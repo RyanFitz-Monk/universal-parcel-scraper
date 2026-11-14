@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isTntAuNotice, tntAuStage } from './status.js';
@@ -29,7 +30,7 @@ export function normalizeTntAuNumber(raw: string): string {
 
 /** A day the page writes `dd/mm/yyyy` as `yyyy-mm-dd`, or ''. */
 function isoDay(value: string): string {
-  const match = DAY.exec(value);
+  const match = DAY.exec(paddedDate(value));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) ?? '' : '';
 }
 
@@ -67,7 +68,7 @@ export function parseTntAu(html: string, raw: string): CarrierResult {
     const [wording = '', date = '', clock = '', depot = ''] = $(row).children('td').toArray().map((cell) => clean($(cell).text(), 160));
     const day = isoDay(date);
     // A scan the page gives without a time keeps its day.
-    const time = clock ? CLOCK.exec(clock) : null;
+    const time = clock ? CLOCK.exec(paddedDate(clock)) : null;
     if (!wording || !day || (clock && !time)) throw new SchemaError(PROVIDER, 'TNT Australia returned an invalid scan');
     const scan = { local_time: time ? `${day}T${time[1]}:${time[2]}:00` : day, description: wording, ...(depot ? { location: depot } : {}) };
     if (isTntAuNotice(wording)) return { ...scan, ...(previous ? { stage: previous, stage_source: 'none' } : {}) };
@@ -79,7 +80,7 @@ export function parseTntAu(html: string, raw: string): CarrierResult {
   // The parcel stands at its newest scan with a stage; a notice after it stays the last update.
   const current = events.find((event) => event.stage && event.stage_source !== 'none');
   const stage = current?.stage as Stage | undefined;
-  const eta = summary.map((cell) => /^Estimated Delivery by:\s*(\d{2}\/\d{2}\/\d{4})(?:\s+\d{2}:\d{2})?$/i.exec(cell)?.[1]).find(Boolean);
+  const eta = summary.map((cell) => /^Estimated Delivery by:\s*(\d{2}\/\d{2}\/\d{4})(?:\s+\d{2}:\d{2})?$/i.exec(paddedDate(cell))?.[1]).find(Boolean);
   const expected = eta && stage !== 'delivered' ? isoDay(eta) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',

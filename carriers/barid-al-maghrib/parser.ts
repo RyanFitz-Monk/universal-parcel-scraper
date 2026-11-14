@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -73,7 +74,7 @@ function eventsOf($: CheerioAPI): CarrierEvent[] {
     if (cells.length !== 4) throw new SchemaError(PROVIDER, 'Barid Al-Maghrib returned an invalid history row');
     const [date, clock, location, wording] = cells as [string, string, string, string];
     if (date) {
-      const match = DAY.exec(date);
+      const match = DAY.exec(paddedDate(date));
       const iso = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
       if (!iso || clock || location || wording) throw new SchemaError(PROVIDER, 'Barid Al-Maghrib returned an invalid scan date');
       day = { iso, text: date };
@@ -88,7 +89,7 @@ function eventsOf($: CheerioAPI): CarrierEvent[] {
     const staged = baridAlMaghribStage(description);
     events.push({
       local_time: day.iso,
-      ...(CLOCK.test(clock) ? { provider_time_text: `${day.text} ${clock}` } : {}),
+      ...(CLOCK.test(paddedDate(clock)) ? { provider_time_text: `${day.text} ${clock}` } : {}),
       ...(office ? { location: office } : {}),
       description,
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),

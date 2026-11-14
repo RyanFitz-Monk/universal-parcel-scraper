@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { correoUruguayoStage, summaryStage } from './status.js';
@@ -47,7 +48,8 @@ function code(row: Record<string, unknown>): string {
  * A scan's `fecha`, "19/08/2026 22:27": a wall clock to the minute, with no
  * zone, as the page shows it.
  */
-function wallClock(value: string): string {
+function wallClock(shown: string): string {
+  const value = paddedDate(shown);
   // Parsing in UTC checks the calendar fields only; no offset is assigned.
   const parsed = CLOCK.test(value) ? DateTime.fromFormat(value, 'dd/MM/yyyy HH:mm', { zone: 'UTC' }) : null;
   // Luxon rolls 24:00 over to the next day; only a clock that reads back unchanged is kept.

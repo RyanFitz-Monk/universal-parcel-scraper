@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, MaintenanceError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode, countryTimeZone, sharedClockZone, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { normalizeAustrianPostNumber } from '../austrian-post/adapter.js';
@@ -77,7 +78,7 @@ function place(raw: string): { location: string; country: string | null } {
  * in Vienna; any other keeps its wall clock.
  */
 function scanClock(text: string, country: string | null): { time: string } | { local_time: string } {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !day || Number(match[4]) > 23 || Number(match[5]) > 59 || Number(match[6]) > 59) {
     throw new SchemaError(PROVIDER, 'Hermes Austria returned an invalid scan time');

@@ -4,6 +4,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { correoArgentinoStage, scanWording } from './status.js';
@@ -92,7 +93,7 @@ function abroadScan(cells: readonly string[]): Scan | null {
 
 /** A row of Correo Argentino's own history: its plant, the event and, for a delivery visit, how it went. */
 function domesticScan(cells: readonly string[]): Scan | null {
-  const clock = DOMESTIC_CLOCK.exec(cells[0]!);
+  const clock = DOMESTIC_CLOCK.exec(paddedDate(cells[0]!));
   if (!clock) throw new SchemaError(PROVIDER, 'Correo Argentino returned a scan without a valid clock');
   const [, day, month, year, hour, minute, second] = clock;
   const description = scanWording(clean(cells[2], 200), clean(cells[3], 200));

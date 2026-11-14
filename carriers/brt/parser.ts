@@ -7,6 +7,7 @@ import { isBrtCustomerParcelId, isBrtTrackingNumber } from '../../core/detection
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import type { ClassifiedStatus } from '../../core/status/index.js';
 import type { CarrierId } from '../../generated/catalog.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode, countryTimeZone, isoTime, sharedClockZone } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { API_LABELS } from '../dpd/status.js';
@@ -185,12 +186,12 @@ function clockZones(place: string, inItaly: boolean): string[] | null {
  * round, keeps that day; any other date or clock stays provider text.
  */
 function scanClock(date: string, clock: string, zones: readonly string[] | null): { time?: string; local_time?: string; provider_time_text?: string } {
-  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(date);
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(paddedDate(date));
   const day = match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
   if (day && !clock) return { local_time: day };
-  const time = /^(\d{2})\.(\d{2})$/.exec(clock);
+  const time = /^(\d{1,2})\.(\d{2})$/.exec(clock);
   if (day && time && Number(time[1]) < 24 && Number(time[2]) < 60) {
-    const wall = `${day}T${time[1]}:${time[2]}:00`;
+    const wall = `${day}T${time[1]!.padStart(2, '0')}:${time[2]}:00`;
     if (zones && DateTime.fromISO(wall, { zone: HOME_ZONE }).getPossibleOffsets().length === 1 && sharedClockZone(zones, wall)) {
       const placed = isoTime(wall, HOME_ZONE);
       if (placed?.iso.startsWith(wall)) return { time: placed.iso };

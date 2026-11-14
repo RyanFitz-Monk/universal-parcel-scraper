@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
 import { kolayGelsinStage } from './status.js';
@@ -27,8 +28,9 @@ function identity(value: unknown): string | null {
   return null;
 }
 
-function wallClock(value: unknown): string {
-  if (typeof value !== 'string' || !CLOCK.test(value)) throw new SchemaError(PROVIDER, 'Kolay Gelsin returned an invalid milestone clock');
+function wallClock(written: unknown): string {
+  const value = typeof written === 'string' ? paddedDate(written) : '';
+  if (!CLOCK.test(value)) throw new SchemaError(PROVIDER, 'Kolay Gelsin returned an invalid milestone clock');
   const date = DateTime.fromFormat(value, 'dd.MM.yyyy HH:mm', { zone: 'UTC' });
   if (!date.isValid || date.toFormat('dd.MM.yyyy HH:mm') !== value) throw new SchemaError(PROVIDER, 'Kolay Gelsin returned an invalid milestone day');
   // UTC validates the calendar digits only; the row states no offset.

@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/normalize.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { directFreightStage } from './status.js';
@@ -20,7 +21,7 @@ export function normalizeDirectFreightNumber(raw: string): string {
 }
 
 function clock(value: string): string {
-  const m = /^(\d{1,2}) ([A-Z][a-z]{2}) (\d{4}) ((?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d)$/.exec(value);
+  const m = /^(\d{1,2}) ([A-Z][a-z]{2}) (\d{4}) ((?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d)$/.exec(paddedDate(value));
   const day = m ? calendarDay(Number(m[3]), MONTHS.indexOf(m[2]!) + 1, Number(m[1])) : null;
   if (!m || !day) throw new SchemaError(PROVIDER, 'Direct Freight returned an invalid scan clock');
   return `${day}T${m[4]}`;
@@ -78,7 +79,7 @@ export function parseDirectFreight(html: string, raw: string): CarrierResult {
   const eta = panel.find('#lblEtaDetails'), etaLabel = panel.find('#lblEtaLabel');
   if (eta.length !== 1 || etaLabel.length !== 1) throw new SchemaError(PROVIDER, 'Direct Freight changed its delivery estimate');
   const etaText = clean(eta.text(), 80);
-  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(etaText);
+  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(etaText));
   const expected = date ? calendarDay(Number(date[3]), Number(date[2]), Number(date[1])) : null;
   if (etaText && (!expected || clean(etaLabel.text()) !== 'Scheduled For Delivery By')) throw new SchemaError(PROVIDER, 'Direct Freight returned an unreadable delivery estimate');
   const staged = directFreightStage(newest.description!);

@@ -85,6 +85,11 @@ describe('TOPTRANS tracking adapter', () => {
     expect(result.events![0]!.time).toBe('2026-10-25T02:30:00+02:00');
   });
 
+  it('reads a scan clock printed without leading zeros', () => {
+    const result = parseToptrans(scans([['901 - Vzorovice', '5.1.26 9:05 - Zásilka svezena do skladu']]), DELIVERED);
+    expect(result.events![0]!.time).toBe('2026-01-05T09:05:00+01:00');
+  });
+
   it('binds a piece number to the shipment whose run of pieces holds it', async () => {
     const fetcher = vi.fn<typeof fetch>(async () => reply());
     for (const piece of [FIRST_PIECE, MIDDLE_PIECE, '1230000000103']) {

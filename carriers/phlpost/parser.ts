@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -64,7 +65,7 @@ function digits(year: string, month: number, day: string, hour12: string, minute
  * as UTC+8 by the server, so it settles no zone and is not read.
  */
 function rowClock(value: string): { local: string; domestic: boolean } {
-  const ips = IPS_CLOCK.exec(value);
+  const ips = IPS_CLOCK.exec(paddedDate(value));
   if (ips) return { local: digits(ips[3]!, Number(ips[2]), ips[1]!, ips[4]!, ips[5]!, ips[6]!, ips[7]!), domestic: false };
   const domestic = DOMESTIC_CLOCK.exec(value);
   const month = domestic ? MONTHS.indexOf(domestic[1]!) + 1 : 0;

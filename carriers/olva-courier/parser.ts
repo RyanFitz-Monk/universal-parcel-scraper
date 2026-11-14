@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -95,10 +96,11 @@ function pageData(page: string): Record<string, unknown> {
  * the tracker kept only the day of.
  */
 function wallClock(date: string, time: string): string {
-  const day = DATE.exec(date);
+  const day = DATE.exec(paddedDate(date));
+  const clock = paddedDate(time);
   const valid = day ? calendarDay(Number(day[3]), Number(day[2]), Number(day[1])) : null;
-  if (!valid || !TIME.test(time)) throw new SchemaError(PROVIDER, 'Olva Courier returned an invalid scan time');
-  return time === '00:00:00' ? valid : `${valid}T${time}`;
+  if (!valid || !TIME.test(clock)) throw new SchemaError(PROVIDER, 'Olva Courier returned an invalid scan time');
+  return clock === '00:00:00' ? valid : `${valid}T${clock}`;
 }
 
 interface Scan { event: CarrierEvent; index: number }

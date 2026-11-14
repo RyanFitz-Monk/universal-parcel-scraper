@@ -16,6 +16,7 @@ import { runSteps } from '../../core/runner/index.js';
 import { firstAttemptMs, networkRetryStep } from '../../core/runner/networkRetry.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, countryTimeZone, firstOccurrence, regionHasTown } from '../../core/time/index.js';
 import { clean, decodeText, fetchBounded, textFromHtml, userAgentOf } from '../../core/transport/index.js';
 
@@ -59,8 +60,8 @@ const WORDING = new RegExp(String.raw`langtag="event_'\s*\+\s*(\d{1,6})\s*\+\s*'
 const LOCATION = new RegExp(String.raw`var TrackingLocation = ${LITERAL};`);
 // A second part the page appends to the location when it has one.
 const LOCATION_DETAIL = new RegExp(String.raw`TrackingLocation \+= " - " \+ ${LITERAL};`);
-const DATE = /<span class="text14 t-faded-1">(\d{2} [A-Z][a-z]{2} \d{4})<\/span>/;
-const CLOCK = /<span class="text14 t-faded-1 event-time">((?:0\d|1[0-2]):[0-5]\d [AP]M)<\/span>/;
+const DATE = /<span class="text14 t-faded-1">(\d{1,2} [A-Z][a-z]{2} \d{4})<\/span>/;
+const CLOCK = /<span class="text14 t-faded-1 event-time">((?:0?\d|1[0-2]):[0-5]\d [AP]M)<\/span>/;
 // The page's own rewrite of a location such as "Lagos Others - NIGERIA" to the country alone.
 const OTHERS = /(.*?) Other[s]? - (.*)/i;
 // A firewall or bot check's page, which can come back with HTTP 200.
@@ -96,7 +97,7 @@ export function getOnlineScanZone(location: string): string | null {
  */
 function scanClock(date: string, time: string, zoneOf: string, member: GetOnlineMember): Pick<CarrierEvent, 'time'> & { local_time?: string } {
   // Parsing in UTC checks the calendar fields only; no offset is assigned.
-  const wall = DateTime.fromFormat(`${date} ${time}`, 'dd MMM yyyy hh:mm a', { zone: 'UTC', locale: 'en-US' });
+  const wall = DateTime.fromFormat(paddedDate(`${date} ${time}`), 'dd MMM yyyy hh:mm a', { zone: 'UTC', locale: 'en-US' });
   if (!wall.isValid) throw new SchemaError(member.provider, `${member.name} returned an invalid scan time`);
   const local = wall.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   const zone = getOnlineScanZone(zoneOf);

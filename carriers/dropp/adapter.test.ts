@@ -80,6 +80,8 @@ describe('Dropp HTTP adapter', () => {
     const result = parseDropp(changed('delivered', (body) => { body.airborne = '08.05.2026 09:00'; }), DELIVERED);
     expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'Parcel delivered', last_update_local: '2026-05-08T09:00:00' });
     expect(result.events![0]).toMatchObject({ provider_code: 'airborne' });
+    expect(parseDropp(changed('delivered', (body) => { body.airborne = '8.5.2026 9:00'; }), DELIVERED))
+      .toMatchObject({ last_update_local: '2026-05-08T09:00:00' });
   });
 
   it('reads the unknown-number answer as not found, a record without steps as no history and another parcel as inconclusive', () => {

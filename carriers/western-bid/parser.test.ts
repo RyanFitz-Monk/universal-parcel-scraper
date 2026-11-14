@@ -78,6 +78,10 @@ describe('Western Bid public milestone parser', () => {
     expect(() => parse(fixture().replace('04/22/2031 3:46 PM', text))).toThrow(expect.objectContaining({ kind: 'schema' }));
   });
 
+  it('reads a milestone clock printed without leading zeros', () => {
+    expect(parse(fixture().replace('04/22/2031 3:46 PM', '4/22/2031 3:46 PM'))).toMatchObject({ last_update_local: '2031-04-22T15:46:00' });
+  });
+
   it('does not silently truncate changed milestone layouts or excessive rows', () => {
     expect(() => parse(fixture().replace('Delivered<br>04/22/2031 3:46 PM', 'Delivered<br><b>04/22/2031 3:46 PM</b>')))
       .toThrow(expect.objectContaining({ kind: 'schema' }));

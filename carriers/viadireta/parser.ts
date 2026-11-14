@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/text.js';
 import { newDeliveryDay, viadiretaStage } from './status.js';
 
@@ -32,7 +33,8 @@ export function normalizeViadiretaNumber(raw: string): string {
 }
 
 /** A movement's date and second as one wall time. The page gives no zone. */
-function wallClock(text: string): string {
+function wallClock(raw: string): string {
+  const text = paddedDate(raw);
   const match = CLOCK.exec(text);
   // UTC only checks the calendar fields; no offset is assigned.
   const parsed = match ? DateTime.fromObject({ year: Number(match[3]), month: Number(match[2]), day: Number(match[1]),

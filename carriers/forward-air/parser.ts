@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { windowEstimate, type WindowEstimate } from '../../core/result/window.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -47,7 +48,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
 
 /** "11/22/2026 12:33" as an offset-less ISO wall clock, or null when it is not a real one. */
 function wallClock(value: string): string | null {
-  const match = CLOCK.exec(value);
+  const match = CLOCK.exec(paddedDate(value));
   if (!match) return null;
   const [, month, day, year, hour, minute] = match;
   const wall = `${year}-${month}-${day}T${hour}:${minute}:00`;
@@ -140,7 +141,7 @@ function day(value: string): string | null {
  * end is no real clock gives none.
  */
 function estimate(record: Record<string, unknown>): WindowEstimate {
-  const window = WINDOW.exec(text(record, 'EstimatedDeliveryRange', 64));
+  const window = WINDOW.exec(paddedDate(text(record, 'EstimatedDeliveryRange', 64)));
   if (window) {
     const end = wallClock(window[2]!);
     return end ? windowEstimate(wallClock(window[1]!), end) : { expected_delivery: null };

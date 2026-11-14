@@ -68,6 +68,7 @@ describe('TDN HTTP adapter', () => {
       });
     }
     expect(line('En reparto - 02/02/2026 09:41')).toMatchObject({ events: [{ local_time: '2026-02-02T09:41:00', description: 'En reparto' }] });
+    expect(line('En reparto - 028 - 2/2/2026 9:41')).toMatchObject({ events: [{ local_time: '2026-02-02T09:41:00', description: 'En reparto' }] });
     for (const text of ['En reparto', 'En reparto - 028', 'En reparto - 028 - 02/02/2026']) {
       expect(() => line(text), text).toThrow(expect.objectContaining({ kind: 'schema' }));
     }

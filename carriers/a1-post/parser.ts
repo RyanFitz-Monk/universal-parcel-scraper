@@ -5,6 +5,7 @@ import { USPS_ROUTING_BARCODE } from '../../core/detection/usps.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, isoTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { a1PostScan } from './status.js';
@@ -40,7 +41,7 @@ export function normalizeA1PostNumber(raw: string): string {
 
 /** A row's clock as an ISO wall time; the day must exist. */
 function wallClock(text: string): string {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!day) throw new SchemaError(PROVIDER, 'A1 POST returned an invalid row time');
   return `${day}T${match![4]}:${match![5]}:00`;

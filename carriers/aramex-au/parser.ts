@@ -3,6 +3,7 @@ import { isValidSscc, normalizeTrackingNumber } from '../../core/detection/index
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence } from '../../core/time/index.js';
 import { cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -97,7 +98,7 @@ function wallOf(value: string): string | null {
 
 /** A `dd/mm/yyyy` day as `YYYY-MM-DD`, or null. */
 function dayOf(value: string): string | null {
-  const match = DAY.exec(value);
+  const match = DAY.exec(paddedDate(value));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 

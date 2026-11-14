@@ -7,6 +7,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { windowEstimate } from '../../core/result/window.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean, textFromHtml } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -65,7 +66,7 @@ export function linearWording(raw: string): string {
  */
 export function linearEstimate(raw: string, day: string): string | null {
   const wording = textFromHtml(raw, 4_000);
-  const round = ROUND.exec(wording);
+  const round = ROUND.exec(paddedDate(wording));
   if (round) return windowEstimate(`${day} ${round[1]}:${round[2]}`, `${day} ${round[3]}:${round[4]}`).expected_delivery;
   const due = DUE.exec(wording);
   return due ? calendarDay(Number(due[3]), MONTHS.indexOf(due[2]!.toLowerCase()) + 1, Number(due[1])) : null;
@@ -73,8 +74,8 @@ export function linearEstimate(raw: string, day: string): string | null {
 
 /** The page displays these date and time strings directly, without a zone. */
 function wallClock(row: Record<string, unknown>): string {
-  const date = DATE.exec(text(row, 'date', 32));
-  const clock = CLOCK.exec(text(row, 'time', 32));
+  const date = DATE.exec(paddedDate(text(row, 'date', 32)));
+  const clock = CLOCK.exec(paddedDate(text(row, 'time', 32)));
   const day = date ? calendarDay(Number(date[3]), Number(date[2]), Number(date[1])) : null;
   if (!day || day < '2000-01-01' || !clock) invalid('Linear Logistics returned an invalid scan time');
   return `${day}T${clock[1]}:${clock[2]}:00`;

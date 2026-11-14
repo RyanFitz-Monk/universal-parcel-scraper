@@ -117,6 +117,7 @@ describe('Chazki tracking adapter', () => {
 
   it('reads the reply’s twelve-hour clocks day first, and nothing else', () => {
     expect(chazkiClock('09/03/2026 9:07 am')).toBe('2026-03-09T09:07:00');
+    expect(chazkiClock('9/3/2026 9:07 am')).toBe('2026-03-09T09:07:00');
     expect(chazkiClock('31/12/2026 12:00 am')).toBe('2026-12-31T00:00:00');
     expect(chazkiClock('01/01/2026 12:59 PM')).toBe('2026-01-01T12:59:00');
     expect(chazkiClock('01/01/2026 11:59 pm')).toBe('2026-01-01T23:59:00');

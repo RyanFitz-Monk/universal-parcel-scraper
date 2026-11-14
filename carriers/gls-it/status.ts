@@ -1,5 +1,6 @@
 import { classifyWording, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 
 /**
  * The tracker's scan sentences in its English locale, mapped whole. The scans
@@ -70,7 +71,7 @@ const BOOKED = /^consegna prenotata il (\d{2})\/(\d{2})\/(\d{2})\.?$/;
 
 /** The day a redelivery was booked for, `YYYY-MM-DD`, when the sentence books one. */
 export function glsItalyBookedDay(sentence: string): string | undefined {
-  const match = BOOKED.exec(normalizeStatusWording(sentence));
+  const match = BOOKED.exec(paddedDate(normalizeStatusWording(sentence)));
   if (!match) return undefined;
   const [year, month, date] = [2000 + Number(match[3]), Number(match[2]), Number(match[1])];
   const day = new Date(Date.UTC(year, month - 1, date));
@@ -79,7 +80,7 @@ export function glsItalyBookedDay(sentence: string): string | undefined {
 
 /** The stage the map gives a sentence, by `normalizeStatusWording` form. */
 function mappedStage(wording: string): Stage | undefined {
-  return SCANS.get(wording) ?? (BOOKED.test(wording) ? 'in_transit' : undefined);
+  return SCANS.get(wording) ?? (BOOKED.test(paddedDate(wording)) ? 'in_transit' : undefined);
 }
 
 /** The stage a scan's sentence gives it: the map first, then the shared wording rules. */

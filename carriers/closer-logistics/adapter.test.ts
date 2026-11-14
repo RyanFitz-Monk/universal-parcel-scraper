@@ -153,6 +153,9 @@ describe('Closer Logistics HTTP adapter', () => {
       reply.packages[1]!.trackings.push({ id: 7000010, createdAt: '11/03/2026 06:00:00', status: 'documented' });
     }), IN_TRANSIT);
     expect(dated.events!.filter((event) => event.provider_code === 'documented').map((event) => event.local_time)).toEqual(['2026-03-11T06:00:00']);
+    expect(parseCloser(changed('in-transit', (reply) => {
+      reply.packages[1]!.trackings.push({ id: 7000010, createdAt: '11/3/2026 6:00:00', status: 'documented' });
+    }), IN_TRANSIT).events!.filter((event) => event.provider_code === 'documented').map((event) => event.local_time)).toEqual(['2026-03-11T06:00:00']);
   });
 
   it('counts a shipment only when it names the number asked', () => {

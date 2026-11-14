@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { lookupBudget, type AdapterFactory, type TrackingContext } from '../../core/adapter/index.js';
 import { InputRequiredError, InvalidInputError, NotFoundError, SchemaError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -68,8 +69,9 @@ function parseDateTime(raw: unknown): DateTime | null {
   if (!value) return null;
   let parsed = firstOccurrence(DateTime.fromISO(value, { zone: 'Europe/Madrid', setZone: true }));
   if (!parsed.isValid) {
+    const padded = paddedDate(value);
     for (const format of DATE_FORMATS) {
-      parsed = firstOccurrence(DateTime.fromFormat(value, format, { zone: 'Europe/Madrid' }));
+      parsed = firstOccurrence(DateTime.fromFormat(padded, format, { zone: 'Europe/Madrid' }));
       if (parsed.isValid) break;
     }
   }

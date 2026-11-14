@@ -92,6 +92,8 @@ describe('GLS Italy direct tracking', () => {
     }), NUMBER);
     expect(booked('Consegna prenotata il 06/03/26')).toMatchObject({ status: 'in_transit', current_stage: 'in_transit',
       current_stage_source: 'carrier_map', last_status_text: 'Consegna prenotata il 06/03/26', expected_delivery: '2026-03-06' });
+    expect(booked('Consegna prenotata il 6/3/26')).toMatchObject({ current_stage: 'in_transit', current_stage_source: 'carrier_map',
+      last_status_text: 'Consegna prenotata il 6/3/26', expected_delivery: '2026-03-06' });
     expect(booked('Consegna prenotata il 31/02/26')).toMatchObject({ current_stage: 'in_transit', expected_delivery: null });
     expect(parseGLSItaly(fixture(), NUMBER).expected_delivery).toBeNull();
   });

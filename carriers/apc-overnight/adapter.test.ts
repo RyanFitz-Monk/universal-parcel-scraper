@@ -106,6 +106,8 @@ describe('APC Overnight tracking adapter', () => {
     const unknown = parseApcOvernight(page('delivered').replaceAll('Delivered (08-Jan-2026 10:23)', 'Weighed (08-Jan-2026 10:23)'), DELIVERED);
     expect(unknown).toMatchObject({ current_stage: 'failed_attempt', last_status_text: 'Weighed' });
     expect(unknown.events![0]).toEqual({ local_time: '2026-01-08T10:23:00', description: 'Weighed' });
+    expect(parseApcOvernight(page('delivered').replaceAll('Delivered (08-Jan-2026 10:23)', 'Weighed (8-Jan-2026 9:58)'), DELIVERED).events![0])
+      .toEqual({ local_time: '2026-01-08T09:58:00', description: 'Weighed' });
     // A summary without a weight or a service in APC's form leaves them out.
     const bare = parseApcOvernight(page('delivered').replace('>20 kg<', '>0 kg<').replace(/>NC16 \(([^)]*)\)</, '>$1<'), DELIVERED);
     expect(bare.weight_kg).toBeUndefined();

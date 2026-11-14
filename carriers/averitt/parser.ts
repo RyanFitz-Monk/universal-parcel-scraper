@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { averittStage } from './status.js';
 
@@ -36,7 +37,7 @@ export function normalizeAverittNumber(raw: string): string {
 
 /** "09/17/2026 2:18 PM" as a wall clock. The page gives no zone. */
 function wallClock(text: string): string | null {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   if (!match) return null;
   const [, month, day, year, hour, minute, half] = match;
   if (Number(hour) < 1 || Number(hour) > 12 || Number(minute) > 59) return null;

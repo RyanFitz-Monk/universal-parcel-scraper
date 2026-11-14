@@ -4,6 +4,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { classifyWording, languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -98,7 +99,8 @@ function summary(events: CarrierEvent[]): Pick<CarrierResult, 'status' | 'curren
  * that recorded it, to the second, with no zone. The reply does not say
  * where that office is, so the clock stays local.
  */
-function internationalClock(value: string): string {
+function internationalClock(raw: string): string {
+  const value = paddedDate(raw);
   // Parsing in UTC checks the calendar fields only; no offset is assigned.
   const parsed = INTERNATIONAL_CLOCK.test(value) ? DateTime.fromFormat(value, 'dd-MM-yyyy HH:mm:ss', { zone: 'UTC' }) : null;
   if (!parsed?.isValid) throw new SchemaError(PROVIDER, 'Bangladesh Post returned an invalid scan time');
@@ -208,7 +210,8 @@ function text(row: Record<string, unknown>, key: string, maxLength: number): str
  * A domestic scan's date, "03-01-2025", and time, "09:22:37 PM": the wall
  * clock of a Bangladeshi office, so Dhaka time.
  */
-function domesticTime(date: string, time: string): string {
+function domesticTime(rawDate: string, rawTime: string): string {
+  const [date, time] = [paddedDate(rawDate), paddedDate(rawTime)];
   const parsed = DOMESTIC_DATE.test(date) && DOMESTIC_TIME.test(time)
     ? firstOccurrence(DateTime.fromFormat(`${date} ${time}`, 'dd-MM-yyyy hh:mm:ss a', { zone: ZONE, locale: 'en-US' })) : null;
   const iso = parsed?.isValid ? parsed.toISO({ suppressMilliseconds: true }) : null;

@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { dragonStarCurierMappedStage, dragonStarCurierStage } from './status.js';
 
@@ -67,7 +68,7 @@ function detail(main: Cheerio<Element>, $: CheerioAPI, label: string): string | 
 
 /** A scan's wall clock to the minute. The page names no zone, so it stays local. */
 function wallClock(text: string): string {
-  const clock = CLOCK.exec(clean(text, 32));
+  const clock = CLOCK.exec(paddedDate(clean(text, 32)));
   const local = clock ? `${clock[3]}-${clock[2]}-${clock[1]}T${clock[4]}:${clock[5]}:00` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });

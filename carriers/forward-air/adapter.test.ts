@@ -143,6 +143,7 @@ describe('Forward Air HTTP adapter', () => {
     };
     // A window within one day is its slot on the station's clock, one across days its days.
     expect(estimate('11/03/2026 08:00-11/03/2026 17:00')).toEqual([null, '2026-11-03 08:00–17:00']);
+    expect(estimate('11/3/2026 8:00-11/3/2026 17:00')).toEqual([null, '2026-11-03 08:00–17:00']);
     expect(estimate('11/03/2026 08:00 - 11/04/2026 17:00')).toEqual(['2026-11-03', '2026-11-04']);
     // A window that ends before it starts, or whose start is no real clock, gives its end's day.
     expect(estimate('11/04/2026 08:00-11/03/2026 17:00')).toEqual([null, '2026-11-03']);

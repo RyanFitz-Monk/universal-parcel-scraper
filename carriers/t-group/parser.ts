@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { tGroupStage } from './status.js';
@@ -42,7 +43,7 @@ export function normalizeTGroupNumber(raw: string): string {
  * it was written.
  */
 function scanClock(text: string): { local: string; clock: { time: string } | { local_time: string } } {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !day || Number(match[4]) > 23 || Number(match[5]) > 59) throw new SchemaError(PROVIDER, 'Tgroup returned an invalid scan time');
   const local = `${day}T${match[4]}:${match[5]}:00`;
@@ -73,7 +74,7 @@ function weightKg(text: string | undefined): number | null {
 
 /** The planned delivery day, "03/08/2026", as a calendar day. */
 function plannedDay(text: string | undefined): string | null {
-  const match = DAY.exec(text ?? '');
+  const match = DAY.exec(paddedDate(text ?? ''));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 

@@ -6,6 +6,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { skynetSaStage } from './status.js';
 
@@ -70,8 +71,8 @@ function waybills($: CheerioAPI, heading: Cheerio<Element>): { number: string; t
 }
 
 /** A scan's wall clock, from the table's `dd/MM/yyyy` day and `HH:mm:ss` time. The page names no zone. */
-function wallClock(date: string, time: string): string {
-  const day = DATE.exec(date);
+function wallClock(rawDate: string, rawTime: string): string {
+  const day = DATE.exec(paddedDate(rawDate)), time = paddedDate(rawTime);
   const local = day && CLOCK.test(time) ? `${day[3]}-${day[2]}-${day[1]}T${time}` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   if (!local || DateTime.fromISO(local, { zone: 'UTC' }).toFormat("yyyy-MM-dd'T'HH:mm:ss") !== local) {

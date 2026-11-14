@@ -8,6 +8,7 @@ import {
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { dxStage } from './status.js';
@@ -111,7 +112,7 @@ function boundPage(html: string, number: string): CheerioAPI {
 
 /** A scan's date and clock as a wall time: the page names no zone. */
 function wallClock(text: string): string {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const hour = match ? Number(match[4]) : 0;
   if (!match || hour < 1 || hour > 12) throw new SchemaError(PROVIDER, 'DX returned an invalid scan time');
   const day = calendarDay(2000 + Number(match[3]), Number(match[2]), Number(match[1]));
@@ -127,7 +128,7 @@ export function dxWording(text: string): string {
 
 /** The day the despatch label gives, as the anchor of the menu's delivery date. */
 function despatchDay($: CheerioAPI): string | null {
-  const match = DESPATCH.exec(clean(field($, 'lbl_consdate')?.text(), 20));
+  const match = DESPATCH.exec(paddedDate(clean(field($, 'lbl_consdate')?.text(), 20)));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 

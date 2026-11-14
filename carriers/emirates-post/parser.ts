@@ -4,6 +4,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, explicitOffsetTime, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -42,8 +43,9 @@ function statusOf(value: unknown): { code: string; description: string } {
 function clockOf(value: unknown, location: string): Partial<CarrierEvent> {
   const stated = explicitOffsetTime(value);
   if (stated) return { time: stated.iso };
-  if (typeof value !== 'string' || !WALL.test(value)) throw new SchemaError(PROVIDER, 'Emirates Post returned an unreadable scan clock');
-  const parsed = DateTime.fromFormat(value, 'dd/MM/yyyy hh:mm:ss a', { locale: 'en-US', zone: 'UTC' });
+  const wall = typeof value === 'string' ? paddedDate(value) : '';
+  if (!WALL.test(wall)) throw new SchemaError(PROVIDER, 'Emirates Post returned an unreadable scan clock');
+  const parsed = DateTime.fromFormat(wall, 'dd/MM/yyyy hh:mm:ss a', { locale: 'en-US', zone: 'UTC' });
   if (!parsed.isValid || parsed.year < 2000) throw new SchemaError(PROVIDER, 'Emirates Post returned an invalid scan clock');
   const local_time = parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   const instant = UAE_PLACE.test(location) ? zonedTime(local_time, "yyyy-MM-dd'T'HH:mm:ss", 'Asia/Dubai') : null;

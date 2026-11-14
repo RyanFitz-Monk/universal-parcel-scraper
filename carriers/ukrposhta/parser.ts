@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import { isValidS10TrackingNumber } from '../../core/detection/s10.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
@@ -31,7 +32,7 @@ function envelope(value: unknown): Record<string, unknown> {
 
 /** Validate calendar digits without assigning a timezone to the wall clock. */
 export function ukrposhtaWallClock(value: string): string | null {
-  const raw = value.trim();
+  const raw = paddedDate(value.trim());
   const format = /^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/.test(raw) ? 'dd.MM.yyyy HH:mm'
     : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(raw) ? "yyyy-MM-dd'T'HH:mm:ss" : null;
   if (!format) return null;

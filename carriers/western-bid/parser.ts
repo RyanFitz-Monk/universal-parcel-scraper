@@ -5,6 +5,7 @@ import { uspsPackageIdentifier } from '../../core/detection/usps.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/text.js';
 import { westernBidStage } from './status.js';
 
@@ -48,10 +49,11 @@ function identity(text: string): string | null {
 }
 
 /** The English client renders minute-resolution clocks without a stated offset. */
-function wallClock(text: string): string {
-  if (!/^\d{2}\/\d{2}\/\d{4} \d{1,2}:\d{2} [AP]M$/.test(text)) throw new SchemaError(PROVIDER, 'Western Bid returned an invalid milestone clock');
-  const date = DateTime.fromFormat(text, 'MM/dd/yyyy h:mm a', { zone: 'UTC', locale: 'en-US' });
-  if (!date.isValid || date.year < 1000 || date.toFormat('MM/dd/yyyy h:mm a') !== text) throw new SchemaError(PROVIDER, 'Western Bid returned an invalid milestone day');
+function wallClock(raw: string): string {
+  const text = paddedDate(raw);
+  if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2} [AP]M$/.test(text)) throw new SchemaError(PROVIDER, 'Western Bid returned an invalid milestone clock');
+  const date = DateTime.fromFormat(text, 'MM/dd/yyyy hh:mm a', { zone: 'UTC', locale: 'en-US' });
+  if (!date.isValid || date.year < 1000 || date.toFormat('MM/dd/yyyy hh:mm a') !== text) throw new SchemaError(PROVIDER, 'Western Bid returned an invalid milestone day');
   // UTC checks the calendar only. The DOM supplies no offset to attach to it.
   return date.toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }

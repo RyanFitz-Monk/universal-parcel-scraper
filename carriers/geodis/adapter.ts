@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { lookupBudget, type AdapterFactory, type TrackingContext } from '../../core/adapter/index.js';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
 import type { Stage } from '../../generated/catalog.js';
@@ -82,10 +83,10 @@ function dateTimestamp(value: string): number | null {
 }
 
 function eventTime(dateValue: unknown, timeValue: unknown): { local: string; timestamp: number } | null {
-  const timestamp = dateTimestamp(clean(dateValue, 32));
+  const timestamp = dateTimestamp(paddedDate(clean(dateValue, 32)));
   if (timestamp === null) return null;
   const day = new Date(timestamp).toISOString().slice(0, 10);
-  const match = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/.exec(clean(timeValue, 16));
+  const match = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/.exec(paddedDate(clean(timeValue, 16)));
   if (!match) return { local: day, timestamp };
   const withClock = timestamp
     + Number(match[1]) * 3_600_000
@@ -95,7 +96,7 @@ function eventTime(dateValue: unknown, timeValue: unknown): { local: string; tim
 }
 
 function expectedDelivery(value: unknown): string | null {
-  const raw = clean(value, 32);
+  const raw = paddedDate(clean(value, 32));
   const french = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw);
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
   const date = french

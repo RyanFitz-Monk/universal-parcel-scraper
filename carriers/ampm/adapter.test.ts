@@ -142,6 +142,7 @@ describe('Grupo ampm HTTP adapter', () => {
   it('reads no promise it cannot parse', () => {
     expect(parseAmpm(text('in-transit.html').replace('20-03-2026 21:00:00', ''), IN_TRANSIT)).toMatchObject({ expected_delivery: null });
     expect(parseAmpm(text('in-transit.html').replace('20-03-2026 21:00:00', '31-02-2026 21:00:00'), IN_TRANSIT)).toMatchObject({ expected_delivery: null });
+    expect(parseAmpm(text('in-transit.html').replace('20-03-2026 21:00:00', '2-4-2026 9:00:00'), IN_TRANSIT)).toMatchObject({ expected_delivery: '2026-04-02' });
   });
 
   it('keeps a browser check, a refusal, a moved route and a broken page apart from an unknown number', async () => {

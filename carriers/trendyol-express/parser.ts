@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/text.js';
 import { trendyolStage } from './status.js';
 
@@ -21,7 +22,8 @@ export function trendyolTrackingUrl(number: string): string {
   return `https://kargotakip.trendyol.com/?${new URLSearchParams({ orderNumber: normalizeTrendyolNumber(number) })}`;
 }
 
-function clock(text: string): string {
+function clock(raw: string): string {
+  const text = paddedDate(raw);
   if (!/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/.test(text)) throw new SchemaError(PROVIDER, 'Trendyol Express returned an invalid scan clock');
   const date = DateTime.fromFormat(text, 'dd.MM.yyyy HH:mm', { zone: 'UTC' });
   // UTC validates the calendar digits only; the carrier supplies no offset.

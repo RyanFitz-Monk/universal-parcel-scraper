@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { tirupatiStage } from './status.js';
@@ -27,7 +28,7 @@ const BOOKED = /^(\d{2})-(\d{2})-(\d{2}) - (\d{2}):(\d{2}) ([AP]M)$/;
 // A scan's or the status line's day, as "29-08-26".
 const DAY = /^(\d{2})-(\d{2})-(\d{2})$/;
 // The status line, as "Out To SAMPLE R.O. On Dated 29-08-26" or "Delivered On Dated 04-09-26 By SAMPLEPUR".
-const STATUS_LINE = /^(.+?)\s+On Dated\s+(\d{2}-\d{2}-\d{2})(?:\s+By\s+(.+))?$/i;
+const STATUS_LINE = /^(.+?)\s+On Dated\s+(\d{1,2}-\d{1,2}-\d{2})(?:\s+By\s+(.+))?$/i;
 // An OUT row's route names the office it left and the next one; an IN row's the office it reached first.
 const OUT_ROUTE = /^From:\s*(.*?)\s*To:\s*(.*)$/i;
 const IN_ROUTE = /^At:\s*(.*?)(?:\s+From:.*)?$/i;
@@ -131,7 +132,7 @@ export function tirupatiDetailUrl(location: string | null): string {
 
 /** The booking's wall clock, read in India and read back unchanged, as an instant. */
 function bookingTime(text: string): string {
-  const parts = BOOKED.exec(text);
+  const parts = BOOKED.exec(paddedDate(text));
   const local = parts ? `${parts[1]}-${parts[2]}-20${parts[3]} ${parts[4]}:${parts[5]} ${parts[6]}` : '';
   const format = 'dd-MM-yyyy hh:mm a';
   const wall = firstOccurrence(DateTime.fromFormat(local, format, { zone: ZONE, locale: 'en-US' }));
@@ -144,7 +145,7 @@ function bookingTime(text: string): string {
 
 /** A day the page prints as dd-mm-yy, as a local calendar day. */
 function localDay(text: string): string {
-  const parts = DAY.exec(text);
+  const parts = DAY.exec(paddedDate(text));
   const day = parts ? calendarDay(2000 + Number(parts[3]), Number(parts[2]), Number(parts[1])) : null;
   if (!day) throw new SchemaError(PROVIDER, 'Shree Tirupati Courier returned an invalid scan date');
   return day;

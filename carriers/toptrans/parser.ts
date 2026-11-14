@@ -22,7 +22,7 @@ const SHIPMENT = /^\d{11}$/;
 const PIECE = /^(?:\d{10}|\d{13})$/;
 const DIGITS = /^\d{6,20}$/;
 // "08.07.26 16:56 - Zásilka doručena": the depot's wall clock, then the status.
-const SCAN = /^(\d{2})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}) - (\S.*)$/;
+const SCAN = /^(\d{1,2})\.(\d{1,2})\.(\d{2}) (\d{1,2}):(\d{2}) - (\S.*)$/;
 // "815 - Trenčín": the depot's number, then its town; " - " for a scan without one.
 const DEPOT = /^(?:\d{1,4}\s*)?-\s*/;
 const WEIGHT = /^(\d{1,6}(?:[.,]\d{1,3})?)$/;

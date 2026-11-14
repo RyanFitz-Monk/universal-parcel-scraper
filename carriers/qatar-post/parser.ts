@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber } from '../../core/detection/s10.js';
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
@@ -26,7 +27,7 @@ function identity(value: unknown, number: string): boolean {
   return typeof value === 'string' && value.length <= 64 && normalizeTrackingNumber(value) === number;
 }
 function clock(value: string): string {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4}) ((?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d)$/.exec(value);
+  const m = /^(\d{2})\/(\d{2})\/(\d{4}) ((?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d)$/.exec(paddedDate(value));
   const day = m ? calendarDay(Number(m[3]), Number(m[1]), Number(m[2])) : null;
   if (!day || !m) throw new SchemaError(PROVIDER, 'Qatar Post returned an invalid scan clock');
   return `${day}T${m[4]}`;

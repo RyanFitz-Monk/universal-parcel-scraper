@@ -6,6 +6,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, InputRequiredError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { transmissionMappedStage } from './status.js';
@@ -80,8 +81,8 @@ export function parseSearchReply(html: string, asked: string, postcode: string):
 
 /** A day and clock of the page as Dutch time, or null when they are not one. */
 function wallClock(day: string, clock: string): DateTime | null {
-  const date = DAY.exec(day);
-  const time = CLOCK.exec(clock);
+  const date = DAY.exec(paddedDate(day));
+  const time = CLOCK.exec(paddedDate(clock));
   if (!date || !time) return null;
   const local = `${date[3]}-${date[2]}-${date[1]}T${time[1]}:${time[2]}:${time[3] ?? '00'}`;
   // Parsing in UTC checks the calendar digits; Luxon would roll 24:00 or 30 February over.
@@ -146,7 +147,7 @@ function weightOf($: CheerioAPI, barcodes: ReadonlySet<string> | null): number |
 function deliveryBox($: CheerioAPI): Pick<CarrierResult, 'delivered_at' | 'expected_delivery' | 'expected_delivery_from'> {
   const box = labelled($, 'h6', /^(?:Aflevering|Delivery)$/i).parent();
   const label = clean(box.children('h4').first().text(), 40);
-  const value = clean(box.children('h6').eq(1).text(), 60);
+  const value = paddedDate(clean(box.children('h6').eq(1).text(), 60));
   const delivered = AT.exec(value);
   if (delivered && /^(?:Afgeleverd op|Delivered on)$/i.test(label)) {
     const time = wallClock(delivered[1]!, delivered[2]!);

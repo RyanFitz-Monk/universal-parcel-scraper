@@ -5,6 +5,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, 
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -104,8 +105,8 @@ interface Scan {
 
 /** A scan's date ("26.01.2026") and time ("15:19:24"): the office's wall clock, with no zone. */
 function wallClock(date: unknown, time: unknown): string {
-  const day = clean(date, 16);
-  const clock = clean(time, 16);
+  const day = paddedDate(clean(date, 16));
+  const clock = paddedDate(clean(time, 16));
   // Parsing in UTC checks the calendar fields only; no offset is assigned.
   const parsed = DATE.test(day) && TIME.test(clock)
     ? DateTime.fromFormat(`${day} ${clock}`, 'dd.MM.yyyy HH:mm:ss', { zone: 'UTC' }) : null;

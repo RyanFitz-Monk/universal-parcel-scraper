@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { closerLabel, closerStage } from './status.js';
@@ -58,7 +59,7 @@ function code(row: Record<string, unknown>): string {
  * it comes and names no zone, so it stays a wall clock.
  */
 function wallClock(value: unknown): string {
-  const match = typeof value === 'string' ? CLOCK.exec(value) : null;
+  const match = typeof value === 'string' ? CLOCK.exec(paddedDate(value)) : null;
   const local = match ? `${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:${match[6]}` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });

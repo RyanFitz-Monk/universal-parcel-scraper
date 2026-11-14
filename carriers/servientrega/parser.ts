@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -46,7 +47,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
  * guide's clocks are read in Bogotá time. Another guide keeps its wall clocks.
  */
 function clock(value: string, domestic: boolean): { time?: string; local_time?: string; at: number } {
-  const match = CLOCK.exec(value);
+  const match = CLOCK.exec(paddedDate(value));
   if (!match) throw new SchemaError(PROVIDER, 'Servientrega returned an invalid time');
   const [, day, month, year, hour, minute] = match;
   const wall = `${year}-${month}-${day}T${hour}:${minute}`;

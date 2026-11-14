@@ -6,6 +6,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { isMatkahuoltoNotice, matkahuoltoStage } from './status.js';
@@ -71,8 +72,8 @@ function sameNumber(named: string, number: MatkahuoltoNumber): boolean {
 
 /** The scan's date and time ("08.10.2026", "11:14") as a wall clock. They carry no offset. */
 function wallClock(date: string, time: string): string | null {
-  const day = DATE.exec(date);
-  const clock = TIME.exec(time);
+  const day = DATE.exec(paddedDate(date));
+  const clock = TIME.exec(paddedDate(time));
   if (!day || !clock) return null;
   // UTC only checks the calendar fields. No offset is assigned.
   const parsed = DateTime.fromObject({ year: Number(day[3]), month: Number(day[2]), day: Number(day[1]),

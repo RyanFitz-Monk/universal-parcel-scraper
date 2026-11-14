@@ -20,6 +20,7 @@ import { colisPrivePostcode } from '../../core/catalog/postcode.js';
 import { InputRequiredError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
 import { UpstreamHttpError, clean, decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { classifyStatus, comparableText } from './status.js';
 
@@ -55,7 +56,7 @@ function displayedShipmentNumber(value: string): string {
  * dates such as 31/02.
  */
 function dateKey(value: string): number | null {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(value));
   if (!match) return null;
   const [, day, month, year] = match;
   const timestamp = Date.UTC(Number(year), Number(month) - 1, Number(day));
@@ -99,7 +100,7 @@ export function normalizeColisPriveCredential(raw: string, rawPostcode = ''): st
 /** The day a row announces for a confirmed appointment or a relay drop-off: "… le DD/MM/YYYY". */
 function plannedDay(description: string): string | null {
   if (!/\b(?:rendez vous est confirme|va etre prochainement depose)\b/.test(comparableText(description))) return null;
-  const match = /\ble (\d{2})\/(\d{2})\/(\d{4})\.?$/.exec(description);
+  const match = /\ble (\d{2})\/(\d{2})\/(\d{4})\.?$/.exec(paddedDate(description));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 

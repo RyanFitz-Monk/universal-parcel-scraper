@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -45,8 +46,9 @@ function docket(value: unknown): string {
 }
 
 /** A wall clock in the reply's format, read back unchanged, or null. */
-function wallClock(value: string, format: string): DateTime | null {
-  if (!value) return null;
+function wallClock(raw: string, format: string): DateTime | null {
+  if (!raw) return null;
+  const value = paddedDate(raw);
   const wall = firstOccurrence(DateTime.fromFormat(value, format, { zone: ZONE, locale: 'en-US' }));
   // Luxon rolls 24:00 over to the next day; only a clock that reads back unchanged is kept.
   return wall.isValid && wall.toFormat(format).toUpperCase() === value.toUpperCase() ? wall : null;

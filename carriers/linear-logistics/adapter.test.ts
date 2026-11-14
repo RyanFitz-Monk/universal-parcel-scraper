@@ -70,6 +70,9 @@ describe('Linear Logistics HTTP adapter', () => {
     // A day before the newest scan's is stale.
     expect(parseLinear(changed((body) => { body.data = [{ ...body.data[8]!, date: '05/03/2026' }, ...body.data.slice(7)]; }), NUMBER))
       .toMatchObject({ expected_delivery: null });
+    expect(parseLinear(changed((body) => { body.data = [{ ...body.data[8]!, date: '5/3/2026', time: '9:05' }, ...body.data.slice(7)]; }), NUMBER))
+      .toMatchObject({ last_update_local: '2026-03-05T09:05:00', expected_delivery: null });
+    expect(linearEstimate('Item out on delivery vehicle (ETA: 9:19-11:19)', '2026-03-05')).toBe('2026-03-05 09:19–11:19');
     expect(linearEstimate('Item out on delivery vehicle (ETA: 15:19-13:19)', '2026-03-05')).toBe('2026-03-05');
     expect(linearEstimate('Item out on delivery vehicle (ETA: 25:00-26:00)', '2026-03-05')).toBeNull();
     expect(linearEstimate('Redelivery has been booked (Due for delivery on Monday 30 Feb 2026)', '2026-03-05')).toBeNull();

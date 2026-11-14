@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { cruzDelSurStage } from './status.js';
@@ -43,7 +44,7 @@ function section($: CheerioAPI, title: RegExp): Cheerio<AnyNode> | undefined {
 
 /** An event's wall clock: a day, then a clock to the minute when the page gives one. No offset is assigned. */
 function wallClock(day: string, clock: string | undefined): string {
-  const date = DATE.exec(day);
+  const date = DATE.exec(paddedDate(day));
   const local = date ? calendarDay(Number(date[3]), Number(date[2]), Number(date[1])) : null;
   if (!local) throw new SchemaError(PROVIDER, 'Cruz del Sur returned an invalid event date');
   if (clock === undefined) return local;

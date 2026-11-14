@@ -104,6 +104,8 @@ describe('Nim Express HTTP adapter', () => {
     // A later delivery round, and the earlier page's failed delivery.
     const round = parseNimExpress(withItems(fixture('in-transit'), (items) => `${item('12/10/2569 09:00:00', 'อยู่ระหว่างจัดส่ง ครั้งที่ 2')}${items}`), IN_TRANSIT);
     expect(round).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery' });
+    const unpadded = parseNimExpress(withItems(fixture('in-transit'), (items) => `${item('2/11/2569 9:00:00', 'อยู่ระหว่างจัดส่ง ครั้งที่ 2')}${items}`), IN_TRANSIT);
+    expect(unpadded.last_update).toBe('2026-11-02T09:00:00+07:00');
     const failed = parseNimExpress(withItems(fixture('in-transit'), (items) => `${item('12/10/2569 17:00:00', 'สินค้าจัดส่งไม่ได้', '9 DC สมมติ')}${items}`), IN_TRANSIT);
     expect(failed).toMatchObject({ status: 'exception', current_stage: 'failed_attempt' });
     expect(failed.events![0]).toMatchObject({ location: 'DC สมมติ' });
@@ -247,6 +249,7 @@ describe('Nim Express status vocabulary', () => {
     // The bill number, the pickup day and window and the delivery round do not change a wording.
     expect(nimExpressStage(`ผู้ส่งสร้างบิลเข้าระบบ Tracking no. ${IN_TRANSIT}`)).toEqual({ stage: 'registered', source: 'carrier_map' });
     expect(nimExpressStage('ยืนยันเข้ารับ วันที่ 12/10/2569 09:00 - 12:00')).toEqual({ stage: 'registered', source: 'carrier_map' });
+    expect(nimExpressStage('ยืนยันเข้ารับ วันที่ 2/1/2569 9:00 - 12:00')).toEqual({ stage: 'registered', source: 'carrier_map' });
     expect(nimExpressStage('อยู่ระหว่างจัดส่ง ครั้งที่ 3')).toEqual({ stage: 'out_for_delivery', source: 'carrier_map' });
     // A wording the map does not know falls to the shared rules, else stays without a stage.
     expect(nimExpressStage('Delivered')).toEqual({ stage: 'delivered', source: 'wording:language' });

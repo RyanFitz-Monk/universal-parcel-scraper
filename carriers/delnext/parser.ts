@@ -7,6 +7,7 @@ import {
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import type { CarrierId } from '../../generated/catalog.js';
 import { delnextStage } from './status.js';
@@ -52,7 +53,8 @@ export function isDelnextOutage(html: string): boolean {
 }
 
 /** The scan's wall clock: the page gives a day and a time to the minute, without a zone. */
-function wallClock(day: string, time: string): string {
+function wallClock(shownDay: string, shownTime: string): string {
+  const day = paddedDate(shownDay), time = paddedDate(shownTime);
   const date = DAY.exec(day);
   const clock = CLOCK.exec(time);
   // UTC only checks the calendar fields; the clock keeps no offset.
@@ -77,7 +79,7 @@ function estimate($: CheerioAPI, stage: Stage | undefined, newest: string | unde
   if (!stage || STOPPED.has(stage)) return null;
   const text = $('section.product-tracking-area .status-short-details').toArray()
     .map((node) => clean($(node).text(), 80)).find((value) => value.startsWith(ESTIMATE_LABEL));
-  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text?.slice(ESTIMATE_LABEL.length).trim() ?? '');
+  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(text?.slice(ESTIMATE_LABEL.length).trim() ?? ''));
   const day = date ? DateTime.fromObject({ year: Number(date[3]), month: Number(date[2]), day: Number(date[1]) }, { zone: 'UTC' }) : null;
   const iso = day?.isValid ? day.toISODate() : null;
   return iso && (!newest || iso >= newest.slice(0, 10)) ? iso : null;

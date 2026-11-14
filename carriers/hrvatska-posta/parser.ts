@@ -7,6 +7,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { isoTime, postalOfficeZone } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { hrvatskaPostaStage } from './status.js';
@@ -49,7 +50,7 @@ export function normalizeHrvatskaPostaNumber(raw: string): string {
 
 /** The scan's date and time ("30.06.2026 10:15:45") as a wall clock. They carry no offset. */
 function wallClock(stamp: string): string | null {
-  const match = STAMP.exec(stamp);
+  const match = STAMP.exec(paddedDate(stamp));
   if (!match) return null;
   // UTC only checks the calendar fields. No offset is assigned.
   const parsed = DateTime.fromFormat(`${match[1]} ${match[2]}`, 'dd.MM.yyyy HH:mm:ss', { zone: 'UTC' });

@@ -5,6 +5,7 @@ import { USPS_ROUTING_BARCODE, uspsPackageIdentifier } from '../../core/detectio
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode } from '../../core/time/index.js';
 import { clean, escapeRegExp } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -52,7 +53,7 @@ function list(row: Record<string, unknown>, key: string, max: number): unknown[]
  * so it stays a wall clock.
  */
 function scanClock(row: Record<string, unknown>): string {
-  const raw = text(row, 'dateTimeString', 32);
+  const raw = paddedDate(text(row, 'dateTimeString', 32));
   // Parsing in UTC checks the calendar only; the wall clock keeps no offset.
   const parsed = CLOCK.test(raw) ? DateTime.fromFormat(raw, 'LLL dd yyyy hh:mm a', { zone: 'UTC', locale: 'en-US' }) : null;
   if (!parsed?.isValid || parsed.toFormat('LLL dd yyyy hh:mm a', { locale: 'en-US' }) !== raw) {

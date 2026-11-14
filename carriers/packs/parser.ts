@@ -6,6 +6,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InputRequiredError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { packsStage } from './status.js';
@@ -69,7 +70,7 @@ function wallClock(year: string, month: string, day: string, hour: string, minut
 
 /** A "dd-MM-yyyy HH:mm" clock of the page, or null. */
 function pageClock(text: string): DateTime | null {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   return match ? wallClock(match[3]!, match[2]!, match[1]!, match[4]!, match[5]!) : null;
 }
 

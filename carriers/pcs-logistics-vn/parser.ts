@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -49,7 +50,7 @@ function placeCountry(place: string): string | null {
 
 /** The wall clock of `STRDETTIME`, in ISO form; anything else is a changed reply. */
 function wallClock(value: string): string {
-  const parts = CLOCK.exec(value);
+  const parts = CLOCK.exec(paddedDate(value));
   const wall = parts ? `${parts[3]}-${parts[2]}-${parts[1]}T${parts[4]}` : '';
   // Parsing in UTC checks the calendar digits only. Luxon rolls 24:00:00 over to the next day.
   const checked = DateTime.fromISO(wall, { zone: 'UTC' });

@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { stCourierStage } from './status.js';
@@ -79,7 +80,7 @@ interface Scan { event: CarrierEvent; at: string; index: number; key: string }
 function projectRow($: CheerioAPI, row: Element, index: number): Scan {
   const cells = $(row).children('div');
   if (cells.length !== 3) throw new SchemaError(PROVIDER, 'ST Courier returned an incomplete scan');
-  const [day, clock, ...rest] = lines(cells.first());
+  const [day, clock, ...rest] = lines(cells.first()).map((line) => paddedDate(line));
   if (!day || !clock || rest.length || !SCAN_DAY.test(day) || !SCAN_CLOCK.test(clock)) {
     throw new SchemaError(PROVIDER, 'ST Courier returned an invalid scan time');
   }
@@ -168,8 +169,8 @@ export function parseStCourier(html: string, raw: string): CarrierResult {
   const summed = summary ? stCourierStage(summary) : null;
   // The summary's word stands for a delivery or a return, which the history can lack.
   const final = summed?.stage === 'delivered' || summed?.stage === 'returned' ? summed : null;
-  const clock = final?.stage === 'delivered' ? fields.get('Delivery Date/Time') ?? '' : '';
-  const deliveredOn = clock && SUMMARY_CLOCK.test(clock) ? indianTime(clock, 'dd-MM-yyyy h:mm a') : null;
+  const clock = final?.stage === 'delivered' ? paddedDate(fields.get('Delivery Date/Time') ?? '') : '';
+  const deliveredOn = clock && SUMMARY_CLOCK.test(clock) ? indianTime(clock, 'dd-MM-yyyy hh:mm a') : null;
   if (clock && !deliveredOn) throw new SchemaError(PROVIDER, 'ST Courier returned an invalid delivery time');
 
   if (!events.length) {

@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -64,8 +65,8 @@ function scrubbed(value: string): string {
 
 /** A scan's `LastModifiedDate` and `LastModifiedTime`: the branch's wall clock, read in Malaysia's zone. */
 function scanTime(row: Record<string, unknown>): { time: string; at: number } {
-  const date = text(row, 'LastModifiedDate', 16);
-  const clock = text(row, 'LastModifiedTime', 16);
+  const date = paddedDate(text(row, 'LastModifiedDate', 16));
+  const clock = paddedDate(text(row, 'LastModifiedTime', 16));
   const zoned = firstOccurrence(DateTime.fromFormat(`${date} ${clock}`, 'dd/MM/yyyy HH:mm:ss', { zone: ZONE }));
   // Luxon refuses a day the month does not have.
   if (!DATE.test(date) || !CLOCK.test(clock) || !zoned.isValid) throw new SchemaError(PROVIDER, 'Line Clear returned an invalid scan time');

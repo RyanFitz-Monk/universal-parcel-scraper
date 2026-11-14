@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { jetlineStage } from './status.js';
@@ -166,7 +167,7 @@ export function jetlineHistoryFields(html: string, number: string): URLSearchPar
 
 /** A row's day, `14/08/2026`, as `YYYY-MM-DD`. */
 function dayOf(text: string): string {
-  const match = DAY.exec(text);
+  const match = DAY.exec(paddedDate(text));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   return day ?? invalid('Jetline returned an invalid day');
 }

@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/normalize.js';
 import { InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { fxdcPostStage } from './status.js';
@@ -34,7 +35,7 @@ export function parseFxdcPost(html: string, raw: string): CarrierResult {
   if (description !== clean(heading.text(), 100) || !description || /[<>@]|\d{6,}/.test(description)) throw new SchemaError(PROVIDER, 'FXDC Post returned contradictory current states');
   const received = steps.filter((_, el) => clean($(el).find('h4').text()) === 'Ontvangen in Miami' && ($(el).hasClass('done') || $(el).hasClass('now')));
   if (description !== 'Aangemeld' && !received.length) throw new NoHistoryError(PROVIDER, 'The portal did not show its own forwarding leg', { reason: 'unsupported_service' });
-  const date = /^bijgewerkt (\d{2})-(\d{2})-(\d{4})$/.exec(clean(updated.text(), 80));
+  const date = /^bijgewerkt (\d{2})-(\d{2})-(\d{4})$/.exec(paddedDate(clean(updated.text(), 80)));
   const day = date ? calendarDay(Number(date[3]), Number(date[2]), Number(date[1])) : null;
   if (!day) throw new SchemaError(PROVIDER, 'FXDC Post returned an invalid update day');
   const stage = fxdcPostStage(null, description), mass = Number(weight[1]!.replace(',', '.')) * (weight[2] === 'lb' ? 0.45359237 : 1);

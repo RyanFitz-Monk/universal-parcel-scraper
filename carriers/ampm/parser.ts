@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { ampmStage } from './status.js';
 
@@ -40,13 +41,14 @@ export function isBlockPage(html: string): boolean {
 
 /** A `dd-MM-yyyy HH:mm:ss` clock as a wall time; anything else is a changed page. */
 function wallClock(text: string): string | null {
-  const match = CLOCK.exec(text);
+  const value = paddedDate(text);
+  const match = CLOCK.exec(value);
   if (!match) return null;
   // UTC only checks the calendar fields; no offset is assigned.
   const parsed = DateTime.fromObject({ year: Number(match[3]), month: Number(match[2]), day: Number(match[1]),
     hour: Number(match[4]), minute: Number(match[5]), second: Number(match[6]) }, { zone: 'UTC' });
   // Luxon rolls 24:00 over to the next day; only a clock that reads back unchanged is kept.
-  if (!parsed.isValid || parsed.year < 2000 || parsed.toFormat('dd-MM-yyyy HH:mm:ss') !== text) return null;
+  if (!parsed.isValid || parsed.year < 2000 || parsed.toFormat('dd-MM-yyyy HH:mm:ss') !== value) return null;
   return parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }
 

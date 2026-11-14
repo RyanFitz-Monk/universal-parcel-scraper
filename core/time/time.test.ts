@@ -19,6 +19,7 @@ describe('time policies', () => {
     expect(parsed?.iso).toBe('2026-01-15T09:30:00+01:00');
     expect(zonedTime('15/01/2026 09:30:00', 'dd/MM/yyyy HH:mm:ss', 'Europe/Madrid', { locale: 'es-ES' })?.iso).toBe('2026-01-15T09:30:00+01:00');
     expect(zonedTime('not a date', 'yyyy-MM-dd', 'UTC')).toBeNull();
+    expect(zonedTime('5.1.2026 9:30', 'dd.MM.yyyy HH:mm', 'Europe/Prague')?.iso).toBe('2026-01-05T09:30:00+01:00');
   });
 
   it('reads ISO values with or without an offset', () => {

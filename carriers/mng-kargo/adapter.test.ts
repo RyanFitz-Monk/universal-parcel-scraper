@@ -137,6 +137,8 @@ describe('DHL eCommerce Türkiye shipment page', () => {
     expect(() => parseMngKargo(unlabelled, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     const undated = edited('delivered', $ => { $('.rightBox .dateBox').first().text('Bugün'); });
     expect(() => parseMngKargo(undated, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
+    const unpadded = edited('delivered', $ => { $('.rightBox .dateBox').first().text('8.1.2026'); });
+    expect(parseMngKargo(unpadded, NUMBER).events![0]!.local_time).toBe('2026-01-08');
     const duplicated = edited('delivered', $ => { $('.rightBox > ul > li').first().after($('.rightBox > ul > li').first().clone()); });
     expect(parseMngKargo(duplicated, NUMBER).events).toHaveLength(9);
   });

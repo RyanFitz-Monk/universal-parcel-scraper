@@ -111,6 +111,7 @@ describe('KEX Express HTTP adapter', () => {
     expect(delivered).not.toHaveProperty('delivered_at');
     expect(parseKex(changed('in-transit', (ref) => { ref.shipment.edt = ''; }), IN_TRANSIT)).toMatchObject({ expected_delivery: null });
     expect(parseKex(changed('in-transit', (ref) => { ref.shipment.edt = '31 Feb 2026'; }), IN_TRANSIT)).toMatchObject({ expected_delivery: null });
+    expect(parseKex(changed('in-transit', (ref) => { ref.shipment.edt = '2 Oct 2026'; }), IN_TRANSIT)).toMatchObject({ expected_delivery: '2026-10-02' });
   });
 
   it('keeps an unknown code without a stage and takes phone numbers out of the wording', () => {

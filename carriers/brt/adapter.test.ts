@@ -298,6 +298,7 @@ describe('BRT direct tracking', () => {
     expect(at('25.10.2026', '01.59').last_update).toBe('2026-10-25T01:59:00+02:00');
     expect(at('25.10.2026', '03.00').last_update).toBe('2026-10-25T03:00:00+01:00');
     expect(at('29.03.2026', '03.00').last_update).toBe('2026-03-29T03:00:00+02:00');
+    expect(at('5.11.2026', '9.30').last_update).toBe('2026-11-05T09:30:00+01:00');
   });
 
   it('reports only the scoped matching TIS0868 parcel-label negative', () => {

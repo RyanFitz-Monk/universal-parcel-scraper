@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { zelerisQuiet, zelerisRailStage, zelerisStage } from './status.js';
 
@@ -18,7 +19,7 @@ const ORDER = /^Pedido ([0-9A-Z]{1,40})$/;
 const DAY = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 const CLOCK = /^(\d{2}):(\d{2})$/;
 // The delivered step names its date and time after its label.
-const RAIL_STAMP = /\s+\d{2}\/\d{2}\/\d{4}(?:\s+\d{2}:\d{2})?$/;
+const RAIL_STAMP = /\s+\d{1,2}\/\d{1,2}\/\d{4}(?:\s+\d{1,2}:\d{2})?$/;
 // A firewall or bot check's page, which can come back with HTTP 200.
 const BLOCKED = /<title>\s*(?:Web Page Blocked|Request Rejected|Access Denied|Attention Required|Just a moment)|_cf_chl_opt|cf-turnstile|Attack ID:/i;
 const MAX_ROWS = 300;
@@ -52,8 +53,8 @@ function shipmentKey(number: string): string {
 
 /** A row's date ("16/07/2026") and clock ("19:35") as one wall time. The page gives no offset. */
 function wallClock(day: string, time: string): string | null {
-  const date = DAY.exec(day);
-  const clock = CLOCK.exec(time);
+  const date = DAY.exec(paddedDate(day));
+  const clock = CLOCK.exec(paddedDate(time));
   if (!date || !clock) return null;
   // UTC only checks the calendar fields. No offset is assigned.
   const parsed = DateTime.fromObject({ year: Number(date[3]), month: Number(date[2]), day: Number(date[1]),

@@ -86,6 +86,7 @@ describe('Tgroup HTTP adapter', () => {
     expect(result.events![0]).toMatchObject({ local_time: '2027-03-28T02:30:00' });
     expect(result.events![0]).not.toHaveProperty('time');
     expect(parseTGroup(newestAt('29/03/2027 02:30'), IN_TRANSIT)).toMatchObject({ last_update: '2027-03-29T02:30:00+02:00' });
+    expect(parseTGroup(newestAt('5/11/2026 9:10'), IN_TRANSIT)).toMatchObject({ last_update: '2026-11-05T09:10:00+01:00' });
   });
 
   it('keeps no address, sender, delivery note or branch number, and no weight the page leaves at zero', () => {

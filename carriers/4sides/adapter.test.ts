@@ -82,6 +82,8 @@ describe('4Sides HTTP adapter', () => {
     const late = parseFoursides(changed('in-transit', (body) => { body.deliveredDate = '16-03-2026'; }), IN_TRANSIT);
     expect(late).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Приём (В СЦ)', last_update_local: '2026-03-16' });
+    expect(parseFoursides(changed('in-transit', (body) => { body.deliveredDate = '16-3-2026'; }), IN_TRANSIT))
+      .toMatchObject({ status: 'delivered', last_update_local: '2026-03-16' });
     const returned = parseFoursides(changed('delivered', (body) => {
       body.events.push({ date: '06-03-2026', status: 'Возврат (В доставке)' });
     }), DELIVERED);

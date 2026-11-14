@@ -78,6 +78,7 @@ describe('Serpost tracking adapter', () => {
       last_status_text: 'ENVÍO EN PROCESAMIENTO DE DISTRIBUCIÓN EN EL DOMICILIO DE DESTINO' });
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('destination_country');
+    expect(parseSerpost(edited('in-transit', reply => { reply[0]!.fecha = '10/5/2026 11:32:27'; }), IN_TRANSIT)).toMatchObject({ last_update: '2026-10-05T11:32:27-05:00' });
     expect(result.events!.at(-1)).toEqual({ time: '2026-10-02T16:48:00-05:00', location: 'OFICINA POSTAL EJEMPLO',
       description: 'ENVÍO ADMITIDO EN OFICINA POSTAL EJEMPLO', provider_code: '012', stage: 'accepted', stage_source: 'carrier_map' });
   });
@@ -165,7 +166,6 @@ describe('Serpost tracking adapter', () => {
       edited('in-transit', reply => { reply[0]!.observacion = { url: 'map' }; }),
       edited('in-transit', reply => { delete reply[0]!.fecha; }),
       edited('in-transit', reply => { reply[0]!.fecha = '2026-10-05T11:32:27'; }),
-      edited('in-transit', reply => { reply[0]!.fecha = '10/5/2026 11:32:27'; }),
       edited('in-transit', reply => { reply[0]!.fecha = '10/05/2026 11:32'; }),
       edited('in-transit', reply => { reply[0]!.fecha = '13/05/2026 11:32:27'; }),
       edited('in-transit', reply => { reply[0]!.fecha = '02/30/2026 11:32:27'; }),

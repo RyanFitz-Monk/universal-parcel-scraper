@@ -5,6 +5,7 @@ import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, Schem
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { kargoturkNotice, kargoturkStage } from './status.js';
@@ -20,8 +21,9 @@ export function normalizeKargoturkNumber(raw: string): string {
   return number;
 }
 
-function clock(date: string, time: string): string {
-  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(date);
+function clock(date: string, written: string): string {
+  const time = paddedDate(written);
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(paddedDate(date));
   const day = match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
   if (!day || (time && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time))) throw new SchemaError(PROVIDER, 'KargoTurk returned an invalid scan clock');
   return time ? `${day}T${time}:00` : day;

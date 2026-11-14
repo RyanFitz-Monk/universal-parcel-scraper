@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedWording } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { mrlStage } from './status.js';
@@ -46,8 +47,8 @@ function invalid(message: string): never {
 
 /** A row's wall clock, checked against the calendar. */
 function clockOf(day: string, hour: string): string {
-  const date = DAY.exec(day);
-  const time = HOUR.exec(hour);
+  const date = DAY.exec(paddedDate(day));
+  const time = HOUR.exec(paddedDate(hour));
   const calendar = date ? calendarDay(Number(date[3]), Number(date[2]), Number(date[1])) : null;
   if (!calendar || !time || Number(time[1]) > 23 || Number(time[2]) > 59) invalid('MRL Global returned an invalid scan time');
   return `${calendar}T${time[1]}:${time[2]}:00`;
@@ -115,7 +116,7 @@ function latestOf($: CheerioAPI): { description: string; location: string; clock
   if (!latest.length) return null;
   if (latest.length > 1) invalid('MRL Global returned several latest updates');
   const label = labelOf(latest.find('.data-state').text());
-  const stamp = STAMP.exec(clean(latest.find('.data-date').text(), 40));
+  const stamp = STAMP.exec(paddedDate(clean(latest.find('.data-date').text(), 40)));
   if (!label.description || !stamp) invalid('MRL Global returned an incomplete latest update');
   const [day, hour] = [stamp[1]!, stamp[2]!];
   return { ...label, clock: clockOf(day, hour) };

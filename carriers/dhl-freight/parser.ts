@@ -5,6 +5,7 @@ import { hasGs1CheckDigit } from '../../core/detection/numericChecksums.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { dhlFreightStage } from './status.js';
@@ -84,7 +85,7 @@ function identifiers($: CheerioAPI, fields: Map<string, string>): Set<string> {
  * The page names no zone, so either stays local.
  */
 function clockOf(text: string): string {
-  const match = DAY.exec(text);
+  const match = DAY.exec(paddedDate(text));
   const [, day, month, year, hour, minute] = match ?? [];
   const parsed = match ? DateTime.fromObject({ year: Number(year), month: Number(month), day: Number(day),
     hour: Number(hour ?? 0), minute: Number(minute ?? 0) }, { zone: 'UTC' }) : null;

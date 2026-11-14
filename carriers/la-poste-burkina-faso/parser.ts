@@ -5,6 +5,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { laPosteBurkinaFasoStage } from './status.js';
@@ -59,7 +60,7 @@ function unexpected(html: string, message: string): never {
 
 /** A scan's wall clock, calendar-checked. */
 function wallClock(text: string): string {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !day || Number(match[4]) > 23 || Number(match[5]) > 59 || Number(match[6]) > 59) {
     throw new SchemaError(PROVIDER, 'La Poste Burkina Faso returned an invalid scan time');

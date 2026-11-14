@@ -4,6 +4,7 @@ import { InvalidInputError, NoHistoryError, SchemaError } from '../../core/error
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { isRecord } from '../../core/types.js';
 import { starexStage } from './status.js';
 
@@ -28,7 +29,7 @@ export function normalizeStarexNumber(raw: string): string {
 
 /** A scan's `DD-MM-YYYY HH:mm` clock, without a zone. */
 function wallClock(value: unknown): string {
-  const match = typeof value === 'string' ? CLOCK.exec(value) : null;
+  const match = typeof value === 'string' ? CLOCK.exec(paddedDate(value)) : null;
   if (!match) throw new SchemaError(PROVIDER, 'Starex returned an invalid scan time');
   const [, day, month, year, hour, minute] = match;
   const local = `${year}-${month}-${day}T${hour}:${minute}:00`;

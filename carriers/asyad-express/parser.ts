@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { fromLooseFormat } from '../../core/time/fields.js';
 import { firstOccurrence, postalOfficeZone } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
@@ -27,8 +28,8 @@ function text(value: unknown, max = 500): string {
 function clock(value: unknown, postal: boolean, zone: string | null): Pick<CarrierEvent, 'time' | 'local_time' | 'time_zone' | 'time_zone_basis'> {
   const raw = text(value, 64);
   const format = postal ? 'M/d/yyyy h:mm:ss a' : 'MMM-dd-yyyy hh:mm a';
-  const shape = postal ? /^\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M$/ : /^[A-Z][a-z]{2}-\d{2}-\d{4} \d{2}:\d{2} [AP]M$/;
-  const wall = DateTime.fromFormat(raw, format, { zone: 'UTC', locale: 'en' });
+  const shape = postal ? /^\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M$/ : /^[A-Z][a-z]{2}-\d{1,2}-\d{4} \d{1,2}:\d{2} [AP]M$/;
+  const wall = fromLooseFormat(raw, format, { zone: 'UTC', locale: 'en' });
   if (!shape.test(raw) || !wall.isValid) throw new SchemaError(PROVIDER, 'Asyad Express returned an invalid scan clock');
   const local_time = wall.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   if (!zone) return { local_time };

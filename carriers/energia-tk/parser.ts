@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import { eventPoint, type CarrierEvent, type CarrierResult, type EventPoint } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { energiaStage } from './status.js';
@@ -138,7 +139,7 @@ function progress(stage: Stage | undefined): number {
 function day(row: Record<string, unknown>, key: string): string | null {
   const value = text(row, key, 16);
   if (!value) return null;
-  const match = DAY.exec(value);
+  const match = DAY.exec(paddedDate(value));
   const iso = match ? `${match[3]}-${match[2]}-${match[1]}` : '';
   const parsed = new Date(`${iso}T00:00:00Z`);
   if (!match || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== iso) {

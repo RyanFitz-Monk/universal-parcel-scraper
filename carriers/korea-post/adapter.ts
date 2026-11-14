@@ -5,6 +5,7 @@ import type { AdapterFactory, TrackingContext } from '../../core/adapter/index.j
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { koreaPostStatus } from './status.js';
@@ -26,7 +27,7 @@ export function normalizeKoreaPostNumber(raw: string): string {
 }
 
 function eventTime(raw: string): string {
-  const parsed = DateTime.fromFormat(raw, 'HH:mm dd-LLL-yyyy', { zone: 'UTC', locale: 'en-US' });
+  const parsed = DateTime.fromFormat(paddedDate(raw), 'HH:mm dd-LLL-yyyy', { zone: 'UTC', locale: 'en-US' });
   if (!parsed.isValid) throw new SchemaError('Korea Post', 'Korea Post returned an invalid scan time');
   // The portal explicitly uses destination-local time after handover. Preserve
   // its sequence and wall clocks; a Korea-wide timezone would corrupt these.
@@ -97,7 +98,7 @@ function parseDomestic(html: string, number: string): CarrierResult {
   for (const row of rows.toArray().reverse()) {
     const cells = $(row).children('td');
     if (cells.length !== 4 || cells.filter('[colspan], [rowspan]').length) throw new SchemaError('Korea Post');
-    const clock = `${clean(cells.eq(0).text(), 32)} ${clean(cells.eq(1).text(), 32)}`;
+    const clock = paddedDate(`${clean(cells.eq(0).text(), 32)} ${clean(cells.eq(1).text(), 32)}`);
     // Every domestic scan happens at a Korean office, and Korea keeps one
     // offset all year.
     const local = firstOccurrence(DateTime.fromFormat(clock, 'yyyy.MM.dd HH:mm', { zone: 'Asia/Seoul' }));

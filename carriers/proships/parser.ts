@@ -5,6 +5,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, 
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { proshipsStage } from './status.js';
@@ -64,7 +65,8 @@ export function proshipsWording(raw: string): string {
 }
 
 /** A scan's date and minute as one wall time. The page gives no zone. */
-function wallClock(text: string): string {
+function wallClock(raw: string): string {
+  const text = paddedDate(raw);
   const match = CLOCK.exec(text);
   // UTC only checks the calendar fields; no offset is assigned.
   const parsed = match ? DateTime.fromObject({ year: Number(match[3]), month: Number(match[2]), day: Number(match[1]),

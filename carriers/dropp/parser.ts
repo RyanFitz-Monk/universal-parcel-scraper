@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -26,7 +27,7 @@ export function normalizeDroppNumber(raw: string): string {
 function clock(payload: Record<string, unknown>, key: string): string | null {
   const value = payload[key];
   if (value === null || value === undefined || value === '') return null;
-  const match = typeof value === 'string' ? CLOCK.exec(value.trim()) : null;
+  const match = typeof value === 'string' ? CLOCK.exec(paddedDate(value.trim())) : null;
   const [, day, month, year, hour, minute] = match ?? [];
   const date = match ? calendarDay(Number(year), Number(month), Number(day)) : null;
   if (!date || Number(hour) > 23 || Number(minute) > 59) throw new SchemaError(PROVIDER, `Dropp returned an invalid ${key} time`);

@@ -181,6 +181,8 @@ describe('CSE HTTP adapter', () => {
     const events = parseCse(english, DELIVERED).events!;
     expect(events[1]).toMatchObject({ description: 'Синтетическое событие', stage: 'out_for_delivery', stage_source: expect.stringMatching(/^wording/) });
     expect(events[4]).toEqual({ local_time: '2026-03-03T09:05:00', location: 'Тестовск г', description: 'Другое синтетическое событие' });
+    expect(parseCse(changed('delivered', (item) => { item.History.waybill_info[4]!.EventDate = '3.3.2026 9:05'; }), DELIVERED).events![4]!.local_time)
+      .toBe('2026-03-03T09:05:00');
     // A notice keeps no stage, whatever its English twin says.
     expect(cseStage('Информация по отправлению', 'Delivered')).toBeNull();
     const unknown = changed('delivered', (item) => { Object.assign(item, { State: 'Синтетический статус', StateEn: '' }); });

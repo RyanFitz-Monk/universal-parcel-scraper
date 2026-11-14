@@ -4,6 +4,7 @@ import { detectCarrierMatch, normalizeTrackingNumber } from '../../core/detectio
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -82,7 +83,7 @@ export function sfcWording(statu: string): { description: string; handover?: Han
 
 /** A scan's wall clock. The reply names no zone, and the partner's scans are on the destination's clock. */
 function scanClock(row: Record<string, unknown>): string {
-  const stamp = text(row, 'date', 32);
+  const stamp = paddedDate(text(row, 'date', 32));
   const iso = ISO_CLOCK.exec(stamp);
   const us = iso ? null : US_CLOCK.exec(stamp);
   const local = iso ? `${iso[1]}-${iso[2]}-${iso[3]}T${iso[4]}:${iso[5]}:${iso[6]}`

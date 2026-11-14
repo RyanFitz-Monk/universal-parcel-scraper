@@ -4,6 +4,7 @@ import { isTopdeliveryReference } from '../../core/detection/topdelivery.js';
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { topdeliveryStage } from './status.js';
@@ -20,11 +21,11 @@ export function normalizeTopdeliveryNumber(raw: string): string {
 }
 
 function clock(date: string, time: string): string {
-  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(date);
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(paddedDate(date));
   const day = match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
   if (!day) throw new SchemaError(PROVIDER, 'TopDelivery returned an invalid scan day');
   if (!time) return day;
-  const parts = /^\(((?:[01]\d|2[0-3]):[0-5]\d)\)$/.exec(time);
+  const parts = /^\(((?:[01]\d|2[0-3]):[0-5]\d)\)$/.exec(paddedDate(time));
   if (!parts) throw new SchemaError(PROVIDER, 'TopDelivery returned an invalid scan clock');
   return `${day}T${parts[1]}:00`;
 }

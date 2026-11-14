@@ -92,6 +92,8 @@ describe('TCI Express HTTP adapter', () => {
     const onTheRoad = changed('in-transit', /<td> 22-SEP-2026 <\/td>(\s*)<td>23:55 <\/td>/, '<td> </td>$1<td> </td>');
     expect(parseTciExpress(onTheRoad, IN_TRANSIT)).toMatchObject({ last_status_text: 'Despatched to XSSC (SAMPLE SORTING CENTER)',
       last_update: '2026-09-20T22:40:00Z', last_update_local: '2026-09-21T04:10:00' });
+    expect(parseTciExpress(changed('in-transit', /<td> 22-SEP-2026 <\/td>(\s*)<td>23:55 <\/td>/, '<td> 2-OCT-2026 </td>$1<td>7:55 </td>'), IN_TRANSIT))
+      .toMatchObject({ last_update: '2026-10-02T02:25:00Z', last_update_local: '2026-10-02T07:55:00' });
     // A booking without an estimate or a weight gives neither.
     const bare = parseTciExpress(edited(changed('in-transit', '<td> 26-SEP-2026 </td>', '<td> </td>'), '<td> 25 </td>', '<td> 0 </td>'), IN_TRANSIT);
     expect(bare.expected_delivery).toBeNull();
@@ -139,7 +141,6 @@ describe('TCI Express HTTP adapter', () => {
       changed('in-transit', '<td> 20-SEP-2026 </td>', '<td> 2026-09-20 </td>'),
       changed('in-transit', '<td> 20-SEP-2026 </td>', '<td> 31-SEP-2026 </td>'),
       changed('in-transit', '<td> 19:45 </td>', '<td> 24:00 </td>'),
-      changed('in-transit', '<td> 19:45 </td>', '<td> 7:45 </td>'),
       changed('in-transit', '<td> XSAB (SAMPLE BKG) </td>', '<td> SAMPLE BKG </td>'),
       changed('in-transit', '<td> 1 </td>', ''),
       // An arrival time without its day.

@@ -4,6 +4,7 @@ import { isSkladusaReference } from '../../core/detection/skladusa.js';
 import { ChallengeError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { projectSkladusaStatus, type SkladusaStatus } from './status.js';
 
@@ -38,7 +39,7 @@ export function assertSkladusaGuestHtml(html: string): void {
 }
 
 function clock(value: string): string {
-  const match = /^(\d{2})\.(\d{2})\.(\d{4}) ([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+  const match = /^(\d{2})\.(\d{2})\.(\d{4}) ([01]\d|2[0-3]):([0-5]\d)$/.exec(paddedDate(value));
   const year = Number(match?.[3]);
   const day = match && year >= 2000 && year <= 2100 ? calendarDay(year, Number(match[2]), Number(match[1])) : null;
   if (!match || !day) throw new SchemaError(PROVIDER, 'SkladUSA returned an invalid scan clock');

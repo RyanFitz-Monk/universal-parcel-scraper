@@ -1,8 +1,8 @@
 import { load } from 'cheerio';
-import { DateTime } from 'luxon';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { classifyWording, languageStageStatus, type ClassifiedStatus } from '../../core/status/index.js';
+import { fromLooseFormat } from '../../core/time/fields.js';
 import { countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { classifyAramexStatus, isAramexNote } from './status.js';
@@ -62,7 +62,7 @@ export function parseAramex(html: string, number: string): CarrierResult {
     // Parsing in UTC validates the calendar digits only. The resulting wall
     // time carries no offset because this cross-border portal does not give one.
     const clockText = [day, clock].filter(Boolean).join(' ');
-    const parsed = DateTime.fromFormat(clockText, 'dd MMM yy HH:mm', { locale: 'en', zone: 'UTC' });
+    const parsed = fromLooseFormat(clockText, 'dd MMM yy HH:mm', { locale: 'en', zone: 'UTC' });
     const local = parsed.isValid ? parsed.toISO({ includeOffset: false, suppressMilliseconds: true }) : null;
     const location = [clean($(row).find('.addr .city').text(), 120), clean($(row).find('.addr .country').text(), 80)].filter(Boolean).join(', ');
     const key = `${local ?? clockText}\u0000${description}\u0000${location}`;

@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { vrlMappedStage, vrlStage } from './status.js';
 
@@ -35,7 +36,8 @@ export function normalizeVrlNumber(raw: string): string {
 }
 
 /** A day as the page writes it, "06-Mar-2026", as an ISO calendar day. */
-function calendarDay(text: string): string {
+function calendarDay(raw: string): string {
+  const text = paddedDate(raw);
   // Parsing in UTC checks the calendar alone; a day that reads back changed is not one.
   const parsed = DateTime.fromFormat(text, DAY_FORMAT, { zone: 'UTC', locale: 'en-US' });
   if (!DAY.test(text) || !parsed.isValid || parsed.toFormat(DAY_FORMAT, { locale: 'en-US' }) !== text) {
@@ -74,7 +76,7 @@ function scansOf($: CheerioAPI, timeline: Cheerio<Element>): Row[] {
     const written = clean(clock.text(), 40);
     // The page can list a row with neither a time nor a day, as ", ".
     if (/^,?$/.test(written)) return;
-    const match = SCAN_CLOCK.exec(written);
+    const match = SCAN_CLOCK.exec(paddedDate(written));
     if (!match) throw new SchemaError(PROVIDER, 'VRL returned an invalid scan time');
     const description = clean(content.children('label').first().text(), 120);
     const location = clean(content.find('div.step-labell div.city').text(), 120);

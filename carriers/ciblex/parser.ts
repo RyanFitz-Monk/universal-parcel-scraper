@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { clean } from '../../core/transport/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, zonedTime } from '../../core/time/index.js';
 import { classifyCiblexStatus, comparableText, isCiblexNotice } from './status.js';
 
@@ -18,7 +19,8 @@ export function ciblexTrackingUrl(raw: string): string {
   return url.toString();
 }
 
-function scanTime(date: string, clock: string): { time?: string; local_time?: string; provider_time_text?: string } {
+function scanTime(rawDate: string, rawClock: string): { time?: string; local_time?: string; provider_time_text?: string } {
+  const [date, clock] = [paddedDate(rawDate), paddedDate(rawClock)];
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date);
   const day = match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
   // A scan dated by its day alone keeps that day.
@@ -30,7 +32,7 @@ function scanTime(date: string, clock: string): { time?: string; local_time?: st
     if (parsed?.iso.startsWith(local) && unique) return { time: parsed.iso };
     return { local_time: local };
   }
-  const text = clean(`${date} ${clock}`, 64);
+  const text = clean(`${rawDate} ${rawClock}`, 64);
   return text ? { provider_time_text: text } : {};
 }
 

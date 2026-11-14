@@ -2,6 +2,7 @@ import { DateTime, IANAZone } from 'luxon';
 import { isValidS10TrackingNumber } from '../../core/detection/s10.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
@@ -55,7 +56,7 @@ const ABROAD = /^(?:PO\/\d{2}|PAR\/18)$/;
 function expectedDay(payload: JsonObject, stage: string | undefined): string | null {
   if (payload.situacao !== 'T' || payload.atrasado === true) return null;
   if (stage && ['delivered', 'returned', 'ready_for_pickup'].includes(stage)) return null;
-  const day = DateTime.fromFormat(clean(payload.dtPrevista, 16), 'dd/MM/yyyy', { zone: 'UTC' });
+  const day = DateTime.fromFormat(paddedDate(clean(payload.dtPrevista, 16)), 'dd/MM/yyyy', { zone: 'UTC' });
   return day.isValid ? day.toISODate() : null;
 }
 

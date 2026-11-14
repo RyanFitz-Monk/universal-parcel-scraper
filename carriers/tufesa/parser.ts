@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { tufesaStage } from './status.js';
@@ -59,8 +60,9 @@ const RECEIVER = /\s*[,;:.\-–]?\s*\brecibid[oa]\s+por\b[\s\S]*$/i;
  * clock stays local.
  */
 function wallClock(date: string, time: string): string {
-  const day = DATE.exec(date);
-  const local = day && CLOCK.test(time) ? `${day[3]}-${day[2]}-${day[1]}T${time}:00` : '';
+  const day = DATE.exec(paddedDate(date));
+  const clock = paddedDate(time);
+  const local = day && CLOCK.test(clock) ? `${day[3]}-${day[2]}-${day[1]}T${clock}:00` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   if (!local || DateTime.fromISO(local, { zone: 'UTC' }).toFormat("yyyy-MM-dd'T'HH:mm:ss") !== local) {
     throw new SchemaError(PROVIDER, 'TufesaPack returned an invalid scan time');

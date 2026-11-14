@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -80,7 +81,7 @@ export interface EnviaShipment {
 }
 
 function estimate(value: unknown): string | null {
-  const match = ETA.exec(clean(value, 16));
+  const match = ETA.exec(paddedDate(clean(value, 16)));
   const day = match ? DateTime.fromObject({ year: Number(match[3]), month: Number(match[2]), day: Number(match[1]) }, { zone: 'UTC' }) : null;
   // The estimate is a side note: one in another form is left out.
   return day?.isValid ? day.toISODate() : null;

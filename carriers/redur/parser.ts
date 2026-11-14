@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { redurStage } from './status.js';
@@ -35,7 +36,7 @@ export function isRedurChallenge(html: string): boolean {
 
 /** A scan's wall clock, to the minute and without a zone. Midnight marks a scan dated to the day alone. */
 function scanClock(text: string): string {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !day) throw new SchemaError(PROVIDER, 'Redur returned an invalid scan time');
   return match[4] === '00:00' ? day : `${day}T${match[4]}:00`;

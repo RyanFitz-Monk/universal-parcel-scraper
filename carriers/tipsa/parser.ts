@@ -1,6 +1,7 @@
 import { load } from 'cheerio';
 import { ChallengeError, IndeterminateError, InvalidInputError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { AGENCY_READ, comparable, tipsaStatus } from './status.js';
@@ -50,7 +51,7 @@ export function tipsaDetailUrl(location: string): string {
   const keys = [...url.searchParams.keys()];
   if (url.origin !== DETAIL_ORIGIN || url.pathname.toLowerCase() !== DETAIL_PATH || url.username || url.password || url.hash
     || keys.length !== 2 || !keys.includes('servicio') || !keys.includes('fecha')
-    || !SERVICE.test(url.searchParams.get('servicio')!) || !/^\d{2}\/\d{2}\/\d{2}$/.test(url.searchParams.get('fecha')!)) {
+    || !SERVICE.test(url.searchParams.get('servicio')!) || !/^\d{2}\/\d{2}\/\d{2}$/.test(paddedDate(url.searchParams.get('fecha')!))) {
     throw new SchemaError(PROVIDER, 'TIPSA shipment page address changed');
   }
   return url.toString();

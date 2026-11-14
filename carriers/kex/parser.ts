@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import { eventPoint, type CarrierEvent, type CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -95,7 +96,7 @@ function railStage(icon: unknown): Stage | undefined {
 
 /** The due date the page shows, as "02 Oct 2026"; a calendar day. */
 function dueDate(shipment: Record<string, unknown>): string | null {
-  const value = text(shipment, 'edt', 32);
+  const value = paddedDate(text(shipment, 'edt', 32));
   if (!DUE.test(value)) return null;
   const parsed = DateTime.fromFormat(value, 'dd MMM yyyy', { zone: 'UTC', locale: 'en-US' });
   return parsed.isValid ? parsed.toISODate() : null;

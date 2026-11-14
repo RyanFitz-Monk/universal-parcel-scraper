@@ -6,6 +6,7 @@ import { accepted, recognizeFromLookup, type AdapterFactory, type TrackingContex
 import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, InvalidInputError, NotFoundError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode, countryTimeZone, firstOccurrence } from '../../core/time/index.js';
 import { clean, decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { japanPostStatus } from './status.js';
@@ -61,7 +62,8 @@ export function normalizeJapanPostNumber(raw: string): string {
   return number;
 }
 
-function wallTime(raw: string): string {
+function wallTime(written: string): string {
+  const raw = paddedDate(written);
   const format = /^\d{2}\/\d{2}\/\d{4}$/.test(raw) ? 'MM/dd/yyyy' : 'MM/dd/yyyy HH:mm';
   // The table explicitly labels overseas scans as local time. Validate the
   // calendar in UTC without assigning that zone to an international event.
@@ -195,7 +197,7 @@ export function parse(html: string, trackingNumber: string): CarrierResult {
  * chosen, as long as no scan is dated after that day. It is a plan, not a scan.
  */
 function designatedDelivery(fields: ReadonlyMap<string, string>, latestLocal: string): string | null {
-  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(fields.get('Designated date for delivery') ?? '');
+  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(fields.get('Designated date for delivery') ?? ''));
   const day = date ? calendarDay(Number(date[3]), Number(date[1]), Number(date[2])) : null;
   if (!day || latestLocal.slice(0, 10) > day) return null;
   const slot = /^From (\d{1,2}):([0-5]\d) to (\d{1,2}):([0-5]\d)$/.exec(fields.get('Designated time slot') ?? '');

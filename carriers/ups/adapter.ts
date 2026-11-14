@@ -11,6 +11,7 @@ import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/resu
 import { runSteps, singleFlight, takeTurn } from '../../core/runner/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode, countryTimeZone, firstOccurrence } from '../../core/time/index.js';
 import { otherRegionZones, regionZone } from '../../places/zones.js';
 import { clean, cleanScalar, decodeText, fetchBounded, parseJsonBytes, TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from '../../core/transport/index.js';
@@ -455,7 +456,7 @@ function scanClock(activity: JsonObject, local: string | null, day: string | nul
 function activityClock(activity: JsonObject, place: string): ScanClock {
   const localDate = cleanScalar(activity.date);
   const localTime = cleanScalar(activity.time);
-  const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(localDate);
+  const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(localDate));
   const timeMatch = /^(\d{1,2}):([0-5]\d)\s*([AP])\.?M\.?$/i.exec(localTime);
   const hour = Number(timeMatch?.[1]);
   const local = dateMatch && timeMatch && hour >= 1 && hour <= 12

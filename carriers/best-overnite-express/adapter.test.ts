@@ -101,6 +101,8 @@ describe('Best Overnite Express HTTP adapter', () => {
     // The hour the clocks repeat in autumn reads as its first occurrence.
     expect(clock((body) => { between('CA', 'CA')(body); body.collHistories[0] = row('PICK UP MADE', 'Nov 01 2026', '01:30'); }))
       .toMatchObject({ time: '2026-11-01T01:30:00-07:00' });
+    expect(clock((body) => { between('CA', 'CA')(body); body.collHistories[0] = row('PICK UP MADE', 'Nov 2 2026', '9:30'); }))
+      .toMatchObject({ time: '2026-11-02T09:30:00-08:00' });
     // A day without a time stays a day, in any zone.
     expect(clock((body) => { between('CA', 'CA')(body); body.collHistories[0]!.time = ''; })).toEqual(expect.objectContaining({ local_time: '2026-07-13' }));
   });

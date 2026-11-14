@@ -363,6 +363,8 @@ describe('DPD Germany app projection', () => {
       ['Pickup ordered for: 05.01.2026', 'registered'],
     ]);
     expect(result.events?.every(event => event.stage_source === 'carrier_map')).toBe(true);
+    const unpadded = await track('DELIVERED', [['5.1.2026', '0:05', 'Pickup ordered for: 5.1.2026', 'Absenderstadt (DE)']]);
+    expect(unpadded.events?.at(-1)).toMatchObject({ time: '2026-01-05T00:05:00+01:00', description: 'Pickup ordered for: 5.1.2026', stage: 'registered' });
   });
 
   it('lets a newest scan that is no delivery set the status beside a delivered rail', async () => {

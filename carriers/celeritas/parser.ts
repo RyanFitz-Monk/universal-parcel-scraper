@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { celeritasHeadingStage, celeritasStage } from './status.js';
 
@@ -33,7 +34,7 @@ export function normalizeCeleritasNumber(raw: string): string {
 
 /** A row's date and clock as one wall time. The page gives no offset. */
 function wallClock(text: string): string | null {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   if (!match) return null;
   // UTC only checks the calendar fields. No offset is assigned.
   const parsed = DateTime.fromObject({ year: Number(match[3]), month: Number(match[2]), day: Number(match[1]),

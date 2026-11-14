@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { twsStage } from './status.js';
@@ -51,8 +52,8 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
  * wall clock with no zone in the reply, so it stays local.
  */
 function scanClock(row: Record<string, unknown>): string {
-  const day = DAY.exec(text(row, 'data', 16));
-  const clock = CLOCK.exec(text(row, 'ora', 16));
+  const day = DAY.exec(paddedDate(text(row, 'data', 16)));
+  const clock = CLOCK.exec(paddedDate(text(row, 'ora', 16)));
   const local = day && clock ? `${day[3]}-${day[2]}-${day[1]}T${clock[1]}:${clock[2]}:${clock[3] ?? '00'}` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   // Luxon rolls 24:00 over to the next day; only a clock that reads back unchanged is kept.

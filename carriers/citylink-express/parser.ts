@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryTimeZone, firstOccurrence, sharedClockZone } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -57,7 +58,7 @@ export function citylinkWording(raw: string): string {
 
 /** A scan's `detDate` (`DD/MM/YYYY`) and `detTime` (`HHmmss`) as an offset-less wall clock. */
 function wallClock(row: Record<string, unknown>): string {
-  const date = DATE.exec(text(row, 'detDate', 16));
+  const date = DATE.exec(paddedDate(text(row, 'detDate', 16)));
   const clock = CLOCK.exec(text(row, 'detTime', 16));
   const wall = date && clock ? `${date[3]}-${date[2]}-${date[1]}T${clock[1]}:${clock[2]}:${clock[3]}` : '';
   // Parsing in UTC checks the calendar digits only. Luxon rolls 24:00:00 over to the next day.

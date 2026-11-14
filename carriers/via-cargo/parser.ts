@@ -4,6 +4,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, 
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -43,7 +44,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
  * working hours, so the clock is read in Buenos Aires time.
  */
 function scanTime(value: string): string {
-  const match = CLOCK.exec(value);
+  const match = CLOCK.exec(paddedDate(value));
   const wall = match ? `${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:00` : '';
   // UTC only checks the calendar fields. Luxon rolls 24:00 over to the next day.
   const checked = DateTime.fromISO(wall, { zone: 'UTC' });

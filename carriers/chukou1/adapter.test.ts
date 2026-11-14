@@ -120,6 +120,8 @@ describe('Chukou1 HTTP adapter', () => {
       ['2026-09-17T06:17:00', 'Item was sent out from Logistics Centre'],
       ['2026-09-15T20:50:00', 'Item received by Logistics Centre'],
     ]);
+    const unpadded = parseChukou1(changed('in-transit', (shipment) => { shipment.firstLegTrackingDetails[0]!.dateTimeString = 'Sep 7 2026 6:18 AM'; }), IN_TRANSIT);
+    expect(unpadded.events!.find((event) => event.description === 'Item was sent out from Logistics Centre')!.local_time).toBe('2026-09-07T06:18:00');
     // China Post's own wording has no rule; the scans before it stage the parcel.
     expect(result.events!.slice(0, 6).every((event) => event.stage === undefined)).toBe(true);
     expect(JSON.stringify(result)).not.toMatch(/(?<!\d)(?:0000003\d|00000020)(?!\d)|示例省/);
@@ -231,7 +233,6 @@ describe('Chukou1 HTTP adapter', () => {
       (shipment: Shipment) => { shipment.firstLegTrackingDetails[0]!.dateTimeString = '2026-09-17T06:17:00+08:00'; },
       (shipment: Shipment) => { shipment.firstLegTrackingDetails[0]!.dateTimeString = 'Sep 31 2026 06:18 AM'; },
       (shipment: Shipment) => { shipment.firstLegTrackingDetails[0]!.dateTimeString = 'Sep 17 2026 13:18 PM'; },
-      (shipment: Shipment) => { shipment.firstLegTrackingDetails[0]!.dateTimeString = 'Sep 7 2026 06:18 AM'; },
       (shipment: Shipment) => { shipment.destinctPostCode = 3; },
       (shipment: Shipment) => { shipment.trackingNumber = ['UU000000005CN']; },
     ]) {

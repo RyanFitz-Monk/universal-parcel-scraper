@@ -72,6 +72,7 @@ describe('Guatex HTTP adapter', () => {
     expect(Object.keys(result).sort()).toEqual(['current_stage', 'current_stage_source', 'delivered_at', 'events', 'expected_delivery',
       'last_status_text', 'last_update', 'status', 'timezone']);
     expect(JSON.stringify(result)).not.toMatch(ROUTES);
+    expect(parseGuatex(changed('delivered', (body) => { body.tracking[0]!.fecha = '5/3/2026'; }), DELIVERED).events).toEqual(result.events);
   });
 
   it('keeps the courier’s delivery as the handover without the summary’s clock', () => {
@@ -194,7 +195,6 @@ describe('Guatex HTTP adapter', () => {
       (body: Reply) => { body.tracking = Array.from({ length: 501 }, () => body.tracking[0]) as never; },
       (body: Reply) => { body.tracking[0] = 'Entregado' as never; },
       (body: Reply) => { body.tracking[0]!.fecha = '31/02/2026'; },
-      (body: Reply) => { body.tracking[0]!.fecha = '5/3/2026'; },
       (body: Reply) => { body.tracking[0]!.hora = '24:00'; },
       (body: Reply) => { body.tracking[0]!.hora = '18:35:00'; },
       (body: Reply) => { body.tracking[0]!.fecha = 20260305; },

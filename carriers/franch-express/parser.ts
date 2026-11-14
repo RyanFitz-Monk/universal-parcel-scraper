@@ -6,6 +6,7 @@ import { detectCarrierMatch, normalizeTrackingNumber } from '../../core/detectio
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedWording } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { franchExpressStage } from './status.js';
@@ -90,7 +91,7 @@ interface Scan { event: CarrierEvent; at: string; index: number; key: string; st
  */
 function projectRow($: CheerioAPI, row: Element, index: number): Scan {
   const item = $(row);
-  const clock = clean(item.children('p.m-b-5').first().text(), 60);
+  const clock = paddedDate(clean(item.children('p.m-b-5').first().text(), 60));
   const titles = item.children('h4.tracking-title');
   const details = item.children('p').not('.m-b-5');
   if (titles.length !== 1 || details.length !== 1) throw new SchemaError(PROVIDER, 'Franch Express returned an incomplete scan');

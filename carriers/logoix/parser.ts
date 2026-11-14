@@ -7,6 +7,7 @@ import {
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { normalizeAustrianPostNumber } from '../austrian-post/adapter.js';
@@ -66,7 +67,8 @@ function cellText(cell: Cheerio<Element>, maxLength: number): string {
 }
 
 /** A scan's clock: LogoiX's wall clock to the minute, read in Freilassing's zone. */
-function scanTime(text: string): { time: string; at: number } {
+function scanTime(written: string): { time: string; at: number } {
+  const text = paddedDate(written);
   const parts = CLOCK.exec(text);
   // Luxon rolls 24:00 over to the next day.
   const parsed = parts && Number(parts[4]) < 24 ? zonedTime(text, 'dd.MM.yyyy HH:mm', LOGOIX_ZONE) : null;

@@ -107,6 +107,8 @@ describe('MRL Global HTTP adapter', () => {
       current_stage_source: 'carrier_map', last_status_text: 'Onboard Delivery Scan', last_update_local: '2026-10-14T07:30:00' });
     const unknown = addRow(fixture('in-transit'), row(IN_TRANSIT, 'Sample Scan', '15/10/2026', '08:00'));
     expect(parseMrl(unknown, IN_TRANSIT).events![0]).toEqual({ local_time: '2026-10-15T08:00:00', description: 'Sample Scan' });
+    const unpadded = addRow(fixture('in-transit'), row(IN_TRANSIT, 'Sample Scan', '5/1/2027', '8:00'));
+    expect(parseMrl(unpadded, IN_TRANSIT).events![0]).toEqual({ local_time: '2027-01-05T08:00:00', description: 'Sample Scan' });
     const labelled = withoutLatest(unknown);
     expect(parseMrl(labelled, IN_TRANSIT)).toMatchObject({ status: 'unknown', last_status_text: 'Sample Scan' });
     expect(parseMrl(labelled, IN_TRANSIT)).not.toHaveProperty('current_stage');

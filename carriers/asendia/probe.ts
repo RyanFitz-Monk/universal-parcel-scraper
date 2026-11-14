@@ -28,6 +28,7 @@ import { load } from 'cheerio';
 import { DateTime } from 'luxon';
 import { ChallengeError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
+import { fromLooseFormat } from '../../core/time/fields.js';
 import { firstOccurrence, isoTime, zonedTime, type ParsedTime } from '../../core/time/index.js';
 import {
   cleanScalar,
@@ -257,7 +258,7 @@ function expectedDelivery(parcel: JsonObject): string | null {
     const raw = cleanScalar(value, 64);
     if (!raw) continue;
     let parsed = firstOccurrence(DateTime.fromISO(raw, { zone: ZONE }));
-    if (!parsed.isValid) parsed = firstOccurrence(DateTime.fromFormat(raw, 'dd/MM/yyyy', { zone: ZONE }));
+    if (!parsed.isValid) parsed = firstOccurrence(fromLooseFormat(raw, 'dd/MM/yyyy', { zone: ZONE }));
     if (parsed.isValid) return parsed.toISODate();
   }
   return null;

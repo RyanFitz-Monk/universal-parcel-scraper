@@ -8,6 +8,7 @@
 import { DateTime, IANAZone } from 'luxon';
 import type { CarrierResult } from '../result/index.js';
 import { carrierTimezone } from '../catalog/index.js';
+import { fromLooseFormat } from './fields.js';
 import { firstOccurrence } from './index.js';
 
 export function resultTimezone(carrierId: string, result: CarrierResult): string {
@@ -44,7 +45,7 @@ export function eventTimestamp(raw: unknown, assumedTimezone = 'UTC'): string | 
     return parsed.toUTC().toISO({ suppressMilliseconds: true }) ?? null;
   }
   for (const format of EVENT_FORMATS) {
-    parsed = firstOccurrence(DateTime.fromFormat(value, format, { zone: assumedTimezone }));
+    parsed = firstOccurrence(fromLooseFormat(value, format, { zone: assumedTimezone }));
     if (parsed.isValid) return parsed.toUTC().toISO({ suppressMilliseconds: true }) ?? null;
   }
   return null;

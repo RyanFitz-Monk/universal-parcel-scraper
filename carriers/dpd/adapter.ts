@@ -12,6 +12,7 @@ import { listsNewestFirst } from '../../core/result/order.js';
 import { runSteps } from '../../core/runner/index.js';
 import { classifyWording, type Stage } from '../../core/status/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, isoTime, explicitOffsetTime, zonedTime, type ParsedTime } from '../../core/time/index.js';
 import { decodeText, fetchBounded, parseJsonBytes, userAgentOf, type TrawlClient } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
@@ -260,7 +261,7 @@ function eventTime(date: string, clock: string): string {
 
 /** A page row's day, `dd.MM.yyyy`, when it shows no time: a date alone, never midnight. */
 function pageDay(date: string): string | null {
-  const day = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(date);
+  const day = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(paddedDate(date));
   return day ? calendarDay(Number(day[3]), Number(day[2]), Number(day[1])) : null;
 }
 
@@ -668,7 +669,7 @@ export function parseDPDTrackingHtml(html: string, trackingNumber: string): Carr
     // The summary shows each step's date alone, oldest first.
     $('.parcelStatus .row').each((_, element) => {
       const row = $(element);
-      const date = /\d{2}\.\d{2}\.\d{4}/.exec(clean(row.text()))?.[0] ?? '';
+      const date = /\d{1,2}\.\d{1,2}\.\d{4}/.exec(clean(row.text()))?.[0] ?? '';
       const description = clean(row.find('.col-xs-7').text())
         || clean(row.text()).replace(date, '').trim();
       const day = pageDay(date);

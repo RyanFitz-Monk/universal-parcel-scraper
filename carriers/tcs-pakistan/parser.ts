@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -17,7 +18,7 @@ const NUMBER = /^\d{11,14}$/;
 const ZONE = 'Asia/Karachi';
 const PAKISTAN = 'PAK';
 // The weekday, month, day, year and a time of day to the minute, as "Saturday Sep 12, 2026 20:48".
-const CLOCK_FORMAT = 'cccc LLL d, yyyy HH:mm';
+const CLOCK_FORMAT = 'cccc LLL dd, yyyy HH:mm';
 const NOT_FOUND = /^No Data Found\b/i;
 // Checkpoints that name the TCS station in `recievedby`; on the others the
 // field is empty or names who took the parcel.
@@ -65,7 +66,7 @@ interface Clock { time?: string; local_time?: string; at: number }
  * clocks read in Karachi time; an international one keeps its wall clocks.
  */
 function clock(value: string, domestic: boolean): Clock {
-  const written = value.split(/\s+/).join(' ');
+  const written = paddedDate(value.split(/\s+/).join(' '));
   // UTC only checks the calendar fields and the weekday. Luxon rolls 24:00 over to the next day.
   const checked = DateTime.fromFormat(written, CLOCK_FORMAT, { zone: 'UTC', locale: 'en-US' });
   if (!checked.isValid || checked.toFormat(CLOCK_FORMAT, { locale: 'en-US' }) !== written) {
@@ -110,10 +111,10 @@ function summaryStatus(summary: string): string {
 
 /** The delivery date the summary promises before the delivery round, as "Expected Delivery Date : 12-APR-25 …". */
 function expectedDate(summary: string): string | null {
-  const match = /^\s*Expected Delivery Date\s*:\s*(\d{2})-([A-Z]{3})-(\d{2})\b/im.exec(summary);
+  const match = /^\s*Expected Delivery Date\s*:\s*(\d{1,2})-([A-Z]{3})-(\d{2})\b/im.exec(summary);
   if (!match) return null;
   const [, day, month, year] = match;
-  const date = DateTime.fromFormat(`${day}-${month![0]}${month!.slice(1).toLowerCase()}-${year}`, 'dd-LLL-yy', { zone: 'UTC', locale: 'en-US' });
+  const date = DateTime.fromFormat(`${day!.padStart(2, '0')}-${month![0]}${month!.slice(1).toLowerCase()}-${year}`, 'dd-LLL-yy', { zone: 'UTC', locale: 'en-US' });
   return date.isValid ? date.toISODate() : null;
 }
 

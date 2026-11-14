@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { israelPostStage } from './status.js';
@@ -43,8 +44,8 @@ export function parseIsraelPost(payload: unknown, raw: string): CarrierResult {
     if (!isRecord(row) || !Number.isInteger(row.CategoryCode) || ((row.CategoryCode as number) < 0 || (row.CategoryCode as number) > 9999)) {
       throw new SchemaError(PROVIDER, 'Israel Post returned an invalid event category');
     }
-    const written = row.StatusDate;
-    if (typeof written !== 'string' || !/^\d{2}\/\d{2}\/\d{4}$/.test(written)) {
+    const written = typeof row.StatusDate === 'string' ? paddedDate(row.StatusDate) : '';
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(written)) {
       throw new SchemaError(PROVIDER, 'Israel Post returned an event without its day');
     }
     const date = DateTime.fromFormat(written, 'dd/MM/yyyy', { zone: 'UTC' });

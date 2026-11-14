@@ -5,6 +5,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { qwintryStage } from './status.js';
 
@@ -55,7 +56,8 @@ function unexpected(html: string, message: string): never {
 }
 
 /** A scan's wall clock, to the second; the page names no zone. */
-function scanClock(text: string): string {
+function scanClock(raw: string): string {
+  const text = paddedDate(raw);
   // Parsing in UTC checks the calendar digits only; Luxon rolls 24:00 over, so only a clock that reads back unchanged is kept.
   const parsed = CLOCK.test(text) ? DateTime.fromFormat(text, 'dd.MM.yyyy HH:mm:ss', { zone: 'UTC' }) : null;
   if (!parsed?.isValid || parsed.toFormat('dd.MM.yyyy HH:mm:ss') !== text) throw new SchemaError(PROVIDER, 'Qwintry returned an invalid scan time');

@@ -5,6 +5,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { postaKenyaStage } from './status.js';
@@ -131,7 +132,7 @@ function dayOf(text: string): string {
  * a country, keeps its wall clock.
  */
 function clockOf(day: string, text: string, kenya: boolean): { time: string } | { local_time: string } {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   if (!match) throw new SchemaError(PROVIDER, 'Posta Kenya returned an invalid scan time');
   const wall = `${day}T${match[1]}:${match[2]}:00`;
   const zoned = kenya ? zonedTime(wall, "yyyy-MM-dd'T'HH:mm:ss", ZONE) : null;

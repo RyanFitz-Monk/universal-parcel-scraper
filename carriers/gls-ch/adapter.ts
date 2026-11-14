@@ -7,6 +7,7 @@ import { IndeterminateError, InputRequiredError, InvalidInputError, NotFoundErro
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
 import { unreadEstimates } from '../../core/result/unread.js';
 import { withNetworkRetry } from '../../core/runner/networkRetry.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
@@ -240,7 +241,7 @@ function parseEventTime(dateValue: unknown, timeValue: unknown): {
 } | null {
   const date = text(dateValue, 64);
   const time = text(timeValue, 32);
-  const joined = `${date} ${time}`.trim();
+  const joined = paddedDate(`${date} ${time}`.trim());
   if (!joined) return null;
   let parsed = firstOccurrence(DateTime.fromISO(joined, { zone: 'Europe/Zurich' }));
   if (!parsed.isValid) {
@@ -363,7 +364,7 @@ function arrivalText(parcel: JsonObject): string {
 function expectedDelivery(parcel: JsonObject): string | null {
   const match = arrivalText(parcel).match(ARRIVAL_DATE);
   if (!match) return null;
-  const raw = match[0];
+  const raw = paddedDate(match[0]);
   for (const format of ['d-MMM-yyyy', 'd/MM/yyyy', 'd.MM.yyyy']) {
     const parsed = firstOccurrence(DateTime.fromFormat(raw, format, { zone: 'Europe/Zurich', locale: 'en' }));
     if (parsed.isValid) return parsed.toISODate();

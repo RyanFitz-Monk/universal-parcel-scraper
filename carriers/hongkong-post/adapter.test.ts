@@ -75,6 +75,8 @@ describe('Hongkong Post chatbot answer', () => {
     const corrected = text('found').replace('at as  03-01-2026', 'as at 03-01-2026').replace('Delivered.', 'Item returned to sender.');
     expect(parseHongkongPostAnswer(corrected)).toMatchObject({ status: 'exception', current_stage: 'returned',
       current_stage_source: 'wording:language', last_status_text: 'Item returned to sender', last_update_local: '2026-01-03T14:05:00' });
+    expect(parseHongkongPostAnswer(text('found').replace('03-01-2026 14:05', '3-1-2026 9:05')))
+      .toMatchObject({ last_status_text: 'Delivered', last_update_local: '2026-01-03T09:05:00' });
     const unknown = parseHongkongPostAnswer(text('found').replace('Delivered.', 'Synthetic new wording.'));
     expect(unknown).toMatchObject({ status: 'unknown', last_status_text: 'Synthetic new wording', last_update_local: '2026-01-03T14:05:00' });
     expect(unknown).not.toHaveProperty('current_stage');

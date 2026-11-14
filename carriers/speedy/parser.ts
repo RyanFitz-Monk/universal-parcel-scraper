@@ -4,6 +4,7 @@ import { ChallengeError, InvalidInputError, NotFoundError, SchemaError, Transpor
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -54,7 +55,7 @@ const comments = (row: Record<string, unknown>) =>
 /** The "Expected Delivery Date: DD.MM.YYYY" note on a scan, as an ISO day. */
 function estimateOf(row: Record<string, unknown>): string | null {
   for (const comment of comments(row)) {
-    const match = /^Expected Delivery Date:\s*(\d{2})\.(\d{2})\.(\d{4})$/i.exec(clean(comment.text, 64));
+    const match = /^Expected Delivery Date:\s*(\d{2})\.(\d{2})\.(\d{4})$/i.exec(paddedDate(clean(comment.text, 64)));
     if (match) return `${match[3]}-${match[2]}-${match[1]}`;
   }
   return null;

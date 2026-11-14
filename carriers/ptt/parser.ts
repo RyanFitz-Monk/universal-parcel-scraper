@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } fro
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { pttStage } from './status.js';
@@ -35,7 +36,9 @@ export function normalizePttNumber(raw: string): string {
 }
 
 /** The scan's date and time ("06/10/2026", "18:31:34") as a wall clock. They carry no offset. */
-function wallClock(day: string, time: string): string | null {
+function wallClock(date: string, clock: string): string | null {
+  const day = paddedDate(date);
+  const time = paddedDate(clock);
   if (!DAY.test(day) || !TIME.test(time)) return null;
   // UTC only checks the calendar fields. No offset is assigned.
   const parsed = DateTime.fromFormat(`${day} ${time.length === 5 ? `${time}:00` : time}`, 'dd/MM/yyyy HH:mm:ss', { zone: 'UTC' });

@@ -187,6 +187,7 @@ describe('MRW anonymous tracking', () => {
     }
     expect(latestAt('02600 Ejemplo', '15/01/2026').last_update).toBe('2026-01-15T19:29:00+01:00');
     expect(latestAt('06000 Andorra', '15/01/2026').last_update).toBe('2026-01-15T19:29:00+01:00');
+    expect(latestAt('02600 Ejemplo', '5/1/2026').last_update).toBe('2026-01-05T19:29:00+01:00');
   });
 
   it('keeps the wall clocks of offices whose code does not settle their clock', () => {

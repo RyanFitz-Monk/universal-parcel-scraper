@@ -84,6 +84,11 @@ describe('Barid Al-Maghrib tracking page', () => {
       last_update_local: '2026-07-03', weight_kg: 0.8, destination_country: 'MA' });
     expect(result.events!.map((event) => [event.local_time, event.stage])).toEqual([
       ['2026-07-03', 'in_transit'], ['2026-07-02', 'in_transit'], ['2026-07-02', 'accepted']]);
+    const unpadded = parseBaridAlMaghrib(edited('in-transit.html', ($) => {
+      rows($).children('tr').eq(0).children('td').eq(0).text('3/7/2026');
+      rows($).children('tr').eq(1).children('td').eq(1).text('6:12:30');
+    }), IN_TRANSIT);
+    expect(unpadded.events![0]).toMatchObject({ local_time: '2026-07-03', provider_time_text: '3/7/2026 6:12:30' });
     expect(JSON.stringify(result)).not.toMatch(PRIVATE);
   });
 

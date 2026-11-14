@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { blueexStage } from './status.js';
@@ -17,7 +18,7 @@ export const BLUEEX_MAX_BYTES = 256 * 1024;
 const NUMBER = /^(?:[4-6]\d{9}|CP\d{12})$/;
 const ZONE = 'Asia/Karachi';
 // A scan, as "Aug 4th, 2026(03:04 PM) - Out For Delivery".
-const SCAN = /^([A-Z][a-z]{2}) (\d{1,2})(st|nd|rd|th), (\d{4})\((\d{2}:\d{2} [AP]M)\) - (.+)$/;
+const SCAN = /^([A-Z][a-z]{2}) (\d{1,2})(st|nd|rd|th), (\d{4})\((\d{1,2}:\d{2} [AP]M)\) - (.+)$/;
 const CLOCK_FORMAT = 'MMM d yyyy hh:mm a';
 const LABEL = /^BlueEX Shipping Label : (\S{1,40})/;
 // A station scan ends with its city after a comma or a dash, as
@@ -52,7 +53,7 @@ function ordinal(day: number): string {
 
 /** A wall clock to the minute, read in Karachi time: BlueEX scans in Pakistan, which keeps one offset. */
 function clock(month: string, day: string, suffix: string, year: string, minute: string): { time: string; at: number } {
-  const written = `${month} ${Number(day)} ${year} ${minute}`;
+  const written = `${month} ${Number(day)} ${year} ${paddedDate(minute)}`;
   // UTC only checks the calendar fields.
   const checked = DateTime.fromFormat(written, CLOCK_FORMAT, { zone: 'UTC', locale: 'en-US' });
   if (!checked.isValid || checked.toFormat(CLOCK_FORMAT, { locale: 'en-US' }) !== written || ordinal(Number(day)) !== suffix) {

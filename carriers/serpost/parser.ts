@@ -4,6 +4,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import { eventPoint, type CarrierEvent, type CarrierResult, type EventPoint } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -73,7 +74,7 @@ function text(row: Record<string, unknown>, key: string, maxLength: number): str
  * that made it, read on Lima time.
  */
 function instant(value: string): string {
-  const match = CLOCK.exec(value);
+  const match = CLOCK.exec(paddedDate(value));
   const local = match ? `${match[3]}-${match[1]}-${match[2]}T${match[4]}:${match[5]}:${match[6]}` : '';
   // The calendar check reads the clock as written, before it is placed on Lima time.
   const written = local ? DateTime.fromISO(local, { zone: 'UTC' }) : null;

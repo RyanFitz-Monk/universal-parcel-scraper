@@ -6,6 +6,7 @@ import { returnedTrackingNumber } from '../../core/detection/returned.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { pakistanPostStage } from './status.js';
@@ -70,9 +71,10 @@ export function pakistanPostWording(text: string): string {
 
 /** A scan's date ("January 09, 2026") and 12-hour time ("7:41 AM"): the scanning office's wall clock, with no zone. */
 function wallClock(date: string, time: string): string {
+  const day = paddedDate(date);
   // Parsing in UTC checks the calendar fields only; no offset is assigned.
-  const parsed = DATE.test(date) && CLOCK.test(time)
-    ? DateTime.fromFormat(`${date} ${time.toUpperCase()}`, 'MMMM dd, yyyy h:mm a', { zone: 'UTC', locale: 'en-US' }) : null;
+  const parsed = DATE.test(day) && CLOCK.test(time)
+    ? DateTime.fromFormat(`${day} ${time.toUpperCase()}`, 'MMMM dd, yyyy h:mm a', { zone: 'UTC', locale: 'en-US' }) : null;
   if (!parsed?.isValid) throw new SchemaError(PROVIDER, 'Pakistan Post returned an invalid scan time');
   return parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }

@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { skyboxStage } from './status.js';
@@ -32,7 +33,7 @@ export function normalizeSkyboxNumber(raw: string): string {
 
 /** A row's wall clock, to the minute. */
 function wallClock(text: string): string {
-  const parts = CLOCK.exec(text);
+  const parts = CLOCK.exec(paddedDate(text));
   if (parts) {
     const [month, day, year, hour, minute] = parts.slice(1).map(Number) as [number, number, number, number, number];
     const date = calendarDay(year, month, day);

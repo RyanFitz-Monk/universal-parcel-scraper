@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -92,7 +93,7 @@ function serviceOf(labels: unknown): string {
 function estimateOf(shipment: Record<string, unknown>): string | null {
   const days = Number(clean(shipment.estimatedNumberOfDaysUntilDelivery, 16) || Number.NaN);
   if (!(days > 0)) return null;
-  const dates = [...text(shipment, 'estimatedDeliveryDateMessage', 300).matchAll(ESTIMATE)];
+  const dates = [...paddedDate(text(shipment, 'estimatedDeliveryDateMessage', 300)).matchAll(ESTIMATE)];
   if (dates.length !== 1) return null;
   const [, day, month, year] = dates[0]!;
   return calendarDay(Number(year), Number(month), Number(day));

@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { hispapostStage } from './status.js';
@@ -83,7 +84,7 @@ export function parseHispapost(html: string, rawNumber: string): CarrierResult {
   if (normalizeTrackingNumber(title) !== number) throw new SchemaError(PROVIDER, 'Hispapost answered for a different barcode');
   const info = $('.tracking-info');
   const description = clean(info.find('p.h2').first().text(), 160);
-  const shown = clean(info.find('p.h4').first().text(), 40);
+  const shown = paddedDate(clean(info.find('p.h4').first().text(), 40));
   if (info.length !== 1 || !description) throw new SchemaError(PROVIDER, 'Hispapost returned a parcel without its status');
   // The status's clock: Hispapost's wall clock to the minute.
   const clock = shown ? CLOCK.test(shown) ? zonedTime(shown, 'dd/MM/yyyy HH:mm', ZONE) : null : undefined;

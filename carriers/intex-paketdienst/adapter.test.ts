@@ -73,6 +73,7 @@ describe('INTEX Paketdienst tracking adapter', () => {
   it('reads the repeated hour when the clocks go back as its first occurrence', () => {
     const result = parseIntex(scans([['Eingang Hauptumschlagsplatz', '25.10.2026 um 02:30 Uhr']]), DELIVERED);
     expect(result.events![0]!.time).toBe('2026-10-25T02:30:00+02:00');
+    expect(parseIntex(scans([['Eingang Hauptumschlagsplatz', '5.1.2026 um 9:05 Uhr']]), DELIVERED).events![0]!.time).toBe('2026-01-05T09:05:00+01:00');
   });
 
   it('keeps a destination outside Germany unnamed', () => {

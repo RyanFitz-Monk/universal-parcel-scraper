@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InputRequiredError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { aTuHoraStage } from './status.js';
@@ -90,7 +91,7 @@ function code(row: Record<string, unknown>, key: string): string {
  * without a zone, so it stays local.
  */
 function wallClock(value: unknown): string {
-  const match = CLOCK.exec(clean(value, 40));
+  const match = CLOCK.exec(paddedDate(clean(value, 40)));
   const local = match ? `${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:${match[6]}` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });
@@ -103,7 +104,7 @@ function wallClock(value: unknown): string {
 
 /** A `dd/MM/yyyy` day as `yyyy-MM-dd`, or null. */
 function day(value: unknown): string | null {
-  const match = DAY.exec(clean(value, 16));
+  const match = DAY.exec(paddedDate(clean(value, 16)));
   if (!match) return null;
   const iso = `${match[3]}-${match[2]}-${match[1]}`;
   return DateTime.fromISO(iso, { zone: 'UTC' }).isValid ? iso : null;

@@ -4,6 +4,7 @@ import { InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '.
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { jneStage } from './status.js';
@@ -38,7 +39,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
  * Indonesia spans three (WIB, WITA, WIT), so the wall clock stays local.
  */
 function scanClock(raw: string): string {
-  const parsed = DateTime.fromFormat(raw, 'dd-MM-yyyy HH:mm', { zone: 'UTC' });
+  const parsed = DateTime.fromFormat(paddedDate(raw), 'dd-MM-yyyy HH:mm', { zone: 'UTC' });
   if (!parsed.isValid) throw new SchemaError(PROVIDER, 'JNE returned an invalid scan time');
   return parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }

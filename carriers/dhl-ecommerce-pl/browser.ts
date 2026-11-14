@@ -1,5 +1,6 @@
 import { BudgetExceededError, ChallengeError, IndeterminateError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import type { TrawlClient } from '../../core/transport/trawl.js';
@@ -26,16 +27,16 @@ export function parseDhlPolandHistory(payload: unknown, waybill: string): Carrie
       || typeof row.description !== 'string' || row.description.length > 500) {
       throw new SchemaError(PROVIDER, 'DHL Poland returned an invalid scan');
     }
-    const date = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(row.date);
+    const date = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(paddedDate(row.date)), time = paddedDate(row.time);
     const day = date && calendarDay(Number(date[3]), Number(date[2]), Number(date[1]));
-    if (!day || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(row.time)) throw new SchemaError(PROVIDER, 'DHL Poland returned an invalid scan clock');
+    if (!day || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new SchemaError(PROVIDER, 'DHL Poland returned an invalid scan clock');
     const description = clean(row.description, 500).replace(/\s*(?:The (?:shipment|parcel) (?:was )?received by|Przesyłka odebrana przez)\b[\s\S]*$/i, '').trim()
       // A terminal the page leaves unnamed has an empty slot.
       .replace(/^(The shipment has reached DHL terminal) in \./i, '$1.');
     if (!description) throw new SchemaError(PROVIDER, 'DHL Poland returned an empty scan');
     const stage = dhlPolandScanStage(description);
     const location = clean(row.location, 200);
-    return { local_time: `${day}T${row.time}:00`, description,
+    return { local_time: `${day}T${time}:00`, description,
       ...(location ? { location } : {}), ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
   });
   if (!events.length) throw new IndeterminateError(PROVIDER, 'DHL Poland returned no scan history');

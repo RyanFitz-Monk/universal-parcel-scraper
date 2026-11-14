@@ -64,6 +64,10 @@ describe('Trendyol Express public browser adapter', () => {
     expect(() => parseTrendyol(page.replaceAll('12.04.2026 09:30', stamp), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
   });
 
+  it('reads a scan clock printed without leading zeros', () => {
+    expect(parseTrendyol(page.replaceAll('12.04.2026 09:30', '12.4.2026 9:30'), NUMBER)).toMatchObject({ last_update_local: '2026-04-12T09:30:00' });
+  });
+
   it('keeps an HTTP 200 firewall page challenged', () => {
     expect(() => parseTrendyol('<title>Just a moment...</title>', NUMBER)).toThrow(expect.objectContaining({ kind: 'challenge' }));
   });

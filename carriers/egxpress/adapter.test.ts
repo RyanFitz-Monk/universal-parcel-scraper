@@ -84,6 +84,8 @@ describe('EGXPRESS domestic HTTP adapter', () => {
     const day = changed((body) => { body.trackInfo[0]!.trackList[0]!.transTime = ''; });
     expect(parseEgxpress(day, NUMBER).events!.find((event) => event.provider_code === 'POD')!.local_time).toBe('2026-04-04');
     expect(parseEgxpress(day, NUMBER)).toMatchObject({ current_stage: 'delivered', last_update_local: '2026-04-04' });
+    const unpadded = changed((body) => { body.trackInfo[0]!.trackList[0]!.transdate = '4/4/2026'; body.trackInfo[0]!.trackList[0]!.transTime = ''; });
+    expect(parseEgxpress(unpadded, NUMBER).events!.find((event) => event.provider_code === 'POD')!.local_time).toBe('2026-04-04');
   });
 
   it('requires the full explicit unknown signature and never turns empty success or error codes into absence', () => {

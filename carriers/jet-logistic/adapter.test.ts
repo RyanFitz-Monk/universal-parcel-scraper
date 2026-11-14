@@ -83,6 +83,10 @@ describe('Jet Logistic HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Синтетический этап',
       last_update_local: '2026-05-22' });
     expect(result.events![0]).toEqual({ local_time: '2026-05-22', location: 'Примерск, Примерская область', description: 'Синтетический этап' });
+    const unpadded = parseJetLogistic(changed('in-transit', (body) => {
+      body.answer = [...lines(body).slice(0, 4), 'Синтетический этап-Примерск-(Примерская область), дата выполнения : 2.6.2026 9:05:07'].join('\r');
+    }), IN_TRANSIT);
+    expect(unpadded.events![0]).toEqual({ local_time: '2026-06-02T09:05:07', location: 'Примерск, Примерская область', description: 'Синтетический этап' });
     expect(JSON.stringify(result)).not.toMatch(/Примечание/);
   });
 

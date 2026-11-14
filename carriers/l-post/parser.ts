@@ -4,6 +4,7 @@ import { IndeterminateError, InputRequiredError, InvalidInputError, NotFoundErro
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { windowEstimate } from '../../core/result/window.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { lPostStage } from './status.js';
@@ -110,7 +111,7 @@ function courierWindow(day: string, order: Record<string, unknown>): string {
 
 /** A row's wall clock, `dd.MM.yyyy HH:mm`; the reply names no zone. */
 function wallClock(value: unknown): string {
-  const match = typeof value === 'string' ? CLOCK.exec(value.trim()) : null;
+  const match = typeof value === 'string' ? CLOCK.exec(paddedDate(value.trim())) : null;
   const local = match ? `${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:00` : '';
   // Parsing in UTC checks the calendar digits only; Luxon rolls 24:00 over, so the clock must read back unchanged.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });

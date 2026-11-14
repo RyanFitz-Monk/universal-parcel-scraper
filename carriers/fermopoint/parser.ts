@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { fermopointStage } from './status.js';
@@ -32,7 +33,8 @@ export function normalizeFermopointNumber(raw: string): string {
 }
 
 /** A step's clock, "26/02/2025 19:26:50", as a wall clock with no zone. */
-function wallClock(value: string): string {
+function wallClock(raw: string): string {
+  const value = paddedDate(raw);
   // Parsing in UTC checks the calendar fields only; no offset is assigned.
   const wall = CLOCK.test(value) ? DateTime.fromFormat(value, 'dd/MM/yyyy HH:mm:ss', { zone: 'UTC' }) : null;
   if (!wall?.isValid) throw new SchemaError(PROVIDER, 'Fermopoint returned an invalid step time');

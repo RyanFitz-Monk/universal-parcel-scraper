@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -49,7 +50,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
 
 /** A scan's wall clock, read in India and read back unchanged, as an instant. */
 function scanTime(date: string, time: string): string {
-  const local = `${date} ${time}`;
+  const local = paddedDate(`${date} ${time}`);
   const wall = firstOccurrence(DateTime.fromFormat(local, CLOCK, { zone: ZONE }));
   // Luxon rolls 24:00:00 over to the next day; only a clock that reads back unchanged is kept.
   if (!wall.isValid || wall.toFormat(CLOCK) !== local) throw new SchemaError(PROVIDER, 'Trackon returned an invalid scan time');

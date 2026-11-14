@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { nimExpressStage } from './status.js';
@@ -46,7 +47,7 @@ function invalid(message: string): never {
  * offset, so the clock is read in Bangkok time, which keeps no daylight saving.
  */
 function scanTime(text: string): { time: string; at: number } {
-  const parts = CLOCK.exec(text);
+  const parts = CLOCK.exec(paddedDate(text));
   const year = parts ? Number(parts[3]) - BUDDHIST_ERA : 0;
   const wall = parts ? `${String(year).padStart(4, '0')}-${parts[2]}-${parts[1]}T${parts[4]}:${parts[5]}:${parts[6]}` : '';
   const zoned = firstOccurrence(DateTime.fromISO(wall, { zone: ZONE }));

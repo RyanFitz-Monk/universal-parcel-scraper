@@ -204,6 +204,7 @@ describe('Chronopost direct tracking', () => {
 
     it('uses only the newest instruction', () => {
       expect(tracked(instruction('07/01/2026'), instruction('09/01/2026', '2026-01-06T09:00:00+01:00')).expected_delivery).toBe('2026-01-09');
+      expect(tracked(instruction('07/01/2026'), instruction('9/1/2026', '2026-01-06T09:00:00+01:00')).expected_delivery).toBe('2026-01-09');
       for (const day of ['31/02/2026', '2026-01-09', 'Samedi']) {
         expect(tracked(instruction('07/01/2026'), instruction(day, '2026-01-06T09:00:00+01:00')).expected_delivery).toBeNull();
       }

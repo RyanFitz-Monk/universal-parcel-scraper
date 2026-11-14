@@ -67,6 +67,7 @@ describe('SkyKing HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !event.local_time && !event.provider_code)).toBe(true);
     expect(result).not.toHaveProperty('history_truncated');
+    expect(parseSkyking(edited('delivered', (rows) => { rows.at(-1)!.DateTime = '5/1/2027 - 9:05:07'; }), DELIVERED)).toMatchObject({ last_update: '2027-01-05T03:35:07Z' });
   });
 
   it('keeps no courier, delivery area, signing detail, phone number, reference, id or image link', () => {

@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { chazkiCurrent, chazkiRow } from './status.js';
@@ -82,7 +83,7 @@ export function readChazkiSearch(payload: unknown, raw: string): number {
 
 /** A clock as the reply writes it, as a wall clock with no offset: the reply names no zone. */
 export function chazkiClock(value: unknown): string {
-  const match = typeof value === 'string' ? CLOCK.exec(value.trim()) : null;
+  const match = typeof value === 'string' ? CLOCK.exec(paddedDate(value.trim())) : null;
   if (!match) throw new SchemaError(PROVIDER, 'Chazki returned an invalid history clock');
   const [, day, month, year, hour, minute, half] = match;
   const twelve = Number(hour);

@@ -105,6 +105,8 @@ describe('Metropolitan Warehouse HTTP adapter', () => {
     const undated = parseMetropolitanWarehouse(page('in-transit', (rows) => [{ ...rows[0], Date: '' }, ...rows.slice(1)]), IN_TRANSIT);
     expect(undated.events![0]).not.toHaveProperty('local_time');
     expect(undated.last_update_local).toBe('2026-03-03T01:05:00');
+    const unpadded = parseMetropolitanWarehouse(page('in-transit', (rows) => [{ ...rows[0], Date: '3/5/2026 1:05 AM' }, ...rows.slice(1)]), IN_TRANSIT);
+    expect(unpadded.events![0]!.local_time).toBe('2026-03-05T01:05:00');
     // Only the latest hundred rows are kept.
     const long = parseMetropolitanWarehouse(page('in-transit', (rows) => Array.from({ length: 120 }, (_, index) => ({ ...rows[0],
       Date: `03/${String(28 - Math.floor(index / 5)).padStart(2, '0')}/2026 ${String(12 - (index % 5)).padStart(2, '0')}:00 PM` }))), IN_TRANSIT);

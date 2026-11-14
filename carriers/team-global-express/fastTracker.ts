@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { ChallengeError, IndeterminateError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { PROVIDER } from './parser.js';
@@ -95,7 +96,8 @@ export function parseFastTrackerSearch(html: string, consignment: string): FastT
 export interface FastTrackerItemPage { events: CarrierEvent[]; service: string; estimate: string | null }
 
 /** A scan's clock, `dd/MM/yy HH:mm`, New Zealand's. */
-function scanTime(value: string): string {
+function scanTime(raw: string): string {
+  const value = paddedDate(raw);
   const day = CLOCK.test(value) ? DateTime.fromFormat(value, 'dd/MM/yy HH:mm', { zone: 'UTC' }) : null;
   const parsed = day?.isValid && day.toFormat('dd/MM/yy HH:mm') === value ? zonedTime(value, 'dd/MM/yy HH:mm', ZONE) : null;
   if (!parsed) throw new SchemaError(PROVIDER, 'Team Global Express returned an invalid scan time');
@@ -129,7 +131,7 @@ export function parseFastTrackerItem(html: string, item: FastTrackerItem): FastT
     };
     return event;
   }).reverse();
-  const estimate = clean($('#ConsignmentDetails_lblEDDVal').text(), 16);
+  const estimate = paddedDate(clean($('#ConsignmentDetails_lblEDDVal').text(), 16));
   const day = ESTIMATE.test(estimate) ? DateTime.fromFormat(estimate, 'dd/MM/yyyy', { zone: 'UTC' }) : null;
   return { events, service: clean($('#ConsignmentDetails_lblService').text(), 80), estimate: day?.isValid ? day.toISODate() : null };
 }

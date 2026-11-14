@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { blueExpressReturnStarts, blueExpressStage } from './status.js';
@@ -43,9 +44,10 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
  * year while the rest of mainland Chile changes its clocks, so the clock stays
  * local. A scan the lookup lost the date of keeps no clock.
  */
-function scanClock(day: string, time: string): string | undefined {
+function scanClock(day: string, rawTime: string): string | undefined {
   if (day === LOST_DAY) return undefined;
-  const parts = DAY.exec(day);
+  const parts = DAY.exec(paddedDate(day));
+  const time = paddedDate(rawTime);
   const local = parts ? `${parts[3]}-${parts[2]}-${parts[1]}T${time}` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });

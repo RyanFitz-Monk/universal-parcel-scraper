@@ -90,6 +90,7 @@ describe('A1 POST HTTP adapter', () => {
     expect(result.events!.map((event) => [event.time, event.stage])).toEqual([
       ['2026-03-14T10:41:00+02:00', 'in_transit'], ['2026-03-13T20:40:00+02:00', 'registered'],
     ]);
+    expect(parseA1Post(withRows(row('4.3.2026 9:41', 'Пратката е обработена A1 POST')), PARTNER).events![0]!.time).toBe('2026-03-04T09:41:00+02:00');
   });
 
   it('names a partner only for a known name, its own host and one number its rules offer', () => {

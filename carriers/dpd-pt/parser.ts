@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import {
   DPD_PT_COLLECTION, DPD_PT_DELIVERY, DPD_PT_FORECAST, DPD_PT_POINT_RECEIPT, DPD_PT_RETURN, DPD_PT_RETURNED, DPD_PT_WINDOW, dpdPtStage,
@@ -42,7 +43,8 @@ export function isDpdPtChallenge(html: string): boolean {
 }
 
 /** The scan's wall clock: the page gives a day and a time to the minute, without a zone. */
-function wallClock(day: string, time: string): string {
+function wallClock(shownDay: string, shownTime: string): string {
+  const day = paddedDate(shownDay), time = paddedDate(shownTime);
   const date = DATE.exec(day);
   const clock = CLOCK.exec(time);
   // UTC only checks the calendar fields; the clock keeps no offset.

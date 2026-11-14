@@ -1,5 +1,6 @@
 import { classifyWording, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import type { CarrierStatusMap } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 
 /**
  * The wordings of the tracking page's timeline, which carry no code, by their
@@ -36,7 +37,7 @@ const LABELS: ReadonlyMap<string, Stage> = new Map([
 
 /** A wording in the form the map keys it on: lower case, single spaces, and placeholders for its variable parts. */
 function labelKey(wording: string): string {
-  return wording.toLocaleLowerCase('en-US').replace(/\s+/g, ' ').trim()
+  return paddedDate(wording).toLocaleLowerCase('en-US').replace(/\s+/g, ' ').trim()
     .replace(/(tracking no\.) ?[a-z0-9]{1,40}$/, '$1 [number]')
     .replace(/\d{2}\/\d{2}\/\d{4}/g, '[date]')
     .replace(/\d{2}:\d{2}/g, '[time]')

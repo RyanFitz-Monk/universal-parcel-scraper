@@ -6,6 +6,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, 
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { windowEstimate } from '../../core/result/window.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -130,7 +131,7 @@ function rowOf(row: unknown): Row {
   // Whoever signed for the freight is left out of the wording.
   const description = clean(text(row, 'Description', 200).replace(TAKER, '$1$2').replace(/[\s,;:-]+$/, ''), 160);
   if (!description) invalid('FasTrak returned a history row without its status');
-  const booked = APPOINTMENT.exec(description);
+  const booked = APPOINTMENT.exec(paddedDate(description));
   if (code === APPOINTMENT_CODE || booked) {
     const day = booked ? calendarDay(Number(booked[3]), Number(booked[1]), Number(booked[2])) : null;
     return { event: { local_time, description }, appointment: day ? appointmentOf(day, booked?.[4], booked?.[5]) : local_time.slice(0, 10) };

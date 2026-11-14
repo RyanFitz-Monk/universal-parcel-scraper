@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import { eventPoint, type CarrierEvent, type CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedWording } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -43,7 +44,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
 
 /** "06.01.2026" as a calendar day: the history gives days without a clock. */
 function day(row: Record<string, unknown>): string {
-  const match = DAY.exec(text(row, 'date', 16));
+  const match = DAY.exec(paddedDate(text(row, 'date', 16)));
   return (match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]))) || invalid('SAT returned an invalid state date');
 }
 

@@ -120,6 +120,9 @@ describe('Starex HTTP adapter', () => {
     }), IN_TRANSIT);
     expect(delayed.events![0]).toEqual({ local_time: '2026-09-25T09:00:00', description: 'Delivery delayed', provider_code: 'delivery_delayed' });
     expect(delayed).toMatchObject({ current_stage: 'in_transit', last_status_text: 'Delivery delayed' });
+    expect(parseStarex(changed('in-transit', (scans) => {
+      scans.unshift({ status: 'delivery_delayed', name: 'Delivery delayed', description: '', date: '5-10-2026 9:00' });
+    }), IN_TRANSIT).events![0]).toMatchObject({ local_time: '2026-10-05T09:00:00' });
     const worded = parseStarex(changed('in-transit', (scans) => {
       scans.unshift({ status: 'synthetic_status', name: 'Delivered', description: 'The package has been delivered to the recipient', date: '25-09-2026 09:00' });
     }), IN_TRANSIT);

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { explicitOffsetTime, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { normalizePackManNumber } from './number.js';
@@ -35,7 +36,7 @@ export function isPackManBlockPage(html: string): boolean {
  * the shown minute in Athens; otherwise the shown clock is read in Athens.
  */
 function scanTime(time: Cheerio<Element>): string {
-  const shown = clean(time.text(), 40);
+  const shown = paddedDate(clean(time.text(), 40));
   const wall = SHOWN.test(shown) ? zonedTime(shown, SHOWN_FORMAT, ZONE) : null;
   if (!wall) throw new SchemaError(PROVIDER, 'Pack-Man returned an invalid scan time');
   const stamped = explicitOffsetTime(time.attr('datetime'));

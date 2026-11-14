@@ -85,7 +85,7 @@ export function expectNumberPrompt(text: string): void {
   }
 }
 
-const FOUND = /^According to the system record, status of the mail item (?:at as|as at) (\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2}) is as follows: (.+)$/;
+const FOUND = /^According to the system record, status of the mail item (?:at as|as at) (\d{1,2})-(\d{1,2})-(\d{4}) (\d{1,2}):(\d{2}) is as follows: (.+)$/;
 
 /**
  * The answer to the number. It does not repeat the number: the caller binds it
@@ -101,7 +101,8 @@ export function parseHongkongPostAnswer(text: string): CarrierResult {
   if (line.startsWith('Sorry, the information entered is incorrect')) throw new SchemaError(PROVIDER, 'Hongkong Post chatbot menu changed');
   const match = FOUND.exec(line);
   if (!match) throw new SchemaError(PROVIDER, 'Hongkong Post chatbot returned an unexpected answer');
-  const [, day, month, year, hour, minute, rawStatus] = match;
+  const [, day, month, year, writtenHour, minute, rawStatus] = match;
+  const hour = writtenHour!.padStart(2, '0');
   const date = calendarDay(Number(year), Number(month), Number(day));
   if (!date || Number(hour) > 23 || Number(minute) > 59) throw new SchemaError(PROVIDER, 'Hongkong Post chatbot returned an invalid status time');
   const wording = rawStatus!.trim().replace(/\.$/, '').trim();

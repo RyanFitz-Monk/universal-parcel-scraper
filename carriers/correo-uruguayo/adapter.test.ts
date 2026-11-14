@@ -118,6 +118,9 @@ describe('Correo Uruguayo tracking adapter', () => {
     expect(unknown).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'EVENTO DE MUESTRA',
       last_update_local: '2026-05-13T08:00:00' });
     expect(unknown.events![0]).toEqual({ local_time: '2026-05-13T08:00:00', description: 'EVENTO DE MUESTRA', provider_code: '99' });
+    expect(parseCorreoUruguayo(edited('in-transit', (item) => {
+      item.eventos.unshift({ fecha: '13/5/2026 8:00', evento: 'EVENTO DE MUESTRA', ubicacion: null, codigoevento: 99 });
+    }), IN_TRANSIT).events![0]!.local_time).toBe('2026-05-13T08:00:00');
   });
 
   it('keeps scans of one minute in the reply’s order, whichever way it lists them', () => {

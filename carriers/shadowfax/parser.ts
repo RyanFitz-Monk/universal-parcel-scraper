@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -133,7 +134,7 @@ function readMilestone(row: unknown): Scan[] {
 function estimate(value: unknown): string | null {
   const text = clean(value, 60);
   if (!text) return null;
-  const parsed = DateTime.fromFormat(text, 'dd MMMM yyyy, cccc', { zone: 'UTC', locale: 'en-US' });
+  const parsed = DateTime.fromFormat(paddedDate(text), 'dd MMMM yyyy, cccc', { zone: 'UTC', locale: 'en-US' });
   return parsed.isValid ? parsed.toISODate() : null;
 }
 

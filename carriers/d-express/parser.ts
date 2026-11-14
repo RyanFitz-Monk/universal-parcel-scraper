@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime, type ParsedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -32,7 +33,7 @@ export function normalizeDexpressNumber(raw: string): string {
 
 /** A wall clock to the second, read in Belgrade. */
 function clockOf(value: unknown): ParsedTime {
-  const text = typeof value === 'string' ? clean(value, 40) : '';
+  const text = typeof value === 'string' ? paddedDate(clean(value, 40)) : '';
   // Luxon rolls 24:00 over to the next day.
   const parsed = CLOCK.test(text) && Number(text.slice(11, 13)) < 24 ? zonedTime(text, 'dd.MM.yyyy HH:mm:ss', ZONE) : null;
   if (!parsed) throw new SchemaError(PROVIDER, 'D Express returned an invalid scan time');

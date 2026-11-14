@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { whistlQuiet, whistlStage } from './status.js';
 
@@ -39,7 +40,8 @@ export function normalizeWhistlNumber(raw: string): string {
 }
 
 /** The scan's date and time ("18/06/2026 12:43:52") as a wall clock. They carry no offset. */
-function wallClock(stamp: string): string | null {
+function wallClock(raw: string): string | null {
+  const stamp = paddedDate(raw);
   if (!STAMP.test(stamp)) return null;
   // UTC only checks the calendar fields. No offset is assigned.
   const parsed = DateTime.fromFormat(stamp, 'dd/MM/yyyy HH:mm:ss', { zone: 'UTC' });

@@ -3,6 +3,7 @@ import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } fro
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -57,8 +58,8 @@ export function parsePostaRomana(payload: unknown, rawNumber: string, readAt = D
   const seen = new Set<string>();
   details.forEach((detail, index) => {
     if (!isRecord(detail)) throw new SchemaError(PROVIDER, 'Poșta Română returned an invalid scan');
-    const day = clean(detail.data, 16);
-    const hour = clean(detail.ora, 8);
+    const day = paddedDate(clean(detail.data, 16));
+    const hour = paddedDate(clean(detail.ora, 8));
     const description = clean(detail.detaliu, 300);
     const clock = DAY.test(day) && CLOCK.test(hour) ? zonedTime(`${day} ${hour}`, 'dd.MM.yyyy HH:mm', ZONE) : null;
     if (!clock || !description) throw new SchemaError(PROVIDER, 'Poșta Română returned a scan without a clock or wording');

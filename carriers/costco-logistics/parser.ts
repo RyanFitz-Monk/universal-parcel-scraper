@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, textFromHtml } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { costcoLogisticsStage } from './status.js';
@@ -30,7 +31,7 @@ export function isCostcoBlockPage(body: string): boolean {
 
 /** The market's MM/DD/YY and twelve-hour clock, without an inferred zone. */
 function wallClock(date: unknown, time: unknown): string {
-  const day = typeof date === 'string' ? /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(date.trim()) : null;
+  const day = typeof date === 'string' ? /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(paddedDate(date.trim())) : null;
   const clock = typeof time === 'string' ? /^([1-9]|1[0-2]):([0-5]\d)\s*([ap]m)$/i.exec(time.trim()) : null;
   if (!day || !clock) throw new SchemaError(PROVIDER, 'Costco Logistics returned an invalid scan clock');
   const hour = Number(clock[1]) % 12 + (clock[3]!.toLowerCase() === 'pm' ? 12 : 0);

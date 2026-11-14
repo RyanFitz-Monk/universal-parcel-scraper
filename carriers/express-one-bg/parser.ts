@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { expressOneBgPlace, expressOneBgStage } from './status.js';
 
@@ -49,7 +50,9 @@ export function readExpressOneBgToken(html: string): string {
 }
 
 /** A row's date and minute as one wall time. The page gives no zone. */
-function wallClock(day: string, minute: string): string {
+function wallClock(rawDay: string, rawMinute: string): string {
+  const day = paddedDate(rawDay);
+  const minute = paddedDate(rawMinute);
   const text = `${day} ${minute}`;
   const parsed = DAY.test(day) && MINUTE.test(minute) ? DateTime.fromFormat(text, CLOCK_FORMAT, { zone: 'UTC' }) : null;
   // UTC only checks the calendar fields; no offset is assigned. Only a clock that reads back unchanged is kept.

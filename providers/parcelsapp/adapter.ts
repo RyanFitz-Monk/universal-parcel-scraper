@@ -22,6 +22,7 @@ import { CarrierError, carrierErrorKind, ChallengeError, IndeterminateError, Inp
 import { runSteps } from '../../core/runner/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import {
   canadaProvinceTimeZone, countryCode, countryTimeZone, mislabeledLocalTime, mislabeledWallTime, regionHasTown, sharedClockZone,
   timeZoneCountry, usStateTimeZone, usZipState,
@@ -2345,7 +2346,7 @@ function parseHtml(html: string, trackingNumber: string, timezone: string | null
     }
     // The English web app renders the UTC digits of its API, which are the
     // scan's local clock.
-    const labeled = DateTime.fromFormat(`${date} ${time}`, 'dd LLL yyyy HH:mm', { locale: 'en', zone: 'UTC' });
+    const labeled = DateTime.fromFormat(paddedDate(`${date} ${time}`), 'dd LLL yyyy HH:mm', { locale: 'en', zone: 'UTC' });
     if (!labeled.isValid) throw new SchemaError(SOURCE, 'ParcelsApp returned an invalid event date');
     const state = readState({ carriers }, { date: labeled.toISO(), ...(name ? { carrier: carriers.indexOf(name) } : {}) },
       description, timezone, numberOf(trackingNumber), false, replyDestination({}, numberOf(trackingNumber)), null, NO_CODES, filed);

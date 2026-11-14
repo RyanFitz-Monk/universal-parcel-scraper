@@ -111,6 +111,11 @@ describe('CBL Logística HTTP adapter', () => {
     });
     expect(parseCbl(incident, IN_TRANSIT)).toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map',
       last_status_text: 'MERCANCIA RETENIDA', last_update_local: '2026-11-04T10:00:00' });
+    const unpadded = changed('in-transit', (data) => {
+      data.datos_expedicion.SITUACION_LOCALIZADOR = null;
+      data.incidencias = [{ Fecha: '4/11/2026 9:00:00', Descripcion: 'MERCANCIA RETENIDA', Ampliacion: '' }];
+    });
+    expect(parseCbl(unpadded, IN_TRANSIT)).toMatchObject({ last_update_local: '2026-11-04T09:00:00' });
   });
 
   it('reads a documented shipment without scans as a summary of its situation', () => {

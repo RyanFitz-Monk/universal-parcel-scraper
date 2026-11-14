@@ -83,6 +83,7 @@ describe('OCS HTTP adapter', () => {
       ['2026-02-10T10:20:00', 'in_transit', 'SAMPLE GATEWAY, JAPAN', 'Arrived at Facility: Arrived at Warehouse'],
       ['2026-02-09T21:00:00', 'customs', undefined, 'Export Declaration: Preliminary Declaration(MEC)'],
     ]);
+    expect(rows(parseOcs(fixture('export').replaceAll('09Feb2026', '9Feb2026'), EXPORT))[6]![0]).toBe('2026-02-09T21:00:00');
     expect(result.events!.at(-1)).toMatchObject({ stage: 'registered',
       description: 'Shipment Information entered at customer site: EDI: International : IEC' });
     expect(JSON.stringify(result)).not.toMatch(/Exampleville|SAMPLE-SHI/);

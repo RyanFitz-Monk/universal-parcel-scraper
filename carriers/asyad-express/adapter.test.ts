@@ -80,6 +80,8 @@ describe('Asyad Express mobile guest tracking', () => {
     expect(result.events).toHaveLength(2);
     expect(result.events![0]!.provider_code).toBe('S400');
     expect(result.events![1]!.local_time).toBe('2026-03-10T16:30:00');
+    expect(parseAsyadExpress({ ...express(), data: [{ ...express().data[0]!, statusTime: 'Mar-5-2026 9:05 PM' }] }, NUMBER)!.events![0]!.local_time)
+      .toBe('2026-03-05T21:05:00');
     for (const entry of statuses.entries) expect(statusMap.stage(entry.code, entry.wording)).toBe(entry.stage);
   });
 

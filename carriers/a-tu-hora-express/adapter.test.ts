@@ -160,6 +160,8 @@ describe('A Tu Hora Express HTTP adapter', () => {
     const incident = changed('in-transit', (data) => { data.estados.unshift(scan('3', 'Motivo de muestra', '11/11/2026 12:00:00')); });
     expect(parseATuHora(incident, IN_TRANSIT_CREDENTIAL, IN_TRANSIT_GUID)).toMatchObject({ status: 'exception', current_stage: 'exception',
       last_status_text: 'Motivo de muestra', last_update_local: '2026-11-11T12:00:00' });
+    const unpadded = changed('in-transit', (data) => { data.estados.unshift(scan('3', 'Motivo de muestra', '1/12/2026 9:00:00')); });
+    expect(parseATuHora(unpadded, IN_TRANSIT_CREDENTIAL, IN_TRANSIT_GUID)).toMatchObject({ last_update_local: '2026-12-01T09:00:00' });
     // A history whose newest rows have no step takes its stage from the newest that has one.
     const pending = changed('in-transit', (data) => { data.estados.unshift(scan('5', 'Pendiente de realizar', '11/11/2026 12:00:00')); });
     expect(parseATuHora(pending, IN_TRANSIT_CREDENTIAL, IN_TRANSIT_GUID)).toMatchObject({ status: 'out_for_delivery',

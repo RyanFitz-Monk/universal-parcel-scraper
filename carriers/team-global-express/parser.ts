@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { teamGlobalExpressMilestoneStage, teamGlobalExpressStage } from './status.js';
@@ -143,7 +144,7 @@ function record(row: Record<string, unknown>, key: string): Record<string, unkno
  * never says which, so it stays a wall clock.
  */
 function scanClock(row: Record<string, unknown>): string {
-  const value = text(row, 'dateTimeStamp', 32);
+  const value = paddedDate(text(row, 'dateTimeStamp', 32));
   const parsed = DateTime.fromFormat(value, 'dd-MM-yyyy hh:mm a', { zone: 'UTC', locale: 'en-US' });
   if (!CLOCK.test(value) || !parsed.isValid || parsed.toFormat('dd-MM-yyyy hh:mm a', { locale: 'en-US' }) !== value) {
     throw new SchemaError(PROVIDER, 'Team Global Express returned an invalid scan time');
@@ -180,7 +181,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
 
 /** The estimate, `dd/MM/yyyy`, as a calendar day. */
 function estimate(summary: Record<string, unknown>): string | null {
-  const value = text(summary, 'eta', 16);
+  const value = paddedDate(text(summary, 'eta', 16));
   const parsed = DateTime.fromFormat(value, 'dd/MM/yyyy', { zone: 'UTC' });
   return ETA.test(value) && parsed.isValid ? parsed.toISODate() : null;
 }

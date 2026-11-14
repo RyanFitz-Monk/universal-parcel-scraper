@@ -100,6 +100,7 @@ describe('Post One own-item HTML parser', () => {
     expect(result.events![0]!.local_time).toBe('2026-06-16T15:37:09');
     expect(result.events![1]!.local_time).toBe('2026-06-16T08:52');
     expect(result.last_update).toBeNull(); expect(result.delivered_at).toBeUndefined();
+    expect(parsePostOneTrackingHtml(fixture().replace('16/06/2026 15:37', '6/7/2026 9:37'), NUMBER).events![0]!.local_time).toBe('2026-07-06T09:37');
   });
 
   it.each(['31/02/2026 15:37', '16/13/2026 15:37', '16/06/2026 24:37', '16/06/2026 15:60',

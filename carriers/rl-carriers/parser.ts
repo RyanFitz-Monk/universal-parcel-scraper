@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -64,7 +65,7 @@ function shipmentList(html: string): unknown {
 
 /** A row's wall clock, `MM/DD/YYYY` and `hh:mm:ss AM`, without an offset. */
 function clockOf(date: string, time: string): string | null {
-  const day = DATE.exec(date);
+  const day = DATE.exec(paddedDate(date));
   const clock = TIME.exec(time);
   if (!day || !clock) return null;
   const iso = calendarDay(Number(day[3]), Number(day[1]), Number(day[2]));

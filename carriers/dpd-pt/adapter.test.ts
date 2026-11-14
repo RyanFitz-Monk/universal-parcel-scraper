@@ -145,6 +145,7 @@ describe('DPD Portugal tracking adapter', () => {
     expect(result).toMatchObject({ current_stage: 'delivered', current_stage_source: expect.stringMatching(/^wording:/) });
     expect(parseDpdPt(history(['998', '15-10-2026', '09:00', 'SAMPLE EVENT']), DELIVERED)).toMatchObject({ status: 'unknown',
       last_status_text: 'SAMPLE EVENT', last_update_local: '2026-10-15T09:00:00' });
+    expect(parseDpdPt(history(['998', '5-1-2026', '9:00', 'SAMPLE EVENT']), DELIVERED).last_update_local).toBe('2026-01-05T09:00:00');
   });
 
   it('reads a proof of delivery later scans take back as no step, and a parcel sent back as a return under way', () => {

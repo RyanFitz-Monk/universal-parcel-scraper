@@ -148,7 +148,6 @@ describe('Via Cargo HTTP adapter', () => {
       (shipment: Shipment) => { shipment.listaEventos[0]!.tipoEvento = 7; },
       (shipment: Shipment) => { shipment.listaEventos[0]!.deleNombre = { nombre: 'EJEMPLO' }; },
       (shipment: Shipment) => { shipment.listaEventos[0]!.fechaEvento = '2026-04-16 06:38'; },
-      (shipment: Shipment) => { shipment.listaEventos[0]!.fechaEvento = '16/04/2026 6:38'; },
       (shipment: Shipment) => { shipment.listaEventos[0]!.fechaEvento = '31/04/2026 06:38'; },
       (shipment: Shipment) => { shipment.listaEventos[0]!.fechaEvento = '16/04/2026 24:00'; },
       (shipment: Shipment) => { delete shipment.listaEventos[0]!.fechaEvento; delete shipment.listaEventos[0]!.fechaAlta; },
@@ -159,6 +158,11 @@ describe('Via Cargo HTTP adapter', () => {
     ]) {
       expect(() => parseViaCargo(changed('in-transit', change), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     }
+  });
+
+  it('reads a scan clock printed without leading zeros', () => {
+    const result = parseViaCargo(changed('in-transit', (shipment) => { shipment.listaEventos[0]!.fechaEvento = '16/4/2026 6:38'; }), NUMBER);
+    expect(result.events![0]).toMatchObject({ provider_code: 'CPCE', time: '2026-04-16T06:38:00-03:00' });
   });
 
   it('keeps an unknown number, a refused key, a moved route, a browser check and a broken reply apart', async () => {

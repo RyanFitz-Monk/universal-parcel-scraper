@@ -71,6 +71,7 @@ describe('City Express HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(/00000,|SAMPLE TOWN|EXAMPLE CITY|SAMPLE-REF|EXAMPLE\.SHOP/);
     // The shipment's single parcel is the same history.
     expect(parseCityExpress(text('delivered.html'), DELIVERED_PARCEL)).toEqual(result);
+    expect(parseCityExpress(text('delivered.html').replace('04.03.2026 09:20', '4.3.2026 9:20'), DELIVERED).events![1]!.local_time).toBe('2026-03-04T09:20:00');
   });
 
   it('reads a shipment of several parcels whole, and a parcel’s number as that parcel alone', () => {

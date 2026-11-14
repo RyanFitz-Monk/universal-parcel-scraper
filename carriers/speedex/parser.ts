@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { speedexStage } from './status.js';
 
@@ -38,7 +39,7 @@ export function isSpeedexBlockPage(html: string): boolean {
  * minute, with no zone, so it stays local.
  */
 function wallClock(text: string): string {
-  const match = STAMP.exec(text);
+  const match = STAMP.exec(paddedDate(text));
   const local = match ? `${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:00` : '';
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });

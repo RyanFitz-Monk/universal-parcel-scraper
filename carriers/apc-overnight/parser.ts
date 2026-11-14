@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { apcOvernightStage, isApcOvernightNotice } from './status.js';
 
@@ -21,7 +22,7 @@ const INVALID = 'Consignment identifier is invalid';
 // A firewall or bot check's page, which can come back with HTTP 200.
 const BLOCKED = /<title>\s*(?:Request Rejected|Access Denied|Attention Required|Just a moment)|requested URL was rejected|_cf_chl_opt|cf-turnstile/i;
 // "At Hub (10-Oct-2026 00:31)": the wording, then the day and minute in brackets.
-const ROW = /^(.+?) \((\d{2}-[A-Z][a-z]{2}-\d{4} \d{2}:\d{2})\)$/;
+const ROW = /^(.+?) \((\d{1,2}-[A-Z][a-z]{2}-\d{4} \d{1,2}:\d{2})\)$/;
 const WEIGHT = /^(\d{1,6}(?:\.\d{1,3})?) kg$/;
 // "NC16 (Next Business Day Non-Conveyable Parcel)": the service's code, then its name.
 const SERVICE = /^[A-Z0-9]{1,8} \((.{1,80})\)$/;
@@ -40,7 +41,7 @@ export function normalizeApcOvernightNumber(raw: string): string {
 /** "09-Oct-2026 17:58" as a wall clock. The page gives no offset. */
 function wallClock(stamp: string): string | null {
   // UTC only checks the calendar fields. No offset is assigned.
-  const parsed = DateTime.fromFormat(stamp, 'dd-LLL-yyyy HH:mm', { zone: 'UTC', locale: 'en-GB' });
+  const parsed = DateTime.fromFormat(paddedDate(stamp), 'dd-LLL-yyyy HH:mm', { zone: 'UTC', locale: 'en-GB' });
   return parsed.isValid ? parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss") : null;
 }
 

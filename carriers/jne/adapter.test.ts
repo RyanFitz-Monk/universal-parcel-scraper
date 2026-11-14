@@ -102,6 +102,7 @@ describe('JNE HTTP adapter', () => {
       ['2026-03-02T20:45:00', 'RECEIVED AT WAREHOUSE'], ['2026-03-01T15:30:00', 'DEPARTED FROM TRANSIT'],
       ['2026-03-01T15:30:00', 'RECEIVED AT SORTING CENTER'], ['2026-03-01T13:00:00', 'SHIPMENT RECEIVED BY JNE COUNTER OFFICER AT'],
     ]);
+    expect(parseJne(changed('in-transit', (body) => { body.history[2]!.date = '1-3-2026 15:30'; }), IN_TRANSIT).events).toEqual(result.events);
   });
 
   it('reorders a history given newest first', () => {

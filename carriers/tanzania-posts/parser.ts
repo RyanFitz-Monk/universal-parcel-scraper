@@ -5,6 +5,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -111,7 +112,7 @@ function hourOf(hour: number, suffix: string): number | null {
  * keep their wall clock.
  */
 function clockOf(text: string, inTanzania: boolean): { time: string } | { local_time: string } {
-  const match = CREATED.exec(text);
+  const match = CREATED.exec(paddedDate(text));
   if (!match) throw new SchemaError(PROVIDER, 'Tanzania Posts Corporation returned an invalid scan time');
   const [, weekday, day, month, year, hours, minutes, seconds, suffix] = match;
   // The weekday must fit the date; parsing in UTC checks the calendar only.

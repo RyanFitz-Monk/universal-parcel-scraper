@@ -2,6 +2,7 @@ import { isCttExpressTrackingNumber } from '../../core/detection/cttExpress.js';
 import { IndeterminateError, InvalidInputError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import type { Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -39,8 +40,8 @@ function weightKg(value: unknown): number | undefined {
 
 /** Scans carry the depot's wall clock and no offset. */
 function scanClock(date: unknown, time: unknown): { local_time?: string } {
-  const day = typeof date === 'string' ? /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date) : null;
-  const clock = typeof time === 'string' ? /^(\d{2}):(\d{2})$/.exec(time) : null;
+  const day = typeof date === 'string' ? /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(date)) : null;
+  const clock = typeof time === 'string' ? /^(\d{2}):(\d{2})$/.exec(paddedDate(time)) : null;
   const iso = day && calendarDay(Number(day[3]), Number(day[2]), Number(day[1]));
   return iso && clock && Number(clock[1]) < 24 && Number(clock[2]) < 60 ? { local_time: `${iso}T${clock[1]}:${clock[2]}:00` } : {};
 }

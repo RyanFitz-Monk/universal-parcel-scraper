@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { FARGO_COURIER_INVOICE, fargoCourierStage } from './status.js';
@@ -68,8 +69,8 @@ interface Row { code: string; description: string; day: string; clock: string; l
 
 /** A wall clock checked digit by digit; Luxon would roll 24:00 over to the next day. */
 function wallClock(row: Row): string {
-  const day = DAY.exec(row.day);
-  const clock = CLOCK.exec(row.clock);
+  const day = DAY.exec(paddedDate(row.day));
+  const clock = CLOCK.exec(paddedDate(row.clock));
   const wall = day && clock ? `${day[3]}-${day[2]}-${day[1]}T${clock[1]}:${clock[2]}:00` : '';
   const parsed = DateTime.fromISO(wall, { zone: 'UTC' });
   if (!wall || !parsed.isValid || parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss") !== wall) {

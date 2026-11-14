@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { estafetaStatus, estafetaWording } from './status.js';
 
@@ -83,9 +84,10 @@ export function estafetaRegistered(lookup: EstafetaLookup): CarrierResult {
 function clockText(raw: string): string { return raw.replace(/\s+hrs\.$/i, '').trim(); }
 
 function clock(day: string, time: string): { local_time?: string; provider_time_text?: string } {
-  const rawClock = clockText(time);
-  const validated = /^\d{2}\/\d{2}\/\d{4}$/.test(day) && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(rawClock)
-    ? DateTime.fromFormat(`${day} ${rawClock}`, 'dd/MM/yyyy HH:mm', { zone: 'UTC' }) : null;
+  const date = paddedDate(day);
+  const rawClock = paddedDate(clockText(time));
+  const validated = /^\d{2}\/\d{2}\/\d{4}$/.test(date) && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(rawClock)
+    ? DateTime.fromFormat(`${date} ${rawClock}`, 'dd/MM/yyyy HH:mm', { zone: 'UTC' }) : null;
   return validated?.isValid ? { local_time: validated.toISO({ includeOffset: false, suppressMilliseconds: true }) }
     : { provider_time_text: clean(`${day} ${time}`, 100) };
 }

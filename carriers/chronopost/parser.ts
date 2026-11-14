@@ -6,6 +6,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { withoutShortenedScans } from '../../core/result/repeats.js';
 import { windowEstimate, type WindowEstimate } from '../../core/result/window.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode, countryTimeZone, explicitOffsetTime, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { xmlDocument, type XmlNode } from '../../core/transport/xml.js';
@@ -85,13 +86,13 @@ function depotClock(raw: string, place: string): ReturnType<typeof clock> {
 
 /** The recipient's chosen redelivery day, printed as dd/MM/yyyy. */
 function redeliveryDay(value: string): string | null {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(value));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 
 /** One end of an appointment, printed as dd/MM/yyyy HH:mm[:ss], a wall clock without an offset. */
 function appointmentEnd(value: string): string | null {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4}) ([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/.exec(value);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4}) ([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/.exec(paddedDate(value));
   if (!match) return null;
   const day = calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
   return day ? `${day} ${match[4]}:${match[5]}` : null;

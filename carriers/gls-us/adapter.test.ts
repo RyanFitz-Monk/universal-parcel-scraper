@@ -257,6 +257,7 @@ describe('GLS US status vocabulary', () => {
         .toEqual({ kind: 'mapped', stage: entry.stage });
     }
     expect(statusMap.stage(null, 'arrival scan - delivery sched for 12/31/2026')).toBe('in_transit');
+    expect(statusMap.stage(null, 'arrival scan - delivery sched for 1/5/2026')).toBe('in_transit');
     expect(statusMapAnswer({ carrier: 'gls-us', providerCode: null, description: 'Synthetic note' })).toEqual({ kind: 'unknown' });
   });
 });

@@ -2,7 +2,7 @@ import { classifyWording, type ClassifiedWording, type Stage } from '../../core/
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
 
 /** "Nova data: 02-10-2026" at the end of a movement: the day the next delivery is set for. */
-const NEW_DAY = /\s*nova data:\s*(\d{2})-(\d{2})-(\d{4})\.?$/i;
+const NEW_DAY = /\s*nova data:\s*(\d{1,2})-(\d{1,2})-(\d{4})\.?$/i;
 
 /** The wording without its new delivery day or closing full stop, with one kind of dash. */
 function keyOf(wording: string): string {

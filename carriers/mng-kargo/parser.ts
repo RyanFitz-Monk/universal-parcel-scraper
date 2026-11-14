@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { mngKargoStage } from './status.js';
@@ -60,7 +61,7 @@ export function parseMngKargoForm(html: string): string {
 
 /** The page's date ("08.10.2026"), a calendar day without a time. */
 function dayOf(text: string): string | undefined {
-  const match = DAY.exec(text);
+  const match = DAY.exec(paddedDate(text));
   return (match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]))) || undefined;
 }
 

@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { intexStage } from './status.js';
@@ -53,7 +54,7 @@ interface Row {
 }
 
 function rowOf(wording: string, clock: string, index: number): Row {
-  const match = CLOCK.exec(clock);
+  const match = CLOCK.exec(paddedDate(clock));
   const at = match ? firstOccurrence(DateTime.fromObject({ year: Number(match[3]), month: Number(match[2]), day: Number(match[1]),
     hour: Number(match[4]), minute: Number(match[5]) }, { zone: ZONE })) : null;
   const description = clean(wording, 300);

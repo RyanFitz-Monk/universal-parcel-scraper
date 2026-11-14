@@ -3,6 +3,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -84,8 +85,8 @@ export function emsVietnamScanText(raw: string): { code: string; description: st
 
 /** The wall clock of `NGAY` (day/month/year) and `GIO`, to the second. */
 function wallClock(row: Record<string, unknown>): string {
-  const date = DATE.exec(text(row, 'NGAY', 16));
-  const clock = text(row, 'GIO', 16);
+  const date = DATE.exec(paddedDate(text(row, 'NGAY', 16)));
+  const clock = paddedDate(text(row, 'GIO', 16));
   const wall = date ? `${date[3]}-${date[2]}-${date[1]}T${clock}` : '';
   // Parsing in UTC checks the calendar digits only. Luxon rolls 24:00:00 over to the next day.
   const checked = DateTime.fromISO(wall, { zone: 'UTC' });

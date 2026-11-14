@@ -5,6 +5,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, SchemaError } fr
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { lastMovement } from '../../core/result/pickup.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { correosDeMexicoStage } from './status.js';
@@ -100,8 +101,8 @@ function failedPage(html: string, message: string): never {
 }
 
 function scanOf(cells: readonly string[]): CorreosDeMexicoScan {
-  const day = DAY.exec(cells[0] ?? '');
-  const clock = CLOCK.exec(cells[1] ?? '');
+  const day = DAY.exec(paddedDate(cells[0] ?? ''));
+  const clock = CLOCK.exec(paddedDate(cells[1] ?? ''));
   const date = day ? calendarDay(Number(day[3]), Number(day[2]), Number(day[1])) : null;
   if (!date || !clock || Number(clock[1]) > 23 || Number(clock[2]) > 59 || Number(clock[3]) > 59) {
     throw new SchemaError(PROVIDER, 'Correos de México returned a scan without a valid clock');

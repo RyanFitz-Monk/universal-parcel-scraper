@@ -85,6 +85,8 @@ describe('American West HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(/EXAMPLE CITY|SAMPLE-BOL|00000000000033|215|2026-10-16T/);
     expect(parseAmericanWest(withField(fixture('in-transit'), 'appointment_date', ' 10-21-2026 '), IN_TRANSIT))
       .toMatchObject({ expected_delivery: '2026-10-21' });
+    expect(parseAmericanWest(withField(fixture('in-transit'), 'appointment_date', ' 11-2-2026 '), IN_TRANSIT))
+      .toMatchObject({ expected_delivery: '2026-11-02' });
     // A day before the newest milestone's is stale, and the ETA to the final mile agent is the hub's.
     expect(parseAmericanWest(withField(fixture('in-transit'), 'deliver_by_date', ' 10-15-2026 '), IN_TRANSIT)).toMatchObject({ expected_delivery: null });
     expect(parseAmericanWest(withField(fixture('in-transit'), 'deliver_by_date', ''), IN_TRANSIT)).toMatchObject({ expected_delivery: null });

@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { cblScanStage, cblSituation } from './status.js';
@@ -55,7 +56,7 @@ export function cblWording(raw: unknown): string {
  * named by none, so it stays local.
  */
 function wallClock(value: unknown): string {
-  const raw = clean(value, 40);
+  const raw = paddedDate(clean(value, 40));
   let local = '';
   const iso = ISO_CLOCK.exec(raw);
   const page = iso ? null : PAGE_CLOCK.exec(raw);

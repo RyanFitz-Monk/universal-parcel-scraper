@@ -61,6 +61,8 @@ describe('BlueEX HTTP adapter', () => {
       ],
     });
     expect(JSON.stringify(parseBlueex(fixture('delivered'), DELIVERED))).not.toMatch(/Sana|Synthetic/);
+    expect(parseBlueex(fixture('delivered').replaceAll('Mar 4th, 2026(01:05 PM)', 'Mar 4th, 2026(1:05 PM)'), DELIVERED).last_update)
+      .toBe('2026-03-04T13:05:00+05:00');
   });
 
   it('reads a consignment in transit through the adapter', async () => {

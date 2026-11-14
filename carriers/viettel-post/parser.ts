@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
 import { viettelPostStage } from './status.js';
@@ -38,8 +39,8 @@ export function parseViettelPost(payload: unknown, raw: string): CarrierResult {
   const stage = viettelPostStage(wording);
   const code = cleanScalar(shipment.MA_TRANGTHAI, 16);
   if (!/^\d{1,4}$/.test(code)) throw new SchemaError(PROVIDER, 'Viettel Post returned an invalid status code');
-  const clock = shipment.TIME_TRANGTHAI;
-  if (typeof clock !== 'string' || !/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(clock)) throw new SchemaError(PROVIDER, 'Viettel Post returned no status clock');
+  const clock = typeof shipment.TIME_TRANGTHAI === 'string' ? paddedDate(shipment.TIME_TRANGTHAI) : '';
+  if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(clock)) throw new SchemaError(PROVIDER, 'Viettel Post returned no status clock');
   const date = DateTime.fromFormat(clock, 'dd/MM/yyyy HH:mm', { zone: 'UTC' });
   if (!date.isValid || date.toFormat('dd/MM/yyyy HH:mm') !== clock) throw new SchemaError(PROVIDER, 'Viettel Post returned an invalid status clock');
   const local = date.toFormat("yyyy-MM-dd'T'HH:mm:ss");

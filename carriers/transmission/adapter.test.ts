@@ -114,6 +114,8 @@ describe('TransMission tracking adapter', () => {
       '<h4 class=\'mb-1 gray-500 body-b2 font-weight-500\'>Geschat tussen</h4><h6 class=\'mb-1 gray-900 body-b2 font-weight-500 mb-2\'><span><img src="/images/order/Clock.svg" class=""> 26-10-2026 09:08 - 11:08</span> </h6>');
     expect(parseTransmissionPage(window, MOVING)).toMatchObject({
       expected_delivery_from: '2026-10-26T09:08:00+01:00', expected_delivery: '2026-10-26T11:08:00+01:00' });
+    expect(parseTransmissionPage(window.replace('26-10-2026 09:08', '2-11-2026 9:08'), MOVING)).toMatchObject({
+      expected_delivery_from: '2026-11-02T09:08:00+01:00', expected_delivery: '2026-11-02T11:08:00+01:00' });
     const unknown = fixture('announced');
     expect(parseTransmissionPage(unknown, ANNOUNCED)).not.toHaveProperty('expected_delivery');
     const boxOnly = fixture('delivered').replace(/<td>39<\/td>|<td>0<\/td>/g, '<td>77</td>').replace(/<td>Bezorgd<\/td>/g, '<td>Synthetic</td>');

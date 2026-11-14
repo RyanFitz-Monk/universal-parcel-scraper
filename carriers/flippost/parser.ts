@@ -1,6 +1,7 @@
 import { IndeterminateError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -51,7 +52,7 @@ export function flippostRows(payload: unknown): Row[] {
  * manual's example gives the same rows as days alone, so midnight keeps the day only.
  */
 function rowClock(row: Row): string {
-  const match = CLOCK.exec(text(row, 'atime', 20));
+  const match = CLOCK.exec(paddedDate(text(row, 'atime', 20)));
   const day = match ? calendarDay(2000 + Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !day) invalid('Flip Post returned an invalid row time');
   const [hours, minutes] = [match[4], match[5]];

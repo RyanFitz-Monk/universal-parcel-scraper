@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -66,7 +67,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 120): strin
 function dayOf(row: Record<string, unknown>, key: string): string | null {
   const value = text(row, key, 40);
   if (!value) return null;
-  const match = DAY.exec(value);
+  const match = DAY.exec(paddedDate(value));
   const day = match ? calendarDay(Number(match[3]), Number(match[1]), Number(match[2])) : null;
   if (!day) invalid(`American West returned an invalid ${key}`);
   return day;

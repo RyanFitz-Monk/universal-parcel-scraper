@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -44,7 +45,7 @@ function text(row: Record<string, unknown>, key: string, maxLength: number): str
 function dayOf(row: Record<string, unknown>): string {
   const value = text(row, 'timestamp', 40);
   if (!value) return '';
-  const match = DAY.exec(value);
+  const match = DAY.exec(paddedDate(value));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!day) throw new SchemaError(PROVIDER, 'BJS returned an invalid status date');
   return day;

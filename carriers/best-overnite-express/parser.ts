@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -27,7 +28,7 @@ const DELIVERY_ROW = /^DELIVERED\b/i;
 // A terminal's town, in letters and spaces; any other place text is not kept.
 const TOWN = /^[A-Z]+(?: [A-Z]+)*$/i;
 // The status line the page shows for a shipment without scans, when it was delivered.
-const DELIVERED_STATUS = /^Delivered on (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{2}:\d{2})\b/i;
+const DELIVERED_STATUS = /^Delivered on (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}:\d{2})\b/i;
 // States on Pacific time throughout. Oregon and Nevada each keep a corner on Mountain time.
 const PACIFIC_STATES = new Set(['CA', 'WA']);
 const PACIFIC = 'America/Los_Angeles';
@@ -91,7 +92,8 @@ interface Clock {
  * A clock on `day`: an instant in the zone when there is one, else a wall
  * clock. Midnight, as on pickups, is a day without a time.
  */
-function clockOn(day: string, value: string, zone: string | null): Clock {
+function clockOn(day: string, raw: string, zone: string | null): Clock {
+  const value = paddedDate(raw);
   if (!value || value === '00:00') return { local_time: day };
   const clock = CLOCK.exec(value);
   if (!clock || Number(clock[1]) > 23 || Number(clock[2]) > 59) invalid('Best Overnite returned an invalid time');
@@ -102,7 +104,7 @@ function clockOn(day: string, value: string, zone: string | null): Clock {
 
 /** A day as the scans write it, `Apr 06 2026`, or null. */
 function spelledDay(value: string): string | null {
-  const day = DAY.exec(value);
+  const day = DAY.exec(paddedDate(value));
   const month = day ? MONTHS.indexOf(day[1]!) + 1 : 0;
   return day && month ? calendarDay(Number(day[3]), month, Number(day[2])) : null;
 }
@@ -135,7 +137,7 @@ function projectRow(row: unknown, zone: string | null, names: ReadonlySet<string
 function dayOf(payload: Record<string, unknown>, key: string): string | null {
   const value = text(payload, key, 20);
   if (!value) return null;
-  const slashed = SLASHED_DAY.exec(value);
+  const slashed = SLASHED_DAY.exec(paddedDate(value));
   const day = slashed ? calendarDay(Number(slashed[3]), Number(slashed[1]), Number(slashed[2])) : spelledDay(value);
   if (!day) invalid(`Best Overnite returned an invalid ${key}`);
   return day;

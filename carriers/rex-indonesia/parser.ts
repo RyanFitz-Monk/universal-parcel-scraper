@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { rexStage } from './status.js';
@@ -17,8 +18,9 @@ export function rexNumber(raw: string): string {
   return number;
 }
 
-function clock(day: string, time: string): string | null {
-  if (!day && !time) return null; // Undated template milestones are not completed scans.
+function clock(rawDay: string, rawTime: string): string | null {
+  if (!rawDay && !rawTime) return null; // Undated template milestones are not completed scans.
+  const day = paddedDate(rawDay), time = paddedDate(rawTime);
   const parts = /^(\d{2})-(\d{2})-(\d{4})$/.exec(day);
   const date = parts ? calendarDay(Number(parts[3]), Number(parts[2]), Number(parts[1])) : null;
   if (!date || Number(parts?.[3]) < 1000 || (time && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time))) {

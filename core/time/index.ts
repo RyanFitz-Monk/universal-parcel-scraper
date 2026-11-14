@@ -11,6 +11,7 @@
 import { DateTime } from 'luxon';
 import { REGION_TOWNS } from '../../generated/regionTowns.js';
 import { clean } from '../transport/text.js';
+import { looseFormat } from './fields.js';
 import { townName } from './townNames.js';
 
 export interface ParsedTime {
@@ -51,7 +52,7 @@ export function explicitOffsetTime(value: unknown, maxLength = 64): ParsedTime |
 /**
  * Naive wall-clock strings in one known zone. Use when the provider documents
  * (or live checks show) a single backend zone; note regional caveats in the
- * adapter.
+ * adapter. The format's `dd`, `MM`, `HH` and `hh` also take one digit.
  */
 export function zonedTime(
   value: unknown,
@@ -61,7 +62,7 @@ export function zonedTime(
 ): ParsedTime | null {
   const raw = clean(value, options.maxLength ?? 64);
   if (!raw) return null;
-  return fromDateTime(firstOccurrence(DateTime.fromFormat(raw, format, { zone, locale: options.locale })));
+  return fromDateTime(firstOccurrence(DateTime.fromFormat(raw, looseFormat(format), { zone, locale: options.locale })));
 }
 
 /** ISO strings that may or may not carry an offset; offset-less values are read in `zone`. */

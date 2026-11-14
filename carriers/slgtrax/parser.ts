@@ -4,6 +4,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, 
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -66,7 +67,7 @@ function text(row: Record<string, unknown>, key: string, maxLength: number): str
  * its seconds when it falls in that minute.
  */
 function instantOf(row: Record<string, unknown>): { time: string; at: number } {
-  const shown = text(row, 'date_time', 40);
+  const shown = paddedDate(text(row, 'date_time', 40));
   // UTC only checks the calendar fields.
   const checked = CLOCK.test(shown) ? DateTime.fromFormat(shown, CLOCK_FORMAT, { zone: 'UTC', locale: 'en-US' }) : null;
   if (!checked?.isValid || checked.toFormat(CLOCK_FORMAT, { locale: 'en-US' }) !== shown) {

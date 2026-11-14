@@ -5,6 +5,7 @@ import {
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -129,7 +130,8 @@ function warehouse(result: unknown, side: 'Origen' | 'Destino'): string {
  * A milestone's clock: `MM/dd/yyyy HH:mm:ss` on Colombia's clock. Inter
  * Rapidísimo's network is within Colombia, which keeps one zone all year.
  */
-function scanTime(value: string): string {
+function scanTime(written: string): string {
+  const value = paddedDate(written);
   const [, month, day, year, clock] = SCAN_CLOCK.exec(value) ?? [];
   const placed = clock ? zonedTime(value, 'MM/dd/yyyy HH:mm:ss', ZONE) : null;
   // Luxon rolls 24:00 over to the next day; only a clock that reads back unchanged is kept.

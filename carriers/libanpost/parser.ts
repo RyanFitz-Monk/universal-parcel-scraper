@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/text.js';
 import { libanPostStage } from './status.js';
 
@@ -28,8 +29,8 @@ function detail($: CheerioAPI, label: string): string | null {
 }
 
 function clock(date: string, time: string): string {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date);
-  const t = /^(\d{2}):(\d{2})$/.exec(time);
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(date));
+  const t = /^(\d{2}):(\d{2})$/.exec(paddedDate(time));
   if (!m || !t) throw new SchemaError(PROVIDER, 'LibanPost returned an invalid scan clock');
   const parsed = DateTime.fromObject({ year: +m[3]!, month: +m[2]!, day: +m[1]!, hour: +t[1]!, minute: +t[2]! }, { zone: 'UTC' });
   if (!parsed.isValid || parsed.year < 2000 || +t[1]! >= 24) throw new SchemaError(PROVIDER, 'LibanPost returned an invalid scan clock');

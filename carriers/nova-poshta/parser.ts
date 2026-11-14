@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
 import type { Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { explicitOffsetTime, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
@@ -58,7 +59,7 @@ export function isNovaPoshtaWaybill(number: string): boolean {
   return WAYBILL.test(number);
 }
 function receiptTime(value: unknown): string | undefined {
-  const text = clean(value, 64);
+  const text = paddedDate(clean(value, 64));
   const format = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? 'yyyy-MM-dd HH:mm:ss'
     : /^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/.test(text) ? 'dd-MM-yyyy HH:mm:ss' : null;
   return format ? zonedTime(text, format, 'Europe/Kyiv')?.iso : undefined;

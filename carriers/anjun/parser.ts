@@ -3,6 +3,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar, textFromHtml } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { anjunStage } from './status.js';
@@ -81,7 +82,7 @@ function scanClock(row: Record<string, unknown>): string {
 /** Anjun Express's day-first clock, `dd-MM-yyyy HH:mm:ss`, as the tracker's `yyyy-MM-dd HH:mm:ss`. */
 function nodeClock(row: Record<string, unknown>): string {
   const raw = text(row, 'dateTime', 32);
-  const parts = DAY_FIRST.exec(raw);
+  const parts = DAY_FIRST.exec(paddedDate(raw));
   if (!parts) throw new SchemaError(PROVIDER, 'Anjun Express returned an invalid scan time');
   return wallClock(`${parts[3]}-${parts[2]}-${parts[1]} ${parts[4]}`);
 }

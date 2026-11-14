@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -38,7 +39,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
 /** A calendar day the reply writes as dd-mm-yyyy, or null for none. */
 function day(value: string, what: string): string | null {
   if (!value) return null;
-  const match = DAY.exec(value);
+  const match = DAY.exec(paddedDate(value));
   const iso = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!iso || iso < '2000-01-01') throw new SchemaError(PROVIDER, `4Sides returned an invalid ${what}`);
   return iso;

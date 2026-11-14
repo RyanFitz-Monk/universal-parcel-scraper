@@ -2,6 +2,7 @@ import { load } from 'cheerio';
 import { DateTime } from 'luxon';
 import { IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence, regionHasTown, townKey } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { classifyMrwStatus, MRW_NEUTRAL_STATUS } from './status.js';
@@ -78,7 +79,7 @@ export function parseMrwSummary(html: string, raw: string): MrwSummary {
 function buildLocalDate(rawDate: string, rawHour: string): { local_time?: string; provider_time_text?: string } {
   const date = clean(rawDate, 32);
   const hour = clean(rawHour, 16);
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(date));
   const clock = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(hour);
   if (match && clock) {
     const day = calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
@@ -211,7 +212,7 @@ export function parseMrwHistory(html: string, raw: string, summary: MrwSummary):
   // The summary can lag the history: a delivery reopened and attempted again
   // is listed above the delivery the summary still shows. The summary's own
   // row must be in the history, with only later rows above it.
-  const at = listed.findIndex((row) => row.status === summary.status && row.date === summary.date && row.hour === summary.hour);
+  const at = listed.findIndex((row) => row.status === summary.status && paddedDate(row.date) === paddedDate(summary.date) && row.hour === summary.hour);
   const shown = at > 0 ? sortableClock(listed[at]!) : '';
   if (at < 0 || (at > 0 && (!shown || listed.slice(0, at).some((row) => !(sortableClock(row) >= shown))))) {
     throw new IndeterminateError('MRW', 'Current summary and history disagree');

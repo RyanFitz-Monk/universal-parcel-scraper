@@ -37,7 +37,7 @@ export const DPD_DE_APP_SCANS: Readonly<Record<string, Stage>> = {
 };
 
 /** The key a scan's wording is mapped under: a booked collection's date becomes an ellipsis. */
-export const dpdDeScanKey = (wording: string) => wording.replace(/^(Pickup ordered for:) \d{2}\.\d{2}\.\d{4}$/i, '$1 …');
+export const dpdDeScanKey = (wording: string) => wording.replace(/^(Pickup ordered for:) \d{1,2}\.\d{1,2}\.\d{4}$/i, '$1 …');
 
 const NOT_COLLECTED = 'The consignee did not collect the parcel.';
 const DRIVER_PICKUP = 'Pick-up from the Pickup parcelshop by DPD driver';

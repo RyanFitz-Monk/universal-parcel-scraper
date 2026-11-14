@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
@@ -37,7 +38,7 @@ function text(value: unknown, field: string, maxLength = 500): string {
 
 /** The page only changes the clock's presentation to AM/PM; the feed states no zone. */
 function localClock(day: unknown, time: unknown): string {
-  const date = DAY.exec(text(day, 'scan date', 40));
+  const date = DAY.exec(paddedDate(text(day, 'scan date', 40)));
   const calendar = date ? calendarDay(Number(date[3]), Number(date[2]), Number(date[1])) : null;
   if (!calendar || date?.[3] === '0000' || date?.[3] === '0001') invalid('EGXPRESS returned an invalid scan date');
   const raw = text(time, 'scan time', 40);

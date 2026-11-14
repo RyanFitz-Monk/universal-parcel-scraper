@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { xmlDocument, type XmlNode } from '../../core/transport/xml.js';
@@ -39,7 +40,7 @@ function field(shipment: XmlNode, name: string): string {
 
 /** A day the reply prints as dd/MM/yyyy. */
 function day(value: string): string | null {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(paddedDate(value));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 

@@ -7,6 +7,7 @@ describe('consumer result time interpretation', () => {
     expect(eventTimestamp('2026-07-01T12:00:00+08:00', 'Europe/Zurich')).toBe('2026-07-01T04:00:00Z');
     expect(eventTimestamp('2026-07-01 12:00:00', 'Europe/Zurich')).toBe('2026-07-01T10:00:00Z');
     expect(eventTimestamp('2026-02-30T12:00:00')).toBeNull();
+    expect(eventTimestamp('5.7.2026 9:00', 'Europe/Zurich')).toBe('2026-07-05T07:00:00Z');
   });
   it('stores a wall time the clocks repeat at the same instant in every season', () => {
     const now = Settings.now;

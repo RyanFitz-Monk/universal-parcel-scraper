@@ -4,6 +4,7 @@ import { IndeterminateError, InputRequiredError, InvalidInputError, NoHistoryErr
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { windowEstimate, type WindowEstimate } from '../../core/result/window.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { estesForwardingStage } from './status.js';
@@ -57,7 +58,7 @@ interface Instant {
  * empty field is null.
  */
 function clock(row: Record<string, unknown>, key: string): Instant | null {
-  const raw = text(row, key, 32);
+  const raw = paddedDate(text(row, key, 32));
   if (!raw) return null;
   const parts = CLOCK.exec(raw);
   if (!parts) throw new SchemaError(PROVIDER, `EFW returned an invalid ${key}`);

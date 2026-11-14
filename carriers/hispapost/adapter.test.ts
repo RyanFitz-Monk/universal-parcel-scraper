@@ -64,6 +64,8 @@ describe('Hispapost HTTP adapter', () => {
       timezone: 'Europe/Madrid', summary_only: true,
       events: [{ time: '2026-03-14T12:05:00+01:00', description: 'Entregado', stage: 'delivered', stage_source: 'carrier_map' }],
     });
+    expect(parseHispapost(fixture('delivered').replace('14/03/2026 12:05', '4/3/2026 9:05'), DELIVERED))
+      .toMatchObject({ last_update: '2026-03-04T09:05:00+01:00' });
   });
 
   it('reads the hour Madrid’s clocks repeat as its first occurrence', () => {

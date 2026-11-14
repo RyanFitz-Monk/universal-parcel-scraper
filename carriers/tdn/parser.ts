@@ -15,7 +15,7 @@ export const TDN_MAX_BYTES = 512 * 1024;
 const NUMBER = /^9999\d{8}$/;
 // "Entregado - 041 - 19/12/2022 18:04": the status, the branch's number, sometimes followed by
 // its name, and a clock to the minute.
-const LINE = /^(.+?)(?:\s+-\s+\d{1,4}(?:\s+[^\s-](?:[^-]|(?<=\S)-(?=\S))*?)?)?\s+-\s+(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/;
+const LINE = /^(.+?)(?:\s+-\s+\d{1,4}(?:\s+[^\s-](?:[^-]|(?<=\S)-(?=\S))*?)?)?\s+-\s+(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{2})$/;
 // The tracker's answer for an expedition it has not registered, in the rail's first slot. The
 // accent is left open, so a page decoded in the wrong encoding still reads as this notice.
 const NOT_REGISTERED = /^Env\S{1,3}o no registrado\b/i;

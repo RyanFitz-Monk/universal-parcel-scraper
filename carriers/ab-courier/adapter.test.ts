@@ -114,6 +114,8 @@ describe('A&B Courier HTTP adapter', () => {
     // The database's empty clock is no clock.
     expect(parseAbCourier(transit((detail) => { detail.pickedUpTime = 'Jan  1 1900 12:00AM'; }), IN_TRANSIT).events).toEqual([]);
     expect(parseAbCourier(transit((detail) => { detail.estimatedDeliveryBy = '01/01/1900 00:00:00'; }), IN_TRANSIT).expected_delivery).toBeNull();
+    expect(parseAbCourier(transit((detail) => { detail.estimatedDeliveryBy = '1/5/2027 9:00:00'; }), IN_TRANSIT).expected_delivery)
+      .toBe('2027-01-05T09:00:00-05:00');
   });
 
   it('stages the statuses after a pickup, a cancellation and a status only the picture’s step places', () => {

@@ -77,6 +77,8 @@ describe('Naqel HTTP adapter', () => {
     // An expected day the page words otherwise is left out.
     expect(parseNaqel(changed('in-transit', '<td>18-10-2026</td>', '<td>2026-10-18</td>'), IN_TRANSIT).expected_delivery).toBeNull();
     expect(parseNaqel(changed('in-transit', '<td>18-10-2026</td>', '<td></td>'), IN_TRANSIT).expected_delivery).toBeNull();
+    const unpadded = changed('in-transit', 'October 14, 2026', 'November 4, 2026').replace('<td>18-10-2026</td>', '<td>8-1-2027</td>');
+    expect(parseNaqel(unpadded, IN_TRANSIT)).toMatchObject({ last_update_local: '2026-11-04T22:00:00', expected_delivery: '2027-01-08' });
   });
 
   it('keeps no destination, pickup day, payment method, piece count or footer contact', () => {

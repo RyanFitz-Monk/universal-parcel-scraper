@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { tciExpressStage } from './status.js';
@@ -42,7 +43,8 @@ export function normalizeTciExpressNumber(raw: string): string {
 }
 
 /** A day as the tables write it, "26-JUN-2024", as an ISO calendar day. */
-function calendarDay(text: string): string {
+function calendarDay(raw: string): string {
+  const text = paddedDate(raw);
   // Parsing in UTC checks the calendar alone; a day that reads back changed is not one.
   const parsed = DateTime.fromFormat(text, DAY_FORMAT, { zone: 'UTC', locale: 'en-US' });
   if (!DAY.test(text) || !parsed.isValid || parsed.toFormat(DAY_FORMAT, { locale: 'en-US' }).toUpperCase() !== text.toUpperCase()) {
@@ -52,8 +54,8 @@ function calendarDay(text: string): string {
 }
 
 /** A transhipment clock: an Indian wall clock to the minute, or its day alone when the time cell is empty. */
-function scanClock(date: string, time: string): Pick<CarrierEvent, 'time'> & { local_time: string } {
-  const day = calendarDay(date);
+function scanClock(date: string, rawTime: string): Pick<CarrierEvent, 'time'> & { local_time: string } {
+  const day = calendarDay(date), time = paddedDate(rawTime);
   if (!time) return { local_time: day };
   const local = `${day}T${time}`;
   const wall = firstOccurrence(DateTime.fromISO(local, { zone: ZONE }));

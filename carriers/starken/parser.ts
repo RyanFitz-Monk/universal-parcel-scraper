@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { STARKEN_WAITING, starkenMappedStage, starkenStage } from './status.js';
@@ -56,7 +57,7 @@ function list(row: Record<string, unknown>, key: string, max: number): unknown[]
  * regions do not share one all year, so the wall clock stays local.
  */
 function scanClock(value: string): string {
-  const match = CLOCK.exec(value);
+  const match = CLOCK.exec(paddedDate(value));
   const local = match ? `${match[3]}-${match[2]}-${match[1]}T${match[4]}` : '';
   // Parsing in UTC checks the calendar digits only; luxon rolls 24:00 over to the next day.
   const parsed = DateTime.fromISO(local, { zone: 'UTC' });

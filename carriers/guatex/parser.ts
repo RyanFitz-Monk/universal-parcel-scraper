@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -59,7 +60,9 @@ type Clock = { time: string } | { local_time: string };
  * A day and clock, read in Guatemala and read back unchanged, as an instant to
  * the minute. A day without a clock stays a day.
  */
-function readClock(day: string, clock: string, what: string): Clock {
+function readClock(writtenDay: string, writtenClock: string, what: string): Clock {
+  const day = paddedDate(writtenDay);
+  const clock = paddedDate(writtenClock);
   if (DAY.test(day) && (!clock || CLOCK.test(clock))) {
     const format = clock ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy';
     const local = clock ? `${day} ${clock}` : day;

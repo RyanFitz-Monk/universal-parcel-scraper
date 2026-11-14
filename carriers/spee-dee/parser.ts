@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { speeDeeActivity, speeDeeStatus } from './status.js';
 
@@ -29,7 +30,7 @@ export function normalizeSpeeDeeNumber(raw: string): string {
 
 /** A page clock ("MM/DD/YYYY hh:mm[:ss] am") as a wall time; the page gives scans no offset. */
 function wallClock(text: string): string | null {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   if (!match) return null;
   const [, day, hour, minute, second = '00', meridiem] = match;
   // UTC only checks the calendar fields. No offset is assigned.

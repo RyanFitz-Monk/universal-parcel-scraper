@@ -31,7 +31,7 @@ const SUMMARY = 'Air Waybill No.|Latest Tracking Record|Shipper|Receiver|Pcs|Act
 const DETAIL = 'Air Waybill No.|Shipper|Receiver|Type|Pcs|Actual Weight|Vol. Weight';
 const HISTORY = 'Activity|Date/Time|Location|Memo';
 // "Fri 13Mar2026 12:07", the scan's wall clock to the minute.
-const CLOCK = /^(?:[A-Z][a-z]{2}\s+)?(\d{2}[A-Z][a-z]{2}\d{4}\s\d{2}:\d{2})$/;
+const CLOCK = /^(?:[A-Z][a-z]{2}\s+)?(\d{1,2}[A-Z][a-z]{2}\d{4}\s\d{1,2}:\d{2})$/;
 const WEIGHT = /^(\d{1,5}(?:\.\d{1,3})?)\s*kg$/i;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
@@ -119,7 +119,7 @@ function records($: CheerioAPI, table: AnyNode) {
 function wallClock(text: string): string {
   const match = CLOCK.exec(text);
   // Read in UTC to check the calendar alone: a day or time that does not exist is refused.
-  const parsed = match ? DateTime.fromFormat(match[1]!, 'ddLLLyyyy HH:mm', { zone: 'UTC', locale: 'en-US' }) : null;
+  const parsed = match ? DateTime.fromFormat(match[1]!, 'dLLLyyyy H:mm', { zone: 'UTC', locale: 'en-US' }) : null;
   if (!parsed?.isValid) throw new SchemaError(PROVIDER, 'OCS returned an invalid scan time');
   return parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }

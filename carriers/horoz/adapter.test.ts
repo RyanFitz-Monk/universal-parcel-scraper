@@ -68,6 +68,7 @@ describe('Horoz Lojistik HTTP adapter', () => {
     // A date that is not one is no expectation.
     expect(parseHoroz(inTransit().replace('>13.03.2026<', '>31.02.2026<'), DELIVERED).expected_delivery).toBeNull();
     expect(parseHoroz(inTransit().replace('>13.03.2026<', '><'), DELIVERED).expected_delivery).toBeNull();
+    expect(parseHoroz(inTransit().replace('>13.03.2026<', '>3.4.2026<'), DELIVERED).expected_delivery).toBe('2026-04-03');
   });
 
   it('puts the movements in clock order when the page does not', () => {
@@ -76,6 +77,8 @@ describe('Horoz Lojistik HTTP adapter', () => {
       '2026-03-11T07:58:20', '2026-03-10T21:03:48', '2026-03-10T06:15:33']);
     // The headline keeps the stage; the newest movement gives the clock.
     expect(result).toMatchObject({ current_stage: 'delivered', last_update_local: '2026-03-13T08:00:00' });
+    expect(parseHoroz(text('delivered.html').replace('09.03.2026 17:42:10', '9.3.2026 7:42:10'), DELIVERED).events!.at(-1))
+      .toMatchObject({ local_time: '2026-03-09T07:42:10' });
   });
 
   it('reads the empty note under its own form as not found', async () => {

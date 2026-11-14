@@ -1,6 +1,7 @@
 import type { ClassifiedStatus } from '../../core/status/index.js';
 import type { CarrierStatusMap } from '../../core/status/statusMap.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
+import { paddedDate } from '../../core/time/fields.js';
 
 // GLS US's scan wordings, in `normalizeStatusWording` form. Other wording is left to the shared classifier.
 const SCANS = new Map<string, ClassifiedStatus>([
@@ -24,7 +25,7 @@ const SUMMARIES = new Map<string, ClassifiedStatus>([
 /** A scan's stage, by its wording as GLS US writes it. */
 export function glsUsScanStatus(description: string): ClassifiedStatus | undefined {
   const wording = normalizeStatusWording(description);
-  return SCANS.get(wording) ?? (ARRIVAL.test(wording) ? { status: 'in_transit', stage: 'in_transit' } : undefined);
+  return SCANS.get(wording) ?? (ARRIVAL.test(paddedDate(wording)) ? { status: 'in_transit', stage: 'in_transit' } : undefined);
 }
 
 /** The shipment's status as the reply names it, such as "out for delivery". */

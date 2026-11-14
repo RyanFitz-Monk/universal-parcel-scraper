@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { sendexStage } from './status.js';
@@ -52,7 +53,7 @@ const pad = (part: string) => part.padStart(2, '0');
  * several zones and the page names none, so no offset is assigned.
  */
 function wallClock(text: string): string {
-  const match = CLOCK.exec(text);
+  const match = CLOCK.exec(paddedDate(text));
   const date = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !date || Number(match[4]) > 23 || Number(match[5]) > 59) throw new SchemaError(PROVIDER, 'Sendex returned an invalid movement time');
   return `${date}T${pad(match[4]!)}:${pad(match[5]!)}:00`;
@@ -60,7 +61,7 @@ function wallClock(text: string): string {
 
 /** The commitment date as a calendar day; a field the page leaves empty, or writes otherwise, gives none. */
 function commitment(text: string): string | null {
-  const match = DAY.exec(text);
+  const match = DAY.exec(paddedDate(text));
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 

@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { naqelStage, naqelSummaryStage } from './status.js';
 
@@ -64,7 +65,7 @@ function summary($: CheerioAPI): Map<string, string> {
  * the Gulf and the countries Naqel collects from, so the clock stays local.
  */
 function scanClock(day: string, time: string): string {
-  const text = `${day} ${time}`;
+  const text = `${paddedDate(day)} ${time}`;
   // Parsing in UTC checks the calendar digits only; the wall clock keeps no offset.
   const parsed = DateTime.fromFormat(text, CLOCK, { locale: 'en', zone: 'UTC' });
   // Only a clock that reads back unchanged is kept.
@@ -74,8 +75,9 @@ function scanClock(day: string, time: string): string {
 
 /** The expected delivery day; a missing or unreadable one is none. */
 function estimate(text: string): string | null {
-  const parsed = DateTime.fromFormat(text, ETA, { zone: 'UTC' });
-  return parsed.isValid && parsed.toFormat(ETA) === text ? parsed.toISODate() : null;
+  const value = paddedDate(text);
+  const parsed = DateTime.fromFormat(value, ETA, { zone: 'UTC' });
+  return parsed.isValid && parsed.toFormat(ETA) === value ? parsed.toISODate() : null;
 }
 
 /** Whether the shipment the page names is the one asked for: its waybill, or one of its pieces. */

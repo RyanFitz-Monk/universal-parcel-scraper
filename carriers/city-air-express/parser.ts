@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/normalize.js';
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { cityAirExpressStage } from './status.js';
@@ -28,7 +29,7 @@ export function normalizeCityAirExpressNumber(raw: string): string {
 }
 
 function clock(value: string): string {
-  const match = /^(\d{2}) ([A-Za-z]{3}) (\d{4}) ([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+  const match = /^(\d{2}) ([A-Za-z]{3}) (\d{4}) ([01]\d|2[0-3]):([0-5]\d)$/.exec(paddedDate(value));
   const year = Number(match?.[3]);
   const day = match && year >= 2000 && year <= 2100
     ? calendarDay(year, MONTHS.indexOf(match[2]!.toLowerCase()) + 1, Number(match[1])) : null;
@@ -39,7 +40,7 @@ function clock(value: string): string {
 function publicWording(wording: string, localTime: string): string {
   const known = KNOWN_WORDING.get(wording.toLowerCase());
   if (known) return known;
-  const delivery = /^Delivered to .{1,400} at ([01]\d|2[0-3]):([0-5]\d) on (\d{2})-(\d{2})-(\d{4})$/i.exec(wording);
+  const delivery = /^Delivered to .{1,400} at ([01]\d|2[0-3]):([0-5]\d) on (\d{2})-(\d{2})-(\d{4})$/i.exec(paddedDate(wording));
   if (!delivery) return 'Tracking update';
   const day = calendarDay(Number(delivery[5]), Number(delivery[4]), Number(delivery[3]));
   if (!day || day + 'T' + delivery[1] + ':' + delivery[2] !== localTime) {

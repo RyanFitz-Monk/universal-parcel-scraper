@@ -85,6 +85,10 @@ describe('Ukrposhta native history projection', () => {
     expect(ukrposhtaWallClock(value)).toBeNull();
   });
 
+  it('reads a clock printed without leading zeros', () => {
+    expect(ukrposhtaWallClock('5.3.2026 9:05')).toBe('2026-03-05T09:05:00');
+  });
+
   it('preserves a current unknown code without borrowing older delivered progress', () => {
     const pair = fixture();
     pair.overview.result[0].event = pair.history.result[0].gtt_event = 'constructor';

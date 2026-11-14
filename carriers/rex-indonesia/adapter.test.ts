@@ -63,9 +63,10 @@ describe('REX Indonesia milestones', () => {
 
   it('leaves blank template milestones inconclusive and rejects changed clocks or columns', () => {
     expect(() => parseRex(history(row('Diterima Oleh : Synthetic Signatory')), NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
-    for (const [day, time] of [['31-02-2026', '10:00'], ['01-06-2026', '24:00'], ['', '10:00'], ['01-06-2026', '9:00'], ['0000-00-00', '00:00']]) {
+    for (const [day, time] of [['31-02-2026', '10:00'], ['01-06-2026', '24:00'], ['', '10:00'], ['0000-00-00', '00:00']]) {
       expect(() => parseRex(history(row('Diterima Oleh : Synthetic Signatory', day, time)), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     }
+    expect(parseRex(history(row('Asal Synthetic depot', '1-6-2026', '9:15')), NUMBER).events).toEqual([{ local_time: '2026-06-01T09:15', description: 'Asal', location: 'Synthetic depot' }]);
     expect(() => parseRex(history().replace('<td>Date</td>', '<td>Changed</td>'), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     expect(() => parseRex(history(row('Unknown personal label', '01-06-2026')), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     expect(() => parseRex('x'.repeat(REX_MAX_BYTES + 1), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));

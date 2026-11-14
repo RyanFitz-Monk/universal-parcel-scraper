@@ -5,6 +5,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/index.js';
 import { expressOneQuiet, expressOneStage } from './status.js';
 
@@ -44,8 +45,8 @@ export function normalizeExpressOneNumber(raw: string): string {
 
 /** A day heading and a row's clock as one wall time. The page gives no offset. */
 function wallClock(day: string, time: string): string | null {
-  const date = DAY.exec(day);
-  const clock = CLOCK.exec(time);
+  const date = DAY.exec(paddedDate(day));
+  const clock = CLOCK.exec(paddedDate(time));
   if (!date || !clock) return null;
   const [year, month, dayOfMonth] = date[3] ? [date[3], date[2]!, date[1]!] : [date[4]!, date[5]!, date[6]!];
   // UTC only checks the calendar fields. No offset is assigned.

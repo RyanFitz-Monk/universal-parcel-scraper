@@ -4,6 +4,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { clean } from '../../core/transport/text.js';
 import { zoomStage, zoomWording } from './status.js';
 
@@ -39,7 +40,8 @@ export function validateZoomResultUrl(rawUrl: string, raw: string): void {
   }
 }
 
-function creationYear(text: string): number {
+function creationYear(raw: string): number {
+  const text = paddedDate(raw);
   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(text)) throw new SchemaError(PROVIDER, 'Zoom returned an invalid creation date');
   const date = DateTime.fromFormat(text, 'dd/MM/yyyy', { zone: 'UTC' });
   if (!date.isValid || date.year < 1000 || date.toFormat('dd/MM/yyyy') !== text) throw new SchemaError(PROVIDER, 'Zoom returned an invalid creation day');
@@ -47,8 +49,9 @@ function creationYear(text: string): number {
 }
 
 /** Each table clock keeps its digits; the creation date settles only its century. */
-function wallClock(day: string, time: string, anchorYear: number): string {
-  const parts = /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(day);
+function wallClock(rawDay: string, rawTime: string, anchorYear: number): string {
+  const parts = /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(paddedDate(rawDay));
+  const time = paddedDate(rawTime);
   if (!parts || !/^\d{2}:\d{2}$/.test(time)) throw new SchemaError(PROVIDER, 'Zoom returned an invalid scan clock');
   const base = Math.floor(anchorYear / 100) * 100 + Number(parts[3]);
   const candidates = [base - 100, base, base + 100].sort((left, right) => Math.abs(left - anchorYear) - Math.abs(right - anchorYear));

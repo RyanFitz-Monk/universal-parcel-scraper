@@ -3,6 +3,7 @@ import { CarrierError, IndeterminateError, SchemaError, TransportError } from '.
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
 import { windowEstimate, type WindowEstimate } from '../../core/result/window.js';
 import type { ClassifiedStatus, Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, isoTime, zonedTime } from '../../core/time/index.js';
 import type { XmlNode } from '../../core/transport/xml.js';
 import {
@@ -34,14 +35,14 @@ function estimateClock(raw: string) {
 function estimateDay(raw: string): string | null {
   if (estimateClock(raw)) return raw.slice(0, 10);
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
-  const display = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(raw);
+  const display = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(paddedDate(raw));
   const day = iso ? calendarDay(Number(iso[1]), Number(iso[2]), Number(iso[3]))
     : display ? calendarDay(Number(display[3]), Number(display[2]), Number(display[1])) : null;
   return day && !placeholderDay(day) ? day : null;
 }
 
 function announcedDay(wording: string): string | null {
-  const date = /^Your parcel is estimated to be delivered on:\s*(?:[A-Za-z]+,\s*)?(\d{2}\.\d{2}\.\d{4})$/i.exec(wording)?.[1];
+  const date = /^Your parcel is estimated to be delivered on:\s*(?:[A-Za-z]+,\s*)?(\d{2}\.\d{2}\.\d{4})$/i.exec(paddedDate(wording))?.[1];
   return date ? estimateDay(date) : null;
 }
 
@@ -138,11 +139,12 @@ export function parseDpdDeApp(data: XmlNode, scans: XmlNode, number: string): { 
     }
     const day = scalar(row, 'ScanDate', 16);
     const time = scalar(row, 'ScanTime', 16);
-    if (!/^\d{2}\.\d{2}\.\d{4}$/.test(day) || !/^\d{2}:\d{2}$/.test(time)) invalid();
+    const wall = paddedDate(`${day} ${time}`);
+    if (!/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/.test(wall)) invalid();
     const place = /^(.{1,120}) \(([A-Z]{2})\)$/.exec(scalar(row, 'Location'));
     if (place) placed = place[2]!;
     // German facilities keep German civil time; a clock elsewhere has no established zone.
-    const clock = zonedTime(`${day} ${time}`, 'dd.MM.yyyy HH:mm', place?.[2] === 'DE' ? 'Europe/Berlin' : 'UTC');
+    const clock = zonedTime(wall, 'dd.MM.yyyy HH:mm', place?.[2] === 'DE' ? 'Europe/Berlin' : 'UTC');
     if (!clock) invalid();
     const key = dpdDeScanKey(wording);
     const stage = Object.hasOwn(DPD_DE_APP_SCANS, key) ? DPD_DE_APP_SCANS[key] : dpdDeShopCollectionStage(key, waited, previous);

@@ -6,6 +6,7 @@ import { isValidDhlExpressWaybill } from '../../core/detection/numericChecksums.
 import { BudgetExceededError, carrierErrorKind, ChallengeError, IndeterminateError, InvalidInputError, NotFoundError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
 import { recoverableByDefault, runSteps, type StepContext } from '../../core/runner/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { explicitOffsetTime, zonedTime } from '../../core/time/index.js';
 import { clean, parseJsonBytes } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -51,8 +52,8 @@ const CLOCK_FORMAT = 'cccc, MMMM dd, yyyy HH:mm';
  * dated only when its facility's zone is known; any other keeps its clock.
  */
 function clock(date: unknown, time: unknown, location: string): Pick<CarrierEvent, 'time'> & { local_time?: string } {
-  if (typeof date !== 'string' || typeof time !== 'string' || !/^\d{2}:\d{2}$/.test(time)) return {};
-  const wall = `${date} ${time}`;
+  if (typeof date !== 'string' || typeof time !== 'string' || !/^\d{2}:\d{2}$/.test(paddedDate(time))) return {};
+  const wall = paddedDate(`${date} ${time}`);
   const local = DateTime.fromFormat(wall, CLOCK_FORMAT, { locale: 'en', zone: 'utc' });
   if (!local.isValid) return {};
   const zone = facilityZone(location);

@@ -11,6 +11,8 @@ describe('Aramex direct tracking', () => {
   it('preserves local clocks without fabricating instants or using the progress rail', () => {
     const result = parseAramex(html, NUMBER);
     expect(result).toMatchObject({ status: 'delivered', last_update: null, last_update_local: '2026-01-03T14:00:00' });
+    expect(parseAramex(html.replaceAll('03 Jan 26', '3 Jan 26').replace('>08:00<', '>8:00<'), NUMBER).events?.map(e => e.local_time))
+      .toEqual(['2026-01-03T14:00:00', '2026-01-03T08:00:00']);
     expect(result.events?.map(e => e.stage)).toEqual(['delivered', 'out_for_delivery']);
     expect(result.events?.[0]).not.toHaveProperty('time');
     expect(JSON.stringify(result)).not.toMatch(/Private Recipient|Example Address|progress-rail/);

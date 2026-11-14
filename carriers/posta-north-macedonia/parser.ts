@@ -2,6 +2,7 @@ import { isValidS10TrackingNumber, normalizeTrackingNumber } from '../../core/de
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -56,7 +57,7 @@ function text(row: Record<string, unknown>, key: string, maxLength: number): str
  * zone: a wall clock without a verified offset, so it stays `local_time`.
  */
 function clockOf(raw: string): string {
-  const match = CLOCK.exec(raw);
+  const match = CLOCK.exec(paddedDate(raw));
   const day = match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
   if (!match || !day) throw new SchemaError(PROVIDER, 'Pošta na Severna Makedonija returned an invalid scan time');
   if (match[4] === undefined) return day;

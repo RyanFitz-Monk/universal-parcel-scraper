@@ -4,6 +4,7 @@ import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } fro
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import type { ClassifiedStatus } from '../../core/status/index.js';
 import { hasGs1CheckDigit } from '../../core/detection/numericChecksums.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, firstOccurrence, regionHasTown } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -167,7 +168,7 @@ function localTime(digits: string, format: string): string | undefined {
 
 function scanClock(raw: string): { local_time?: string; provider_time_text?: string } {
   const text = clean(raw, 64);
-  const digits = /^(?:[\p{L}]{3},?\s+)?(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}(?::\d{2})?)$/u.exec(text)?.[1];
+  const digits = /^(?:[\p{L}]{3},?\s+)?(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}(?::\d{2})?)$/u.exec(paddedDate(text))?.[1];
   const local = digits ? localTime(digits, digits.length === 19 ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') : undefined;
   if (local) return { local_time: local };
   return text ? { provider_time_text: text } : {};
@@ -215,7 +216,7 @@ export function parseCorreosExpressFeed(payload: unknown, raw: string): CorreosE
   if (list.length > MAX_SCANS) throw new SchemaError(PROVIDER, 'The Correos localizador returned too many scans');
   const scans = list.map((event): CorreosExpressFeedScan => {
     if (!isRecord(event)) throw new SchemaError(PROVIDER, 'The Correos localizador returned an invalid scan');
-    const date = clean(event.fecEvento, 16), time = clean(event.horEvento, 16);
+    const date = paddedDate(clean(event.fecEvento, 16)), time = paddedDate(clean(event.horEvento, 16));
     const clock = /^\d{2}\/\d{2}\/\d{4}$/.test(date) && /^\d{2}:\d{2}:\d{2}$/.test(time) ? localTime(`${date} ${time}`, 'dd/MM/yyyy HH:mm:ss') : undefined;
     const code = cleanScalar(event.codEvento, 32).toUpperCase();
     if (!clock || (code && !/^[A-Z0-9]{2,16}$/.test(code))) throw new SchemaError(PROVIDER, 'The Correos localizador returned an invalid scan');

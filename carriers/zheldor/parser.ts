@@ -2,6 +2,7 @@ import { isZheldorReference } from '../../core/detection/zheldor.js';
 import { ChallengeError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
@@ -21,7 +22,7 @@ function identity(value: unknown, number: string): boolean {
 }
 
 function clock(value: unknown): string {
-  const match = typeof value === 'string' && /^(\d{2})\.(\d{2})\.(\d{4}) ([01]?\d|2[0-3]):([0-5]\d):([0-5]\d)$/.exec(value);
+  const match = typeof value === 'string' && /^(\d{2})\.(\d{2})\.(\d{4}) ([01]?\d|2[0-3]):([0-5]\d):([0-5]\d)$/.exec(paddedDate(value));
   const day = match && calendarDay(Number(match[3]), Number(match[2]), Number(match[1]));
   if (!day || !match) throw new SchemaError(PROVIDER, 'JDE returned an invalid scan clock');
   return `${day}T${match[4]!.padStart(2, '0')}:${match[5]}:${match[6]}`;

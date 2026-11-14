@@ -511,6 +511,11 @@ unless customs holds, inspects or detains the parcel there. A customs problem is
 Universal providers preserve Posti's handling labels, where registration can record repeated
 physical handling rather than electronic pre-advice.
 
+A culture's short date can drop the leading zero of a day, month or hour, which samples
+dated from the 10th, in October to December or from 10:00 hide. A parser pads such a field
+with `paddedDate()` ([fields](core/time/fields.ts)) before matching it against two digits,
+and `zonedTime()` reads `dd`, `MM`, `HH` and `hh` with one digit or two.
+
 `resolveResult()` exposes an `instant` only for a scan clock with a verified UTC offset.
 Local clocks keep their original fields. An adapter puts a clock whose zone the feed does
 not establish in `local_time`: a consumer reads an offset-less `time` in the result's zone,
