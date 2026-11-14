@@ -86,6 +86,19 @@ describe('locatePlace', () => {
     expect(place('QZXVILLE, AZ', ['US', 'AZ'])).toBeNull();
     expect(place('QZXVILLE, CA', ['US', 'CA', 'MX'])).toBeNull();
     expect(place('QZXVILLE, TX', ['US', 'CN'])).toMatchObject({ country: 'US', region: 'TX' });
+    // Brazil's states whose codes a country has too, after a comma or not: Amazonas and Rondônia keep their own clocks.
+    expect(place('QZXVILLE, MG', ['BR', 'CN'])).toMatchObject({ country: 'BR', precision: 'country', region: 'MG' });
+    for (const text of ['QZXVILLE, AM', 'QZXVILLE - AM', 'QZXVILLE / AM', 'QZXVILLE AM']) {
+      const found = place(text, ['BR']);
+      expect(found, text).toMatchObject({ country: 'BR', region: 'AM' });
+      expect(placeTimeZone(found!), text).toBe('America/Manaus');
+    }
+    expect(placeTimeZone(place('QZXVILLE, RO', ['BR', 'CN'])!)).toBe('America/Porto_Velho');
+    // A town known in the code's country stays there, and so does a parcel that may be in it.
+    expect(place('MADRID, ES', ['BR', 'CN'])).toMatchObject({ country: 'ES', name: 'Madrid' });
+    expect(place('YEREVAN, AM', ['BR'])).toMatchObject({ country: 'AM', name: 'Yerevan' });
+    expect(place('QZXVILLE, ES', ['BR', 'ES'])).toMatchObject({ country: 'ES', precision: 'country' });
+    expect(place('QZXVILLE, MG', ['CN'])).toMatchObject({ country: 'MG', precision: 'country' });
   });
 
   it("reads a town it does not know before a code that is also the parcel's country as the state, where the scans write states", () => {

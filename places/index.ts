@@ -825,7 +825,7 @@ function locate(location: string | null | undefined, hints: PlaceHints, split = 
     rest = before.replace(/[\s,;(-]+$/, '');
     hinted.unshift(trailing);
     admin.push(trailing);
-    if (end![1] && !/,|;/.test(before) && !ambiguousAddressCodes.has(trailing)) {
+    if (end![1] && !/,|;/.test(before) && !ambiguousAddressCodes.has(trailing) && !writtenStateCountry(data, trailing, context)) {
       country = trailing;
       looseCountry = true;
     }
@@ -1139,7 +1139,9 @@ function statedRegion(data: Gazetteer, stated: readonly string[], country: strin
   const owner = country ?? (stated.length > 1 && last && data.countries.has(last) ? last : null);
   if (owner) {
     const code = [...stated].reverse().find((other) => other !== owner && ADMIN_CODES[owner]?.[other]);
-    return code ? { country: owner, code } : null;
+    if (code) return { country: owner, code };
+    const within = last === owner ? writtenStateCountry(data, owner, context) : undefined;
+    return within ? { country: within, code: owner } : null;
   }
   const found = last && !context.includes(last) ? context.find((other) => ADMIN_CODES[other]?.[last]) : undefined;
   return found ? { country: found, code: last! } : null;
@@ -1172,6 +1174,16 @@ function writtenState(index: number, locations: readonly (string | null | undefi
   const owner = base.find((other) => other !== code && ADMIN_CODES[other]?.[code]);
   const inState = owner ? countryPlace(gazetteer(), owner, true) : null;
   return inState && { ...inState, place: { ...inState.place, region: code } };
+}
+
+/**
+ * The country whose state a code written as a country's names, on a parcel nothing puts in the
+ * country of that code: "EXAMPLE TOWN, MG" or "EXAMPLE TOWN - AM" on a parcel to Brazil is in
+ * Minas Gerais or Amazonas, not Madagascar or Armenia. A town known in the country of that code
+ * ("MADRID, ES") is found first.
+ */
+function writtenStateCountry(data: Gazetteer, code: string, context: readonly string[]): string | undefined {
+  return context.includes(code) ? undefined : stateCountry(data, code, context);
 }
 
 function countryPlace(data: Gazetteer, country: string, text: boolean): Located | null {
