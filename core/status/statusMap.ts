@@ -50,6 +50,19 @@ export function normalizeStatusWording(description: string): string {
 }
 
 /**
+ * Why the map leaves a scan without a stage on purpose, by its provider code (null without one) and
+ * `normalizeStatusWording` wording, or undefined when it does not: a gap without a code covers only
+ * wording that came without one, a gap without wording every wording of its code, and `gapNote` the
+ * gaps the map cannot list.
+ */
+export function statusGapNote(map: CarrierStatusMap, code: string | null, wording: string): string | undefined {
+  const key = code === null ? null : map.codeKey?.(code) ?? code;
+  const gap = map.gaps.find((candidate) => (candidate.code ?? null) === key
+    && (candidate.wording === undefined || candidate.wording === wording));
+  return gap?.note ?? map.gapNote?.(code, wording);
+}
+
+/**
  * Sentences several carriers' trackers relay word for word, by `normalizeStatusWording` wording,
  * with the stage they have wherever they appear. A carrier's map consults this after its own.
  */

@@ -2,12 +2,12 @@ import { DateTime, FixedOffsetZone } from 'luxon';
 import { detectCarrierMatch, normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
-import { newestStagedScan } from '../../core/result/unstaged.js';
+import { leadingScan } from '../../core/result/unstaged.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, epochSecondsTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { alphastlineShipmentStage, alphastlineStage, isAlphastlineNotice } from './status.js';
+import { alphastlineShipmentStage, alphastlineStage, statusMap } from './status.js';
 
 export const PROVIDER = 'Alphastline';
 // A long history is a few kilobytes of JSON.
@@ -168,11 +168,8 @@ export function parseAlphastline(payload: unknown, raw: string): CarrierResult {
   scans.sort((left, right) => right.at - left.at);
   const events = scans.map(({ event }) => event);
   const newest = events[0]!;
-  // A delivery stands only while no newer scan may have undone it (`newestStagedScan`). The line's
-  // notices move nothing, so a notice after a delivery leaves it standing.
-  const moving = events.filter((event) => !isAlphastlineNotice(event.description!));
-  const lead = moving[0];
-  const current = currentStage(lead?.stage ? lead : newestStagedScan(moving) ?? undefined, status);
+  // A delivery stands only while no newer scan may have undone it; the line's notices move nothing (`leadingScan`).
+  const current = currentStage(leadingScan(events, statusMap), status);
   const country = countryCode(text(shipment, 'shipTo', 8));
   return {
     status: current ? languageStageStatus(current.stage) : 'unknown',

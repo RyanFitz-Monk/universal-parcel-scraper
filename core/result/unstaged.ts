@@ -1,5 +1,6 @@
 import { STAGES, type Stage } from '../../generated/catalog.js';
 import { languageStageStatus } from '../status/index.js';
+import { normalizeStatusWording, statusGapNote, type CarrierStatusMap } from '../status/statusMap.js';
 import type { CarrierEvent, CarrierResult } from './index.js';
 import { listsNewestFirst, scanTime } from './order.js';
 
@@ -24,6 +25,29 @@ export function newestStagedScan(events: readonly CarrierEvent[]): CarrierEvent 
   if (indexes.length === 0) return null;
   const scan = events[listsNewestFirst(events) === false ? Math.max(...indexes) : Math.min(...indexes)]!;
   return scan.stage === 'delivered' || scan.stage === 'returned' ? null : scan;
+}
+
+/**
+ * Whether a carrier's map says a scan moves nothing: it maps it as pending, or leaves it without a
+ * stage on purpose (`statusGapNote`), as a notice that keeps the stage of the scan before it.
+ */
+export function movesNothing(event: CarrierEvent, map: CarrierStatusMap): boolean {
+  if (event.stage) return event.stage === 'pending';
+  const wording = normalizeStatusWording(event.description ?? '');
+  return wording !== '' && statusGapNote(map, event.provider_code ?? null, wording) !== undefined;
+}
+
+/**
+ * The scan that sets the stage, of a carrier's scans newest first: the newest, when it has a stage,
+ * else the newest staged scan no newer scan may have undone (`newestStagedScan`), so a newer scan
+ * without a stage undoes a delivery. A notice the carrier's map says moves nothing (`movesNothing`)
+ * is passed over and a delivery stands under it; with only such notices, the newest staged one leads.
+ */
+export function leadingScan(newestFirst: readonly CarrierEvent[], map: CarrierStatusMap): CarrierEvent | undefined {
+  const moving = newestFirst.filter((event) => !movesNothing(event, map));
+  const lead = moving[0];
+  if (!lead) return newestFirst.find((event) => event.stage);
+  return lead.stage ? lead : newestStagedScan(moving) ?? undefined;
 }
 
 /**

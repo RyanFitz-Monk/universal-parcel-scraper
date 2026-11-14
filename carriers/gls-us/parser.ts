@@ -3,11 +3,11 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { PROGRESS } from '../../core/result/partial.js';
-import { newestStagedScan } from '../../core/result/unstaged.js';
+import { leadingScan } from '../../core/result/unstaged.js';
 import { classifyWording, languageStageStatus, type ClassifiedStatus, type Stage } from '../../core/status/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { glsUsScanStatus, glsUsShipmentStatus } from './status.js';
+import { glsUsScanStatus, glsUsShipmentStatus, statusMap } from './status.js';
 
 export const PROVIDER = 'GLS US';
 export const GLS_US_MAX_BYTES = 1_000_000;
@@ -118,8 +118,9 @@ export function parseGlsUs(payload: unknown, raw: string): CarrierResult {
   const summaryText = clean(record.status, 64);
   const summary = glsUsShipmentStatus(summaryText);
   const newest = events[0];
-  // The newest scan with a stage, but never a delivery or a return under a newer scan without one.
-  const staged = newest?.stage ? newest : newestStagedScan(events);
+  // The newest scan with a stage, but never a delivery or a return under a newer scan without one
+  // that moves something (`leadingScan`).
+  const staged = leadingScan(events, statusMap);
   const scanned = staged ? scanStatus(staged) : undefined;
   // The status can lag a scan the reply already lists: a scan further along leads.
   const current = summary && !(scanned && (PROGRESS[scanned.stage] ?? 0) > (PROGRESS[summary.stage] ?? 0)) ? summary : scanned ?? summary;

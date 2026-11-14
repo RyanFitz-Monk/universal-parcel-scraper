@@ -2197,6 +2197,10 @@ describe('ParcelsApp result parsing', () => {
       .map((scan) => [scan.time, scan.time_zone]);
     // UPS's "City, CC": Tunisia's code is Tennessee's too.
     expect(read('US', 'TN', 'Tunis, TN')).toEqual([['2026-11-04T09:12:00.000Z', 'Africa/Tunis']]);
+    // Morocco's is Massachusetts's; its offset is the time zone data's to give.
+    expect(read('US', 'MA', 'Casablanca, MA')?.map(([, zone]) => zone)).toEqual(['Africa/Casablanca']);
+    // Sent from Morocco, the code is Morocco's before the first scan in the US and Massachusetts's after it.
+    expect(read('MA', 'US', 'Casablanca, MA', 'Example City, MA')?.map(([, zone]) => zone)).toEqual(['America/New_York', 'Africa/Casablanca']);
     expect(read('US', 'DE', 'Example City, DE')).toEqual([['2026-11-04T09:12:00.000Z', 'Europe/Berlin']]);
     // Indonesia's is Idaho's after the first scan in the US, not before it: Indonesia's three clocks leave that scan its label.
     expect(read('ID', 'US', 'Jakarta, ID', 'Example City, ID')).toEqual([

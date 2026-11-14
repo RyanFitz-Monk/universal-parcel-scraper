@@ -774,7 +774,7 @@ import { statusMap as frontierCa } from '../../carriers/frontier-ca/status.js';
 import { statusMap as expedico } from '../../carriers/expedico/status.js';
 import type { CarrierId, Stage } from '../../generated/catalog.js';
 import { statusMap as universal } from '../../providers/status.js';
-import { normalizeStatusWording, type CarrierStatusMap } from '../status/statusMap.js';
+import { normalizeStatusWording, statusGapNote, type CarrierStatusMap } from '../status/statusMap.js';
 import { CARRIER_DEFINITIONS } from './definitions.js';
 
 /** By adapter: a carrier served by another's adapter, as Delivengo by La Poste's, reads that map. */
@@ -943,9 +943,6 @@ export function statusMapAnswer(observed: ObservedStatus): StatusMapAnswer {
   const code = observed.providerCode || null;
   const stage = map.stage(code, wording);
   if (stage) return { kind: 'mapped', stage };
-  const key = code === null ? null : map.codeKey?.(code) ?? code;
-  const gap = map.gaps.find((candidate) => (candidate.code ?? null) === key
-    && (candidate.wording === undefined || candidate.wording === wording));
-  const note = gap?.note ?? map.gapNote?.(code, wording);
+  const note = statusGapNote(map, code, wording);
   return note ? { kind: 'intentional_gap', note } : UNKNOWN;
 }

@@ -5,12 +5,51 @@ import { NOOP_RECORDER } from '../telemetry/index.js';
 import type { UniversalTracker } from '../../providers/universal.js';
 import type { CarrierEvent, CarrierResult } from './index.js';
 import { resultStage } from './resolve.js';
-import { readNewestStage } from './unstaged.js';
+import { leadingScan, movesNothing, readNewestStage } from './unstaged.js';
+import type { CarrierStatusMap } from '../status/statusMap.js';
 
 const scan = (time: string, description: string, stage?: string): CarrierEvent =>
   ({ time, description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) });
 const unknown = (events: CarrierEvent[]): CarrierResult =>
   ({ status: 'unknown', last_status_text: events[0]?.description ?? '', last_update: events[0]?.time ?? null, expected_delivery: null, events });
+
+describe('leadingScan', () => {
+  // A map that leaves a notice without a stage on purpose, by its wording and by a code with any wording.
+  const map: CarrierStatusMap = {
+    stage: () => undefined,
+    gaps: [{ wording: 'expected delivery date updated', note: 'It moves nothing and keeps the stage of the scan before it.' },
+      { code: 'NOTE', note: 'A note to the recipient: it keeps the stage of the scan before it.' }],
+    gapNote: (_code, wording) => (wording.startsWith('delivery window ') ? 'A window, which moves nothing.' : undefined),
+  };
+  const delivered = scan('2026-01-04T15:00:00Z', 'Delivered', 'delivered');
+  const coded = (event: CarrierEvent, provider_code: string): CarrierEvent => ({ ...event, provider_code });
+
+  it('keeps a delivery under a newer notice the map says moves nothing', () => {
+    for (const notice of [scan('2026-01-05T09:00:00Z', 'EXPECTED DELIVERY DATE UPDATED'), coded(scan('2026-01-05T09:00:00Z', 'Any wording'), 'NOTE'),
+      scan('2026-01-05T09:00:00Z', 'Delivery window 9-12'), scan('2026-01-05T09:00:00Z', 'Awaiting delivery to an access point', 'pending')]) {
+      expect(movesNothing(notice, map), notice.description).toBe(true);
+      expect(leadingScan([notice, delivered], map), notice.description).toBe(delivered);
+    }
+  });
+
+  it('lets a newer scan the map does not know undo a delivery or a return, and leads with a staged newest scan', () => {
+    for (const stage of ['delivered', 'returned']) {
+      expect(leadingScan([scan('2026-01-05T09:00:00Z', 'A new code'), scan('2026-01-04T15:00:00Z', 'Done', stage)], map)).toBeUndefined();
+    }
+    // A wording gap covers that wording only when it comes without a code.
+    expect(leadingScan([coded(scan('2026-01-05T09:00:00Z', 'EXPECTED DELIVERY DATE UPDATED'), 'OTHER'), delivered], map)).toBeUndefined();
+    const moving = scan('2026-01-05T09:00:00Z', 'Returned to the depot', 'in_transit');
+    expect(leadingScan([moving, delivered], map)).toBe(moving);
+    const transit = scan('2026-01-03T09:00:00Z', 'In transit', 'in_transit');
+    expect(leadingScan([scan('2026-01-05T09:00:00Z', 'A new code'), transit], map)).toBe(transit);
+  });
+
+  it('leads with the newest staged notice when only notices came', () => {
+    const pending = scan('2026-01-05T09:00:00Z', 'Awaiting delivery to an access point', 'pending');
+    expect(leadingScan([scan('2026-01-06T09:00:00Z', 'EXPECTED DELIVERY DATE UPDATED'), pending], map)).toBe(pending);
+    expect(leadingScan([scan('2026-01-06T09:00:00Z', 'EXPECTED DELIVERY DATE UPDATED')], map)).toBeUndefined();
+  });
+});
 
 describe('readNewestStage', () => {
   it('reads a result whose newest scan has no stage by the newest scan with one', () => {

@@ -4,13 +4,13 @@ import {
   IndeterminateError, InputRequiredError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError,
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
-import { newestStagedScan } from '../../core/result/unstaged.js';
+import { leadingScan } from '../../core/result/unstaged.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { firstOccurrence } from '../../core/time/index.js';
 import { clean, textFromHtml } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { jAndTWording } from '../j-and-t-au/official.js';
-import { jAndTCnStage } from './status.js';
+import { jAndTCnStage, statusMap } from './status.js';
 
 export const PROVIDER = 'J&T Express China';
 // A long history is a few dozen kilobytes.
@@ -142,8 +142,8 @@ export function parseJAndTCn(answer: Record<string, unknown>, raw: string): Carr
   if (!scans.length) throw new NoHistoryError(PROVIDER);
   const newestFirst = scans.sort((a, b) => b.timestamp - a.timestamp || a.index - b.index).map(({ event }) => event);
   const newest = newestFirst[0]!;
-  // A delivery stands only while no newer scan may have undone it (`newestStagedScan`).
-  const staged = newest.stage ? newest : newestStagedScan(newestFirst) ?? undefined;
+  // A delivery stands only while no newer scan may have undone it, unless that scan moves nothing (`leadingScan`).
+  const staged = leadingScan(newestFirst, statusMap);
   const stage = staged?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? staged!.time as string : null;
   return {
