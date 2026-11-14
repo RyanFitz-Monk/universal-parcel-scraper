@@ -317,6 +317,16 @@ describe('shared provider result', () => {
     }
   });
 
+  it("reads 360Lion's hand-over to the last mile abroad, as ParcelsApp relays it", () => {
+    // 360Lion's own tracker words the Argentine last mile's intake "handover to lastmile" (WSD02), beside its
+    // Spanish "Recibido(Ya recibió el paquete.)", a second before the station's arrival.
+    for (const wording of ['Handover to LM', 'handover to lastmile', 'Hand over to last mile', 'Recibido(Ya recibió el paquete.)']) {
+      expect(event('2026-01-07T12:45:00-03:00', wording), wording).toMatchObject({ stage: 'in_transit', stage_source: 'wording:provider' });
+    }
+    // A bare "Recibido" can be the recipient's receipt.
+    expect(event('2026-01-07T12:45:00-03:00', 'Recibido')).not.toMatchObject({ stage: 'in_transit', stage_source: 'wording:provider' });
+  });
+
   it("reads Landmark Global's pallet for any crossing, and a destination carrier's pre-alert, as ParcelsApp relays them", () => {
     for (const wording of ['Grouped when pallet scanned to crossing (SLC INTERPOST #1)', 'Grouped when pallet scanned to crossing (DDU #1234)']) {
       expect(event('2026-01-07T12:45:00-07:00', wording)).toMatchObject({ stage: 'in_transit', stage_source: 'wording:provider' });

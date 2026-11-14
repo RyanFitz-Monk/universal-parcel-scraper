@@ -399,7 +399,7 @@ step exists for future protocol changes.
   own adapter reads it. Read on Zagreb's clock, a British office's scans came out an hour
   early. A scan without an office, which can be the destination post's, keeps its wall
   clock as there; the other scans take Zagreb's clock.
-- JS Express's, ECMS's and KTD's dates are the clock of each scan's place, not the China time
+- JS Express's, ECMS's, KTD's and 360Lion's dates are the clock of each scan's place, not the China time
   of their catalog zone. JS Express's own feed gives the same digits with China's offset at
   its Chinese warehouse, the Netherlands' at Schiphol and the destination courier's at the
   courier's scans: read on China's clock, its scans at Schiphol came six hours early, and a
@@ -407,11 +407,15 @@ step exists for future protocol changes.
   them each facility's offset, Japan's at Narita, where China's clock put them an hour
   after ECMS's own rows. KTD files SwiftX's hub scans at SwiftX's digits under the hub's
   town and state, and on China's clock its flight from Shanghai landed in Chicago 75
-  minutes after take-off. A scan in China takes Beijing's clock, except a JS Express
-  flight's departure filed there, which keeps its wall clock as in JS Express's own
-  adapter. A scan elsewhere takes the clock of the US state or Canadian province its place
-  names for certain, else the single clock of the country it names; one with no place,
-  only a town or a country of several clocks keeps its wall clock. This is no rule for
+  minutes after take-off. 360Lion's own tracker gives each scan its place's offset, "-3" in
+  Argentina and "+8" at Pudong, under a country or airport code ("AR", "EZE"); on China's
+  clock its Argentine scans came eleven hours early. A scan in China takes Beijing's clock,
+  except a JS Express flight's departure filed there, which keeps its wall clock as in JS
+  Express's own adapter. A 360Lion scan at an airport code takes the airport's clock. A
+  scan elsewhere takes the clock of the US state or Canadian province its place names for
+  certain, else the clock of the country it names, when its zones keep one at that moment
+  (Argentina's, under several names); one with no place, only a town or a country of
+  several clocks keeps its wall clock. This is no rule for
   every line on China's clock: Hualei's tenants (Mayi Yinfu) and DHLink date their scans
   abroad on Beijing time.
 - Juxi Express relays the scans of the carrier that delivers abroad at the facility's wall

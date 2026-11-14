@@ -28,9 +28,9 @@ import {
 } from '../../core/time/index.js';
 import type { TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { splitRegionTownZone } from '../../places/index.js';
+import { airportTimeZone, splitRegionTownZone } from '../../places/index.js';
 import { countryName, militaryPostOffice } from '../../places/trackingLocation.js';
-import { hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
+import { countryZones, hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
 import { captureFailure, capturedBodies, loadCapture, type CaptureSpec } from '../shared/capture.js';
 import { CAINIAO_CHINA_LEG, CAINIAO_CHINA_ZONE } from '../../carriers/aliexpress/clock.js';
 import { chinaPostEnglish, chinaPostLabelPlace } from '../../carriers/china-post/status.js';
@@ -1173,19 +1173,29 @@ function brandNetworkZones(payload: Record<string, unknown>, name: string, numbe
  * their scans abroad on Beijing time. A scan of these lines takes Beijing's
  * clock in China (with JS Express's own rule for its flights there), else
  * that of the US state or Canadian province its place names for certain
- * ("New York, United States"), else the single clock of the country it
- * names. One with no place, only a town or a country of several clocks keeps
- * its wall clock. KTD's dates do this too: it files SwiftX's hub scans at
+ * ("New York, United States"), else the clock of the country it names, when
+ * its zones keep one at that moment (Argentina's, under several names). One
+ * with no place, only a town or a country of several clocks keeps its wall
+ * clock. KTD's dates do this too: it files SwiftX's hub scans at
  * SwiftX's digits under the hub's town and state, and its flight's take-off
  * in Shanghai and landing in Chicago, which China's clock put 75 minutes apart.
+ * 360Lion's own tracker dates each scan with its place's offset, "-3" in
+ * Argentina and "+8" at Pudong, and places it by a country or airport code
+ * ("AR", "EZE", "PVG"), as ParcelsApp copies it: read on China's clock, its
+ * Argentine scans came eleven hours early. Its airport code takes the
+ * airport's clock.
  */
-const PLACE_CLOCK_LINES = new Set(['js-express', 'ecms-express', 'ktd']);
-function placeClockLine(carrier: string, status: string, location: string): string | null {
+const PLACE_CLOCK_LINES = new Set(['js-express', 'ecms-express', 'ktd', '360lion']);
+function placeClockLine(carrier: string, status: string, location: string, date: unknown): string | null {
   const china = carrier === 'js-express' ? jsExpressChinaClock(status, location) : undefined;
   if (china !== undefined) return china;
+  if (carrier === '360lion' && /^[A-Z]{3}$/.test(location)) return airportTimeZone(location);
   if (inChina(location)) return 'Asia/Shanghai';
   const region = regionClock(location);
-  return region?.certain ? region.zone : countryTimeZone(lastPlace(location)) ?? null;
+  if (region?.certain) return region.zone;
+  const country = lastPlace(location);
+  const wall = mislabeledWallTime(date);
+  return countryTimeZone(country) ?? (wall ? sharedClockZone(countryZones(countryCode(country) ?? ''), wall) : null);
 }
 
 /**
@@ -1291,7 +1301,7 @@ function carrierClock(payload: Record<string, unknown>, state: Record<string, un
   if (sent !== undefined) return sent;
   const relayed = relayedPostZone(carrier, scanLocation(name, state.location));
   if (relayed !== undefined) return relayed;
-  if (carrier && PLACE_CLOCK_LINES.has(carrier)) return placeClockLine(carrier, status, scanLocation(name, state.location));
+  if (carrier && PLACE_CLOCK_LINES.has(carrier)) return placeClockLine(carrier, status, scanLocation(name, state.location), state.date);
   // Juxi Express relays the scans of the carrier that delivers abroad at the facility's wall clock: its
   // place's clock, or null for its wall clock in a country of several. Its own rows are Beijing's.
   const juxi = carrier === 'juxi-express' ? juxiExpressAbroadZone(scanLocation(name, state.location), status, destination) : undefined;

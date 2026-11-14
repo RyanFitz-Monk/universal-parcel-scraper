@@ -1210,6 +1210,23 @@ describe('ParcelsApp result parsing', () => {
     });
   });
 
+  it("reads 360Lion's scans on their place's clock, by country or airport code", () => {
+    // 360Lion's own tracker gives these digits "-3" in Argentina and at Ezeiza, and "+8" at Pudong;
+    // China's clock put the Argentine ones eleven hours early.
+    const result = parseParcelsAppResponse({ carriers: ['360Lion'], originCode: 'CN', destinationCode: 'AR', states: [
+      { date: '2026-11-14T11:30:24Z', status: 'Arribado DC(El paquete ha llegado a la estación.)', carrier: 0, location: 'AR' },
+      { date: '2026-11-12T17:19:00Z', status: 'Handover to LM', carrier: 0, location: 'AR' },
+      { date: '2026-11-09T22:06:00Z', status: 'Arrived at airport', carrier: 0, location: 'EZE' },
+      { date: '2026-11-01T03:05:00Z', status: 'Departed from airport', carrier: 0, location: 'PVG' },
+    ] }, number, identity(), 'Asia/Shanghai');
+    expect(result.events!.map((scan) => [scan.description, scan.time])).toEqual([
+      ['Arribado DC(El paquete ha llegado a la estación.)', '2026-11-14T14:30:24.000Z'],
+      ['Handover to LM', '2026-11-12T20:19:00.000Z'],
+      ['Arrived at airport', '2026-11-10T01:06:00.000Z'],
+      ['Departed from airport', '2026-10-31T19:05:00.000Z'],
+    ]);
+  });
+
   it("reads KTD's scans on their place's clock, so its copies of SwiftX's hub scans stay one with them", () => {
     // Live shape: KTD files SwiftX's scan at SwiftX's digits, and its flight's take-off and
     // landing on their own places' clocks. On China's clock the flight took 75 minutes.
