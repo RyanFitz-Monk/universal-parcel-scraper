@@ -149,6 +149,14 @@
       "note": "The first scan in the hands of the forwarder that takes the parcel to the flight, after the order data."
     },
     {
+      "wording": "Picked up by Shipping Partner",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-13",
+      "note": "Shouwu's partner collecting the parcel from the seller, the first scan after the order data."
+    },
+    {
       "wording": "Shipment departed from facility",
       "stage": "in_transit",
       "language": "en",

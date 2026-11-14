@@ -428,6 +428,8 @@ describe('Shouwu International status vocabulary', () => {
     expect(statusMap.stage(null, 'failed delivery for reason: sample reason')).toBe('failed_attempt');
     // A missort in the last mile is a delay: the parcel goes on to its round.
     expect(shouwuStage('Mis routed')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+    // Its partner collecting the parcel from the seller, right after the order data.
+    expect(shouwuStage('Picked up by Shipping Partner')).toEqual({ stage: 'accepted', source: 'carrier_map' });
     // DPD's failed round with a wrong address joined: the parcel went back to the depot, not to the sender.
     expect(statusMapAnswer({ carrier: 'shouwu', providerCode: null,
       description: 'Unfortunately we have not been able to deliver your parcel. Consignee address not correct.' })).toEqual({ kind: 'mapped', stage: 'failed_attempt' });
