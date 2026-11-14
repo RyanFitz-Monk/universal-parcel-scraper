@@ -727,6 +727,11 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // A forwarder's warehouse weighing and consolidating a parcel it holds, or giving it another last-mile carrier for
   // its weight, as ParcelsApp relays it: "Weighed at Warehouse", "Consolidation Completed".
   if (/^weighed at (?:the )?warehouse\.?$|^consolidation completed\.?$|^the warehouse changed the last mile vendor\b/.test(text)) return 'in_transit';
+  // UniUni's local warehouse taking a parcel for delivery, and a driver given it shortly before the round goes out,
+  // as Ship24 relays them for a parcel UniUni does not answer for: in transit, as UniUni's map reads its own transit to
+  // the local warehouse (255).
+  if (/^(?:the |your )?parcel (?:has been |was )?sent to (?:the )?local [a-z][a-z&' ]{0,40} warehouse for delivery$/.test(text)
+    || /^(?:the |your )?parcel (?:has been |was )?assigned to (?:a |the |your )?delivery driver$/.test(text)) return 'in_transit';
   // A pickup still to come ("will be picked up") is not one either.
   if (/accepted|(?<!\b(?:be|being) )picked up|pick up was successful|^drop off$|pick ?up scan|prepared the package for return to ups or pickup by ups|handed (?:over )?to (?:dpd|gls)|package received at dhl|item booked|consignment was mailed|posted at (?:a |the )?(?:postal point|post office)|pris en charge|prise en charge|collecte.*(?:reussi|effectue)|recupere.*boite aux lettres|depose.*point postal|remis a (?:dpd|gls)|envoi.*depose|abholung.*erfolgreich|^(?:die sendung wurde )?erfolgreich abgeholt$|eingeliefert|an (?:dpd|gls) ubergeben|paket.*(?:angenommen|ubernommen)|ritiro.*(?:riuscito|effettuato)|pres[oa] in carico|affidat[oa] a (?:dpd|gls)|depositat.*punto postale|spedizione.*impostata/.test(text)) return 'accepted';
   // Taken in by the carrier: Royal Mail's "Item received by Royal Mail", a parcel shop's or a warehouse's
@@ -735,6 +740,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // received" names no receiver and stays unread. The Hualei platform's arrival at a line's receiving point
   // (到达收货点) is a receipt too.
   if (/^到达收货点|^item received by royal mail$|\btaken over by one of our operators\b|\bwe've received your (?:parcel|package|item) at the parcel ?shop\b|^(?:(?:the |your )?(?:item|parcel|package|shipment) )?(?:was|has been) dropped off at (?:the |a )?parcel ?shop$|^(?![^,]*\b(?:recipient|consignee|receiver|customer|addressee|buyer|pick ?up point|parcel ?shop|locker|destination)\b)[a-z][\w&' -]{0,40} has received the goods(?:, [^,]{1,40}){0,2}\.?$|^the shipment has been deposited at a seur pickup point$|^(?:the |your )?collection (?:has been |was )?(?:carried out|completed)$|^已入库|^(?:(?:the |your )?(?:item|parcel|package|shipment) )?(?:has been |was )?put into storage$/.test(text)) return 'accepted';
+  // The sender handing a parcel in at a shop that takes parcels, named after it, as ParcelsApp relays a Nordic carrier's
+  // "Shipment has been handed in to <shop>": the carrier's collection follows.
+  if (/^(?:the )?(?:shipment|parcel|package|item) (?:has been|was) handed in (?:to|at) (?!.*\breturn)[^.;]{1,80}$/.test(text)) return 'accepted';
   // Royal Mail's sender drop-offs at a parcel locker and a postbox, as providers relay them.
   if (/^sender advised item dropped off at parcel locker$|^dropped off at postbox$/.test(text)) return 'accepted';
   // Poste Italiane's drop-off at a Punto Poste or a Punto Poste-Locker in English ("presa in carico presso il Punto Poste").

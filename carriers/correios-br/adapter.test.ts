@@ -44,7 +44,8 @@ describe('Correios parser', () => {
     expect(result.events?.[0]).toEqual({ description: 'Objeto entregue ao destinatário', provider_code: 'BDE/01', time: '2026-01-05T16:10:47-03:00', location: 'Cidade Exemplo, SP', stage: 'delivered' });
     expect(result.events?.[2]!.stage).toBe('exception');
     expect(result.events?.[3]!.stage).toBe('exception');
-    expect(result.events?.[5]!.stage).toBe('accepted');
+    // Posted after its customs declaration: an import's hand-over abroad.
+    expect(result.events?.[5]!.stage).toBe('in_transit');
     expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
     for (const row of statuses.entries) expect((row.code ? classifyCorreiosStatus(row.code) : classifyCorreiosWording(row.wording))?.stage, row.wording).toBe(row.stage);
     expect(classifyCorreiosStatus('BDE/99')).toBeUndefined();
@@ -169,6 +170,17 @@ describe('Correios parser', () => {
       ['PAR/18', 'in_transit'], ['PO/01', 'in_transit'], ['PO/01', 'accepted']]);
     const once = parseCorreios({ ...fixture, eventos: [scan('PO', '01', 'Objeto postado', at('2 10:43:00'))] }, NUMBER);
     expect(once).toMatchObject({ current_stage: 'accepted', events: [{ stage: 'accepted' }] });
+  });
+
+  it('reads the posting of an import Correios numbers, listed after its customs declaration, as transit', () => {
+    const at = (time: string) => ({ date: `2026-01-0${time}.000000`, timezone_type: 3, timezone: 'America/Sao_Paulo' });
+    const declared = scan('PAR', '21', 'Informações enviadas para análise da autoridade aduaneira/órgãos anuentes', at('3 11:10:00'));
+    const result = parseCorreios({ ...fixture, codObjeto: 'NN000000005BR', eventos: [scan('PO', '01', 'Objeto postado', at('4 16:03:00')), declared] }, 'NN000000005BR');
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+    expect(result.events!.map(({ provider_code: code, stage }) => [code, stage])).toEqual([['PO/01', 'in_transit'], ['PAR/21', 'customs']]);
+    // A label issued before the posting leaves it the acceptance.
+    const labelled = parseCorreios({ ...fixture, eventos: [scan('PO', '01', 'Objeto postado', at('4 16:03:00')), scan('FC', '82', 'Etiqueta emitida', at('3 09:00:00'))] }, NUMBER);
+    expect(labelled).toMatchObject({ current_stage: 'accepted', events: [{ stage: 'accepted' }, { stage: 'registered' }] });
   });
 
   it("reads the sending post's rows on its country's clock, which Correios labels with Brasília's zone", () => {

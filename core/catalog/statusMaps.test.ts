@@ -531,6 +531,8 @@ describe('status map answers', () => {
     expect(answer('australia-post', 'DD-ER15', 'Delivered')).toEqual(mapped('delivered'));
     expect(answer('australia-post', 'DD-ER99', 'Delivered')).toEqual(mapped('delivered'));
     expect(answer('australia-post', 'AFP-ER99', "It's on its way")).toEqual(unknown);
+    // Its export clearance as a universal provider relays it, without the code.
+    expect(answer('australia-post', null, 'Cleared and awaiting international departure')).toEqual(mapped('in_transit'));
   });
 
   it('answers an Australia Post scan stored with its milestone label as the adapter stages it', () => {
@@ -680,6 +682,8 @@ describe('status map answers', () => {
       ['Item is in transit in European', 'in_transit'],
       ['Item has started customs clearance process', 'customs'],
       ['Parcel on its way', 'in_transit'],
+      // FedEx's scans in the United States after it collected the parcel, as Shouwu copies them.
+      ['Arrived at FedEx location', 'in_transit'], ['Departed FedEx location', 'in_transit'],
     ] as const) expect(answer('shouwu', '', wording), wording).toEqual(mapped(stage));
   });
 

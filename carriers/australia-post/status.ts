@@ -59,6 +59,9 @@ export function australiaPostCodeParts(providerCode: string): { code: string; mi
   return at < 0 ? { code: providerCode } : { code: providerCode.slice(0, at), milestone: providerCode.slice(at + 1) };
 }
 
+/** Australia Post's wordings a universal provider relays without their event code, by that code. */
+const RELAYED: Readonly<Record<string, string>> = { 'cleared and awaiting international departure': 'INT-0008' };
+
 /**
  * What the map says about one scan: its event code and milestone label, as the adapter reads
  * them. A scan stored with its event code alone, or without one, has no label: a listed code
@@ -68,7 +71,7 @@ export const statusMap: CarrierStatusMap = {
   stage: (providerCode, wording) => {
     const { code, milestone } = australiaPostCodeParts(providerCode ?? '');
     if (milestone !== undefined) return australiaPostStatus(milestone, code)?.stage;
-    return australiaPostStatus('', code)?.stage ?? (wording === 'delivered' ? 'delivered' : undefined);
+    return australiaPostStatus('', code || (Object.hasOwn(RELAYED, wording) ? RELAYED[wording] : undefined))?.stage ?? (wording === 'delivered' ? 'delivered' : undefined);
   },
   gaps: [],
 };

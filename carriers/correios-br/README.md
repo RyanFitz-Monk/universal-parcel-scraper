@@ -48,7 +48,10 @@ with, its main clock where it keeps several (basis `carrier`): a wall clock left
 be dated on Brasília's zone after the parser. It reaches Correios Brazil
 when a caller names it, a provider names it (some write "Brazil Post"), or a result gives
 Brazil as the destination of an S10 item. The arrival in Brazil reads as transit, and so
-does a posting the sending post lists again when it dispatches the item.
+does a posting the sending post lists again when it dispatches the item. An import Correios
+numbers itself (`NN…BR`) lists the declaration sent to customs first and its posting when the
+shipper hands the item to the airline abroad: a posting listed after the item has moved on
+reads as transit too.
 
 ## Testing
 

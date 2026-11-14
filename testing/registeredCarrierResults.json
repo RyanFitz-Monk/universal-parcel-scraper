@@ -1162,7 +1162,7 @@
           "description": "Objeto postado",
           "provider_code": "PO/01",
           "time": "2026-01-02T18:40:01-03:00",
-          "stage": "accepted"
+          "stage": "in_transit"
         },
         {
           "description": "Informações enviadas para análise da autoridade aduaneira/órgãos anuentes",

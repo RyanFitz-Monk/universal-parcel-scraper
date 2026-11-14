@@ -594,6 +594,22 @@
       "note": "FedEx collecting the parcel from Shouwu's depot in the United States after the import clearance, its town and postcode before the wording. Shouwu had the parcel long before, so it is no handover from the sender."
     },
     {
+      "wording": "Arrived at FedEx location",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "FedEx's scans after it collected the parcel from Shouwu's depot, copied in FedEx's words."
+    },
+    {
+      "wording": "Departed FedEx location",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "FedEx's scans after it collected the parcel from Shouwu's depot, copied in FedEx's words."
+    },
+    {
       "wording": "Your consignment has been picked up",
       "stage": "in_transit",
       "language": "en",

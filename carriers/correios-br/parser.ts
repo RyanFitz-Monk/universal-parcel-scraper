@@ -61,19 +61,24 @@ function expectedDay(payload: JsonObject, stage: string | undefined): string | n
 }
 
 const POSTINGS = new Set(['PO/01', 'PO/09']);
+// Stages that come before the item moves: a label issued, the item posted.
+const UNMOVED = new Set<string | undefined>([undefined, 'pending', 'registered', 'accepted']);
 
 /**
- * Mail from abroad can list the sending post's posting twice, the second time
- * when that post dispatched the item: a later posting is the item moving on,
- * not a second acceptance. Events are newest first.
+ * A posting listed once the item has moved on is the item moving on, not its
+ * acceptance. Mail from abroad can list the sending post's posting twice, the
+ * second time when that post dispatched the item. An import Correios numbers
+ * itself (`NN…BR`) lists the declaration sent to customs first, often after
+ * the shipper's export clearance, and its posting when the shipper hands it
+ * to the airline abroad. Events are newest first.
  */
 function laterPostingsInTransit(events: CarrierEvent[]): void {
-  let posted = false;
+  let moved = false;
   for (let index = events.length - 1; index >= 0; index--) {
     const event = events[index]!;
-    if (!POSTINGS.has(event.provider_code ?? '')) continue;
-    if (posted) events[index] = { ...event, stage: 'in_transit' };
-    posted = true;
+    const posting = POSTINGS.has(event.provider_code ?? '');
+    if (posting && moved) events[index] = { ...event, stage: 'in_transit' };
+    moved ||= posting || !UNMOVED.has(event.stage);
   }
 }
 
