@@ -268,19 +268,37 @@ describe('DHL piece identifiers', () => {
     for (const number of ['JJD000390012345678901', 'JJD149150012345678901', 'JJD012959123456789012', 'JJD01460001234567890123']) {
       expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'dhl', confidence: 'high' });
     }
-    // Plates of 000090 and fourteen to sixteen digits are issued in the Dutch network, which DHL Paket's tracker does not hold.
-    for (const number of ['JJD00009005912345678901', 'JJD000090254000012345678', 'JJD0000900601234567890123']) {
-      expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'dhl-ecommerce-nl', confidence: 'high', candidates: ['dhl-ecommerce-nl'] });
-    }
-    for (const number of ['JJD000091254000012345678', 'JJD0000902540001234567', 'JJD00009025400001234567890']) {
-      expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'dhl', confidence: 'high' });
-    }
     // A zero-padded serial also fits Australia Post's article ID, which leaves a bare JJD plate to DHL.
     expect(detectCarrierMatch('JJD000390012000123456')).toMatchObject({ carrier: 'dhl', confidence: 'high' });
     expect(detectCarrierMatch('12JJD123456789000123456')).toMatchObject({ carrier: 'australia-post', confidence: 'high' });
     for (const number of ['JD012959123456789012J', 'JD149000012345678901J', 'JD0146000123456789012J']) {
       expect(detectCarrierMatch(number).candidates).not.toContain('dhl-express');
     }
+  });
+
+  // The digits after JJD name the network that issued a plate; DHL Paket's tracker holds no record of the
+  // Dutch and Iberian ones. Synthetic plates.
+  it('gives a JJD plate to the network that issued it, and every other plate to DHL Paket', () => {
+    const issued: Record<string, readonly string[]> = {
+      'dhl-ecommerce-nl': ['JJD00009005912345678901', 'JJD000090254000012345678', 'JJD0000900601234567890123'],
+      'dhl-ecommerce-es': ['JJD00006112345678901234', 'JJD00026812345678901234', 'JJD00026912345678901234', 'JJD00036812345678901234'],
+      'dhl-express': ['JJD014600012345678901'],
+      dhl: ['JJD149020123456789012345', 'JJD149150012345678901', 'JJD000390012345678901', 'JJD000030123456789012345678',
+        'JJD123456789012345678', 'JJD12345678'],
+    };
+    for (const [carrier, numbers] of Object.entries(issued)) {
+      for (const number of numbers) {
+        expect(detectCarrierMatch(number), number).toMatchObject({ carrier, confidence: 'high', candidates: [carrier] });
+      }
+    }
+    // Another issuer, or another length, is DHL Paket's.
+    for (const number of ['JJD000091254000012345678', 'JJD0000902540001234567', 'JJD00009025400001234567890',
+      'JJD00006212345678901234', 'JJD00026712345678901234', 'JJD00036912345678901234', 'JJD0000611234567890123',
+      'JJD000268123456789012345', 'JJD012959123456789012']) {
+      expect(detectCarrierMatch(number), number).toMatchObject({ carrier: 'dhl', confidence: 'high', candidates: ['dhl'] });
+    }
+    // Yodel's length only suggests DHL after InPost.
+    expect(detectCarrierMatch('JJD0002231234567890')).toMatchObject({ carrier: 'unknown', confidence: 'low', candidates: ['inpost', 'dhl'] });
   });
 });
 

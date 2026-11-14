@@ -682,12 +682,16 @@
         "checksum": "frankier-id"
       },
       {
-        "pattern": "^JJD(?!\\d{16}$)(?!0146\\d{14}$)(?!000090\\d{14,16}$)[A-Z0-9]{8,}$",
-        "confidence": "high"
+        "pattern": "^JJD(?:0146\\d{14}|000090\\d{14,16}|000(?:061|268|269|368)\\d{14})$",
+        "confidence": "low"
       },
       {
         "pattern": "^JJD\\d{16}$",
         "confidence": "low"
+      },
+      {
+        "pattern": "^JJD[A-Z0-9]{8,}$",
+        "confidence": "high"
       },
       {
         "pattern": "^JD(?!01)\\d{18}$",
@@ -16850,6 +16854,10 @@
       {
         "pattern": "^[A-Z]{2}\\d{7}0$",
         "confidence": "low"
+      },
+      {
+        "pattern": "^JJD000(?:061|268|269|368)\\d{14}$",
+        "confidence": "high"
       }
     ]
   },

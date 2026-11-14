@@ -85,6 +85,11 @@
       "id": "dhl-ecommerce-es-2",
       "pattern": "^[A-Z]{2}\\d{7}0$",
       "confidence": "low"
+    },
+    {
+      "id": "dhl-ecommerce-es-3",
+      "pattern": "^JJD000(?:061|268|269|368)\\d{14}$",
+      "confidence": "high"
     }
   ]
 }

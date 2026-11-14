@@ -14,8 +14,8 @@ these numbers as another DHL service and sends them to DHL's global page. Only
 ranges appear on DHL's tracking pages but are no longer tracked; the rule covers
 them by inference, as DHL Paket's plates use other prefixes. Typed with its
 `(J)` before or after it, a piece of the `JD0146` range goes to DHL Express
-too; DHL's tracker knows the piece only without it. Other `JJD` numbers stay
-DHL Paket's licence plates, and the adapter reads any `JD01` piece with its
+too; DHL's tracker knows the piece only without it. Other `JJD` numbers are
+licence plates of DHL's parcel networks, and the adapter reads any `JD01` piece with its
 `(J)` on either side when DHL Express is named. A letter O typed for the zero after `JD`
 (`JDO1…`) is read as that zero, since no carrier issues the shape with the letter.
 

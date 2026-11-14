@@ -85979,10 +85979,10 @@
   },
   {
     "input": "JJD00006135051474093003",
-    "carrier": "dhl",
+    "carrier": "dhl-ecommerce-es",
     "confidence": "high",
     "candidates": [
-      "dhl"
+      "dhl-ecommerce-es"
     ]
   },
   {
@@ -86056,34 +86056,34 @@
   },
   {
     "input": "JJD00026906000002411001",
-    "carrier": "dhl",
+    "carrier": "dhl-ecommerce-es",
     "confidence": "high",
     "candidates": [
-      "dhl"
+      "dhl-ecommerce-es"
     ]
   },
   {
     "input": "JJD00026926000797050001",
-    "carrier": "dhl",
+    "carrier": "dhl-ecommerce-es",
     "confidence": "high",
     "candidates": [
-      "dhl"
+      "dhl-ecommerce-es"
     ]
   },
   {
     "input": "JJD00026926000832370001",
-    "carrier": "dhl",
+    "carrier": "dhl-ecommerce-es",
     "confidence": "high",
     "candidates": [
-      "dhl"
+      "dhl-ecommerce-es"
     ]
   },
   {
     "input": "JJD00036806102768486001",
-    "carrier": "dhl",
+    "carrier": "dhl-ecommerce-es",
     "confidence": "high",
     "candidates": [
-      "dhl"
+      "dhl-ecommerce-es"
     ]
   },
   {

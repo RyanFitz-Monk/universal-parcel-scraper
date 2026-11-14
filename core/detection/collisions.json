@@ -1186,6 +1186,30 @@
     "reason": "Yodel, InPost's UK network, prints JJD licence plates of this length, and DHL's networks use the same prefix. Neither has a check, so both stay suggestions."
   },
   {
+    "shape": "JJD000090 and fourteen to sixteen digits",
+    "carriers": [
+      "dhl",
+      "dhl-ecommerce-nl"
+    ],
+    "reason": "A licence plate the Dutch network issues. DHL Paket's tracker holds no record of it, so DHL only suggests it and the Dutch rule decides."
+  },
+  {
+    "shape": "JJD000061, JJD000268, JJD000269 or JJD000368 and fourteen digits",
+    "carriers": [
+      "dhl",
+      "dhl-ecommerce-es"
+    ],
+    "reason": "A licence plate the Iberian network issues. DHL Paket's tracker holds no record of it, so DHL only suggests it and the Iberian rule decides."
+  },
+  {
+    "shape": "JJD0146 and fourteen digits",
+    "carriers": [
+      "dhl",
+      "dhl-express"
+    ],
+    "reason": "An Express piece identifier typed with the label's (J). DHL only suggests it and DHL Express's rule decides."
+  },
+  {
     "shape": "Fifteen digits starting with 0 or 1 that pass the GS1 check",
     "carriers": [
       "brt",

@@ -47,8 +47,11 @@ the gateway behind its customer tracking page. German DHL Paket is
   to CTT Express's tracker, read as in transit.
 - Ten-digit numbers overlap with DHL Express and other carriers, so detection
   only suggests this carrier and the portal's answer attributes the parcel.
-  Twelve and twenty-two digits, `JJD` plates and S10 numbers are accepted when
-  the carrier is named and claimed by no rule here.
+- `JJD` licence plates whose digits after `JJD` start with `000061`, `000268`,
+  `000269` or `000368`, with fourteen more, are issued by this network. DHL
+  Paket's tracker holds no record of them, so detection selects this carrier.
+  Twelve and twenty-two digits, other `JJD` plates and S10 numbers are accepted
+  when the carrier is named and claimed by no rule here.
 - The tracking page's shipment links are `ModificarEnvio` in Spanish,
   `ModificarMeuEnvio` in Portuguese and `ModifyMyShipment` in English. A pasted
   one gives its number and this carrier, and leaves out the postcode a link can

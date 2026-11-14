@@ -43,14 +43,20 @@ how a consumer learns that DHL holds one behind a postcode.
   this endpoint answers them as another DHL service too. Typed with the
   label's `(J)`, as `JJD0146`, they go to DHL Express as well: this endpoint
   then shows only the last-mile scans DHL Paket adds when it delivers the piece.
-- `JJD` licence plates are shared by DHL's European parcel networks and detected
-  as DHL Paket. The adapter of another network, such as
-  [Poland's](../dhl-ecommerce-pl/README.md), reads one when its carrier is named.
+- `JJD` licence plates are shared by DHL's European parcel networks. The digits
+  after `JJD` name the network that issued a plate, and detection gives the
+  plate to it: `000090` and fourteen to sixteen digits more to
+  [DHL eCommerce Netherlands](../dhl-ecommerce-nl/README.md), `000061`,
+  `000268`, `000269` or `000368` and fourteen more to
+  [DHL eCommerce Iberia](../dhl-ecommerce-es/README.md). This endpoint holds no
+  record of those. Every other plate is DHL Paket's. Plates that cross
+  networks, such as `149` and `000030` ones, also appear on the Polish, Dutch
+  and Iberian trackers, whose adapters read them when their carrier is named.
   A plate of `JJD` and sixteen digits is the length Yodel, now InPost's UK
   network, prints, so it only suggests DHL after [InPost](../inpost/README.md).
-  `JJD000090` and fourteen to sixteen digits are issued by
-  [DHL eCommerce Netherlands](../dhl-ecommerce-nl/README.md): this endpoint
-  holds no record of them.
+- DHL Paket's `JJD` rule takes any plate. The rule before it lists the plates
+  other networks issue, so for those DHL is only a suggestion and the issuer's
+  rule decides. A network's new issuer goes in both rules.
 - A plate typed without its `(J)`, as `JD` and eighteen digits outside the
   `JD01` range, is still DHL Paket's: DHL's global tracking lists that form as
   the piece of a DHL Paket shipment. It only suggests DHL, because this

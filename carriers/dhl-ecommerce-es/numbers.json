@@ -239,7 +239,7 @@
         "reportedRole": "reported_shipment"
       },
       "expect": {
-        "carrier": "dhl",
+        "carrier": "dhl-ecommerce-es",
         "confidence": "high"
       },
       "note": "One of two shipments in the complaint; the Iberian tracker returns its history."
@@ -259,7 +259,7 @@
         "reportedRole": "reported_shipment"
       },
       "expect": {
-        "carrier": "dhl",
+        "carrier": "dhl-ecommerce-es",
         "confidence": "high"
       },
       "note": "One of two shipments in the complaint; the Iberian tracker returns its history."
@@ -279,7 +279,7 @@
         "reportedRole": "reported_shipment"
       },
       "expect": {
-        "carrier": "dhl",
+        "carrier": "dhl-ecommerce-es",
         "confidence": "high"
       },
       "note": "Parcel from Portugal; the Iberian tracker returns its history, including the agreed delivery days."
@@ -343,7 +343,7 @@
         "reportedRole": "shipment_tracking"
       },
       "expect": {
-        "carrier": "dhl",
+        "carrier": "dhl-ecommerce-es",
         "confidence": "high"
       },
       "note": "Parcel to Germany dropped off at a ServicePoint; the Iberian tracker returns its only scan."
@@ -363,7 +363,7 @@
         "reportedRole": "expedition_code"
       },
       "expect": {
-        "carrier": "dhl",
+        "carrier": "dhl-ecommerce-es",
         "confidence": "high"
       },
       "note": "The Iberian tracker returns its history, ending in a return to the sender."

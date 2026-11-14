@@ -911,7 +911,7 @@
     "carrier": "dhl-ecommerce-es",
     "pattern": "^JJD",
     "kind": "by_design",
-    "reason": "The JJD licence plate is shared by DHL's European parcel networks and detected as DHL. The Iberian portal reads it when the carrier is named."
+    "reason": "JJD licence plates issued by DHL's other networks are detected as theirs, most as DHL Paket's. The Iberian portal reads them when the carrier is named."
   },
   {
     "carrier": "dhl-ecommerce-nl",
@@ -923,7 +923,7 @@
     "carrier": "dhl-ecommerce-pl",
     "pattern": "^JJD",
     "kind": "by_design",
-    "reason": "The JJD licence plate is shared by DHL's European parcel networks and detected as DHL. The Polish portal reads it when the carrier is named."
+    "reason": "JJD licence plates issued by DHL's other networks are detected as theirs, most as DHL Paket's. The Polish portal reads them when the carrier is named."
   },
   {
     "carrier": "dhl-ecommerce-pl",

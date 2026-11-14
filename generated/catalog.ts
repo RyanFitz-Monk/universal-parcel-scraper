@@ -686,12 +686,16 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "checksum": "frankier-id"
       },
       {
-        "pattern": "^JJD(?!\\d{16}$)(?!0146\\d{14}$)(?!000090\\d{14,16}$)[A-Z0-9]{8,}$",
-        "confidence": "high"
+        "pattern": "^JJD(?:0146\\d{14}|000090\\d{14,16}|000(?:061|268|269|368)\\d{14})$",
+        "confidence": "low"
       },
       {
         "pattern": "^JJD\\d{16}$",
         "confidence": "low"
+      },
+      {
+        "pattern": "^JJD[A-Z0-9]{8,}$",
+        "confidence": "high"
       },
       {
         "pattern": "^JD(?!01)\\d{18}$",
@@ -16854,6 +16858,10 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       {
         "pattern": "^[A-Z]{2}\\d{7}0$",
         "confidence": "low"
+      },
+      {
+        "pattern": "^JJD000(?:061|268|269|368)\\d{14}$",
+        "confidence": "high"
       }
     ]
   },
@@ -58048,7 +58056,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "spring-gds": ["spring-gds-1","spring-gds-2","spring-gds-3","spring-gds-1810"],
   "postlogistics": ["postlogistics-dashed-reference","postlogistics-compact-reference"],
   "dachser": [],
-  "dhl": ["dhl-1","dhl-14","dhl-16","dhl-15","dhl-9","dhl-8","dhl-10","dhl-3","dhl-13","dhl-12","dhl-17","dhl-7"],
+  "dhl": ["dhl-1","dhl-14","dhl-16","dhl-15","dhl-other-network-plate","dhl-8","dhl-9","dhl-10","dhl-3","dhl-13","dhl-12","dhl-17","dhl-7"],
   "dhl-ecommerce": ["dhl-ecommerce-1","dhl-ecommerce-8","dhl-ecommerce-2","dhl-ecommerce-4","dhl-ecommerce-5","dhl-ecommerce-6","dhl-ecommerce-9","dhl-ecommerce-7"],
   "ups": ["ups-1","ups-3"],
   "amazon-logistics": ["amazon-logistics-1"],
@@ -58462,7 +58470,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "dex-i": [],
   "dex-pk": ["dex-pk-1"],
   "dg-transporte": [],
-  "dhl-ecommerce-es": ["dhl-ecommerce-es-1","dhl-ecommerce-es-2"],
+  "dhl-ecommerce-es": ["dhl-ecommerce-es-1","dhl-ecommerce-es-2","dhl-ecommerce-es-3"],
   "dhl-ecommerce-nl": ["dhl-ecommerce-nl-1","dhl-ecommerce-nl-2","dhl-ecommerce-nl-3","dhl-ecommerce-nl-4"],
   "dhl-ecommerce-pl": ["dhl-ecommerce-pl-1"],
   "dhl-ecommerce-uk": ["dhl-ecommerce-uk-2","dhl-ecommerce-uk-1"],
