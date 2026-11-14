@@ -1,16 +1,23 @@
 import type { SameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
+import { countryTimeZone } from '../../core/time/index.js';
+
+/** A location without the "Office - " the adapter once kept before an office's name or code. */
+function named(text: string): string {
+  return text.trim().replace(/^Office - /, '');
+}
 
 /**
- * A location as the adapter writes it now. It once kept "Office - " before an
- * office India Post names, and before an office of exchange's UPU code, which
- * it now leaves out with the PIN unless the office is in India.
+ * What a stored location reads as now. The adapter once kept an office of exchange's UPU
+ * code ("Office - DEFRAA", "INMAAB 600099"), which it now leaves out with the PIN unless the
+ * office is in India. It tells a code from an office's name of five or six letters ("KANPUR",
+ * "RODGAU") by the airport after the country, which a browser does not load, so a stored
+ * word with a country's two letters first is read both ways.
  */
-function location(text: string): string {
-  const stored = /^Office - (.+)$/.exec(text.trim());
-  if (!stored) return text.trim();
-  const code = /^([A-Z]{2})[A-Z]{3}[A-Z\d](?: (\d{6}))?$/.exec(stored[1]!);
-  if (!code) return stored[1]!;
-  return code[1] === 'IN' ? code[2] ?? '' : '';
+function storedReadings(text: string): string[] {
+  const location = named(text);
+  const code = /^([A-Z]{2})[A-Z]{3}[A-Z\d]?(?: (\d{6}))?$/.exec(location);
+  if (!code || !countryTimeZone(code[1])) return [location];
+  return [location, code[1] === 'IN' ? code[2] ?? '' : ''];
 }
 
 // MySpeedPost rewords a scan, and can restate it under another event_type, at the same
@@ -21,6 +28,6 @@ function location(text: string): string {
 // destination's offset, unless a reply lacks what places them abroad.
 export const sameInstantIdentityPolicy: SameInstantIdentityPolicy = {
   sourceCarrierId: 'india-post', storedSources: ['india-post'], requireProviderCode: false, matchEachScan: true,
-  matches: (incoming, stored) => location(incoming.location) === location(stored.location),
+  matches: (incoming, stored) => storedReadings(stored.location).includes(named(incoming.location)),
   relabelledFrom: 'Asia/Kolkata',
 };

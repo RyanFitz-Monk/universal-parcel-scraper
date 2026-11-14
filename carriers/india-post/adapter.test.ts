@@ -465,6 +465,11 @@ describe('India Post response normalization', () => {
     expect(location('Office - KANPUR', '208001')).toBe('KANPUR 208001');
     expect(location('Office - INDORE', '452001')).toBe('INDORE 452001');
     expect(location('Office - PATNA', '800001')).toBe('PATNA 800001');
+    expect(location('Office - RODGAU', '')).toBe('RODGAU');
+    // The code can come without "Office - ".
+    expect(location('INMAAB', '600099')).toBe('600099');
+    expect(location('DEFRAA', '400099')).toBe('');
+    expect(location('KANPUR', '208001')).toBe('KANPUR 208001');
   });
 
   it('keeps rows newest first once a take-off is back on its own clock', () => {

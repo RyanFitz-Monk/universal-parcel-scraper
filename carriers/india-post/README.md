@@ -106,9 +106,9 @@ Outcomes:
   `event_type` ("Item bagged" as "Bag Closed"), and a reply never holds two scans at one second
   and office. So the app identity policy updates the stored scan at the same instant and location,
   when the match is unique both ways, whatever the provider code. A stored location that kept
-  "Office - " before a name or a UPU code matches the location the adapter gives for it. Its
-  `relabelledFrom: 'Asia/Kolkata'` lets a scan abroad take over the row
-  stored under India's label, by wall clock, provider code and location. The consumer owns the
+  "Office - " before a name or a UPU code, or kept a bare code, matches the location the adapter
+  gives for it. Its `relabelledFrom: 'Asia/Kolkata'` lets a scan abroad take over the row stored
+  under India's label, by wall clock, provider code and location. The consumer owns the
   stored rows and notification receipts.
 - IDs and pincodes arrive as numbers or strings, hence `cleanScalar`. A pincode is kept in the
   location only when it is exactly six digits and does not start with 9: those belong to the Army
@@ -116,10 +116,10 @@ Outcomes:
 - "Office -" followed at most by a code (`Office - 00000000`, `Office - FRA`) stands for an office
   India Post does not name. The location leaves it out and keeps the pincode alone, unless the code
   names an airport abroad: the office of exchange there carries an Indian office's pincode. An
-  office of exchange's UPU code (`Office - DEFRAA`, `Office - DEFRA`) opens with its country and is
-  left out the same way, when the airport after the country keeps that country's clock: a name of
-  five or six letters ("KANPUR") is kept. An office abroad India Post names after "Office - " keeps
-  its name alone.
+  office of exchange's UPU code (`Office - DEFRAA`, `Office - DEFRA`, or bare as `INMAAB`) opens
+  with its country and is left out the same way, when the airport after the country keeps that
+  country's clock: a name of five or six letters ("KANPUR", "RODGAU") is kept. An office abroad
+  India Post names after "Office - " keeps its name alone.
 - A row's `pincode_info` is MySpeedPost's directory entry for the pincode, not for the office:
   "KOLKATA FOREIGN LCAO 900056" comes back as an office in Delhi, and unverified entries can be
   hundreds of kilometres off. Its coordinates become the scan's `point` only when the entry is

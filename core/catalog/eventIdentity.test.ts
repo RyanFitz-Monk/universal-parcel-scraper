@@ -19,6 +19,12 @@ describe('same-instant identity policies', () => {
     expect(policy?.matches?.(arrived('400001'), arrived('Office - INBOMB 400001'))).toBe(true);
     expect(policy?.matches?.(arrived('Example Mail Centre'), arrived('Office - Other Mail Centre'))).toBe(false);
     expect(policy?.matches?.(arrived('400001'), arrived('Office - DEFRAA 400001'))).toBe(false);
+    // An office named in five or six letters keeps its name; a bare code was once kept as one.
+    expect(policy?.matches?.(arrived('KANPUR 208001'), arrived('Office - KANPUR 208001'))).toBe(true);
+    expect(policy?.matches?.(arrived('RODGAU'), arrived('Office - RODGAU'))).toBe(true);
+    expect(policy?.matches?.(arrived('600001'), arrived('INMAAB 600001'))).toBe(true);
+    expect(policy?.matches?.(arrived('KANPUR 208001'), arrived('208001'))).toBe(false);
+    expect(policy?.matches?.(arrived(''), arrived('Office - KANPUR 208001'))).toBe(false);
     // Older app versions match by the instant and code alone, so they get no policy.
     expect(sameInstantIdentityPolicy('india-post')).toBeUndefined();
   });
