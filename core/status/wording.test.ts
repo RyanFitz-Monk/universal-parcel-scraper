@@ -727,6 +727,8 @@ describe('classifyWording', () => {
       // The UPU's arrival at the recipient's collection point (EDH), as posts and aggregators word it.
       ['Item arrival at collection point for pick-up', 'ready_for_pickup'],
       ['Receive item at collection point for pick-up (Inb)', 'ready_for_pickup'],
+      // La Poste's English for it, as SpeedPAK relays it.
+      ['ITEM ARRIVED AT THE COLLECTION POINT WAITING FOR YOUR COLLECT', 'ready_for_pickup'],
     ] as const) expect(classifyWording(wording, 'pending'), wording).toEqual({ stage, source: 'wording:language' });
     // A hand-over to come to the carrier is still a registration.
     expect(classifyWording('Your package is being prepared by the sender. It will be handed over to us soon.', 'pending').stage).toBe('registered');

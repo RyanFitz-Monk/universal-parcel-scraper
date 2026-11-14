@@ -744,8 +744,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // The recipient's pickup point taking the parcel in, "Parcel collected by pickup point" on DPD Poland's own page.
   if (/^acceptance of the (?:package|parcel) at the pick ?up point$/.test(text)) return 'ready_for_pickup';
   // The UPU's event for an item reaching the office or point where its recipient collects it (EDH), as posts and
-  // aggregators word it: "Item arrival at collection point for pick-up", "Receive item at collection point for pick-up (Inb)".
-  if (/^(?:(?:the )?item )?(?:arrival|arrived|receive item) at (?:the )?collection point for pick ?up\b/.test(text)) return 'ready_for_pickup';
+  // aggregators word it: "Item arrival at collection point for pick-up", "Receive item at collection point for pick-up (Inb)",
+  // and La Poste's "Item arrived at the collection point waiting for your collect".
+  if (/^(?:(?:the )?item )?(?:arrival|arrived|receive item) at (?:the )?collection point (?:for pick ?up|waiting for (?:your |the )?collect(?:ion)?)\b/.test(text)) return 'ready_for_pickup';
   // A forwarder's receipt at its warehouse in the sending country, as 17TRACK relays it before the
   // parcel departs that warehouse.
   if (/^(?:package|parcel) received (?:&|and) scanned at (?:the )?carrier's domestic warehouse$/.test(text)) return 'accepted';
