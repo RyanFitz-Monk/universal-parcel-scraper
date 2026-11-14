@@ -39,17 +39,18 @@ Italiane for a number issued abroad.
    - `esitoRicerca` `3` for letter post (`tipoSpedizione` `C`) at `stato` `1`, with neither a
      product nor a movement list: a code Poste does not know, so not-found. A code whose check
      digit fails answers that way.
-   - HTTP 404/410 means the tracking endpoint is unavailable. After a burst of searches from one
-     address, the service answers HTTP 400 with an error envelope asking for a CAPTCHA: a
-     challenge. Other non-200 replies remain upstream errors.
-   - The CAPTCHA comes once an address has sent twenty searches in the past hour, the refused
-     ones included, and stays until the hour holds fewer. So at most eighteen searches an hour
-     go through one transport, recognition included, and none for fifteen minutes after a
-     CAPTCHA. An HTTP 429 pauses them for the wait its `Retry-After` names, else for those
-     fifteen minutes. A lookup over that fails as rate-limited without a request, with the time
-     left to wait and the reason `self_paced`, and the browser step does not run. The catalog asks for a refresh at most
-     every hour, a failed one included, so that up to eighteen followed parcels, out for delivery
-     too, keep within the hour's searches.
+   - HTTP 404/410 means the tracking endpoint is unavailable. After every twenty searches from
+     one address, the service answers the next two with HTTP 400 and an error envelope asking
+     for a CAPTCHA: a challenge. Other non-200 replies remain upstream errors.
+   - The CAPTCHA counts searches, not hours: twenty pass however long they take, and the two
+     after them are refused. At most eighteen searches an hour go through one transport,
+     recognition included, which spreads a busy hour's searches without keeping the CAPTCHA
+     away, and none for fifteen minutes after a CAPTCHA. An HTTP 429 pauses them for the wait
+     its `Retry-After` names, else for those fifteen minutes. A lookup over that fails as
+     rate-limited without a request, with the time left to wait and the reason `self_paced`,
+     and the browser step does not run. The catalog asks for a refresh at most every hour, a
+     failed one included, so that up to eighteen followed parcels, out for delivery too, keep
+     within the hour's searches.
    - Missing or unusable history is a schema failure. Unrecognized empty envelopes remain inconclusive.
 2. `trawl`, only after a challenge: the official page opens in a fresh browser context.
    TRAWL solves its reCAPTCHA checkbox/audio challenge and observes the page retrying the

@@ -116,9 +116,10 @@ function importCharges(value: unknown): { import_charges: ImportCharges } | Reco
 }
 
 /**
- * How many searches are sent through one transport in an hour. The service asks for its CAPTCHA
- * once an address has sent twenty in the past hour, the refused ones included, and until the
- * hour holds fewer: a search over the limit would only prolong the refusals.
+ * How many searches are sent through one transport in an hour, which spreads a busy hour's
+ * searches. It does not keep the CAPTCHA away: the service asks for it after every twenty
+ * searches from an address, however long they took, and for the search after that one too; the
+ * twenty after them pass.
  */
 export const HOURLY_SEARCHES = 18;
 /**
@@ -165,8 +166,8 @@ function rateLimited(state: SearchState, retryAfter: string | null | undefined):
 }
 
 /**
- * After a burst of searches from one address, the service refuses more with HTTP 400 and an
- * error envelope until the caller solves its CAPTCHA.
+ * After every twenty searches from one address, the service refuses the next two with HTTP 400
+ * and an error envelope asking for its CAPTCHA.
  */
 function captchaRequired(bytes: Uint8Array): boolean {
   try {
