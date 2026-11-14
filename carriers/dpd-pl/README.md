@@ -53,8 +53,9 @@ and the United Kingdom have separate carrier ids.
   moved it, as at the pickup point where the sender dropped it off or in
   another DPD country; it is then a hand-over in transit. Its wording alone
   does not give its stage, so the `statusMap` answers unknown for it.
-- A return travels under a new parcel number. The original parcel's history
-  ends in an exception, and the return's number is not kept.
+- A return travels back to the sender under a new parcel number. The
+  original parcel's history ends there as returned, and the return's number
+  is not kept.
 - A description keeps the scan's first line only, without the recipient's
   name, the pickup point or the links after it. A row without wording, or
   whose first line reads as an email or markup, is left out.

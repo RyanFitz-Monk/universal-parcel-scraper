@@ -17,7 +17,7 @@ const codes: Record<string, ClassifiedStatus> = {
   'OEC/01': { status: 'out_for_delivery', stage: 'out_for_delivery' },
   // Out for delivery back to the sender: the parcel is on its way back.
   'OEC/09': { status: 'exception', stage: 'returned' },
-  // Waiting at the unit the recipient named, or at a post office box.
+  // Waiting for collection at the address the scan gives, or in a post office box.
   'LDI/01': { status: 'in_transit', stage: 'ready_for_pickup' },
   'LDI/02': { status: 'in_transit', stage: 'ready_for_pickup' },
   'FC/82': { status: 'pending', stage: 'registered' },
@@ -47,15 +47,32 @@ const codes: Record<string, ClassifiedStatus> = {
   'PAR/15': { status: 'in_transit', stage: 'in_transit' },
 };
 
+// Wordings Correios documents without a code, as normalized wording.
+const wordings: Record<string, ClassifiedStatus> = {
+  // Correios's import guide: taxes or its despacho postal fee are due, and the import is not released until they are paid.
+  'aguardando pagamento': { status: 'in_transit', stage: 'customs' },
+};
+
 export function classifyCorreiosStatus(code: string): ClassifiedStatus | undefined {
   return Object.hasOwn(codes, code) ? codes[code] : undefined;
 }
 
+/** A wording Correios documents without a code. */
+export function classifyCorreiosWording(wording: string): ClassifiedStatus | undefined {
+  const key = normalizeStatusWording(wording);
+  return Object.hasOwn(wordings, key) ? wordings[key] : undefined;
+}
+
+/** A scan by its code, else, where the code is not recorded, by a wording documented without one. */
+export function classifyCorreiosScan(code: string, wording: string): ClassifiedStatus | undefined {
+  return classifyCorreiosStatus(code) ?? classifyCorreiosWording(wording);
+}
+
 /** The stage of each recorded wording through its code, left out where two codes word it alike with different stages. */
 const STAGE_BY_WORDING = new Map<string, Stage | undefined>();
-for (const { code, wording } of statuses.entries) {
-  const key = normalizeStatusWording(wording);
-  const stage = classifyCorreiosStatus(code)?.stage;
+for (const entry of statuses.entries) {
+  const key = normalizeStatusWording(entry.wording);
+  const stage = (entry.code ? classifyCorreiosStatus(entry.code) : classifyCorreiosWording(entry.wording))?.stage;
   STAGE_BY_WORDING.set(key, STAGE_BY_WORDING.has(key) && STAGE_BY_WORDING.get(key) !== stage ? undefined : stage);
 }
 
@@ -63,10 +80,11 @@ for (const { code, wording } of statuses.entries) {
 const CORREIOS_CODE = /^[A-Z]{2,4}\/\d{2}$/;
 
 /**
- * What the map says about one scan: its code, else, for a universal provider's copy without
- * one or under the provider's own code, the wording Correios gives a recorded code.
+ * What the map says about one scan: its code, or, for a code not recorded, a wording documented
+ * without one; for a universal provider's copy without Correios's code or under the provider's
+ * own, the wording Correios gives a recorded code or documents without one.
  */
 export const statusMap: CarrierStatusMap = {
-  stage: (code, wording) => (code && CORREIOS_CODE.test(code) ? classifyCorreiosStatus(code)?.stage : STAGE_BY_WORDING.get(wording)),
+  stage: (code, wording) => (code && CORREIOS_CODE.test(code) ? classifyCorreiosScan(code, wording)?.stage : STAGE_BY_WORDING.get(wording)),
   gaps: [],
 };

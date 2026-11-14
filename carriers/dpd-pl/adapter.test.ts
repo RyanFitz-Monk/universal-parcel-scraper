@@ -165,13 +165,19 @@ describe('DPD Poland direct tracking', () => {
     expect(noticeFirst.events?.map(event => [event.stage, event.stage_source])).toEqual([['in_transit', 'carrier_map'], ['registered', 'none']]);
   });
 
-  it('ends delivery at a refusal or a return without keeping the return number', () => {
+  it('ends delivery at a refusal, and the history at a return, without keeping the return number', () => {
     const result = parseDpdPl(history(['2026-07-04', '10:00:00', 'Parcel return<br>Return parcel number:&nbsp;<a href="./parcelDetails?p1=9999000000003L">9999000000003L</a>', 'ZZ1'],
       ['2026-07-03', '10:00:00', 'Parcel not delivered - recipient resigned', ''], ['2026-07-02', '10:00:00', 'Parcel collected by courier', ''],
       ['2026-07-01', '10:00:00', 'Registered parcel data, parcel not dispatched yet', '']), NUMBER);
-    expect(result).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'Parcel return' });
-    expect(result.events?.map(event => event.stage)).toEqual(['exception', 'exception', 'accepted', 'registered']);
+    expect(result).toMatchObject({ status: 'exception', current_stage: 'returned', last_status_text: 'Parcel return' });
+    expect(result.events?.map(event => event.stage)).toEqual(['returned', 'exception', 'accepted', 'registered']);
     expect(JSON.stringify(result)).not.toContain('9999000000003L');
+    // The Polish page's return reads alike, on the page and in a provider's copy.
+    const polish = parseDpdPl(history(['2026-07-04', '10:00:00', 'Zwrot przesyłki', 'ZZ1'], ['2026-07-02', '10:00:00', 'Parcel collected by courier', '']), NUMBER);
+    expect(polish).toMatchObject({ status: 'exception', current_stage: 'returned', last_status_text: 'Zwrot przesyłki' });
+    for (const wording of ['Parcel return', 'Zwrot przesyłki']) {
+      expect(statusMapAnswer({ carrier: 'dpd-pl', providerCode: null, description: wording }), wording).toEqual({ kind: 'mapped', stage: 'returned' });
+    }
   });
 
   it('keeps new wording unstaged and never derives an older delivery or a foreign clock', () => {

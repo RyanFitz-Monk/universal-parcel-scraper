@@ -9,7 +9,7 @@ import type { TrawlCapturedResponse, TrawlClient } from '../../core/transport/tr
 import { CorreiosTracker } from './adapter.js';
 import { isCorreiosCaptchaError, normalizeCorreiosNumber, parseCorreios } from './parser.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
-import { classifyCorreiosStatus } from './status.js';
+import { classifyCorreiosStatus, classifyCorreiosWording } from './status.js';
 
 const NUMBER = 'AA000000005BR';
 const HOME = 'https://rastreamento.correios.com.br/app/index.php';
@@ -46,7 +46,7 @@ describe('Correios parser', () => {
     expect(result.events?.[3]!.stage).toBe('exception');
     expect(result.events?.[5]!.stage).toBe('accepted');
     expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
-    for (const row of statuses.entries) expect(classifyCorreiosStatus(row.code)?.stage).toBe(row.stage);
+    for (const row of statuses.entries) expect((row.code ? classifyCorreiosStatus(row.code) : classifyCorreiosWording(row.wording))?.stage, row.wording).toBe(row.stage);
     expect(classifyCorreiosStatus('BDE/99')).toBeUndefined();
   });
 
@@ -58,6 +58,34 @@ describe('Correios parser', () => {
     // Correios's own code decides, even an unrecorded one.
     expect(answer('BDE/99', 'Objeto postado')).toEqual({ kind: 'unknown' });
     expect(answer(null, 'Synthetic wording')).toEqual({ kind: 'unknown' });
+    // A wording Correios documents without a code reads alike in a copy and under a code not recorded.
+    expect(answer(null, 'Aguardando pagamento')).toEqual({ kind: 'mapped', stage: 'customs' });
+    expect(answer('XYZ/99', 'Aguardando pagamento')).toEqual({ kind: 'mapped', stage: 'customs' });
+    // A recorded code still decides over it.
+    expect(answer('BDE/01', 'Aguardando pagamento')).toEqual({ kind: 'mapped', stage: 'delivered' });
+  });
+
+  it('holds an import in customs while Correios waits for its taxes or fee, whatever code the scan carries', () => {
+    const clock = { date: '2026-01-07 10:00:00.000000', timezone_type: 3, timezone: 'America/Sao_Paulo' };
+    for (const description of ['Aguardando pagamento', 'AGUARDANDO PAGAMENTO']) {
+      const result = parseCorreios({ ...fixture, eventos: [scan('XYZ', '99', description, clock), ...fixture.eventos] }, NUMBER);
+      expect(result, description).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: description });
+      expect(result.events?.[0], description).toMatchObject({ provider_code: 'XYZ/99', stage: 'customs' });
+    }
+    // Only the whole wording: a longer one and an unrecorded code alone stay unread.
+    for (const description of ['Aguardando pagamento confirmado', 'Objeto em trânsito']) {
+      const result = parseCorreios({ ...fixture, eventos: [scan('XYZ', '99', description, clock), ...fixture.eventos] }, NUMBER);
+      expect(result, description).toMatchObject({ status: 'unknown' });
+      expect(result.current_stage, description).toBeUndefined();
+    }
+  });
+
+  it('keeps the town of the unit where an item waits for collection', () => {
+    const clock = { date: '2026-01-07 10:00:00.000000', timezone_type: 3, timezone: 'America/Sao_Paulo' };
+    const waiting = { ...scan('LDI', '01', 'Objeto aguardando retirada no endereço indicado', clock), unidade: { endereco: { cidade: 'Cidade Exemplo', uf: 'SP' } } };
+    const result = parseCorreios({ ...fixture, eventos: [waiting, ...fixture.eventos] }, NUMBER);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'ready_for_pickup' });
+    expect(result.events?.[0]).toMatchObject({ provider_code: 'LDI/01', location: 'Cidade Exemplo, SP', stage: 'ready_for_pickup' });
   });
 
   it('reads an item posted for abroad through export customs and a receipt without a unit address', () => {

@@ -7,7 +7,7 @@ import { firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
 import { hasSeveralClocks, mainZone } from '../../places/zones.js';
-import { classifyCorreiosStatus } from './status.js';
+import { classifyCorreiosScan } from './status.js';
 
 export function normalizeCorreiosNumber(raw: string): string {
   const number = raw.toUpperCase().replace(/[\s.-]/g, '');
@@ -106,14 +106,14 @@ export function parseCorreios(payload: unknown, number: string): CarrierResult {
     const key = `${clock.time ?? clock.local_time ?? clock.provider_time_text ?? ''}\u0000${providerCode}\u0000${description}\u0000${location}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const mapped = classifyCorreiosStatus(providerCode);
+    const mapped = classifyCorreiosScan(providerCode, description);
     events.push({ description, provider_code: providerCode, ...clock, ...(location ? { location } : {}), ...(mapped ? { stage: mapped.stage } : {}) });
   }
   if (!events.length) throw new IndeterminateError('Correios', 'Correios returned no tracking scans');
   laterPostingsInTransit(events);
   // The single-object response is newest first. Keep unresolved clocks there.
   const latest = events[0]!;
-  const mapped = classifyCorreiosStatus(latest.provider_code ?? '');
+  const mapped = classifyCorreiosScan(latest.provider_code ?? '', latest.description ?? '');
   const service = isRecord(payload.tipoPostal) ? clean(payload.tipoPostal.categoria, 80) : '';
   return { status: mapped?.status ?? 'unknown', ...(latest.stage ? { current_stage: latest.stage } : {}),
     last_status_text: latest.description, last_update: latest.time ?? null, last_update_local: latest.local_time ?? null,

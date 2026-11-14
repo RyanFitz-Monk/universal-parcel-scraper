@@ -26,11 +26,12 @@ export const DPD_PL_SCANS: Readonly<Record<string, Stage>> = {
   'Parcel not delivered - recipient not available': 'failed_attempt',
   'Parcel not delivered - wrong address': 'failed_attempt',
   'Not delivered to pickup point - overloaded': 'failed_attempt',
-  // A refusal, a parcel nobody collected in time, and a return sent back
-  // under a new parcel number: delivery stops, and none has reached the sender.
+  // A refusal and a parcel nobody collected in time: delivery stops.
   'Parcel not delivered - recipient resigned': 'exception',
   'Waiting for pickup timeout': 'exception',
-  'Parcel return': 'exception',
+  // The parcel goes back to its sender under a new parcel number, and the
+  // original parcel's history ends here.
+  'Parcel return': 'returned',
   'Parcel delivered': 'delivered',
 };
 
