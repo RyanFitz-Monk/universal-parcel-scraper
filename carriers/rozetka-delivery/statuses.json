@@ -230,8 +230,8 @@
       "wording": "Прийом повернень",
       "language": "uk",
       "confirmedBy": "portal",
-      "note": "The public tracker dictionary at https://rz-delivery.rozetka.ua/api/track-status.",
-      "stage": "returned"
+      "note": "The public tracker dictionary at https://rz-delivery.rozetka.ua/api/track-status files it under \"Повертається\", returns under way.",
+      "stage": "exception"
     },
     {
       "code": "50020",

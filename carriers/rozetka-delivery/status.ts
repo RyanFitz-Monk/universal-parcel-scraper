@@ -4,7 +4,8 @@ import type { CarrierStatusMap } from '../../core/status/statusMap.js';
 // The anonymous track-status dictionary groups these codes by the parcel's
 // actual movement. A return under way is an exception until it reaches the
 // sender's branch, where it is returned; returns never become recipient
-// delivery or collection.
+// delivery or collection. The acceptance of returns (50030) is in the
+// dictionary's group of returns under way.
 const STAGES: Readonly<Record<string, Stage>> = {
   '10010': 'registered', '10020': 'registered',
   '10028': 'accepted', '10029': 'exception', '10030': 'accepted',
@@ -15,7 +16,7 @@ const STAGES: Readonly<Record<string, Stage>> = {
   '40030': 'in_transit', '40040': 'ready_for_pickup', '40080': 'ready_for_pickup',
   '40045': 'failed_attempt', '40050': 'exception', '40060': 'exception', '40070': 'exception',
   '50010': 'exception', '50011': 'exception', '50012': 'exception', '50013': 'exception',
-  '50015': 'exception', '50021': 'exception', '50030': 'returned', '50020': 'returned',
+  '50015': 'exception', '50021': 'exception', '50030': 'exception', '50020': 'returned',
   '60030': 'delivered', '60040': 'returned',
 };
 
