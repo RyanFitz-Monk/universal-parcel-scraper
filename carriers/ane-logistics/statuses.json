@@ -1,4 +1,40 @@
 {
   "carrier": "ane-logistics",
-  "entries": []
+  "entries": [
+    {
+      "code": "GOT",
+      "wording": "已揽收",
+      "stage": "accepted",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "code": "DEPARTURE_S",
+      "wording": "运输中",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "code": "UNLOAD_IN",
+      "wording": "运输中",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "code": "UNLOAD_OUT",
+      "wording": "运输中",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "code": "DEPARTURE_C",
+      "wording": "运输中",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    }
+  ]
 }

@@ -8167,7 +8167,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "ane-logistics",
+      "localClocks": true
     },
     "canaryUrl": "https://www.ane56.com/self-Check.html",
     "trackingSearchUrl": "https://www.ane56.com/self-Check.html",
@@ -48969,7 +48970,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Kolkata",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "tci-freight",
+      "localClocks": true
     },
     "canaryUrl": "https://tcifreight.in/tracking-consignment/",
     "trackingSearchUrl": "https://tcifreight.in/tracking-consignment/",

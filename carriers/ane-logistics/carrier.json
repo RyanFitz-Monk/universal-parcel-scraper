@@ -19,17 +19,42 @@
   "timezone": "Asia/Shanghai",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "ane-logistics",
+    "steps": [
+      "direct"
+    ],
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code"
+  ],
   "portal": {
     "searchUrl": "https://www.ane56.com/self-Check.html",
     "canaryUrl": "https://www.ane56.com/self-Check.html",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "provider_code"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code"
+    ],
+    "discarded": [
+      "recipient",
+      "contact",
+      "address",
+      "signature",
+      "POD"
+    ],
+    "unavailable": [
+      "eta"
+    ]
   },
   "links": [],
   "detection": []

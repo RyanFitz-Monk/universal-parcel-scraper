@@ -32,6 +32,7 @@ import { adapter as ampm } from '../carriers/ampm/adapter.js';
 import { adapter as anPost } from '../carriers/an-post/adapter.js';
 import { adapter as ancDelivers } from '../carriers/anc-delivers/adapter.js';
 import { adapter as andreani } from '../carriers/andreani/adapter.js';
+import { adapter as aneLogistics } from '../carriers/ane-logistics/adapter.js';
 import { adapter as anjun } from '../carriers/anjun/adapter.js';
 import { adapter as anousith } from '../carriers/anousith/adapter.js';
 import { adapter as anserx } from '../carriers/anserx/adapter.js';
@@ -659,6 +660,7 @@ import { adapter as taqbinHk } from '../carriers/taqbin-hk/adapter.js';
 import { adapter as taxydema } from '../carriers/taxydema/adapter.js';
 import { adapter as tccCo } from '../carriers/tcc-co/adapter.js';
 import { adapter as tciExpress } from '../carriers/tci-express/adapter.js';
+import { adapter as tciFreight } from '../carriers/tci-freight/adapter.js';
 import { adapter as tcsPakistan } from '../carriers/tcs-pakistan/adapter.js';
 import { adapter as tdn } from '../carriers/tdn/adapter.js';
 import { adapter as tealca } from '../carriers/tealca/adapter.js';
@@ -796,6 +798,7 @@ export const REGISTRY: RegistryDefinition = {
     "an-post": anPost,
     "anc-delivers": ancDelivers,
     "andreani": andreani,
+    "ane-logistics": aneLogistics,
     "anjun": anjun,
     "anousith": anousith,
     "anserx": anserx,
@@ -1423,6 +1426,7 @@ export const REGISTRY: RegistryDefinition = {
     "taxydema": taxydema,
     "tcc-co": tccCo,
     "tci-express": tciExpress,
+    "tci-freight": tciFreight,
     "tcs-pakistan": tcsPakistan,
     "tdn": tdn,
     "tealca": tealca,
@@ -1605,7 +1609,7 @@ export const REGISTRY: RegistryDefinition = {
     "an-post": "an-post",
     "anc-delivers": "anc-delivers",
     "andreani": "andreani",
-    "ane-logistics": "universal",
+    "ane-logistics": "ane-logistics",
     "anjun": "anjun",
     "annto": "universal",
     "anousith": "anousith",
@@ -2836,7 +2840,7 @@ export const REGISTRY: RegistryDefinition = {
     "tcc-co": "tcc-co",
     "tccs": "universal",
     "tci-express": "tci-express",
-    "tci-freight": "universal",
+    "tci-freight": "tci-freight",
     "tcs-pakistan": "tcs-pakistan",
     "tdn": "tdn",
     "tealca": "tealca",

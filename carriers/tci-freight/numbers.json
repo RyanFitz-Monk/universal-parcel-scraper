@@ -1,5 +1,27 @@
 {
   "carrier": "tci-freight",
-  "gap": "Its nine-character consignment numbers fit many carriers, and no public page shows one.",
-  "records": []
+  "records": [
+    {
+      "number": "222405116",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.linkedin.com/posts/monu-kumar-831870a7_just-of-many-reniders-to-tci-freight-doing-activity-7506599012083568640-ZS6I",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "tnt",
+          "tforce-freight",
+          "xpo-ltl"
+        ]
+      },
+      "note": "Public shipment report; the carrier guest API confirms the whole reference and dated history."
+    }
+  ]
 }

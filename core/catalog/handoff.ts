@@ -36,6 +36,8 @@ import { isFanCourierReference } from '../detection/fanCourier.js';
 import { isCostcoLogisticsReference } from '../detection/costcoLogistics.js';
 import { isAeropostReference } from '../detection/aeropost.js';
 import { isOmLogisticsReference } from '../detection/omLogistics.js';
+import { isAneLogisticsReference } from '../detection/aneLogistics.js';
+import { isTciFreightReference } from '../detection/tciFreight.js';
 import { isZesExpressReference } from '../detection/zesExpress.js';
 import { isJAndTBrReference } from '../detection/jAndTBr.js';
 import { isZheldorReference } from '../detection/zheldor.js';
@@ -51,6 +53,8 @@ export interface DeliveryHandoff {
 // about a partner's number only fails, however often the hand-off is retried.
 const REFERENCES_LOOKED_UP: Readonly<Record<string, (number: string) => boolean>> = {
   aeropost: isAeropostReference,
+  'ane-logistics': isAneLogisticsReference,
+  'tci-freight': isTciFreightReference,
   'om-logistics': isOmLogisticsReference,
   'zes-express': isZesExpressReference,
   'j-and-t-br': isJAndTBrReference,

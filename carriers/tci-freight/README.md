@@ -1,28 +1,29 @@
 # TCI Freight
 
-TCI Freight parcels use enabled universal providers. There is no dedicated adapter.
+Tracks domestic road-freight consignments of TCI Freight, separately from TCI Express.
 
-TCI Freight is the road freight division of Transport Corporation of India Ltd. It carries full
-and part truckloads and oversized loads across India. It is a different company from TCI Express,
-which has its own catalog entry. Its site is tcifreight.in.
+## How it works
 
-## Numbers
+`direct` posts the whole consignment as `CnsNo` and `DivisionCode: "1"` to the
+`ShipmentTrackingList` guest endpoint in the official site's `aerp.tcifreight.in`
+TLOG tenant. The signed-out client sends `Authorization: Bearer null`; no account,
+issued token, session or browser is needed. The web form's arithmetic check is local;
+the API request and the client's deep-link lookup carry no answer.
 
-Its consignment (CNS) numbers are nine characters, as the tracker's validation says. That length
-fits many carriers, and no public page shows one, so there is no rule.
+The summary must name the whole consignment, and every populated dispatch identity
+must agree. Only the scan wording, city and displayed `STATUS_DATE` are read.
+`LIST_ORDER` is an internal sort clock, so it does not add time precision to a date.
 
-## Why there is no adapter
+## Limitations
 
-Its tracking page posts the consignment number through a WordPress form and then opens an address
-the server returns. The TCI group's tracker, a JavaScript app for road, rail, sea and air
-shipments, asks for an image code before it searches.
+`Invalid cns !` does not distinguish an absent consignment from an invalid number;
+it stays inconclusive. Delivery documents, contact details, vehicle positions and
+account operations are excluded. Shared numeric shapes do not establish TCI ownership;
+explicit selection or a named handoff is required.
 
-## Links
-
-The tracking page takes the number in a POST form, and the group tracker's search asks for an
-image code, which the catalog does not link around. No address opens one consignment.
+The official customer app links a customer dashboard; it supplies no separate guest
+history protocol needed by this adapter.
 
 ## Testing
 
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+`npm run test:carriers:live -- carriers/tci-freight`

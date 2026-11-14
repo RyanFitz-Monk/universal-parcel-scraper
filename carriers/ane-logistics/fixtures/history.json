@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "errorCode": 200,
+  "message": null,
+  "data": [
+    {
+      "billno": "246813579123",
+      "wayBillInfo": {
+        "ewbNo": "246813579123",
+        "ecId": 1,
+        "contact": "PRIVATE CONTACT"
+      },
+      "scanListPDD": null,
+      "scanList": [
+        {
+          "operateTime": "2026-1-2 9:03:04",
+          "scanType": "GOT",
+          "city": "SYNTHETIC ORIGIN",
+          "desc": "PRIVATE STAFF AND PHONE",
+          "createTime": "2026-11-14 13:00:00"
+        },
+        {
+          "operateTime": "2026-01-03 10:12:13",
+          "scanType": "DEPARTURE_S",
+          "city": "SYNTHETIC ORIGIN"
+        },
+        {
+          "operateTime": "2026-01-04 11:12:13",
+          "scanType": "UNLOAD_IN",
+          "city": "SYNTHETIC HUB"
+        }
+      ]
+    }
+  ]
+}

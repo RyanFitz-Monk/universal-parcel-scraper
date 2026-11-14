@@ -1,5 +1,39 @@
 {
   "carrier": "ane-logistics",
-  "gap": "No public page shows an ANE Logistics number.",
-  "records": []
+  "records": [
+    {
+      "number": "300575212335",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://ts.voc.com.cn/question/view/2342845.html",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "mondial-relay",
+          "colis-prive",
+          "mrw",
+          "brt",
+          "japan-post",
+          "sf-express",
+          "sto",
+          "zto",
+          "yamato",
+          "j-and-t",
+          "lbc-express",
+          "metropolitan-warehouse",
+          "paquetexpress",
+          "sagawa",
+          "sending"
+        ]
+      },
+      "note": "Public shipment report; the carrier guest API confirms the whole reference and dated history."
+    }
+  ]
 }

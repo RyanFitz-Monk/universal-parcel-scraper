@@ -16,17 +16,39 @@
   "timezone": "Asia/Kolkata",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "tci-freight",
+    "steps": [
+      "direct"
+    ],
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location"
+  ],
   "portal": {
     "searchUrl": "https://tcifreight.in/tracking-consignment/",
     "canaryUrl": "https://tcifreight.in/tracking-consignment/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location"
+    ],
+    "discarded": [
+      "recipient",
+      "contact",
+      "address",
+      "signature",
+      "POD"
+    ],
+    "unavailable": [
+      "eta"
+    ]
   },
   "links": [],
   "detection": []

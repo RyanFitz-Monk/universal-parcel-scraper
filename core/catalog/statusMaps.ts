@@ -10,6 +10,8 @@
  * universal providers, whose map is the reading they give a scan
  * (`providers/status.ts`).
  */
+import { statusMap as aneLogistics } from '../../carriers/ane-logistics/status.js';
+import { statusMap as tciFreight } from '../../carriers/tci-freight/status.js';
 import { statusMap as aeropost } from '../../carriers/aeropost/status.js';
 import { statusMap as westernBid } from '../../carriers/western-bid/status.js';
 import { statusMap as libanpost } from '../../carriers/libanpost/status.js';
@@ -781,6 +783,8 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'western-bid': westernBid,
   libanpost,
   'om-logistics': omLogistics,
+  'ane-logistics': aneLogistics,
+  'tci-freight': tciFreight,
   'zes-express': zesExpress,
   'j-and-t-br': jAndTBr,
   zheldor,

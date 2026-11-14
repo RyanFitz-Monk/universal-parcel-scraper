@@ -1,4 +1,23 @@
 {
   "carrier": "tci-freight",
-  "entries": []
+  "entries": [
+    {
+      "wording": "Consignment Booked for NOIDA",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "Consignment Arrived at NOIDA (NOIDA UDYOG KENDRA)",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "Consignment Dispatched to NOIDA (NOIDA UDYOG KENDRA)",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "portal"
+    }
+  ]
 }

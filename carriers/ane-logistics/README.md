@@ -1,24 +1,29 @@
 # ANE Logistics
 
-ANE Logistics parcels use enabled universal providers. There is no dedicated adapter.
+Tracks ordinary domestic ANE freight waybills through its official guest API.
 
-ANE Logistics (安能物流), based in Shanghai, carries parcels and freight from 3 to 300 kg through a network
-across China. Its site is ane56.com.
+## How it works
 
-## Numbers
+`direct` posts the whole `billNo` to
+`https://www.ane56.com/gw/api/order/v2/searchWayBillByNo`, with the public detail
+page as referrer. The site offers Tencent verification, but this guest read needs
+no CAPTCHA ticket, account, cookie or bootstrap session.
 
-No public page shows one of its numbers, so there is no rule.
+Both `data[].billno` and `wayBillInfo.ewbNo` must name the whole requested waybill.
+Scans keep `operateTime` as a local wall clock. Response construction time is not a scan.
+The adapter keeps the scan code, category and city; free-form staff/contact descriptions,
+addresses, signatures and delivery documents are excluded.
 
-## Why there is no adapter
+## Limitations
 
-Its waybill query on ane56.com shows scans only after a Tencent slider CAPTCHA, whose ticket the detail page
-needs. No public number is known to see a found reply.
+The ordinary `scanList` is partial. PDD (`ecId: 398` / `scanListPDD`) uses another
+history contract and remains with enabled providers. Unmapped codes keep their code
+without an invented stage; signed-delivery semantics are not inferred from them.
+Empty replies stay inconclusive. Shared numeric formats do not establish ownership;
+explicit selection or a named handoff is required.
 
-## Links
-
-Its detail page needs the CAPTCHA's ticket beside the number, so no link names a number alone.
+No distinct official Android guest protocol is needed for this web read.
 
 ## Testing
 
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+`npm run test:carriers:live -- carriers/ane-logistics`

@@ -1,0 +1,39 @@
+{
+  "Error": null,
+  "shipmentTrackingS1_DATAs": [
+    {
+      "CNS_NO": "246813579",
+      "BKG_DATE": "01-JAN-2026"
+    }
+  ],
+  "disInfo2": [
+    {
+      "cns_cns_no": "246813579",
+      "LORRY_REGIS_NO": "PRIVATE VEHICLE"
+    }
+  ],
+  "shipmentTrackingS2_DATAs": [
+    {
+      "CSH_NUMBER": "PRIVATE CONTACT"
+    }
+  ],
+  "POD_IMG": "PRIVATE DOCUMENT",
+  "shipmentTrackingS4_DATAs": [
+    {
+      "STATUS_DATE": "4-JAN-2026",
+      "LIST_ORDER": "01/04/2026 13:14:15",
+      "CITY": "SYNTHETIC DESTINATION",
+      "STATUS": "Consignment Arrived at SYNTHETIC DESTINATION"
+    },
+    {
+      "STATUS_DATE": "02-JAN-2026",
+      "CITY": "SYNTHETIC ORIGIN",
+      "STATUS": "Consignment Dispatched to SYNTHETIC DESTINATION"
+    },
+    {
+      "STATUS_DATE": "01-JAN-2026",
+      "CITY": "SYNTHETIC ORIGIN",
+      "STATUS": "Consignment Booked for SYNTHETIC DESTINATION"
+    }
+  ]
+}
