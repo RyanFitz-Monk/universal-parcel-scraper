@@ -87,18 +87,30 @@ const LABEL_SUFFIX = String.raw`(?:numbers?(?!\p{L})|no\.|(?:no|id)(?![\p{L}0-9.
 // Other languages name the parcel or its tracking, with a word for its number
 // before or after: "numéro de suivi", "Sendung Nr.", "número de envío", "numer
 // przesyłki", or join the two: "Sendungsnummer", "zendingnummer". A courier's
-// label names its waybill: "Waybill No.", "AWB", "número de guía".
+// label names its waybill: "Waybill No.", "AWB", "número de guía". A customer
+// service line is no label: "Service colis : 01 23 45 67 89".
 const PARCEL_WORDS = String.raw`suivi|colis|envoi|sendung|paket|pakket|zending|seguimiento|rastreo|env[ií]o|paquete|gu[ií]a`
   + String.raw`|tracciamento|spedizione|pacco|rastreio|rastreamento|encomenda|przesy[lł]k[ai]|paczk[ai]`;
 const NUMBER_WORDS = String.raw`num[eé]ro|n[uú]mero|numer|nummer|nr\.?|n\.?\s?[°º]`;
+// Russian: "трек-номер", "номер отправления", "почтовый идентификатор", "ШПИ".
+const RUSSIAN_LABEL = String.raw`(?<!\p{L})(?:трек(?:инг)?[-\s]?(?:номер|код)[а-яё]{0,3}`
+  + String.raw`|номер[а-яё]{0,2}\s+(?:для\s+)?(?:отслеживания|отправления|посылки|почтового\s+отправления)`
+  + String.raw`|почтов(?:ый|ого|ым)\s+идентификатор[а-яё]{0,2}|шпи)(?!\p{L})`;
+// Chinese has no space between words, so its label needs none before or after: the
+// number must still start with a Latin letter or a digit. Never a bare "单号", which
+// ends "订单号", an order number.
+const CHINESE_LABEL = String.raw`(?:(?:运|運|快递|快遞|物流|包裹)(?:单|單)(?:号|號|编号|編號)|(?:运|運)(?:单|單)`
+  + String.raw`|(?:追踪|追蹤|跟踪|跟蹤)(?:单号|單號|号码|號碼|编号|編號|号|號|码|碼))(?:\s*(?:是|为|為))?`;
 const LABELLED_NUMBER = new RegExp(
   String.raw`(?:track(?:ing)?(?:\s*${LABEL_SUFFIX}|(?!\p{L}))`
   + String.raw`|(?:parcel|shipment|waybill|awb)(?:\s+(?:tracking(?!\p{L})|${LABEL_SUFFIX})|(?!\p{L}))`
-  + String.raw`|(?:(?:${NUMBER_WORDS})\s*(?:(?:de|du|di|del|do|da)\s+|d')?)?(?:${PARCEL_WORDS})(?!\p{L})(?:\s*(?:${NUMBER_WORDS}))?`
+  + String.raw`|(?<!service\s{1,3})(?:(?:${NUMBER_WORDS})\s*(?:(?:de|du|di|del|do|da)\s+|d')?)?(?:${PARCEL_WORDS})(?!\p{L})(?:\s*(?:${NUMBER_WORDS}))?`
+  + String.raw`|${RUSSIAN_LABEL}|${CHINESE_LABEL}`
   // A joined word is read from its start: a later start in the same word reads no more, and would try every letter.
   + String.raw`|(?<!\p{L})\p{L}*(?:sendungs|paket|tracking|zending)nummer)`
-  // An email's template can print its separator twice: "Tracking Number: : 1234567899".
-  + String.raw`(?:\s+(?:is|est|es|ist|lautet|è|é|jest)(?:\s+(?:le|el|il|o))?(?![\p{L}0-9]))?\s*(?:[:#-]\s*){0,2}`
+  // An email's template can print its separator twice: "Tracking Number: : 1234567899". Chinese and
+  // Japanese text print a full-width colon.
+  + String.raw`(?:\s+(?:is|est|es|ist|lautet|è|é|jest)(?:\s+(?:le|el|il|o))?(?![\p{L}0-9]))?\s*(?:[:：#-]\s*){0,2}`
   // The token holds a digit, so a label followed by a plain word does not end the search. Groups
   // printed apart may follow it: "1Z 999 AA1 01 2345 6784".
   + String.raw`((?=[A-Z0-9.-]{0,39}\d)(?:[A-Z0-9][A-Z0-9.-]{3,39}|[A-Z0-9][A-Z0-9.-]{1,2}(?=\s[A-Z0-9]*\d))`
@@ -110,6 +122,8 @@ export const ALTERNATIVE_WORDS = 'or|oder|ou|o|of|lub';
 const ALTERNATIVE_NUMBER = new RegExp(String.raw`^\s+(?:${ALTERNATIVE_WORDS})\s+[A-Z0-9.-]*\d`, 'i');
 // A date, day or year first: "12.11.2026", "2026-11-12".
 const DATE = /^(?:\d{1,2}([./-])\d{1,2}\1\d{2,4}|\d{4}([./-])\d{1,2}\2\d{1,2})$/;
+// A phone number in the French and Belgian layout: a 0, then two-digit groups printed apart.
+const PHONE = /^0\d(?:[ .-]\d{2}){4}$/;
 
 /** Whether a labelled token is a date, written whole or ending a sentence. */
 export function isDateToken(token: string): boolean {
@@ -142,6 +156,7 @@ export function keywordNumberInText(raw: string): string | undefined {
   const claimed = joins.slice(1).reverse().find((joined) => detectCarrierMatch(joined).confidence === 'high');
   // A date printed in groups or with slashes, which end the token, is no number either.
   if (!claimed && (isDateToken(groups.join('.')) || isDateToken(/^\S*/.exec(raw.slice(start))![0]))) return undefined;
+  if (!claimed && PHONE.test(groups.join(' ').replace(/[.-]+$/, ''))) return undefined;
   const grouped = groups.length > 1 && groups.every((group) => group.length <= 6) && joins.at(-1)!.length >= 8
     ? joins.at(-1) : undefined;
   const candidate = claimed ?? grouped ?? joins[0]!;

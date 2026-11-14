@@ -638,6 +638,25 @@ describe('the detection engine', () => {
     expect(parseTrackingInput(text)).toMatchObject({ trackingNumber: '12345678', source: 'text', confidence: 'low' });
   });
 
+  it('reads the number after a Russian or Chinese label', () => {
+    for (const text of ['Трек-номер: 1234567899', 'трек номер 1234567899', 'Номер отслеживания: 1234567899', 'Номер отправления: 1234567899',
+      'ШПИ: 1234567899', 'Почтовый идентификатор 1234567899', '运单号：1234567899', '快递单号: 1234567899', '物流单号 1234567899',
+      '追踪号：1234567899', '運單號：1234567899', '您的运单号是 1234567899', '运单号为：1234567899']) {
+      expect(keywordNumberInText(text), text).toBe('1234567899');
+    }
+    // An order number is no tracking number, and a word that only ends like a label is none.
+    for (const text of ['订单号: 1234567899', '运单状态 1234567899', 'Автотрек-номер 1234567899']) {
+      expect(keywordNumberInText(text), text).toBeUndefined();
+    }
+  });
+
+  it('reads no phone number after a label, nor the number of a service line', () => {
+    for (const text of ['Service colis : 01 23 45 67 89', 'Votre colis : 01.23.45.67.89', 'Service colis : 0123456789', 'Kundenservice Paket: 1234567899']) {
+      expect(keywordNumberInText(text), text).toBeUndefined();
+    }
+    expect(keywordNumberInText('Service de suivi : 1234567899')).toBe('1234567899');
+  });
+
   it('reads the groups a number prints apart in a message', () => {
     expect(parseTrackingInput('Your tracking number is 1Z 999 AA1 01 2345 6784 and it ships today'))
       .toMatchObject({ trackingNumber: '1Z999AA10123456784', carrier: 'ups', confidence: 'high', source: 'text' });
