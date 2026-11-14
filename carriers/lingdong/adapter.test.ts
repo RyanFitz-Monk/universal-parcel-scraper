@@ -115,8 +115,14 @@ describe('Lingdong International tracking adapter', () => {
     expect(statusMapAnswer({ carrier: 'lingdong', providerCode: 'ARRIVAL', description: 'Shipment arrived at facility' }))
       .toEqual({ kind: 'mapped', stage: 'accepted' });
     expect(statusMapAnswer({ carrier: 'lingdong', providerCode: null, description: '合成的记录' })).toEqual({ kind: 'unknown' });
-    for (const description of ['预计10.28航班/Flight scheduled for October 28th', '预计1.2航班/Flight scheduled for January 2nd', '预计30号航班【Expect flight 30th.】', '预计2号航班【Expect flight 2nd.】']) {
+    for (const description of ['预计10.28航班/Flight scheduled for October 28th', '预计1.2航班/Flight scheduled for January 2nd', '预计30号航班【Expect flight 30th.】', '预计2号航班【Expect flight 2nd.】',
+      '预计11.9航班/Scheduled flight on November 9st', '预计12.21航班/Scheduled flight on December 21st']) {
       expect(statusMapAnswer({ carrier: 'lingdong', providerCode: null, description })).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    }
+    // The label before the first scan, the hand-over to GOFO in the United States after the release, and GOFO's hub.
+    for (const [description, stage] of [['Shipping Label Created', 'registered'], ['包裹交接给本地物流商处理/Received by local delivery company', 'in_transit'],
+      ['Arrived at GOFO Regional Hub', 'in_transit']] as const) {
+      expect(statusMapAnswer({ carrier: 'lingdong', providerCode: null, description })).toEqual({ kind: 'mapped', stage });
     }
     // The delivery partner's scans as the forwarder relays them, in capitals.
     for (const description of ['FIRST PARCEL SCAN ALONG POSTE ITALIANE’S LOGISTIC NETWORK', 'IN TRANSIT ALONG POSTE ITALIANE’S LOGISTIC NETWORK']) {

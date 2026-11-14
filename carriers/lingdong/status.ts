@@ -3,9 +3,9 @@ import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status
 import statuses from './statuses.json' with { type: 'json' };
 
 const WORDINGS = new Map<string, Stage>(statuses.entries.map((entry) => [normalizeStatusWording(entry.wording), entry.stage as Stage]));
-// The booked flight's day, as month.day and in English, "预计10.28航班/Flight scheduled for October 28th", or as
-// the day of the month in both, "预计30号航班【Expect flight 30th.】".
-const FLIGHT_DAY = /^(预计)\d{1,2}\.\d{1,2}(航班\/flight scheduled for )[a-z]+ \d{1,2}(?:st|nd|rd|th)$/;
+// The booked flight's day, as month.day and in English, "预计10.28航班/Flight scheduled for October 28th" or
+// "预计11.9航班/Scheduled flight on November 9st", or as the day of the month in both, "预计30号航班【Expect flight 30th.】".
+const FLIGHT_DAY = /^(预计)\d{1,2}\.\d{1,2}(航班\/(?:flight scheduled for|scheduled flight on) )[a-z]+ \d{1,2}(?:st|nd|rd|th)$/;
 const FLIGHT_DATE = /^(预计)\d{1,2}(号航班【expect flight )\d{1,2}(?:st|nd|rd|th)(\.?】)$/;
 
 /**
