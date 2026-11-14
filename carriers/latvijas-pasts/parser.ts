@@ -113,6 +113,12 @@ export function parseLatvijasPasts(payload: unknown, rawNumber: string): Carrier
     const classified = latvijasPastsStage(event.provider_code!, event.description!);
     if (classified) Object.assign(event, { stage: classified.stage, stage_source: classified.source });
   }
+  // An unsuccessful delivery (36) at the second of a redirection's relabelling (1127) records the
+  // redirection, not a round: the item goes on to its new address.
+  const relabelled = new Set(scans.filter(({ event }) => event.provider_code === '1127').map(({ wall }) => wall));
+  for (const { event, wall } of scans) {
+    if (event.provider_code === '36' && relabelled.has(wall)) Object.assign(event, { stage: 'in_transit', stage_source: 'carrier_map' });
+  }
 
   const latest = events[0]!;
   const stage = latest.stage as Stage | undefined;

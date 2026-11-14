@@ -51,6 +51,9 @@ its country's when the country keeps one zone; other events, and a clock that su
 ambiguous, stay local times. Scans at the same second follow the tracker's progress groups, from created to delivered,
 then the reply's order. A repeated foreign event counts once.
 
+An unsuccessful delivery (36) at the second of a redirection's relabelling (1127) records the
+redirection, not a round, so it is in transit: the item goes on to its new address.
+
 An office without an English name comes back as "Pasts", the company's name, and gets no
 location. Office postcodes, the delivery office named ahead of the delivery and the non-delivery
 reason and action are not read.

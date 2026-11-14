@@ -103,6 +103,27 @@ describe('Latvijas Pasts tracking adapter', () => {
     expect(rows(parseLatvijasPasts(shuffled, ABROAD))).toEqual(rows(result));
   });
 
+  it('reads an unsuccessful delivery at the second of a redirection\'s relabelling as the item going on', () => {
+    const office = { office_code: 'LV9001', office: 'Customer centre: Example' };
+    const redirected = edited('collected', payload => {
+      payload.data = [
+        { ...office, event_timestamp: '2026-03-12 07:59:12.000', event_code: '36', event: 'Unsuccessful delivery attempt', event_group_sequence_number: 4 },
+        { ...office, event_timestamp: '2026-03-12 07:59:12.000', event_code: '1127', event: 'Item address re-labelled', event_group_sequence_number: 3 },
+        { ...office, event_timestamp: '2026-03-12 07:57:06.000', event_code: '1126', event: 'Item redirected', event_group_sequence_number: 3 },
+        ...payload.data!.slice(2),
+      ];
+    });
+    const result = parseLatvijasPasts(redirected, COLLECTED);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map' });
+    expect(rows(result).slice(0, 3).map(([, code, stage]) => [code, stage])).toEqual([['36', 'in_transit'], ['1127', 'in_transit'], ['1126', 'in_transit']]);
+    // Without a relabelling at its second, it is a failed round.
+    const attempt = edited('collected', payload => {
+      payload.data = [{ ...office, event_timestamp: '2026-03-12 07:59:12.000', event_code: '36', event: 'Unsuccessful delivery attempt', event_group_sequence_number: 4 },
+        ...payload.data!.slice(2)];
+    });
+    expect(parseLatvijasPasts(attempt, COLLECTED)).toMatchObject({ current_stage: 'failed_attempt' });
+  });
+
   it('stages new codes through the shared wording rules, keeps the rest visible and drops office postcodes', () => {
     const returned = edited('abroad', payload => { payload.data!.unshift({ ...payload.data![0]!, event_code: '9999', event: 'Item returned to sender' }); });
     expect(parseLatvijasPasts(returned, ABROAD)).toMatchObject({ status: 'exception', current_stage: 'returned',
