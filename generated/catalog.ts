@@ -16680,7 +16680,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "detectionRules": []
   },
   "der-kurier-sk": {
-    "displayName": "DER KURIER",
+    "displayName": "DER KURIER Slovakia",
     "color": "#fe0000",
     "aliases": [
       "DER KURIER Slovakia, spol. s r.o."
@@ -24803,7 +24803,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "GSO",
       "Golden State Overnight",
       "Golden State Overnight Delivery Service",
-      "GSO (GLS US)"
+      "GSO (GLS US)",
+      "GLS United States",
+      "General Logistics Systems US"
     ],
     "countries": [
       "US"

@@ -268,9 +268,15 @@ describe('carrier names reported by universal providers', () => {
   });
 
   it.each([
-    'GLS (US)', 'GLS US', 'GLS USA', 'GSO (GLS US)', 'Golden State Overnight',
+    'GLS (US)', 'GLS US', 'GLS USA', 'GSO (GLS US)', 'Golden State Overnight', 'GLS United States', 'General Logistics Systems US',
   ])('maps %s to GLS US, which runs a system of its own', (name) => {
     expect(carrierIdFromName(name)).toBe('gls-us');
+  });
+
+  it('maps plain DER KURIER to the German network, and its Slovak namesake by its own name', () => {
+    expect(carrierIdFromName('DER KURIER')).toBe('der-kurier');
+    expect(carrierIdFromName('DER KURIER Slovakia')).toBe('der-kurier-sk');
+    expect(carrierIdFromName('DER KURIER (SK)')).toBeUndefined();
   });
 
   it("keeps GLS US out of bare GLS's networks", () => {
@@ -281,7 +287,9 @@ describe('carrier names reported by universal providers', () => {
 
   it.each([
     // A country without one zone, a brand with several networks.
-    'UPS United States', 'DHL Germany', 'GLS', 'France', 'Evri Group',
+    'UPS United States', 'DHL Germany', 'GLS', 'General Logistics Systems', 'France', 'Evri Group',
+    // GLS US and GLS Canada are separate companies.
+    'GLS America',
     // A carrier whose scans are instants, followed by a country other than its home.
     'Bpost Netherlands', 'Aramex Jordan',
     // No network there, two networks there, a worldwide network, a network on another clock.
