@@ -218,6 +218,8 @@ describe('Huaya Express tracking adapter', () => {
       .toEqual({ kind: 'mapped', stage: 'accepted' });
     expect(statusMapAnswer({ carrier: 'huaya-express', providerCode: 'ARRIVAL', description: '到达收货点' }))
       .toEqual({ kind: 'mapped', stage: 'accepted' });
+    expect(statusMapAnswer({ carrier: 'huaya-express', providerCode: null, description: 'Shipment not yet received or processed' }))
+      .toEqual({ kind: 'mapped', stage: 'registered' });
     expect(statusMapAnswer({ carrier: 'huaya-express', providerCode: null, description: '合成的记录' })).toEqual({ kind: 'unknown' });
   });
 
