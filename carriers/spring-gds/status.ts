@@ -102,7 +102,21 @@ const DOMESTIC_STAGE = new Map<string, Stage>([
 
 /** The stage of one domestic tracker observation, or undefined when unmapped. Its labels write the apostrophe either way. */
 export function postNLDomesticStage(description: string): Stage | undefined {
-  return DOMESTIC_STAGE.get(description.trim().toLocaleLowerCase('en-US').replace(/[.!]+$/, '').replace(/\u2019/g, "'"));
+  return DOMESTIC_STAGE.get(labelKey(description));
+}
+
+/**
+ * International item scans a universal provider relays without their category, lowercase without
+ * final punctuation: statuses 3070, 8 and 101, which the Transit category stages.
+ */
+const RELAYED_STAGE = new Map<string, Stage>([
+  ['the item is received by postnl', 'in_transit'],
+  ['the item is at the postnl sorting center', 'in_transit'],
+  ['the item is processed at the postnl sorting center', 'in_transit'],
+]);
+
+function labelKey(description: string): string {
+  return description.trim().toLocaleLowerCase('en-US').replace(/[.!]+$/, '').replace(/\u2019/g, "'");
 }
 
 /**
@@ -119,12 +133,14 @@ export function postNLCode(status: string, category: unknown): string {
  * What the map says about one scan. An international scan stored with its category is staged by
  * that category, its label (the stored wording) and its status number, as the adapter stages it.
  * A domestic observation, or an international scan stored with its status number alone, is read by the
- * domestic tracker's labels, whole, as a universal provider relays them under PostNL's name.
+ * domestic tracker's labels, whole, as a universal provider relays them under PostNL's name, and by the
+ * international item scans it relays without their category.
  */
 export const statusMap: CarrierStatusMap = {
   stage: (code, wording) => {
     const [, status, category] = /^(\d{1,8})\/(.+)$/s.exec(code ?? '') ?? [];
-    return category === undefined ? postNLDomesticStage(wording) : postNLStatus(category, wording, status)?.stage;
+    return category === undefined ? postNLDomesticStage(wording) ?? RELAYED_STAGE.get(labelKey(wording))
+      : postNLStatus(category, wording, status)?.stage;
   },
   gaps: [],
   wholeWording: true,

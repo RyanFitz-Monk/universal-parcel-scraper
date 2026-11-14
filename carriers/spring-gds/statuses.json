@@ -193,6 +193,20 @@
       "note": "An item scan that can follow the acceptance centre scan by days; stays with the Transit category."
     },
     {
+      "wording": "The item is at the PostNL sorting center",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "note": "Status 8 in the Transit category, a minute or less after PostNL receives the item; a universal provider relays it without the category."
+    },
+    {
+      "wording": "The item is processed at the PostNL sorting center",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "note": "Status 101 in the Transit category, with the sorting centre's arrival; a universal provider relays it without the category."
+    },
+    {
       "wording": "The shipment is handed over in bulk final acceptance of the item to be confirmed",
       "language": "en",
       "stage": "accepted",

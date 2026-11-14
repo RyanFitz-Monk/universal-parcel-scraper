@@ -503,6 +503,11 @@ describe('status map answers', () => {
   it("answers Spring GDS by PostNL's domestic labels, and an international scan by the category stored with its number", () => {
     expect(answer('spring-gds', 'Z1', 'Shipment received by PostNL')).toEqual(mapped('accepted'));
     expect(answer('spring-gds', null, 'Driver is en route')).toEqual(mapped('out_for_delivery'));
+    // PostNL's international item scans, as a universal provider relays them without their category.
+    for (const description of ['The item is received by PostNL', 'The item is at the PostNL sorting center', 'The item is processed at the PostNL sorting center']) {
+      expect(answer('spring-gds', null, description), description).toEqual(mapped('in_transit'));
+      expect(relayedWordingStage('spring-gds', description), description).toBe('in_transit');
+    }
     expect(answer('spring-gds', '37/delivered', 'Shipment delivered')).toEqual(mapped('delivered'));
     expect(answer('spring-gds', '1233/pre-advised', 'Synthetic wording')).toEqual(mapped('registered'));
     // The label refines an overloaded category, as in the adapter.
