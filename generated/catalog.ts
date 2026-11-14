@@ -5022,6 +5022,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "mode": "automatic",
       "adapter": "china-post",
       "recognitionRank": 905,
+      "refresh": {
+        "minMinutes": 60
+      },
       "localClocks": true,
       "browser": true
     },
@@ -28731,6 +28734,10 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "tracking": {
       "mode": "automatic",
       "adapter": "j-and-t-br",
+      "refresh": {
+        "minMinutes": 30,
+        "afterFailureMinutes": 60
+      },
       "localClocks": true,
       "browser": true
     },

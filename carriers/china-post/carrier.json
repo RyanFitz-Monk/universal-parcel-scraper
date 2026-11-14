@@ -24,6 +24,9 @@
     "recognition": {
       "rank": 905
     },
+    "refresh": {
+      "minMinutes": 60
+    },
     "localClocks": true,
     "browser": true
   },

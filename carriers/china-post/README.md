@@ -171,6 +171,8 @@ sender (711) reads "已退回", shown as "Returned".
   and never not found. Tracking with TRAWL also asks the anonymous web preview
   after this answer; HTTP recognition stays inconclusive without opening a browser.
 - Without TRAWL, a request for the phone digits ends as `input_required`.
+- An item behind the phone digits costs a browser preview on every check, so
+  the catalog asks for a refresh at most hourly.
 - Full history needs a signed-in account: `subjection/v2` answers guests with
   "请登录后再查询" (sign in first), and the web channels ask for a user token.
   Accounts are not used. The WeChat page's slider route

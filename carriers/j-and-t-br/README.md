@@ -10,7 +10,9 @@ An ambiguous image abstains. It permits at most two drags and two bound tracking
 within the caller's deadline, and closes its fresh context. The helper abstains often, within
 seconds and before any drag, so the adapter asks it once more when the budget left still holds
 a solved run of about half a minute: the new context draws another image. Unsupported
-puzzles and refused verification leave enabled universal providers available.
+puzzles and refused verification leave enabled universal providers available. Every answer
+costs a solved puzzle, about half a minute of browser time, so the catalog asks for a refresh
+at most every half hour, and an hour after a failed one, out for delivery included.
 
 The request and positive reply must name the whole domestic waybill. A successful reply with
 an empty list, or with no data as for a waybill J&T has no record of yet, is no history rather

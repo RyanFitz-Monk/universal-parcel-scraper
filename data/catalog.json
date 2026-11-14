@@ -5018,6 +5018,9 @@
       "mode": "automatic",
       "adapter": "china-post",
       "recognitionRank": 905,
+      "refresh": {
+        "minMinutes": 60
+      },
       "localClocks": true,
       "browser": true
     },
@@ -28727,6 +28730,10 @@
     "tracking": {
       "mode": "automatic",
       "adapter": "j-and-t-br",
+      "refresh": {
+        "minMinutes": 30,
+        "afterFailureMinutes": 60
+      },
       "localClocks": true,
       "browser": true
     },
