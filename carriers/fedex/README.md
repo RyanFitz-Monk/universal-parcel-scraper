@@ -201,14 +201,19 @@ application identifiers and issued tokens stay outside the repository.
 any of them.
 
 Optional independent workers behind proxies can take the qualifying second browser
-attempt; the first attempt keeps the original route. Custom adapter hosts supply them as
-`environment.trawlRoutes["fedex-residential"]` and `["fedex-datacenter"]`; the facade
+attempt; the first attempt keeps the original route unless `FEDEX_FIRST_ROUTE=datacenter`
+(the tracker's `firstRoute`) sends it to the datacenter worker as well. FedEx challenges
+an address in spells that follow neither its request rate nor the hour, so a deployment
+whose own address is often challenged can keep it out of FedEx lookups. A worker serves
+one lookup at a time and answers 503 with `Retry-After` while busy; the lookup waits for
+it while at least 15 seconds of its budget would remain. Custom adapter hosts supply them
+as `environment.trawlRoutes["fedex-residential"]` and `["fedex-datacenter"]`; the facade
 constructs them from `FEDEX_RESIDENTIAL_TRAWL_URL` and `FEDEX_DATACENTER_TRAWL_URL`, and
 the carrier never constructs a browser service itself. A worker never adds an attempt: the
 attempt count, total deadline, whole-number checks and provider fallback remain unchanged.
 Step telemetry records the selected route (`default`, `datacenter` or `residential`) and
-whether dated history came back. A retry over IPv6 alone recovered fewer histories than the
-original route, so no such route is offered.
+whether dated history came back. A retry over IPv6 alone recovered fewer histories than
+the original route, so no such route is offered.
 
 With the residential worker alone, `FEDEX_RESIDENTIAL_RETRY_PERCENT` selects its share of
 those attempts, defaulting to half; the rest keep the original retry route. Once the

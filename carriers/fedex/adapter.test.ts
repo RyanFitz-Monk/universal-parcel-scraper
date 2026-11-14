@@ -862,6 +862,46 @@ describe('FedEx lookup steps', () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
+  it('sends the first attempt and the retry to the datacenter service when the deployment asks for it', async () => {
+    const records: Parameters<StepRecorder['step']>[0][] = [];
+    const egress = { route: 'datacenter', family: 'unknown', pageConnections: 1, apiConnections: 1, bytes: 700 };
+    const fetcher = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(Response.json({ tier: 3, statusCode: 200, html: '', fedexEgress: egress, capturedResponses: [{ url: TRACK_API, status: 403, body: null }] }))
+      .mockResolvedValueOnce(Response.json({ tier: 3, statusCode: 200, html: '', fedexEgress: egress,
+        capturedResponses: [{ url: TRACK_API, status: 200, body: JSON.stringify(deliveredFixture()) }] }));
+    const environment = { trawl: new TrawlClient(TRAWL_URL), browserExecutablePath: null,
+      trawlRoutes: { 'fedex-datacenter': new TrawlClient('http://datacenter.test') },
+      env: { FEDEX_FIRST_ROUTE: 'datacenter' }, recorder: { step: (r: Parameters<StepRecorder['step']>[0]) => records.push(r), lookup() {} } };
+    await expect(adapter(environment).track({ number: DELIVERED_NUMBER })).resolves.toMatchObject({ status: 'delivered' });
+    expect(fetcher.mock.calls.map(c => String(c[0]))).toEqual(['http://datacenter.test/scrape', 'http://datacenter.test/scrape']);
+    expect(records[0]).toMatchObject({ networkRoute: 'datacenter', networkAttempt: 'initial', networkBytes: 700 });
+    expect(records[1]).toMatchObject({ networkRoute: 'datacenter', networkAttempt: 'retry', historyAvailable: true });
+    // Without a datacenter service the setting changes nothing; any other value is refused.
+    fetcher.mockReset().mockResolvedValueOnce(Response.json({ tier: 3, statusCode: 200, html: '',
+      capturedResponses: [{ url: TRACK_API, status: 200, body: JSON.stringify(deliveredFixture()) }] }));
+    await expect(adapter({ ...environment, trawlRoutes: undefined }).track({ number: DELIVERED_NUMBER })).resolves.toMatchObject({ status: 'delivered' });
+    expect(fetcher.mock.calls.map(c => String(c[0]))).toEqual([`${TRAWL_URL}/scrape`]);
+    expect(() => adapter({ ...environment, env: { FEDEX_FIRST_ROUTE: 'residential' } })).toThrow(TypeError);
+  });
+
+  it('waits for a busy route worker within the budget, and not for one that is stopping', async () => {
+    const busy = (retryAfter?: string) => new Response(null, { status: 503, headers: retryAfter === undefined ? {} : { 'Retry-After': retryAfter } });
+    const delivered = () => Response.json({ tier: 3, statusCode: 200, html: '',
+      fedexEgress: { route: 'datacenter', family: 'unknown', pageConnections: 1, apiConnections: 1, bytes: 1 },
+      capturedResponses: [{ url: TRACK_API, status: 200, body: JSON.stringify(deliveredFixture()) }] });
+    const tracker = new FedExTracker({ trawl: new TrawlClient(TRAWL_URL), datacenterTrawl: new TrawlClient('http://datacenter.test'), firstRoute: 'datacenter' });
+    const fetcher = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(busy('0')).mockResolvedValueOnce(delivered());
+    await expect(tracker.fetch(DELIVERED_NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    expect(fetcher.mock.calls.map(c => String(c[0]))).toEqual(['http://datacenter.test/scrape', 'http://datacenter.test/scrape']);
+    // A stopping worker gives no Retry-After, and a short budget leaves no time to wait: the reply stands.
+    fetcher.mockReset().mockResolvedValueOnce(busy()).mockResolvedValueOnce(delivered());
+    await expect(tracker.fetch(DELIVERED_NUMBER)).rejects.toMatchObject({ name: 'UpstreamHttpError', status: 503 });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    fetcher.mockReset().mockResolvedValueOnce(busy('0')).mockResolvedValueOnce(delivered());
+    await expect(tracker.fetch(DELIVERED_NUMBER, { budgetMs: 10_000 })).rejects.toMatchObject({ name: 'UpstreamHttpError', status: 503 });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
   it('lets the persisted trial assign the retry, gives the worker its lease and charges what the worker vouches for', async () => {
     const store = memoryRetryRouteTrialStore();
     const environment = { trawl: new TrawlClient(TRAWL_URL), browserExecutablePath: null,

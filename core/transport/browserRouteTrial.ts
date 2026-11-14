@@ -37,7 +37,11 @@ export class BrowserRouteTrial<T> {
     };
   }
 
-  primary(): T { return this.begin('default', 'initial'); }
+  /** The first attempt, on the original route unless the caller names a configured one. */
+  primary(route?: AlternativeRoute): T {
+    if (route !== undefined && !this.options.routes?.[route]) throw new TypeError('Unconfigured browser route');
+    return this.begin(route ?? 'default', 'initial');
+  }
 
   get isAlternate(): boolean { return this.route !== 'default'; }
 

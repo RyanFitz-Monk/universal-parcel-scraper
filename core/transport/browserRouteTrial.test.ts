@@ -61,3 +61,13 @@ it('takes a route the caller names once, records it, and refuses one that is not
   const bare = new BrowserRouteTrial({ primary: 'normal', alternative: null, route: 'residential', share: 0, steps: ['browser'] });
   expect(() => bare.retry('datacenter')).toThrow(TypeError);
 });
+
+it('starts on a named route when the caller asks, and refuses one that is not configured', () => {
+  const step = vi.fn(), trial = new BrowserRouteTrial({ primary: 'normal', alternative: null, route: 'residential', share: 0,
+    steps: ['browser'], recorder: { step, lookup() {} }, routes: { datacenter: 'rack' } });
+  expect(trial.primary('datacenter')).toBe('rack'); trial.recorder.step(record);
+  expect(step.mock.calls[0]?.[0]).toMatchObject({ networkRoute: 'datacenter', networkAttempt: 'initial' });
+  expect(trial.retry('datacenter')).toBe('rack'); trial.recorder.step(record);
+  expect(step.mock.calls[1]?.[0]).toMatchObject({ networkRoute: 'datacenter', networkAttempt: 'retry' });
+  expect(() => trial.primary('residential')).toThrow(TypeError);
+});

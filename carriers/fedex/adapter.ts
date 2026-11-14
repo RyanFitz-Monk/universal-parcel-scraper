@@ -68,6 +68,21 @@ const API_TIMEOUT_MS = 15_000;
 const MAX_EVENTS_TO_INSPECT = 500;
 const MAX_EVENTS_TO_RETURN = 100;
 const HOUR_MS = 3_600_000;
+// A route worker serves one lookup at a time. While it is busy, the lookup waits for it only as long as this much
+// of its budget would remain for the browser afterwards.
+const WORKER_BROWSER_MIN_MS = 15_000;
+const WORKER_BUSY_WAIT_MAX_MS = 2_000;
+
+/** Waits `ms`, or rejects with the signal's reason once it ends. */
+function pause(ms: number, signal: AbortSignal): Promise<void> {
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const done = () => { clearTimeout(timer); signal.removeEventListener('abort', ended); };
+    const ended = () => { done(); reject(signal.reason); };
+    const timer = setTimeout(() => { done(); resolve(); }, ms);
+    signal.addEventListener('abort', ended, { once: true });
+  });
+}
 
 export function normalizeFedExTrackingNumber(raw: string): string {
   // A scanned label barcode is tracked by the tracking number it carries. A
@@ -616,6 +631,11 @@ export interface FedExTrackerOptions {
   datacenterTrawl?: TrawlClient | null;
   /** Bounded, persisted assignment of retries between the datacenter and residential services. */
   retryTrial?: RetryRouteTrial | null;
+  /**
+   * Where the first browser attempt goes: the original route (`default`), or the datacenter service
+   * once it is configured (`datacenter`). Either way, every qualifying retry takes the datacenter service.
+   */
+  firstRoute?: 'default' | 'datacenter';
   /** The deployment's FedEx API project, or null without one. */
   api?: FedExApiCredentials | null;
   fetcher?: typeof fetch;
@@ -629,6 +649,7 @@ export class FedExTracker {
   readonly #residentialRetryShare: number;
   readonly #datacenterTrawl: TrawlClient | null;
   readonly #retryTrial: RetryRouteTrial | null;
+  readonly #firstRoute: 'default' | 'datacenter';
   readonly #api: FedExApiClient | null;
   readonly #fetcher: typeof fetch | undefined;
   readonly #recorder: StepRecorder;
@@ -645,6 +666,10 @@ export class FedExTracker {
     // The trial needs both services; without the residential one every retry takes the datacenter's.
     this.#retryTrial = this.#datacenterTrawl && this.#residentialTrawl ? options.retryTrial ?? null : null;
     void this.#retryTrial?.load();
+    if (options.firstRoute !== undefined && options.firstRoute !== 'default' && options.firstRoute !== 'datacenter') {
+      throw new TypeError('FedEx first route must be default or datacenter');
+    }
+    this.#firstRoute = options.firstRoute === 'datacenter' && this.#datacenterTrawl ? 'datacenter' : 'default';
     this.#api = options.api ? new FedExApiClient(options.api, options.fetcher) : null;
     this.#fetcher = options.fetcher;
     this.#recorder = options.recorder ?? NOOP_RECORDER;
@@ -668,15 +693,28 @@ export class FedExTracker {
     // The worker's report for the retry: its bytes, and whether it named the lease it was given and cut it.
     let report: { bytes?: number; verified: boolean; limited: boolean } = { verified: false, limited: false };
     const browser = async (client: TrawlClient, remainingMs: number, signal: AbortSignal, route: 'default' | TrialRoute = 'default',
-      lease: RetryRouteLease | null = null) =>
-      trial.result(await this.#trawlResult(client, number, browserMs(remainingMs), signal, route,
-        family => trial.observeFamily(family), proof => {
-          trial.observeBytes(proof.bytes);
-          // Only the lease's own bytes: whatever another lookup carried was charged to that one.
-          report = { ...(typeof proof.bytes === 'number' && Number.isSafeInteger(proof.bytes) && proof.bytes >= 0 ? { bytes: proof.bytes } : {}),
-            verified: lease !== null && proof.lease === lease.id && proof.allowance === lease.allowanceBytes,
-            limited: proof.limited === true };
-        }, lease));
+      lease: RetryRouteLease | null = null) => {
+      const started = performance.now();
+      for (;;) {
+        const left = remainingMs - (performance.now() - started);
+        try {
+          return trial.result(await this.#trawlResult(client, number, browserMs(left), signal, route,
+            family => trial.observeFamily(family), proof => {
+              trial.observeBytes(proof.bytes);
+              // Only the lease's own bytes: whatever another lookup carried was charged to that one.
+              report = { ...(typeof proof.bytes === 'number' && Number.isSafeInteger(proof.bytes) && proof.bytes >= 0 ? { bytes: proof.bytes } : {}),
+                verified: lease !== null && proof.lease === lease.id && proof.allowance === lease.allowanceBytes,
+                limited: proof.limited === true };
+            }, lease));
+        } catch (error) {
+          // A busy worker answers 503 with Retry-After before it takes the request or its lease; one stopping answers without it.
+          const wait = route !== 'default' && error instanceof UpstreamHttpError && error.status === 503 && error.retryAfterMs !== undefined
+            ? Math.min(Math.max(error.retryAfterMs, 250), WORKER_BUSY_WAIT_MAX_MS) : null;
+          if (wait === null || remainingMs - (performance.now() - started) - wait < WORKER_BROWSER_MIN_MS) throw error;
+          await pause(wait, signal);
+        }
+      }
+    };
     return runSteps<CarrierResult>({
       // Without a caller's budget the lookup leaves the service its own time and
       // the request the allowance to bring the answer back.
@@ -691,7 +729,9 @@ export class FedExTracker {
       ...(trawl ? [
         // The page answers what the API could not, except a shipment the recipient must verify.
         { id: 'trawl', recovers: (error: unknown) => !(error instanceof InputRequiredError),
-          run: ({ remainingMs, signal }: StepContext) => browser(trial.primary()!, remainingMs, signal) },
+          run: ({ remainingMs, signal }: StepContext) => this.#firstRoute === 'datacenter'
+            ? browser(trial.primary('datacenter')!, remainingMs, signal, 'datacenter')
+            : browser(trial.primary()!, remainingMs, signal) },
         // The service discards a context whose tracking call was refused, so a
         // second read starts a fresh one: Akamai's 403 is intermittent.
         { id: 'trawl', recovers: (error: unknown) => error instanceof ChallengeError && error.reason === 'api_denied' && error.status === 403,
@@ -700,7 +740,7 @@ export class FedExTracker {
               const client = trial.retry()!;
               return browser(client, remainingMs, signal, trial.isAlternate ? 'residential' : 'default');
             }
-            // Never the original route: the trial assigns datacenter or residential, else datacenter.
+            // Never the original route: the trial assigns datacenter or residential, else datacenter, whichever took the first attempt.
             // The trial waits for its store within a quarter of the budget; a residential route has its reservation saved.
             const started = performance.now();
             const assignment = this.#retryTrial ? await this.#retryTrial.assign({ budgetMs: remainingMs / 4 }) : null;
@@ -881,6 +921,7 @@ export const adapter: AdapterFactory = (environment) => {
     residentialRetryShare: environment.env.FEDEX_RESIDENTIAL_RETRY_PERCENT === undefined ? 0.5 : Number(environment.env.FEDEX_RESIDENTIAL_RETRY_PERCENT) / 100,
     datacenterTrawl: environment.trawlRoutes?.['fedex-datacenter'] ?? null,
     retryTrial: fedexRetryTrial(environment.env, environment.retryTrialStores?.['fedex-retry']),
+    firstRoute: (environment.env.FEDEX_FIRST_ROUTE?.trim() || undefined) as FedExTrackerOptions['firstRoute'],
     api,
     recorder: environment.recorder,
   });
