@@ -152,6 +152,10 @@ function validateCarrierSemantics(carrier, adapterFolders) {
     if (rule.preferred !== undefined && (rule.preferred !== true || rule.confidence !== 'low')) {
       throw new Error(`${where} detection rule ${rule.id} may only prefer a low-confidence match`);
     }
+    // A high-confidence rule names its carrier wherever the number stands.
+    if (rule.standalone !== undefined && (rule.standalone !== true || rule.confidence !== 'low')) {
+      throw new Error(`${where} detection rule ${rule.id} may only keep a low-confidence match out of text`);
+    }
   }
   for (const rule of carrier.links) {
     for (const field of ['query', 'path', 'pathPattern', 'fragment']) {
@@ -184,6 +188,7 @@ function contractDetectionRule(rule) {
   if (rule.rawPattern !== undefined) contractRule.rawPattern = rule.rawPattern;
   if (rule.checksum !== undefined) contractRule.checksum = rule.checksum;
   if (rule.preferred !== undefined) contractRule.preferred = rule.preferred;
+  if (rule.standalone !== undefined) contractRule.standalone = rule.standalone;
   return contractRule;
 }
 

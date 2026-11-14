@@ -37,6 +37,8 @@ Columbia, based in Federal Way. Tracked by PRO through the lookup its tracking p
 - A delivered status line ("DELIVERED ON {day}") keeps its day and nothing else, so a receiver it
   names is dropped. A log without a delivery row gets one on that day. A signer named after a
   row's activity is dropped too.
+- A delivered line or row that notes freight delivered short, over or damaged ("DELIVERED –
+  SHORT/DAMAGED") keeps that note and reads as a problem: the consignee has a claim to settle.
 - The reply can name the shipper and the consignee with their addresses, and holds the bill of
   lading, the purchase order, a partner's PRO, the terminals and a delivery receipt flag. None of
   them is read; a partner and its PRO stay in the status line's wording.

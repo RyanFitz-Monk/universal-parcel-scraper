@@ -31,7 +31,9 @@ that form as well; the library drops the `I`. `rl-carriers-1` offers R+L for the
 digits without the dash, all at low confidence, so preflight asks recognition. Lettered PROs are
 often written without the dash, in R+L's own tracing links too, and the lettered numbers of that
 layout the app tracked were R+L's, so that form is offered although some other carriers'
-references share it; R+L also rejects a PRO whose check digit fails. Nine digits are far more
+references share it; R+L also rejects a PRO whose check digit fails. Invoices and other carriers'
+numbers in a message take that shape too, so the rule is `standalone`: it offers R+L for a number
+given on its own, never for one read out of a pasted text. Nine digits are far more
 common elsewhere, so they are claimed only with the dash or the `I`. Three letters and seven
 digits are a shape other carriers' references take, so an `I` before two letters and seven digits
 is not claimed either.

@@ -159,6 +159,7 @@
       "ClassifiedWording",
       "DeliveryHandoff",
       "DetectionConfidence",
+      "DetectionOptions",
       "DetectionRule",
       "EventPoint",
       "FailureHint",

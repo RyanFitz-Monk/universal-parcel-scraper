@@ -32,7 +32,7 @@
           "sengi-express"
         ]
       },
-      "note": "Made-up number in the shape of a parcel the app tracked to Italy: an SDA waybill of three digits, C, eight digits and F. Sengi's tracker answered it with its leg to the handover, which a universal provider relayed under Sengi's name, before SDA knew it. The shape is SDA's, so detection offers Sengi at low confidence beside Poste Italiane, and recognition asks Sengi's tracker."
+      "note": "Made-up number in the shape of a parcel the app tracked to Italy: an SDA waybill of three digits, C, eight digits and F. Sengi's tracker answered it with its leg to the handover, which a universal provider relayed under Sengi's name, before SDA knew it. The shape is SDA's, so detection offers Sengi at low confidence beside AliExpress and Poste Italiane. Recognition asks Sengi's tracker, and a waybill Sengi and Poste Italiane both know is filed under Sengi, which hands it on to Poste Italiane."
     }
   ]
 }

@@ -103,7 +103,8 @@
     {
       "id": "rl-carriers-3",
       "pattern": "^[A-Z]{2}\\d{7}$",
-      "confidence": "low"
+      "confidence": "low",
+      "standalone": true
     }
   ]
 }

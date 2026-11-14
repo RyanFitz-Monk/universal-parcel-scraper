@@ -11,6 +11,7 @@ export type {
   CarrierDetection,
   ChecksumRejection,
   DetectionConfidence,
+  DetectionOptions,
   TrackingInputMatch,
 } from './types.js';
 export { AMAZON_NUMBER_PATTERN, isAmazonTrackingNumber } from './amazon.js';

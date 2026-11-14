@@ -108,6 +108,8 @@ export interface DetectionRule {
     | 'frankier-id' | 'dhl-ecommerce-pl' | 'mondial-relay-head';
   /** Low confidence only: number evidence that lists this carrier first among suggestions. */
   preferred?: boolean;
+  /** Low confidence only: a shape prose shares, offered for a number given on its own, never one read out of a text. */
+  standalone?: boolean;
 }
 
 /** A link rule as it is written in the catalog, before its regexes compile. */

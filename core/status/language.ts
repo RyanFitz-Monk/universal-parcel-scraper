@@ -314,8 +314,15 @@ const ZH_FINAL: ReadonlyArray<readonly [RegExp, Stage]> = [
   // ("退回中") are not.
   [new RegExp(String.raw`${ZH_LEAD}已[经經]?被?(?:退回|退[还還]|返[还還]|退件)(?:(?:至|给|給|到)?${ZH_RETURN_TARGET})?${ZH_END}`), 'returned'],
   [new RegExp(String.raw`${ZH_LEAD}(?:退回|退件|退[还還])件?已?[经經]?(?:妥投|妥收|[签簽]收)${ZH_END}|${ZH_LEAD}(?:${ZH_SIGNED}[，,；;。] ?(?:已[经經]?|成功|已成功)?)?(?:退回|退[还還]|返[还還])(?:至|给|給|到)?${ZH_RETURN_TARGET}${ZH_END}|[签簽]收人 ?(?:是|为|為|[:：]) ?(?:原?寄件人|[发發]件人)`), 'returned'],
+  // Sent back by the pickup point nobody collected the parcel from, after the failed delivery Jumppoint's
+  // map words as "派送失敗:由自提點退件".
+  [new RegExp(String.raw`${ZH_LEAD}(?:(?:派送|投[递遞]|配送)失[败敗] ?[:：，,]? ?)?由自提[点點]退件${ZH_END}`), 'returned'],
   // Not delivered after a try: "未妥投", "投递失败", China Post's "已试投/投递失败".
   [new RegExp(String.raw`${ZH_LEAD}(?:未能?妥投|妥投失[败敗]|(?:投[递遞]|派送|配送|派件)失[败敗]|已[试試]投)`), 'failed_attempt'],
+  // A collection point signed for the parcel: the signer Deppon's map names on its delivery, "代收点签收".
+  [new RegExp(String.raw`${ZH_LEAD}代收[点點][签簽]收 ?$`), 'delivered'],
+  // Held for the recipient by a collection point, as J&T China's and ZTO's maps read a bare "已代收".
+  [new RegExp(String.raw`${ZH_LEAD}已[经經]?代收${ZH_END}`), 'ready_for_pickup'],
   // Kept in a locker or at a pickup point ("已投递至【…智能快件箱】", "已存放至【…驿站】，请您及时取件",
   // "已由【…驿站】代收", "已送達，請於7日內取件"), or waiting there for the recipient or with a pickup code. A parcel waiting
   // for a courier, sent out of a warehouse ("已出库待取件") or ordered by the sender ("预计取件时间"),

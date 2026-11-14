@@ -106,11 +106,12 @@ function coversTrackingPage(rule: TrackingLinkRule, carrier: CarrierId): boolean
   return rule.domains.some((domain) => matchesDomain(host, domain));
 }
 
+/** A number and what detection makes of it; one read out of a text leaves the `standalone` rules out. */
 function trackingMatch(
   trackingNumber: string,
   source: TrackingInputMatch['source'],
 ): TrackingInputMatch {
-  return { trackingNumber, source, ...detectCarrierMatch(trackingNumber) };
+  return { trackingNumber, source, ...detectCarrierMatch(trackingNumber, { inText: source === 'text' }) };
 }
 
 // "1234567899 or 9987654321" holds two numbers.

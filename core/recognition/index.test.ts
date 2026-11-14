@@ -368,6 +368,9 @@ describe('settling on a carrier', () => {
       .toEqual({ carrier: 'aliexpress', choices: [] });
     expect(settleRecognition([outcome('poste-italiane', 'known'), outcome('aliexpress', 'unknown')], now))
       .toEqual({ carrier: 'poste-italiane', choices: [] });
+    // Sengi Express carries the parcel to Italy under the SDA waybill Poste Italiane delivers it with.
+    expect(settleRecognition([outcome('poste-italiane', 'known'), outcome('sengi-express', 'known')], now))
+      .toEqual({ carrier: 'sengi-express', choices: [] });
     // An old AliExpress parcel that used the number says nothing about this one.
     expect(settleRecognition([outcome('poste-italiane', 'known', { lastActivityAt: '2026-09-09T00:00:00Z' }),
       outcome('aliexpress', 'known', { lastActivityAt: '2026-01-02T00:00:00Z' })], now))

@@ -511,6 +511,10 @@
         "preferred": {
           "description": "Low-confidence rules only: the number shape is evidence for this carrier (such as a depot range), so it is listed first among the suggestions. It never selects the carrier on its own.",
           "const": true
+        },
+        "standalone": {
+          "description": "Low-confidence rules only: other numbers in prose share the shape, such as an invoice's, so the rule offers its carrier for a number given on its own and never for one read out of a text.",
+          "const": true
         }
       }
     }

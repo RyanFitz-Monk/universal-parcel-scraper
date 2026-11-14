@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { classifyWording, wordingStage } from './wording.js';
 import { trackingLanguageStage } from './language.js';
+import deppon from '../../carriers/deppon/statuses.json' with { type: 'json' };
+import jAndTCn from '../../carriers/j-and-t-cn/statuses.json' with { type: 'json' };
+import jumppoint from '../../carriers/jumppoint/statuses.json' with { type: 'json' };
 
 describe('classifyWording', () => {
   it.each(['Not delivered to sender', 'Will be delivered back to sender', 'May have been delivered to the sender',
@@ -1167,6 +1170,10 @@ describe('classifyWording', () => {
       ['已送達，請於7日內取件', 'ready_for_pickup'], ['包裹已送達，請及時取件', 'ready_for_pickup'], ['包裹已送達，請至門市取貨', 'ready_for_pickup'],
       ['未妥投', 'failed_attempt'], ['未妥投，原因：收件人不在', 'failed_attempt'], ['投递失败', 'failed_attempt'],
       ['已试投/投递失败（/已通知客户）', 'failed_attempt'],
+      // As J&T China's, Deppon's and Jumppoint's own maps read them: a collection point holding the parcel, one
+      // signing for it as the recipient's signer, and a pickup point sending back a parcel nobody collected.
+      ['已代收', 'ready_for_pickup'], ['包裹已代收', 'ready_for_pickup'], ['代收点签收', 'delivered'], ['代收點簽收', 'delivered'],
+      ['派送失敗:由自提點退件', 'returned'], ['派送失败：由自提点退件', 'returned'],
     ] as const) expect(classifyWording(wording, 'pending'), wording).toEqual({ stage, source: 'wording:language' });
     // A centre sending the item back, a return under way, a round asking the recipient to sign, a note
     // about after the signature, an abnormal signature, a parcel waiting for a courier, a courier's
@@ -1177,6 +1184,14 @@ describe('classifyWording', () => {
       // Nor is an arrival at the hub in brackets.
       '包裹已送達【示例】物流中心，進行理貨轉運中', '快件已送达【示例分拨中心】', '您的快件已送达【示例转运中心】，准备发往下一站']) {
       expect(classifyWording(wording, 'pending'), wording).toEqual({ stage: 'pending', source: 'none' });
+    }
+  });
+
+  it("reads the Chinese wordings J&T China's, Deppon's and Jumppoint's maps stage as those maps do", () => {
+    for (const [map, wording] of [[jAndTCn, '已代收'], [deppon, '代收点签收'], [jumppoint, '派送失敗:由自提點退件']] as const) {
+      const row = map.entries.find(entry => entry.wording === wording);
+      expect(row?.stage, wording).toBeDefined();
+      expect(trackingLanguageStage(wording), wording).toBe(row?.stage);
     }
   });
 

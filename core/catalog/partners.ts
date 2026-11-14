@@ -7,7 +7,8 @@ export { followsPartnerNumbers } from './origins.js';
  * partner gave it. Evri International answers Paack's, Hermes Germany's or
  * DHL's number with its own history of the parcel, and Sengi Express Poste
  * Italiane's code for a parcel it carries to Italy. That number is still the
- * partner's, unlike an origin's above.
+ * partner's, unlike a number an origin follows the parcel under, such as the
+ * SDA waybill Sengi Express also answers.
  */
 const PARTNER_NUMBER_TRACKERS: ReadonlySet<string> = new Set(['evri', 'sengi-express']);
 

@@ -52,7 +52,10 @@ Other parcels for Italy carry an SDA waybill: three digits, `C`, eight digits an
 takes the parcel only Sengi's tracker knows it, and universal providers relay its rows under
 Sengi's name. The waybill is SDA's and AliExpress shows its buyers SDA waybills too, so the rule
 is low confidence beside Poste Italiane's and AliExpress's. Recognition asks Sengi about this
-shape only: its tracker holds the parcels Sengi carries, so a waybill it knows is Sengi's.
+shape only: its tracker holds the parcels Sengi carries, so a waybill it knows is Sengi's. Sengi
+follows the parcel under that waybill as AliExpress does under its delivery carrier's number
+(`core/catalog/origins.ts`): when Sengi and Poste Italiane both know it, recognition files it under
+Sengi, whose leg comes first, and the hand-off brings Poste Italiane in for the last mile.
 
 ## Links
 

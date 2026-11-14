@@ -239,6 +239,15 @@ describe('an origin that follows the parcel under its delivery carrier\'s number
     }
     expect(deliveryHandoff('aliexpress', 'DOFR9999999999980HD', { destination_country: 'FR' })).toBeNull();
   });
+  it('hands an SDA waybill Sengi Express carried to Italy on to Poste Italiane', () => {
+    const sda = '000C99999980F';
+    expect(followsPartnerNumbers('sengi-express')).toBe(true);
+    expect(deliveryHandoff('sengi-express', sda, { destination_country: 'IT' }))
+      .toEqual({ carrier: 'poste-italiane', number: sda, basis: 'reference' });
+    expect(deliveryHandoff('sengi-express', sda, { destination_country: 'MT' })).toBeNull();
+    // Its own numbers for Malta fit no other carrier.
+    expect(deliveryHandoff('sengi-express', 'ABCDE000000000MT', { destination_country: 'IT' })).toBeNull();
+  });
   it('leaves carriers that track only their own numbers alone', () => {
     for (const carrier of ['poste-italiane', 'four-px', 'la-poste']) {
       expect(followsPartnerNumbers(carrier)).toBe(false);

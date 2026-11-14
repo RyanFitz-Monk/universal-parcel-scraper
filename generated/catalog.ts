@@ -42999,7 +42999,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       },
       {
         "pattern": "^[A-Z]{2}\\d{7}$",
-        "confidence": "low"
+        "confidence": "low",
+        "standalone": true
       }
     ]
   },

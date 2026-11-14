@@ -11,6 +11,15 @@ import type { DetectionRule } from '../catalog/types.js';
 
 export type DetectionConfidence = 'high' | 'low' | 'none';
 
+export interface DetectionOptions {
+  /**
+   * The number was read out of a text, such as a pasted message, rather than
+   * given on its own: a `standalone` rule, whose shape prose shares, offers
+   * nothing for it.
+   */
+  inText?: boolean;
+}
+
 export interface CarrierDetection {
   carrier: CarrierId;
   confidence: DetectionConfidence;

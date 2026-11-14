@@ -326,6 +326,21 @@ describe('R+L Carriers tracking adapter', () => {
     expect(parseTrackingInput(rlTracingUrl(DELIVERED))).toMatchObject({ trackingNumber: DELIVERED, carrier: 'rl-carriers', source: 'link' });
   });
 
+  it('offers a lettered PRO without its dash for a number given on its own, never one read out of a text', () => {
+    for (const typed of [DELIVERED, 'zz 1234567']) {
+      expect(parseTrackingInput(typed), typed).toMatchObject({ source: 'number', candidates: expect.arrayContaining(['rl-carriers']) });
+    }
+    expect(detectCarrierMatch(DELIVERED, { inText: true }).candidates).not.toContain('rl-carriers');
+    // Invoices and other carriers' numbers in a message share the shape.
+    for (const text of [`Your parcel ${DELIVERED} is on its way`, `Tracking number: ${DELIVERED}`, `Invoice ${DELIVERED} is attached to this email.`]) {
+      const parsed = parseTrackingInput(text);
+      expect(parsed.candidates, text).not.toContain('rl-carriers');
+      expect(parsed.carrier, text).not.toBe('rl-carriers');
+    }
+    // The dash keeps the PRO R+L's in a text too.
+    expect(parseTrackingInput('Track your R+L shipment ZZ123456-7')).toMatchObject({ source: 'text', candidates: ['rl-carriers'] });
+  });
+
   it('routes a PRO the caller names R+L for to the adapter', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => html(fixture('delayed')));
     const answer = await createTracker({ fetcher, providers: [], env: {} }).track({ number: DELAYED, carrier: 'rl-carriers' }, { budgetMs: 3000 });

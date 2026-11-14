@@ -11,7 +11,8 @@
  * rule only moves its carrier to the front of the suggestions. A carrier that
  * follows parcels under their delivery carrier's number is no rival to the one
  * carrier that issues it: the issuer's high-confidence rule names the issuer,
- * and the follower is kept in `origins`.
+ * and the follower is kept in `origins`. A `standalone` rule offers its
+ * carrier only for a number given on its own, not one read out of a text.
  */
 import { DETECTION_RULE_IDS, type CarrierId } from '../../generated/catalog.js';
 import type { DetectionRule } from '../catalog/types.js';
@@ -21,7 +22,7 @@ import { CHECKSUMS } from './checksums.js';
 import { isCttExpressTrackingNumber } from './cttExpress.js';
 import { normalizeTrackingNumber } from './normalize.js';
 import { compiledRule, compiledRuleFits, ruleFits, type CompiledRule } from './rules.js';
-import type { CarrierDetection, ChecksumRejection } from './types.js';
+import type { CarrierDetection, ChecksumRejection, DetectionOptions } from './types.js';
 
 function checksumPasses(rule: DetectionRule, trackingNumber: string): boolean {
   return rule.checksum === undefined || CHECKSUMS[rule.checksum](trackingNumber);
@@ -35,10 +36,12 @@ interface CarrierRules { carrier: CarrierId; rules: readonly DetectionRule[]; ex
 /**
  * A carrier's first rule whose pattern, rawPattern and checksum all pass: it
  * decides the carrier's confidence and preference. The rules before it that
- * fit the number but failed their checksum are added to `rejected`.
+ * fit the number but failed their checksum are added to `rejected`. A
+ * `standalone` rule is no rule for a number read out of a text.
  */
-function decisiveRule(entry: CarrierRules, trackingNumber: string, printed: string, rejected: RejectedRule[]): DetectionRule | undefined {
+function decisiveRule(entry: CarrierRules, trackingNumber: string, printed: string, rejected: RejectedRule[], inText: boolean): DetectionRule | undefined {
   for (const [index, rule] of entry.rules.entries()) {
+    if (inText && rule.standalone) continue;
     if (!compiledRuleFits(entry.expressions[index]!, trackingNumber, printed)) continue;
     if (checksumPasses(rule, trackingNumber)) return rule;
     rejected.push({ carrier: entry.carrier, id: DETECTION_RULE_IDS[entry.carrier][index]!, rule });
@@ -84,7 +87,7 @@ function groupsOfRules(): RuleGroup[] {
   return groups;
 }
 
-function detect(raw: string): { detection: CarrierDetection; rejections: ChecksumRejection[] } {
+function detect(raw: string, inText = false): { detection: CarrierDetection; rejections: ChecksumRejection[] } {
   const printed = raw.trim().toUpperCase();
   const trackingNumber = normalizeTrackingNumber(raw);
   if (!trackingNumber) {
@@ -97,7 +100,7 @@ function detect(raw: string): { detection: CarrierDetection; rejections: Checksu
     if (!group.anyPattern.test(trackingNumber)) continue;
     for (const entry of group.carriers) {
       if (entry.carrier === 'ctt-express' && !isCttExpressTrackingNumber(trackingNumber)) continue;
-      const rule = decisiveRule(entry, trackingNumber, printed, rejected);
+      const rule = decisiveRule(entry, trackingNumber, printed, rejected, inText);
       if (rule) matches.push({ carrier: entry.carrier, confidence: rule.confidence, preferred: rule.preferred === true });
     }
   }
@@ -125,9 +128,12 @@ function detect(raw: string): { detection: CarrierDetection; rejections: Checksu
   };
 }
 
-/** Return only a high-confidence carrier; preserve ambiguous candidates for the UI. */
-export function detectCarrierMatch(raw: string): CarrierDetection {
-  return detect(raw).detection;
+/**
+ * Return only a high-confidence carrier; preserve ambiguous candidates for the
+ * UI. A number read out of a text (`inText`) leaves `standalone` rules out.
+ */
+export function detectCarrierMatch(raw: string, options: DetectionOptions = {}): CarrierDetection {
+  return detect(raw, options.inText === true).detection;
 }
 
 /**

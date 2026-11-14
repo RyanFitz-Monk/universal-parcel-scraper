@@ -25,6 +25,10 @@ const TIME = /^(\d{1,2}):(\d{2})\s*([ap])\.?m\.?$/i;
 // The delivery day a delivered line ends with: "DELIVERED ON 2023-02-17".
 const DELIVERED = /^DELIVERED\b/i;
 const DELIVERY_DAY = /\bON\s+(\d{4})-(\d{2})-(\d{2})\b/i;
+// A problem a delivered line notes, straight after "DELIVERED" or after its day, never inside the
+// receiver's name between them: "DELIVERED – SHORT/DAMAGED", freight delivered short, over or damaged.
+const PROBLEMS = String.raw`(?:SHORT(?:AGE)?|OVER(?:AGE)?|DAMAGED?|OS&D)(?:\s*[/&,]\s*(?:SHORT(?:AGE)?|OVER(?:AGE)?|DAMAGED?))*`;
+const DELIVERY_PROBLEM = new RegExp(String.raw`^DELIVERED\s*[-–—:,]?\s*(${PROBLEMS})\b|\bON\s+\d{4}-\d{2}-\d{2}\s*[-–—:,]?\s*(${PROBLEMS})\s*$`, 'i');
 // A signer or receiver named after a scan's wording.
 const SIGNER = /\s*[-:,]?\s*\b(?:SIGNED(?:\s+FOR)?(?:\s+BY)?|SIGNATURE|SIGNER|RECEIVED\s+BY|ACCEPTED\s+BY|REC'?D\s+BY)\b.*$/i;
 // A stage the shipment's status settles over the newest row.
@@ -78,14 +82,18 @@ function wallClock(row: Record<string, unknown>): string {
 
 /**
  * Wording without the person who received the freight: a delivered line keeps
- * its delivery day and nothing else ("DELIVERED TO <name> ON 2023-02-17" reads
- * "DELIVERED ON 2023-02-17"), and a signer named after other wording is cut off.
+ * its delivery day and the problem it notes, and nothing else ("DELIVERED TO
+ * <name> ON 2023-02-17" reads "DELIVERED ON 2023-02-17", "DELIVERED – SHORT/DAMAGED
+ * TO <name>" reads "DELIVERED – SHORT/DAMAGED"), and a signer named after other
+ * wording is cut off.
  */
 export function withoutSigner(wording: string): string {
   if (DELIVERED.test(wording)) {
     const day = DELIVERY_DAY.exec(wording);
     const date = day ? calendarDay(Number(day[1]), Number(day[2]), Number(day[3])) : null;
-    return date ? `DELIVERED ON ${date}` : 'DELIVERED';
+    const problem = DELIVERY_PROBLEM.exec(wording);
+    const noted = problem ? ` – ${(problem[1] ?? problem[2]!).toUpperCase().replace(/\s+/g, '')}` : '';
+    return `DELIVERED${noted}${date ? ` ON ${date}` : ''}`;
   }
   return wording.replace(SIGNER, '').trim();
 }
@@ -134,10 +142,11 @@ function order(left: CarrierEvent | undefined, right: CarrierEvent | undefined):
   return from.slice(0, 10) !== to.slice(0, 10) || (from.length > 10 && to.length > 10) ? from.localeCompare(to) : 0;
 }
 
-/** The delivery the status line dates, placed among the rows by its day, when no row records one. */
+/** The delivery the status line dates, placed among the rows by its day, when no row records it. */
 function withDelivery(events: CarrierEvent[], status: string): CarrierEvent[] {
   const day = DELIVERY_DAY.exec(status);
-  if (!day || events.some((event) => event.stage === 'delivered')) return events;
+  const stage = peninsulaStage(status)?.stage;
+  if (!day || events.some((event) => event.stage === stage)) return events;
   const local_time = `${day[1]}-${day[2]}-${day[3]}`;
   const delivery = staged({ local_time, description: status }, status);
   const at = events.findIndex((event) => event.local_time!.slice(0, 10) <= local_time);
@@ -175,7 +184,7 @@ export function parsePeninsula(payload: unknown, raw: string): CarrierResult {
 
   const status = withoutSigner(text(payload, 'proStatus', 300));
   const headline: ClassifiedWording | null = status ? peninsulaStage(status) : null;
-  const events = headline?.stage === 'delivered' ? withDelivery(history(rows), status) : history(rows);
+  const events = DELIVERED.test(status) ? withDelivery(history(rows), status) : history(rows);
   if (!events.length && !status) throw new NoHistoryError(PROVIDER);
 
   // The status line settles a delivery, a return, a problem and the hand-off to a partner

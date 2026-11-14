@@ -17,6 +17,9 @@ const STAGES: ReadonlyMap<string, Stage> = new Map([
 // The status line of a delivered shipment: "DELIVERED ON 2023-02-17". The parser drops a
 // receiver named in it.
 const DELIVERED = /^delivered\b/;
+// A delivered line that notes freight delivered short, over or damaged, as the parser keeps it:
+// "DELIVERED – SHORT/DAMAGED". The shipment arrived with a problem the consignee has to settle.
+const DELIVERED_WITH_PROBLEM = /^delivered\s*[-–—:,]?\s*(?:short(?:age)?|over(?:age)?|damaged?|os&d)\b/;
 // The status line of a shipment handed to a partner carrier for delivery:
 // "TENDERED TO <carrier> ON <date> ON THEIR PRO <number>".
 const HANDOFF = /^tendered to\b/;
@@ -24,6 +27,7 @@ const HANDOFF = /^tendered to\b/;
 /** The stage the map gives Peninsula's wording, if it knows it. */
 export function peninsulaMappedStage(wording: string): Stage | undefined {
   const normalized = normalizeStatusWording(wording);
+  if (DELIVERED_WITH_PROBLEM.test(normalized)) return 'exception';
   if (DELIVERED.test(normalized)) return 'delivered';
   if (HANDOFF.test(normalized)) return 'in_transit';
   return STAGES.get(normalized);

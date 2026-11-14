@@ -125,6 +125,26 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
       .toEqual(['2026-05-06T11:47:00', '2026-05-06T00:05:00', '2026-05-05', '2026-05-05T12:20:00']);
   });
 
+  it('keeps a delivery short, over or damaged as a problem, in the status line and in a row', () => {
+    const headed = (proStatus: string, change: (body: Reply) => void = () => {}) => parsePeninsula(shipment('in-transit', (body) => {
+      body.proStatus = proStatus;
+      change(body);
+    }), IN_TRANSIT);
+    const damaged = headed('DELIVERED – SHORT/DAMAGED TO PAT EXAMPLE ON 2026-05-07');
+    expect(damaged).toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map',
+      last_status_text: 'DELIVERED – SHORT/DAMAGED ON 2026-05-07', last_update_local: '2026-05-07' });
+    expect(events(damaged)[0]).toEqual(['2026-05-07', 'DELIVERED – SHORT/DAMAGED ON 2026-05-07', 'exception', null]);
+    expect(JSON.stringify(damaged)).not.toMatch(/PAT/);
+    expect(headed('DELIVERED ON 2026-05-07 - DAMAGED')).toMatchObject({ status: 'exception', last_status_text: 'DELIVERED – DAMAGED ON 2026-05-07' });
+    expect(headed('DELIVERED - SHORT')).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'DELIVERED – SHORT' });
+    const row = headed('IN TRANSIT', (body) => body.shipmentLog.push(
+      { date: '2026-05-07', time: '9:05am', activity: 'DELIVERED SHORT SIGNED BY PAT EXAMPLE', location: 'SAMPLEVILLE, WA' }));
+    expect(events(row)[0]).toEqual(['2026-05-07T09:05:00', 'DELIVERED – SHORT', 'exception', 'SAMPLEVILLE, WA']);
+    expect(row).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'DELIVERED – SHORT' });
+    // A receiver whose name holds one of those words is no problem.
+    expect(headed('DELIVERED TO PAT SHORT ON 2026-05-07')).toMatchObject({ status: 'delivered', last_status_text: 'DELIVERED ON 2026-05-07' });
+  });
+
   it('reads a status line without a log as a summary, and nothing at all as no history', () => {
     const empty = (proStatus: string) => shipment('delivered', (body) => {
       body.proStatus = proStatus;
@@ -145,6 +165,8 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
     expect(withoutSigner('DELIVERED ON 2026-03-03 SIGNED BY J EXAMPLE')).toBe('DELIVERED ON 2026-03-03');
     expect(withoutSigner('Delivered to J. Example')).toBe('DELIVERED');
     expect(withoutSigner('DELIVERED ON 2026-02-30')).toBe('DELIVERED');
+    expect(withoutSigner('DELIVERED – SHORT/DAMAGED')).toBe('DELIVERED – SHORT/DAMAGED');
+    expect(withoutSigner('Delivered - short / damaged to J. Example on 2026-03-03')).toBe('DELIVERED – SHORT/DAMAGED ON 2026-03-03');
     expect(withoutSigner('POD RECEIVED BY J EXAMPLE')).toBe('POD');
     expect(withoutSigner('DOCK')).toBe('DOCK');
   });
