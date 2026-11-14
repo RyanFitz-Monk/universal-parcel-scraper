@@ -167,6 +167,13 @@ function summarize(scans: readonly CarrierEvent[]): CarrierResult {
   // Every scan is an instant. The reply lists a customs check filed late
   // among later scans; newest first by the clock, the order stays stable.
   events.sort((a, b) => Date.parse(b.time!) - Date.parse(a.time!));
+  // A pickup that collected nothing after the parcel was posted at a drop-off point leaves it
+  // there, as the point's pickup on hold does: accepted, not a registration after a movement.
+  events.forEach((event, index) => {
+    if (event.provider_code === 'F001' && events.slice(index + 1).some((older) => older.stage === 'accepted')) {
+      Object.assign(event, { stage: 'accepted', stage_source: 'carrier_map' });
+    }
+  });
 
   const newest = events[0]!;
   const staged = events.find((event) => event.stage);

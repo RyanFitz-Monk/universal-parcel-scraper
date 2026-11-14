@@ -137,6 +137,26 @@ describe('SPX Express Brazil HTTP adapter', () => {
     expect(unmapped).toMatchObject({ last_status_text: 'Aviso sintético', current_stage: 'customs' });
   });
 
+  it('leaves a parcel posted at a drop-off point there when a pickup from it fails, not in transit', async () => {
+    const posted = (collected: boolean) => changed('delivered', (tracking) => {
+      tracking.records = tracking.records.filter((row) => ['F001', 'F004', 'F000', ...(collected ? ['F100'] : [])].includes(String(row.tracking_code)));
+      Object.assign(tracking.records.find((row) => row.tracking_code === 'F004')!,
+        { tracking_code: 'F098', tracking_name: 'Dropped Off', description: 'Pedido postado Cidade Exemplo - SP', display_flag: 1 });
+      tracking.records.find((row) => row.tracking_code === 'F001')!.description = 'Não conseguimos coletar o pedido: Tempo insuficiente para coleta';
+    });
+    // Through the tracker, which reads every result's late registrations.
+    const track = async (body: unknown) => (await createTracker({ fetcher: vi.fn<typeof fetch>().mockResolvedValue(reply(body)), providers: [], env: {} })
+      .track({ number: DELIVERED, carrier: 'spx-br' }, { budgetMs: 3000 })).result;
+    const waiting = await track(posted(false));
+    expect(waiting).toMatchObject({ current_stage: 'accepted', current_stage_source: 'carrier_map' });
+    expect(waiting.events.map((event) => [event.provider_code, event.stage])).toEqual([['F001', 'accepted'], ['F098', 'accepted'], ['F000', 'registered']]);
+    expect((await track(posted(true))).events.map((event) => [event.provider_code, event.stage, event.stage_source]))
+      .toEqual([['F100', 'accepted', 'carrier_map'], ['F001', 'accepted', 'carrier_map'], ['F098', 'accepted', 'carrier_map'], ['F000', 'registered', 'carrier_map']]);
+    // One before the posting leaves the parcel with its seller.
+    const unprepared = await track(fixture('delivered'));
+    expect(unprepared.events.find((event) => event.provider_code === 'F001')).toMatchObject({ stage: 'registered' });
+  });
+
   it('reads the way back of a return the page hides, before the return it shows', () => {
     const hidden = (code: string, time: number, description: string) =>
       ({ tracking_code: code, tracking_name: 'Hidden', description, actual_time: time, display_flag: 0 });
