@@ -13,6 +13,8 @@ import carrier from './carrier.json' with { type: 'json' };
 
 const NUMBER = 'SZLD9999999980';
 const UNKNOWN = 'SZLD9900000009';
+// The delivery carrier's number, which takes the order's tracking number on the tracker once the forwarder hands it on.
+const PARTNER = '9900000000000000000001';
 // Noon in Beijing on 5 March, after the fixture's rows.
 const READ_AT = Date.parse('2026-03-05T04:00:00Z');
 const fixture = (name: string): unknown => JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8'));
@@ -108,6 +110,21 @@ describe('Lingdong International tracking adapter', () => {
     expect(() => parseLingdongPage(page('page-order'), NUMBER, READ_AT)).toThrow('no scans for the shipment yet');
     // Another number is not the order.
     expect(() => parseLingdongPage(page('page-order'), 'SZLD9900000009', READ_AT)).toThrow('did not show the number as one shipment');
+  });
+
+  it('reads an order found by its own number once the delivery carrier’s number has taken the tracking number', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json(fixture('no-track'))).mockResolvedValueOnce(html(page('page-handed')));
+    const result = await adapter(environment(fetcher)).track({ number: NUMBER });
+    expect(result).toMatchObject({ last_status_text: 'Shipment information received', last_update: '2026-03-02T16:15:01+08:00',
+      destination_country: 'ES', delivery_tracking_number: PARTNER });
+    expect(result.events).toHaveLength(1);
+    // The page shows the order for the one number its form echoes, and not for an own number it shows as the tracking number.
+    expect(() => parseLingdongPage(page('page-handed'), UNKNOWN, READ_AT)).toThrow('did not show the number as one shipment');
+    expect(() => parseLingdongPage(page('page-handed').replaceAll(PARTNER, UNKNOWN), NUMBER, READ_AT)).toThrow('did not show the number as one shipment');
+    // The track interface stops returning the number the same way.
+    const record = (fixture('track') as [{ data: Record<string, unknown>[] }])[0].data[0]!;
+    const handed = [{ ack: 'true', data: [{ ...record, trackingNumber: PARTNER, business_seqinvoicecode: 'LDTEST0000000000001' }] }];
+    expect(parseLingdongTrack(handed, NUMBER, READ_AT)).toMatchObject({ current_stage: 'in_transit', delivery_tracking_number: PARTNER });
   });
 
   it('maps every wording it lists by wording alone, and the app reads the map', () => {

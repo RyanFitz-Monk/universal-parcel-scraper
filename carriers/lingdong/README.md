@@ -32,8 +32,11 @@ The tracker answers plain HTTP only. No account, key, cookie, CAPTCHA or browser
 
 ## Limitations
 
-The record names no delivery carrier or last-mile number, so the delivery partner's scans are
-only those the forwarder relays.
+The record names no delivery carrier, so the delivery partner's scans are only those the
+forwarder relays. Once the forwarder hands an order on, the delivery carrier's number can take
+its tracking number, and the tracker then finds the order by the SZLD number without showing it:
+a lone order it finds that way answers the number, and the number it shows is passed on as the
+delivery tracking number.
 
 ## Numbers
 

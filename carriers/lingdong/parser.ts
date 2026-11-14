@@ -18,7 +18,7 @@ export function repeatsLingdongRow(wording: string, other: string): boolean {
 }
 
 export const LINGDONG: HualeiTenant = { carrier: 'lingdong', provider: PROVIDER, origin: LINGDONG_ORIGIN, stage: lingdongStage,
-  repeats: repeatsLingdongRow };
+  repeats: repeatsLingdongRow, ownNumber: /^SZLD\d{10}$/ };
 
 /** The track interface's reply, or null when it holds no row for the number. */
 export const parseLingdongTrack = (payload: unknown, number: string, readAt?: number): CarrierResult | null =>

@@ -86,7 +86,8 @@ export interface HualeiTenant {
    * `trackingNumber`, the track interface still finds an order by its own
    * number but returns it in no field: a lone record that holds none of the
    * number then answers it, unless its tracking number is another of the
-   * tenant's own. A tracking number of another shape is the delivery carrier's.
+   * tenant's own, and so does a lone waybill on the page whose form echoes the
+   * number alone. A tracking number of another shape is the delivery carrier's.
    */
   readonly ownNumber?: RegExp;
   /**
@@ -624,9 +625,12 @@ export function parseHualeiPage(html: string, raw: string, tenant: HualeiTenant,
   const bound = waybills.filter((waybill) => (shown(waybill) && holds(waybill, PAGE_IDENTITY_COLUMNS)) || holds(waybill, PAGE_OWN_COLUMNS));
   // The page shows one block per number its form echoes back, one per line: on
   // a tenant that hides the number it found an order by, a lone record answers
-  // the only number echoed.
+  // the only number echoed. So does it for a tenant's own number, as on the interface, once the
+  // delivery carrier's number has taken the tracking number, unless that is another of its own.
   const echo = ($('input#codes').attr('value') ?? '').split(/[\r\n]+/).map(identity).filter(Boolean);
-  const echoed = tenant.pageEcho && !bound.length && waybills.length === 1 && shown(waybills[0]!)
+  const own = (value: string) => Boolean(tenant.ownNumber?.test(value));
+  const hides = (waybill: PageWaybill) => tenant.pageEcho || (own(number) && !own(identity(waybill.cells.get('跟踪号码') ?? '')));
+  const echoed = !bound.length && waybills.length === 1 && shown(waybills[0]!) && hides(waybills[0]!)
     && echo.length === 1 && echo[0] === identity(number);
   if (echoed) bound.push(waybills[0]!);
   if (bound.length !== 1) throw new IndeterminateError(provider, `${provider} did not show the number as one shipment`);

@@ -42,7 +42,9 @@ instead.
   inconclusive. [BYHD's](../byhd/README.md) page hides the number it found an order by, so there
   a lone record counts for the one number the page's form echoes back. [JRT's](../jrt/README.md)
   interface stops returning JRT's own number once the delivering carrier's takes the tracking
-  number, so there a lone record holding none of a JRT number counts for it.
+  number, so there a lone record holding none of a JRT number counts for it, and so does a lone
+  page waybill whose form echoes that number alone; [Lingdong's](../lingdong/README.md) tracker
+  does the same with its SZLD numbers.
 - GZYL writes a shipment's timeline ahead: every row carries the same creation time, days before
   most of the scan times. A row the track interface says was written more than twelve hours
   before its own clock is a forecast, not a scan, and is held back on every tenant; the margin
