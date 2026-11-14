@@ -248,14 +248,15 @@ export function chinaPostDestinationScan(wording: string): boolean {
   return DESTINATION_PLACED_LABELS.has(label) && place !== undefined && chinaPostCountry(place) !== undefined;
 }
 
-// The destination post's attempt, which China Post words with no place, unlike its round and
-// delivery: "已试投/投递失败（/已通知客户）".
-const DESTINATION_UNPLACED_LABELS = new Set(['已试投/投递失败']);
+// The destination post's attempt and its hold at the delivery office, which China Post words with
+// no place, unlike its round and delivery: "已试投/投递失败（/已通知客户）" and "境外投递点留存".
+const DESTINATION_UNPLACED_LABELS = new Set(['已试投/投递失败', '境外投递点留存']);
 
 /**
  * The rows of a forwarder's China Post feed that are the destination post's own scans: those
  * `chinaPostDestinationScan` names, and from the first of them on, by the clock as written, an
- * attempt, until a scan placed at a Chinese office has the item home again.
+ * attempt or a hold at the delivery office, until a scan placed at a Chinese office has the item
+ * home again.
  */
 export function chinaPostDestinationRows(rows: readonly { wording: string; wall: number }[]): Set<number> {
   const found = new Set(rows.flatMap((row, index) => (chinaPostDestinationScan(row.wording) ? [index] : [])));

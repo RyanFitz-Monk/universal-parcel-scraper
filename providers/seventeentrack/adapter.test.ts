@@ -962,6 +962,31 @@ describe('17TRACK result parsing', () => {
     expect(home?.[0]).toEqual(['Delivery attempted, not delivered', '2026-10-25T02:00:00.000Z', undefined]);
   });
 
+  it("reads the destination post's place-less hold at its delivery office on its clock", () => {
+    const row = (date: string, time: string, description: string) => ({
+      time_iso: `${date}T${time}+08:00`, time_utc: null, time_raw: { date, time, timezone: null },
+      description, location: '', stage: null, sub_status: 'InTransit_Other' });
+    const reply = (events: unknown[]) => ({ meta: { code: 200 }, shipments: [{ number, code: 200, shipment: {
+      latest_status: { status: 'InTransit' }, shipping_info: { recipient_address: { country: 'FR' } },
+      tracking: { providers: [{ provider: { key: 3011, name: 'China Post', country: 'CN' }, events }] } } }] });
+    const read = (events: unknown[]) => parse17TrackResponse(reply(events), number).events?.map((e) => [e.description, e.time]);
+    // La Poste's arrival at its delivery site came at 09:14 Paris time, as China Post's copy gives it.
+    expect(read([
+      row('2026-11-12', '10:06:00', '【法国】安排投递'),
+      row('2026-11-12', '09:14:00', '境外投递点留存'),
+      row('2026-11-07', '15:04:00', '送交境外进口海关'),
+      row('2026-11-01', '10:00:00', '中国邮政已收取邮件'),
+    ])).toEqual([
+      ['Out for delivery', '2026-11-12T09:06:00.000Z'],
+      ['境外投递点留存', '2026-11-12T08:14:00.000Z'],
+      ['Presented to import customs abroad', '2026-11-07T14:04:00.000Z'],
+      ['China Post has received the mail', '2026-11-01T02:00:00.000Z'],
+    ]);
+    // Before any destination scan, it is no copy of the destination post's.
+    expect(read([row('2026-11-12', '09:14:00', '境外投递点留存'), row('2026-11-01', '10:00:00', '中国邮政已收取邮件')])?.[0])
+      .toEqual(['境外投递点留存', '2026-11-12T01:14:00.000Z']);
+  });
+
   it("stages China Post's final and import customs labels that 17TRACK files under generic transit, on its leg and on XC's", () => {
     const row = (time: string, description: string) => ({
       time_iso: `2026-10-17T${time}+08:00`, time_utc: null, time_raw: { date: '2026-10-17', time, timezone: null },
