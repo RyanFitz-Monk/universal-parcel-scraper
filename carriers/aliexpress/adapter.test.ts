@@ -411,12 +411,20 @@ describe('Cainiao projection', () => {
     ]);
     expect(result.events?.[0]).toMatchObject({ stage_source: 'none' });
     expect(result.events?.[1]).not.toHaveProperty('stage_source');
-    // Worded only by the placeholder, after import customs started, it leaves the parcel in customs.
+    // Worded only by the placeholder, after import customs started, it leaves the parcel in customs, under the
+    // scan's wording, while it stays the last update.
     const placeholder = scan('LAST_MILE_ASN_NOTIFY', '2026-06-10 09:00:00');
     const customs = parseCainiaoTrackingResponse({ module: [{ mailNo: 'LP00000000000001',
       latestTrace: placeholder, detailList: [placeholder, scan('CC_IM_START', '2026-06-10 08:00:00', '', 'Import customs clearance started'), departed],
     }] }, 'LP00000000000001');
-    expect(customs).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: 'Carrier update' });
+    expect(customs).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: 'Import customs clearance started',
+      last_update: '2026-06-10T09:00:00+08:00' });
+    expect(customs.events?.[0]).toMatchObject({ description: 'Carrier update' });
+    // Seconds after a departure from a placed sorting center, the headline keeps the departure without its town.
+    const outbound = scan('SC_OUTBOUND_SUCCESS', '2026-06-10 08:59:19', '', '[Example Town] Departed from sorting center');
+    const placed = parseCainiaoTrackingResponse({ module: [{ mailNo: 'LP00000000000001', latestTrace: placeholder, detailList: [placeholder, outbound] }] },
+      'LP00000000000001');
+    expect(placed).toMatchObject({ current_stage: 'in_transit', last_status_text: 'Departed from sorting center' });
     expect(customs.events?.[0]).toMatchObject({ stage: 'customs', stage_source: 'none' });
     // An order turned from a self-pickup into a home delivery moves no parcel either.
     const converted = scan('PARCEL_ORDER_INFO_UPDATE', '2026-06-10 09:00:00', '', 'Self-pickup converted to home delivery');

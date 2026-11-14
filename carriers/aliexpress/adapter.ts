@@ -255,6 +255,8 @@ export function parseCainiaoTrackingResponse(value: unknown, trackingNumber: str
     ? details.find((event) => cainiaoActionStage(cainiaoActionCode(event.actionCode))) ?? latest
     : latest;
   const standingAction = cainiaoActionCode(standing.actionCode);
+  // A notice worded only by the placeholder says nothing: the headline stays its standing scan's.
+  const headline = standing !== latest && /^carrier update$/i.test(scanWording(latest)) ? standing : latest;
   const status = standingAction
     ? (CAINIAO_ACTION_STATUS.get(standingAction) ?? 'unknown')
     : (CAINIAO_STATUS.get(rawStatus)
@@ -297,7 +299,7 @@ export function parseCainiaoTrackingResponse(value: unknown, trackingNumber: str
     status,
     ...(currentStage ? { current_stage: currentStage } : {}),
     // Before any scan, Cainiao words its order token in `statusDesc` ("Awaiting seller dispatch").
-    last_status_text: placedWording(scanWording(latest), carriers).description || text(trackingModule.statusDesc) || rawStatus,
+    last_status_text: placedWording(scanWording(headline), carriers).description || text(trackingModule.statusDesc) || rawStatus,
     last_update: 'time' in latestClock ? latestClock.time || null : null,
     ...('local_time' in latestClock ? { last_update_local: latestClock.local_time } : {}),
     expected_delivery: status === 'delivered' ? null : expected,
