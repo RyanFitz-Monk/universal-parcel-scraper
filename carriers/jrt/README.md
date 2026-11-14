@@ -46,8 +46,8 @@ browser is needed, and no portal link is published.
   moves the parcel leads it.
 - The line into the United States ends with UPS. The tracker copies UPS's rows in Chinese, and
   they show UPS's English. They come on UPS's wall clock at the scan's place: a delivery read on
-  Beijing time would fall before dawn there. Rows in UPS's words or at a place in the United
-  States keep their wall clocks, which the scan's state dates, or a neighbouring scan's for a
+  Beijing time would fall before dawn there. Rows in UPS's words, its note that the parcel goes to
+  an access point included, or at a place in the United States keep their wall clocks, which the scan's state dates, or a neighbouring scan's for a
   row without a place. The flight row names its month and day, read as an ellipsis.
 - The line into Mexico ends with J&T Express Mexico. The tracker copies J&T's rows in Spanish, the
   town and the site in brackets, on J&T's clock in Mexico City, the one its own tracker answers on:

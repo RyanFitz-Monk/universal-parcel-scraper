@@ -753,7 +753,7 @@
       "stage": "pending",
       "confirmedBy": "live",
       "firstSeen": "2026-11-11",
-      "note": "Copied from UPS before the forwarder's first scan: UPS's note that the parcel goes to an access point, which moves nothing. The tracker writes UPS's registered sign as a question mark."
+      "note": "Copied from UPS beside its label row, on UPS's wall clock: UPS's note that the parcel goes to an access point, which moves nothing. The tracker writes UPS's registered sign as a question mark."
     },
     {
       "wording": "Package has been packed and delivered to airport",

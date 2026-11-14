@@ -8,7 +8,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { dateLocalClocks } from '../../places/clocks.js';
 import { adapter } from './adapter.js';
 import { JRT_ORIGIN, parseJrtPage, parseJrtTrack } from './parser.js';
-import { isJrtDhlGermanRow, isJrtDhlRow, isJrtJtMexicoRow, jrtEnglish, statusMap } from './status.js';
+import { isJrtDhlGermanRow, isJrtDhlRow, isJrtJtMexicoRow, isJrtUpsRow, jrtEnglish, statusMap } from './status.js';
 import carrier from './carrier.json' with { type: 'json' };
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -216,6 +216,30 @@ describe('JRT tracking adapter', () => {
     ]);
   });
 
+  it('reads UPS’s access point note on UPS’s wall clock, as its other rows', () => {
+    const payload = fixture('track-ups') as { data: { consigneeCountry: string; trackDetails: Record<string, string>[] }[] }[];
+    const record = payload[0]!.data[0]!;
+    const label = record.trackDetails.find(({ track_content }) => track_content!.startsWith('发件人已创建标签'))!;
+    // On the line into Belgium UPS's label names the country, and its note follows by minutes without a place:
+    // on Beijing's clock the note would fall seven hours before the label.
+    record.consigneeCountry = 'BE';
+    Object.assign(label, { track_location: 'BE', track_date: '2026-03-10 15:35:15' });
+    record.trackDetails.splice(record.trackDetails.indexOf(label), 0,
+      { ...label, track_date: '2026-03-10 15:41:18', track_location: '', track_content: '等待递送至 UPS Access Point? 地点。' });
+    const result = dateLocalClocks('jrt', parseJrtTrack(payload, 'UP0000000000000003', Date.parse('2026-03-22T00:00:00Z'))!);
+    expect(result.events?.slice(-3).map(({ time, time_zone, time_zone_basis, description, stage }) => [time, time_zone, time_zone_basis, description, stage])).toEqual([
+      ['2026-03-10T15:41:18+01:00', 'Europe/Brussels', 'neighbour', 'Awaiting delivery to a UPS Access Point location.', 'pending'],
+      ['2026-03-10T15:35:15+01:00', 'Europe/Brussels', 'place', 'Shipper created a label, UPS has not received the package yet.', 'registered'],
+      ['2026-03-07T17:57:36+08:00', undefined, undefined, 'The electronic cargo information has been received', 'registered'],
+    ]);
+  });
+
+  it('reads every row the map says UPS wrote on UPS’s wall clock, without a place', () => {
+    const ups = statuses.entries.filter(({ note }) => /^(?:Copied from UPS\b|UPS's label row\b)/.test(note ?? ''));
+    expect(ups.length).toBeGreaterThan(8);
+    expect(ups.filter(({ wording }) => !isJrtUpsRow(wording, '')).map(({ wording }) => wording)).toEqual([]);
+  });
+
   it('reads J&T Express Mexico’s rows on the line into Mexico on J&T’s clock in Mexico City', () => {
     const payload = fixture('track-dhl') as { data: Record<string, unknown>[] }[];
     const record = payload[0]!.data[0]! as { trackDetails: Record<string, string>[] } & Record<string, unknown>;
@@ -400,7 +424,7 @@ describe('JRT tracking adapter', () => {
     expect(answer('Sorry, the second flight has been delayed and is expected to 11.12 land')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('报关已放行等待3号航班起飞 Customs released,Awaiting departure on flight of the 3rd')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('10/22号航班')).toEqual({ kind: 'mapped', stage: 'in_transit' });
-    // UPS's access point note, copied before the forwarder's first scan, moves nothing.
+    // UPS's access point note moves nothing.
     expect(answer('等待递送至 UPS Access Point? 地点。')).toEqual({ kind: 'mapped', stage: 'pending' });
     // A delayed flight names its new day in both halves.
     expect(answer('航班延误，预计12/3号飞出 Flight delayed, estimated departure on Dec 3.')).toEqual({ kind: 'mapped', stage: 'in_transit' });

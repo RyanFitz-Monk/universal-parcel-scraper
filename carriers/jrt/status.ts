@@ -87,9 +87,10 @@ export function jrtStage(_code: string | null, wording: string): Stage | undefin
  */
 export const jrtEnglish = (_code: string | null, wording: string): string | undefined => WORDINGS.english(jrtScanKey(wording));
 
-// UPS's rows, which the tracker copies in Chinese on UPS's wall clock on the line into the United States.
-const UPS_ROWS = new Set(['发件人已创建标签，但是 UPS 尚未收到包裹。', '抵达设施', '离开设施', '已提取', 'UPS 设施处理', '已装上递送车辆',
-  '准备今天递送', '已递送'].map(normalizeStatusWording));
+// UPS's rows, which the tracker copies in Chinese on UPS's wall clock on the lines UPS delivers: its label, its note
+// that the parcel goes to an access point, its scans and its delivery.
+const UPS_ROWS = new Set(['发件人已创建标签，但是 UPS 尚未收到包裹。', '等待递送至 UPS Access Point? 地点。', '抵达设施', '离开设施', '已提取',
+  'UPS 设施处理', '已装上递送车辆', '准备今天递送', '已递送'].map(normalizeStatusWording));
 
 /** Whether a row is one UPS wrote, by its wording or its place in the United States: it is on UPS's wall clock. */
 export const isJrtUpsRow = (wording: string, place: string): boolean =>
