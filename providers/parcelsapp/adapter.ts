@@ -1217,9 +1217,13 @@ function placeClockLine(carrier: string, status: string, location: string, date:
  * (`laPosteLetterRelay` for a tracked letter's).
  * Correios Brazil names it after "Country, ": read on Brasília's clock, China
  * Post's posting came eleven hours after China Post's own row of it.
+ * DHL Paket, the sending post, names the country of its arrival abroad
+ * ("Portugal") on that country's wall clock, as DHL's own tracker shows it
+ * (carriers/dhl): read on Berlin's clock, it came an hour before the
+ * delivering partner's own scan of it.
  */
 const RELAYING_POSTS: Readonly<Record<string, string>> = {
-  azerpost: 'AZ', 'correios-br': 'BR', 'correo-uruguayo': 'UY', 'la-poste': 'FR', 'slovenska-posta': 'SK',
+  azerpost: 'AZ', 'correios-br': 'BR', 'correo-uruguayo': 'UY', dhl: 'DE', 'la-poste': 'FR', 'slovenska-posta': 'SK',
 };
 // Correios Brazil names the sending post's country in Portuguese after the label ParcelsApp translates
 // from its "País". There a name a Brazilian town shares, which `countryCode` leaves to the town, is the country.

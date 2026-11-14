@@ -609,6 +609,9 @@ describe('classifyWording', () => {
       ['Arribado a país destino. Entregado por Aerolínea', 'in_transit'],
       ['Recepción correo de destino. Entregado a Distribuidor', 'in_transit'],
       ['Proceso finalizado. Entregado', 'delivered'],
+      // 360Lion's Argentine leg loading the parcel for the next station, as ParcelsApp relays it.
+      ['Salida(El paquete ya está cargado al vehículo a la próxima estación.)', 'in_transit'],
+      ['Salida a reparto', 'out_for_delivery'],
       ['Entregue à transportadora', 'in_transit'],
       ['Entregado en el punto de recogida', 'ready_for_pickup'],
       ['Entregue no cacifo', 'ready_for_pickup'],

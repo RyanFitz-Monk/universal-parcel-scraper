@@ -853,6 +853,17 @@ describe('ParcelsApp result parsing', () => {
     expect(lettered('United States', '18:03')).toEqual(['local 2026-10-28T17:03:00.000']);
   });
 
+  it("reads DHL Paket's scans in another country on that country's clock, as DHL's own tracker does", () => {
+    const time = (location: string) => parseParcelsAppResponse({
+      carriers: ['Deutsche Post - DHL Paket'],
+      states: [{ date: '2026-11-14T03:29:00Z', status: 'Die Sendung ist im Zielland/Zielgebiet eingetroffen', carrier: 0, location }],
+    }, number, identity()).events?.map((scan) => [scan.time ?? `local ${scan.local_time}`, scan.time_zone]);
+    // DHL's tracker states 03:29+01:00 for its arrival in Portugal, where the partner's own scan is at 03:29 Lisbon time.
+    expect(time('Portugal')).toEqual([['2026-11-14T03:29:00.000Z', 'Europe/Lisbon']]);
+    expect(time('Deutschland')).toEqual([['2026-11-14T02:29:00.000Z', 'Europe/Berlin']]);
+    expect(time('Canada')).toEqual([['local 2026-11-14T03:29:00.000', undefined]]);
+  });
+
   it("reads Shouwu's dates as the epoch Shouwu stores", () => {
     const times = parseParcelsAppResponse({
       carriers: ['Shouwu Express'], originCode: 'CN', destinationCode: 'US',

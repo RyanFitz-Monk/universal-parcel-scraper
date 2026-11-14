@@ -571,6 +571,9 @@ step exists for future protocol changes.
   Correios Brazil names it after "Country, ", in Portuguese: read on Brasília's clock, China Post's posting
   came eleven hours after China Post's own row of it. There a name a Brazilian town shares ("FRANCA") is the country. Albania Post's relays under the foreign post's country ("Finland") keep their wall clock, as
   its own tracker leaves them: they run hours ahead of the foreign post's own scans.
+  DHL Paket names the country of its arrival abroad ("Portugal") on that country's wall
+  clock, as DHL's own tracker shows it ([DHL](../../carriers/dhl/README.md)): read on
+  Berlin's clock, it came an hour before the delivering partner's own scan of it.
 - Speedaf's dates are its sites' wall clocks under a UTC label. Its own feed dates the
   scans up to the departing flight ("Cargo flight departured") on China time and the rest
   on the destination's, and Cainiao's copies of the same scans agree once read that way.
