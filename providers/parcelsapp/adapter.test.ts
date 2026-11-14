@@ -10,6 +10,7 @@ import type { LookupRecord, StepRecord, StepRecorder } from '../../core/telemetr
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { dateLocalClocks } from '../../places/clocks.js';
 import { ParcelsAppTracker, parseParcelsAppHtml, parseParcelsAppResponse } from './adapter.js';
+import type { ParcelsAppHttpClient } from './http.js';
 
 const number = 'ZZ12345678900';
 const API = 'https://parcelsapp.com/api/v2/parcels';
@@ -2643,6 +2644,24 @@ describe('ParcelsApp result parsing', () => {
     expect(times(['DPD France'], dpd, '10000000000000')).toEqual(['2026-07-22T12:17:00.000Z']);
     expect(parseParcelsAppHtml(rendered(carrierRow('02 Oct 2026', '10:07', 'In transit', 'Italy Post')), number).events?.[0]?.time)
       .toBe('2026-10-02T08:07:00.000Z');
+  });
+
+  it('reads a DPD network\'s name on the clock of the group\'s network the parcel is filed under', async () => {
+    // DPD's networks answer for each other's parcels through one guest service, and ParcelsApp names
+    // "DPD France" for a parcel of Jadlog, DPD's network in Brazil, with no place. Jadlog's own rows
+    // have ParcelsApp's digits on Sao Paulo's clock.
+    const payload = { carriers: ['DPD France'], states: [
+      { date: '2026-11-13T11:29:00Z', status: 'At delivery center', carrier: 0 },
+      { date: '2026-11-13T07:55:00Z', status: 'In transit', carrier: 0 },
+    ] };
+    const tracker = new ParcelsAppTracker({ httpClient: { fetch: () => Promise.resolve(payload) } as unknown as ParcelsAppHttpClient });
+    const times = async (timezone: string | null, carrier: string | null) =>
+      (await tracker.fetch('10000000000000', 5000, null, timezone, undefined, carrier)).events?.map((event) => event.time);
+    expect(await times('America/Sao_Paulo', 'jadlog')).toEqual(['2026-11-13T14:29:00.000Z', '2026-11-13T10:55:00.000Z']);
+    // Filed under DPD France, another carrier or none, they keep Paris.
+    for (const [timezone, carrier] of [['Europe/Paris', 'dpd-fr'], ['America/Sao_Paulo', 'correios-br'], [null, null]] as const) {
+      expect(await times(timezone, carrier), String(carrier)).toEqual(['2026-11-13T10:29:00.000Z', '2026-11-13T06:55:00.000Z']);
+    }
   });
 
   it('reads SunYou\'s destination leg on the destination\'s clock', () => {

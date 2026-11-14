@@ -16,6 +16,7 @@ import { carrierDefinition, carrierTimezone } from '../../core/catalog/index.js'
 import {
   brandCarrierIds, brandTimeZones, carrierBrand, carrierIdFromName, carrierNameCountryZone, isCarrierFeedName, isKnownCarrierName,
 } from '../../core/catalog/hints.js';
+import { GROUP_LOOKUP_BRANDS } from '../../core/catalog/networks.js';
 import { detectCarrierMatch, isValidS10TrackingNumber } from '../../core/detection/index.js';
 import { CarrierError, carrierErrorKind, ChallengeError, IndeterminateError, InputRequiredError, InvalidInputError, NoHistoryError, SchemaError, UpstreamHttpError, UpstreamNetworkError } from '../../core/errors/index.js';
 import { runSteps } from '../../core/runner/index.js';
@@ -79,8 +80,14 @@ function emptyView(html: string): boolean {
 
 export function parseParcelsAppResponse(payload: unknown, trackingNumber: string, html: string, timezone: string | null = null,
   readAt = Date.now()): CarrierResult {
+  return parseResponse(payload, trackingNumber, html, timezone, readAt, null);
+}
+
+/** A reply the page captured, for a parcel filed under a carrier (`filedNetworkZone`) or none. */
+function parseResponse(payload: unknown, trackingNumber: string, html: string, timezone: string | null, readAt: number,
+  filed: string | null): CarrierResult {
   if (!parcelsIdentity(html, numberOf(trackingNumber))) throw new SchemaError(SOURCE, 'ParcelsApp shipment identity missing');
-  return parseHistory(payload, trackingNumber, timezone, readAt);
+  return parseHistory(payload, trackingNumber, timezone, readAt, filed);
 }
 
 /**
@@ -1115,6 +1122,22 @@ function numberNetworkZone(carrier: string | undefined, number: string): string 
 }
 
 /**
+ * The clock of the network a parcel is filed under, when ParcelsApp names another network of a
+ * brand whose networks answer for each other through one guest service, and the filed one
+ * belongs to the brand only by a name of it ("DPD Brazil" for Jadlog): its numbers fall in no
+ * depot range of the brand's. ParcelsApp names "DPD France" for a Jadlog parcel, whose own
+ * rows have its digits on Sao Paulo's clock.
+ */
+function filedNetworkZone(carrier: string | undefined, filed: string | null): string | null {
+  const brand = carrier ? carrierBrand(carrier) : undefined;
+  if (!brand || !filed || !GROUP_LOOKUP_BRANDS.includes(brand) || carrierBrand(filed)) return null;
+  const named = carrierDefinition(filed).aliases?.some((alias) => alias.toLowerCase().startsWith(`${brand} `)
+    && carrierIdFromName(alias) === filed);
+  const zone = named ? carrierTimezone(filed) : 'UTC';
+  return zone === 'UTC' ? null : zone;
+}
+
+/**
  * The clocks a bare brand's scan with no location can be on when its catalog
  * networks keep several (DPD's, with the UK's): the clock of the network that
  * labelled the parcel, which the number asked or a number ParcelsApp names
@@ -1407,7 +1430,7 @@ function localClockBrand(name: unknown): boolean {
 }
 
 function guessedZone(payload: Record<string, unknown>, state: Record<string, unknown>, fallback: string | null, number: string,
-  destination: string | null = null, origin: string | null = null): string | null {
+  destination: string | null = null, origin: string | null = null, filed: string | null = null): string | null {
   const name = stateCarrierName(payload, state);
   const key = nameKey(name);
   const carrier = typeof name === 'string' ? carrierIdFromName(name) : undefined;
@@ -1419,7 +1442,8 @@ function guessedZone(payload: Record<string, unknown>, state: Record<string, unk
   const guess = (candidate: string | null) => fitsPlace(candidate, location);
   if (typeof name !== 'string') return guess(fallback);
   const nameZone = carrierNameCountryZone(name);
-  const named = guess((nameZone && numberNetworkZone(carrier, number)) || nameZone || (HOME_COUNTRIES[key] ?? null));
+  const named = guess((nameZone && (filedNetworkZone(carrier, filed) ?? numberNetworkZone(carrier, number))) || nameZone
+    || (HOME_COUNTRIES[key] ?? null));
   if (named) return named;
   // A location with no single-clock country ("Toronto, ON", "Chicago, US")
   // can be a network of the brand outside the catalog, on another clock.
@@ -1436,7 +1460,8 @@ function guessedZone(payload: Record<string, unknown>, state: Record<string, unk
  * which `wallClockZones` falls back on.
  */
 function readState(payload: Record<string, unknown>, raw: Record<string, unknown>, status: string, fallback: string | null, number: string,
-  inNorthAmerica = false, destination: string | null = null, origin: string | null = null, distrusted: ReadonlySet<string> = NO_CODES) {
+  inNorthAmerica = false, destination: string | null = null, origin: string | null = null, distrusted: ReadonlySet<string> = NO_CODES,
+  filed: string | null = null) {
   const name = stateCarrierName(payload, raw);
   const location = scanLocation(name, raw.location);
   const offset = ownOffset(name, raw.date, location);
@@ -1463,7 +1488,7 @@ function readState(payload: Record<string, unknown>, raw: Record<string, unknown
   const office = placed === undefined ? postingOffice(name, status, location, replyOrigin(payload, number)) : null;
   const destinationCode = placed === undefined && !wallClock && destinationOffice(name, location, destination);
   const zone = placed !== undefined ? placed
-    : wallClock || office || destinationCode ? null : guessedZone(payload, raw, fallback, number, destination, origin);
+    : wallClock || office || destinationCode ? null : guessedZone(payload, raw, fallback, number, destination, origin, filed);
   const known = wallClock ? knownClock(name, status, destination, origin) : null;
   // A local clock that nothing places, in the US or Canada alone ("US 12345").
   const country = countryCode(lastPlace(location));
@@ -2028,7 +2053,8 @@ const NUMBER_FORM = /^(?:one|two|three|\d+) digits? (?:is|are) missing from the 
 const numberFormNotice = (raw: unknown): boolean => isRecord(raw) && typeof raw.status === 'string'
   && NUMBER_FORM.test(raw.status.trim()) && !raw.carrier && !raw.location;
 
-function parseHistory(payload: unknown, trackingNumber: string, timezone: string | null = null, readAt = Date.now()): CarrierResult {
+function parseHistory(payload: unknown, trackingNumber: string, timezone: string | null = null, readAt = Date.now(),
+  filed: string | null = null): CarrierResult {
   if (isRecord(payload) && payload.error === 'RELOAD') throw new ChallengeError(SOURCE);
   if (isRecord(payload) && (payload.error === 'NO_DATA' || payload.error === 'NO_TRACKER')) {
     throw new NoHistoryError(SOURCE, 'ParcelsApp has no usable shipment history');
@@ -2085,7 +2111,7 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
     }
     const status = relayedLabel(raw.status);
     if (FORECAST.test(status) || summaryRow(stateCarrierName(payload, raw), status)) continue;
-    const state = readState(payload, raw, status, timezone, number, inNorthAmerica, destination, origin, distrustedAt(raw.date));
+    const state = readState(payload, raw, status, timezone, number, inNorthAmerica, destination, origin, distrustedAt(raw.date), filed);
     const carrier = typeof state.name === 'string' ? carrierIdFromName(state.name) : undefined;
     const scan = carrierScan(carrier, status) ?? airportHandOver(carrier, status, state.location, destination);
     entries.push({ ...state, raw, scan, wording: scan?.wording ?? status });
@@ -2265,6 +2291,11 @@ function browserCanRecover(error: unknown): boolean {
 }
 
 export function parseParcelsAppHtml(html: string, trackingNumber: string, timezone: string | null = null, readAt = Date.now()): CarrierResult {
+  return parseHtml(html, trackingNumber, timezone, readAt, null);
+}
+
+/** The rendered page, for a parcel filed under a carrier (`filedNetworkZone`) or none. */
+function parseHtml(html: string, trackingNumber: string, timezone: string | null, readAt: number, filed: string | null): CarrierResult {
   if (!parcelsIdentity(html, numberOf(trackingNumber))) throw new SchemaError(SOURCE, 'ParcelsApp shipment identity missing');
   const $ = load(html);
   const nodes = $('.tracking-info .parcel .events > .event');
@@ -2303,7 +2334,7 @@ export function parseParcelsAppHtml(html: string, trackingNumber: string, timezo
     const labeled = DateTime.fromFormat(`${date} ${time}`, 'dd LLL yyyy HH:mm', { locale: 'en', zone: 'UTC' });
     if (!labeled.isValid) throw new SchemaError(SOURCE, 'ParcelsApp returned an invalid event date');
     const state = readState({ carriers }, { date: labeled.toISO(), ...(name ? { carrier: carriers.indexOf(name) } : {}) },
-      description, timezone, numberOf(trackingNumber), false, replyDestination({}, numberOf(trackingNumber)));
+      description, timezone, numberOf(trackingNumber), false, replyDestination({}, numberOf(trackingNumber)), null, NO_CODES, filed);
     const scan = carrierScan(name ? carrierIdFromName(name) : undefined, description);
     rows.push({ name, description, state, scan });
   });
@@ -2378,7 +2409,8 @@ export class ParcelsAppTracker {
     this.http = options.httpClient === undefined ? new ParcelsAppHttpClient(options.fetcher, options.userAgent) : options.httpClient;
   }
 
-  async fetch(trackingNumber: string, budgetMs = this.options.timeoutMs ?? PARCELSAPP_BUDGET_MS, postcode?: string | null, timezone: string | null = null, signal?: AbortSignal): Promise<CarrierResult> {
+  async fetch(trackingNumber: string, budgetMs = this.options.timeoutMs ?? PARCELSAPP_BUDGET_MS, postcode?: string | null, timezone: string | null = null,
+    signal?: AbortSignal, carrier: string | null = null): Promise<CarrierResult> {
     const number = numberOf(trackingNumber);
     if (!Number.isFinite(budgetMs) || budgetMs < 1) throw new TypeError('ParcelsApp timeout must be positive');
     const deadline = performance.now() + budgetMs;
@@ -2390,7 +2422,7 @@ export class ParcelsAppTracker {
       if (isRecord(payload) && payload.correctId && payload.correctId !== number) {
         throw new SchemaError(SOURCE, 'ParcelsApp returned an unverified tracking alias');
       }
-      return { ...parseHistory(payload, number, timezone), tracking_source: 'structured-web-response' };
+      return { ...parseHistory(payload, number, timezone, Date.now(), carrier), tracking_source: 'structured-web-response' };
     };
     return runSteps({ carrier: SOURCE, budgetMs, signal, recorder: this.options.recorder }, [{
       id: 'direct',
@@ -2425,7 +2457,7 @@ export class ParcelsAppTracker {
           let payload: unknown;
           try {
             payload = JSON.parse(body);
-            return parseParcelsAppResponse(payload, number, page.html, timezone);
+            return parseResponse(payload, number, page.html, timezone, Date.now(), carrier);
           } catch {
             // Polling replies, unrelated numbers and demo shipments are not history.
             noData ||= isRecord(payload) && (payload.error === 'NO_DATA' || payload.error === 'NO_TRACKER');
@@ -2438,7 +2470,7 @@ export class ParcelsAppTracker {
           throw noData ? new NoHistoryError(SOURCE, 'ParcelsApp has no usable shipment history') : captureFailure(page, capture);
         }
         // The rendered page carries the same history when no body was readable.
-        return parseParcelsAppHtml(page.html, number, timezone);
+        return parseHtml(page.html, number, timezone, Date.now(), carrier);
       },
     }]);
   }
@@ -2451,6 +2483,6 @@ export const adapter: AdapterFactory = (environment) => {
   return {
     id: SOURCE,
     steps: ['direct', 'retry', 'trawl'],
-    track: (input, context) => tracker.fetch(input.number, context?.budgetMs, input.postcode, input.timezone ?? null, context?.signal),
+    track: (input, context) => tracker.fetch(input.number, context?.budgetMs, input.postcode, input.timezone ?? null, context?.signal, input.carrier ?? null),
   };
 };

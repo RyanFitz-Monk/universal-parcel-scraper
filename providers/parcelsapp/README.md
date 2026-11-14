@@ -105,8 +105,11 @@ step exists for future protocol changes.
      after the location because the name can be a branch, not the scan's place
      ("Cainiao (China)" scanning in Spain). When the number's depot range picks another
      network of the brand, that network's zone replaces it: a DPD UK number filed under
-     "DPD France" is on London time, as DPD UK's page, Ship24 and 17TRACK show. A few
-     networks named without a country have their home country's clock here (Home clocks
+     "DPD France" is on London time, as DPD UK's page, Ship24 and 17TRACK show. The lookup's
+     `carrier` does so too when it belongs to DPD only by a DPD name ("DPD Brazil" for Jadlog),
+     whose numbers no depot range picks: DPD's networks answer for each other, and ParcelsApp
+     names "DPD France" for a Jadlog parcel's scans, which carry Jadlog's São Paulo digits. A
+     few networks named without a country have their home country's clock here (Home clocks
      below);
   4. for a bare brand or brand group ("DPD Group", "GLS", "Hermes") on a scan with no
      location, the zone of that brand's catalog carriers, if every one of them reads the

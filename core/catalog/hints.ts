@@ -1,7 +1,7 @@
 import { CARRIER_DEFINITIONS, carrierTimezone } from './definitions.js';
 import { TRACKING_LINK_RULES, matchesDomain } from './linkRules.js';
 import { countryTimeZone } from '../time/index.js';
-import { NETWORK_BRANDS, carrierBrand } from './networks.js';
+import { GROUP_LOOKUP_BRANDS, NETWORK_BRANDS, carrierBrand } from './networks.js';
 import type { CarrierId } from '../../generated/catalog.js';
 
 export { carrierBrand };
@@ -147,11 +147,6 @@ function countryQualified(name: string): { base: string; country: string } | und
   }
   return undefined;
 }
-
-// DPD's networks share one guest service that answers for any DPD parcel, and
-// 17TRACK writes "DPD (BE)" for parcels DPD places in the Netherlands. Only
-// recognition, from DPD's current country for the parcel, names the network.
-const GROUP_LOOKUP_BRANDS = ['dpd'];
 
 /**
  * A brand's one network in a country ("GLS (FR)"). None when a network of the
