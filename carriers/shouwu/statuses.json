@@ -81,6 +81,14 @@
       "confirmedBy": "live"
     },
     {
+      "wording": "The ship has already set sail",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "Shouwu's ship leaving China on a sea line, after the export clearance and before the arrival at the port abroad."
+    },
+    {
       "wording": "Arrived at airport of Destination",
       "stage": "in_transit",
       "language": "en",
@@ -576,6 +584,14 @@
       "language": "zh",
       "confirmedBy": "live",
       "note": "Handed to the delivering partner's depot and scanned there."
+    },
+    {
+      "wording": "Picked up",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "FedEx collecting the parcel from Shouwu's depot in the United States after the import clearance, its town and postcode before the wording. Shouwu had the parcel long before, so it is no handover from the sender."
     },
     {
       "wording": "Your consignment has been picked up",

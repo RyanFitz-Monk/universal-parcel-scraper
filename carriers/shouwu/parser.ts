@@ -9,7 +9,7 @@ import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { countryZones } from '../../places/zones.js';
 import { shouwuSendsBack, shouwuStage, shouwuStatusLabel, shouwuStatusStage } from './status.js';
-import { withoutCountryCode } from './place.js';
+import { withoutCountryCode, withoutRelayedPlace } from './place.js';
 
 export const PROVIDER = 'Shouwu International';
 // One parcel's reply is a few kilobytes.
@@ -159,7 +159,9 @@ function readParcel(entry: Record<string, unknown>, order: Record<string, unknow
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Shouwu returned an invalid scan');
     const clock = scanClock(row);
-    const description = text(row, 'traceDesc');
+    // FedEx's rows open with their town, state, country and postcode, a delivery's the recipient's: the place is the
+    // scan's own field, without the postcode.
+    const description = withoutRelayedPlace(text(row, 'traceDesc'));
     const location = place(row);
     // A row without wording or a time places nothing.
     if (!clock || !description) continue;

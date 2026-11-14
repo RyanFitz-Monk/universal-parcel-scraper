@@ -34,8 +34,9 @@ numbers `shouwu-1` offers.
   scans is a summary. Scans have no code; the status map stages the wording seen on them, such as
   the warehouse's intake and processing as accepted, and the shared rules stage the rest. On
   some lines Shouwu writes its own rows in Chinese, through the flight and the clearance abroad;
-  the delivering partner's "Your consignment has been picked up" after them is that partner
-  collecting the parcel from Shouwu's depot, in transit, not a handover from the sender.
+  the delivering partner's "Your consignment has been picked up", or FedEx's "Picked up", after
+  them is that partner collecting the parcel from Shouwu's depot, in transit, not a handover from
+  the sender.
 - A delivery after a row that sends the parcel back, as DHL's "Shipment sent directly from parcel
   center to business customer" after its "Shipment will be returned to origin", is the return
   delivered to the sender: returned, which refines Undelivered and Delivered alike.
@@ -70,6 +71,10 @@ numbers `shouwu-1` offers.
 - A scan's place is `traceLocation`, which the page leaves out and Shouwu's own back office shows
   before the wording. A country's code it opens with, as in `CN,` before a sort facility, is left
   out. Anything with a digit, as an address or a postcode has, is dropped.
+- FedEx's rows in the United States open their wording with the town, state, country and
+  postcode (`SAMPLE TOWN, CA, US, 00000, Arrived at FedEx location`), a delivery's the
+  recipient's. The wording is read without them, as the place is `traceLocation`, and a row
+  stored with them keeps its identity.
 - The destination is `order.countryCodeTwo`. The status text (`traceStatusDesc`) and the
   destination's name are not read.
 - The request carries the page's `x-locale`, `zh-cn` unless a visitor chose another language.

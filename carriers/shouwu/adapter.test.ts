@@ -412,6 +412,30 @@ describe('Shouwu International stored scans', () => {
       expect(policy?.matches?.(scan, other)).toBe(false);
     }
   });
+
+  it('reads FedEx\'s rows without the town, state, country and postcode before their wording, and lets the rows stored with them keep their identity', () => {
+    const relayed = changed((traces) => {
+      traces.splice(0, traces.length,
+        trace(1_776_009_600, 'SAMPLE TOWN, TX, US, 00000, Delivered', 'US,TX,SAMPLE TOWN'),
+        trace(1_775_923_200, 'SAMPLE HUB, CA, US, 00000-0000, Arrived at FedEx location', 'US,CA,SAMPLE HUB'),
+        trace(1_775_919_600, 'SAMPLE HUB, CA, US, 00000, Picked up', 'US,CA,SAMPLE HUB'),
+        trace(1_775_916_000, 'Delivered, Front Door, SAMPLE', 'US,CA,SAMPLE HUB'));
+    });
+    expect(parseShouwu(relayed, DELIVERED).events!.map((event) => [event.description, event.location, event.stage])).toEqual([
+      ['Delivered', 'TX,SAMPLE TOWN', 'delivered'],
+      ['Arrived at FedEx location', 'CA,SAMPLE HUB', 'in_transit'],
+      // FedEx collecting the parcel from Shouwu's depot abroad, after the clearance: no handover from the sender.
+      ['Picked up', 'CA,SAMPLE HUB', 'in_transit'],
+      ['Delivered, Front Door, SAMPLE', 'CA,SAMPLE HUB', 'delivered'],
+    ]);
+    const policy = sameInstantIdentityPolicy('shouwu', { supportsScanMatching: true });
+    const scan = { stage: 'in_transit', description: 'Arrived at FedEx location', location: 'CA,SAMPLE HUB', providerCode: '' };
+    expect(policy?.matches?.(scan, { ...scan, description: 'SAMPLE HUB, CA, US, 00000, Arrived at FedEx location' })).toBe(true);
+    for (const other of [{ ...scan, description: 'SAMPLE HUB, CA, US, 00000, Departed FedEx location' },
+      { ...scan, location: 'TX,SAMPLE TOWN', description: 'SAMPLE HUB, CA, US, 00000, Arrived at FedEx location' }]) {
+      expect(policy?.matches?.(scan, other)).toBe(false);
+    }
+  });
 });
 
 describe('Shouwu International numbers', () => {
@@ -430,6 +454,8 @@ describe('Shouwu International status vocabulary', () => {
     expect(shouwuStage('Mis routed')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     // Its partner collecting the parcel from the seller, right after the order data.
     expect(shouwuStage('Picked up by Shipping Partner')).toEqual({ stage: 'accepted', source: 'carrier_map' });
+    // Its ship's departure, after the export clearance.
+    expect(shouwuStage('The ship has already set sail')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     // DPD's failed round with a wrong address joined: the parcel went back to the depot, not to the sender.
     expect(statusMapAnswer({ carrier: 'shouwu', providerCode: null,
       description: 'Unfortunately we have not been able to deliver your parcel. Consignee address not correct.' })).toEqual({ kind: 'mapped', stage: 'failed_attempt' });
