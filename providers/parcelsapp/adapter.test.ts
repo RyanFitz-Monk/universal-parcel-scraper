@@ -3253,6 +3253,13 @@ describe('ParcelsApp result parsing', () => {
     // A location in another country takes that country's clock, and another step at 00:00 keeps its instant.
     expect(read([scan('2026-10-15T21:00:00Z', 'DEPARTED', 'Example Town, United Kingdom')])?.[0]?.time).toBe('2026-10-15T20:00:00.000Z');
     expect(read([scan('2026-10-16T00:00:00Z', 'DEPARTED')])?.[0]).toMatchObject({ time: '2026-10-15T22:00:00.000Z', local_time: undefined });
+    // A date sent with no time at all keeps its day, whatever the step, instead of failing the reply.
+    for (const carriers of [['BRT Bartolini (Parcel ID)'], ['Example Network']]) {
+      expect(read([scan('2026-10-16', 'ARRIVED AT DEPOT'), scan('2026-10-15T21:00:00Z', 'DEPARTED')], carriers, 'Europe/Rome')).toEqual([
+        { time: undefined, local_time: '2026-10-16', stage: 'in_transit' },
+        { time: '2026-10-15T19:00:00.000Z', local_time: undefined, stage: 'in_transit' },
+      ]);
+    }
     // The rendered page gives the same day.
     const page = parseParcelsAppHtml(rendered(carrierRow('16 Oct 2026', '00:00', 'FOR DELIVERY', 'BRT Bartolini (Parcel ID)')), number);
     expect(page.events?.[0]).toMatchObject({ local_time: '2026-10-16' });

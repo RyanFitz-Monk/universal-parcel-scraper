@@ -161,12 +161,16 @@ const UNLOCATED_LOCAL_CLOCKS = new Set(['ups', 'fedex']);
  * read on the clock of a placed scan near it, it came at a US midnight. A
  * shipping partner's step filed under UPS or USPS ("Departed Shipping Partner
  * Facility, EXAMPLE CITY, CA 12345") can come at 00:00 too, while UPS's own
- * lookup gives the same step its minute that morning.
+ * lookup gives the same step its minute that morning. A date ParcelsApp sends
+ * with no time at all ("2026-10-16"), as on BRT parcels while BRT's own
+ * tracker is down, keeps its day whatever the carrier.
  */
 const USPS_UNTIMED = /^(?:in\s+transit(?:\s+to\s+next\s+facility|,\s*arriving\s+(?:on\s+time|late))|pre-shipment\s+info\s+sent\s+to\s+usps(?:,\s*usps\s+awaiting\s+item)?)$/i;
 const SHIPPING_PARTNER_STEP = /\bshipping\s+partner\b/i;
+const BARE_DAY = /^\d{4}-\d{2}-\d{2}$/;
 function datedOnly(name: unknown, status: string, date: unknown): string | null {
   const wall = mislabeledWallTime(date);
+  if (wall && typeof date === 'string' && BARE_DAY.test(date.trim())) return wall.slice(0, 10);
   if (!wall || !/T00:00:00(?:\.0+)?$/.test(wall)) return null;
   const key = nameKey(name);
   const step = key === 'fedex' ? /^picked\s+up$/i : key === 'usps' ? USPS_UNTIMED
@@ -2135,7 +2139,7 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
   // and EQuick's of GOFO France's), and takes that offset. A wall-clock scan
   // with no place copies any other carrier's placed scan this way.
   const copyKey = ({ date, wording }: typeof entries[number], wall = mislabeledWallTime(date)) => {
-    const text = wall ? localEvent(date, wording)?.description : undefined;
+    const text = wall ? localEvent(wall, wording)?.description : undefined;
     return wall && text ? `${wall}|${text}` : '';
   };
   const offsetClocks = entries.filter((entry) => entry.offset).map((entry) => [
@@ -2361,7 +2365,7 @@ function parseHtml(html: string, trackingNumber: string, timezone: string | null
   const zoneSteps = rows.map(({ state }): ZoneStep => state.zone ? 'carrier' : state.fallback ? 'routing' : state.known ? 'known' : 'labeled');
   copiedNetworkZones(rows.map(({ name, description, state, scan }, index) => {
     const wall = mislabeledWallTime(state.date);
-    const text = wall ? localEvent(state.date, scan?.wording ?? description)?.description : undefined;
+    const text = wall ? localEvent(wall, scan?.wording ?? description)?.description : undefined;
     return { name, key: wall && text ? `${wall}|${text}` : '', zone: zones[index]!,
       fixed: Boolean(state.offset) || relaysFacilityClock(name), location: '' };
   })).forEach((zone, index) => {

@@ -193,6 +193,8 @@ step exists for future protocol changes.
   left out when a timed scan of another network shows the same stage that day, as DPD
   Germany's "Parcel out for delivery" does BRT's "FOR DELIVERY" on a parcel BRT hands to
   it: without a time, the copy has no place among that day's scans.
+- A date ParcelsApp sends with no time at all ("2026-10-16"), as it has on BRT parcels
+  while BRT's own tracker was down, keeps its day the same way, whatever the carrier.
 - A network whose every scan in the reply is at 00:00, at least three of them over two
   days or more, keeps their days in `local_time` the same way. ParcelsApp writes
   Shiprocket's scans so, while Shiprocket's own tracker gives each its minute. So does a
