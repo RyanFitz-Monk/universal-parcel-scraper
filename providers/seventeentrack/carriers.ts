@@ -64,6 +64,7 @@ export function seventeenTrackCarrierKeys(carrier: string | null | undefined): r
  */
 const LEG_CARRIERS: Readonly<Record<number, string>> = {
   191903: 'xuchuan-logistics', // XC
+  100777: 'der-kurier-sk', // Der Kurier, the German network's name
 };
 
 /** The name of 17TRACK's leg: the catalog's for a carrier its key stands for, else 17TRACK's own. */

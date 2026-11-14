@@ -44,6 +44,9 @@ and delivery towns; the adapter asks for the German site in English, which does 
 
 ## Limitations
 
+GO! Switzerland has its own site and national tracker, outside this service, so Switzerland is
+not among the countries.
+
 Shipments leave the tracker a few months after delivery, and it then gives the not-found
 notice. The page has no estimated delivery date, weight or service. GO!'s Android app
 (`com.generalovernight.express`) reads GO!'s web-service API on `ws.api.general-overnight.com`;

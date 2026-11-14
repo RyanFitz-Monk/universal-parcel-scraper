@@ -1292,6 +1292,17 @@ describe('17TRACK result parsing', () => {
     expect(JSON.stringify(result)).not.toContain('PRIVATE');
   });
 
+  it('names DER KURIER Slovakia’s leg by its key, 100777, as 17TRACK writes it with the German network’s name', () => {
+    const number = '12345678901';
+    const reply = (key: number) => ({ meta: { code: 200 }, shipments: [{ number, code: 200, shipment: {
+      latest_status: { status: 'InTransit' },
+      tracking: { providers: [{ provider: { key, name: 'Der Kurier', country: 'SK' }, events: [{
+        time_iso: '2026-10-17T09:00:00+02:00', time_utc: null, time_raw: { date: '2026-10-17', time: '09:00:00', timezone: null },
+        description: 'In transit', location: '', stage: null, sub_status: 'InTransit_Other' }] }] } } }] });
+    expect(parse17TrackResponse(reply(100777), number)).toMatchObject({ reported_carriers: ['DER KURIER Slovakia'], discovered_carrier: 'der-kurier-sk' });
+    expect(parse17TrackResponse(reply(190000), number)).toMatchObject({ reported_carriers: ['Der Kurier'], discovered_carrier: 'der-kurier' });
+  });
+
   it('names Xuchuan’s leg by its key, 191903, and not by the XC 17TRACK writes for it, which names no carrier alone', () => {
     const xuchuan = 'XC9999999980CN';
     const reply = (key: number) => ({ meta: { code: 200 }, shipments: [{ number: xuchuan, code: 200, shipment: {
