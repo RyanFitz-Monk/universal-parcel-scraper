@@ -96,6 +96,13 @@
       "note": "A US last-mile partner's departure from its facility, relayed without a code."
     },
     {
+      "wording": "Parcel received by Transit Facility.",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "note": "A US last-mile partner's receipt at a transit facility (code 70), relayed without a code."
+    },
+    {
       "wording": "Parcel received by local Facility.",
       "language": "en",
       "stage": "in_transit",

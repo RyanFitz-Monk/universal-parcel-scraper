@@ -588,6 +588,13 @@ describe('17TRACK result parsing', () => {
       row('2026-10-26', '06:33:00', 'Parcel arrived at branch', 'FR'), row('2026-11-09', '14:26:00', 'Item was released by Customs', 'MISSISSAUGA,ON'),
       row('2026-11-06', '09:09:22', 'Sorted for delivery', 'Zürich Briefzentrum')]), number).events?.map((event) => event.time))
       .toEqual(['2026-11-09T19:26:00.000Z', '2026-11-08T07:27:13.000Z', '2026-11-06T08:09:22.000Z', '2026-10-26T05:33:00.000Z']);
+    // A delivery with no place is the delivering post's, on the destination's clock: on Beijing's it came seven hours
+    // before the post's arrival at the delivery point. Where the destination keeps several clocks its wall clock stays.
+    expect(parse17TrackResponse(reply(190384, 'CH', [row('2026-11-09', '10:39:40', 'Delivered', ''),
+      row('2026-11-09', '10:10:26', 'Arrival at the collection/delivery point', 'Zürich Briefzentrum')]), number).events?.map((event) => event.time))
+      .toEqual(['2026-11-09T09:39:40.000Z', '2026-11-09T09:10:26.000Z']);
+    expect(parse17TrackResponse(reply(190384, 'US', [row('2026-11-09', '10:39:40', 'Delivered', '')]), number).events?.[0]?.local_time)
+      .toBe('2026-11-09T10:39:40');
     // Another feed keeps 17TRACK's reading.
     expect(parse17TrackResponse(reply(100999, 'US', [row('2026-11-08', '11:14:15', 'Arrived', 'Miami,FL')]), number).events?.[0]?.time)
       .toBe('2026-11-08T03:14:15.000Z');

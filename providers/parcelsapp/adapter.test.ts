@@ -1227,6 +1227,19 @@ describe('ParcelsApp result parsing', () => {
     ]);
   });
 
+  it("reads Anjun's scans in China on Beijing's clock and keeps the wall clock of those in Brazil", () => {
+    // Anjun's own tracker gives the Brazilian scan these digits, which the host dates on its state's
+    // clock; read on Beijing's, ParcelsApp's copy came twelve hours before Anjun's own row.
+    const result = parseParcelsAppResponse({ carriers: ['Anjun'], originCode: 'CN', destinationCode: 'BR', states: [
+      { date: '2026-11-14T13:26:19Z', status: 'O pacote chegou ao centro de trânsito', carrier: 0, location: 'EXAMPLE TOWN / MT' },
+      { date: '2026-11-01T03:05:00Z', status: 'Departed from airport', carrier: 0, location: 'Shenzhen' },
+    ] }, number, identity(), 'Asia/Shanghai');
+    expect(result.events!.map((scan) => [scan.description, scan.time ?? `local ${scan.local_time}`])).toEqual([
+      ['O pacote chegou ao centro de trânsito', 'local 2026-11-14T13:26:19.000'],
+      ['Departed from airport', '2026-10-31T19:05:00.000Z'],
+    ]);
+  });
+
   it("reads KTD's scans on their place's clock, so its copies of SwiftX's hub scans stay one with them", () => {
     // Live shape: KTD files SwiftX's scan at SwiftX's digits, and its flight's take-off and
     // landing on their own places' clocks. On China's clock the flight took 75 minutes.

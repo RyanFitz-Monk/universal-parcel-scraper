@@ -15,12 +15,14 @@ const observed: Record<string, { group: string; wording: string; mapped: Classif
   LL020: { group: 'ENTREGADO', wording: 'EL ENVÍO HA SIDO ENTREGADO A UN VECINO.', mapped: delivered },
   LC001: { group: 'EN REPARTO', wording: 'EL ENVÍO ESTÁ EN REPARTO.', mapped: { status: 'out_for_delivery', stage: 'out_for_delivery' } },
   LC003: { group: 'EN REPARTO', wording: 'EL ENVÍO ESTÁ EN REPARTO.', mapped: { status: 'out_for_delivery', stage: 'out_for_delivery' } },
+  LC860: { group: 'EN REPARTO', wording: 'EL ENVÍO ESTÁ EN REPARTO INTERNACIONAL.', mapped: { status: 'out_for_delivery', stage: 'out_for_delivery' } },
   LI300: { group: 'EN DEMORA', wording: 'EL ENVÍO HA SUFRIDO UN RETRASO Y ES POSIBLE QUE SE DEMORE LA ENTREGA. DISCULPA LAS MOLESTIAS.', mapped: null },
   LI582: { group: 'EN DEMORA', wording: 'EL ENVÍO HA SUFRIDO UN RETRASO PROVOCANDO UNA POSIBLE DEMORA EN LA ENTREGA. DISCULPA LAS MOLESTIAS.', mapped: null },
   LI557: { group: 'EN DEMORA', wording: 'EL ENVÍO HA SUFRIDO UN RETRASO PROVOCANDO UNA POSIBLE DEMORA EN LA ENTREGA. DISCULPA LAS MOLESTIAS.', mapped: null },
   LI587: { group: 'EN DEMORA', wording: 'EL ENVÍO HA SUFRIDO UN RETRASO PROVOCANDO UNA POSIBLE DEMORA EN LA ENTREGA. DISCULPA LAS MOLESTIAS', mapped: null },
   // Recorded after the day's delivery round, which starts again the next day.
   LI521: { group: 'EN INCIDENCIA', wording: 'EL ENVÍO NO SE HA ENTREGADO PORQUE LA DIRECCIÓN DE ENTREGA ESTÁ INCOMPLETA O ERRÓNEA.', mapped: { status: 'exception', stage: 'failed_attempt' } },
+  LI508: { group: 'EN INCIDENCIA', wording: 'EL ENVÍO NO SE HA ENTREGADO PORQUE LA DIRECCIÓN DE ENTREGA ES INCORRECTA.', mapped: { status: 'exception', stage: 'failed_attempt' } },
   LI523: { group: 'EN INCIDENCIA', wording: 'EL ENVÍO NO SE HA ENTREGADO POR AUSENCIA O CIERRE. SE PUEDE REPROGRAMAR UNA NUEVA ENTREGA.', mapped: { status: 'exception', stage: 'failed_attempt' } },
   // During the round to a SEUR Pickup point, the point could not take the parcel; SEUR names another point a minute later.
   LI503: { group: 'EN INCIDENCIA', wording: 'NO SE HA PODIDO DEPOSITAR EL ENVÍO EN EL PUNTO SOLICITADO', mapped: { status: 'exception', stage: 'failed_attempt' } },

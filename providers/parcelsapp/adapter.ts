@@ -1190,7 +1190,7 @@ function brandNetworkZones(payload: Record<string, unknown>, name: string, numbe
  * Argentine scans came eleven hours early. Its airport code takes the
  * airport's clock.
  */
-const PLACE_CLOCK_LINES = new Set(['js-express', 'ecms-express', 'ktd', '360lion']);
+const PLACE_CLOCK_LINES = new Set(['js-express', 'ecms-express', 'ktd', '360lion', 'anjun']);
 function placeClockLine(carrier: string, status: string, location: string, date: unknown): string | null {
   const china = carrier === 'js-express' ? jsExpressChinaClock(status, location) : undefined;
   if (china !== undefined) return china;

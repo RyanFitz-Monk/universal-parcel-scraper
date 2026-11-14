@@ -137,6 +137,24 @@
       "note": "In the EN TRÁNSITO group: received at the delivering facility, the round to come. SEUR writes it with \"EN ENVÍO\"."
     },
     {
+      "code": "LC860",
+      "wording": "EL ENVÍO ESTÁ EN REPARTO INTERNACIONAL.",
+      "language": "es",
+      "stage": "out_for_delivery",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "An international parcel's delivery round, after its receipt at the delivering facility."
+    },
+    {
+      "code": "LI508",
+      "wording": "EL ENVÍO NO SE HA ENTREGADO PORQUE LA DIRECCIÓN DE ENTREGA ES INCORRECTA.",
+      "language": "es",
+      "stage": "failed_attempt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The round's attempt failing on a wrong address; the parcel went back to the delivering facility."
+    },
+    {
       "code": "LD221",
       "wording": "EL ENVÍO HA LLEGADO A LA ADUANA DE DESTINO. INICIAMOS LOS TRÁMITES DE DESPACHO ADUANERO.",
       "language": "es",

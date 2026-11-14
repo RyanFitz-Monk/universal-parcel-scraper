@@ -180,7 +180,9 @@ carrier.
   USPS's departure from a Chicago distribution center came ten hours before USPS's own
   acceptance there. A row placed abroad is read on the clock of the town, state or province its
   place names, or of its country where that keeps one, and keeps its wall clock in a country of
-  several. Juxi's own rows, in China or with no place, keep 17TRACK's reading.
+  several. A delivery with no place is the delivering carrier's, on the destination's clock: on
+  Beijing's, Swiss Post's came seven hours before its arrival at the delivery point. Juxi's own
+  rows, in China or with no place, keep 17TRACK's reading.
 - DAI Post's leg (carrier key 100790) shows the tracker's clocks, each the scan's local time,
   and 17TRACK puts one offset on all of them: `+01:00` on a parcel from London, on its
   Singapore and Brisbane scans too. A scan is read as the

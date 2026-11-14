@@ -718,6 +718,10 @@ describe('classifyWording', () => {
       ['Handover To Last Mile', 'in_transit'], ['Received by Last Mile Provider', 'in_transit'],
       // A hand-over to the last-mile partner's regional centre, as 4PX relays iMile's.
       ['Shipment delivered to iMile RDC or lastmile vendor', 'in_transit'], ['Delivered to the last-mile vendor', 'in_transit'],
+      // A forwarder's warehouse steps and its collection from the destination airport.
+      ['Weighed at Warehouse', 'in_transit'], ['Consolidation Completed', 'in_transit'],
+      ['Picked up at destination airport', 'in_transit'],
+      ['The warehouse changed the last-mile vendor due to the weight difference, the new tracking number is GFUS0000000000', 'in_transit'],
       ['Package picked up', 'accepted'],
       ['Picked up by the carrier', 'accepted'],
       // Colis Privé's English as ParcelsApp relays it: its takeover, its depot with the driver's round to come, and a pickup point.

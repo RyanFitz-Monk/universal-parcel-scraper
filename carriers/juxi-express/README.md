@@ -25,7 +25,8 @@ place, are on that clock. The scans of the carrier that delivers abroad, which J
 each facility's wall clock, are read on their place's clock by the
 [17TRACK](../../providers/seventeentrack/README.md) and
 [ParcelsApp](../../providers/parcelsapp/README.md) adapters
-([clock.ts](clock.ts)).
+([clock.ts](clock.ts)). A delivery with no place is the delivering carrier's, since Juxi delivers
+nothing abroad, and takes the destination's clock where that country keeps one.
 
 ## Links
 

@@ -714,6 +714,12 @@ export function trackingLanguageStage(description: string): Stage | undefined {
     if (!/\b(?:yet|noch|encore|ancora|todavia|aun|ainda|jeszcze)\b/.test(text)) return 'exception';
     return COLLECTED_BY_CARRIER.test(text) ? 'registered' : new RegExp(RECIPIENT).test(text) ? 'ready_for_pickup' : undefined;
   }
+  // A forwarder or its last-mile partner collecting a flight's parcels from the destination airport: "Picked up at
+  // destination airport", as ParcelsApp relays Juxi Express's line after the flight landed.
+  if (/^picked up (?:at|from) (?:the )?destination airport$/.test(text)) return 'in_transit';
+  // A forwarder's warehouse weighing and consolidating a parcel it holds, or giving it another last-mile carrier for
+  // its weight, as ParcelsApp relays it: "Weighed at Warehouse", "Consolidation Completed".
+  if (/^weighed at (?:the )?warehouse\.?$|^consolidation completed\.?$|^the warehouse changed the last mile vendor\b/.test(text)) return 'in_transit';
   // A pickup still to come ("will be picked up") is not one either.
   if (/accepted|(?<!\b(?:be|being) )picked up|pick up was successful|^drop off$|pick ?up scan|prepared the package for return to ups or pickup by ups|handed (?:over )?to (?:dpd|gls)|package received at dhl|item booked|consignment was mailed|posted at (?:a |the )?(?:postal point|post office)|pris en charge|prise en charge|collecte.*(?:reussi|effectue)|recupere.*boite aux lettres|depose.*point postal|remis a (?:dpd|gls)|envoi.*depose|abholung.*erfolgreich|^(?:die sendung wurde )?erfolgreich abgeholt$|eingeliefert|an (?:dpd|gls) ubergeben|paket.*(?:angenommen|ubernommen)|ritiro.*(?:riuscito|effettuato)|pres[oa] in carico|affidat[oa] a (?:dpd|gls)|depositat.*punto postale|spedizione.*impostata/.test(text)) return 'accepted';
   // Taken in by the carrier: Royal Mail's "Item received by Royal Mail", a parcel shop's or a warehouse's
