@@ -201,6 +201,24 @@ describe('FedEx structured response', () => {
     expect(cutoff(lateDropOff, '', 'CA', 'Shipment cancelled')).toMatchObject({ status: 'exception', current_stage: 'exception' });
   });
 
+  it('reads a delivery date FedEx moved as the newest scan says, unless the details name a problem', () => {
+    /** A parcel whose newest scan is `newest`, flagged delayed under the page's "Delivery updated". */
+    const moved = (newest: readonly [string, string, string, string], details = '', code = 'DY') => {
+      const payload = groundEconomyFixture([newest, ['2026-06-04', 'OC', 'Shipment information sent to FedEx', '']], DELIVERED_NUMBER);
+      const shipment = (payload.output as { packages: Record<string, unknown>[] }).packages[0]!;
+      Object.assign(shipment, { keyStatusCD: code, keyStatus: 'Delivery updated', statusWithDetails: details });
+      return parseFedExTrackingResponse(payload, DELIVERED_NUMBER);
+    };
+    const local = moved(['2026-06-05', 'AR', 'At local FedEx facility', '']);
+    expect(local).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Delivery updated' });
+    expect(local.events?.[0]).toMatchObject({ provider_code: 'AR', stage: 'in_transit' });
+    expect(moved(['2026-06-05', 'OD', 'On FedEx vehicle for delivery', ''])).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery' });
+    // A scan of a problem stays one, and so does a delay the details name, or another code under the label.
+    expect(moved(['2026-06-05', 'DE', 'Delivery exception', 'Customer not available or business closed'])).toMatchObject({ status: 'exception', current_stage: 'failed_attempt' });
+    expect(moved(['2026-06-05', 'AR', 'At local FedEx facility', ''], 'Delay: weather')).toMatchObject({ status: 'exception', current_stage: 'exception' });
+    expect(moved(['2026-06-05', 'AR', 'At local FedEx facility', ''], '', 'SE')).toMatchObject({ status: 'exception', current_stage: 'exception' });
+  });
+
   it('orders scans by their instant, not by their local date, and an undated scan last', () => {
     const payload = inTransitFixture();
     const shipment = (payload.output as { packages: Record<string, unknown>[] }).packages[0]!;

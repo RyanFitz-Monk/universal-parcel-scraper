@@ -110,7 +110,9 @@ fallback')`.
 - `DY` (delayed) and `SE` (shipment exception) are exceptions, except while the newest scan is
   a pickup "received after FedEx cutoff", or a drop-off (`DO`) "received after final location
   pickup", and the wording names no problem. FedEx flags such a parcel, which leaves on the next
-  business day, with either code, so it reads as picked up.
+  business day, with either code, so it reads as picked up. Under the page's status "Delivery
+  updated", `DY` marks a delivery date FedEx moved and has no scan of its own: unless the details
+  name a problem, the newest scan's stage stands.
 - Hold at location: `HL` and `HP` (FedEx's "Ready for pickup (Hold at Location)") are
   `ready_for_pickup`; `RR` (delivery option requested) and `HA` (hold accepted) stay in
   transit. A hold for a problem, such as clearance or a wrong address, carries another code

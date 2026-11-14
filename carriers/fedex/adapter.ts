@@ -20,6 +20,7 @@ import {
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { runSteps, type StepContext } from '../../core/runner/index.js';
+import { STAGES } from '../../core/status/index.js';
 import { NOOP_RECORDER, outcomeOf, type StepRecorder } from '../../core/telemetry/index.js';
 import {
   calendarDay,
@@ -292,6 +293,9 @@ function holdLocation(nameValue: unknown, addressValue: unknown, residential: bo
 // business day. Only that newest scan explains the flag.
 const AFTER_CUTOFF = /\breceived after (?:fedex cutoff|final location pickup)\b/i;
 const AFTER_CUTOFF_CODES = new Set(['DY', 'SE']);
+// The page labels a delivery date FedEx moved "Delivery updated", under the delay code, with no
+// scan of its own: unless its details name a problem, the parcel goes on as its newest scan says.
+const DATE_MOVED = /^delivery updated$/i;
 
 // Ground Economy can hand a parcel to the U.S. Postal Service for the last leg.
 // FedEx then relays USPS's scans, the first naming the package number USPS
@@ -408,10 +412,14 @@ function shipmentResult(shipment: FedExShipment, number: string): CarrierResult 
   const keyStatusCD = shipment.statusCode.toUpperCase();
   const statusText = keyStatus || newest?.description || 'Tracking information received';
   const wording = fedexStage(`${keyStatus} ${statusDetails}`);
+  const namesProblem = Boolean(wording && statusForStage(wording) === 'exception');
   const afterCutoff = AFTER_CUTOFF_CODES.has(keyStatusCD) && newest?.stage === 'accepted'
-    && AFTER_CUTOFF.test(newest.description ?? '') && !(wording && statusForStage(wording) === 'exception');
-  const stage = afterCutoff ? 'accepted' : FEDEX_CODE_STAGE[keyStatusCD] ?? wording ?? undefined;
-  const status = afterCutoff ? 'in_transit' : fedexStatus(keyStatusCD, `${keyStatus} ${statusDetails}`, trimmed.length > 0);
+    && AFTER_CUTOFF.test(newest.description ?? '') && !namesProblem;
+  const dateMoved = keyStatusCD === 'DY' && DATE_MOVED.test(keyStatus) && !namesProblem;
+  // The newest scan's stage, where the package's flag says nothing more.
+  const standing = afterCutoff ? 'accepted' : dateMoved ? STAGES.find((value) => value === newest?.stage) : undefined;
+  const stage = standing ?? FEDEX_CODE_STAGE[keyStatusCD] ?? wording ?? undefined;
+  const status = standing ? statusForStage(standing) : fedexStatus(keyStatusCD, `${keyStatus} ${statusDetails}`, trimmed.length > 0);
   const delivered = stage === 'delivered';
   const estimate = delivered ? null : shipment.estimate;
   const pickupPoint = stage === 'ready_for_pickup' ? shipment.holdLocation : '';
