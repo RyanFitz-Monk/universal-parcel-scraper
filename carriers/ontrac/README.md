@@ -35,7 +35,8 @@ proof-of-delivery images. The hold code asking the recipient for address details
 instructions is an exception; a delivery stopped for missing address details is a failed
 attempt. NFRP, an order transferred to another carrier, is in transit although OnTrac's page
 calls it delivered: the reply does not name the carrier that delivers it. Delays and misroutes,
-which the code list files as exceptions, are in transit: the parcel moves on with a new date.
+which the code list files as exceptions with the status in transit, are in transit: the parcel
+moves on with a new date.
 
 ## Testing
 
