@@ -29,18 +29,51 @@
   "timezone": "Europe/Tallinn",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "hrx",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code",
+    "delivered_at",
+    "destination_country",
+    "offset_timestamps",
+    "weight"
+  ],
   "portal": {
     "url": "https://wop.hrx.eu/public/tracking/{trackingNumber}",
     "searchUrl": "https://www.hrx.lv/en/track-trace/",
     "canaryUrl": "https://www.hrx.lv/en/track-trace/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "destination",
+      "destination_country",
+      "weight",
+      "dimensions"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "delivered_at",
+      "destination_country",
+      "offset_timestamps",
+      "weight"
+    ],
+    "discarded": [
+      "destination",
+      "dimensions"
+    ],
+    "unavailable": [
+      "eta",
+      "service_name"
+    ]
   },
   "links": [
     {

@@ -29,6 +29,9 @@ export interface TrackingLinkCase {
 // independently of the generated link templates, so a template that drifts
 // fails here instead of passing against itself.
 export const trackingLinkCases: TrackingLinkCase[] = [
+  { carrier: 'hrx', number: 'TRK0000000199',
+    route: /^https:\/\/wop\.hrx\.eu\/public\/tracking\/TRK0000000199$/,
+    marker: /Tracking details for shipment|Tracking details not available/ },
   { carrier: 'western-bid', number: 'WBX000000000199',
     route: /^https:\/\/track\.westparcel\.com\/\?trackNumber=WBX000000000199$/,
     marker: /Enter your tracking number|We did not find a parcel with this number/ },

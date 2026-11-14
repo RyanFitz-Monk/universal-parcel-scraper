@@ -1,0 +1,20 @@
+{
+  "tracking_number": "TRK0000000001",
+  "delivery_location_country": "LV",
+  "delivery_location_city": "PRIVATE-CITY",
+  "delivery_location_address": "PRIVATE-ADDRESS 1",
+  "length_cm": "30.0",
+  "width_cm": "20.0",
+  "height_cm": "10.0",
+  "weight_kg": "1.25",
+  "tracking_events": [
+    { "event": "created", "location": null, "timestamp": "2026-03-02T09:15:00.000+02:00" },
+    { "event": "ready", "location": "", "timestamp": "2026-03-02T11:40:00.000+02:00" },
+    { "event": "hrx_picked_up", "location": "Synthetic Sender Depot", "timestamp": "2026-03-02T16:05:00.000+02:00" },
+    { "event": "hrx_terminal_in", "location": "Synthetic Terminal A", "timestamp": "2026-03-02T19:30:00.000+02:00" },
+    { "event": "hrx_terminal_out", "location": "Synthetic Terminal A", "timestamp": "2026-03-03T05:10:00.000+02:00" },
+    { "event": "delivered_to_partner", "location": "Synthetic Partner Hub", "timestamp": "2026-03-03T12:00:00.000+02:00" },
+    { "event": "moved", "location": " ", "timestamp": "2026-03-04T07:45:00.000+02:00" },
+    { "event": "notified", "location": "Synthetic Locker 12", "timestamp": "2026-03-04T10:20:00.000+02:00" }
+  ]
+}

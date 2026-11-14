@@ -27020,7 +27020,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Tallinn",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "hrx"
     },
     "canaryUrl": "https://www.hrx.lv/en/track-trace/",
     "trackingUrlTemplate": "https://wop.hrx.eu/public/tracking/{trackingNumber}",

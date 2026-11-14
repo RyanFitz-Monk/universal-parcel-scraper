@@ -1,4 +1,117 @@
 {
   "carrier": "hrx",
-  "entries": []
+  "entries": [
+    {
+      "code": "created",
+      "wording": "Order created",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "not_ready",
+      "wording": "Not ready",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "ready",
+      "wording": "Ready",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "hrx_picked_up",
+      "wording": "Picked up by HRX",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "hrx_terminal_in",
+      "wording": "In terminal HRX",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "hrx_terminal_out",
+      "wording": "Out of terminal",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "moved",
+      "wording": "On the move",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "delivered_to_partner",
+      "wording": "Distribution center",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "scanned_by_partner",
+      "wording": "Scanned in distribution center",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "notified",
+      "wording": "Ready for pickup - customer notified",
+      "stage": "ready_for_pickup",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "delivered",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "customer_returned",
+      "wording": "Parcel is being returned",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "returned",
+      "wording": "Returned",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "cancelled",
+      "wording": "Order is cancelled",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "writeoff",
+      "wording": "Parcel written off",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "other",
+      "wording": "Unparsed",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "An event HRX could not read from its partner; it says nothing about the parcel."
+    }
+  ]
 }
