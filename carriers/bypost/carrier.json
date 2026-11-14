@@ -16,18 +16,62 @@
   "timezone": "Europe/Oslo",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "bypost",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code",
+    "delivered_at",
+    "destination_country",
+    "offset_timestamps",
+    "weight",
+    "pickup_point"
+  ],
   "portal": {
     "url": "https://bypost.no/spor/{trackingNumber}/",
     "searchUrl": "https://bypost.no/spor/",
     "canaryUrl": "https://bypost.no/spor/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "origin",
+      "destination",
+      "destination_country",
+      "weight",
+      "dimensions",
+      "pickup_point",
+      "signatory",
+      "proof_of_delivery",
+      "postcodes"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "delivered_at",
+      "destination_country",
+      "offset_timestamps",
+      "weight",
+      "pickup_point"
+    ],
+    "discarded": [
+      "origin",
+      "destination",
+      "dimensions",
+      "signatory",
+      "proof_of_delivery",
+      "postcodes"
+    ],
+    "unavailable": [
+      "eta",
+      "service_name"
+    ]
   },
   "links": [
     {

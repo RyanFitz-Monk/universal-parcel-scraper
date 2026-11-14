@@ -89,6 +89,7 @@ const corpus = new Map(loadNumberCorpusFiles().map((file) => [file.carrier, file
 /** Synthetic numbers in the format of a carrier whose corpus has no public number yet. */
 const UNSAMPLED: Readonly<Record<string, readonly string[]>> = {
   hrx: ['TRK0000000001'],
+  bypost: ['BYP000000001'],
   'dpd-hu': ['16400000000001'],
   homexpress: ['TMS00000000000'],
   'mongol-infinity-post': ['1000000'],

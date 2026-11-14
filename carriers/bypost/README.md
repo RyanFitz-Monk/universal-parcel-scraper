@@ -1,27 +1,41 @@
 # Bypost
 
-Bypost parcels use enabled universal providers. There is no dedicated adapter.
+Tracks shipments of Bypost, Bypost AS of Skien: a Norwegian postal and courier company in
+southern Norway with its own vehicles and terminals, carrying letters, business parcels up to
+35 kg, courier deliveries and library transport.
 
-Bypost, Bypost AS of Skien, is a Norwegian postal and courier company in southern Norway with its
-own vehicles and terminals. It carries letters and mass mailings, business parcels up to 35 kg,
-courier deliveries and library transport.
+## How it works
+
+`direct` asks the service behind the tracking page, `GET https://bypost.no/api/track?number={number}`:
+no session, token or browser.
+
+The reply's fields and codes are taken from the tracking page's script, which holds the
+wording of each shipment status and event code. A shipment lists its packages, each with its
+own number and events. The shipment's number reads every package; a package's own number
+reads that package. A shipment of several packages counts as delivered once each package is.
+
+An event keeps its code as `provider_code` and the label the service gives it, else the page's
+wording for the code. A code the page does not list is kept without a stage, as are the four
+notices about a delivery date or a home delivery order.
+
+Event clocks are read only with the offset the service states. The town of a scan, the
+destination country, the weight and a single package's pickup point are read. Postcodes,
+dimensions, the signatory and the proof of delivery are left out, and the recipient's phone
+number, which opens the proof of delivery, is never sent.
 
 ## Numbers
 
-Its tracking page takes a tracking or parcel number of 6 to 40 letters and digits. Its example has
-17 digits starting 70, the shape of Bring's consignment numbers, and no public page shows a real
-number, so there is no rule.
+The tracking page takes a tracking or package number of 6 to 40 letters and digits. Its
+example has 17 digits starting 70, the shape of Bring's consignment numbers, and no public
+page shows a real number, so there is no rule. Bypost is asked when it is selected or when a
+tracking link names it.
 
-## Why there is no adapter
+## Limitations
 
-The tracking page reads the number from its address and asks Bypost's JSON service for the
-shipment's status timeline. With no public number to check its replies against, there is no
-adapter. The proof of delivery, a signature or photos, is behind the recipient's phone number.
+The service answers an unknown number and a shipment not collected yet the same way, with an
+empty shipment; both read as not found. A 404 is a moved service, not a missing parcel.
 
-## Leads
-
-The page calls `GET https://bypost.no/api/track?number={number}`, and adds the recipient's phone
-number as `recipient_phone` to show the proof of delivery.
+A registered shipment without events is a summary: its status and the page's sentence for it.
 
 ## Links
 
@@ -30,5 +44,4 @@ bypost.no `/spor/` link with a number names Bypost.
 
 ## Testing
 
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+`npm run test:carriers:live -- carriers/bypost`

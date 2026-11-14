@@ -1,4 +1,131 @@
 {
   "carrier": "bypost",
-  "entries": []
+  "entries": [
+    {
+      "code": "PREPARING",
+      "wording": "Klargjøres",
+      "stage": "registered",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "EXCEPTION",
+      "wording": "Avvik",
+      "stage": "exception",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Kansellert",
+      "stage": "exception",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "HANDED_IN",
+      "wording": "Levert til transportør",
+      "stage": "accepted",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "AT_TERMINAL",
+      "wording": "På terminal",
+      "stage": "in_transit",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_TRANSIT",
+      "wording": "Underveis",
+      "stage": "in_transit",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_INTERNATIONAL_TRANSIT",
+      "wording": "I internasjonal transport",
+      "stage": "in_transit",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_CUSTOMS",
+      "wording": "Til tollbehandling",
+      "stage": "customs",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "READY_FOR_PICKUP",
+      "wording": "Klar for henting",
+      "stage": "ready_for_pickup",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "OUT_FOR_DELIVERY",
+      "wording": "Ut for levering",
+      "stage": "out_for_delivery",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELIVERY_ATTEMPTED",
+      "wording": "Leveringsforsøk",
+      "stage": "failed_attempt",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Levert",
+      "stage": "delivered",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "RETURNING_TO_SENDER",
+      "wording": "På vei tilbake til avsender",
+      "stage": "returned",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "RETURNED_TO_SENDER",
+      "wording": "Returnert til avsender",
+      "stage": "returned",
+      "language": "nb",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELAYED",
+      "wording": "Mulig forsinkelse",
+      "language": "nb",
+      "confirmedBy": "bundle",
+      "note": "A notice about the delivery; the parcel stays where its last scan left it."
+    },
+    {
+      "code": "DELIVERY_RESCHEDULED",
+      "wording": "Leveringsdato endret",
+      "language": "nb",
+      "confirmedBy": "bundle",
+      "note": "A notice about the delivery; the parcel stays where its last scan left it."
+    },
+    {
+      "code": "HOME_DELIVERY_ORDERED",
+      "wording": "Hjemlevering bestilt",
+      "language": "nb",
+      "confirmedBy": "bundle",
+      "note": "A notice about the delivery; the parcel stays where its last scan left it."
+    },
+    {
+      "code": "HOME_DELIVERY_CANCELLED",
+      "wording": "Hjemlevering kansellert",
+      "language": "nb",
+      "confirmedBy": "bundle",
+      "note": "A notice about the delivery; the parcel stays where its last scan left it."
+    }
+  ]
 }

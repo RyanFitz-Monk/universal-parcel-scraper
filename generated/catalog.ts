@@ -11884,7 +11884,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Oslo",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "bypost"
     },
     "canaryUrl": "https://bypost.no/spor/",
     "trackingUrlTemplate": "https://bypost.no/spor/{trackingNumber}/",

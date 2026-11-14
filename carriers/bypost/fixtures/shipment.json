@@ -1,0 +1,30 @@
+{
+  "number": "BYP000000001",
+  "source": "bypost",
+  "status": "IN_TRANSIT",
+  "origin": { "postal_code": "PRIVATE-0001", "city": "PRIVATE-ORIGIN", "country_code": "NO", "approximate": true },
+  "destination": { "postal_code": "PRIVATE-0002", "city": "PRIVATE-DESTINATION", "country_code": "NO", "approximate": true },
+  "packages": [
+    {
+      "number": "BYPKOLLI0000001",
+      "status": "IN_TRANSIT",
+      "weight_kg": 2.4,
+      "dimensions": { "length_cm": 40, "width_cm": 30, "height_cm": 20 },
+      "detail": {
+        "status_description": "Pakken er <b>klar for henting</b>.",
+        "pickup_point_name": "Synthetic Hentested",
+        "pickup_point_url": "https://example.invalid/hentested",
+        "signature_name": "PRIVATE-SIGNATORY",
+        "signature_image_url": "/api/track/asset?PRIVATE",
+        "pod_image_urls": ["/api/track/asset?PRIVATE"],
+        "pod_available": false
+      },
+      "events": [
+        { "code": "HANDED_IN", "label": null, "description": null, "occurred_at": "2026-03-02T08:15:00+01:00", "postal_code": "PRIVATE-0003", "country_code": "NO", "city": "Synthetic By A", "signature": null },
+        { "code": "AT_TERMINAL", "label": "Ankommet terminal", "description": "", "occurred_at": "2026-03-02T17:40:00+01:00", "postal_code": "PRIVATE-0004", "country_code": "NO", "city": "Synthetic By B", "signature": null },
+        { "code": "DELAYED", "label": null, "description": "Ny leveringsdag <a href=\"https://example.invalid/info\">se her</a>", "occurred_at": "2026-03-03T06:00:00+01:00", "postal_code": null, "country_code": null, "city": null, "signature": null },
+        { "code": "READY_FOR_PICKUP", "label": null, "description": null, "occurred_at": "2026-03-03T11:05:00.000Z", "postal_code": "PRIVATE-0005", "country_code": "NO", "city": "Synthetic By C", "signature": "PRIVATE-SIGNATORY" }
+      ]
+    }
+  ]
+}

@@ -11880,7 +11880,7 @@
     "timezone": "Europe/Oslo",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "bypost"
     },
     "canaryUrl": "https://bypost.no/spor/",
     "trackingUrlTemplate": "https://bypost.no/spor/{trackingNumber}/",

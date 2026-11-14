@@ -79,6 +79,7 @@ import { adapter as bulgarianPosts } from '../carriers/bulgarian-posts/adapter.j
 import { adapter as burdDelivery } from '../carriers/burd-delivery/adapter.js';
 import { adapter as bussgods } from '../carriers/bussgods/adapter.js';
 import { adapter as byhd } from '../carriers/byhd/adapter.js';
+import { adapter as bypost } from '../carriers/bypost/adapter.js';
 import { adapter as cChezVous } from '../carriers/c-chez-vous/adapter.js';
 import { adapter as c3x } from '../carriers/c3x/adapter.js';
 import { adapter as cacesa } from '../carriers/cacesa/adapter.js';
@@ -846,6 +847,7 @@ export const REGISTRY: RegistryDefinition = {
     "burd-delivery": burdDelivery,
     "bussgods": bussgods,
     "byhd": byhd,
+    "bypost": bypost,
     "c-chez-vous": cChezVous,
     "c3x": c3x,
     "cacesa": cacesa,
@@ -1723,7 +1725,7 @@ export const REGISTRY: RegistryDefinition = {
     "burundi-post": "universal",
     "bussgods": "bussgods",
     "byhd": "byhd",
-    "bypost": "universal",
+    "bypost": "bypost",
     "c-chez-vous": "c-chez-vous",
     "c3x": "c3x",
     "c807-xpress": "universal",
