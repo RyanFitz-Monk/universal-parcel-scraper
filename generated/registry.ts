@@ -723,6 +723,7 @@ import { adapter as uzbekistanPost } from '../carriers/uzbekistan-post/adapter.j
 import { adapter as vXpress } from '../carriers/v-xpress/adapter.js';
 import { adapter as valmo } from '../carriers/valmo/adapter.js';
 import { adapter as vaspExpresso } from '../carriers/vasp-expresso/adapter.js';
+import { adapter as veho } from '../carriers/veho/adapter.js';
 import { adapter as veloces } from '../carriers/veloces/adapter.js';
 import { adapter as venipak } from '../carriers/venipak/adapter.js';
 import { adapter as viaCargo } from '../carriers/via-cargo/adapter.js';
@@ -1500,6 +1501,7 @@ export const REGISTRY: RegistryDefinition = {
     "v-xpress": vXpress,
     "valmo": valmo,
     "vasp-expresso": vaspExpresso,
+    "veho": veho,
     "veloces": veloces,
     "venipak": venipak,
     "via-cargo": viaCargo,
@@ -2988,7 +2990,7 @@ export const REGISTRY: RegistryDefinition = {
     "valueway": "universal",
     "vasp-expresso": "vasp-expresso",
     "vatican-post": "universal",
-    "veho": "universal",
+    "veho": "veho",
     "veloblitz": "universal",
     "veloces": "veloces",
     "velocity-express-in": "universal",

@@ -80,6 +80,7 @@ const BROWSER_ONLY: Readonly<Record<string, readonly (keyof Browsers)[]>> = {
   fedex: ['service'], 'magyar-posta': ['service'], 'mondial-relay': ['service'], 'old-dominion': ['chromium'], 'royal-mail': ['chromium'],
   loggi: ['service'], 'sf-express': ['service'], swiftx: ['service'], usps: ['service'], 'emirates-post': ['service'], '17TRACK': ['service'],
   'trendyol-express': ['service'],
+  veho: ['service'],
   yunexpress: ['service', 'chromium'], 'Postal Ninja': ['service', 'chromium'],
 };
 /** Numbers a carrier above tracks over plain HTTP, without its browser. */

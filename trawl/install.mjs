@@ -80,6 +80,12 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
         requestReplacement: handle.requestBrowserReplacement }) } : {
       solveCaptcha: (page, timeout) => solveRecaptchaV2(page, timeout, budget.signal) }) })
   }
+  // Veho attests the address: a request's proxy carries the helper's whole fresh context.
+  if (carrierRequest && vehoBrowserRequest(url, capture)) {
+    return await runVehoBrowser({ ...carrierRun, signal: budget.signal, ...(proxyUrl ? {
+      openContext: () => newWanbContext(handle.browser, { proxy: proxyUrl, onCreated: handle.noteTemporaryContext,
+        requestReplacement: handle.requestBrowserReplacement }) } : {}) })
+  }
   if (carrierPage && xpoBrowserNumber(url, capture)) {
     return await runXpoBrowser({ ...carrierRun, solveCaptcha: (page, timeout) => solveRecaptchaV2(page, timeout) })
   }
@@ -95,6 +101,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
     + 'import { solveRecaptchaV2 } from "../solvers/recaptcha"\n'
     + 'import { wanbBrowserNumber, runWanbBrowser } from "../utils/wanbexpress-browser.mjs"\n'
     + 'import { newFreshContext as newWanbContext } from "@trawl/browser"\n'
+    + 'import { vehoBrowserRequest, runVehoBrowser } from "../utils/veho-browser.mjs"\n'
     + 'import { xpoBrowserNumber, runXpoBrowser } from "../utils/xpo-browser.mjs"\n'
     + 'import { magyarPostaBrowserNumber, runMagyarPostaBrowser } from "../utils/magyar-posta-browser.mjs"\n'
     + 'import { magyarPostaAppRequest, runMagyarPostaApp } from "../utils/magyar-posta-app.mjs"\n'

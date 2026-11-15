@@ -1,4 +1,267 @@
 {
   "carrier": "veho",
-  "entries": []
+  "entries": [
+    {
+      "code": "created",
+      "wording": "Order info received",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "pickedUpFromClient",
+      "wording": "Departed the sender's facility",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The tracker's label names the sender: \"Departed {{clientDisplayName}} facility\"."
+    },
+    {
+      "code": "PackageLoadedOntoFirstMileTransit",
+      "wording": "Package is in transit to a Veho Facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "droppedOffAtVeho",
+      "wording": "Arrived at Veho facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "PackageArrivedAtFacility",
+      "wording": "At Veho facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "PackageDepartedFromFacility",
+      "wording": "In transit",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "pickedUpFromVeho",
+      "wording": "Out for delivery",
+      "stage": "out_for_delivery",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "delivered",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "Without a reason the driver met at the address, the package waits for the next route."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Driver could not locate delivery address.",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Driver could not access delivery address.",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Driver reported location closed when delivery was attempted",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Driver reported damage to the package",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Driver reported delivery was refused",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Unable to deliver to military base",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Unforeseen weather is impacting the speed of your delivery",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Driver reported issue during delivery",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageHadDeliveryIssue",
+      "wording": "Delivery issue: Unforeseen issue during delivery route",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The label, then the sentence the tracker shows for the issue's reason."
+    },
+    {
+      "code": "PackageDelayed",
+      "wording": "Package delayed",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "misdelivered",
+      "wording": "Issue with order",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "Delivered to a wrong location, or lost in transit."
+    },
+    {
+      "code": "discarded",
+      "wording": "Issue with order",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The package could not be delivered."
+    },
+    {
+      "code": "notReceivedFromClient",
+      "wording": "Issue with order",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "Veho did not receive the package from the sender when it expected to."
+    },
+    {
+      "code": "cancelled",
+      "wording": "Issue with order",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The order was cancelled."
+    },
+    {
+      "code": "returnedToClient",
+      "wording": "Issue with order",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The order is being returned to its sender after several attempts."
+    },
+    {
+      "code": "returned",
+      "wording": "Update received",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "The tracker gives this operation no label of its own."
+    },
+    {
+      "code": "returnedToVeho",
+      "wording": "Returned to Veho facility",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "Back at the facility after a route that did not deliver it."
+    },
+    {
+      "code": "wrongFacilityByClient",
+      "wording": "Transit error",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "wrongFacilityByVeho",
+      "wording": "Transit error",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "source"
+    },
+    {
+      "code": "outForPickup",
+      "wording": "Update received",
+      "stage": null,
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "A collection from the recipient, which the guest tracker lists without a label of its own."
+    },
+    {
+      "code": "pickedUpFromConsumer",
+      "wording": "Update received",
+      "stage": null,
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "A collection from the recipient, which the guest tracker lists without a label of its own."
+    },
+    {
+      "code": "pickupSkipped",
+      "wording": "Update received",
+      "stage": null,
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "A collection from the recipient, which the guest tracker lists without a label of its own."
+    },
+    {
+      "code": "pickupFailed",
+      "wording": "Update received",
+      "stage": null,
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "A collection from the recipient, which the guest tracker lists without a label of its own."
+    },
+    {
+      "code": "pickupDroppedOffAtVeho",
+      "wording": "Update received",
+      "stage": null,
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "A collection from the recipient, which the guest tracker lists without a label of its own."
+    },
+    {
+      "code": "pickupTransferredToExternalCarrier",
+      "wording": "Update received",
+      "stage": null,
+      "language": "en",
+      "confirmedBy": "source",
+      "note": "A collection from the recipient, which the guest tracker lists without a label of its own."
+    }
+  ]
 }

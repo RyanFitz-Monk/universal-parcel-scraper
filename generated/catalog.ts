@@ -52978,7 +52978,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/New_York",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "veho",
+      "browserRecognitionRank": 47,
+      "browser": true
     },
     "canaryUrl": "https://track.shipveho.com/",
     "trackingUrlTemplate": "https://track.shipveho.com/#/trackingid/{trackingNumber}",

@@ -17,18 +17,57 @@
   "timezone": "America/New_York",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "veho",
+    "steps": [
+      "direct",
+      "trawl"
+    ],
+    "browser": true,
+    "browserRecognition": {
+      "rank": 47
+    }
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code",
+    "delivered_at",
+    "eta",
+    "eta_window",
+    "offset_timestamps",
+    "sender_name",
+    "canonical_tracking_number"
+  ],
   "portal": {
     "url": "https://track.shipveho.com/#/trackingid/{trackingNumber}",
     "searchUrl": "https://track.shipveho.com/",
     "canaryUrl": "https://track.shipveho.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "eta_window",
+      "delivered_at",
+      "sender_name",
+      "destination"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "eta_window",
+      "delivered_at",
+      "sender_name"
+    ],
+    "discarded": [
+      "destination"
+    ],
+    "unavailable": [
+      "weight",
+      "service_name"
+    ]
   },
   "links": [
     {

@@ -64,6 +64,9 @@ its reason, browser slot, lookups, age and memory share.
 Australia Post, DHL Express, SF Express, WanbExpress, XPO, Asendia, Correios Brazil, DHL Poland, Magyar Posta and ZTO use fresh contexts.
 A request's proxy carries WanbExpress's whole fresh context; through it the helper runs only
 the page's passive check and leaves a visible checkbox unsolved.
+Veho's helper opens the tracker's home page, with no tracking number, in a fresh context and
+returns only the guest attestation the page obtains: the token and its lifetime, or the
+refusal's status. A request's proxy carries that whole context.
 SF Express solves GeeTest's slider locally and asks for at most two other puzzles when it
 cannot read one.
 ZTO solves Dingxiang's slider and ordered-character challenge locally, with at most two

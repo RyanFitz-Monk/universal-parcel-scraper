@@ -1,0 +1,87 @@
+{
+  "data": {
+    "order": {
+      "clientDisplayName": "Synthetic Outfitters",
+      "timeZone": "America/New_York",
+      "deliveryDateInfo": {
+        "date": "2026-03-06",
+        "dateType": "Expected"
+      },
+      "packages": [
+        {
+          "trackingId": "VH0SYNTHETIC01",
+          "timeZone": "America/New_York",
+          "deliveryTimeWindow": {
+            "startsAt": null,
+            "endsAt": null
+          },
+          "eventLog": [
+            {
+              "operation": "delivered",
+              "timestamp": "2026-03-05T18:18:55.073Z",
+              "message": null,
+              "facility": null
+            },
+            {
+              "operation": "pickedUpFromVeho",
+              "timestamp": "2026-03-05T14:28:59.148Z",
+              "message": null,
+              "facility": null
+            },
+            {
+              "operation": "PackageHadDeliveryIssue",
+              "timestamp": "2026-03-04T22:10:00.000Z",
+              "message": "AccessIssues - FrontGate",
+              "facility": null
+            },
+            {
+              "operation": "pickedUpFromVeho",
+              "timestamp": "2026-03-04T13:02:11.000Z",
+              "message": null,
+              "facility": null
+            },
+            {
+              "operation": "PackageArrivedAtFacility",
+              "timestamp": "2026-03-04T06:00:00.000Z",
+              "message": null,
+              "facility": {
+                "city": "Synthville",
+                "state": "GA"
+              }
+            },
+            {
+              "operation": "PackageDepartedFromFacility",
+              "timestamp": "2026-03-03T23:15:00.000Z",
+              "message": null,
+              "facility": {
+                "city": "Sampleton",
+                "state": "TN"
+              }
+            },
+            {
+              "operation": "droppedOffAtVeho",
+              "timestamp": "2026-03-03T05:40:48.876Z",
+              "message": null,
+              "facility": {
+                "city": "Sampleton",
+                "state": "TN"
+              }
+            },
+            {
+              "operation": "pickedUpFromClient",
+              "timestamp": "2026-03-02T21:00:00.000Z",
+              "message": null,
+              "facility": null
+            },
+            {
+              "operation": "created",
+              "timestamp": "2026-03-01T19:14:03.367Z",
+              "message": null,
+              "facility": null
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
