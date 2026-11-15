@@ -2347,7 +2347,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "checksum": "s10"
       },
       {
-        "pattern": "^(?!\\d{16}F\\d{4}$)(?:32\\d{11}[A-F0-9]{8}|(?=[A-F0-9]*[A-F])[A-F0-9]{2}\\d{7}[A-F0-9]{12})$",
+        "pattern": "^(?!(?!32)\\d{16}F\\d{4}$)(?:32\\d{11}[A-F0-9]{8}|(?=[A-F0-9]*[A-F])[A-F0-9]{2}\\d{7}[A-F0-9]{12})$",
         "confidence": "low"
       },
       {

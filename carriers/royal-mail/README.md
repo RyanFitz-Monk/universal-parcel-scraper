@@ -163,7 +163,9 @@ an `http://` or `socks5://` proxy to local browser launches. With
 `ROYAL_MAIL_BROWSER_WS_ENDPOINT`, the remote worker controls its own network route;
 this proxy setting does not change it. Domestic 2D references have 21 characters (two hexadecimal, seven digits,
 twelve hexadecimal) or 16 hexadecimal ones. They remain low-confidence candidates because their
-shape can overlap unrelated identifiers. Printed spaces and hyphens are stripped
+shape can overlap unrelated identifiers. Sixteen digits, an F and four digits are FAN Courier
+International's, but for those starting 32, the common prefix, which detection offers Royal Mail
+first and FAN Courier International second. Printed spaces and hyphens are stripped
 before submission. Other barcode formats and postcode-gated delivery options are
 outside this adapter's scope.
 

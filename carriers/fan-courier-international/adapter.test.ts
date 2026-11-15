@@ -168,6 +168,23 @@ describe('FAN Courier International numbers', () => {
     expect(isRoyalMailDomesticReference('1000000000000001FA001')).toBe(true);
   });
 
+  it('offers Royal Mail first, and FAN Courier International too, for the shape starting 32', async () => {
+    // Synthetic: a Royal Mail 32 reference whose hexadecimal tail is three digits, an F and four digits.
+    const shared = '3200192540002217F4500';
+    const detected = detectCarrierMatch(shared);
+    expect(detected).toMatchObject({ carrier: 'unknown', confidence: 'low' });
+    expect(detected.candidates[0]).toBe('royal-mail');
+    expect(detected.candidates).toContain('fan-courier-international');
+    expect(isRoyalMailDomesticReference(shared)).toBe(true);
+    // One hexadecimal character changed, it is Royal Mail's alone.
+    expect(detectCarrierMatch('3200192540002217F45A0').candidates).toEqual(['royal-mail']);
+    // FAN Courier International's adapter keeps asking about the shape.
+    const notFound = { ...fixture('not-found'), message: `Shipment number was not found: ${shared}` };
+    const fetcher = vi.fn<typeof fetch>(async () => reply(notFound, 404));
+    await expect(new FanCourierInternationalTracker({ fetcher }).fetch(shared)).rejects.toMatchObject({ kind: 'not_found' });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
   it('turns Postal Ninja\'s FAN Courier into FAN Courier International for its numbers only', () => {
     expect(universalCarrierHints(['FAN Courier'], NUMBER)).toEqual({ reported_carriers: ['FAN Courier'], discovered_carrier: 'fan-courier-international' });
     expect(universalCarrierHints(['FAN Courier'], '4000000000010')).toMatchObject({ discovered_carrier: 'fan-courier' });

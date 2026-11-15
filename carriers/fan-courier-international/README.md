@@ -24,7 +24,9 @@ Romanian network's AWB tracker. The adapter asks the status API behind that trac
   no code or one the map does not know, the newest event past the opening statuses leads: a hub
   arrival or a received code the map reads.
 - Postal Ninja names these shipments "FAN Courier"; for a number of this shape that name points
-  to this carrier. Royal Mail's 21-character 2D references leave the shape out.
+  to this carrier. Royal Mail's 21-character 2D references leave the shape out, but for numbers
+  starting 32, Royal Mail's common prefix, which detection offers Royal Mail first and this
+  carrier second.
 - A provider also reports the service as "FAN Courier (EU)", which is kept as an alias.
 
 ## Limitations

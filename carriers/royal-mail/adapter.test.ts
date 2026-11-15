@@ -935,6 +935,9 @@ describe('Royal Mail lookup steps', () => {
     expect(royalMailTrackingUrl('0000ABCDEF000000')).toContain('/0000ABCDEF000000');
     expect(() => royalMailTrackingUrl('120000000000000000000')).toThrow('domestic 2D reference');
     expect(() => royalMailTrackingUrl('4C000A0000000ABCDEF12')).toThrow('domestic 2D reference');
+    // FAN Courier International's shape is Royal Mail's too when it starts 32.
+    expect(royalMailTrackingUrl('3200192540002217F4500')).toContain('/3200192540002217F4500');
+    expect(() => royalMailTrackingUrl('1000000000000001F0001')).toThrow('domestic 2D reference');
   });
 
   it('accepts a Parcelforce parcel number, which the same tracker answers, but not its consignment number', () => {
