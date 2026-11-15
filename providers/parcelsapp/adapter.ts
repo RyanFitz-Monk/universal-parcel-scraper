@@ -29,6 +29,7 @@ import {
 } from '../../core/time/index.js';
 import type { TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
+import { carrierHomeZone } from '../../places/clocks.js';
 import { airportTimeZone, splitRegionTownZone } from '../../places/index.js';
 import { countryName, militaryPostOffice } from '../../places/trackingLocation.js';
 import { countryZones, hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
@@ -223,23 +224,46 @@ function twelveHourDial(name: unknown): boolean {
  * our network" at 09:18:52 came as "Shipment picked up" at 09:18, and its 22:21:11 clearance
  * awaiting departure as "Package shipped" at 10:21. The dial keeps the scan's day, its minute and
  * its hour on a twelve-hour clock; a relay at another hour or on another day is a scan of its own.
+ * The scan is compared on its own wall clock: its digits where a zone places them or nothing
+ * reads them as an instant, else its instant at the offset it states or on its carrier's home
+ * clock (bpost's 13:05 UTC is 2:05 on the dial in Brussels).
  * Read by its day alone, the copy would stand beside the scan, so it is not read.
  */
-function twelveHourCopies<T extends { name: unknown; date: unknown; raw: Record<string, unknown> }>(entries: readonly T[]): Set<T> {
+function twelveHourCopies<T extends { name: unknown; date: unknown; raw: Record<string, unknown>; offset: string | null; location: string;
+  nationwide: boolean; wallOnly: boolean }>(entries: readonly T[], zones: readonly { zone: string | null }[]): Set<T> {
   const at = (date: unknown) => {
     const wall = mislabeledWallTime(date);
     const read = wall ? DateTime.fromISO(wall, { zone: 'utc' }) : null;
     return read?.isValid ? read : null;
   };
+  const ownClock = (own: T, index: number) => {
+    const digits = at(own.date);
+    if (!digits || zones[index]?.zone || unplacedLocalClock(own) || own.wallOnly) return digits;
+    if (own.offset) {
+      const stated = DateTime.fromISO(String(own.date).trim(), { setZone: true });
+      return stated.isValid ? stated : null;
+    }
+    const carrier = typeof own.name === 'string' ? carrierIdFromName(own.name) : undefined;
+    const home = carrier ? carrierHomeZone(carrier) : null;
+    return home ? digits.setZone(home) : digits;
+  };
   return new Set(entries.filter((copy) => {
     const relay = twelveHourDial(copy.name) && typeof copy.name === 'string'
       && carrierScan(carrierIdFromName(copy.name), relayedLabel(copy.raw.status)) !== undefined;
     const dial = relay ? at(copy.date) : null;
-    return dial !== null && entries.some((own) => {
-      const scan = twelveHourDial(own.name) ? null : at(own.date);
-      return scan !== null && scan.hasSame(dial, 'day') && scan.minute === dial.minute && scan.hour % 12 === dial.hour % 12;
+    return dial !== null && entries.some((own, index) => {
+      const scan = twelveHourDial(own.name) ? null : ownClock(own, index);
+      return scan !== null && scan.toISODate() === dial.toISODate() && scan.minute === dial.minute && scan.hour % 12 === dial.hour % 12;
     });
   }));
+}
+
+/**
+ * Whether a scan no zone places keeps its wall clock rather than ParcelsApp's label: a facility
+ * clock's, or a UPS or FedEx scan with no location or placed only in the US or Canada.
+ */
+function unplacedLocalClock(entry: { name: unknown; location: string; nationwide: boolean }): boolean {
+  return relaysFacilityClock(entry.name) || ((!entry.location || entry.nationwide) && UNLOCATED_LOCAL_CLOCKS.has(nameKey(entry.name)));
 }
 
 /**
@@ -2235,7 +2259,7 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
   const relayed = relayCopies(entries);
   const dayOnly = dayOnlyNetworks(entries);
   const midnight = midnightCopies(entries, dayOnly);
-  const dialed = twelveHourCopies(entries);
+  const dialed = twelveHourCopies(entries, zones);
   const steps = new Set<CarrierEvent>();
   const latest = new LatestScan(SOURCE);
   for (const [index, entry] of entries.entries()) {
@@ -2254,7 +2278,7 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
     // its wall clock as its local time. Any other
     // scan with no zone keeps ParcelsApp's label.
     const facility = !zone && relaysFacilityClock(name);
-    const unplaced = facility || (!zone && (!entry.location || entry.nationwide) && UNLOCATED_LOCAL_CLOCKS.has(nameKey(name)));
+    const unplaced = !zone && unplacedLocalClock(entry);
     const localOnly = !zone && !unplaced && entry.wallOnly;
     // A step or network its carrier dates by the day alone keeps the day (`datedOnly`, `dayOnlyNetworks`).
     const step = datedOnly(name, relayedLabel(raw.status), date);

@@ -197,6 +197,14 @@ describe('ParcelsApp YTO scans', () => {
       ['Cleared and awaiting international departure', '2026-11-03T11:21:11.000Z'],
       ['Shipment received for export', '2026-11-03'],
     ]);
+    // A sending post read as an instant is compared on its home clock: bpost's 13:05 UTC is 14:05 in Brussels, 2:05 on the dial.
+    const fromBelgium = (relayDate: string) => parseParcelsAppResponse({ carriers: ['bpost', 'Morocco Post'], destinationCode: 'MA', states: [
+      { date: relayDate, status: 'Package shipped', location: 'Example, Belgium', carrier: 1 },
+      { date: '2026-11-03T13:05:00Z', status: 'Item dispatched abroad', location: 'EXAMPLE', carrier: 0 },
+    ] }, number, identity()).events?.map((event) => [event.description, event.time ?? event.local_time]);
+    expect(fromBelgium('2026-11-03T02:05:00Z')).toEqual([['Item dispatched abroad', '2026-11-03T13:05:00.000Z']]);
+    // Its UTC hour on the dial is not its copy.
+    expect(fromBelgium('2026-11-03T01:05:00Z')).toHaveLength(2);
   });
 
   it("reads Croatia Post's relayed labels by its own map and a post abroad on that office's clock", () => {
