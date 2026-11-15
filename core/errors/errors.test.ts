@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BudgetExceededError, CarrierError, ChallengeError, IndeterminateError, InputRequiredError, InvalidInputError, MaintenanceError,
   NoHistoryError, NotFoundError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError, UpstreamNetworkError,
-  carrierErrorKind, errorTypeOf, retryAfterMsOf, writtenAheadClocks,
+  carrierErrorKind, errorTypeOf, plannedEventsOf, retryAfterMsOf, writtenAheadClocks,
 } from './index.js';
 import { failureHint, failureKind } from './hint.js';
 
@@ -50,6 +50,10 @@ describe('carrier error taxonomy', () => {
     expect(writtenAheadClocks(new Error('outer', { cause: ahead }))).toEqual(['2026-03-02T10:00:00+08:00']);
     expect(writtenAheadClocks(new NoHistoryError('pengyou'))).toEqual([]);
     expect(new NoHistoryError('pengyou', undefined, { writtenAhead: [] }).writtenAhead).toBeUndefined();
+    const step = { time: '2026-03-02T10:00:00+08:00', description: 'Departed from facility' };
+    expect(plannedEventsOf(new Error('outer', { cause: new NoHistoryError('pengyou', undefined, { plannedEvents: [step] }) }))).toEqual([step]);
+    expect(plannedEventsOf(ahead)).toEqual([]);
+    expect(new NoHistoryError('pengyou', undefined, { plannedEvents: [] }).plannedEvents).toBeUndefined();
   });
 
   it('labels failures outside the taxonomy by what a retry could change', () => {

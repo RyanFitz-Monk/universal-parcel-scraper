@@ -58,9 +58,21 @@ describe('Pengyou tracking adapter', () => {
     const later = parsePengyouTrack(fixture('track'), NUMBER, Date.parse('2026-03-12T04:00:00Z'))!;
     expect(later.events).toHaveLength(2);
     expect(later.current_stage).toBe('in_transit');
-    const text = JSON.stringify(later);
+    const { planned_events: planned, ...scanned } = later;
+    const text = JSON.stringify(scanned);
     for (const value of ['Delivered', 'Out for delivery', 'Departed from facility', 'Synthetic Recipient', 'Synthetic Shop', 'PY-TEST-001', 'PYTEST0000000000001']) {
       expect(text, value).not.toContain(value);
+    }
+    // They are listed apart, as steps at the clocks held back, the earliest first, and still name no party.
+    expect(planned).toEqual([
+      { time: '2026-03-03T09:36:02+08:00', description: 'Departed from facility', location: 'SHENZHEN', stage: 'in_transit' },
+      { time: '2026-03-05T08:57:03+08:00', description: 'Arrived at destination country', stage: 'in_transit' },
+      { time: '2026-03-07T08:18:04+08:00', description: 'Out for delivery', stage: 'out_for_delivery' },
+      { time: '2026-03-09T07:39:05+08:00', description: 'Delivered', stage: 'delivered' },
+    ]);
+    expect(planned!.map(({ time }) => time)).toEqual([...later.written_ahead!].sort());
+    for (const value of ['Synthetic Recipient', 'Synthetic Shop', 'PY-TEST-001', 'PYTEST0000000000001']) {
+      expect(JSON.stringify(planned), value).not.toContain(value);
     }
   });
 
@@ -95,7 +107,16 @@ describe('Pengyou tracking adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Shipment arrived at facility' });
     expect(result.events).toHaveLength(2);
     expect(result.written_ahead).toContain('2026-03-09T07:39:05+08:00');
-    expect(JSON.stringify(result)).not.toContain('Sample Town');
+    // The script's delivery is a step, never a scan.
+    expect(JSON.stringify(result.events)).not.toContain('Sample Town');
+    expect(result.planned_events!.at(-1)).toMatchObject({ time: '2026-03-09T07:39:05+08:00', stage: 'delivered' });
+  });
+  it('lists the steps of an order none of whose rows is due yet on its error', () => {
+    let error: unknown;
+    try { parsePengyouTrack(fixture('track'), NUMBER, Date.parse('2026-03-01T02:00:00Z')); } catch (caught) { error = caught; }
+    expect(error).toMatchObject({ name: 'NoHistoryError', reason: 'written_ahead' });
+    const { writtenAhead, plannedEvents } = error as { writtenAhead: string[]; plannedEvents: { time: string }[] };
+    expect(plannedEvents.map(({ time }) => time)).toEqual([...writtenAhead].sort());
   });
 
   it('reads a delivery’s town as its place, on Beijing’s clock, without the postal code', () => {

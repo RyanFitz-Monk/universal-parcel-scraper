@@ -3,6 +3,7 @@ import { detectCarrierMatch, normalizeTrackingNumber, uspsPackageIdentifier } fr
 import { USPS_ROUTING_BARCODE } from '../../core/detection/usps.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { plannedEvent, plannedEvents } from '../../core/result/planned.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, firstOccurrence } from '../../core/time/index.js';
 import { cleanScalar } from '../../core/transport/index.js';
@@ -160,11 +161,13 @@ export function parseDealerSend(payload: unknown, raw: string, readAt = Date.now
     return true;
   });
   const ahead = scans.filter((scan) => scan.ahead);
+  // The rows dated after the read, as steps at their wall clocks.
+  const planned = plannedEvents(ahead.map(({ event }) => plannedEvent(event)));
   const events = scans.filter((scan) => !scan.ahead)
     .sort((a, b) => (a.local < b.local ? 1 : a.local > b.local ? -1 : a.index - b.index)).map(({ event }) => event);
   if (!events.length) {
     throw new NoHistoryError(PROVIDER, 'DealerSend has no scans for the parcel yet', ahead.length
-      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ local }) => local))] } : { reason: 'listed' });
+      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ local }) => local))], plannedEvents: planned } : { reason: 'listed' });
   }
 
   const newest = events[0]!;
@@ -186,5 +189,6 @@ export function parseDealerSend(payload: unknown, raw: string, readAt = Date.now
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
     ...(ahead.length ? { written_ahead: [...new Set(ahead.map(({ local }) => local))] } : {}),
+    ...(planned.length ? { planned_events: planned } : {}),
   };
 }

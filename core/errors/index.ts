@@ -14,6 +14,7 @@
  */
 
 import type { UpstreamHttpDiagnostics } from '../transport/upstreamHttpDiagnostics.js';
+import type { PlannedEvent } from '../result/planned.js';
 import { redactedReply, redactedRequest } from './redaction.js';
 
 export type { UpstreamHttpDiagnostics };
@@ -97,6 +98,8 @@ export class NoHistoryError extends IndeterminateError {
    * or a wall clock when the carrier does not say in which zone.
    */
   readonly writtenAhead?: readonly string[];
+  /** The steps the carrier wrote before they happen, as a result's `planned_events`. */
+  readonly plannedEvents?: readonly PlannedEvent[];
   /**
    * The carrier the record hands the parcel to, by catalog id, and the number that carrier tracks it
    * under, as a result's `delivery_carrier` and `delivery_tracking_number`: a record can name the
@@ -109,11 +112,13 @@ export class NoHistoryError extends IndeterminateError {
   constructor(
     provider: string,
     message = `${provider} has no history for the shipment`,
-    options?: CarrierErrorOptions & { writtenAhead?: readonly string[]; deliveryCarrier?: string; deliveryTrackingNumber?: string },
+    options?: CarrierErrorOptions & { writtenAhead?: readonly string[]; plannedEvents?: readonly PlannedEvent[]; deliveryCarrier?: string;
+      deliveryTrackingNumber?: string },
   ) {
     super(provider, message, options);
     this.name = 'NoHistoryError';
     if (options?.writtenAhead?.length) this.writtenAhead = [...options.writtenAhead];
+    if (options?.plannedEvents?.length) this.plannedEvents = [...options.plannedEvents];
     if (options?.deliveryCarrier) this.deliveryCarrier = options.deliveryCarrier;
     if (options?.deliveryTrackingNumber) this.deliveryTrackingNumber = options.deliveryTrackingNumber;
   }
@@ -292,6 +297,18 @@ export function writtenAheadClocks(error: unknown): readonly string[] {
   for (let depth = 0; depth < MAX_CAUSE_DEPTH && current instanceof Error && !seen.has(current); depth += 1) {
     seen.add(current);
     if (current instanceof NoHistoryError && current.writtenAhead) return current.writtenAhead;
+    current = current.cause;
+  }
+  return [];
+}
+
+/** The steps a carrier wrote before they happen, when any error in the chain lists some. */
+export function plannedEventsOf(error: unknown): readonly PlannedEvent[] {
+  const seen = new Set<unknown>();
+  let current = error;
+  for (let depth = 0; depth < MAX_CAUSE_DEPTH && current instanceof Error && !seen.has(current); depth += 1) {
+    seen.add(current);
+    if (current instanceof NoHistoryError && current.plannedEvents) return current.plannedEvents;
     current = current.cause;
   }
   return [];

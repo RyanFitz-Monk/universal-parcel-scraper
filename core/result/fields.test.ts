@@ -102,6 +102,27 @@ describe('rows written ahead', () => {
       expect(normalizeCarrierResult({ written_ahead: value, events: [] })).not.toHaveProperty('written_ahead');
     }
   });
+
+  it('keeps the steps a carrier wrote before they happen, each once and the earliest first, and drops anything else', () => {
+    const planned_events = [
+      { time: '2026-01-05T11:00:00+08:00', description: 'Delivered', location: 'Sample Town', stage: 'delivered' },
+      { local_time: '2026-01-04T10:06:28', description: 'Departed from facility', stage: 'not a stage' },
+      { time: '2026-01-05T11:00:00+08:00', description: 'Delivered', location: 'Sample Town', stage: 'delivered' },
+      { local_time: '2026-01-03', description: 'Arrived', extra: 'dropped' },
+      { time: '2026-01-06T12:30:00', description: 'No offset' },
+      { local_time: '2026-01-06T12:30:00Z', description: 'Offset as a wall clock' },
+      { time: '2026-01-07T09:00:00Z', description: '  ' },
+      'soon', null,
+    ];
+    expect(normalizeCarrierResult({ planned_events, events: [] }).planned_events).toEqual([
+      { local_time: '2026-01-03', description: 'Arrived' },
+      { local_time: '2026-01-04T10:06:28', description: 'Departed from facility' },
+      { time: '2026-01-05T11:00:00+08:00', description: 'Delivered', location: 'Sample Town', stage: 'delivered' },
+    ]);
+    for (const value of [[], ['soon'], [{ description: 'No clock' }], {}, null]) {
+      expect(normalizeCarrierResult({ planned_events: value, events: [] })).not.toHaveProperty('planned_events');
+    }
+  });
 });
 
 describe('event places', () => {

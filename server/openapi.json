@@ -810,6 +810,36 @@
             },
             "description": "The clocks of rows the carrier holds back as written ahead of them, which a provider relaying them shows as scans."
           },
+          "planned_events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "description"
+              ],
+              "properties": {
+                "time": {
+                  "type": "string",
+                  "description": "The step's clock with its offset."
+                },
+                "local_time": {
+                  "type": "string",
+                  "description": "The step's wall clock or day, when the carrier states no offset."
+                },
+                "description": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "stage": {
+                  "type": "string",
+                  "description": "The stage the step would mean once it happens. It sets nothing."
+                }
+              }
+            },
+            "description": "The steps the carrier wrote before they happen and that the scans leave out, in its own words, the earliest first. A step held back as written ahead stands at its clock in written_ahead. They are no scans: they set no stage, status or estimate."
+          },
           "unread_estimates": {
             "type": "array",
             "items": {

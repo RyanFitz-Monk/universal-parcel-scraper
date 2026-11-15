@@ -16,6 +16,7 @@ import {
   ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError, TransportError,
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { plannedEvent, plannedEvents, type PlannedEvent } from '../../core/result/planned.js';
 import { runSteps } from '../../core/runner/index.js';
 import { firstAttemptMs, networkRetryStep } from '../../core/runner/networkRetry.js';
 import { classifyWording, languageStageStatus, type Stage } from '../../core/status/index.js';
@@ -273,11 +274,15 @@ function stageOf(tenant: HualeiTenant, code: string, description: string): { sta
  * once, and so do rows the tenant says repeat another. A row the tenant has
  * English for is staged and deduplicated by its own wording, then shown in
  * English. `ahead` lists the clocks of the rows held back as written ahead
- * and of the custom track's, as the tenant reads them.
+ * and of the custom track's, as the tenant reads them, and `planned` those
+ * rows as steps at the same clocks, the earliest first.
  */
-function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number, page: boolean): { events: CarrierEvent[]; truncated: boolean; ahead: string[] } {
+function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number, page: boolean): {
+  events: CarrierEvent[]; truncated: boolean; ahead: string[]; planned: PlannedEvent[];
+} {
   const seen = new Set<string>();
   const ahead = new Set<string>();
+  const held: { clock: string; index: number; step: PlannedEvent }[] = [];
   const kept: { clock: string; index: number; event: CarrierEvent; english?: string }[] = [];
   const clocks = rows.map((row) => wallClock(row.clock, tenant.provider));
   // The page shows no creation times, so it cannot tell a script's delivery row from a scan: there
@@ -288,26 +293,35 @@ function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number,
     const local = clocks[index]!;
     const placed = isoTime(local, HUALEI_ZONE)!;
     const reading = tenant.clock?.(row) ?? (tenant.wallClocks ? 'wall' : 'platform');
-    if (row.code === CUSTOM_TRACK || forecast[index]) {
-      ahead.add(reading === 'platform' ? placed.iso : local);
-      return;
-    }
-    if (placed.timestamp > readAt) return;
     const parts = tenant.split?.(row.content, row.location) ?? row;
     const place = hualeiPlace(parts.location);
     const wording = hualeiWording(parts.content, parts.location);
     const description = wording || place;
-    if (!description) return;
     const location = wording ? place : '';
+    const english = wording ? tenant.english?.(row.code || null, normalizeStatusWording(wording)) : undefined;
+    // A row held back is named by its clock as the tenant reads it, and listed as a step at that same clock,
+    // in the words a scan would show.
+    const hold = (staged = description ? stageOf(tenant, row.code, description) : undefined) => {
+      const clock = reading === 'platform' ? placed.iso : local;
+      ahead.add(clock);
+      const step = plannedEvent({ ...(reading === 'platform' ? { time: clock } : { local_time: clock }), description: english ?? description,
+        ...(location ? { location } : {}), ...(staged ? { stage: staged.stage } : {}) });
+      if (step) held.push({ clock: local, index, step });
+    };
+    if (row.code === CUSTOM_TRACK || forecast[index]) {
+      hold();
+      return;
+    }
+    if (placed.timestamp > readAt) return;
+    if (!description) return;
     const key = JSON.stringify([local, description, location, row.code]);
     if (seen.has(key)) return;
     seen.add(key);
     const staged = stageOf(tenant, row.code, description);
     if (scripted && staged?.stage === 'delivered') {
-      ahead.add(reading === 'platform' ? placed.iso : local);
+      hold(staged);
       return;
     }
-    const english = wording ? tenant.english?.(row.code || null, normalizeStatusWording(wording)) : undefined;
     const written = writtenAt(row);
     kept.push({ clock: local, index, ...(english ? { english } : {}), event: {
       ...(reading === 'platform' ? { time: placed.iso } : { local_time: reading === 'day' ? local.slice(0, 10) : local }), description,
@@ -338,7 +352,10 @@ function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number,
   const leg = returnLeg(unique.map(({ event }) => event));
   const events = unique.map(({ event, english }, index) => ({ ...event, ...(english ? { description: english } : {}),
     ...(leg[index] ? { stage: 'returned' } : {}) }));
-  return { events: events.slice(0, MAX_EVENTS), truncated: events.length > MAX_EVENTS, ahead: [...ahead] };
+  // The steps held back, the earliest first, each once.
+  held.sort((a, b) => (a.clock === b.clock ? b.index - a.index : a.clock < b.clock ? -1 : 1));
+  return { events: events.slice(0, MAX_EVENTS), truncated: events.length > MAX_EVENTS, ahead: [...ahead],
+    planned: plannedEvents(held.map(({ step }) => step)) };
 }
 
 /** Two wall clocks exactly an hour apart. */
@@ -377,7 +394,7 @@ interface Facts {
  * of the rows held back.
  */
 function result(rows: readonly HualeiRow[], facts: Facts, tenant: HualeiTenant, readAt: number, page = false): CarrierResult {
-  const { events, truncated, ahead } = scans(rows, tenant, readAt, page);
+  const { events, truncated, ahead, planned } = scans(rows, tenant, readAt, page);
   const { partner } = facts;
   const deliveryTrackingNumber = partner && partner.number !== identity(facts.number) ? partner.number
     : facts.downstream && facts.downstream !== identity(facts.number) ? facts.downstream : undefined;
@@ -387,6 +404,7 @@ function result(rows: readonly HualeiRow[], facts: Facts, tenant: HualeiTenant, 
   if (!events.length) {
     throw new NoHistoryError(tenant.provider, `${tenant.provider} has no scans for the shipment yet`, {
       ...(ahead.length ? { reason: 'written_ahead', writtenAhead: ahead } : { reason: 'listed' }),
+      ...(planned.length ? { plannedEvents: planned } : {}),
       ...(partner ? { deliveryCarrier: partner.carrier } : {}), ...(deliveryTrackingNumber ? { deliveryTrackingNumber } : {}),
     });
   }
@@ -412,6 +430,7 @@ function result(rows: readonly HualeiRow[], facts: Facts, tenant: HualeiTenant, 
     events,
     ...(truncated ? { history_truncated: true } : {}),
     ...(ahead.length ? { written_ahead: ahead } : {}),
+    ...(planned.length ? { planned_events: planned } : {}),
   };
 }
 

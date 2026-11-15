@@ -5,7 +5,7 @@ import { carrierDefinition, carrierTimezone } from '../core/catalog/index.js';
 import { carrierTakesPhoneDigits, carrierTakesPostcode, MissingCarrierInputError, normalizeCarrierInputs, normalizeDeliveryPostcode } from '../core/catalog/inputs.js';
 import { deliveryHandoff, noHistoryHandoff, type DeliveryHandoff } from '../core/catalog/handoff.js';
 import { detectCarrierMatch, normalizeTrackingNumber, parseTrackingInput, validTrackingNumber } from '../core/detection/index.js';
-import { BudgetExceededError, IndeterminateError, InputRequiredError, NoHistoryError, writtenAheadClocks, type CarrierErrorKind } from '../core/errors/index.js';
+import { BudgetExceededError, IndeterminateError, InputRequiredError, NoHistoryError, plannedEventsOf, writtenAheadClocks, type CarrierErrorKind } from '../core/errors/index.js';
 import { failureHint, type FailureHint } from '../core/errors/hint.js';
 import { MAX_RECOGNITIONS, recognitionCandidates, recognizeAll, settleRecognition, type RecognitionOutcome } from '../core/recognition/index.js';
 import { fillPartialAnswer, isPartialAnswer, withoutWrittenAhead } from '../core/result/partial.js';
@@ -342,12 +342,14 @@ export function createTracker(options: TrackerOptions = {}) {
         }
       }
     }
-    // Rows the carrier holds back as written ahead of their clocks are no scans when a provider relays them.
+    // Rows the carrier holds back as written ahead of their clocks are no scans when a provider relays them;
+    // the steps the carrier wrote stay beside the provider's scans.
     const ahead = result ? [] : writtenAheadClocks(lastError);
+    const planned = result ? [] : plannedEventsOf(lastError);
     const scansOf = (candidate: UniversalSource, answer: ResolvedResult) => {
       const kept = withoutWrittenAhead(answer, ahead);
-      if (!kept) throw new NoHistoryError(candidate, `${candidate} relays only rows the carrier wrote ahead`, { reason: 'written_ahead', writtenAhead: ahead });
-      return kept;
+      if (!kept) throw new NoHistoryError(candidate, `${candidate} relays only rows the carrier wrote ahead`, { reason: 'written_ahead', writtenAhead: ahead, plannedEvents: planned });
+      return planned.length && !kept.planned_events ? { ...kept, planned_events: [...planned] } : kept;
     };
     // A partial direct answer stands unless an enabled provider holds a fuller history that is not behind it.
     const partial = result && isPartialAnswer(result) ? result : null;

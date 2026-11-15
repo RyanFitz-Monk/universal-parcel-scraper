@@ -70,7 +70,8 @@ Tracked through the lookup its tracking page makes.
   within a minute after the receipt, whatever scans fall between them: such a timeline can put
   the parcel through the destination's customs while the warehouse in China is still handling
   it. Their clocks are named in `written_ahead`, or, for an order with nothing else, in its
-  error, so that a provider's copies of them are set aside as well.
+  error, so that a provider's copies of them are set aside as well, and the rows are kept as
+  planned steps.
 - The recipient's province, city and postcode, the postcodes in the rows' places, the
   shipment's reference and the delivery estimate are never read.
 

@@ -189,6 +189,7 @@ describe('DealerSend HTTP adapter', () => {
     const result = parseDealerSend(reply('in-transit-canada.json'), CANADA_PARCEL, early);
     expect(result).toMatchObject({ last_status_text: 'Item is ready for departure.', last_update_local: '2026-06-09T02:13:00' });
     expect(result.written_ahead).toContain('2026-06-16T11:51:00');
+    expect([...new Set(result.planned_events!.map((step) => step.time ?? step.local_time))].sort()).toEqual([...result.written_ahead!].sort());
     let error: unknown;
     try {
       parseDealerSend(reply('in-transit-canada.json'), CANADA_PARCEL, Date.parse('2026-06-01T00:00:00Z'));
@@ -198,6 +199,7 @@ describe('DealerSend HTTP adapter', () => {
     expect(error).toBeInstanceOf(NoHistoryError);
     expect(error).toMatchObject({ kind: 'indeterminate', reason: 'written_ahead' });
     expect((error as NoHistoryError).writtenAhead).toContain('2026-06-16T11:51:00');
+    expect((error as NoHistoryError).plannedEvents).toContainEqual(expect.objectContaining({ local_time: '2026-06-16T11:51:00' }));
   });
 
   it('reads the tracker’s null answer as not found', async () => {

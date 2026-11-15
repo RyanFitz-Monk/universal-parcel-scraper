@@ -632,7 +632,8 @@ describe('standalone tracker', () => {
     });
 
     it('sets aside a provider\'s copies of the rows the carrier holds back as written ahead', async () => {
-      const ahead = new NoHistoryError('ups', undefined, { reason: 'written_ahead', writtenAhead: ['2026-01-01T17:00:00+08:00', '2026-01-02T17:00:00+08:00'] });
+      const ahead = new NoHistoryError('ups', undefined, { reason: 'written_ahead', writtenAhead: ['2026-01-01T17:00:00+08:00', '2026-01-02T17:00:00+08:00'],
+        plannedEvents: [{ time: '2026-01-04T17:00:00+08:00', description: 'Delivered', stage: 'delivered' }] });
       const tracker = (ship24: Scan[]) => createTracker({ registry: registry(vi.fn().mockRejectedValue(ahead)),
         fetcher: providerReplies({ ship24 }), providers: ['Ship24'] });
       const copies: Scan[] = [['2026-01-02T09:00:00Z', 'In transit'], ['2026-01-01T09:00:00Z', 'In transit']];
@@ -642,6 +643,8 @@ describe('standalone tracker', () => {
       const answer = await tracker([['2026-01-03T09:00:00Z', 'Delivered'], ...copies]).track({ number });
       expect(answer).toMatchObject({ source: 'Ship24', result: { current_stage: 'delivered' } });
       expect(answer.result.events.map(event => event.instant)).toEqual(['2026-01-03T09:00:00Z']);
+      // The steps the carrier wrote stay beside the provider's scans.
+      expect(answer.result.planned_events).toEqual([{ time: '2026-01-04T17:00:00+08:00', description: 'Delivered', stage: 'delivered' }]);
     });
 
     it('looks past a provider that does not improve on the direct answer', async () => {

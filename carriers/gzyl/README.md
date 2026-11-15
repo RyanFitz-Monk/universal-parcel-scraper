@@ -53,8 +53,8 @@ instead.
   six hours before its own clock, is the same script's and is held back too. The page shows no
   creation times, so a row dated after the lookup on Beijing time is held back too. An order
   whose rows are all held back has no history yet. Either way the clocks of the rows written
-  ahead are named, in `written_ahead` or the error, so that a universal provider's copies of
-  them are set aside too: GZYL's order row alone is kept while the script fills a provider's
+  ahead are named, in `written_ahead` or the error, and the rows are kept as planned steps, so
+  that a universal provider's copies of them are set aside too: GZYL's order row alone is kept while the script fills a provider's
   history. The record's own summary status is not read; the stage comes from the rows kept.
   After a row a tenant's map reads as returned, a move or a delivery is the parcel going, or
   delivered, back to the sender, and is returned too.

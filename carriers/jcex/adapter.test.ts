@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { sameInstantIdentityPolicy } from '../../app.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch, parseTrackingInput } from '../../core/detection/index.js';
+import type { NoHistoryError } from '../../core/errors/index.js';
 import type { CarrierEvent } from '../../core/result/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
@@ -301,6 +302,10 @@ describe('JCEX HTTP adapter', () => {
     }), NUMBER, Date.parse('2026-04-13T00:00:00Z'));
     expect(result).toMatchObject({ current_stage: 'in_transit', last_status_text: 'Arrive at the delivery point', last_update: '2026-04-11T01:09:38+08:00',
       written_ahead: expect.arrayContaining(['2026-04-11T01:09:45+08:00', '2026-04-11T13:45:45+08:00', '2026-04-12T03:15:45+08:00']) });
+    // The timeline's rows are steps at those clocks, never scans.
+    expect(result.planned_events!.map(({ time, description }) => [time, description])).toEqual(expect.arrayContaining([
+      ['2026-04-12T03:15:45+08:00', 'Departed from origin country']]));
+    expect([...new Set(result.planned_events!.map((step) => step.time ?? step.local_time))].sort()).toEqual([...result.written_ahead!].sort());
     // Two such rows, or rows whose spacing breaks the six minutes, stay.
     const kept = parseJcex(changed('delivered', (content) => {
       content.trackDetails.splice(9, 3, ...rows(content).slice(1, 3), { ...rows(content)[3]!, eventTime: '2026-04-12 03:16:45' });
@@ -316,6 +321,9 @@ describe('JCEX HTTP adapter', () => {
     }
     expect(error).toMatchObject({ name: 'NoHistoryError', reason: 'written_ahead',
       writtenAhead: ['2026-04-11T01:09:45+08:00', '2026-04-11T13:45:45+08:00', '2026-04-12T03:15:45+08:00'] });
+    expect((error as NoHistoryError).plannedEvents!.map(({ time, description }) => [time, description])).toEqual([
+      ['2026-04-11T01:09:45+08:00', 'Departed from sort facility'], ['2026-04-11T01:09:45+08:00', 'Picked up by shipping partner'],
+      ['2026-04-11T13:45:45+08:00', 'Hand over to airline'], ['2026-04-12T03:15:45+08:00', 'Departed from origin country']]);
   });
 
   it('sets aside a timeline written after a receipt however many scans fall between its rows', () => {

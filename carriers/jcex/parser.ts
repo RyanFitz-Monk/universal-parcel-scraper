@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { plannedEvent, plannedEvents } from '../../core/result/planned.js';
 import { withoutShortenedScans } from '../../core/result/repeats.js';
 import { classifyWording, languageStageStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
@@ -304,6 +305,7 @@ export function parseJcex(payload: unknown, raw: string, readAt = Date.now()): C
   // Neither a row dated after the read nor a row of the timeline JCEX writes is a scan.
   const written = timeline(projected.map(({ at }) => at));
   const ahead = projected.filter(({ at }) => at > readAt || written.has(at));
+  const planned = plannedEvents(ahead.map(({ event }) => plannedEvent(event)));
   // Rows come newest first, but JCEX puts its own milestone, such as the
   // handover to the delivering partner, on top: the rows are ordered by their
   // clocks, and rows at one time keep the reply's order. A delivering partner's scan can come
@@ -314,7 +316,8 @@ export function parseJcex(payload: unknown, raw: string, readAt = Date.now()): C
   // The rows written ahead are named, so that a provider's copies of them are not taken for scans.
   if (!events.length) {
     throw new NoHistoryError(PROVIDER, 'JCEX has no scans for the waybill yet', ahead.length
-      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ event }) => event.time ?? event.local_time!))] } : { reason: 'listed' });
+      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ event }) => event.time ?? event.local_time!))], plannedEvents: planned }
+      : { reason: 'listed' });
   }
 
   const newest = events[0]!;
@@ -333,5 +336,6 @@ export function parseJcex(payload: unknown, raw: string, readAt = Date.now()): C
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
     ...(ahead.length ? { written_ahead: [...new Set(ahead.map(({ event }) => event.time ?? event.local_time!))] } : {}),
+    ...(planned.length ? { planned_events: planned } : {}),
   };
 }

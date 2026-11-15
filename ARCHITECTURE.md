@@ -179,7 +179,10 @@ fallback's rows at those clocks, the same instant within a minute or the same wa
 copies of them and are set aside; a fallback left with nothing has no history either. Hosts
 apply `writtenAheadClocks` to the carrier's error and `withoutWrittenAhead` to each fallback.
 A carrier that keeps other rows names those clocks in the result's `written_ahead`, and
-`fillPartialAnswer` sets a fallback's copies of them aside before comparing histories.
+`fillPartialAnswer` sets a fallback's copies of them aside before comparing histories. The
+rows themselves stay in the carrier's words as `planned_events` on the result, or
+`plannedEvents` on the error (`plannedEventsOf`), and a fallback that wins keeps them beside
+its scans. They are steps the carrier announced, not scans: hosts may show them apart.
 An answer without history can name the hand-over in the error's `deliveryCarrier` and
 `deliveryTrackingNumber`, as a result's `delivery_carrier` and `delivery_tracking_number` would:
 a record can name the delivery carrier's number before any scan, or after it drops its own rows

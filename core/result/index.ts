@@ -18,6 +18,9 @@ import { isRecipientAction, recipientAction, type RecipientAction } from '../sta
 import { withTieOrder } from './order.js';
 import { windowOpens, writtenWindow } from './window.js';
 import { MAX_UNREAD_ESTIMATES, UNREAD_ESTIMATE_FIELD } from './unread.js';
+import { plannedEvents, type PlannedEvent } from './planned.js';
+
+export type { PlannedEvent } from './planned.js';
 
 export type CarrierStatus =
   | 'pending'
@@ -159,6 +162,12 @@ export interface CarrierResult extends JsonObject {
    * relaying them shows as scans: an instant with its offset, or a wall clock.
    */
   written_ahead?: string[];
+  /**
+   * The steps the carrier wrote before they happen and that the scans leave out, in its own words,
+   * the earliest first. A step held back as written ahead stands at its clock in `written_ahead`.
+   * They are no scans: they set no stage, status or estimate.
+   */
+  planned_events?: PlannedEvent[];
   /**
    * The fields of the carrier's reply that hold a delivery estimate or slot the adapter does
    * not read yet, by their path in the reply: a capture of this reply would teach it their shape.
@@ -308,6 +317,9 @@ export function normalizeCarrierResult(value: unknown): CarrierResult {
   const ahead = normalized.written_ahead;
   if (!Array.isArray(ahead) || !ahead.length || ahead.length > MAX_WRITTEN_AHEAD
     || !ahead.every((clock) => typeof clock === 'string' && WRITTEN_AHEAD_CLOCK.test(clock))) delete normalized.written_ahead;
+  const planned = plannedEvents(normalized.planned_events);
+  if (planned.length) normalized.planned_events = planned;
+  else delete normalized.planned_events;
   const unread = Array.isArray(normalized.unread_estimates)
     ? [...new Set(normalized.unread_estimates.filter((field): field is string => typeof field === 'string' && UNREAD_ESTIMATE_FIELD.test(field)))]
       .slice(0, MAX_UNREAD_ESTIMATES)
