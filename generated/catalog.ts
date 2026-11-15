@@ -41960,7 +41960,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Budapest",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "qt-express"
     },
     "canaryUrl": "https://tracking.qtlogistics.eu/hu",
     "trackingUrlTemplate": "https://tracking.qtlogistics.eu/hu/{trackingNumber}",

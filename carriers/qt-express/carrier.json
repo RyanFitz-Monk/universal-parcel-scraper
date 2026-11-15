@@ -18,18 +18,40 @@
   "timezone": "Europe/Budapest",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "qt-express",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps"
+  ],
   "portal": {
     "url": "https://tracking.qtlogistics.eu/hu/{trackingNumber}",
     "searchUrl": "https://tracking.qtlogistics.eu/hu",
     "canaryUrl": "https://tracking.qtlogistics.eu/hu",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "delivery_options"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps"
+    ],
+    "discarded": [
+      "delivery_options"
+    ],
+    "unavailable": [
+      "eta",
+      "location"
+    ]
   },
   "links": [
     {

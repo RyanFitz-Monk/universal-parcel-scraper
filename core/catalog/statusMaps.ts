@@ -15,6 +15,7 @@ import { statusMap as tciFreight } from '../../carriers/tci-freight/status.js';
 import { statusMap as hrx } from '../../carriers/hrx/status.js';
 import { statusMap as bypost } from '../../carriers/bypost/status.js';
 import { statusMap as nightStarExpress } from '../../carriers/night-star-express/status.js';
+import { statusMap as qtExpress } from '../../carriers/qt-express/status.js';
 import { statusMap as swissconnect } from '../../carriers/swissconnect/status.js';
 import { statusMap as timeMatters } from '../../carriers/time-matters/status.js';
 import { statusMap as aeropost } from '../../carriers/aeropost/status.js';
@@ -793,6 +794,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   hrx,
   bypost,
   'night-star-express': nightStarExpress,
+  'qt-express': qtExpress,
   swissconnect,
   'time-matters': timeMatters,
   'zes-express': zesExpress,

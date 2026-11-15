@@ -1,4 +1,197 @@
 {
   "carrier": "qt-express",
-  "entries": []
+  "entries": [
+    {
+      "code": "ARRIVED TO REGIONAL DEPOT",
+      "wording": "Arrived to regional depot",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The parcel's first scan, at the carrier's main warehouse."
+    },
+    {
+      "code": "ARRIVED TO REGIONAL DEPOT",
+      "wording": "Megérkezett a regionális raktárba",
+      "stage": "in_transit",
+      "language": "hu",
+      "confirmedBy": "bundle",
+      "note": "The parcel's first scan, at the carrier's main warehouse."
+    },
+    {
+      "code": "TRANSFER TO FINAL DEPOT",
+      "wording": "Transfer to final depot",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "TRANSFER TO FINAL DEPOT",
+      "wording": "Átszállítva a kiszállító raktárba",
+      "stage": "in_transit",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ARRIVED TO FINAL DEPOT",
+      "wording": "Arrived to final depot",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ARRIVED TO FINAL DEPOT",
+      "wording": "Megérkezett a kiszállító raktárba",
+      "stage": "in_transit",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LAST MILE DELIVERY PROCESSING",
+      "wording": "Last mile delivery processing",
+      "stage": "out_for_delivery",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The courier has the parcel and is delivering it."
+    },
+    {
+      "code": "LAST MILE DELIVERY PROCESSING",
+      "wording": "Kézbesítés folyamatban",
+      "stage": "out_for_delivery",
+      "language": "hu",
+      "confirmedBy": "bundle",
+      "note": "The courier has the parcel and is delivering it."
+    },
+    {
+      "code": "WAITING FOR CUSTOMER PICKUP",
+      "wording": "Waiting for customer pickup",
+      "stage": "ready_for_pickup",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The parcel waits at a pickup point."
+    },
+    {
+      "code": "WAITING FOR CUSTOMER PICKUP",
+      "wording": "Ügyfél általi átvételre vár",
+      "stage": "ready_for_pickup",
+      "language": "hu",
+      "confirmedBy": "bundle",
+      "note": "The parcel waits at a pickup point."
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Kézbesítve",
+      "stage": "delivered",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "RETURNED TO DEPOT",
+      "wording": "Returned to depot",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A parcel that is not delivered again and waits at the depot for its return to the sender."
+    },
+    {
+      "code": "RETURNED TO DEPOT",
+      "wording": "Visszaküldve a raktárba",
+      "stage": "returned",
+      "language": "hu",
+      "confirmedBy": "bundle",
+      "note": "A parcel that is not delivered again and waits at the depot for its return to the sender."
+    },
+    {
+      "code": "RETURNED TO SENDER",
+      "wording": "Returned to sender",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The parcel is on its way back to its sender."
+    },
+    {
+      "code": "RETURNED TO SENDER",
+      "wording": "Visszaküldve a feladónak",
+      "stage": "returned",
+      "language": "hu",
+      "confirmedBy": "bundle",
+      "note": "The parcel is on its way back to its sender."
+    },
+    {
+      "code": "DELIVERY FAILED",
+      "wording": "Delivery failed",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELIVERY FAILED",
+      "wording": "Sikertelen kézbesítés",
+      "stage": "failed_attempt",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DAMAGED",
+      "wording": "Damaged",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DAMAGED",
+      "wording": "Sérült",
+      "stage": "exception",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LOST",
+      "wording": "Lost",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LOST",
+      "wording": "Elveszett",
+      "stage": "exception",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DESTROYED IN TRANSPORT",
+      "wording": "Destroyed in transport",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DESTROYED IN TRANSPORT",
+      "wording": "Szállítás közben megsemmisült",
+      "stage": "exception",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Cancelled",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Törölve",
+      "stage": "exception",
+      "language": "hu",
+      "confirmedBy": "bundle"
+    }
+  ]
 }

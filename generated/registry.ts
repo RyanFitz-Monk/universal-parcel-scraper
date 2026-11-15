@@ -550,6 +550,7 @@ import { adapter as ptt } from '../carriers/ptt/adapter.js';
 import { adapter as pullmanCargo } from '../carriers/pullman-cargo/adapter.js';
 import { adapter as purolator } from '../carriers/purolator/adapter.js';
 import { adapter as qatarPost } from '../carriers/qatar-post/adapter.js';
+import { adapter as qtExpress } from '../carriers/qt-express/adapter.js';
 import { adapter as quantiumSolutions } from '../carriers/quantium-solutions/adapter.js';
 import { adapter as quickFort } from '../carriers/quick-fort/adapter.js';
 import { adapter as quickRabbit } from '../carriers/quick-rabbit/adapter.js';
@@ -1321,6 +1322,7 @@ export const REGISTRY: RegistryDefinition = {
     "pullman-cargo": pullmanCargo,
     "purolator": purolator,
     "qatar-post": qatarPost,
+    "qt-express": qtExpress,
     "quantium-solutions": quantiumSolutions,
     "quick-fort": quickFort,
     "quick-rabbit": quickRabbit,
@@ -2637,7 +2639,7 @@ export const REGISTRY: RegistryDefinition = {
     "pxc-pacific": "universal",
     "qatar-post": "qatar-post",
     "qls-quince": "universal",
-    "qt-express": "universal",
+    "qt-express": "qt-express",
     "quality-post": "universal",
     "quantium-solutions": "quantium-solutions",
     "quick-fort": "quick-fort",
