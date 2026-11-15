@@ -1,4 +1,680 @@
 {
   "carrier": "tsb-es",
-  "entries": []
+  "entries": [
+    {
+      "code": "alta",
+      "wording": "Recorded",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "alta",
+      "wording": "Creada",
+      "stage": "registered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "alta",
+      "wording": "Creada",
+      "stage": "registered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "recepcion",
+      "wording": "Reception",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "recepcion",
+      "wording": "Recepción",
+      "stage": "accepted",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "recepcion",
+      "wording": "Recepció",
+      "stage": "accepted",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "salida",
+      "wording": "Departure",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "salida",
+      "wording": "Salida de origen",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "salida",
+      "wording": "Sortida Origen",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "llegada",
+      "wording": "Arrival",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "llegada",
+      "wording": "Llegada en destino",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "llegada",
+      "wording": "Arribada Destí",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "llegadaAlmacenInternacional",
+      "wording": "Arrival International",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The arrival step of a shipment with an international departure."
+    },
+    {
+      "code": "llegadaAlmacenInternacional",
+      "wording": "Llegada internacional",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "The arrival step of a shipment with an international departure."
+    },
+    {
+      "code": "llegadaAlmacenInternacional",
+      "wording": "Arribada internacional",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "The arrival step of a shipment with an international departure."
+    },
+    {
+      "code": "reparto",
+      "wording": "On Delivery",
+      "stage": "out_for_delivery",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "reparto",
+      "wording": "En Reparto",
+      "stage": "out_for_delivery",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "reparto",
+      "wording": "Repartiment",
+      "stage": "out_for_delivery",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "repartoFallida",
+      "wording": "FAILED DELIVERY",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A delivery round that failed: the rail marks its delivery step in red and has no wording for it, so it takes the wording of a failed delivery."
+    },
+    {
+      "code": "repartoFallida",
+      "wording": "REPARTO FALLIDO",
+      "stage": "failed_attempt",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "A delivery round that failed: the rail marks its delivery step in red and has no wording for it, so it takes the wording of a failed delivery."
+    },
+    {
+      "code": "repartoFallida",
+      "wording": "ENTREGA FALLIDA",
+      "stage": "failed_attempt",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "A delivery round that failed: the rail marks its delivery step in red and has no wording for it, so it takes the wording of a failed delivery."
+    },
+    {
+      "code": "entrega",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "entrega",
+      "wording": "Entregada",
+      "stage": "delivered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "entrega",
+      "wording": "Entregada",
+      "stage": "delivered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ALTA",
+      "wording": "PENDING",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ALTA",
+      "wording": "PENDIENTE",
+      "stage": "registered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ALTA",
+      "wording": "PENDENT",
+      "stage": "registered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LECT",
+      "wording": "PENDING",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LECT",
+      "wording": "PENDIENTE",
+      "stage": "registered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LECT",
+      "wording": "PENDENT",
+      "stage": "registered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "COMP",
+      "wording": "PENDING",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "COMP",
+      "wording": "PENDIENTE",
+      "stage": "registered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "COMP",
+      "wording": "PENDENT",
+      "stage": "registered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LLEG",
+      "wording": "AT DESTINATION",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LLEG",
+      "wording": "DESTINO",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "LLEG",
+      "wording": "DESTÍ",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CPCE",
+      "wording": "IN TRANSIT",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CPCE",
+      "wording": "EN TRANSITO",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CPCE",
+      "wording": "EN TRÀNSIT",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "REPA",
+      "wording": "IN DELIVERY",
+      "stage": "out_for_delivery",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "REPA",
+      "wording": "REPARTO",
+      "stage": "out_for_delivery",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "REPA",
+      "wording": "REPARTIMENT",
+      "stage": "out_for_delivery",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ENTR",
+      "wording": "DELIVERED",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ENTR",
+      "wording": "ENTREGADA",
+      "stage": "delivered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ENTR",
+      "wording": "ENTREGADA",
+      "stage": "delivered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "BBEN",
+      "wording": "DELIVERED",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "BBEN",
+      "wording": "ENTREGADA",
+      "stage": "delivered",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "BBEN",
+      "wording": "ENTREGADA",
+      "stage": "delivered",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "BBTR",
+      "wording": "DELIVERED*",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "Delivered with a position recorded by the driver."
+    },
+    {
+      "code": "BBTR",
+      "wording": "ENTREGADA*",
+      "stage": "delivered",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "Delivered with a position recorded by the driver."
+    },
+    {
+      "code": "BBTR",
+      "wording": "ENTREGADA*",
+      "stage": "delivered",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "Delivered with a position recorded by the driver."
+    },
+    {
+      "code": "BBTRI",
+      "wording": "FAILED DELIVERY",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "BBTRI",
+      "wording": "REPARTO FALLIDO",
+      "stage": "failed_attempt",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "BBTRI",
+      "wording": "ENTREGA FALLIDA",
+      "stage": "failed_attempt",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CREP",
+      "wording": "FAILED DELIVERY",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CREP",
+      "wording": "REPARTO FALLIDO",
+      "stage": "failed_attempt",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CREP",
+      "wording": "ENTREGA FALLIDA",
+      "stage": "failed_attempt",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IREP",
+      "wording": "FAILED DELIVERY",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IREP",
+      "wording": "REPARTO FALLIDO",
+      "stage": "failed_attempt",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IREP",
+      "wording": "ENTREGA FALLIDA",
+      "stage": "failed_attempt",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ENPA",
+      "wording": "PARTIAL DELIVERY",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "Part of the shipment was delivered and the rest is still to come."
+    },
+    {
+      "code": "ENPA",
+      "wording": "E.PARCIAL",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "Part of the shipment was delivered and the rest is still to come."
+    },
+    {
+      "code": "ENPA",
+      "wording": "E.PARCIAL",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "Part of the shipment was delivered and the rest is still to come."
+    },
+    {
+      "code": "ENAP",
+      "wording": "DEFERRED",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The delivery was put off to a later day."
+    },
+    {
+      "code": "ENAP",
+      "wording": "E.APLAZADA",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "The delivery was put off to a later day."
+    },
+    {
+      "code": "ENAP",
+      "wording": "E.APLAÇADA",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "The delivery was put off to a later day."
+    },
+    {
+      "code": "DGEN",
+      "wording": "RETURN",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DGEN",
+      "wording": "DEVOLUCION",
+      "stage": "returned",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DGEN",
+      "wording": "DEVOLUCIÓ",
+      "stage": "returned",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DORD",
+      "wording": "RETURN",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DORD",
+      "wording": "DEVOLUCION",
+      "stage": "returned",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DORD",
+      "wording": "DEVOLUCIÓ",
+      "stage": "returned",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DPRO",
+      "wording": "RETURN",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DPRO",
+      "wording": "DEVOLUCION",
+      "stage": "returned",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DPRO",
+      "wording": "DEVOLUCIÓ",
+      "stage": "returned",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DENT",
+      "wording": "RETURNED",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DENT",
+      "wording": "DEVUELTA",
+      "stage": "returned",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DENT",
+      "wording": "RETORNADA",
+      "stage": "returned",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "FALT",
+      "wording": "INCIDENCE",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "Goods are missing from the shipment."
+    },
+    {
+      "code": "FALT",
+      "wording": "FALTA",
+      "stage": "exception",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "Goods are missing from the shipment."
+    },
+    {
+      "code": "FALT",
+      "wording": "FALTA",
+      "stage": "exception",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "Goods are missing from the shipment."
+    },
+    {
+      "code": "ANUL",
+      "wording": "CANCELLED",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ANUL",
+      "wording": "ANULADA",
+      "stage": "exception",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ANUL",
+      "wording": "ANULADA",
+      "stage": "exception",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "SACO",
+      "wording": "INTERNATIONAL DEPARTURE",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "SACO",
+      "wording": "SALIDA INTERNACIONAL",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "SACO",
+      "wording": "SORTIDA INTERNACIONAL",
+      "stage": "in_transit",
+      "language": "ca",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "grabacion",
+      "wording": "SAVED",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A state of the sender's own system: the shipment is recorded there."
+    },
+    {
+      "code": "grabacion",
+      "wording": "GRABADA",
+      "stage": "registered",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "A state of the sender's own system: the shipment is recorded there."
+    },
+    {
+      "code": "grabacion",
+      "wording": "GRAVADA",
+      "stage": "registered",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "A state of the sender's own system: the shipment is recorded there."
+    },
+    {
+      "code": "comunicada",
+      "wording": "COMMUNICATED",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A state of the sender's own system: the shipment was announced to the carrier."
+    },
+    {
+      "code": "comunicada",
+      "wording": "COMUNICADA",
+      "stage": "registered",
+      "language": "es",
+      "confirmedBy": "bundle",
+      "note": "A state of the sender's own system: the shipment was announced to the carrier."
+    },
+    {
+      "code": "comunicada",
+      "wording": "COMUNICADA",
+      "stage": "registered",
+      "language": "ca",
+      "confirmedBy": "bundle",
+      "note": "A state of the sender's own system: the shipment was announced to the carrier."
+    }
+  ]
 }

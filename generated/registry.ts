@@ -702,6 +702,7 @@ import { adapter as transaher } from '../carriers/transaher/adapter.js';
 import { adapter as transcorp } from '../carriers/transcorp/adapter.js';
 import { adapter as transmission } from '../carriers/transmission/adapter.js';
 import { adapter as trendyolExpress } from '../carriers/trendyol-express/adapter.js';
+import { adapter as tsbEs } from '../carriers/tsb-es/adapter.js';
 import { adapter as tsjy } from '../carriers/tsjy/adapter.js';
 import { adapter as tstCfExpress } from '../carriers/tst-cf-express/adapter.js';
 import { adapter as tufesa } from '../carriers/tufesa/adapter.js';
@@ -1475,6 +1476,7 @@ export const REGISTRY: RegistryDefinition = {
     "transcorp": transcorp,
     "transmission": transmission,
     "trendyol-express": trendyolExpress,
+    "tsb-es": tsbEs,
     "tsjy": tsjy,
     "tst-cf-express": tstCfExpress,
     "tufesa": tufesa,
@@ -2929,7 +2931,7 @@ export const REGISTRY: RegistryDefinition = {
     "trumpcard": "universal",
     "trunkrs": "universal",
     "trustexpress": "universal",
-    "tsb-es": "universal",
+    "tsb-es": "tsb-es",
     "tsjy": "tsjy",
     "tst-cf-express": "tst-cf-express",
     "ttk-europe": "universal",

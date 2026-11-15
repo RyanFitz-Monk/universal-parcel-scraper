@@ -51433,11 +51433,20 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Madrid",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "tsb-es"
     },
     "canaryUrl": "https://www.tsbconnect.net/app/tracking/public",
+    "trackingUrlTemplate": "https://www.tsbconnect.net/app/tracking/public/tracking/{trackingNumber}",
     "trackingSearchUrl": "https://www.tsbconnect.net/app/tracking/public?search=true",
-    "linkRules": [],
+    "linkRules": [
+      {
+        "domains": [
+          "www.tsbconnect.net",
+          "tsbconnect.net"
+        ],
+        "path": "^/app/tracking/public/tracking/([^/]+)/?$"
+      }
+    ],
     "detectionRules": []
   },
   "tsjy": {

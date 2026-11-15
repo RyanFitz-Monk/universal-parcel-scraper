@@ -1,0 +1,66 @@
+{
+  "num": "TSB0000001",
+  "error": null,
+  "tieneTSBtrack": false,
+  "expedicion": {
+    "numeroExpedicion": "TSB0000001",
+    "referenciaCliente": "SYNTHETICREF1",
+    "estadoExpedicion": "estados.padua.situacion.REPA",
+    "fechaAlta": 1772463900000,
+    "fechaRecepcion": 1772475600000,
+    "fechaSalida": 1772485800000,
+    "fechaLlegada": 1772516400000,
+    "fechaReparto": 1772523000000,
+    "fechaRepartoFallida": null,
+    "fechaEntrega": null,
+    "fechaEntregaConcertada": null,
+    "delegacionOrigenRuta": "00",
+    "delegacionDestinoRuta": "99",
+    "observaciones2": "Synthetic remark",
+    "nombreRemitente": "Synthetic Sender",
+    "direccionRemitente": {
+      "direccion": "Synthetic Street 1",
+      "pais": "ES",
+      "codigoPostal": "00000",
+      "poblacion": "Synthetic Town"
+    },
+    "nombreDestinatario": "Synthetic Recipient",
+    "direccionDestinatario": {
+      "direccion": "Synthetic Street 2",
+      "pais": "ES",
+      "codigoPostal": "00001",
+      "poblacion": "Synthetic City"
+    },
+    "puntosNotificadores": null,
+    "imagenesPOD": [],
+    "bultos": 2,
+    "kilos": 35,
+    "volumen": 0.2,
+    "tipoPortes": "P",
+    "eventos": []
+  },
+  "corresponsalOrigen": {
+    "delegacionNombre": "Synthetic Origin Platform",
+    "razonSocial": "Synthetic Origin SL",
+    "telefono": "000000000",
+    "fax": "",
+    "email": "origin@example.invalid",
+    "direccion": {
+      "direccion": "Synthetic Street 3",
+      "pais": "ES",
+      "codigoPostal": "00002"
+    }
+  },
+  "corresponsalDestino": {
+    "delegacionNombre": "Synthetic Destination Platform",
+    "razonSocial": "Synthetic Destination SL",
+    "telefono": "000000001",
+    "fax": "",
+    "email": "destination@example.invalid",
+    "direccion": {
+      "direccion": "Synthetic Street 4",
+      "pais": "ES",
+      "codigoPostal": "00003"
+    }
+  }
+}
