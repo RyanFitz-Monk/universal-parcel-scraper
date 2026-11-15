@@ -41,7 +41,8 @@ product category the portal names, such as SEDEX. Addresses, recipients, proof i
 and tokens are excluded.
 
 Mail from abroad keeps the S10 number of the post that sent it. The portal lists that post's
-posting and office of exchange, then the item from its arrival in Brazil, with each row's
+posting, office of exchange and dispatch (a transfer without a Brazilian unit, before the
+item's first scan in Brazil), then the item from its arrival in Brazil, with each row's
 zone. The sending post's rows carry its wall clock but Brasília's zone, as China Post's own
 scans of the same items show, so they are read on the clock of the country the number ends
 with, its main clock where it keeps several (basis `carrier`): a wall clock left alone would

@@ -185,26 +185,40 @@ describe('Correios parser', () => {
 
   it("reads the sending post's rows on its country's clock, which Correios labels with Brasília's zone", () => {
     const brasilia = (date: string) => ({ date: `${date}.000000`, timezone_type: 3, timezone: 'America/Sao_Paulo' });
+    const inBrazil = { endereco: { cidade: 'Cidade Exemplo', uf: 'SP' } };
+    const transfer = 'Objeto em transferência - por favor aguarde';
+    // Its posting, office of exchange and dispatch to Brazil, a transfer without a Brazilian unit; then Brazil's rows,
+    // whose transfers keep Brasília's clock with or without a unit.
     const rows = [
-      scan('RO', '01', 'Objeto em trânsito - por favor aguarde', brasilia('2026-11-12 09:30:00')),
+      { ...scan('RO', '01', transfer, brasilia('2026-11-14 10:00:00')), unidade: inBrazil },
+      scan('RO', '01', transfer, brasilia('2026-11-13 18:00:00')),
+      { ...scan('PAR', '16', 'Objeto recebido pelos Correios do Brasil', brasilia('2026-11-13 09:30:00')), unidade: inBrazil },
+      scan('RO', '01', transfer, brasilia('2026-11-11 05:43:00')),
       scan('PAR', '18', 'Objeto recebido na unidade de exportação no país de origem', brasilia('2026-11-11 03:07:00')),
       scan('PO', '01', 'Objeto postado', brasilia('2026-11-10 21:00:00')),
     ];
     const china = parseCorreios({ ...fixture, codObjeto: 'AA000000005CN', eventos: rows }, 'AA000000005CN');
     expect(china.events!.map(({ time, local_time, time_zone, time_zone_basis }) => [time, local_time, time_zone, time_zone_basis])).toEqual([
-      ['2026-11-12T09:30:00-03:00', undefined, undefined, undefined],
+      ['2026-11-14T10:00:00-03:00', undefined, undefined, undefined],
+      ['2026-11-13T18:00:00-03:00', undefined, undefined, undefined],
+      ['2026-11-13T09:30:00-03:00', undefined, undefined, undefined],
+      ['2026-11-11T05:43:00+08:00', '2026-11-11T05:43:00', 'Asia/Shanghai', 'place'],
       ['2026-11-11T03:07:00+08:00', '2026-11-11T03:07:00', 'Asia/Shanghai', 'place'],
       ['2026-11-10T21:00:00+08:00', '2026-11-10T21:00:00', 'Asia/Shanghai', 'place'],
     ]);
+    // Before any row in Brazil, the dispatch is the sending post's too.
+    const dispatched = parseCorreios({ ...fixture, codObjeto: 'AA000000005CN', eventos: rows.slice(3) }, 'AA000000005CN');
+    expect(dispatched.events![0]).toMatchObject({ provider_code: 'RO/01', time: '2026-11-11T05:43:00+08:00', time_zone: 'Asia/Shanghai' });
     // A country of several clocks gives its main clock, the sending post's own, never Brasília's after the shared
     // clock step; Brazil's own mail keeps the zone Correios states.
     for (const [number, zone, offset] of [['AA000000005US', 'America/New_York', '-05:00'], ['AA000000005PT', 'Europe/Lisbon', '+00:00']] as const) {
       const sent = dateLocalClocks('correios-br', parseCorreios({ ...fixture, codObjeto: number, eventos: rows }, number));
-      expect(sent.events!.slice(1).map(({ time, time_zone, time_zone_basis }) => [time, time_zone, time_zone_basis]), number).toEqual([
-        [`2026-11-11T03:07:00${offset}`, zone, 'carrier'], [`2026-11-10T21:00:00${offset}`, zone, 'carrier']]);
+      expect(sent.events!.slice(3).map(({ time, time_zone, time_zone_basis }) => [time, time_zone, time_zone_basis]), number).toEqual([
+        [`2026-11-11T05:43:00${offset}`, zone, 'carrier'], [`2026-11-11T03:07:00${offset}`, zone, 'carrier'], [`2026-11-10T21:00:00${offset}`, zone, 'carrier']]);
     }
     const brazil = parseCorreios({ ...fixture, eventos: rows }, NUMBER);
-    expect(brazil.events!.map(event => event.time)).toEqual(['2026-11-12T09:30:00-03:00', '2026-11-11T03:07:00-03:00', '2026-11-10T21:00:00-03:00']);
+    expect(brazil.events!.map(event => event.time)).toEqual(['2026-11-14T10:00:00-03:00', '2026-11-13T18:00:00-03:00', '2026-11-13T09:30:00-03:00',
+      '2026-11-11T05:43:00-03:00', '2026-11-11T03:07:00-03:00', '2026-11-10T21:00:00-03:00']);
   });
 
   it('reads the service and shows the delivery forecast only where the portal does', () => {

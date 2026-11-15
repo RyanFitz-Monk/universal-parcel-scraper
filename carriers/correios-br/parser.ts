@@ -50,6 +50,15 @@ function scanClock(value: unknown, abroad?: string | null, basis = 'place'): Sca
 
 // The sending post's rows for mail from abroad: its posting and its office of exchange.
 const ABROAD = /^(?:PO\/\d{2}|PAR\/18)$/;
+// Its dispatch to Brazil, a transfer listed without a Brazilian unit before the item's first scan in Brazil. China
+// Post's history shows its dispatch at that wall clock; on Brasília's clock it would lie hours ahead when first listed.
+const TRANSFERS = new Set(['RO/01', 'DO/01']);
+
+/** The Brazilian unit a row names, as "city, state", or empty. */
+function unitPlace(row: JsonObject): string {
+  const address = isRecord(row.unidade) && isRecord(row.unidade.endereco) ? row.unidade.endereco : null;
+  return address ? [clean(address.cidade, 100), clean(address.uf, 8)].filter(Boolean).join(', ') : '';
+}
 
 // The portal shows its delivery forecast only for an object in transit
 // (situacao T) that it does not mark as late.
@@ -98,16 +107,19 @@ export function parseCorreios(payload: unknown, number: string): CarrierResult {
   const originBasis = hasSeveralClocks(origin) ? 'carrier' : 'place';
   const events: CarrierEvent[] = [];
   const seen = new Set<string>();
-  for (const row of payload.eventos) {
+  // Rows are newest first: those after the oldest row naming a Brazilian unit come before the item reached Brazil.
+  let inBrazil = -1;
+  payload.eventos.forEach((row, index) => { if (isRecord(row) && unitPlace(row)) inBrazil = index; });
+  for (const [index, row] of payload.eventos.entries()) {
     if (!isRecord(row)) throw new SchemaError('Correios', 'Correios returned an incomplete scan');
     const code = clean(row.codigo, 8);
     const subtype = clean(row.tipo, 8);
     const description = clean(row.descricao, 500);
     if (!/^[A-Z]{2,4}$/.test(code) || !/^\d{2}$/.test(subtype) || !description) throw new SchemaError('Correios', 'Correios returned an incomplete scan');
     const providerCode = `${code}/${subtype}`;
-    const clock = scanClock(row.dtHrCriado, ABROAD.test(providerCode) ? originZone : undefined, originBasis);
-    const address = isRecord(row.unidade) && isRecord(row.unidade.endereco) ? row.unidade.endereco : null;
-    const location = address ? [clean(address.cidade, 100), clean(address.uf, 8)].filter(Boolean).join(', ') : '';
+    const location = unitPlace(row);
+    const sent = ABROAD.test(providerCode) || (TRANSFERS.has(providerCode) && !location && index > inBrazil);
+    const clock = scanClock(row.dtHrCriado, sent ? originZone : undefined, originBasis);
     const key = `${clock.time ?? clock.local_time ?? clock.provider_time_text ?? ''}\u0000${providerCode}\u0000${description}\u0000${location}`;
     if (seen.has(key)) continue;
     seen.add(key);
