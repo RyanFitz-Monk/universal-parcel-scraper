@@ -679,6 +679,7 @@ import { adapter as thailandPost } from '../carriers/thailand-post/adapter.js';
 import { adapter as theCourierGuy } from '../carriers/the-courier-guy/adapter.js';
 import { adapter as thhy } from '../carriers/thhy/adapter.js';
 import { adapter as tiki } from '../carriers/tiki/adapter.js';
+import { adapter as timeMatters } from '../carriers/time-matters/adapter.js';
 import { adapter as timelyTitan } from '../carriers/timely-titan/adapter.js';
 import { adapter as tipsa } from '../carriers/tipsa/adapter.js';
 import { adapter as tirupatiCourier } from '../carriers/tirupati-courier/adapter.js';
@@ -1449,6 +1450,7 @@ export const REGISTRY: RegistryDefinition = {
     "the-courier-guy": theCourierGuy,
     "thhy": thhy,
     "tiki": tiki,
+    "time-matters": timeMatters,
     "timely-titan": timelyTitan,
     "tipsa": tipsa,
     "tirupati-courier": tirupatiCourier,
@@ -2873,7 +2875,7 @@ export const REGISTRY: RegistryDefinition = {
     "tig-freight": "universal",
     "tiki": "tiki",
     "time-critical-line": "universal",
-    "time-matters": "universal",
+    "time-matters": "time-matters",
     "timely-titan": "timely-titan",
     "tinypack": "universal",
     "tipsa": "tipsa",

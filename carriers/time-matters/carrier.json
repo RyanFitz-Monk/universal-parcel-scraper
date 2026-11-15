@@ -17,25 +17,57 @@
   "timezone": "Europe/Berlin",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "time-matters",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps",
+    "eta"
+  ],
   "portal": {
     "url": "https://booking.time-matters.com/en-US/tracking/{trackingNumber}",
     "searchUrl": "https://booking.time-matters.com/en-US/tracking",
     "canaryUrl": "https://booking.time-matters.com/en-US/tracking",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "origin",
+      "destination",
+      "signatory"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps",
+      "eta"
+    ],
+    "discarded": [
+      "origin",
+      "destination",
+      "signatory"
+    ],
+    "unavailable": [
+      "service_name",
+      "weight"
+    ]
   },
   "links": [
     {
       "domains": [
         "booking.time-matters.com"
       ],
-      "path": "^/[a-z]{2}-[A-Z]{2}/tracking/([^/?#]+)/?$"
+      "path": "^/[a-z]{2}(?:-[A-Z]{2})?/tracking/([Ss]\\d{2,}(?:-\\d*)?|\\d{8,9}(?:-\\d*)?)/?$"
     }
   ],
   "detection": []

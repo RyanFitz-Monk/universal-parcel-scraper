@@ -1,4 +1,476 @@
 {
   "carrier": "time-matters",
-  "entries": []
+  "entries": [
+    {
+      "code": "REQUEST",
+      "wording": "Requested",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "time:matters is still checking whether it can carry the order."
+    },
+    {
+      "code": "REQUEST",
+      "wording": "Angefragt",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "time:matters is still checking whether it can carry the order."
+    },
+    {
+      "code": "REQUEST",
+      "wording": "Demandé",
+      "stage": "registered",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "time:matters is still checking whether it can carry the order."
+    },
+    {
+      "code": "PREADVICE",
+      "wording": "Confirmed",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The order is confirmed; the shipment has not been handed in yet."
+    },
+    {
+      "code": "PREADVICE",
+      "wording": "Bestätigt",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The order is confirmed; the shipment has not been handed in yet."
+    },
+    {
+      "code": "PREADVICE",
+      "wording": "Confirmé",
+      "stage": "registered",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The order is confirmed; the shipment has not been handed in yet."
+    },
+    {
+      "code": "OPEN",
+      "wording": "Open",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The tracker's own name for a requested or confirmed order."
+    },
+    {
+      "code": "OPEN",
+      "wording": "Offen",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The tracker's own name for a requested or confirmed order."
+    },
+    {
+      "code": "OPEN",
+      "wording": "Ouvert",
+      "stage": "registered",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The tracker's own name for a requested or confirmed order."
+    },
+    {
+      "code": "IN_TRANSPORT",
+      "wording": "In transport",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_TRANSPORT",
+      "wording": "Im Transport",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_TRANSPORT",
+      "wording": "Transport en cours",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "PACKAGE_CLAIM",
+      "wording": "Available",
+      "stage": "ready_for_pickup",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The shipment waits at its last station. For an order that ends at a door the adapter reads it as in transit."
+    },
+    {
+      "code": "PACKAGE_CLAIM",
+      "wording": "Verfügbar",
+      "stage": "ready_for_pickup",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The shipment waits at its last station. For an order that ends at a door the adapter reads it as in transit."
+    },
+    {
+      "code": "PACKAGE_CLAIM",
+      "wording": "Disponible",
+      "stage": "ready_for_pickup",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The shipment waits at its last station. For an order that ends at a door the adapter reads it as in transit."
+    },
+    {
+      "code": "FINISHED",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "Dated by the hand-over at the last stop, or by the arrival at a delivery address."
+    },
+    {
+      "code": "FINISHED",
+      "wording": "Zugestellt",
+      "stage": "delivered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "Dated by the hand-over at the last stop, or by the arrival at a delivery address."
+    },
+    {
+      "code": "FINISHED",
+      "wording": "Livré",
+      "stage": "delivered",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "Dated by the hand-over at the last stop, or by the arrival at a delivery address."
+    },
+    {
+      "code": "REJECTED",
+      "wording": "Rejected by time:matters",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "REJECTED",
+      "wording": "Abgelehnt von time:matters",
+      "stage": "exception",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "REJECTED",
+      "wording": "Décliné par time:matters",
+      "stage": "exception",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Canceled",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Storniert",
+      "stage": "exception",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Annulé",
+      "stage": "exception",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "PickupCourierInformed",
+      "wording": "Pickup courier informed",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "PickupCourierInformed",
+      "wording": "Abholkurier Info",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "PickupCourierInformed",
+      "wording": "Coursier pour le ramassage informé",
+      "stage": "registered",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Acceptance",
+      "wording": "Acceptance",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Acceptance",
+      "wording": "Annahme",
+      "stage": "accepted",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Acceptance",
+      "wording": "Réception",
+      "stage": "accepted",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "SecurityAcceptance",
+      "wording": "Security Acceptance",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "SecurityAcceptance",
+      "wording": "Security Annahme",
+      "stage": "accepted",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "SecurityAcceptance",
+      "wording": "Acceptation à la sécurité",
+      "stage": "accepted",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ExportPartnerInformed",
+      "wording": "Export partner informed",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ExportPartnerInformed",
+      "wording": "Exportpartner Info",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ExportPartnerInformed",
+      "wording": "Partenaire pour la douane export informé",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ExportCustomsEntry",
+      "wording": "Export customs entry",
+      "stage": "customs",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The shipment is with export customs."
+    },
+    {
+      "code": "ExportCustomsEntry",
+      "wording": "Export Zollanmeldung",
+      "stage": "customs",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The shipment is with export customs."
+    },
+    {
+      "code": "ExportCustomsEntry",
+      "wording": "Début de la douane export",
+      "stage": "customs",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The shipment is with export customs."
+    },
+    {
+      "code": "ExportCustomsReleased",
+      "wording": "Export customs released",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ExportCustomsReleased",
+      "wording": "Export Zollfreigabe",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ExportCustomsReleased",
+      "wording": "Douane export finalisée",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Departure",
+      "wording": "Departure",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Departure",
+      "wording": "Abgang",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Departure",
+      "wording": "Départ",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Arrival",
+      "wording": "Arrival",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "An arrival at a stop of the route; the order status says when the shipment is delivered."
+    },
+    {
+      "code": "Arrival",
+      "wording": "Ankunft",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "An arrival at a stop of the route; the order status says when the shipment is delivered."
+    },
+    {
+      "code": "Arrival",
+      "wording": "Arrivée",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "An arrival at a stop of the route; the order status says when the shipment is delivered."
+    },
+    {
+      "code": "ImportCustomsEntry",
+      "wording": "Import customs entry",
+      "stage": "customs",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The shipment is with import customs."
+    },
+    {
+      "code": "ImportCustomsEntry",
+      "wording": "Import Zollanmeldung",
+      "stage": "customs",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The shipment is with import customs."
+    },
+    {
+      "code": "ImportCustomsEntry",
+      "wording": "Début de la douane import",
+      "stage": "customs",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The shipment is with import customs."
+    },
+    {
+      "code": "ImportCustomsReleased",
+      "wording": "Import customs released",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ImportCustomsReleased",
+      "wording": "Import Zollfreigabe",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ImportCustomsReleased",
+      "wording": "Douane import finalisée",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DeliveryCourierInformed",
+      "wording": "Delivery courier informed",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DeliveryCourierInformed",
+      "wording": "Zustellkurier Info",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DeliveryCourierInformed",
+      "wording": "Coursier pour la livraison informé",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "Available",
+      "wording": "Available",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "Ready at a station for the next leg or for collection; the order status says which."
+    },
+    {
+      "code": "Available",
+      "wording": "Verfügbarkeit",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "Ready at a station for the next leg or for collection; the order status says which."
+    },
+    {
+      "code": "Available",
+      "wording": "Mise à disposition",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "Ready at a station for the next leg or for collection; the order status says which."
+    },
+    {
+      "code": "Release",
+      "wording": "Release",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "Handed out at a station, to a courier or to the consignee; the order status says which."
+    },
+    {
+      "code": "Release",
+      "wording": "Übernahme",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "Handed out at a station, to a courier or to the consignee; the order status says which."
+    },
+    {
+      "code": "Release",
+      "wording": "Collecté",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "Handed out at a station, to a courier or to the consignee; the order status says which."
+    }
+  ]
 }

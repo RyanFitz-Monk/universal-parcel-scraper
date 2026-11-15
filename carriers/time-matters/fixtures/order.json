@@ -1,0 +1,54 @@
+{
+  "status": "IN_TRANSPORT",
+  "cancellationStatus": "NONE",
+  "transportType": "DOOR_TO_DOOR",
+  "routing": [
+    {
+      "entityType": "LOCATION",
+      "type": "PICKUP",
+      "trackingPoints": [
+        { "type": "PickupCourierInformed", "planned": null, "estimated": null, "actual": "2026-03-02T08:05:00+01:00" }
+      ]
+    },
+    { "entityType": "TRANSPORT", "type": "COURIER_COLLECTION", "trackingPoints": null },
+    {
+      "entityType": "AIRPORT",
+      "type": "ORIGIN",
+      "iataCode": "XXA",
+      "name": "Synthetic Origin Airport",
+      "address": { "city": "Synthetic Origin", "countryCode": "DE" },
+      "latestAcceptanceTime": "2026-03-02T10:00:00+01:00",
+      "trackingPoints": [
+        { "type": "Acceptance", "planned": "2026-03-02T10:00:00+01:00", "estimated": null, "actual": "2026-03-02T09:40:00+01:00" },
+        { "type": "Departure", "planned": "2026-03-02T11:00:00+01:00", "estimated": null, "actual": "2026-03-02T11:10:00+01:00" }
+      ]
+    },
+    {
+      "entityType": "TRANSPORT",
+      "type": "FLIGHT",
+      "transportNumber": "XX0000",
+      "scheduledTimeDeparture": "2026-03-02T11:00:00+01:00",
+      "scheduledTimeArrival": "2026-03-02T11:45:00+00:00"
+    },
+    {
+      "entityType": "AIRPORT",
+      "type": "DESTINATION",
+      "iataCode": "XXB",
+      "name": "Synthetic Destination Airport",
+      "address": { "city": "Synthetic Destination", "countryCode": "GB" },
+      "earliestAvailabilityTime": "2026-03-02T12:30:00+00:00",
+      "trackingPoints": [
+        { "type": "Arrival", "planned": "2026-03-02T11:45:00+00:00", "estimated": "2026-03-02T11:55:00+00:00", "actual": null },
+        { "type": "Available", "planned": "2026-03-02T12:30:00+00:00", "estimated": null, "actual": null }
+      ]
+    },
+    { "entityType": "TRANSPORT", "type": "COURIER_DELIVERY" },
+    {
+      "entityType": "LOCATION",
+      "type": "DELIVERY",
+      "trackingPoints": [
+        { "type": "Arrival", "planned": "2026-03-02T14:00:00+00:00", "estimated": "2026-03-02T14:20:00+00:00", "actual": null }
+      ]
+    }
+  ]
+}

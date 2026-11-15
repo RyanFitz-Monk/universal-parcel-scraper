@@ -49809,7 +49809,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Berlin",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "time-matters"
     },
     "canaryUrl": "https://booking.time-matters.com/en-US/tracking",
     "trackingUrlTemplate": "https://booking.time-matters.com/en-US/tracking/{trackingNumber}",
@@ -49819,7 +49819,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "domains": [
           "booking.time-matters.com"
         ],
-        "path": "^/[a-z]{2}-[A-Z]{2}/tracking/([^/?#]+)/?$"
+        "path": "^/[a-z]{2}(?:-[A-Z]{2})?/tracking/([Ss]\\d{2,}(?:-\\d*)?|\\d{8,9}(?:-\\d*)?)/?$"
       }
     ],
     "detectionRules": []
