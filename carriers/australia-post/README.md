@@ -30,6 +30,12 @@ inconclusive replies, rate limits and schema errors do not use it. Step telemetr
 distinguishes the default and configured residential routes; it does not infer an IP family.
 HTTP recognition never uses either browser route.
 
+`AUSTRALIA_POST_FIRST_ROUTE=residential` (the tracker's `firstRoute`) sends the first browser read
+through that proxy instead, and the retry after a challenge takes the original route. DataDome can
+challenge the browser service's own address on every read for hours, so a deployment can keep that
+address for the retry. A first read the proxy fails to carry also retries on the original route.
+Without a proxy the setting changes nothing.
+
 Budget: 45 s by default (max 60 s). `trawl` keeps a 15 s transport allowance and fails when less
 remains. Either reply is capped at 1 MB. On the capture, 401/403 is a challenge and 429 is rate
 limited; a missing capture or changed schema is an error for normal provider fallback.

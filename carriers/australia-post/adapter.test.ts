@@ -562,13 +562,14 @@ describe('Australia Post browser retrieval', () => {
 
 describe('Australia Post opt-in browser proxy recovery', () => {
   const proxy = 'http://test-user:test-pass@proxy.example.test:8080';
-  function routed(replies: unknown[], budgetMs?: number) {
+  function routed(replies: unknown[], budgetMs?: number, firstRoute?: 'default' | 'residential') {
     const browser = vi.fn<typeof fetch>().mockImplementation(async () => Response.json(replies.shift()));
     const recorder = { step: vi.fn(), lookup: vi.fn() };
     const client = new AustraliaPostTracker({ trawl: browserService(browser),
-      fetcher: refused(), recorder, fallbackProxyUrl: proxy, timeoutMs: budgetMs });
+      fetcher: refused(), recorder, fallbackProxyUrl: proxy, timeoutMs: budgetMs, firstRoute });
     return { client, browser, recorder };
   }
+  const bodies = (browser: ReturnType<typeof vi.fn<typeof fetch>>) => browser.mock.calls.map(call => JSON.parse(String(call[1]!.body)) as Record<string, unknown>);
 
   it('uses the proxy once after a browser challenge, preserving history and route provenance', async () => {
     const { client, browser, recorder } = routed([service([capture({}, 403)]), service()]);
@@ -632,6 +633,44 @@ describe('Australia Post opt-in browser proxy recovery', () => {
     expect(browser).toHaveBeenCalledTimes(2);
   });
 
+  it('sends the first browser read through the proxy when it is the first route, and the retry after a challenge on the original route', async () => {
+    const { client, browser, recorder } = routed([service([capture({}, 403)]), service()], undefined, 'residential');
+    await expect(client.fetch(NUMBER)).resolves.toEqual(parse(fixture(), NUMBER));
+    const [primary, retry] = bodies(browser);
+    expect(primary).toMatchObject({ proxy, url: australiaPostTrackingUrl(NUMBER), captureResponses: [australiaPostApiUrl(NUMBER)] });
+    expect(primary!.maxTimeout).toBeGreaterThan(29_000);
+    expect(retry).not.toHaveProperty('proxy');
+    expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'trawl', outcome: 'challenge', networkRoute: 'residential', networkAttempt: 'initial' }));
+    expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'trawl', outcome: 'ok', networkRoute: 'default', networkAttempt: 'retry', historyAvailable: true }));
+    expect(JSON.stringify(recorder.step.mock.calls)).not.toContain(proxy);
+  });
+
+  it('keeps an answered first read through the proxy without another', async () => {
+    const { client, browser } = routed([service()], undefined, 'residential');
+    await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    expect(bodies(browser).map(body => body.proxy)).toEqual([proxy]);
+  });
+
+  it('reads on the original route when the proxy fails to carry the first read, and keeps the parcel’s own answers', async () => {
+    const { client, browser } = routed([service([]), service()], undefined, 'residential');
+    await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    expect(bodies(browser).map(body => body.proxy ?? null)).toEqual([proxy, null]);
+    const missing = empty(); missing[0].trackingIds = [NUMBER];
+    for (const payload of [service([capture(missing)]), service([capture({}, 429)]), service([{ ...capture(), body: 'invalid-json' }])]) {
+      const answered = routed([payload, service()], undefined, 'residential');
+      await expect(answered.client.fetch(NUMBER)).rejects.toThrow();
+      expect(answered.browser).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('keeps the original route first without a proxy, and refuses an unknown first route', async () => {
+    const browser = vi.fn<typeof fetch>().mockResolvedValue(Response.json(service()));
+    await new AustraliaPostTracker({ trawl: browserService(browser), fetcher: refused(), firstRoute: 'residential' }).fetch(NUMBER);
+    expect(bodies(browser)[0]).not.toHaveProperty('proxy');
+    expect(() => new AustraliaPostTracker({ trawl: null, fallbackProxyUrl: proxy, firstRoute: 'datacenter' as never }))
+      .toThrow('Australia Post first route must be default or residential');
+  });
+
   it('starts no proxy request after cancellation', async () => {
     const controller = new AbortController();
     const browser = vi.fn<typeof fetch>().mockImplementation(async () => { controller.abort(new Error('stopped')); return Response.json(service([capture({}, 403)])); });
@@ -656,5 +695,11 @@ describe('Australia Post opt-in browser proxy recovery', () => {
       env: { AUSTRALIA_POST_FALLBACK_PROXY_URL: proxy }, browserExecutablePath: null });
     await expect(instance.recognize!(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
     expect(browser).not.toHaveBeenCalled();
+    const first = adapter({ trawl: browserService(browser), fetcher: refused(), recorder: NOOP_RECORDER,
+      env: { AUSTRALIA_POST_FALLBACK_PROXY_URL: proxy, AUSTRALIA_POST_FIRST_ROUTE: ' residential ' }, browserExecutablePath: null });
+    await expect(first.recognize!(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+    expect(browser).not.toHaveBeenCalled();
+    await expect(first.track({ number: NUMBER })).resolves.toMatchObject({ status: 'delivered' });
+    expect(bodies(browser).map(body => body.proxy)).toEqual([proxy]);
   });
 });

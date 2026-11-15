@@ -1,6 +1,6 @@
 
 import { accepted, recognizeFromLookup, type AdapterFactory, type TrackingContext } from '../../core/adapter/index.js';
-import { BudgetExceededError, ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
+import { BudgetExceededError, carrierErrorKind, ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { unreadEstimates } from '../../core/result/unread.js';
@@ -286,15 +286,25 @@ export interface AustraliaPostTrackerOptions {
   timeoutMs?: number;
   recorder?: StepRecorder;
   fallbackProxyUrl?: string;
+  /**
+   * Where the first browser read goes: the original route (`default`), or the configured proxy
+   * (`residential`). The retry after a challenge takes the other route.
+   */
+  firstRoute?: 'default' | 'residential';
 }
 
 export class AustraliaPostTracker {
   private readonly fallbackProxy: string | null;
+  private readonly proxyFirst: boolean;
 
   constructor(private readonly options: AustraliaPostTrackerOptions) {
     const proxy = options.fallbackProxyUrl?.trim() || null;
     if (proxy) browserContextProxy(proxy);
     this.fallbackProxy = proxy;
+    if (options.firstRoute !== undefined && options.firstRoute !== 'default' && options.firstRoute !== 'residential') {
+      throw new TypeError('Australia Post first route must be default or residential');
+    }
+    this.proxyFirst = options.firstRoute === 'residential' && proxy !== null;
   }
 
   async fetch(raw: string, context: TrackingContext = {}): Promise<CarrierResult> {
@@ -367,19 +377,22 @@ export class AustraliaPostTracker {
     }, {
       // The browser reads the same gateway, so it cannot improve on an inconclusive entry.
       enabled: trawl !== null, recovers: (error) => recoverableByDefault(error) && !(error instanceof IndeterminateError),
-      id: 'trawl', run: ({ signal, remainingMs }) => browser(signal, remainingMs, null),
+      id: 'trawl', run: ({ signal, remainingMs }) => browser(signal, remainingMs, this.proxyFirst ? this.fallbackProxy : null),
     }, {
+      // The other route after a challenge. A first read through the proxy also falls back when the
+      // proxy fails to carry it, so a proxy outage leaves the original route.
       id: 'trawl', enabled: trawl !== null && this.fallbackProxy !== null,
-      recovers: error => error instanceof ChallengeError
+      recovers: error => (error instanceof ChallengeError || (this.proxyFirst && carrierErrorKind(error) === 'transport'))
         && deadline - performance.now() >= TRAWL_TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
-      run: ({ signal, remainingMs }) => browser(signal, remainingMs, this.fallbackProxy),
+      run: ({ signal, remainingMs }) => browser(signal, remainingMs, this.proxyFirst ? null : this.fallbackProxy),
     }]);
   }
 }
 
 export const adapter: AdapterFactory = (environment) => {
   const tracker = new AustraliaPostTracker({ trawl: environment.trawl, fetcher: environment.fetcher, recorder: environment.recorder,
-    fallbackProxyUrl: environment.env.AUSTRALIA_POST_FALLBACK_PROXY_URL });
+    fallbackProxyUrl: environment.env.AUSTRALIA_POST_FALLBACK_PROXY_URL,
+    firstRoute: (environment.env.AUSTRALIA_POST_FIRST_ROUTE?.trim() || undefined) as AustraliaPostTrackerOptions['firstRoute'] });
   // Recognition is plain HTTP: it asks the gateway alone, and a refusal there fails instead of starting a browser.
   // A recognition budget can be longer than the minute a lookup takes at most.
   const gateway = new AustraliaPostTracker({ trawl: null, fetcher: environment.fetcher, recorder: environment.recorder });
