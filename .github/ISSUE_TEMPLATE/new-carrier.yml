@@ -11,11 +11,11 @@ body:
     id: url
     attributes:
       label: Public tracking website
-      description: Leave out your own parcels' numbers, postcodes and access tokens.
+      description: Leave out passwords and access tokens.
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
       label: Tracking formats and requirements
-      description: Number shapes, public sample numbers with the pages that give them, required inputs and public documentation.
+      description: Number shapes, sample numbers, required inputs and public documentation. A recent number of your own with its postcode helps most, if you are happy for it to be public; otherwise give public numbers with the pages that publish them.

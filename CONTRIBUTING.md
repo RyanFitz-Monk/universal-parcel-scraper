@@ -114,9 +114,15 @@ id or input. The maintainers write it when they merge, so a carrier needs no pul
 ## Public and private data
 
 This repository is public. What a public page shows can go in, cited by that page's URL: a
-number, its postcode, a tracking link, the carrier's reply. Numbers, postcodes, links and
-recipient details from your own parcels or from a deployment stay out of Git and issues, and
-so do credentials. A bug report uses a public or synthetic number.
+number, its postcode, a tracking link, the carrier's reply.
+
+You can post one of your own parcels in an issue, with its postcode, if you are happy for it
+to be public. It then counts as a public sample cited by the issue, and the carrier's reply,
+which may show your name or town, can become a test fixture. If you would rather keep it
+private, say so in the issue and a maintainer will arrange another way to send it.
+
+Numbers, postcodes, links and recipient details from a deployment stay out of Git and issues,
+and so do credentials.
 
 ## Docs
 

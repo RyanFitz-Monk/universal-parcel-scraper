@@ -1,5 +1,5 @@
 name: A carrier stopped working
-description: Report a retrieval or parsing problem with a public or synthetic number.
+description: Report a retrieval or parsing problem.
 body:
   - type: input
     id: carrier
@@ -11,11 +11,11 @@ body:
     id: behavior
     attributes:
       label: What happened?
-      description: Include the failure kind and expected behavior. Leave out the numbers, postcodes, links and recipient details of your own parcels.
+      description: Include the failure kind and expected behavior.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: Reproduction
-      description: A public number with the page that publishes it, a synthetic fixture, or the error details.
+      description: A number that shows the problem, with its postcode if the carrier asks for one. It can be a public number with the page that publishes it, or one of your own parcels if you are happy for it to be public. Otherwise a synthetic fixture or the error details.

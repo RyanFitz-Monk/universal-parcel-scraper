@@ -93,7 +93,10 @@ has its own tests against audited histories.
 A public sample brings what its source shows: a postcode it embeds, as a USPS 420 routing
 barcode or a Russian Post domestic number does, a postcode or tracking link published with it,
 an opaque page key a search engine indexes, and the carrier's reply, which a provider or parser
-fixture can replay. Its source is the page that gives them.
+fixture can replay. Its source is the page that gives them, such as a forum post, a review,
+public code, an archived tracking link or an issue in which a reporter posts their own parcel.
+A public number may be looked up live with the postcode posted beside it, even when the reply
+shows that person's delivery.
 
 Private live-test numbers, anything from a private lookup or a deployment, and access
 credentials stay out.
