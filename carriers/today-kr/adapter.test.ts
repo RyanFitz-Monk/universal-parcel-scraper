@@ -100,7 +100,9 @@ describe('To-Day HTTP adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('provider_code');
     expect(result).not.toHaveProperty('delivery_carrier');
-    expect(JSON.stringify(result)).not.toMatch(/Sample|샘|000-0000|37\.|127\.|SAMPLE-ORDER|payload|0000-4000/);
+    // The receiver's name as the page masks it; the sender, phones and coordinates stay out.
+    expect(result.receiver_name).toBe('샘*인');
+    expect(JSON.stringify(result)).not.toMatch(/Sample|000-0000|37\.|127\.|SAMPLE-ORDER|payload|0000-4000/);
   });
 
   it('dates the rail’s first departure, and the first station a parcel picked up elsewhere reached, which the page lists no row for', () => {
@@ -136,7 +138,8 @@ describe('To-Day HTTP adapter', () => {
     ]);
     // To-Day's own waybill finds the same parcel.
     expect(parse(fixture('in-delivery'), IN_DELIVERY).events).toEqual(result.events);
-    expect(JSON.stringify(result)).not.toMatch(/Sample|샘|37\.|127\./);
+    expect(result.receiver_name).toBe('샘*인');
+    expect(JSON.stringify(result)).not.toMatch(/Sample|37\.|127\./);
   });
 
   it('reads a return between its two ends, without the shipper’s return point', () => {
@@ -184,7 +187,8 @@ describe('To-Day HTTP adapter', () => {
       data.steps.destination.deliveryState = 'NOT_STARTED';
     }), SHOWN);
     expect(result).toEqual({ status: 'pending', current_stage: 'registered', current_stage_source: 'carrier_map',
-      last_status_text: '투데이가 출발지에서 물품을 픽업할 예정이에요', provider_code: 'BEFORE_COLLECT', last_update: null, delivered_at: null, events: [] });
+      last_status_text: '투데이가 출발지에서 물품을 픽업할 예정이에요', provider_code: 'BEFORE_COLLECT', last_update: null, delivered_at: null,
+      receiver_name: '샘*인', events: [] });
   });
 
   it('names the partner a parcel was handed on to only when the page links it and the number is one it issues', () => {

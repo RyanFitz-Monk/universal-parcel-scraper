@@ -291,15 +291,21 @@ describe('UPS API reply', () => {
     expect(handed([{ number: '1Z999AA10123456793' }]).delivery_carrier).toBeUndefined();
   });
 
-  it('keeps the addresses, recipient, signature, payments and references out of the result', () => {
-    const serialized = JSON.stringify(parseUPSApiResponse(API_REPLY, TRACKING_NUMBER));
+  it('reads the recipient and their address, and keeps the origin, signature, payments and references out of the result', () => {
+    const result = parseUPSApiResponse(API_REPLY, TRACKING_NUMBER);
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: '10 PRIVATE STREET\nPRIVATE POSTCODE PRIVATE CITY' });
+    // The parcel is still on its way, so nobody has taken it.
+    expect(result.signed_by).toBeUndefined();
+    const serialized = JSON.stringify({ ...result, receiver_name: null, receiver_address: null });
     for (const value of [
       'PRIVATE RECIPIENT', 'PRIVATE DOOR', 'PRIVATE-SIGNATURE-IMAGE', 'PRIVATE-PROOF-OF-DELIVERY', 'PRIVATE SHIPPER',
-      '1 PRIVATE ORIGIN STREET', 'PRIVATE ORIGIN CITY', 'PRIVATE ORIGIN POSTCODE', '10 PRIVATE STREET', 'PRIVATE CITY',
-      'PRIVATE POSTCODE', 'PRIVATE ATTENTION NAME', 'PRIVATE-REFERENCE', 'PRIVATE-PAYMENT-ID', 'receivedBy', 'weight',
+      '1 PRIVATE ORIGIN STREET', 'PRIVATE ORIGIN CITY', 'PRIVATE ORIGIN POSTCODE', 'PRIVATE ATTENTION NAME',
+      'PRIVATE-REFERENCE', 'PRIVATE-PAYMENT-ID', 'receivedBy', 'weight',
     ]) {
       expect(serialized).not.toContain(value);
     }
+    const delivered = parseUPSApiResponse(apiFixture((item) => { item.activity = [activity('FS', 'DELIVERED ', {}, 'D')]; }), TRACKING_NUMBER);
+    expect(delivered).toMatchObject({ current_stage: 'delivered', signed_by: 'PRIVATE RECIPIENT' });
   });
 
   it('reports a number UPS has no tracking for as not found, and fails closed on other answers', () => {

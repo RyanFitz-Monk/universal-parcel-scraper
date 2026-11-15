@@ -91,10 +91,9 @@ function weight(value: unknown): number | null {
  * The reply of `/alerce/tracking` for one number: `ok` lists the shipments
  * found, `errores` the lookup's errors and `score` a reCAPTCHA score. The page
  * reports errors as a failed lookup, and an empty `ok` without errors as no
- * shipment for the number. Of the shipment, only its number, service, weight
- * and events are read; the sender's and the recipient's names, addresses,
- * phone numbers and ID numbers, who took the parcel and the customer requests
- * are not.
+ * shipment for the number. Of the shipment, its number, service, weight,
+ * events, the recipient's name and address and who took the parcel are read;
+ * the sender, phone and ID numbers and the customer requests are not.
  */
 export function parseViaCargo(payload: unknown, raw: string): CarrierResult {
   const number = normalizeViaCargoNumber(raw);
@@ -144,6 +143,10 @@ export function parseViaCargo(payload: unknown, raw: string): CarrierResult {
     ? events.slice(0, ended < 0 ? undefined : ended).reverse().find((event) => event.stage === 'delivered') : undefined;
   const service = text(shipment, 'descripcionServicio', 80);
   const kilos = weight(shipment.kilos);
+  const recipient = clean(shipment.nombreDestinatario, 120);
+  const town = [clean(shipment.codigoPostalDestinatario, 16), clean(shipment.poblacionDestinatario, 80)].filter(Boolean).join(' ');
+  const address = [clean(shipment.direccionDestinatario, 200), town].filter(Boolean).join('\n');
+  const taker = stage === 'delivered' ? clean(shipment.nombreQuienRecibe, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -153,6 +156,9 @@ export function parseViaCargo(payload: unknown, raw: string): CarrierResult {
     ...(delivery ? { delivered_at: delivery.time! } : {}),
     ...(kilos !== null ? { weight_kg: kilos } : {}),
     ...(service ? { service_name: service } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

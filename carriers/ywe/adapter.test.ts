@@ -106,11 +106,11 @@ describe('YWE HTTP adapter', () => {
         scan('Parcel is out for delivery.'), scan('Sample Status Note', { timestamp: Date.UTC(2026, 4, 16, 14), operationTip: 'A1' })];
     }), PARCEL);
     expect(worded.events!.map((event) => [event.description, event.provider_code, event.stage, event.stage_source])).toEqual([
-      ['Delivered', '04', 'delivered', 'wording:language'], ['Parcel is out for delivery.', '19', 'out_for_delivery', 'carrier_map'],
+      ['Delivered, signed by SAMPLE RECIPIENT', '04', 'delivered', 'wording:language'], ['Parcel is out for delivery.', '19', 'out_for_delivery', 'carrier_map'],
       ['Sample Status Note', undefined, undefined, undefined]]);
     expect(worded).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
-      delivered_at: '2026-05-16T09:00:00-07:00' });
-    expect(JSON.stringify(worded)).not.toContain('SAMPLE RECIPIENT');
+      delivered_at: '2026-05-16T09:00:00-07:00', signed_by: 'SAMPLE RECIPIENT' });
+    expect(left).not.toHaveProperty('signed_by');
     const unstaged = parseYwe(changed((entry) => { entry.events = [scan('Sample Status Note')]; }), PARCEL);
     expect(unstaged).toMatchObject({ status: 'unknown', last_status_text: 'Sample Status Note' });
     expect(unstaged).not.toHaveProperty('current_stage');

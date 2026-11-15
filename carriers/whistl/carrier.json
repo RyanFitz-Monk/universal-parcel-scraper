@@ -51,7 +51,8 @@
       "delivery_partner",
       "delivery_tracking_number",
       "sender_reference",
-      "recipient_reference"
+      "recipient_reference",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -59,12 +60,12 @@
       "location",
       "service_name",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [
       "sender_reference",
-      "recipient_reference",
-      "signatory"
+      "recipient_reference"
     ],
     "unavailable": [
       "eta",
@@ -90,6 +91,10 @@
     }
   ],
   "detection": [
-    { "id": "whistl-1", "pattern": "^L\\d{17}$", "confidence": "low" }
+    {
+      "id": "whistl-1",
+      "pattern": "^L\\d{17}$",
+      "confidence": "low"
+    }
   ]
 }

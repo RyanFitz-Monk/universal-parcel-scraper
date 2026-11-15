@@ -2,6 +2,7 @@ import { ChallengeError, InvalidInputError, NotFoundError, SchemaError, Transpor
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { epochMillisTime } from '../../core/time/index.js';
+import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { tsbSituation, tsbState, tsbStep } from './status.js';
 
@@ -52,6 +53,15 @@ function moment(value: unknown): { iso: string; timestamp: number } | null {
   return at;
 }
 
+/** The recipient as the page shows them: the name, then the street and the postcode with the town. */
+function recipientOf(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = clean(shipment.nombreDestinatario, 120);
+  const address = isRecord(shipment.direccionDestinatario) ? shipment.direccionDestinatario : {};
+  const town = [cleanScalar(address.codigoPostal, 16), clean(address.poblacion, 80)].filter(Boolean).join(' ');
+  const lines = [clean(address.direccion, 200), town].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(lines ? { receiver_address: lines } : {}) };
+}
+
 export function parseTsb(payload: unknown, rawNumber: string, language: TsbLanguage = 'es'): CarrierResult {
   const number = normalizeTsbNumber(rawNumber);
   if (!isRecord(payload)) throw new SchemaError(PROVIDER, 'TSB returned no shipment');
@@ -96,7 +106,7 @@ export function parseTsb(payload: unknown, rawNumber: string, language: TsbLangu
   const delivered = stage === 'delivered' ? events.find(event => event.provider_code === 'entrega')?.time : undefined;
   const summary = { status: languageStageStatus(stage), current_stage: stage, current_stage_source: 'carrier_map',
     last_status_text: state?.status[language] ?? events[0]!.description!,
-    ...(state && events[0]?.provider_code !== state.code ? { provider_code: state.code } : {}) };
+    ...(state && events[0]?.provider_code !== state.code ? { provider_code: state.code } : {}), ...recipientOf(shipment) };
   if (!events.length) return { ...summary, last_update: null, expected_delivery: null, summary_only: true, events: [] };
   return { ...summary, last_update: events[0]!.time ?? null, expected_delivery: null, ...(delivered ? { delivered_at: delivered } : {}), events };
 }

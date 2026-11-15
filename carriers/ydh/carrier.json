@@ -48,11 +48,11 @@
       "location",
       "provider_code",
       "destination_country",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [
       "customer_reference",
-      "signatory",
       "delivery_partner"
     ],
     "unavailable": [

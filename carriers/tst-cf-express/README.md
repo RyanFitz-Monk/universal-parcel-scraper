@@ -36,13 +36,13 @@ URL tracing guide describes.
   the United States, the result names Saia and that PRO. Freight Saia brings to Canada names the
   ID too, but TST-CF delivers it, so there is no hand-off.
 - The weight in pounds becomes kilograms; the service level is the service name.
-- The page also shows the skid or piece count, the charges, the bill of lading and purchase order
-  references, and the shipper's, consignee's and third party's towns. Only the consignee's
-  province or state is read, for the destination country.
+- The consignee's town and province or state is `receiver_address`, and gives the destination
+  country. The page also shows the skid or piece count, the charges, the bill of lading and
+  purchase order references, and the shipper's and third party's towns, which are not read.
 
 ## Limitations
 
-- No history, sender, recipient, signature or delivery receipt; documents need an account.
+- No history, sender, recipient name, signature or delivery receipt; documents need an account.
 - A PRO reaches the adapter when it is filed under TST-CF Express or opened from a TST-CF link:
   many carriers use ten digits, so no rule claims them and preflight does not ask it.
 - Old PROs, such as the XML tracing guide's example, come back like unknown ones.

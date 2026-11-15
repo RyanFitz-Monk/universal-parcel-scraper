@@ -48,7 +48,7 @@ describe('XPO HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'xpo-ltl', step: 'direct', outcome: 'ok' }));
   });
 
-  it('keeps the service centers’ wall clocks, drops lookups and saves, and reads no party or reference', () => {
+  it('keeps the service centers’ wall clocks, drops lookups and saves, and reads the consignee but no other party or reference', () => {
     const result = xpoLtlResult(parseXpoLtlSummary(fixture('summary-in-transit.html'), MOVING),
       parseXpoLtlHistory(fixture('history-in-transit.html'), MOVING));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
@@ -73,7 +73,8 @@ describe('XPO HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
     expect(result.summary_only).toBeUndefined();
-    expect(JSON.stringify(result)).not.toMatch(/Placeholder|Fictional|Synthetic Supply|Payables|Example Way|60999|80999|43999|5550001|7770001|Prepaid|Mockford/);
+    expect(result).toMatchObject({ receiver_name: 'Jane Placeholder', receiver_address: '42 Fictional Rd\nMockford CO 80999' });
+    expect(JSON.stringify({ ...result, receiver_name: null, receiver_address: null })).not.toMatch(/Placeholder|Fictional|Synthetic Supply|Payables|Example Way|60999|80999|43999|5550001|7770001|Prepaid/);
   });
 
   it('clears the estimate once delivered, cuts the delivery route and leaves out the system unload', () => {

@@ -38,7 +38,7 @@ describe('TSB guest adapter', () => {
 
   it('reads the dated steps of the rail newest first, under the shipment\'s stated situation', () => {
     expect(parseTsb(fixture(), NUMBER)).toEqual({ status: languageStageStatus('out_for_delivery'), current_stage: 'out_for_delivery', current_stage_source: 'carrier_map',
-      last_status_text: 'REPARTO', provider_code: 'REPA', last_update: '2026-03-03T07:30:00Z', expected_delivery: null,
+      last_status_text: 'REPARTO', provider_code: 'REPA', receiver_name: 'Synthetic Recipient', receiver_address: 'Synthetic Street 2\n00001 Synthetic City', last_update: '2026-03-03T07:30:00Z', expected_delivery: null,
       events: [
         { time: '2026-03-03T07:30:00Z', description: 'En Reparto', provider_code: 'reparto', stage: 'out_for_delivery', stage_source: 'carrier_map' },
         { time: '2026-03-03T05:40:00Z', description: 'Llegada en destino', provider_code: 'llegada', stage: 'in_transit', stage_source: 'carrier_map' },
@@ -58,7 +58,7 @@ describe('TSB guest adapter', () => {
     expect(tied.events!.slice(-2).map(event => event.provider_code)).toEqual(['recepcion', 'alta']);
   });
 
-  it('never reads a name, an address, a reference, a remark or a position', () => {
+  it('reads the recipient\'s name and address, and never the sender, a reference, a remark or a position', () => {
     const data = changed(d => {
       Object.assign(d.expedicion, { nombreRemitente: 'PRIVATE SENDER', nombreDestinatario: 'PRIVATE RECIPIENT', referenciaCliente: 'PRIVATEREF', observaciones2: 'PRIVATE REMARK', fechaEntregaConcertada: 'PRIVATE DATE' });
       d.expedicion.direccionDestinatario = { direccion: 'PRIVATE STREET', pais: 'ES', codigoPostal: 'PRIVATEZIP', poblacion: 'PRIVATE TOWN' };
@@ -70,7 +70,12 @@ describe('TSB guest adapter', () => {
     });
     const result = parseTsb(data, NUMBER);
     expect(result.events).toHaveLength(6);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|example\.invalid/);
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET\nPRIVATEZIP PRIVATE TOWN' });
+    expect(JSON.stringify({ ...result, receiver_name: null, receiver_address: null })).not.toMatch(/PRIVATE|example\.invalid/);
+    // Only the parts the shipment gives are kept.
+    expect(parseTsb(changed(d => { d.expedicion.direccionDestinatario = { poblacion: 'Synthetic City' }; delete d.expedicion.nombreDestinatario; }), NUMBER))
+      .toMatchObject({ receiver_address: 'Synthetic City' });
+    expect(parseTsb(changed(d => { d.expedicion.direccionDestinatario = null; d.expedicion.nombreDestinatario = null; }), NUMBER)).not.toHaveProperty('receiver_address');
   });
 
   it('adds an international departure and renames the arrival of such a shipment, as the page does', () => {
@@ -105,7 +110,7 @@ describe('TSB guest adapter', () => {
   it('reads a state of the sender\'s system, a shipment without a dated step, and ignores a situation it does not know', () => {
     const none = (estadoExpedicion: unknown) => changed(d => { for (const key of Object.keys(d.expedicion)) if (key.startsWith('fecha')) d.expedicion[key] = null; d.expedicion.estadoExpedicion = estadoExpedicion; });
     expect(parseTsb(none('E2'), NUMBER)).toEqual({ status: languageStageStatus('registered'), current_stage: 'registered', current_stage_source: 'carrier_map',
-      last_status_text: 'GRABADA', provider_code: 'grabacion', last_update: null, expected_delivery: null, summary_only: true, events: [] });
+      last_status_text: 'GRABADA', provider_code: 'grabacion', receiver_name: 'Synthetic Recipient', receiver_address: 'Synthetic Street 2\n00001 Synthetic City', last_update: null, expected_delivery: null, summary_only: true, events: [] });
     expect(parseTsb(none('E1'), NUMBER, 'en')).toMatchObject({ current_stage: 'registered', last_status_text: 'COMMUNICATED', provider_code: 'comunicada', summary_only: true });
     expect(parseTsb(none('estados.padua.situacion.ALTA'), NUMBER, 'ca')).toMatchObject({ current_stage: 'registered', last_status_text: 'PENDENT', provider_code: 'ALTA' });
     for (const unread of ['estados.padua.situacion.SYNTH', 'estados.other.ENTR', 'entregada', 'e2', 'E 2', '', 4, null, {}]) {

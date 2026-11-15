@@ -51,8 +51,9 @@ describe('XDP direct tracking', () => {
     ]);
     expect(result.events?.every(event => event.time === undefined && event.location === undefined
       && (event.stage === undefined || event.stage_source === 'carrier_map'))).toBe(true);
-    // The recipient, the references, the depot and driver codes and the messages XDP sent stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Alex Example|Sam Sender|ZZ99|EXAMPLE000001|9001|9Z999Z|\b90[123]\b|alert sent|Manifested|notification/);
+    // The recipient's name and postcode are read; the references, the depot and driver codes and the messages XDP sent stay out.
+    expect(result).toMatchObject({ receiver_name: 'Alex Example', receiver_address: 'ZZ99 9ZZ' });
+    expect(JSON.stringify({ ...result, receiver_name: null, receiver_address: null })).not.toMatch(/Alex Example|Sam Sender|ZZ99|EXAMPLE000001|9001|9Z999Z|\b90[123]\b|alert sent|Manifested|notification/);
   });
 
   it('files the return leg as returned and counts each scan once for several pieces', () => {
@@ -71,14 +72,15 @@ describe('XDP direct tracking', () => {
       ['CREATE', 'Order received', 'registered'],
       ['PRINT', 'Label printed', undefined],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Robin Sample|Sample Works|SAMPLE1/);
+    expect(result).toMatchObject({ receiver_name: 'Robin Sample', receiver_address: 'ZZ99 9ZY' });
+    expect(JSON.stringify({ ...result, receiver_name: null })).not.toMatch(/Robin Sample|Sample Works|SAMPLE1/);
   });
 
-  it('leaves an unknown type unstaged and cuts a name from its wording', () => {
+  it('leaves an unknown type unstaged and keeps a name in its wording', () => {
     const result = parseXdp(history([at('5 Mar 2026', '10:00AM'), 'All Barcodes', 'CALLBACK', 'Callback booked by phone sent to Jo Person'],
       [at('5 Mar 2026', '09:00AM'), `${NUMBER}001`, 'DELIVERY', 'Spirit Status: "At Delivery Depot"']), NUMBER);
-    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Callback booked by phone' });
-    expect(result.events?.[0]).toEqual({ local_time: '2026-03-05T10:00:00', description: 'Callback booked by phone', provider_code: 'CALLBACK' });
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Callback booked by phone sent to Jo Person' });
+    expect(result.events?.[0]).toEqual({ local_time: '2026-03-05T10:00:00', description: 'Callback booked by phone sent to Jo Person', provider_code: 'CALLBACK' });
     const unstaged = parseXdp(history([at('5 Mar 2026', '09:00AM'), '', 'DELIVERY', 'Teleported to the moon']), NUMBER);
     expect(unstaged).toMatchObject({ status: 'unknown', last_status_text: 'Teleported to the moon' });
     expect(unstaged.current_stage).toBeUndefined();

@@ -48,9 +48,9 @@ Tracked through the lookup its tracking page makes.
   carrier's and that carrier's rules fit the number: Sagawa, as `Sagawa` or `JD Sagawa`, Japan
   Post, Yamato, and the Korean couriers its site names. K-Packet names no carrier; its Korea Post
   number goes to the destination's post.
-- The recipient's name, the order reference, the internal parcel number, the courier in charge
-  of each scan and the scans' details, which list flight times in each airport's clock, are not
-  kept.
+- The recipient's name, masked as the page shows it, becomes `receiver_name`. The order
+  reference, the internal parcel number, the courier in charge of each scan and the scans'
+  details, which list flight times in each airport's clock, are not kept.
 
 ## Limitations
 

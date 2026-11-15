@@ -50,7 +50,8 @@
       "location",
       "offset_timestamps",
       "delivered_at",
-      "provider_code"
+      "provider_code",
+      "signatory"
     ],
     "discarded": [
       "address",

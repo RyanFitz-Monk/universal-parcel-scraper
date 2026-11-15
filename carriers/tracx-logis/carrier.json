@@ -72,13 +72,13 @@
       "delivered_at",
       "destination_country",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name"
     ],
     "discarded": [
       "progress_rail",
       "origin_country",
       "customer_reference",
-      "recipient_name",
       "remarks"
     ],
     "unavailable": [

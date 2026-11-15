@@ -85,15 +85,17 @@ describe('YDH HTTP adapter', () => {
     expect(result.events!.every((event) => !('time' in event))).toBe(true);
     expect(result.events!.find((event) => event.local_time === '2026-03-15T10:33:00')).toMatchObject({ description: '出口报关' });
     expect(result.events!.at(-1)).toMatchObject({ description: 'Shipment information received' });
+    expect(result.signed_by).toBe('SAMPLE RECIPIENT');
     const json = JSON.stringify(result);
-    for (const excluded of ['SAMPLEORDER0001', 'SAMPLE RECIPIENT', 'SAMPLE PARTNER', 'SAMPLE STAFF', '99999', '法国']) expect(json).not.toContain(excluded);
+    for (const excluded of ['SAMPLEORDER0001', 'SAMPLE PARTNER', 'SAMPLE STAFF', '99999', '法国']) expect(json).not.toContain(excluded);
   });
 
-  it('keeps the parcel where it was when a label comes later, stages new wording through the shared rules, and drops who took a delivery', () => {
+  it('keeps the parcel where it was when a label comes later, stages new wording through the shared rules, and keeps who took a delivery out of its wording', () => {
     const labelled = parseYdh(changed((item) => {
       item.details = [scan('2026-03-14 02:21:05', 'Shipping Label Created'), scan('2026-03-13 19:22:12', 'Shipment arrived at facility', 'AF')];
     }), DELIVERED);
     expect(labelled).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Shipping Label Created' });
+    expect(labelled).not.toHaveProperty('signed_by');
     // A copy without the code is dropped wherever the reply lists it; the same wording at another clock is another scan.
     const relayed = parseYdh(changed((item) => {
       item.details = [scan('2026-03-12 09:22:27', '快件电子信息已经收到'),
@@ -109,6 +111,7 @@ describe('YDH HTTP adapter', () => {
     expect(worded.events!.map((event) => [event.description, event.provider_code, event.stage, event.stage_source])).toEqual([
       ['Delivered', 'XX', 'delivered', 'wording:language'], ['Sample Status Note', undefined, undefined, undefined]]);
     expect(worded).not.toHaveProperty('delivery_tracking_number');
+    expect(worded.signed_by).toBe('SAMPLE RECIPIENT');
     const unstaged = parseYdh(changed((item) => { item.details = [scan('2026-03-19 08:00:00', 'Sample Status Note', '', '--')]; }), DELIVERED);
     expect(unstaged).toMatchObject({ status: 'unknown' });
     expect(unstaged).not.toHaveProperty('current_stage');

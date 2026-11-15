@@ -30,7 +30,7 @@ const FINAL_MILE = /^Final Mile Tracking Number changed to:\s*([A-Za-z0-9]{4,40}
 const MAX_ROWS = 500;
 const MAX_EVENTS = 200;
 
-interface Row { event: CarrierEvent; code: string; index: number }
+interface Row { event: CarrierEvent; code: string; index: number; signatory: string }
 
 /** A reference as Whistl's tracker takes it: letters and digits, at least one digit. */
 export function normalizeWhistlNumber(raw: string): string {
@@ -49,22 +49,22 @@ function wallClock(raw: string): string | null {
 }
 
 /**
- * The scan's wording and place from its cell. The cell's first line prints the
- * wording, the place when the scan has one and the signatory, each followed by
- * one space, so an empty place leaves two spaces after the wording. The
- * signatory and the lines after it are never read. A line that cannot be
- * split that way keeps only the scan's status label.
+ * The scan's wording, place and signatory from its cell. The cell's first line
+ * prints the wording, the place when the scan has one and the signatory, each
+ * followed by one space, so an empty place leaves two spaces after the
+ * wording. The lines after it are never read. A line that cannot be split
+ * that way keeps only the scan's status label.
  */
-function scanText(raw: string, label: string): { description: string; location?: string } {
+function scanText(raw: string, label: string): { description: string; location?: string; signatory: string } {
   const lines = raw.split(/\r?\n/);
   const line = (lines.length > 1 && !lines[0]!.trim() ? lines[1]! : lines[0]!).replace(/^\s+/, '');
   const placed = PLACED.exec(line);
   if (placed) {
     const location = clean(placed[2], 200);
-    return { description: clean(placed[1], 300) || label, ...(location ? { location } : {}) };
+    return { description: clean(placed[1], 300) || label, ...(location ? { location } : {}), signatory: clean(line.slice(placed[0].length), 120) };
   }
   const end = line.indexOf('  ');
-  return { description: (end >= 0 ? clean(line.slice(0, end), 300) : '') || label };
+  return { description: (end >= 0 ? clean(line.slice(0, end), 300) : '') || label, signatory: end >= 0 ? clean(line.slice(end + 2), 120) : '' };
 }
 
 /** The text after a summary label ("Carrier:"), up to the next tag. */
@@ -87,13 +87,13 @@ function rowsOf($: CheerioAPI, card: ReturnType<CheerioAPI>): Row[] {
     const code = clean(cells.eq(1).text(), 80);
     const local = wallClock(clean(cells.eq(3).text(), 40));
     if (!code || !clean(cells.eq(0).text(), 40) || !local) throw new SchemaError(PROVIDER, 'Whistl returned a scan without its status or clock');
-    const { description, location } = scanText(cells.eq(2).text(), code);
+    const { description, location, signatory } = scanText(cells.eq(2).text(), code);
     const event: CarrierEvent = { local_time: local, description, provider_code: code, ...(location ? { location } : {}) };
     // A scan can come twice with the same clock, status, wording and place.
     const identity = JSON.stringify([local, code, description, location ?? null]);
     if (seen.has(identity)) return;
     seen.add(identity);
-    rows.push({ event, code, index });
+    rows.push({ event, code, index, signatory });
   });
   return rows;
 }
@@ -103,8 +103,8 @@ function rowsOf($: CheerioAPI, card: ReturnType<CheerioAPI>): Row[] {
  * shipment's reference as its heading, the carrier and service, and for each
  * parcel its tracking number and scans, newest first. The tracker finds a
  * shipment by its reference or by a parcel's tracking number, so the page
- * must name the requested number as one of them. Sender's and recipient's
- * references, signatories and comments are never read.
+ * must name the requested number as one of them. The signatory of the newest
+ * delivery is read; sender's and recipient's references and comments are not.
  */
 export function parseWhistl(html: string, rawNumber: string): CarrierResult {
   const number = normalizeWhistlNumber(rawNumber);
@@ -164,6 +164,7 @@ export function parseWhistl(html: string, rawNumber: string): CarrierResult {
   // A note or request keeps the stage of the scan before it.
   const current = rows.find(({ code }) => !whistlQuiet(code))?.event;
   const stage = current?.stage as Stage | undefined;
+  const signer = rows.find(({ event }) => event.stage === 'delivered')?.signatory;
 
   // The carrier the shipment travels with. Whistl's own parcel names a final-mile
   // number when another carrier delivers it abroad; another carrier's parcel
@@ -184,6 +185,7 @@ export function parseWhistl(html: string, rawNumber: string): CarrierResult {
     last_update_local: newest.local_time!,
     expected_delivery: null,
     ...(service ? { service_name: service } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(own && parcel.number !== number ? { canonical_tracking_number: parcel.number } : {}),
     ...(partner && partner !== 'whistl' ? { delivery_carrier: partner } : {}),
     ...(delivery ? { delivery_tracking_number: delivery } : {}),

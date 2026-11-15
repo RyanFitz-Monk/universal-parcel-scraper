@@ -44,14 +44,14 @@ describe('XGS tracking', () => {
     expect(xgsTrackingUrl(NUMBER)).toBe(fetcher.mock.calls[0]![0]);
   });
 
-  it('reads the status, dated by the delivery, without the signatory, the ZIP code or the towns', () => {
+  it('reads the status, dated by the delivery, with the signatory and the destination, without the origin or the hubs', () => {
     const result = parseXgs(JSON.parse(text('delivered.json')), NUMBER);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       provider_code: 'DELIVERED', last_update: null, last_update_local: '2026-03-05T09:30:00', expected_delivery: null,
-      summary_only: true, events: [],
+      receiver_address: 'SYNTHETIC CITY, ZZ 00000', signed_by: 'SYNTHETIC SIGNER', summary_only: true, events: [],
     });
-    expect(JSON.stringify(result)).not.toMatch(/SYNTHETIC|00000"|ZZ/);
+    expect(JSON.stringify({ ...result, receiver_address: null, signed_by: null })).not.toMatch(/SYNTHETIC|00000"|ZZ/);
   });
 
   it('dates a probill on its way by its newest milestone, and keeps the planned day', () => {

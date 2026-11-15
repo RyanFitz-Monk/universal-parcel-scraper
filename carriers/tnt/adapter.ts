@@ -127,12 +127,18 @@ function tntExpressHistory(consignment: Record<string, unknown>): Array<{ event:
   return parsed.sort((a, b) => b.timestamp - a.timestamp || a.index - b.index);
 }
 
-/** The destination's country, by its code or else its name; never its city or the rest of the address. */
-function expressDestination(consignment: Record<string, unknown>): Pick<CarrierResult, 'destination_country' | 'destination_country_name'> {
+/** The destination's country, by its code or else its name, its town as the recipient's address, and who signed. */
+function expressDestination(consignment: Record<string, unknown>): Pick<CarrierResult, 'destination_country' | 'destination_country_name' | 'receiver_address' | 'signed_by'> {
   const address = isRecord(consignment.destinationAddress) ? consignment.destinationAddress : {};
   const name = clean(address.country, 60);
   const code = countryCode(clean(address.countryCode, 8)) ?? countryCode(name);
-  return code ? { destination_country: code } : name ? { destination_country_name: name } : {};
+  const town = clean(address.city, 80);
+  const signatory = clean(consignment.signatory, 120);
+  return {
+    ...(code ? { destination_country: code } : name ? { destination_country_name: name } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
+  };
 }
 
 export function parseTntExpressResponse(payload: unknown, rawNumber: string): CarrierResult {

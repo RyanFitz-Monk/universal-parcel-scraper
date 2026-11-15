@@ -70,8 +70,9 @@ describe('TracX Logis tracking adapter', () => {
     ]);
     expect(result.events!.every(event => event.local_time === undefined && event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('last_update_local');
-    // The recipient, the order's reference, the internal parcel number, the courier per scan and the flight details stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Sample R|SAMPLE-ORDER|KRJP|"Sagawa"|Tracxlogis"|Scheduled|SAMPLE-A|오후/);
+    // The recipient's masked name is read; the order's reference, the internal parcel number, the courier per scan and the flight details stay out.
+    expect(result.receiver_name).toBe('Sample R**');
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE-ORDER|KRJP|"Sagawa"|Tracxlogis"|Scheduled|SAMPLE-A|오후/);
   });
 
   it('reads a K-Packet parcel in transit, whose Korea Post number goes to the destination’s post', async () => {

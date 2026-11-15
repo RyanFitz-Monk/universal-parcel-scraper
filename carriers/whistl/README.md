@@ -44,8 +44,9 @@ them by their wording, and the parcel keeps the stage of the scan before them. A
 the list does not have goes to the shared wording rules with the scan's wording.
 
 The description cell prints the scan's wording, its depot when it has one and the signatory.
-The adapter keeps the wording and the depot's name and never reads the signatory, the depot's
-code, the comments below or the sender's and recipient's references. Scan clocks carry no
+The adapter keeps the wording and the depot's name, and the newest delivery's signatory becomes
+`signed_by`. It never reads the depot's code, the comments below or the sender's and
+recipient's references. Scan clocks carry no
 offset and are kept as local times: Whistl's are UK times, a relayed carrier's are its own.
 
 When the carrier is not Whistl, the result names it once the catalog can place its name, and

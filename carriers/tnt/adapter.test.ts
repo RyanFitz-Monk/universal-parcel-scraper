@@ -99,11 +99,19 @@ describe('TNT international public tracking', () => {
       { time: '2026-03-27T09:30:00+08:00', description: 'Shipment in transit', location: 'Synthetic Hub, China', provider_code: 'TR', stage: 'in_transit' },
       { time: '2026-03-27T09:10:00+08:00', description: 'Shipment collected from collection address', location: 'Synthetic Origin, China', provider_code: 'PU', stage: 'accepted' },
     ]);
-    // References, signatures and addresses stay with TNT.
-    expect(JSON.stringify(result)).not.toMatch(/SYNTHETIC-REFERENCE|SYNTHETIC SIGNATORY|Destination|Earlier|Other/);
+    expect(result.receiver_address).toBe('Synthetic Destination');
+    expect(result).not.toHaveProperty('signed_by');
+    // References and the other consignments' signatories and addresses stay with TNT.
+    expect(JSON.stringify(result)).not.toMatch(/SYNTHETIC-REFERENCE|SYNTHETIC SIGNATORY|Earlier|Other/);
   });
 
-  it('reads the destination country alone, by its code or else its name', () => {
+  it('reads the signatory of the consignment it picks', () => {
+    const payload = express();
+    payload['tracker.output'].consignment[0].signatory = 'SAMPLE SIGNER';
+    expect(parseTntExpressResponse(payload, EXPRESS_NUMBER)).toMatchObject({ signed_by: 'SAMPLE SIGNER' });
+  });
+
+  it('reads the destination country by its code or else its name, and the town as the recipient\'s address', () => {
     const destination = (address: unknown) => {
       const payload = express();
       for (const consignment of payload['tracker.output'].consignment) consignment.destinationAddress = address;
@@ -116,8 +124,9 @@ describe('TNT international public tracking', () => {
       const result = destination(address);
       expect(result).not.toHaveProperty('destination_country');
       expect(result).not.toHaveProperty('destination_country_name');
-      expect(JSON.stringify(result)).not.toContain('Synthetic Destination');
     }
+    expect(destination({ city: 'Synthetic Destination' })).toMatchObject({ receiver_address: 'Synthetic Destination' });
+    expect(destination({})).not.toHaveProperty('receiver_address');
   });
 
   it('never reads another number and separates not-found from other replies', () => {

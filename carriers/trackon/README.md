@@ -37,10 +37,11 @@ makes.
   without a known code goes to Trackon's own wordings, then to the shared wording rules. A
   return to origin, worded `RTO …`, is an exception until it is delivered back, then returned.
 - The location is the branch the scan names, without its branch code.
-- A delivery or return loses the remark after its wording, which can name who took the
-  consignment, and every wording loses phone numbers. The origin, destination, postcode,
-  customer reference, piece count, charged weight, product, service type, non-delivery reason
-  and the proof of delivery, signature and non-delivery images in the reply are not kept.
+- A scan keeps the remark after its wording, which can name who took the consignment; that
+  name on the delivery becomes `signed_by`. Every wording loses phone numbers. The postcode and
+  destination become `receiver_address`. The origin, customer reference, piece count, charged
+  weight, product, service type, non-delivery reason and the proof of delivery, signature and
+  non-delivery images in the reply are not kept.
 
 ## Limitations
 

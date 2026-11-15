@@ -49,7 +49,7 @@ describe('Vozovoz HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads an issued order as a summary of its dated milestones, on wall clocks, and keeps nothing else', () => {
+  it('reads an issued order as a summary of its dated milestones, on wall clocks, with its consignee and nothing else', () => {
     const result = parseVozovoz(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Груз выдан', last_update: null, last_update_local: '2026-03-05T14:20:33', expected_delivery: null, summary_only: true });
@@ -59,7 +59,8 @@ describe('Vozovoz HTTP adapter', () => {
     ]);
     // The estimate's window is no milestone.
     expect(JSON.stringify(result)).not.toMatch(/2026-03-06/);
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(result.receiver_name).toBe('Синтетический Получатель');
+    expect(JSON.stringify({ ...result, receiver_name: null })).not.toMatch(PRIVATE);
   });
 
   it('reads an order on its way by its flags, with the estimate the page shows and without its description or reference', () => {
@@ -70,6 +71,7 @@ describe('Vozovoz HTTP adapter', () => {
       ['2026-04-06T09:05:12', 'Заказ создан', 'registered'],
     ]);
     expect(JSON.stringify(result.events)).not.toMatch(PRIVATE);
+    expect(result.receiver_name).toBe('Синтетический Получатель');
     expect(JSON.stringify(result)).not.toMatch(/пояснение|SYNTHETIC-REF|987|500/);
   });
 

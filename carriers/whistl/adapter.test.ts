@@ -69,16 +69,20 @@ describe('Whistl tracking adapter', () => {
     expect(result.events!.map(event => event.provider_code)).toContain('with Whistl');
     expect(result.events!.every(event => event.time === undefined)).toBe(true);
     for (const [name, number] of [['own', OWN], ['partner', SHIPMENT], ['partner', PARTNER], ['multi', SECOND]] as const) {
-      expect(JSON.stringify(parseWhistl(page(name), number)), name).not.toMatch(PRIVATE);
+      const { signed_by: signer, ...rest } = parseWhistl(page(name), number);
+      expect(JSON.stringify(rest), name).not.toMatch(PRIVATE);
+      // The delivery's signatory is read; the comment under it is not.
+      if (name !== 'multi') expect(signer, name).toBe('A RECIPIENT');
     }
   });
 
-  it('never reads a signatory, even when the scan names no place or its wording cannot be split', () => {
+  it('reads a signatory only from a delivery scan, even when the scan names no place or its wording cannot be split', () => {
     const signed = page('own').replace('Shipment is Out for Delivery   ', 'Shipment is Out for Delivery  B COURIER ')
       .replace('Customs cleared   ', 'Customs cleared');
     const result = parseWhistl(signed, OWN);
     expect(rows(result).slice(0, 3).map(([, description]) => description)).toEqual(['Delivered', 'Shipment is Out for Delivery', 'In transit']);
     expect(JSON.stringify(result)).not.toMatch(/B COURIER/);
+    expect(result.signed_by).toBe('A RECIPIENT');
     const placed = parseWhistl(page('partner').replace('(WHISTL TESTTOWN - 101)  ', '(WHISTL TESTTOWN - 101) C SIGNER '), SHIPMENT);
     expect(JSON.stringify(placed)).not.toMatch(/C SIGNER/);
     expect(rows(placed)[3]).toEqual(['2026-06-18T16:00:00', 'Handed over to Royal Mail', 'WHISTL TESTTOWN', 'in_transit']);

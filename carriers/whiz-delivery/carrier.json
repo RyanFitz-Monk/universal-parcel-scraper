@@ -42,14 +42,16 @@
       "origin",
       "destination",
       "proof_of_delivery",
-      "contact_details"
+      "contact_details",
+      "recipient_address"
     ],
     "scraped": [
       "status",
       "history",
       "provider_code",
       "delivered_at",
-      "destination_country"
+      "destination_country",
+      "recipient_address"
     ],
     "discarded": [
       "origin",

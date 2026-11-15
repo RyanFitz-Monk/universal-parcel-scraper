@@ -64,12 +64,12 @@
       "delivered_at",
       "failed_delivery_reason",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name"
     ],
     "discarded": [
       "eta",
       "sender_name",
-      "recipient_name",
       "order_contents",
       "coordinates",
       "related_tracking_numbers"

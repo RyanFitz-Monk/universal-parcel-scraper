@@ -101,7 +101,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
 /**
  * The reply of `getLogisticsTrack/{number}`, the lookup the tracking page
  * makes: `code` "0" with the scans, oldest first, and the recipient's address,
- * which the page pins on a map and the adapter never reads. Any other code is
+ * which the page pins on a map, one line per comma. Any other code is
  * what the page reports as not found; the backend gives "parse tracking
  * response failed" for every number it holds no shipment for. The reply does
  * not echo the number: the scans are those of the whole number in the request.
@@ -137,6 +137,7 @@ export function parseXlcourier(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  const address = clean(data.recipient_address, 300).split(/\s*,\s*/).filter(Boolean).join('\n');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
@@ -144,6 +145,7 @@ export function parseXlcourier(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -57,17 +57,17 @@
       "history",
       "location",
       "provider_code",
-      "destination_country"
+      "destination_country",
+      "signatory",
+      "recipient_address",
+      "remarks",
+      "destination"
     ],
     "discarded": [
       "departure_date",
       "origin",
-      "destination",
       "delivered_at",
-      "delivery_tracking_number",
-      "signatory",
-      "recipient_address",
-      "remarks"
+      "delivery_tracking_number"
     ],
     "unavailable": [
       "eta",

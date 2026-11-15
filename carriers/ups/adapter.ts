@@ -604,8 +604,10 @@ export function parseUPSTrackingResponse(
   const postal = isRecord(detail.additionalInformation)
     ? uspsPackageIdentifier(cleanScalar(detail.additionalInformation.postalServiceTrackingID))
     : null;
-  // Never projected: the ship-to and delivery addresses beyond their country,
-  // `receivedBy`, `leftAt`, the proof-of-delivery link, the access point's
+  // The ship-to address, else the delivery address, and who took a delivered parcel.
+  const shipTo = [detail.shipToAddress, detail.deliveryAddress].map(postalAddress).find(Boolean) ?? '';
+  const taker = delivered ? text(detail.receivedBy, 120) : '';
+  // Never projected: `leftAt`, the proof-of-delivery link, the access point's
   // attention name, hours and coordinates, and `senderShipperNumber`, an
   // account number.
   return {
@@ -617,10 +619,36 @@ export function parseUPSTrackingResponse(
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(pickupPoint ? { pickup_point: pickupPoint } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(shipTo ? { receiver_address: shipTo } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     ...(service ? { service_name: service } : {}),
     ...(postal ? { delivery_carrier: 'usps', delivery_tracking_number: postal } : {}),
     events,
   };
+}
+
+/**
+ * A recipient's address as the page writes it: its street lines, then the
+ * town. UPS nests the address (`address.addressLine1`, `postalCode`) or spells
+ * it out flat (`streetAddress1`, `zipCode`). The country is read apart.
+ */
+function postalAddress(value: unknown): string {
+  const holder = isRecord(value) ? value : null;
+  const address = holder && isRecord(holder.address) ? holder.address : holder;
+  if (!address) return '';
+  const street = [address.addressLine1 || address.streetAddress1, address.addressLine2 || address.streetAddress2, address.addressLine3 || address.streetAddress3]
+    .map((line) => text(line, 120)).filter(Boolean).join('\n');
+  return [street, townOf(address)].filter(Boolean).join('\n');
+}
+
+/** "City, ST 12345" when a US state or Canadian province is named, else "12345 City". */
+function townOf(address: JsonObject): string {
+  const city = text(address.city, 80);
+  const postcode = text(address.postalCode || address.zipCode, 16);
+  const region = text(address.stateProvince || address.state || address.province, 40);
+  if (!region) return [postcode, city].filter(Boolean).join(' ');
+  const tail = [region, postcode].filter(Boolean).join(' ');
+  return city ? `${city}, ${tail}` : tail;
 }
 
 /**
@@ -709,11 +737,11 @@ function apiEstimate(detail: JsonObject): string | null {
 /**
  * The official Track API's answer (`GET /api/track/v1/details/{number}`), as
  * the same shipment the page's reply makes: the scans with their activity
- * codes, the status, the scheduled day and its window, the service, the destination country
- * and the USPS number of a parcel handed to the post office. The addresses
- * beyond their country, the recipient, signature, photo, proof of delivery,
- * payments and references are never read, and neither is the access point,
- * which the API does not name.
+ * codes, the status, the scheduled day and its window, the service, the
+ * destination's country, name and address, who took a delivered parcel and the
+ * USPS number of a parcel handed to the post office. The origin, signature,
+ * photo, proof of delivery, payments and references are never read, and
+ * neither is the access point, which the API does not name.
  */
 export function parseUPSApiResponse(payload: unknown, trackingNumber: string): CarrierResult {
   const shipments = isRecord(payload) && isRecord(payload.trackResponse) && Array.isArray(payload.trackResponse.shipment)
@@ -769,6 +797,9 @@ export function parseUPSApiResponse(payload: unknown, trackingNumber: string): C
   const addresses = Array.isArray(detail.packageAddress) ? detail.packageAddress.filter(isRecord) : [];
   const destination = addresses.find((entry) => cleanScalar(entry.type).toUpperCase() === 'DESTINATION');
   const country = destination && isRecord(destination.address) ? cleanScalar(destination.address.countryCode, 8).toUpperCase() : '';
+  const recipient = destination ? text(destination.name, 120) || text(destination.attentionName, 120) : '';
+  const shipTo = postalAddress(destination);
+  const taker = delivered && isRecord(detail.deliveryInformation) ? text(detail.deliveryInformation.receivedBy, 120) : '';
   const service = isRecord(detail.service) ? clean(text(detail.service.description, 200).replace(/[®™℠]/g, ' '), 80) : '';
   // A parcel UPS hands to the U.S. Postal Service names its USPS number among the alternate numbers.
   const postal = (Array.isArray(detail.alternateTrackingNumber) ? detail.alternateTrackingNumber.filter(isRecord) : [])
@@ -783,6 +814,9 @@ export function parseUPSApiResponse(payload: unknown, trackingNumber: string): C
     expected_delivery: delivered ? null : apiEstimate(detail),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(shipTo ? { receiver_address: shipTo } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     ...(service ? { service_name: service } : {}),
     ...(postal ? { delivery_carrier: 'usps', delivery_tracking_number: postal } : {}),
     events,

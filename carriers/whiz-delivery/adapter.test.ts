@@ -67,8 +67,9 @@ describe('Whiz Delivery tracking', () => {
       ['2026-03-10T11:30:21Z', '25', 'accepted'],
       ['2026-03-05T15:20:44Z', '10', 'registered'],
     ]);
-    // The towns and the shop stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic (?:Town|Origin|Shop)/);
+    // The destination town is the recipient's; the origin and the shop stay out.
+    expect(result.receiver_address).toBe('Synthetic Town, QC');
+    expect(JSON.stringify(result)).not.toMatch(/Synthetic (?:Origin|Shop)/);
   });
 
   it('reads an instant without an offset as UTC, as the tracking page does, and sorts events out of order', () => {

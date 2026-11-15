@@ -46,12 +46,12 @@
       "status",
       "order_date",
       "delivery_date",
-      "eta"
+      "eta",
+      "recipient_name"
     ],
     "discarded": [
       "customer_reference",
       "payment_link",
-      "recipient_name",
       "payment_details"
     ],
     "unavailable": [

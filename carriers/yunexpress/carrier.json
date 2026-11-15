@@ -43,7 +43,9 @@
       "status",
       "history",
       "location",
-      "delivery_partner"
+      "delivery_partner",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "order_references",

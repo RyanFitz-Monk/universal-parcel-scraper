@@ -33,9 +33,6 @@ export function yanwenTrackingUrl(raw: string): string {
 // and a partner's "Not Available" or bare "AA", a code no country holds, is
 // none, as are a code of one or two digits and the partner's own name.
 const POSTCODE = /^(?:[A-Z]\d[A-Z] ?\d[A-Z]\d|\d{5}(?:-\d{4})?)$/i;
-// GOFO's European delivery scans say whether a PIN was used and give a door
-// number; neither belongs in the wording.
-const DELIVERY_DETAIL = /\s*,?\s*\b(?:PIN|Door NO):[^,.]*/gi;
 
 function place(raw: string): string {
   if (isYanwenPlaceholder(raw)) return '';
@@ -170,7 +167,7 @@ export function parse(html: string, trackingNumber: string): CarrierResult {
       const time = eventTime(day, clean(row.find('.timePoint').text(), 64));
       const words = row.find('.cz_r h6');
       if (words.length < 1 || words.length > 2) throw new SchemaError('Yanwen');
-      const description = yanwenWording(clean(words.last().text(), 500).replace(DELIVERY_DETAIL, ''));
+      const description = yanwenWording(clean(words.last().text(), 500));
       if (!description) throw new SchemaError('Yanwen', 'Yanwen returned an empty scan');
       const location = words.length === 2 ? place(clean(words.first().text(), 200).replace(/^\[|\]$/g, '')) : '';
       const code = /\/([A-Z]{2}\d{2})\.png$/.exec(row.find('.cz_c img').attr('src') ?? '')?.[1];

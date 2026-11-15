@@ -25,8 +25,9 @@ const DAY = /^(\d{4}-\d{2}-\d{2})(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/;
 const STATE_ZIP = /\b([A-Z]{2})[ ,;]+\d{5}(?:-\d{4})?\b/g;
 // British and Canadian postcodes, and the four- or five-digit ones of other countries.
 const POSTCODE = /\b(?:[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|[A-Z]\d[A-Z] ?\d[A-Z]\d|\d{4,5})\b/g;
-// Who took a delivered parcel, after the delivery's own words.
+// Who took a delivered parcel, after the delivery's own words; the scan is staged without them.
 const RECEIVER = /\s*[,;:.\-–]\s*(?:signed(?: for)? by|signatory|received by|left with)\b[\s\S]*$/i;
+const TAKER = /[,;:.\-–]\s*(?:signed(?: for)? by|signatory|received by|left with)\s*:?\s*(\S[\s\S]*)$/i;
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written; a date stays.
@@ -52,13 +53,13 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
 
 /**
  * A scan's wording: WINIT's English, else its Chinese, without phone
- * numbers, e-mail addresses or the name of whoever took the parcel. The
+ * numbers or e-mail addresses. The
  * tracker shows the English as HTML, and some relayed UPS wording with its
  * UTF-8 read as Latin-1 ("Pointâ\u0084¢" for "Point™"), which is put right.
  */
 export function winitWording(row: Record<string, unknown>): string {
   const raw = textFromHtml(text(row, 'eventDescription', 2000), 1000) || textFromHtml(text(row, 'eventStatus', 1000), 1000);
-  return clean(repairMisreadUtf8(raw).replace(RECEIVER, '').replace(EMAIL, '').replace(PHONE, '')
+  return clean(repairMisreadUtf8(raw).replace(EMAIL, '').replace(PHONE, '')
     .replace(/\s+([,，;；.。])/g, '$1'), 300).replace(/^[\s,，;；:]+|[\s,，;；:\-–]+$/g, '');
 }
 
@@ -108,7 +109,7 @@ function projectRow(row: unknown): { key: string; event: CarrierEvent } | null {
   const rawCode = text(row, 'eventCode', 32).toUpperCase();
   // The partner's codes are its own; only WINIT's are the scan's code here.
   const code = !partner && /^[A-Z0-9_-]{1,16}$/.test(rawCode) ? rawCode : null;
-  const staged = winitStage(code, description);
+  const staged = winitStage(code, description.replace(RECEIVER, ''));
   const event: CarrierEvent = {
     ...clock,
     description,
@@ -159,9 +160,9 @@ function currentStage(tab: Stage | undefined, scanned: Stage | undefined): Stage
  * lookup finds a shipment by its package number, its order number or its
  * partner's number, and lists a number it does not know with `findNoBl` N.
  * Each shipment counts only when its own package or order number is the one
- * asked; an order with several packages names no single parcel. Staff
- * logins, the recipient's town and postcode, and proof of delivery are not
- * read.
+ * asked; an order with several packages names no single parcel. The
+ * recipient's postcode and town are read; staff logins and proof of delivery
+ * are not.
  */
 export function parseWinit(payload: unknown, raw: string): CarrierResult {
   const number = normalizeWinitNumber(raw);
@@ -212,6 +213,8 @@ export function parseWinit(payload: unknown, raw: string): CarrierResult {
   const eta = day && stage !== 'delivered' && stage !== 'returned' && DateTime.fromISO(day, { zone: 'UTC' }).isValid ? day : null;
   const destination = text(shipment, 'destination', 80);
   const country = destination ? countryCode(destination) : null;
+  const town = [text(shipment, 'destinationPostcode', 16), text(shipment, 'destinationCity', 80)].filter(Boolean).join(' ');
+  const taker = clean(delivered && TAKER.exec(delivered.description!)?.[1], 120).replace(/[\s,;.]+$/, '');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -222,6 +225,8 @@ export function parseWinit(payload: unknown, raw: string): CarrierResult {
     ...(delivered?.time ? { delivered_at: delivered.time } : {}),
     ...handoff(shipment, number),
     ...(country ? { destination_country: country } : destination ? { destination_country_name: destination } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

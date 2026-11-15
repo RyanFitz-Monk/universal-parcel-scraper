@@ -45,7 +45,9 @@
       "location",
       "pickup_point",
       "service_name",
-      "delivery_partner"
+      "delivery_partner",
+      "signatory",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -56,11 +58,12 @@
       "pickup_point",
       "provider_code",
       "service_name",
-      "delivery_partner"
-    ],
-    "discarded": [
+      "delivery_partner",
       "signatory",
       "recipient_address",
+      "recipient_name"
+    ],
+    "discarded": [
       "proof_of_delivery"
     ],
     "unavailable": [

@@ -32,7 +32,12 @@ function description(raw: string): string | null {
   if (/^Unloaded at delivery branch\s+\S/i.test(raw)) return 'Arrived at delivery branch';
   if (/^Loaded for manifest\s+\S+$/i.test(raw)) return 'Loaded for transport';
   if (/^Seal#.*\(\s*Mobile dispatch\s*\)$/i.test(raw)) return 'Dispatch recorded';
-  if (/^Delivered(?: to\s+\S.*)?$/i.test(raw)) return 'Delivered';
+  const delivered = /^Delivered(?: to\s+(\S.*))?$/i.exec(raw);
+  if (delivered) {
+    // Who took the parcel stays; the phone number after their name goes.
+    const taker = clean((delivered[1] ?? '').replace(/\(\s*[+\d\s-]*\)/g, ' ').replace(/[^\s@]+@[^\s@]+|\+?\d[\d\s-]{5,}\d/g, ' '), 120);
+    return taker ? `Delivered to ${taker}` : 'Delivered';
+  }
   for (const wording of ['All Package Label Generated', 'Package Labels Printed', 'Out for delivery']) {
     if (raw.toLowerCase() === wording.toLowerCase()) return wording;
   }
@@ -66,7 +71,8 @@ export function parseVXpress(html: string, raw: string): CarrierResult {
     if (detail.length > 2000 || [...detail.matchAll(/\bLR\s+(\d+)\b/gi)].some(match => match[1] !== number)) throw new SchemaError(PROVIDER, 'V-Xpress returned an invalid or unrelated scan');
     const wording = description(detail);
     if (!wording) continue;
-    const stage = vXpressStage(null, wording);
+    // A delivery is staged without the name of whoever took it.
+    const stage = vXpressStage(null, wording.replace(/^Delivered to .*$/, 'Delivered'));
     // Location includes recipient names on delivery rows; omit it with the raw details.
     events.push({ local_time, description: wording, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) });
   }
@@ -75,8 +81,9 @@ export function parseVXpress(html: string, raw: string): CarrierResult {
   const stage = vXpressStage(null, current), latestStage = events.find(event => event.stage)?.stage;
   if ((stage === 'delivered') !== (latestStage === 'delivered')) throw new SchemaError(PROVIDER, 'V-Xpress summary and delivery scans disagree');
   const seen = new Set<string>(), distinct = events.filter(event => { const key = JSON.stringify(event); if (seen.has(key)) return false; seen.add(key); return true; });
+  const taker = distinct.find(event => event.stage === 'delivered')?.description!.replace(/^Delivered(?: to )?/, '');
   // Summary and timeline have different unlabelled clocks; do not graft its delivery/ETA clock onto a scan.
   return { status: stage ? languageStageStatus(stage) : 'unknown', ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
-    last_status_text: current, last_update: null, last_update_local: distinct[0]!.local_time, expected_delivery: null,
+    last_status_text: current, last_update: null, last_update_local: distinct[0]!.local_time, expected_delivery: null, ...(taker ? { signed_by: taker } : {}),
     ...(distinct.length > 100 ? { history_truncated: true } : {}), events: distinct.slice(0, 100) };
 }

@@ -23,8 +23,9 @@ Chattanooga, Tennessee. Its site is xgsi.com.
   provider code; the newest of the delivery, the hub arrival and the bill day dates the status.
   Times are wall clocks with no zone and stay `local_time`.
 - The status map lists the codes the widget tests: delivered and warehoused at the destination.
-- The signatory, the consignee's ZIP code, the towns, the hubs, the payor and the weight are not
-  read; the reply does not say the weight's unit.
+- The delivery's signatory is `signed_by`, and the destination town and state with the
+  consignee's ZIP code are `receiver_address`. The origin, the hubs, the payor and the weight
+  are not read; the reply does not say the weight's unit.
 
 ## Limitations
 

@@ -59,19 +59,20 @@
       "delivered_at",
       "offset_timestamps",
       "weight",
-      "service_name"
+      "service_name",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
       "origin",
-      "recipient_address",
       "recipient_id",
       "remarks"
     ],
     "unavailable": [
       "eta",
       "sender_name",
-      "recipient_name",
       "proof_of_delivery"
     ]
   },

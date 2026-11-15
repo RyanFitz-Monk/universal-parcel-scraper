@@ -30,11 +30,11 @@ its tracker's own page.
 - Scan clocks are wall clocks to the second with no zone, from the Warsaw hub, Ukrainian depots
   and the origin country, so they stay `local_time` and the page's order stands. The Delivery
   Date repeats the delivery scan's clock and is not kept.
-- The page can follow a scan's wording with ` - ` and a remark. Only the hub or partner depot
-  that an import scan names is kept. Other remarks are free text: a change of address carries
-  the new address, and a changed delivery date its time window.
-- The Signature, which names whoever signed, the customer reference in the XML, the pick-up
-  date, the origin and the destination town are not kept. The destination country comes from
+- The page can follow a scan's wording with ` - ` and a remark, such as a hub's name or the new
+  address of a change of address. The remark stays in the wording; the words before it stage the
+  scan.
+- The XML's signatory becomes `signed_by` and its delivery town `receiver_address`. The customer
+  reference, the pick-up date and the origin are not kept. The destination country comes from
   the XML.
 - The Partner Connote is the parcel's number at a partner, and import scans name a partner's
   destination depot, but neither the page nor the XML names the partner, so there is no

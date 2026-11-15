@@ -205,9 +205,14 @@ function relayedStatus(description: string): ClassifiedStatus | undefined {
   return stage ? { status: languageStageStatus(stage), stage } : undefined;
 }
 
+// GOFO's European delivery scans say whether a PIN was used and give a door
+// number. The wording keeps both; the stage is read without them.
+const DELIVERY_DETAIL = /\s*,?\s*\b(?:PIN|Door NO):[^,.]*/gi;
+const staged = (description: string) => description.replace(DELIVERY_DETAIL, '');
+
 export function yanwenStatus(description: string, code?: string): ClassifiedStatus | undefined {
   if (code === DELIVERY_ICON) return { status: 'delivered', stage: 'delivered' };
-  return WORDING.get(bare(description)) ?? relayedStatus(description);
+  return WORDING.get(bare(staged(description))) ?? relayedStatus(staged(description));
 }
 
 const STAGE_BY_WORDING = new Map([...WORDING].map(([wording, { stage }]) => [normalizeStatusWording(wording), stage]));
@@ -228,7 +233,8 @@ export const yanwenNotice = (description: string): boolean => NOTICES.has(normal
 
 /** What the map says about one scan by its milestone icon, the only code it keeps, else its wording. */
 export const statusMap: CarrierStatusMap = {
-  stage: (code, wording) => (code === DELIVERY_ICON ? 'delivered' : STAGE_BY_WORDING.get(bare(wording)) ?? relayedStage(wording)),
+  stage: (code, wording) => (code === DELIVERY_ICON ? 'delivered'
+    : STAGE_BY_WORDING.get(bare(staged(wording))) ?? relayedStage(staged(wording))),
   gaps: [
     { wording: 'ua.', note: "A partner's scan in Ukraine that Yanwen relays as its country's code alone, without words: it names no stage." },
     ...[...NOTICES].map(([wording, note]) => ({ wording, note })),

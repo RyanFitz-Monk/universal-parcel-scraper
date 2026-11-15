@@ -42,7 +42,8 @@
       "eta",
       "destination_country",
       "customer_reference",
-      "signature"
+      "signature",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -50,11 +51,12 @@
       "location",
       "eta",
       "destination_country",
-      "provider_code"
+      "provider_code",
+      "signature",
+      "recipient_address"
     ],
     "discarded": [
-      "customer_reference",
-      "signature"
+      "customer_reference"
     ],
     "unavailable": []
   },

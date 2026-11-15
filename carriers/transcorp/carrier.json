@@ -61,7 +61,8 @@
       "recipient_name",
       "recipient_address",
       "customer_reference",
-      "service_name"
+      "service_name",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -72,7 +73,10 @@
       "delivered_at",
       "weight",
       "service_name",
-      "destination_country"
+      "destination_country",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "coordinates",
@@ -80,8 +84,6 @@
       "destination",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "customer_reference"
     ],
     "unavailable": [

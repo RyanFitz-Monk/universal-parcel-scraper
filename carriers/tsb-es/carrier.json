@@ -56,13 +56,13 @@
       "history",
       "provider_code",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "customer_reference",
       "parcel_count",
       "weight",

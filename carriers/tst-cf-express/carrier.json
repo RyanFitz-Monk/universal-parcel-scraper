@@ -53,7 +53,8 @@
       "origin",
       "destination",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -64,7 +65,8 @@
       "customs_status",
       "destination",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_address"
     ],
     "discarded": [
       "delivered_at",
@@ -78,7 +80,6 @@
       "offset_timestamps",
       "sender_name",
       "recipient_name",
-      "recipient_address",
       "proof_of_delivery",
       "signatory"
     ]

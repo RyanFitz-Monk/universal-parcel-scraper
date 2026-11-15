@@ -77,7 +77,9 @@ without codes, so the status map also holds the partner lines seen there.
 
 The reply carries a weight without a unit and with placeholder values for some
 services, and estimate fields the page never shows, so neither is read. The
-customer's order number is never read.
+customer's order number is never read. The consignee's name and address become
+`receiver_name` and `receiver_address`. A reply without the consignee gives the
+name on its latest event.
 
 Scan stages come from [status.ts](status.ts), which compares Yuntrack's wording
 without case or repeated spaces. China's export declaration ("The country of origin

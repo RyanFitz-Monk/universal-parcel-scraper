@@ -47,7 +47,7 @@ describe('TransMission tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads every unit’s scans once, in Dutch time, with each depot’s town, and leaves out the people', () => {
+  it('reads every unit’s scans once, in Dutch time, with each depot’s town, the recipient and who took the parcel', () => {
     const result = parseTransmissionPage(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Bezorgd', last_update: '2026-09-30T11:40:26+02:00', delivered_at: '2026-09-30T11:40:26+02:00', weight_kg: 6.5 });
@@ -63,7 +63,9 @@ describe('TransMission tracking adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('expected_delivery');
     expect(result).not.toHaveProperty('summary_only');
-    expect(JSON.stringify(result)).not.toMatch(/Erika|Voorbeeldnaam|Synthetic Shop|proefpad|1234AB|SYNTH|\+316|TESTWEG|PROEFSTRAAT|TRANSPORT B\.V\./i);
+    expect(result).toMatchObject({ receiver_name: 'Erika Voorbeeld', receiver_address: 'proefpad 7\n1234AB monsterdorp', signed_by: 'Voorbeeldnaam' });
+    // The sender, references and contact details stay out.
+    expect(JSON.stringify(result)).not.toMatch(/Synthetic Shop|SYNTH|\+316|TESTWEG|PROEFSTRAAT|TRANSPORT B\.V\./i);
   });
 
   it('reads a parcel on its way from its search codes, with the repeated hour as its first occurrence and the expected day', () => {
@@ -76,12 +78,15 @@ describe('TransMission tracking adapter', () => {
       ['2026-10-24T18:41:11+02:00', 'PROEFSTAD', '20', 'in_transit', 'Bezorgtijd nog onbekend'],
     ]);
     expect(result).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(result)).not.toMatch(/Jan Proef|proefpad|0600000000|1234AB|MONSTERWEG|SAMPLE LOGISTICS/i);
+    expect(result).toMatchObject({ receiver_name: 'Jan Proef', receiver_address: 'proefpad 8\n1234AB monsterdorp' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/0600000000|MONSTERWEG|SAMPLE LOGISTICS/i);
   });
 
   it('reports an announced shipment without scans as registered', () => {
     expect(parseTransmissionPage(fixture('announced'), ANNOUNCED)).toEqual({ status: 'pending', current_stage: 'registered',
-      current_stage_source: 'carrier_map', last_status_text: 'Zending aangemeld', last_update: null, weight_kg: 18, summary_only: true, events: [] });
+      current_stage_source: 'carrier_map', last_status_text: 'Zending aangemeld', last_update: null, weight_kg: 18,
+      receiver_name: 'Piet Monster', receiver_address: 'proefpad 9\n1234AB monsterdorp', summary_only: true, events: [] });
     // Without a headline it has still been announced.
     const bare = fixture('announced').replace(/<h2[^>]*>Zending aangemeld<\/h2>/, '<h2></h2>').replace('<p class="body-b2 gray-500">Zending aangemeld</p>', '');
     expect(parseTransmissionPage(bare, ANNOUNCED)).toMatchObject({ current_stage: 'registered', last_status_text: null, summary_only: true });
@@ -176,11 +181,11 @@ describe('TransMission tracking adapter', () => {
     }
   });
 
-  it('cuts the name of whoever took the parcel from a scan', () => {
+  it('keeps the name of whoever took the parcel in a scan, staged by the words before it', () => {
     const signed = fixture('delivered').replace(/<td>Bezorgd<\/td>/g, '<td>Bezorgd - ontvangen door Voorbeeldnaam</td>');
     const result = parseTransmissionPage(signed, DELIVERED);
-    expect(result.events![0]).toMatchObject({ description: 'Bezorgd', stage: 'delivered' });
-    expect(JSON.stringify(result)).not.toContain('Voorbeeldnaam');
+    expect(result.events![0]).toMatchObject({ description: 'Bezorgd - ontvangen door Voorbeeldnaam', stage: 'delivered' });
+    expect(result.events!.filter((event) => event.stage === 'delivered')).toHaveLength(1);
   });
 
   it('takes T or P and fourteen digits, or a unit’s seventeen, and the recipient’s postcode, without a request otherwise', async () => {

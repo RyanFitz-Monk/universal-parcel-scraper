@@ -61,10 +61,10 @@ describe('TufesaPack HTTP adapter', () => {
     ]);
   });
 
-  it('keeps the delivery without the receiver’s line, the delivery block, the parties or the price', () => {
+  it('keeps the delivery, the recipient and who took the parcel, without the receiver’s line, the sender or the price', () => {
     const result = parseTufesa(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Envío Entregado', last_update_local: '2026-03-04T16:40:00' });
+      last_status_text: 'Envío Entregado', last_update_local: '2026-03-04T16:40:00', receiver_name: 'PERSONA EJEMPLO', signed_by: 'PERSONA EJEMPLO' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.description, event.location, event.stage])).toEqual([
       ['2026-03-04T16:40:00', 'EN', 'Envío Entregado', 'Villa Muestra, Sinaloa', 'delivered'],
       // Collected at the branch, so the parcel waited there.
@@ -76,7 +76,12 @@ describe('TufesaPack HTTP adapter', () => {
       ['2026-03-02T10:15:00', 'RG', 'Envío Documentado', 'Pueblo Ejemplo, Sonora', 'accepted'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.point === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PERSONA|EMPRESA|RECIBIDO|ENTREGA"|10\.0000|-100|AAAA|0\.00|SOBRE|PAGADO|OCURRE/);
+    expect(JSON.stringify({ ...result, receiver_name: null, signed_by: null })).not.toMatch(/PERSONA|EMPRESA|RECIBIDO|ENTREGA"|10\.0000|-100|AAAA|0\.00|SOBRE|PAGADO|OCURRE/);
+    // Before the delivery is recorded nobody has taken the parcel.
+    const moving = parseTufesa(fixture('in-transit'), IN_TRANSIT);
+    expect(moving).toMatchObject({ receiver_name: 'OTRA PERSONA EJEMPLO' });
+    expect(moving.signed_by).toBeUndefined();
+    expect(parseTufesa(changed('delivered', (body) => { body.destinatario = '-'; body.entrega.recibe = '-'; }), DELIVERED)).not.toHaveProperty('signed_by');
   });
 
   it('reads the destination branch’s receipt by the delivery type, and the recorded delivery over a later line', () => {
@@ -97,13 +102,13 @@ describe('TufesaPack HTTP adapter', () => {
       .toMatchObject({ current_stage: 'ready_for_pickup' });
   });
 
-  it('keeps an unknown code to the wording rules, a repeated line once and a receiver out of a shown line', () => {
+  it('keeps an unknown code to the wording rules, a repeated line once and the receiver a shown line names', () => {
     const result = parseTufesa(changed('in-transit', (body) => {
       body.historial.push(scan('ZZ', 'Línea Sintética', '11/06/2026', '03:00'), scan('ZZ', 'Línea Sintética', '11/06/2026', '03:00'),
         scan('', 'Envío Entregado, recibido por Persona Ejemplo', '11/06/2026', '04:00', '-'));
     }), IN_TRANSIT);
     expect(result.events!.slice(0, 2)).toEqual([
-      { local_time: '2026-06-11T04:00:00', description: 'Envío Entregado', stage: 'delivered', stage_source: 'wording:language' },
+      { local_time: '2026-06-11T04:00:00', description: 'Envío Entregado, recibido por Persona Ejemplo', stage: 'delivered', stage_source: 'wording:language' },
       { local_time: '2026-06-11T03:00:00', location: 'Villa Muestra, Sinaloa', description: 'Línea Sintética', provider_code: 'ZZ' },
     ]);
     expect(result.events).toHaveLength(5);

@@ -4,7 +4,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { countryCode, isoTime } from '../../core/time/index.js';
-import { cleanScalar } from '../../core/transport/index.js';
+import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { RTB56_MAX_BYTES, rtb56Clock, rtb56Entry, rtb56Text, rtb56Wording } from './rtb56.js';
 import { yypostStage } from './status.js';
@@ -40,8 +40,8 @@ export function normalizeYypostNumber(raw: string): string {
  * without a zone, a place and English and Chinese wording. A number the
  * tracker does not know gets `success` 0 and its "No query to track
  * information" message. Only the entry whose `server_hawbcode` is the whole
- * number asked is read; the merchant's order reference, the signatory and the
- * proof of delivery are never read.
+ * number asked is read; the merchant's order reference and the proof of
+ * delivery never are. `signatory_name` gives who took a delivered parcel.
  */
 export function parseYypost(payload: unknown, raw: string): CarrierResult {
   const number = normalizeYypostNumber(raw);
@@ -89,6 +89,7 @@ export function parseYypost(payload: unknown, raw: string): CarrierResult {
   const staged = events.find((event) => event.stage && event.stage !== 'registered') ?? events.find((event) => event.stage);
   const stage = staged?.stage as Stage | undefined;
   const country = countryCode(rtb56Text(item, 'destination_country', PROVIDER, 8));
+  const signatory = stage === 'delivered' ? clean(item.signatory_name, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
@@ -97,6 +98,7 @@ export function parseYypost(payload: unknown, raw: string): CarrierResult {
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     // The number of the network that carries the parcel on; the hand-off decides who that is.
     ...(onward ? { delivery_tracking_number: onward } : {}),
     events: events.slice(0, MAX_EVENTS),

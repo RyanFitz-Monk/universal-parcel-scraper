@@ -469,7 +469,7 @@ describe('UPS structured response', () => {
     expect(unnamed).toMatchObject({ current_stage: 'ready_for_pickup' });
     expect(unnamed.pickup_point).toBeUndefined();
     for (const result of [waiting, collected, suggested, unnamed]) {
-      const serialized = JSON.stringify(result);
+      const serialized = JSON.stringify({ ...result, receiver_address: null, signed_by: null });
       for (const value of ['PRIVATE', '1.2345', '2.3456']) expect(serialized).not.toContain(value);
     }
   });
@@ -572,14 +572,22 @@ describe('UPS structured response', () => {
     }
   });
 
-  it('keeps the recipient block out of the result', () => {
-    const serialized = JSON.stringify(parseUPSTrackingResponse(fixture(), TRACKING_NUMBER, TODAY));
-    for (const value of [
-      'PRIVATE RECIPIENT', '10 PRIVATE STREET', 'PRIVATE CITY', 'PRIVATE POSTCODE',
-      'PRIVATE-SIGNATURE-LINK', 'PRIVATE-PHOTO-LINK', 'receivedBy', 'signatureLink',
-    ]) {
+  it('reads the ship-to address, and who took the parcel once it is delivered', () => {
+    const result = parseUPSTrackingResponse(fixture(), TRACKING_NUMBER, TODAY);
+    expect(result.receiver_address).toBe('10 PRIVATE STREET\nPRIVATE POSTCODE PRIVATE CITY');
+    // The parcel is still on its way, so nobody has taken it.
+    expect(result.signed_by).toBeUndefined();
+    const serialized = JSON.stringify(result);
+    for (const value of ['PRIVATE RECIPIENT', 'PRIVATE-SIGNATURE-LINK', 'PRIVATE-PHOTO-LINK', 'receivedBy', 'signatureLink']) {
       expect(serialized).not.toContain(value);
     }
+    const delivered = parseUPSTrackingResponse(withScans([scan('KB', 'DELIVERED', '20260804 15:10:00')]), TRACKING_NUMBER, TODAY);
+    expect(delivered).toMatchObject({ current_stage: 'delivered', signed_by: 'PRIVATE RECIPIENT' });
+    // A flat address with a US state, written as the page writes one.
+    const flat = parseUPSTrackingResponse(withScans([scan('KB', 'DELIVERED', '20260804 15:10:00')], {
+      shipToAddress: null, deliveryAddress: { streetAddress1: '1 Example Ave', streetAddress2: 'Suite 2', city: 'Example Town', state: 'NY', zipCode: '00000', country: 'US' },
+    }), TRACKING_NUMBER, TODAY);
+    expect(flat).toMatchObject({ destination_country: 'US', receiver_address: '1 Example Ave\nSuite 2\nExample Town, NY 00000' });
   });
 
   it('names the shipping service without its trademark signs', () => {

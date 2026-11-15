@@ -79,7 +79,10 @@
       "eta",
       "eta_window",
       "delivered_at",
-      "weight"
+      "weight",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
@@ -87,12 +90,9 @@
       "parcel_count",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "customer_reference",
       "order_reference",
-      "departure_date",
-      "signatory"
+      "departure_date"
     ],
     "unavailable": [
       "service_name",

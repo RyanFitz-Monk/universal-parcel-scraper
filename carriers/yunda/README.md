@@ -19,8 +19,9 @@ Domestic scan clocks use China time. Provider order is preserved across missing 
 invalid clocks, which remain unresolved. Exact scan status labels drive the current
 state. Return movement remains active until a sender delivery is confirmed.
 
-Only short status wording and bracketed city locations are retained. Expanded
-descriptions, names, phones, addresses, signatures and unlabelled weights are excluded.
+Only short status wording and bracketed city locations are retained from scans. The
+order's recipient address and city become `receiver_address`. Expanded descriptions,
+names, phones, signatures and unlabelled weights are excluded.
 
 ## Limitations
 

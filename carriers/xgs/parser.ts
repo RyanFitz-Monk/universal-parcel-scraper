@@ -61,7 +61,8 @@ function wallClock(day: unknown, clock: unknown): string | null {
  * the hubs, the towns, the consignee's ZIP code, the pieces and the weight.
  * The entry must be the probill asked. The reply has no history: the newest
  * of the delivery, the hub arrival and the bill day dates the status. The
- * signatory, the ZIP code, the towns and the payor are not read.
+ * signatory and the destination with the consignee's ZIP code are read; the
+ * origin, the hubs and the payor are not.
  */
 export function parseXgs(payload: unknown, raw: string): CarrierResult {
   const number = normalizeXgsNumber(raw);
@@ -79,6 +80,12 @@ export function parseXgs(payload: unknown, raw: string): CarrierResult {
   // The newest dated milestone; a clock to the second sorts after its own day.
   const newest = [delivered, arrived, billed].filter((value): value is string => Boolean(value)).sort().at(-1) ?? null;
   const planned = stage === 'delivered' ? null : dayOf(entry.DELIVERBYDATE);
+  const signer = text(entry.PODSIGNATURE).slice(0, 120);
+  // "CITY, ST 12345", as a US address ends.
+  const destination = isRecord(entry.shipmentDestination) ? entry.shipmentDestination : {};
+  const city = text(destination.city).slice(0, 80);
+  const region = [text(destination.state).slice(0, 8), text(entry.CONSIGNEE_ZIP).slice(0, 16)].filter(Boolean).join(' ');
+  const town = [city, region].filter(Boolean).join(', ');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -87,6 +94,8 @@ export function parseXgs(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest,
     expected_delivery: planned,
+    ...(town ? { receiver_address: town } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     summary_only: true,
     events: [],
   };

@@ -6,7 +6,7 @@ import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
-import { clean } from '../../core/transport/index.js';
+import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { trackonStage } from './status.js';
 
@@ -25,8 +25,9 @@ const MISSING = 'not found';
 const NOT_TRACKON = 'please enter trackon awbno';
 // A branch code before the branch's name and state, as in "NRTH-NORTHPUR BRANCH, SAMPLE STATE".
 const BRANCH_CODE = /^[A-Z0-9]{2,12}\s*-\s*(?=\S)/;
-// A delivery scan's remark after its wording: "DELIVERED WITH MOBILE APP UPDATE - NULL".
-const REMARK = /\s+-\s+[\s\S]*$/;
+// A delivery scan's remark after its wording, which can name who took the
+// consignment: "DELIVERED WITH MOBILE APP UPDATE - NULL".
+const REMARK = /\s+-\s+([\s\S]*)$/;
 const PLACEHOLDER = /\bNULL\b/gi;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<!\d)\+?\d(?:[\s().-]{0,2}\d){8,}(?!\d)/g;
@@ -57,13 +58,9 @@ function scanTime(date: string, time: string): string {
   return wall.toUTC().toISO({ suppressMilliseconds: true });
 }
 
-/**
- * A scan's wording without phone numbers. A delivery or return loses the remark
- * the service puts after it, which can name who took the consignment.
- */
-export function trackonWording(status: string, stage?: string): string {
-  const own = stage === 'delivered' || stage === 'returned' ? status.replace(REMARK, '') : status;
-  return clean(own.replace(PHONE, '').replace(PLACEHOLDER, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+/** A scan's wording without phone numbers or the service's NULL placeholder. */
+export function trackonWording(status: string): string {
+  return clean(status.replace(PHONE, '').replace(PLACEHOLDER, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
 }
 
 /** The branch a scan names, without its code. */
@@ -83,7 +80,7 @@ function projectRow(row: unknown): (Scan & { key: string }) | null {
   if (!status) throw new SchemaError(PROVIDER, 'Trackon returned a scan without wording');
   const time = scanTime(text(row, 'EVENTDATE', 16), text(row, 'EVENTTIME', 16));
   const staged = trackonStage(code, status);
-  const description = trackonWording(status, staged?.stage);
+  const description = trackonWording(status);
   if (!description) throw new SchemaError(PROVIDER, 'Trackon returned a scan without wording');
   const location = branch(text(row, 'CURRENT_CITY'));
   const event: CarrierEvent = {
@@ -100,8 +97,10 @@ function projectRow(row: unknown): (Scan & { key: string }) | null {
  * The reply of the Android app's `CustDetailTracking` for one AWB number:
  * `summaryTrack` names the consignment and its current status, `lstDetails`
  * lists its scans newest first, and `ResponseStatus.Message` says how the
- * lookup went. The consignor, consignee, postcode, reference, weight, booking
- * details and proof-of-delivery images are not read.
+ * lookup went. The summary's postcode and destination are the recipient's
+ * address, and a delivery's remark names who took the consignment. The
+ * consignor, reference, weight, booking details and proof-of-delivery images
+ * are not read.
  */
 export function parseTrackon(payload: unknown, raw: string): CarrierResult {
   const number = normalizeTrackonNumber(raw);
@@ -139,6 +138,8 @@ export function parseTrackon(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const taker = stage === 'delivered' ? clean(REMARK.exec(current!.description!)?.[1], 120) : '';
+  const address = [cleanScalar(summary.PINCODE, 16), clean(summary.DESTINATION, 80)].filter(Boolean).join(' ');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -146,6 +147,8 @@ export function parseTrackon(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: current!.time! } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     timezone: ZONE,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

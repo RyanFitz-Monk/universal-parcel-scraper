@@ -34,11 +34,13 @@
     "shows": [
       "status",
       "history",
-      "eta"
+      "eta",
+      "signatory"
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "signatory"
     ],
     "discarded": [
       "recipient_details",

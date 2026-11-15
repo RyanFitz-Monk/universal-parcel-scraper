@@ -44,7 +44,7 @@ describe('TMM Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered import by its codes, once per scan, without the recipient\'s details', () => {
+  it('reads a delivered import by its codes, once per scan, with its signatory and delivery town', () => {
     const result = parseTmmExpress(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Consignment delivered in good condition', last_update: null, last_update_local: '2026-03-06T11:42:00',
@@ -54,9 +54,9 @@ describe('TMM Express HTTP adapter', () => {
       ['2026-03-06T08:12:44', 'OD', 'KYIV', 'Out for Delivery', 'out_for_delivery'],
       ['2026-03-05T13:10:00', 'PNA', 'KYIV', 'The phone does not answer', 'failed_attempt'],
       ['2026-03-05T08:31:09', 'OD', 'KYIV', 'Out for Delivery', 'out_for_delivery'],
-      // The new delivery date and the new address after " - " are not kept.
-      ['2026-03-04T17:49:13', 'BSC', 'KYIV', 'Delivery date is changed by client request', 'in_transit'],
-      ['2026-03-04T17:49:13', 'CA', 'KYIV', 'Change of delivery address', 'in_transit'],
+      // The new delivery date and the new address after " - " stay in the wording.
+      ['2026-03-04T17:49:13', 'BSC', 'KYIV', 'Delivery date is changed by client request - дата доставки : 06.03.2026; 9:00 : 12:00', 'in_transit'],
+      ['2026-03-04T17:49:13', 'CA', 'KYIV', 'Change of delivery address - Київ, 00000, вулиця Зразкова, 1', 'in_transit'],
       // The repeated scan is kept once.
       ['2026-03-04T09:05:30', 'HW', 'KYIV', 'Consignment in Warehouse', 'in_transit'],
       ['2026-03-03T17:36:00', 'RC', 'KYIV', 'Released from customs', 'in_transit'],
@@ -67,8 +67,9 @@ describe('TMM Express HTTP adapter', () => {
     ]);
     // Scan clocks name no zone and stay local.
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    // The signatory, the customer reference, the new address and the delivery window are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SIGNER|SAMPLEREF|Зразкова|00000,|06\.03\.2026|POLAND/);
+    // The signatory and the delivery town are read; the customer reference and the origin depot are not.
+    expect(result).toMatchObject({ signed_by: 'SAMPLE SIGNER', receiver_address: 'KYIV' });
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLEREF|POLAND/);
   });
 
   it('keeps the hub and partner depot names, and names no partner the page does not name', () => {
@@ -89,13 +90,13 @@ describe('TMM Express HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toContain('0000000000020');
   });
 
-  it('keeps only a hub\'s or depot\'s name after " - "', () => {
-    expect(tmmExpressWording('IS', 'Import Received HUB - SAMPLE HUB 1')).toEqual({ head: 'Import Received HUB', wording: 'Import Received HUB - SAMPLE HUB 1' });
-    expect(tmmExpressWording('CA', 'Change of delivery address - Sample Street 1 - flat 2'))
-      .toEqual({ head: 'Change of delivery address', wording: 'Change of delivery address' });
-    expect(tmmExpressWording('RO', 'Returned to origin - ')).toEqual({ head: 'Returned to origin', wording: 'Returned to origin' });
-    expect(tmmExpressWording('IRP', 'Import received at partner destination depot - ')).toMatchObject({ wording: 'Import received at partner destination depot' });
-    expect(tmmExpressWording('TR', 'Allocated to a unit / container  or separately in truck'))
+  it('keeps the remark after " - " and stages the wording before it', () => {
+    expect(tmmExpressWording('Import Received HUB - SAMPLE HUB 1')).toEqual({ head: 'Import Received HUB', wording: 'Import Received HUB - SAMPLE HUB 1' });
+    expect(tmmExpressWording('Change of delivery address - Sample Street 1 - flat 2'))
+      .toEqual({ head: 'Change of delivery address', wording: 'Change of delivery address - Sample Street 1 - flat 2' });
+    expect(tmmExpressWording('Returned to origin - ')).toEqual({ head: 'Returned to origin', wording: 'Returned to origin' });
+    expect(tmmExpressWording('Import received at partner destination depot - ')).toMatchObject({ wording: 'Import received at partner destination depot' });
+    expect(tmmExpressWording('Allocated to a unit / container  or separately in truck'))
       .toMatchObject({ wording: 'Allocated to a unit / container or separately in truck' });
   });
 

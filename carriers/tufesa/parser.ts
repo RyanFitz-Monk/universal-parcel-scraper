@@ -51,7 +51,7 @@ function messageNumber(row: Record<string, unknown>): number {
   return value;
 }
 
-// Who took the parcel, should a shown line ever name them.
+// Who took the parcel, should a shown line ever name them; the line is staged without it.
 const RECEIVER = /\s*[,;:.\-–]?\s*\brecibid[oa]\s+por\b[\s\S]*$/i;
 
 /**
@@ -70,6 +70,12 @@ function wallClock(date: string, time: string): string {
   return local;
 }
 
+/** A name the reply writes, without its placeholder for none. */
+function named(value: unknown): string {
+  const name = clean(value, 120);
+  return /^-*$/.test(name) ? '' : name;
+}
+
 /** A place the reply writes, without its placeholder for none. */
 function place(row: Record<string, unknown>): string {
   const value = text(row, 'UbicacionLegible', 120) || text(row, 'ubicacion', 120);
@@ -78,8 +84,9 @@ function place(row: Record<string, unknown>): string {
 
 /**
  * The reply of the tracking page's `commdatosenvio` lookup: an array holding
- * one shipment with its scans, oldest first, each in Tufesa's own words
- * (`movimiento`), its code (`mov`) and the wording the page shows
+ * one shipment with its recipient (`destinatario`), who took it once it is
+ * delivered (`entrega.recibe`) and its scans, oldest first, each in Tufesa's
+ * own words (`movimiento`), its code (`mov`) and the wording the page shows
  * (`MensageCliente`). A code it does not know comes back as message 165, "the
  * code is not valid", with dashes in every field; the page reports an empty
  * array as not found too.
@@ -109,13 +116,14 @@ export function parseTufesa(payload: unknown, raw: string): CarrierResult {
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'TufesaPack returned an invalid scan');
     // The page shows only lines with its own wording; the line naming the receiver has none.
-    const description = text(row, 'MensageCliente', 200).replace(RECEIVER, '');
+    const description = text(row, 'MensageCliente', 200);
     if (!description) continue;
     const local = wallClock(text(row, 'fechamov', 16), text(row, 'horamov', 16));
     const code = text(row, 'mov', 8).toUpperCase();
     const location = place(row);
-    const staged = tufesaStage(code, description, collected);
-    scans.push({ local, key: JSON.stringify([local, code, description, location]), event: {
+    const worded = description.replace(RECEIVER, '');
+    const staged = tufesaStage(code, worded, collected);
+    scans.push({ local, key: JSON.stringify([local, code, worded, location]), event: {
       local_time: local,
       ...(location ? { location } : {}),
       description,
@@ -140,6 +148,8 @@ export function parseTufesa(payload: unknown, raw: string): CarrierResult {
   const delivered = isRecord(shipment.entrega) && shipment.entrega.msgnum === DELIVERY_RECORDED;
   const stage = (delivered ? 'delivered' : scanned?.stage) as Stage | undefined;
   const source = delivered && scanned?.stage !== 'delivered' ? 'carrier_map' : scanned?.stage_source;
+  const recipient = named(shipment.destinatario);
+  const taker = delivered ? named((shipment.entrega as Record<string, unknown>).recibe) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -147,6 +157,8 @@ export function parseTufesa(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

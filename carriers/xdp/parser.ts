@@ -29,7 +29,7 @@ const TYPE = /^[A-Z][A-Z0-9 /&-]{0,39}$/;
 const MESSAGE = /(?:^|\s)(?:EMAIL|SMS)$|\bMESSAGE SENT$/;
 // The scanning system's name around the status it reports: Spirit at the depots, DriverX and ScanX on the round.
 const SYSTEM_STATUS = /^(?:Spirit|DriverX|ScanX) Status: "([^"]{1,200})"$/;
-// Wording that goes on to name a person is cut before the name.
+// Wording that goes on to name a person; the scan is staged and told apart without the name.
 const PERSON = /\s+(?:sent to|signed by|signed for by|received by)\b.*$/i;
 const LABELS = new Map([['CREATE', 'Order received'], ['PRINT', 'Label printed']]);
 const WEIGHT = /^(\d{1,5}(?:\.\d{1,3})?)\s*KG$/i;
@@ -37,7 +37,7 @@ const SERVICE = /^[A-Z0-9][A-Z0-9 /&+-]{0,39}$/i;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 200;
 
-interface Row { local_time: string; type: string; description: string; index: number }
+interface Row { local_time: string; type: string; description: string; worded: string; index: number }
 
 /** A consignment number as the tracker takes it: letters and digits, without a printed leading zero. */
 export function normalizeXdpNumber(raw: string): string {
@@ -88,21 +88,26 @@ function boundBarcodes(cell: string, number: string): boolean {
   return cell.split(/[\s,]+/).filter(Boolean).every((code) => piece.test(code));
 }
 
-/** A row's wording: the system status without its system, a label for a bare type, no person's name. */
+/** A row's wording: the system status without its system, or a label for a bare type. */
 function wording(type: string, data: string): string {
   const reported = SYSTEM_STATUS.exec(data)?.[1] ?? data;
   const text = reported === '--' || !reported ? LABELS.get(type) ?? type : reported;
-  const described = type === 'NEXT STOP' ? `Next stop: ${text}` : text;
-  return described.replace(PERSON, '').trim();
+  return (type === 'NEXT STOP' ? `Next stop: ${text}` : text).trim();
+}
+
+/** A name the consignment block gives, without its placeholder for none. */
+function given($: CheerioAPI, label: string): string {
+  const value = labelled($, label);
+  return value.toUpperCase() === 'N/A' ? '' : value;
 }
 
 /**
  * The legacy tracker's page for one consignment: its details and every scan,
  * newest first, each piece's scan on a row of its own. A consignment shows
  * only with its delivery or collection postcode, and an unknown number and a
- * wrong postcode get the same notice. The recipient's name, company and
- * postcode, the references, the depot and driver codes and the messages XDP
- * sent are never read.
+ * wrong postcode get the same notice. The recipient's name and postcode are
+ * read; their company, the references, the depot and driver codes and the
+ * messages XDP sent are not.
  */
 export function parseXdp(html: string, raw: string): CarrierResult {
   const number = normalizeXdpNumber(raw);
@@ -143,8 +148,9 @@ export function parseXdp(html: string, raw: string): CarrierResult {
     if (!TYPE.test(type)) throw new SchemaError(PROVIDER, 'XDP returned a scan without its status type');
     if (MESSAGE.test(type)) continue;
     const description = wording(type, data);
-    if (!description) throw new SchemaError(PROVIDER, 'XDP returned a scan without its wording');
-    rows.push({ local_time: local, type, description, index });
+    const worded = description.replace(PERSON, '').trim();
+    if (!worded) throw new SchemaError(PROVIDER, 'XDP returned a scan without its wording');
+    rows.push({ local_time: local, type, description, worded, index });
   }
   if (!rows.length) throw new NoHistoryError(PROVIDER);
 
@@ -155,11 +161,11 @@ export function parseXdp(html: string, raw: string): CarrierResult {
   let returning = false;
   for (const row of rows) {
     // A return label starts the way back: every later scan belongs to it.
-    const outbound = xdpStage(row.type, row.description);
+    const outbound = xdpStage(row.type, row.worded);
     const stage: Stage | undefined = returning && outbound && outbound !== 'exception' ? 'returned' : outbound;
-    if (row.type === 'EXCEPTION' && /^return label created$/i.test(row.description)) returning = true;
+    if (row.type === 'EXCEPTION' && /^return label created$/i.test(row.worded)) returning = true;
     // A consignment of several pieces repeats each scan once per piece.
-    const identity = JSON.stringify([row.local_time, row.type, row.description]);
+    const identity = JSON.stringify([row.local_time, row.type, row.worded]);
     if (seen.has(identity)) continue;
     seen.add(identity);
     events.push({ local_time: row.local_time, description: row.description, provider_code: row.type,
@@ -172,6 +178,8 @@ export function parseXdp(html: string, raw: string): CarrierResult {
   const weight = WEIGHT.exec(labelled($, 'Weight'));
   const kilograms = weight ? Number(weight[1]) : 0;
   const service = labelled($, 'Service');
+  const consignee = given($, 'Consignee Name');
+  const postcode = given($, 'Delivery Postcode');
   return {
     status: current ? languageStageStatus(current) : 'unknown',
     ...(current ? { current_stage: current, current_stage_source: 'carrier_map' } : {}),
@@ -181,6 +189,8 @@ export function parseXdp(html: string, raw: string): CarrierResult {
     expected_delivery: null,
     ...(kilograms > 0 ? { weight_kg: kilograms } : {}),
     ...(SERVICE.test(service) && service.toUpperCase() !== 'N/A' ? { service_name: service } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(postcode ? { receiver_address: postcode } : {}),
     events: events.slice(0, MAX_EVENTS),
   };
 }

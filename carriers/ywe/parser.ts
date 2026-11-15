@@ -21,8 +21,10 @@ const EARLIEST_MS = Date.UTC(2000, 0, 1);
 const LATEST_MS = Date.UTC(2100, 0, 1);
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
-// Who took a delivered parcel, as a delivery line can name them.
+// Who took a delivered parcel, as a delivery line can name them. The wording
+// keeps the name; a scan is told apart without it.
 const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signatory|signature)\b.*$/i;
+const TAKER = /\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signatory)\s*:?\s*(\S.*)$/i;
 
 /** A YWE parcel number; anything else is not one its tracker answers. */
 export function normalizeYweNumber(raw: string): string {
@@ -80,7 +82,7 @@ export function parseYwe(payload: unknown, raw: string): CarrierResult {
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'YWE returned an oversized history');
 
   const seen = new Set<string>();
-  const scans: { event: CarrierEvent; timestamp: number }[] = [];
+  const scans: { event: CarrierEvent; timestamp: number; taker: string }[] = [];
   rows.forEach((row: unknown) => {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'YWE returned an invalid scan');
     const time = scanTime(row);
@@ -90,14 +92,16 @@ export function parseYwe(payload: unknown, raw: string): CarrierResult {
     // A row without wording says nothing.
     if (!wording) return;
     const staged = yweStage(wording);
-    const description = clean(staged?.stage === 'delivered' ? wording.replace(RECEIVER, '') : wording, 300) || wording;
-    const key = JSON.stringify([time.timestamp, location, description]);
+    const delivered = staged?.stage === 'delivered';
+    const worded = delivered ? clean(wording.replace(RECEIVER, ''), 300) || wording : wording;
+    const key = JSON.stringify([time.timestamp, location, worded]);
     if (seen.has(key)) return;
     seen.add(key);
-    scans.push({ timestamp: time.timestamp, event: {
+    const taker = delivered ? clean(TAKER.exec(wording)?.[1]?.replace(/[\s.,;]+$/, ''), 120) : '';
+    scans.push({ timestamp: time.timestamp, taker, event: {
       time: time.iso,
       ...(location ? { location } : {}),
-      description,
+      description: wording,
       ...(CODE.test(code) ? { provider_code: code } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
     } });
@@ -111,6 +115,7 @@ export function parseYwe(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const staged = events.find((event) => event.stage);
   const stage = staged?.stage as Stage | undefined;
+  const signatory = stage === 'delivered' ? scans.find((scan) => scan.event.stage === 'delivered')?.taker : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
@@ -118,6 +123,7 @@ export function parseYwe(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: staged!.time! } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

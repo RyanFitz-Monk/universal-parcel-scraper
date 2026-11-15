@@ -40,8 +40,10 @@ lookup Elite's tracking page makes while it renders.
   area within it and the coordinates are not kept.
 - The destination country is the consignee's, or the operating country of a legacy delivery
   order. The weight is the weighed total, else the declared weight.
-- Names, addresses, phone numbers, references, remarks, the courier, the person who received
-  the parcel, cash on delivery and the declared value are not kept.
+- The consignee's name becomes `receiver_name`, and its street lines, area and region
+  `receiver_address`. The person who received the parcel at its delivery becomes `signed_by`.
+  Phone numbers, references, remarks, the courier, cash on delivery and the declared value are
+  not kept.
 - Transcorp's own tracker is a SuiteFleet page on `transcorpuae`, `transcorp` and
   `transcorpqatar.suitefleet.com`. It calls
   `GET https://api.suitefleet.com/api/public/task-timeline?awb={reference}` with the host's

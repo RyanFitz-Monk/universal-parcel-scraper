@@ -39,7 +39,8 @@ order's status and dates rather than a scan history.
 - The estimated delivery is the window from `arrivalFrom` to `arrivalTo`, of which the page
   shows the day of `arrivalFrom`; midnight stands for the day alone. It is the estimate until
   the order is issued or cancelled, and is no milestone.
-- Only the number, the status and the order's dates are kept; the reply's other details are not.
+- The consignee becomes `receiver_name`. Beyond it, only the number, the status and the order's
+  dates are kept; the reply's other details are not.
 
 ## Limitations
 

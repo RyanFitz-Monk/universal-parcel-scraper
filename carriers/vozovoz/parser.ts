@@ -16,7 +16,7 @@ const CHECK_NUMBER = '4033';
 const CLOCK = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2}))?$/;
 // 1C, behind the tracker, writes an unset date as the year 1.
 const FIRST_YEAR = 2000;
-// The fields that name the order's parties; the adapter only asks whether the reply has them.
+// The fields that name the order's parties; of them only the consignee is read.
 const PARTIES = ['organizationId', 'payerId', 'payer', 'consignee'];
 
 /** The nine digits of an order number, the only number the tracker's form takes. */
@@ -79,8 +79,7 @@ const named = (payload: Record<string, unknown>) =>
 
 /**
  * The reply of `POST https://api.vozovoz.ru/v1/order/mini` for one number:
- * the order's status message and flags and its dates, which is all the
- * tracker shows a visitor. An unknown number is error 4033, or an echo of the
+ * the order's status message and flags, its dates and its consignee. An unknown number is error 4033, or an echo of the
  * number without a status, a date or a party, which the page shows as «Нет
  * данных». The lookup also finds an order by its customer's own reference,
  * so the reply must name the number asked.
@@ -125,6 +124,7 @@ export function parseVozovoz(payload: unknown, raw: string): CarrierResult {
 
   const current = vozovozStage(message, flags);
   const settled = flags.isGiven || flags.isCanceled || current.stage === 'delivered' || current.stage === 'returned';
+  const consignee = clean(payload.consignee, 120);
   return {
     status: languageStageStatus(current.stage),
     current_stage: current.stage,
@@ -133,6 +133,7 @@ export function parseVozovoz(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     ...(events[0] ? { last_update_local: events[0].local_time } : {}),
     ...(settled ? { expected_delivery: null } : arrival),
+    ...(consignee ? { receiver_name: consignee } : {}),
     summary_only: true,
     events,
   };

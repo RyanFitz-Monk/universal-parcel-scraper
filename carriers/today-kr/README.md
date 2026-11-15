@@ -35,7 +35,8 @@ Tracked through the lookup its tracking page makes.
   headline, which names why. A lost or stopped parcel is an exception. A pickup or return
   answer has no state; its newest row sets the stage.
 - A pickup or delivery at an address keeps no place, and neither does a shipper's own pickup
-  point, which carries the shipper's name. Stations keep their names. Names, coordinates,
+  point, which carries the shipper's name. Stations keep their names. The receiver's name,
+  masked as the page shows it, becomes `receiver_name`. The sender's name, coordinates,
   products and references in the answer are not kept.
 - A parcel handed on to Hanjin, CJ Logistics or Korea Post EMS carries the partner's name and
   number in the answer, and the page shows that number as the waybill. The adapter reports the

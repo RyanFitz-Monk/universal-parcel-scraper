@@ -219,8 +219,9 @@ function projectScan(row: Record<string, unknown>): { key: string; timestamp: nu
  * number the tracker does not know comes back with every summary field null
  * and no scans. The tracker also finds a parcel by its last-mile or delivery
  * number, so the parcel counts only when its own number is the one asked.
- * The recipient's name, the order's reference, the courier in charge of each
- * scan and a scan's details, flight times in several local clocks, are left out.
+ * The recipient's name, masked as the page shows it, is read. The order's
+ * reference, the courier in charge of each scan and a scan's details, flight
+ * times in several local clocks, are left out.
  */
 export function parseTracx(payload: unknown, raw: string): CarrierResult {
   const number = normalizeTracxNumber(raw);
@@ -253,6 +254,7 @@ export function parseTracx(payload: unknown, raw: string): CarrierResult {
   const staged = events.find(event => event.stage);
   const stage = staged?.stage as Stage | undefined;
   const destination = text(summary, 'DeliveryNationCd', 8).toUpperCase();
+  const recipient = clean(summary.Recipient, 80);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source ?? 'carrier_map' } : {}),
@@ -261,6 +263,7 @@ export function parseTracx(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: staged!.time! } : {}),
     ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
     ...tracxHandoff(text(summary, 'LastmileShippingCompany', 80), text(summary, 'TrackingNo', 64), number),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

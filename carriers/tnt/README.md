@@ -43,9 +43,10 @@ postcode or account is required.
   Spanish, French and Swiss Italian sites give the tracking page its own path.
 - tnt.com lists every consignment that carried the number, since numbers are reused.
   Only consignments whose own number matches are read, and the one with the most recent
-  scan is the parcel. References, signatories and addresses are not kept, except the
-  destination's country: its `countryCode`, or else its name, becomes
+  scan is the parcel. Its signatory becomes `signed_by` and its destination town
+  `receiver_address`. The destination's `countryCode`, or else its name, becomes
   `destination_country` (or `destination_country_name` for a name without an ISO code).
+  References are not kept.
 - tnt.com scan times carry offsets. Scan codes (`legacyCode`) set the stage, because the
   wording is prose: "partially delivered" is not a delivery, and a residential delivery
   (`RES`) reads like `OK`. The estimate is kept as a calendar day until delivery.

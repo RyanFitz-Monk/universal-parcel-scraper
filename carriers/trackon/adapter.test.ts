@@ -50,10 +50,10 @@ describe('Trackon HTTP adapter', () => {
   it('reads Indian wall clocks at UTC+5:30 and stages each scan by its code, newest first', () => {
     const result = parseTrackon(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED WITH MOBILE APP UPDATE', last_update: '2026-09-14T10:48:00Z', delivered_at: '2026-09-14T10:48:00Z',
-      expected_delivery: null, timezone: 'Asia/Kolkata' });
+      last_status_text: 'DELIVERED WITH MOBILE APP UPDATE - ASHA SAMPLE', last_update: '2026-09-14T10:48:00Z', delivered_at: '2026-09-14T10:48:00Z',
+      expected_delivery: null, timezone: 'Asia/Kolkata', receiver_address: '100001 SOUTHGANJ', signed_by: 'ASHA SAMPLE' });
     expect(result.events!.map((event) => [event.time, event.location, event.provider_code, event.stage, event.description])).toEqual([
-      ['2026-09-14T10:48:00Z', 'SOUTHGANJ (MARKET ROAD), SAMPLE STATE', 'DDUF', 'delivered', 'DELIVERED WITH MOBILE APP UPDATE'],
+      ['2026-09-14T10:48:00Z', 'SOUTHGANJ (MARKET ROAD), SAMPLE STATE', 'DDUF', 'delivered', 'DELIVERED WITH MOBILE APP UPDATE - ASHA SAMPLE'],
       // The repeated manifest scan is kept once.
       ['2026-09-14T04:22:00Z', 'SOUTHGANJ (MARKET ROAD), SAMPLE STATE', 'DRBG', 'out_for_delivery', 'DELIVERY MANIFEST PREPARED FOR SOUTHGANJ (MARKET ROAD)'],
       ['2026-09-11T15:23:00Z', 'NORTHPUR BRANCH, SAMPLE STATE', 'BOKN', 'accepted', 'S/MENT BOOKED'],
@@ -63,14 +63,16 @@ describe('Trackon HTTP adapter', () => {
     expect(result).not.toHaveProperty('history_truncated');
   });
 
-  it('keeps no receiver, phone number, reference, postcode, weight, booking detail or proof of delivery link', () => {
+  it('keeps the recipient\'s postcode and town and who took a delivery, and no phone number, reference, weight, booking detail or proof of delivery link', () => {
+    expect(parseTrackon(fixture('in-transit'), IN_TRANSIT)).toMatchObject({ receiver_address: '200002 EASTMOOR' });
+    expect(parseTrackon(fixture('in-transit'), IN_TRANSIT)).not.toHaveProperty('signed_by');
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT], ['returned', RETURNED]] as const) {
       const text = JSON.stringify(parseTrackon(fixture(name), number));
-      expect(text, name).not.toMatch(/ASHA|SAMPLE ?REF|98765|43210|100001|200002|300003|0\.5500|3\.0000|STNDS|AIR"|SURFACE|pod\.example|S10001|NRTH-|EST01|MDVL-|WSTB-|NULL/);
+      expect(text, name).not.toMatch(/SAMPLE ?REF|98765|43210|0\.5500|3\.0000|STNDS|AIR"|SURFACE|pod\.example|S10001|NRTH-|EST01|MDVL-|WSTB-|NULL/);
     }
-    expect(trackonWording('DELIVERED WITH MOBILE APP UPDATE - NULL', 'delivered')).toBe('DELIVERED WITH MOBILE APP UPDATE');
-    expect(trackonWording('RTO DELIVERED TO CUSTOMER / BRANCH - R SAMPLE', 'returned')).toBe('RTO DELIVERED TO CUSTOMER / BRANCH');
-    expect(trackonWording('UNDELIVERED - DOOR LOCKED, CALL +91 98765-43210', 'failed_attempt')).toBe('UNDELIVERED - DOOR LOCKED, CALL');
+    expect(trackonWording('DELIVERED WITH MOBILE APP UPDATE - NULL')).toBe('DELIVERED WITH MOBILE APP UPDATE');
+    expect(trackonWording('RTO DELIVERED TO CUSTOMER / BRANCH - R SAMPLE')).toBe('RTO DELIVERED TO CUSTOMER / BRANCH - R SAMPLE');
+    expect(trackonWording('UNDELIVERED - DOOR LOCKED, CALL +91 98765-43210')).toBe('UNDELIVERED - DOOR LOCKED, CALL');
   });
 
   it('reads a consignment on its way, with scans staged by their wording when they come without a code', () => {

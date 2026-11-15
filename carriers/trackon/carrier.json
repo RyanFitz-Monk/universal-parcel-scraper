@@ -44,23 +44,30 @@
       "location",
       "provider_code",
       "progress_rail",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "remarks",
+      "destination",
+      "postcodes",
+      "recipient_address",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
       "provider_code",
-      "delivered_at"
+      "delivered_at",
+      "remarks",
+      "destination",
+      "postcodes",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "proof_of_delivery",
       "signature",
-      "remarks",
       "origin",
-      "destination",
-      "postcodes",
       "customer_reference",
       "parcel_count",
       "weight",
@@ -72,8 +79,7 @@
       "pickup_point",
       "delivery_partner",
       "sender_name",
-      "recipient_name",
-      "recipient_address"
+      "recipient_name"
     ]
   },
   "links": [

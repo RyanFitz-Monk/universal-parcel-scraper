@@ -60,20 +60,20 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "origin",
       "destination",
       "delivery_method",
       "sender_name",
-      "recipient_name",
       "parcel_count",
       "item_category",
       "payment_details",
       "related_tracking_numbers",
       "proof_of_delivery",
-      "signatory",
       "signature",
       "coordinates"
     ],

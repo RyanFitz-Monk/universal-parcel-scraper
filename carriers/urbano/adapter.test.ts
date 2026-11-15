@@ -69,8 +69,10 @@ describe('Urbano HTTP adapter', () => {
       .toBe(true);
   });
 
-  it('keeps no recipient, signatory, contact, address, courier, vehicle, visit point, contents or sender', () => {
-    const json = JSON.stringify(parseUrbano(fixture('delivered'), DELIVERED));
+  it('reads the recipient, their address and who took the parcel, and keeps no contact, courier, vehicle, visit point, contents or sender', () => {
+    const result = parseUrbano(fixture('delivered'), DELIVERED);
+    expect(result).toMatchObject({ receiver_name: 'Persona Ejemplo', receiver_address: 'Calle Ejemplo 123\nCAYMA - AREQUIPA', signed_by: 'Persona Ejemplo' });
+    const json = JSON.stringify({ ...result, receiver_name: null, receiver_address: null, signed_by: null });
     expect(json).not.toMatch(/Persona|Per\*|00000000|900000000|example\.com|Calle Ejemplo|CAYMA|\*\*\*|ABC|XYZ|Visita|llamar|-16\.|-71\.|Articulo|Tienda|TIENDA|PCK|3000001|400001|WYB|10000001/);
   });
 
@@ -106,17 +108,21 @@ describe('Urbano HTTP adapter', () => {
     expect(unknown.events![0]).not.toHaveProperty('stage');
   });
 
-  it('takes signatories, ID documents, e-mail addresses and phone numbers out of the wording', () => {
-    expect(urbanoWording('Firma:Persona Ejemplo (DNI:00000000)')).toBe('');
-    expect(urbanoWording('Entrega A Titular - Firma: Persona Ejemplo')).toBe('Entrega A Titular');
-    expect(urbanoWording('Entregado a Persona Ejemplo')).toBe('');
-    expect(urbanoWording('Pedido recibido por Persona Ejemplo')).toBe('Pedido');
+  it('keeps signatories in the wording, and takes ID documents, e-mail addresses and phone numbers out', () => {
+    expect(urbanoWording('Firma:Persona Ejemplo (DNI:00000000)')).toBe('Firma:Persona Ejemplo');
+    expect(urbanoWording('Entrega A Titular - Firma: Persona Ejemplo')).toBe('Entrega A Titular - Firma: Persona Ejemplo');
+    expect(urbanoWording('Entregado a Persona Ejemplo')).toBe('Entregado a Persona Ejemplo');
+    expect(urbanoWording('Pedido recibido por Persona Ejemplo')).toBe('Pedido recibido por Persona Ejemplo');
     expect(urbanoWording('Cliente no contesta al 900 000 000, persona@example.com')).toBe('Cliente no contesta al');
     expect(urbanoWording('RECIBIMOS EN ORIGEN')).toBe('RECIBIMOS EN ORIGEN');
     expect(urbanoWording('  Entrega   A Titular ')).toBe('Entrega A Titular');
-    // A signatory in a movement's sub-status leaves its heading alone.
+    // A signatory in a movement's sub-status follows its heading, which stages the scan.
     const signed = parseUrbano(changed('delivered', (shipment) => { shipment.movimientos[0]!.sub_estado = 'Firma:Persona Ejemplo (DNI:00000000)'; }), DELIVERED);
-    expect(signed.events![0]).toMatchObject({ description: 'ENTREGAMOS TU PEDIDO', stage: 'delivered' });
+    expect(signed.events![0]).toMatchObject({ description: 'ENTREGAMOS TU PEDIDO: Firma:Persona Ejemplo', stage: 'delivered' });
+    expect(JSON.stringify(signed)).not.toContain('00000000');
+    // Before the delivery nobody has taken the parcel.
+    expect(parseUrbano(fixture('in-transit'), IN_TRANSIT)).toMatchObject({ receiver_name: 'Persona Ejemplo', receiver_address: 'Avenida Ejemplo 456\nVICTOR LARCO - TRUJILLO' });
+    expect(parseUrbano(changed('in-transit', (shipment) => { shipment.recibe_pedido = 'Persona Ejemplo'; }), IN_TRANSIT)).not.toHaveProperty('signed_by');
     // Without a heading, the sub-status alone is the wording.
     const sub = parseUrbano(changed('delivered', (shipment) => { shipment.movimientos[3]!.detalle = ''; }), DELIVERED);
     expect(sub.events![3]).toMatchObject({ description: 'Direccion Incorrecta', provider_code: 'CV', stage: 'failed_attempt' });

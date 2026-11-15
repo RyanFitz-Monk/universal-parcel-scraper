@@ -3,6 +3,7 @@ import { InvalidInputError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode } from '../../core/time/index.js';
+import { clean } from '../../core/transport/index.js';
 import { RTB56_MAX_BYTES, rtb56Entry, rtb56Scans, rtb56Text } from '../yypost/rtb56.js';
 import { ydhStage } from './status.js';
 
@@ -27,7 +28,8 @@ export function normalizeYdhNumber(raw: string): string {
  * a place, a code and wording: YDH's own in Chinese or English, then those
  * of the partner that delivers abroad, relayed in its language. Only the
  * entry whose `server_hawbcode` is the whole number asked is read; the
- * merchant's order reference and the signatory are never read.
+ * merchant's order reference never is. `signatory_name` gives who took a
+ * delivered parcel.
  */
 export function parseYdh(payload: unknown, raw: string): CarrierResult {
   const number = normalizeYdhNumber(raw);
@@ -39,6 +41,7 @@ export function parseYdh(payload: unknown, raw: string): CarrierResult {
   const stage = staged?.stage as Stage | undefined;
   const country = countryCode(rtb56Text(item, 'destination_country', PROVIDER, 8));
   const channel = normalizeTrackingNumber(rtb56Text(item, 'channel_hawbcode', PROVIDER, 64));
+  const signatory = stage === 'delivered' ? clean(item.signatory_name, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
@@ -47,6 +50,7 @@ export function parseYdh(payload: unknown, raw: string): CarrierResult {
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     // The partner's own number for the parcel; the hand-off decides who that is.
     ...(REFERENCE.test(channel) && channel !== number ? { delivery_tracking_number: channel } : {}),
     events: events.slice(0, MAX_EVENTS),

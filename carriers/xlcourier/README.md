@@ -32,7 +32,8 @@ a national hub. Tracked through the lookup its tracking page makes.
   the page adds to a scan that did not go to plan. The reason loses phone numbers and e-mail
   addresses.
 - A receiving scan names the depot or the hub the parcel arrived at, which becomes its location.
-- The recipient's address, which the page pins on a map, is not kept.
+- The recipient's address, which the page pins on a map, is `receiver_address`, one line per
+  comma.
 
 ## Limitations
 

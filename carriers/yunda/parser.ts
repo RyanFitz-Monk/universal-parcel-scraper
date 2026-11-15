@@ -89,6 +89,11 @@ export function parseYunda(payload: unknown, trackingNumber: string): CarrierRes
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });
+  // The order's recipient address, then its city when the address does not name it.
+  const order = orders[number];
+  const street = isRecord(order) ? clean(order.receiverDetailAddress, 300) : '';
+  const city = clean(history.receiverCity, 60);
+  const address = [street, city && !street.includes(city) ? city : ''].filter(Boolean).join('\n');
   const latest = unique[0]!;
   const mapped = yundaStatus(latest.provider_code!);
   const returned = latest.stage === 'returned';
@@ -96,5 +101,6 @@ export function parseYunda(payload: unknown, trackingNumber: string): CarrierRes
     ...(latest.stage ? { current_stage: latest.stage } : {}),
     timezone: ZONE, last_status_text: latest.description, last_update: latest.time ?? null,
     ...(mapped?.stage === 'delivered' && !returned && latest.time ? { delivered_at: latest.time } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: unique.slice(0, 100) };
 }

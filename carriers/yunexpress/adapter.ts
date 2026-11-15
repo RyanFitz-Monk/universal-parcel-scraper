@@ -312,9 +312,14 @@ export function parse(payload: unknown, trackingNumber: string): CarrierResult {
   const linkedCarrier = linked && linked !== number ? contactPartner(info.AdditionalNotes, linked, country) : undefined;
   const handoff = declared || (linkedCarrier ? linked! : '');
   const partner = declared ? linkedPartner(info.AdditionalNotes, declared) : linkedCarrier;
+  // The consignee, else the name the latest event carries.
+  const consignee = isRecord(info.ConsigneeInfo) ? info.ConsigneeInfo : {};
+  const receiverName = clean(consignee.name, 120) || clean(last.ConsigneeName, 120);
+  const receiverAddress = clean(consignee.address, 300);
   // The first event is the exact latest event, so its code belongs to it.
   return { status: classified?.status ?? yunExpressCodeStatus(last.TrackingStatus) ?? 'unknown', ...(classified ? { current_stage: classified.stage } : {}),
     last_status_text: latest.description, last_update: latest.time ?? null,
+    ...(receiverName ? { receiver_name: receiverName } : {}), ...(receiverAddress ? { receiver_address: receiverAddress } : {}),
     ...(classified?.stage === 'delivered' && decider?.time ? { delivered_at: decider.time } : {}),
     ...(handoff ? { delivery_tracking_number: handoff, ...(partner ? { delivery_carrier: partner } : {}) } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}), events: dated.slice(0, 100) };

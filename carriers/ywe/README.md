@@ -22,6 +22,8 @@ for numbers of YWE and fourteen digits.
   it names, then
   the shared rules. The category the page groups parcels by is not read: it files a delivery
   station's receipt under Alert. The scan code becomes `provider_code`.
+- A delivery line keeps the name of whoever signed for or received the parcel, and that name
+  becomes `signed_by`.
 - A hub's receipt of the container and of the parcel is in transit, not an acceptance: every YWE
   parcel is flown in from China, already on its way, and the receipt is its handover from the line
   that flew it in. Yanwen and Techlink relay these scans with the same stage.

@@ -39,7 +39,8 @@ parcel abroad gives it its own number, which the tracker shows beside YDH's.
 - `channel_hawbcode`, the partner's number, becomes `delivery_tracking_number`, and the
   hand-off decides who is asked. The partner's name is not read: it can be a reseller rather
   than the network that delivers.
-- The merchant's order reference and the signatory are not read.
+- `signatory_name` becomes `signed_by` once the parcel is delivered. The merchant's order
+  reference is not read.
 
 ## Limitations
 

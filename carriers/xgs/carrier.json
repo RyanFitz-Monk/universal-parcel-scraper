@@ -47,15 +47,17 @@
       "postcodes",
       "parcel_count",
       "weight",
-      "references"
+      "references",
+      "recipient_address"
     ],
     "scraped": [
       "status",
       "eta",
-      "delivered_at"
+      "delivered_at",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
-      "signatory",
       "origin",
       "destination",
       "postcodes",

@@ -154,7 +154,7 @@ describe('Yanwen result projection', () => {
       .toMatchObject({ delivery_carrier: 'emile', delivery_tracking_number: 'EM000000000001CA' });
   });
 
-  it('keeps postcodes, PINs and door numbers out of scans', () => {
+  it('keeps postcodes out of scan places, and PINs and door numbers in the wording', () => {
     const $ = load(fixture());
     $('.czhaodl').each((_, timeline) => {
       const rows = $(timeline).find('dd');
@@ -175,9 +175,11 @@ describe('Yanwen result projection', () => {
     expect(sameInstantIdentityPolicy.matches?.(incoming, { ...incoming, location: 'AA' })).toBe(true);
     expect(sameInstantIdentityPolicy.matches?.(incoming, { ...incoming, location: 'Example Town' })).toBe(false);
     expect(sameInstantIdentityPolicy.matches?.(incoming, { ...incoming, location: 'Not Available', description: 'Delivered' })).toBe(false);
-    expect(result.last_status_text).toBe('Delivered in the mailbox. If you have any questions, please contact Example.');
+    expect(result.last_status_text).toBe('Delivered in the mailbox , PIN: 0000 , Door NO: 00. If you have any questions, please contact Example.');
     expect(result.status).toBe('delivered');
-    for (const value of ['Z9Z', '00000', 'PIN', 'Door']) expect(JSON.stringify([result.last_status_text, result.events])).not.toContain(value);
+    expect(yanwenStatus('Delivered., PIN: 0000 , Door NO: 00')?.stage).toBe('delivered');
+    expect(statusMap.stage(null, normalizeStatusWording('Delivered., PIN: 0000 , Door NO: 00'))).toBe('delivered');
+    for (const value of ['Z9Z', '00000']) expect(JSON.stringify([result.last_status_text, result.events])).not.toContain(value);
   });
 
   it('drops the UTC copy of a relayed history and keeps each local scan with its place', () => {

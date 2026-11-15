@@ -170,13 +170,26 @@ function deliveryBox($: CheerioAPI): Pick<CarrierResult, 'delivered_at' | 'expec
 interface Scan { event: CarrierEvent; at: number; order: number }
 
 /**
+ * The recipient's box: the name, then the address, whose first line can
+ * repeat the name, and the person the progress rail says took the parcel.
+ */
+function recipientOf($: CheerioAPI): Pick<CarrierResult, 'receiver_name' | 'receiver_address' | 'signed_by'> {
+  const box = labelled($, 'h6', /^Geadresseerde$/i).parent();
+  const name = clean(box.children('h4').first().text(), 120);
+  const lines = box.children('address').first().text().split('\n').map((line) => clean(line, 200)).filter(Boolean);
+  const address = lines.filter((line, index) => index > 0 || line.toLowerCase() !== name.toLowerCase()).join('\n');
+  const taker = clean(labelled($, 'p', /^(?:Ontvangen door|Received by)$/i).next('p').text(), 120);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}), ...(taker ? { signed_by: taker } : {}) };
+}
+
+/**
  * The tracker's page for one shipment (`/tt/{number}/{postcode}`): its number,
  * the status above the progress rail, the delivery box, and each shipping
  * unit's scans, each with its depot, search code and status. The rail names
  * the depots' towns. A unit's barcode reads that unit's scans; a shipment
- * number reads every unit's, once each. The sender, recipient, references,
- * order numbers, unit descriptions and the name of whoever took the parcel
- * are never read.
+ * number reads every unit's, once each. The recipient's name and address and
+ * whoever took the parcel are read. The sender, references, order numbers and
+ * unit descriptions are never read.
  */
 export function parseTransmissionPage(html: string, raw: string): CarrierResult {
   const { asked, shipment } = normalizeTransmissionNumber(raw);
@@ -202,14 +215,16 @@ export function parseTransmissionPage(html: string, raw: string): CarrierResult 
       if (++rows > MAX_ROWS) throw new SchemaError(PROVIDER, 'TransMission returned too many scans');
       const time = wallClock(row.day, row.clock);
       if (!time) throw new SchemaError(PROVIDER, 'TransMission returned an invalid scan time');
-      const description = row.status.replace(PERSON, '');
-      if (!description) throw new SchemaError(PROVIDER, 'TransMission returned a scan without its status');
+      // A status can go on to name whoever took the parcel; the words before the name stage it.
+      const description = row.status;
+      const worded = row.status.replace(PERSON, '');
+      if (!worded) throw new SchemaError(PROVIDER, 'TransMission returned a scan without its status');
       if (row.code && !/^\d{1,4}$/.test(row.code)) throw new SchemaError(PROVIDER, 'TransMission returned an invalid search code');
       // Units repeat the shipment's scans, and a delivery is logged twice, under 39 and 0, on one clock.
-      const identity = JSON.stringify([iso(time), row.depot, description]);
+      const identity = JSON.stringify([iso(time), row.depot, worded]);
       if (seen.has(identity)) continue;
       seen.add(identity);
-      const stage = transmissionMappedStage(row.code || null, description);
+      const stage = transmissionMappedStage(row.code || null, worded);
       const town = row.depot ? towns.get(row.depot) : undefined;
       scans.push({ at: time.toMillis(), order: scans.length, event: { time: iso(time), ...(town ? { location: town } : {}), description,
         ...(stage ? { stage, stage_source: 'carrier_map' } : {}), ...(row.code ? { provider_code: row.code } : {}) } });
@@ -235,6 +250,7 @@ export function parseTransmissionPage(html: string, raw: string): CarrierResult 
     ...(stage !== 'delivered' && box.expected_delivery ? { expected_delivery: box.expected_delivery } : {}),
     ...(stage !== 'delivered' && box.expected_delivery_from ? { expected_delivery_from: box.expected_delivery_from } : {}),
     ...(weight ? { weight_kg: weight } : {}),
+    ...recipientOf($),
     ...(events.length ? {} : { summary_only: true }),
     events,
   };

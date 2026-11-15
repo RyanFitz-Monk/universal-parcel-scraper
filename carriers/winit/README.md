@@ -38,8 +38,10 @@ to a local courier such as UPS or FedEx. Tracked through the lookup its tracking
   number. A USPS routing barcode gives its package identifier.
 - Relayed UPS wording arrives with its trademark sign read as Latin-1; the adapter puts it
   right.
-- Staff logins, the recipient's town and postcode, proof of delivery, postcodes in courier
-  locations, the person who signed and phone numbers are not kept.
+- The recipient's postcode and town become `receiver_address`. A delivery that names who signed
+  keeps the name, which becomes `signed_by`; the scan is staged without it.
+- Staff logins, proof of delivery, postcodes in courier locations and phone numbers are not
+  kept.
 - The delivery estimate is a day, as the desktop page shows it.
 
 ## Limitations

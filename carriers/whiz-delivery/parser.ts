@@ -68,8 +68,9 @@ function scan(row: unknown): Scan {
  * origin and destination towns, the shop, and its events, each a UTC instant,
  * a WooDelivery task status id and Whiz's wording for it.
  *
- * The reply must name the whole number asked. The towns, the shop and the
- * support banner are not read.
+ * The reply must name the whole number asked. The destination town is the
+ * recipient's address; the origin, the shop and the support banner are not
+ * read.
  */
 export function parseWhiz(payload: unknown, raw: string): CarrierResult {
   const number = normalizeWhizNumber(raw);
@@ -85,7 +86,10 @@ export function parseWhiz(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
-  const country = isRecord(payload.destination) ? text(payload.destination.country).toUpperCase() : '';
+  const destination = isRecord(payload.destination) ? payload.destination : {};
+  const country = text(destination.country).toUpperCase();
+  // "Town, QC", as the page writes a Canadian town with its province.
+  const town = [text(destination.city).slice(0, 80), text(destination.province).slice(0, 40)].filter(Boolean).join(', ');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -94,6 +98,7 @@ export function parseWhiz(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...(stage === 'delivered' && payload.delivered_at ? { delivered_at: instant(payload.delivered_at) } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
+    ...(town ? { receiver_address: town } : {}),
     events,
   };
 }

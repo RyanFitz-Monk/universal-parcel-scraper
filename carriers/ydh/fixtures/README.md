@@ -8,8 +8,8 @@ The replies follow `Service.ashx`'s JSONP for one number, as the adapter asks it
   Chinese, the partner's relayed in French. One scan is listed twice, and another again without
   its code or English wording as a partner's copy, so the tests can show each is kept once. One
   uncoded scan has no English wording. The merchant's order
-  reference, the partner's name and the signatory are present so the tests can show they are
-  left out.
+  reference and the partner's name are present so the tests can show they are left out, and
+  the signatory so they can show it is read.
 - `not-found.txt` is the answer for a number the tracker does not know.
 
 Numbers, clocks, places and the merchant's details are invented.

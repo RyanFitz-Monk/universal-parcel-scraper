@@ -73,9 +73,9 @@ knows it and its own detection offers the reference. Contact numbers and the
 customer's order number are not read. Scan locations keep the town and region
 without Canadian postcodes or US ZIP codes. A partner's "Not Available", bare
 "AA", a code of one or two digits and the partner's own name ("INPOST") are no
-place, and relayed wording drops GOFO's PIN and door-number fragments. Scans
-stored with such a placeholder as their place keep their row, on the stage the
-map now gives them.
+place. Scans stored with such a placeholder as their place keep their row, on
+the stage the map now gives them. Relayed wording keeps GOFO's PIN and door
+number, and the stage is read without them.
 
 Run `npm run test:carriers:live -- carriers/yanwen`.
 Set `YANWEN_TRACKING_NUMBER` outside the repository to check a real parcel.

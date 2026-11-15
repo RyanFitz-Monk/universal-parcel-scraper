@@ -57,7 +57,8 @@ describe('Via Cargo HTTP adapter', () => {
       ['2026-03-02T09:10:00-03:00', 'ALTA', 'accepted', 'SUCURSAL EJEMPLO - CALLE 0'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && event.local_time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|EJEMPLO 0|PROVINCIA|00000000|0000000000|SOLICITUD|IMPROCEDENTE|EFECTUADA|02:20/);
+    expect(result).toMatchObject({ receiver_name: 'SAMPLE RECIPIENT', receiver_address: 'CALLE EJEMPLO 0\n0000 PUEBLO EJEMPLO', signed_by: 'SAMPLE RECEIVER' });
+    expect(JSON.stringify({ ...result, receiver_name: null, receiver_address: null, signed_by: null })).not.toMatch(/SAMPLE|EJEMPLO 0|PROVINCIA|00000000|0000000000|SOLICITUD|IMPROCEDENTE|EFECTUADA|02:20/);
   });
 
   it('reads a shipment on its way to the destination branch', () => {
@@ -66,6 +67,8 @@ describe('Via Cargo HTTP adapter', () => {
       last_status_text: 'EN VIAJE', last_update: '2026-04-16T06:38:00-03:00', expected_delivery: null,
       weight_kg: 1.5, service_name: 'VIA CARGO PLUS ED' });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).toMatchObject({ receiver_name: 'SAMPLE RECIPIENT', receiver_address: 'CALLE EJEMPLO 0\n0000 CIUDAD EJEMPLO' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.provider_code, event.location])).toEqual([
       ['CPCE', 'CENTRO DE DISTRIBUCION EJEMPLO'], ['CPCE', 'TERMINAL EJEMPLO'], ['MANI', 'TERMINAL EJEMPLO'], ['ALTA', 'TERMINAL EJEMPLO'],
     ]);

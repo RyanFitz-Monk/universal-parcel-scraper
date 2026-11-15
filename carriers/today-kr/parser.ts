@@ -202,8 +202,9 @@ function refusal(data: JsonObject, number: string): never {
 /**
  * The opened lookup of the tracking page for one number. A shipment must carry
  * the number asked, as To-Day's own waybill or as the number the page shows
- * for it, such as the shipper's. Names, phone numbers, coordinates, products
- * and the driver are left behind.
+ * for it, such as the shipper's. The receiver's name, masked as the page
+ * shows it, is read; phone numbers, coordinates, products, the sender and the
+ * driver are left behind.
  */
 export function parseToday(type: TodayPageType, data: unknown, raw: string): CarrierResult {
   const number = normalizeTodayNumber(raw);
@@ -244,6 +245,7 @@ export function parseToday(type: TodayPageType, data: unknown, raw: string): Car
   const heading = type === 'LM_COLLECT'
     ? (text(load, 'deliveryClass', 40) === 'RETURNING' ? '반품 접수가 완료되었어요' : '수거 접수가 완료되었어요')
     : headline;
+  const receiver = isRecord(load.receiver) ? clean(load.receiver.name, 80) : '';
   return {
     status: languageStageStatus(stage),
     current_stage: stage,
@@ -252,6 +254,7 @@ export function parseToday(type: TodayPageType, data: unknown, raw: string): Car
     ...(!events.length && state ? { provider_code: state } : {}),
     last_update: events[0]?.time ?? null,
     delivered_at: stage === 'delivered' ? delivered?.time ?? null : null,
+    ...(receiver ? { receiver_name: receiver } : {}),
     ...handoff(load, data.sanitizedOrder),
     events,
   };

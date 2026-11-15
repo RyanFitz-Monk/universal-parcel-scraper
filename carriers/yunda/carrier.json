@@ -38,7 +38,8 @@
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "recipient_address"
     ],
     "discarded": [
       "contact_details",

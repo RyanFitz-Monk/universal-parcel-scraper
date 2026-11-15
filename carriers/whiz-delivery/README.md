@@ -26,8 +26,9 @@ whizdelivery.ca.
   names for a missed delivery awaiting another attempt.
 - Events are UTC instants. The tracking page reads one without an offset as UTC, and so does
   the adapter.
-- The origin and destination towns, the shop, the expected delivery and the delivery photo,
-  which the page shows only after the recipient's postal code, are not read.
+- The destination town and province become `receiver_address`. The origin town, the shop, the
+  expected delivery and the delivery photo, which the page shows only after the recipient's
+  postal code, are not read.
 
 ## Limitations
 

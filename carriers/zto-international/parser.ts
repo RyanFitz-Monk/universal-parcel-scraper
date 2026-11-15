@@ -30,6 +30,8 @@ const PERSONAL_EN = /[\s,，;；]*(?:and\s+)?the\s+(?:(?:scanner|dispatcher|pick
 // The same people and contacts in a Chinese line, with the brackets naming them.
 const PERSONAL_ZH = /(?:业务员|快递员|派件员|扫描员|取件员|签收人|操作员|(?:派件|联系)?电话|包袋号)(?:是)?[:：]?(?:\s*[[【][^\]】]*[\]】])*|(?:如有(?:疑问|问题)请电联|请保持电话畅通)[^。！!]*[。！!]?/g;
 const CONTACT = /@[\w.]+|\+?\d[\d\s-]{5,}\d/g;
+// Who signed for a delivered parcel, as its Chinese line names them in brackets.
+const SIGNER = /签收人(?:是)?[:：]?\s*[[【]([^\]】]{1,60})[\]】]/;
 // Bracketed words that are not a place.
 const NOT_PLACE = /已签收|已揽件|已揽收|操作员|海外|\d{4}|@/;
 
@@ -148,12 +150,15 @@ export function parseZtoInternational(payload: unknown, raw: string): CarrierRes
 
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  let signer = '';
   for (const row of rows) {
     const event = projectRow(row, number);
     const key = event && JSON.stringify([event.local_time, event.provider_code, event.description, event.location]);
     if (!event || seen.has(key!)) continue;
     seen.add(key!);
     events.push(event);
+    // The newest delivery that names who signed for it.
+    if (!signer && event.stage === 'delivered' && isRecord(row)) signer = clean(SIGNER.exec(clean(row.message, 1000))?.[1], 60);
   }
   if (!events.length) throw new NoHistoryError(PROVIDER, 'ZTO International has no scans for the waybill yet', { reason: 'listed' });
 
@@ -167,6 +172,7 @@ export function parseZtoInternational(payload: unknown, raw: string): CarrierRes
     last_update: newest.time!,
     last_update_local: newest.local_time!,
     expected_delivery: null,
+    ...(stage === 'delivered' && signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

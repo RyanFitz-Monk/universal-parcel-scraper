@@ -11,13 +11,17 @@ const NUMBER = '9746825136';
 const fixture = () => readFileSync(new URL('./fixtures/tracking.html', import.meta.url), 'utf8');
 const pair = (date: string, detail: string) => `<tr><td>Date</td><td>${date}</td><td>Details</td><td>${detail}</td></tr><tr><td>Location</td><td>PRIVATE</td></tr>`;
 describe('V-Xpress guest docket tracker', () => {
-  it('binds both whole identities and projects logistics without contacts, trip references or proof updates', () => {
+  it('binds both whole identities and projects logistics and who took the parcel, without contacts, trip references or proof updates', () => {
     const result = parseVXpress(fixture(), NUMBER);
     expect(result).toMatchObject({ current_stage: 'delivered', last_update: null, last_update_local: '2026-07-04T14:15', expected_delivery: null });
-    expect(result.events!.map(event => event.description)).toEqual(['Delivered', 'Out for delivery', 'Arrived at delivery branch', 'Dispatch recorded', 'Loaded for transport', 'Unloaded at facility', 'Package Labels Printed', 'All Package Label Generated']);
+    expect(result.events!.map(event => event.description)).toEqual(['Delivered to PRIVATE recipient', 'Out for delivery', 'Arrived at delivery branch', 'Dispatch recorded', 'Loaded for transport', 'Unloaded at facility', 'Package Labels Printed', 'All Package Label Generated']);
     expect(result.events!.every(event => event.local_time && !event.time && !event.location)).toBe(true);
     expect(result.events!.at(-1)!.stage).toBe('registered'); expect(result.events![3]!.stage).toBeUndefined();
-    expect(result).not.toHaveProperty('delivered_at'); expect(JSON.stringify(result)).not.toMatch(/PRIVATE|example\.invalid|X123|9746825136/);
+    expect(result).not.toHaveProperty('delivered_at'); expect(result).toMatchObject({ signed_by: 'PRIVATE recipient' });
+    expect(result.events![0]!.stage).toBe('delivered');
+    expect(JSON.stringify(result).replaceAll('PRIVATE recipient', '')).not.toMatch(/PRIVATE|example\.invalid|X123|9746825136|919999999999/);
+    const unnamed = parseVXpress(fixture().replace('Delivered to PRIVATE recipient ( 919999999999)', 'Delivered'), NUMBER);
+    expect(unnamed.events![0]).toMatchObject({ description: 'Delivered', stage: 'delivered' }); expect(unnamed).not.toHaveProperty('signed_by');
   });
   it('requires exact absence and rejects mixed, mismatched and ambiguous shipments', () => {
     expect(() => parseVXpress('<div><table><tr><td>Docket Not Found......</td></tr></table></div>', NUMBER)).toThrow(expect.objectContaining({ kind: 'not_found' }));
@@ -39,7 +43,7 @@ describe('V-Xpress guest docket tracker', () => {
     const extra = pair('04-Jul-2026 11:00 AM', 'New logistics entry PRIVATE contact@example.invalid');
     const result = parseVXpress(fixture().replace('<!-- EXTRA -->', extra), NUMBER);
     expect(result.events!.find(event => event.description === 'Tracking update')).toMatchObject({ local_time: '2026-07-04T11:00' });
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|example\.invalid/);
+    expect(JSON.stringify(result).replaceAll('PRIVATE recipient', '')).not.toMatch(/PRIVATE|example\.invalid/);
     const empty = fixture().replace(/<!-- HISTORY_START -->[\s\S]*?<!-- HISTORY_END -->/, pair('04-Jul-2026 11:00 AM', 'POD Copy Received'));
     expect(() => parseVXpress(empty, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate', reason: 'parcel_found' }));
   });

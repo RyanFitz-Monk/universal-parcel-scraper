@@ -7,7 +7,9 @@ route without redirects. Only a shipment-specific 404 that echoes the whole refe
 not found; a missing route or generic error does not.
 
 The feed's clocks have no offsets. They stay local rather than taking the company's headquarters
-clock; consumer place or country enrichment retains its basis. Recipient ZIP and contact details are omitted.
+clock; consumer place or country enrichment retains its basis. The recipient ZIP becomes
+`receiver_address`. A scan keeps who signed for or received the parcel, which becomes
+`signed_by` on a delivery, and its stage is read without the name. Contact details are omitted.
 A carrier name in a scan does not supply its barcode, so it cannot create a delivery handoff.
 Unknown scan wording remains unstaged and no delivery estimate is inferred from the summary.
 

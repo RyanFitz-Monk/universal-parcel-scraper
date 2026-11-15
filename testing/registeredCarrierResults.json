@@ -749,6 +749,8 @@
       "current_stage": "customs",
       "last_status_text": "Customs inspection - Import",
       "last_update": null,
+      "receiver_name": "PRIVATE_NAME",
+      "receiver_address": "PRIVATE_ADDRESS",
       "delivery_tracking_number": "9000000000000000000001",
       "destination_country": "US",
       "events": [
@@ -1180,6 +1182,7 @@
       "timezone": "Asia/Shanghai",
       "last_status_text": "Delivered",
       "last_update": "2026-01-03T18:00:00+08:00",
+      "receiver_address": "Synthetic address\n示例市",
       "delivered_at": "2026-01-03T18:00:00+08:00",
       "events": [
         {

@@ -41,19 +41,26 @@ function integer(value: unknown): number | null {
   return typeof parsed === 'number' && Number.isSafeInteger(parsed) ? parsed : null;
 }
 
-// Who signed for or took the parcel and their ID document, after a status
-// ("Firma: … (DNI: …)", as the shipment's summary words a delivery, or
-// "Recibido por …").
+// Who signed for or took the parcel, after a status ("Firma: …", as the
+// shipment's summary words a delivery, or "Recibido por …"). The status is
+// staged without them.
 const SIGNATORY = /\s*[(,;\-–]?\s*\b(?:(?:firma|dni|doc(?:umento)?|nombre|recibe)\s*:|(?:recibid[oa]|firmad[oa]|entregad[oa])\s+(?:por|a)\b)[\s\S]*$/i;
+// An ID document after a name, "(DNI: 00000000)".
+const ID_DOCUMENT = /\s*[(,;\-–]?\s*\b(?:dni|doc(?:umento)?)\s*:\s*[^\s)]*\)?/gi;
 const EMAIL = /[^\s@]+@[^\s@]+/g;
 // A run of six or more digits, with spaces, dots or hyphens between them, as
 // ID card and phone numbers are written.
 const ID_OR_PHONE = /(?<![A-Z\d])\+?\d(?:[\s.-]?\d){5,}(?![A-Z\d])/gi;
 
-/** A scan's wording without a signatory, an ID document, an e-mail address or phone numbers. */
+/** A scan's wording without an ID document, an e-mail address or phone numbers. */
 export function urbanoWording(raw: string): string {
-  const own = raw.replace(SIGNATORY, '').replace(EMAIL, '').replace(ID_OR_PHONE, '');
+  const own = raw.replace(ID_DOCUMENT, '').replace(EMAIL, '').replace(ID_OR_PHONE, '');
   return clean(clean(own).replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** The words that stage a scan: its wording without the person who took the parcel. */
+function stagedWording(wording: string): string {
+  return urbanoWording(wording.replace(SIGNATORY, ''));
 }
 
 /**
@@ -108,7 +115,7 @@ function scanOf(row: unknown, index: number, names: Map<string, string>): Scan |
   const description = detail && sub && !detail.toLowerCase().includes(sub.toLowerCase()) ? `${detail}: ${sub}` : detail || sub;
   if (!description) return null;
   const location = names.get(text(row, 'agencia', 8).toUpperCase());
-  const staged = urbanoStage(code, detail || sub);
+  const staged = urbanoStage(code, stagedWording(detail) || stagedWording(sub));
   return { index, event: {
     local_time: local,
     ...(location ? { location } : {}),
@@ -168,6 +175,9 @@ function project(shipment: Record<string, unknown>): CarrierResult {
   const expected = stage === 'delivered' || stage === 'returned' ? null
     : calendarDate(text(shipment, 'fec_estimada', 16)) ?? calendarDate(text(shipment, 'fecha_estimada', 16));
   const kg = weight(shipment);
+  const recipient = text(shipment, 'nombre_cliente', 120) || text(shipment, 'cliente', 120);
+  const address = [text(shipment, 'direccion', 200), text(shipment, 'localidad', 120)].filter(Boolean).join('\n');
+  const taker = stage === 'delivered' ? text(shipment, 'recibe_pedido', 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -176,6 +186,9 @@ function project(shipment: Record<string, unknown>): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: expected,
     ...(kg !== null ? { weight_kg: kg } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

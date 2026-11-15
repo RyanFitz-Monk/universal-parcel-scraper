@@ -56,7 +56,8 @@
       "sender_name",
       "parcel_count",
       "delivery_photos",
-      "coordinates"
+      "coordinates",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -65,7 +66,10 @@
       "provider_code",
       "eta",
       "weight",
-      "failed_delivery_reason"
+      "failed_delivery_reason",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
@@ -74,9 +78,7 @@
       "destination",
       "event_details",
       "courier_name",
-      "recipient_name",
       "recipient_id",
-      "recipient_address",
       "sender_name",
       "parcel_count",
       "delivery_photos",

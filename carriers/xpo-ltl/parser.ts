@@ -66,13 +66,16 @@ export interface XpoLtlSummary {
   lastUpdateLocal: string | null;
   expectedDelivery: string | null;
   weightKg: number | null;
+  receiverName?: string;
+  receiverAddress?: string;
 }
 
 /**
  * The PRO tracking page (`TrackingRS.jsp`): one status block whose label cell
  * names the PRO asked for, or the notice that names the PRO.
- * Only the status, the pickup and delivery days and the shipment details are
- * read; shipper, consignee, bill-to, references and documents never are.
+ * Read are the status, the pickup and delivery days, the shipment details and
+ * the consignee, whose first line names it and whose other lines are its
+ * address; shipper, bill-to, references and documents are not.
  */
 export function parseXpoLtlSummary(html: string, raw: string): XpoLtlSummary {
   const number = normalizeXpoLtlNumber(raw);
@@ -108,6 +111,7 @@ export function parseXpoLtlSummary(html: string, raw: string): XpoLtlSummary {
   const lastUpdateLocal = update ? wallClock(update[4]!, update[5]!, update[6]!, update[1]!, update[2]!, update[3]!) : null;
 
   const fields = new Map<string, string>();
+  let consignee: string[] = [];
   // The status table's own rows; the shipment details hold a table of their own.
   const table = links.closest('table');
   for (const row of table.find('tr').filter((_, tr) => $(tr).closest('table').is(table)).toArray()) {
@@ -116,14 +120,19 @@ export function parseXpoLtlSummary(html: string, raw: string): XpoLtlSummary {
     if (name === 'Pickup/Delivery' || name === 'Shipment Details') {
       if (fields.has(name)) throw new SchemaError(PROVIDER, 'XPO tracking page repeats a shipment field');
       fields.set(name, clean(cells.eq(1).text(), 300));
+    } else if (name === 'Consignee' && !consignee.length) {
+      consignee = cells.eq(1).text().split('\n').map((line) => clean(line, 120)).filter(Boolean).slice(0, 5);
     }
   }
+  const [receiverName, ...address] = consignee;
   const estimate = ESTIMATE.exec(fields.get('Pickup/Delivery') ?? '');
   const expectedDelivery = estimate ? calendarDay(2000 + Number(estimate[3]), Number(estimate[1]), Number(estimate[2])) : null;
   const pounds = WEIGHT.exec(fields.get('Shipment Details') ?? '')?.[1];
   const weight = pounds && /^\d{1,3}(?:,\d{3})*$|^\d+$/.test(pounds) ? Number(pounds.replaceAll(',', '')) : null;
   return { code, label, lastUpdateLocal, expectedDelivery,
-    weightKg: weight !== null && weight > 0 ? Math.round(weight * POUNDS_TO_KG * 1000) / 1000 : null };
+    weightKg: weight !== null && weight > 0 ? Math.round(weight * POUNDS_TO_KG * 1000) / 1000 : null,
+    ...(receiverName ? { receiverName } : {}),
+    ...(address.length ? { receiverAddress: address.join('\n') } : {}) };
 }
 
 interface Scan { localTime: string; location: string; description: string }
@@ -201,6 +210,8 @@ export function xpoLtlResult(summary: XpoLtlSummary, scans: Scan[] | null): Carr
     last_update_local: summary.lastUpdateLocal ?? events[0]?.local_time ?? null,
     expected_delivery: stage && NO_ESTIMATE.has(stage) ? null : summary.expectedDelivery,
     ...(summary.weightKg !== null ? { weight_kg: summary.weightKg } : {}),
+    ...(summary.receiverName ? { receiver_name: summary.receiverName } : {}),
+    ...(summary.receiverAddress ? { receiver_address: summary.receiverAddress } : {}),
     ...(scans === null ? { summary_only: true } : {}),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
     events: events.slice(0, MAX_EVENTS),

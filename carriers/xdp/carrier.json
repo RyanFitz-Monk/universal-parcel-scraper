@@ -65,14 +65,17 @@
       "sender_name",
       "recipient_name",
       "postcodes",
-      "customer_reference"
+      "customer_reference",
+      "recipient_address"
     ],
     "scraped": [
       "status",
       "history",
       "provider_code",
       "weight",
-      "service_name"
+      "service_name",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "depot_code",
@@ -83,7 +86,6 @@
       "customer_messages",
       "progress_rail",
       "sender_name",
-      "recipient_name",
       "postcodes",
       "customer_reference"
     ],

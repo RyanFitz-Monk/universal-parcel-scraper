@@ -29,8 +29,10 @@ own search form.
 - The search code decides a scan's stage: an early sorting scan can read "Bezorgtijd nog
   onbekend", the delivery estimate. Scans without a code fall back to their wording.
 - Clocks are wall clocks without a zone, read in Dutch time.
-- The sender, recipient, references, unit descriptions, contact details and the name of
-  whoever took the parcel are never read.
+- The recipient's box gives `receiver_name` and `receiver_address`, and the progress rail names
+  whoever took the parcel, which becomes `signed_by`. A scan keeps that name when its status
+  gives it; the words before it stage the scan. The sender, references, unit descriptions and
+  contact details are never read.
 - No recognition: every lookup needs the postcode.
 
 ## Numbers
@@ -51,7 +53,7 @@ none.
 
 - Nothing can be looked up without the postcode.
 - Older scans came without a search code; those worded as the delivery estimate carry no stage.
-- No signatory or proof of delivery.
+- No proof of delivery.
 
 ## Testing
 

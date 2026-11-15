@@ -10,14 +10,15 @@ const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/tracking.json'
 const absent = () => ({ error: { code: 'not_found', message: `Shipment with ID '${NUMBER}' not found`, details: { resource: 'Shipment', id: NUMBER } } });
 
 describe('Zinc guest history', () => {
-  it('retains offsetless scans and countries without ZIP, retailer or delivering-carrier credentials', () => {
+  it('retains offsetless scans, countries and the recipient ZIP without retailer or delivering-carrier credentials', () => {
     const result = parseZnlogic(fixture(), NUMBER);
     expect(result).toMatchObject({ current_stage: 'delivered', origin_country: 'US', destination_country: 'US', last_update: null,
       last_update_local: '2026-01-06T12:43:00', expected_delivery: null });
     expect(result.events).toHaveLength(6);
     expect(result.events!.map(event => event.stage)).toEqual(['delivered', 'out_for_delivery', 'in_transit', 'in_transit', 'in_transit', 'in_transit']);
     expect(result.events!.every(event => !event.time && event.local_time)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|00000|zip_code|human_time/);
+    expect(result.receiver_address).toBe('PRIVATE');
+    expect(JSON.stringify({ ...result, receiver_address: null })).not.toMatch(/PRIVATE|00000|zip_code|human_time/);
     expect(result).not.toHaveProperty('delivery_carrier'); expect(result).not.toHaveProperty('delivery_tracking_number');
     expect(deliveryHandoff('znlogic', NUMBER, result)).toBeNull();
   });
@@ -30,6 +31,20 @@ describe('Zinc guest history', () => {
     expect(result.events![0]).toMatchObject({ time: '2026-01-06T12:43:00-05:00', time_zone: 'America/New_York', time_zone_basis: 'destination' });
     const placed = dateLocalClocks('znlogic', parseZnlogic(fixture(), NUMBER));
     expect(placed.events![0]).toMatchObject({ local_time: '2026-01-06T12:43:00', time: '2026-01-06T12:43:00-05:00', time_zone_basis: 'place' });
+  });
+
+  it('keeps who signed for a delivery in its wording and reads it as the signatory, on the stage the wording before it gives', () => {
+    const p = fixture(); p.history[0].message = 'Delivered. Signed by SAMPLE PERSON.';
+    const result = parseZnlogic(p, NUMBER);
+    expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'Delivered. Signed by SAMPLE PERSON.', signed_by: 'SAMPLE PERSON' });
+    expect(result.events![0]).toMatchObject({ description: 'Delivered. Signed by SAMPLE PERSON.', stage: 'delivered' });
+    // A name holding a phone number is left out, as before.
+    p.history[0].message = 'Delivered. Received by +1 555 0100 000';
+    expect(parseZnlogic(p, NUMBER)).toMatchObject({ last_status_text: 'Delivered.' });
+    expect(parseZnlogic(p, NUMBER)).not.toHaveProperty('signed_by');
+    Object.assign(p, { status: 'Out for delivery', last_update_summary: 'Out for Delivery' });
+    p.history[0].message = 'Out for delivery, received by SAMPLE PERSON';
+    expect(parseZnlogic(p, NUMBER)).not.toHaveProperty('signed_by');
   });
 
   it('requires an exact shipment-bound 404 rather than a missing route or mixed response', () => {
@@ -56,6 +71,7 @@ describe('Zinc guest history', () => {
 
   it('leaves new wording unstaged without promoting a partner handoff or an old delivery', () => {
     const p = fixture(); p.history[0].message = 'Processing update. Recipient: PRIVATE'; p.history[0].location = 'PRIVATE Road 77';
+    delete p.zip_code;
     const result = parseZnlogic(p, NUMBER);
     expect(result.status).toBe('unknown'); expect(result.events![0]).not.toHaveProperty('stage');
     expect(result.events![0]).not.toHaveProperty('location'); expect(JSON.stringify(result)).not.toContain('PRIVATE');

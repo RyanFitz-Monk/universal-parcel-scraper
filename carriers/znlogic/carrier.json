@@ -50,7 +50,9 @@
       "status",
       "history",
       "origin_country",
-      "destination_country"
+      "destination_country",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "recipient",

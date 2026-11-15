@@ -40,6 +40,7 @@ Tracked through the lookup its mobile tracking page makes.
   picker, signer, operator, collection point, bag or phone. The place is the station a delivery
   was signed at, else the first bracket of the Chinese line: a station, warehouse, city or
   country.
+- The signer a delivery's Chinese line names in brackets (`签收人[…]`) becomes `signed_by`.
 - Code 16's English line says Delivered, but its Chinese line has a parcel station or someone
   else taking the parcel in for the recipient, and the collection follows as code 15. The
   adapter words it "Received on the recipient's behalf" and stages it ready for pickup.

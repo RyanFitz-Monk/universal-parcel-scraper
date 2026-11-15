@@ -139,23 +139,29 @@ describe('YYpost HTTP adapter', () => {
     expect(relayed('SAMPLEREF0001', accepted, sorted)).toMatchObject({ current_stage: 'out_for_delivery', current_stage_source: 'carrier_map' });
   });
 
-  it('checks every clock, stages new wording through the shared rules, and drops who took a delivery', () => {
+  it('checks every clock, stages new wording through the shared rules, and reads who took a delivery from the signatory alone', () => {
     for (const date of ['2026-05-10 24:00:00', '2026-02-30 08:00:00', '2026-05-10T08:00:00', '2026-05-10 08:00', '', null]) {
       expect(() => parseYypost(changed((item) => { item.details = [{ ...scan('', 'Flight arrival'), track_occur_date: date }]; }), PARCEL), String(date))
         .toThrow(expect.objectContaining({ kind: 'schema' }));
     }
     const worded = parseYypost(changed((item) => {
+      item.signatory_name = 'SAMPLE RECIPIENT';
       item.details = [scan('2026-05-16 08:00:00', 'Delivered, signed by SAMPLE RECIPIENT', 'SAMPLE TOWN'), scan('2026-05-16 07:00:00', 'Out for delivery'),
         scan('2026-05-15 07:00:00', 'Sample Status Note')];
     }), PARCEL);
     expect(worded.events!.map((event) => [event.description, event.stage, event.stage_source])).toEqual([
       ['Delivered', 'delivered', 'carrier_map'], ['Out for delivery', 'out_for_delivery', 'wording:language'],
       ['Sample Status Note', undefined, undefined]]);
-    expect(worded).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map' });
+    expect(worded).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
+      signed_by: 'SAMPLE RECIPIENT' });
     expect(worded).not.toHaveProperty('delivered_at');
-    const unstaged = parseYypost(changed((item) => { item.details = [scan('2026-05-15 07:00:00', 'Sample Status Note')]; }), PARCEL);
+    const unstaged = parseYypost(changed((item) => {
+      item.signatory_name = 'SAMPLE RECIPIENT';
+      item.details = [scan('2026-05-15 07:00:00', 'Sample Status Note')];
+    }), PARCEL);
     expect(unstaged).toMatchObject({ status: 'unknown' });
     expect(unstaged).not.toHaveProperty('current_stage');
+    expect(unstaged).not.toHaveProperty('signed_by');
   });
 
   it('reads the Chinese wording when there is no English, and drops rows without either, postcodes and an unusable onward number', () => {

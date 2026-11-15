@@ -22,9 +22,6 @@ const BLOCKED = /<title>\s*(?:Just a moment|Attention Required|Access Denied)|_c
 const NOT_FOUND = /\bnot\s+found\b|не\s+знайден|не\s+найден/i;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^(\d{1,2}):(\d{2}):(\d{2})$/;
-// The codes whose remark after " - " names a hub or depot. Other remarks are
-// free text, such as the new address of a change of address, and are not kept.
-const PLACE_REMARKS: ReadonlySet<string> = new Set(['IS', 'IRP']);
 const MAX_ROWS = 300;
 
 /** A TMM Express AWB number; anything else is not one it issues. */
@@ -53,15 +50,16 @@ function wallClock(date: string, time: string): string {
 }
 
 /**
- * A scan's wording without the remark the page can add after " - ", except a
- * hub's or depot's name; the remark of a change of address is the new address.
+ * A scan's wording with the remark the page can add after " - ", such as a
+ * hub's name or the new address of a change of address, and its head without
+ * the remark, which stages the scan.
  */
-export function tmmExpressWording(code: string, description: string): { wording: string; head: string } {
+export function tmmExpressWording(description: string): { wording: string; head: string } {
   const text = clean(description, 300);
   const split = /^(.*?)\s+-(?:\s+(.*))?$/.exec(text);
   const head = clean(split?.[1] ?? text, 200);
-  const remark = clean(split?.[2] ?? '', 80);
-  return { head, wording: remark && PLACE_REMARKS.has(code) ? `${head} - ${remark}` : head };
+  const remark = clean(split?.[2] ?? '', 200);
+  return { head, wording: remark ? `${head} - ${remark}` : head };
 }
 
 /** One attribute of a status, which must be there. */
@@ -79,7 +77,7 @@ function scans($: CheerioAPI): CarrierEvent[] {
   const events: CarrierEvent[] = [];
   for (const row of rows) {
     const code = attribute(row, 'code', 16).toUpperCase();
-    const { head, wording } = tmmExpressWording(code, attribute(row, 'description', 300));
+    const { head, wording } = tmmExpressWording(attribute(row, 'description', 300));
     if (!head) throw new SchemaError(PROVIDER, 'TMM Express returned a scan without wording');
     const local = wallClock(attribute(row, 'eventDate', 16), attribute(row, 'eventTime', 16));
     const location = clean(row.attribs.depotName, 80);
@@ -133,8 +131,8 @@ function notFound($: CheerioAPI, number: string): never {
  * TMM Express's tracker, `trackparcels?num={number}&mark=is_code`, for one AWB
  * number. A consignment's page has its Common information table, which echoes
  * the number, the Detailed information table of its scans, and the same
- * consignment as base64 XML for the download button, with each status's code.
- * The XML also holds the signatory and a customer reference, which are not read.
+ * consignment as base64 XML for the download button, with each status's code,
+ * the signatory and the delivery town. The customer reference is not read.
  */
 export function parseTmmExpress(html: string, raw: string): CarrierResult {
   const number = normalizeTmmExpressNumber(raw);
@@ -163,6 +161,8 @@ export function parseTmmExpress(html: string, raw: string): CarrierResult {
   const events = scans(xml);
   if (!events.length) throw new NoHistoryError(PROVIDER);
   const country = countryCode(xml('connote > destinationCountry').attr('code'));
+  const town = clean(xml('connote > deliveryTown').first().text(), 80);
+  const signatory = clean(xml('connote > signatory').first().text(), 120);
 
   // Clocks come from Poland, Ukraine and the origin country and keep no zone, so the page's order stands.
   const newest = events[0]!;
@@ -176,6 +176,8 @@ export function parseTmmExpress(html: string, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

@@ -10,8 +10,10 @@ timeline without stating a zone, so it supplies neither a delivery instant nor a
 Any zone a consumer deduces remains separate from the source clock. Labels precede custody;
 assigning trips, data dispatch, account edits and proof administration do not establish movement.
 Mobile dispatch alone supplies no custody stage. Unknown detail text is represented as a generic
-update because that field can embed contact details. Recipient and shipper information, mixed
-locations, references, proof links and raw detail text are omitted.
+update because that field can embed contact details. A delivery keeps the name of whoever took
+the parcel, without the phone number after it, and that name becomes `signed_by`. Other recipient
+and shipper information, mixed locations, references, proof links and raw detail text are
+omitted.
 
 The exact empty `Docket Not Found......` reply establishes absence. Mixed results, malformed
 markup, refusals and rate limits stay distinct, with enabled provider fallback available.

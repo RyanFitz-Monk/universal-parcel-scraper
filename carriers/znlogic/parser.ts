@@ -6,7 +6,7 @@ import { languageStageStatus } from '../../core/status/index.js';
 import { calendarDay, countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
-import { znlogicStage } from './status.js';
+import { ZNLOGIC_TAKER, znlogicStage } from './status.js';
 
 export const PROVIDER = 'Zinc';
 export const ZNLOGIC_BASE = 'https://tracking.link/api/tracking/';
@@ -29,11 +29,21 @@ function clock(value: unknown): string {
   return `${match[1]}-${match[2]}-${match[3]}T${match[4]}`;
 }
 
+const UNSAFE = /[<>@]|\+\d[\d ()-]{6,}|\d{5,}/;
+
 function description(value: unknown): string {
   const raw = text(value).replace(/\s*\([^()]*\)\s*$/, '');
-  const wording = raw.split(/https?:\/\/|\b(?:recipient|consignee|signed\s+by|received\s+by|phone|tracking\s+(?:number|#))\s*[:：]?/i, 1)[0]!.trim();
-  if (!wording || /[<>@]|\+\d[\d ()-]{6,}|\d{5,}/.test(wording)) throw new SchemaError(PROVIDER, 'Zinc returned no logistics description');
-  return wording;
+  const wording = raw.split(/https?:\/\/|\b(?:recipient|consignee|phone|tracking\s+(?:number|#))\s*[:：]?/i, 1)[0]!.trim();
+  const plain = wording.split(ZNLOGIC_TAKER, 1)[0]!.trim();
+  if (!plain || UNSAFE.test(plain)) throw new SchemaError(PROVIDER, 'Zinc returned no logistics description');
+  // Who signed for or received the parcel stays, unless the name holds contact details.
+  return UNSAFE.test(wording) ? plain : wording;
+}
+
+/** The name a scan gives for who signed for or received the parcel. */
+function taker(wording: string): string {
+  const named = ZNLOGIC_TAKER.exec(wording);
+  return named ? clean(wording.slice(named.index + named[0].length).replace(/[\s.,;]+$/, ''), 120) : '';
 }
 
 function location(value: unknown): string {
@@ -74,10 +84,13 @@ export function parseZnlogic(payload: unknown, raw: string, httpStatus = 200): C
   const summaryStage = znlogicStage(null, summary);
   if (summaryStage && stage && summaryStage !== stage) throw new SchemaError(PROVIDER, 'Zinc returned contradictory current states');
   if (/^Delivered(?:\s|$)/i.test(text(payload.status, 250)) && stage && stage !== 'delivered') throw new SchemaError(PROVIDER, 'Zinc returned contradictory delivery states');
+  const signatory = stage === 'delivered' ? taker(newest.description!) : '';
+  const zip = clean(payload.zip_code, 20);
   const origin = payload.origin === undefined ? null : countryCode(text(payload.origin, 100));
   const destination = payload.destination === undefined ? null : countryCode(text(payload.destination, 100));
   return { status: stage ? languageStageStatus(stage) : 'unknown', ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
     last_status_text: newest.description, last_update: null, last_update_local: newest.local_time, expected_delivery: null,
     ...(origin ? { origin_country: origin } : {}), ...(destination ? { destination_country: destination } : {}),
+    ...(zip ? { receiver_address: zip } : {}), ...(signatory ? { signed_by: signatory } : {}),
     ...(events.length > 100 ? { history_truncated: true } : {}), events: events.slice(0, 100) };
 }

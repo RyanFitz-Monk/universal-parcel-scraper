@@ -34,9 +34,13 @@ through the lookup its tracking page makes.
   the page labels over its progress rail; the scans decide the rest.
 - A movement's station is a code such as `LIM`. The adapter names it after the shipment's origin
   or destination station when the code is one of theirs, and leaves it out otherwise.
-- The reply also carries the recipient's name, address, phone, e-mail and ID document, the
-  signatory, the contents, the sender, the courier and vehicle of each run, the photos and GPS
-  points of each visit and internal manifest numbers. None of them is kept.
+- The recipient's name and address become `receiver_name` and `receiver_address`, and once the
+  parcel is delivered, who took it (`recibe_pedido`) becomes `signed_by`. A movement that names
+  who signed keeps the name and is staged without it.
+- The reply also carries the recipient's phone, e-mail and ID document, the contents, the
+  sender, the courier and vehicle of each run, the photos and GPS points of each visit and
+  internal manifest numbers. None of them is kept, and an ID document is taken out of a
+  movement's wording.
 - No recognition: the tracker never says a number is unknown, and eight digits or a letter and
   eight digits are shapes many carriers print.
 

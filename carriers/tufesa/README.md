@@ -32,8 +32,11 @@ branches. Tracked through the lookup its tracking page makes.
   (delivery type `OCURRE`), and in transit otherwise.
 - The page counts a parcel delivered once its delivery block is recorded, whatever line comes
   last; the adapter does the same.
-- The sender, the recipient, the receiver, their signature, the delivery's coordinates, the
-  price, the parcel's kind and count and the external reference are not kept.
+- The recipient is `receiver_name`. Once the delivery is recorded, the person its block says
+  took the parcel is `signed_by`. A shown line that names the receiver keeps the name, and is
+  staged without it.
+- The sender, the signature, the delivery's coordinates, the price, the parcel's kind and count
+  and the external reference are not kept.
 
 ## Limitations
 

@@ -71,7 +71,9 @@
       "eta",
       "weight",
       "provider_code",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "delivered_at",
@@ -79,8 +81,6 @@
       "depots",
       "route_number",
       "sender_details",
-      "recipient_name",
-      "recipient_address",
       "payment_details",
       "customer_reference",
       "proof_of_delivery"

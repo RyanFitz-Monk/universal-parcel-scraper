@@ -106,6 +106,10 @@ rendered status, after that wait.
   tracking page shows them. The attention name is never read: it can name a person.
 - `delivered_at` is the delivering scan's time; `destination_country` the ship-to or delivery
   country code.
+- `receiver_address` is the ship-to address, else the delivery address: the street lines, then
+  "City, ST 12345" when a state or province is named and "12345 City" otherwise. Once the parcel
+  is delivered, `receivedBy` is `signed_by`. The API also names the destination, which becomes
+  `receiver_name`.
 - `service_name` is the service `additionalInformation.serviceInformation` names, without
   the trademark signs UPS adds to it.
 - A parcel UPS hands to the U.S. Postal Service for the last leg (Ground Saver, for one) has
@@ -193,9 +197,8 @@ it can replace browser retrieval. Application configuration and tokens stay outs
 - No dimensions, and a delivery window only from the API. The weight field comes back empty.
 - No sender name: `senderShipperNumber` is the shipper's account number.
 - Without API credentials or a browser service there is no history.
-- The ship-to address beyond its country, the signatory, the proof-of-delivery link and the
-  access point's attention name, hours and coordinates are in the reply but never kept; a
-  test asserts it.
+- The proof-of-delivery link and the access point's attention name, hours and coordinates are
+  in the reply but never kept; a test asserts it.
 
 ## Testing
 

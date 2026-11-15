@@ -70,7 +70,9 @@
       "destination_country",
       "delivery_partner",
       "delivery_tracking_number",
-      "delivered_at"
+      "delivered_at",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "tracking_alias"
@@ -80,7 +82,6 @@
       "service_name",
       "sender_name",
       "recipient_name",
-      "recipient_address",
       "proof_of_delivery"
     ]
   },

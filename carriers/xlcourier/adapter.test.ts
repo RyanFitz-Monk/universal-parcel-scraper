@@ -63,7 +63,8 @@ describe('XLCourier HTTP adapter', () => {
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
     // The failed attempt keeps its reason without the phone number.
     expect(result.events![3]).toMatchObject({ description: 'Unfortunately, we were unable to deliver your parcel. Reason: No answer at the address, call to rearrange' });
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Street|Road)|Sampleton|SA1 1AA|07000/);
+    expect(result.receiver_address).toBe('1 Sample Street\nSampleton\nSAMPLE COUNTY England SA1 1AA GB');
+    expect(JSON.stringify({ ...result, receiver_address: null })).not.toMatch(/Sample (?:Street|Road)|Sampleton|SA1 1AA|07000/);
   });
 
   it('reads a parcel that left the hub as in transit, the later of two scans on one clock first', () => {

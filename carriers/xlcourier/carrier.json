@@ -48,11 +48,10 @@
       "history",
       "location",
       "failed_delivery_reason",
-      "provider_code"
-    ],
-    "discarded": [
+      "provider_code",
       "recipient_address"
     ],
+    "discarded": [],
     "unavailable": [
       "eta",
       "weight",

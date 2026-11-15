@@ -15,7 +15,9 @@ the envelope and shipment. Intermediate challenges retain their failure kind. A 
 TRAWL gives up for lack of time fails as `budget`, not as the service's HTTP 500.
 
 Both routes combine shipment status with history and remove bookkeeping, duplicate
-rows and delivery route details. Party information and document links are discarded.
+rows and delivery route details. The former summary page gives the consignee: its first
+line becomes `receiver_name` and the rest `receiver_address`. Other parties, references
+and document links are discarded.
 The former pages supply facility wall clocks without offsets; the current API supplies
 UTC epoch instants. Neither route invents a timezone for local clocks.
 

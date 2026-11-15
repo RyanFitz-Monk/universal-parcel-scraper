@@ -63,8 +63,9 @@ describe('WINIT HTTP adapter', () => {
     const result = parseWinit(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered',
       last_update: '2026-04-01T12:05:00-05:00', delivered_at: '2026-04-01T12:05:00-05:00', expected_delivery: null,
-      delivery_carrier: 'fedex', delivery_tracking_number: '800000000013', destination_country: 'US' });
+      delivery_carrier: 'fedex', delivery_tracking_number: '800000000013', destination_country: 'US', receiver_address: '00000 SAMPLE CITY' });
     expect(result).not.toHaveProperty('last_update_local');
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.time, event.stage, event.provider_code, event.location, event.description])).toEqual([
       ['2026-04-01T12:05:00-05:00', 'delivered', undefined, 'Sample City,TX', 'Delivered'],
       ['2026-04-01T09:32:27-05:00', 'out_for_delivery', undefined, 'SAMPLE CITY,TX', 'On FedEx vehicle for delivery'],
@@ -131,8 +132,8 @@ describe('WINIT HTTP adapter', () => {
     }
   });
 
-  it('keeps the wording without the person who signed, phone numbers or e-mail addresses, and puts misread UTF-8 right', () => {
-    expect(winitWording({ eventDescription: 'Delivered, signed by SAMPLE PERSON' })).toBe('Delivered');
+  it('keeps the person who signed in the wording, takes phone numbers and e-mail addresses out, and puts misread UTF-8 right', () => {
+    expect(winitWording({ eventDescription: 'Delivered, signed by SAMPLE PERSON' })).toBe('Delivered, signed by SAMPLE PERSON');
     expect(winitWording({ eventDescription: 'Call +1 (555) 000-0000 or sample@example.com to rebook.' })).toBe('Call or to rebook.');
     expect(winitWording({ eventDescription: '<b>UPS Access Pointâ\u0084¢ possession</b> ' })).toBe('UPS Access Point™ possession');
     expect(winitWording({ eventDescription: 'Ã©tape' })).toBe('étape');
@@ -141,6 +142,10 @@ describe('WINIT HTTP adapter', () => {
     // A scan without any wording is no scan.
     const result = parseWinit(changed('in-transit', (shipment) => { shipment.trace.push(scan({ eventDescription: ' ', eventStatus: null })); }), IN_TRANSIT);
     expect(result.events).toHaveLength(6);
+    // The delivery is staged without the signer, who becomes the signatory.
+    const signed = parseWinit(changed('delivered', (shipment) => { shipment.trace.at(-1)!.eventDescription = 'Delivered, signed by SAMPLE PERSON.'; }), DELIVERED);
+    expect(signed).toMatchObject({ current_stage: 'delivered', last_status_text: 'Delivered, signed by SAMPLE PERSON.', signed_by: 'SAMPLE PERSON' });
+    expect(signed.events![0]).toMatchObject({ stage: 'delivered', description: 'Delivered, signed by SAMPLE PERSON.' });
   });
 
   it('names the courier only when the reply does and the number fits it, and never for an untracked service', () => {

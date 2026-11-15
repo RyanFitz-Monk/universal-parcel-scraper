@@ -36,9 +36,10 @@ selected or when a tracking link names it.
 
 ## Limitations
 
-The sender's and recipient's names and addresses, the customer reference, the remarks, the
-platforms' contact details, the delivery position and the proof of delivery are never read,
-though the public page shows them.
+The recipient's name becomes `receiver_name`, and their street, postcode and town
+`receiver_address`. The sender, the customer reference, the remarks, the platforms' contact
+details, the delivery position and the proof of delivery are never read, though the public page
+shows them.
 
 The other events of a shipment are not read: the public page does not show them.
 

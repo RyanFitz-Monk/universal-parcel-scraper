@@ -76,8 +76,9 @@ describe('ZTO International HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.time === `${event.local_time}+08:00` && event.time_zone === 'Asia/Shanghai'
       && event.time_zone_basis === 'carrier' && event.stage_source === 'carrier_map')).toBe(true);
-    // Couriers, signers, collection points, operators and phones stay out.
-    expect(JSON.stringify(result)).not.toMatch(/样例驿站|张样例|李样例|家人|yangliuser|操作员|130000/);
+    // The signer is read; couriers, collection points, operators and phones stay out.
+    expect(result.signed_by).toBe('家人');
+    expect(JSON.stringify({ ...result, signed_by: null })).not.toMatch(/样例驿站|张样例|李样例|家人|yangliuser|操作员|130000/);
   });
 
   it('keeps a parcel waiting at customs, without the operator code in a line haul', () => {

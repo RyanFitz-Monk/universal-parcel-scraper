@@ -199,7 +199,8 @@ function handoff(partners: Map<string, string>, destination: string | null): Pic
  * skid count, charges, service level, references, pickup day, appointment,
  * customs release or estimate, the cities of the shipper, consignee and third
  * party, and the partners' IDs; an unknown one with "Invalid Tracking Number".
- * Anonymous visitors get no scan history.
+ * The consignee's town is the recipient's address. Anonymous visitors get no
+ * scan history.
  */
 export function parseTstCf(html: string, rawNumber: string): CarrierResult {
   const number = normalizeTstCfNumber(rawNumber);
@@ -265,6 +266,7 @@ export function parseTstCf(html: string, rawNumber: string): CarrierResult {
     ...(weight !== null ? { weight_kg: weight } : {}),
     ...(service && service !== UNSET ? { service_name: service } : {}),
     ...(destination ? { destination_country: destination } : {}),
+    ...(consignee && consignee !== UNSET ? { receiver_address: consignee } : {}),
     ...handoff(partners, destination),
     summary_only: true,
     events,

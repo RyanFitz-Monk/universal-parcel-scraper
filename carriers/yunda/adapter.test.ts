@@ -17,16 +17,28 @@ const rows = (value: ReturnType<typeof fixture>) => value.data.logistic[NUMBER].
 const png = async (pixels: Buffer, width: number, height: number) => (await sharp(pixels, { raw: { width, height, channels: 4 } }).png().toBuffer()).toString('base64');
 
 describe('Yunda domestic history', () => {
-  it('binds every scan, reads China time, preserves partial history and excludes private prose', () => {
+  it('binds every scan, reads China time, preserves partial history, reads the recipient address and excludes private prose', () => {
     const result = normalizeCarrierResult(parseYunda(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', timezone: 'Asia/Shanghai',
       last_update: '2026-01-03T18:00:00+08:00', delivered_at: '2026-01-03T18:00:00+08:00' });
     expect(result.events?.map(event => event.stage)).toEqual(['delivered', 'ready_for_pickup', 'out_for_delivery', 'in_transit', 'accepted']);
     expect(result.events?.[0]).toMatchObject({ description: 'Delivered', provider_code: '已签收', location: '示例市' });
-    expect(JSON.stringify(result)).not.toMatch(/Private synthetic|13000000000|Synthetic address|weight|qianshou/);
+    expect(result.receiver_address).toBe('Synthetic address\n示例市');
+    expect(JSON.stringify({ ...result, receiver_address: null })).not.toMatch(/Private synthetic|13000000000|Synthetic address|weight|qianshou/);
     const declared = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8')).capabilities as string[];
     const evidence: Record<string, boolean> = { history: Boolean(result.events?.length), location: Boolean(result.events?.some(event => event.location)) };
     for (const capability of declared) expect(evidence[capability], capability).toBe(true);
+  });
+
+  it('reads the recipient city alone, or the address alone when it names the city', () => {
+    const value = fixture();
+    delete value.data.order[NUMBER].receiverDetailAddress;
+    expect(parseYunda(value, NUMBER).receiver_address).toBe('示例市');
+    value.data.order[NUMBER].receiverDetailAddress = '示例市 Synthetic address';
+    expect(parseYunda(value, NUMBER).receiver_address).toBe('示例市 Synthetic address');
+    value.data.order = [];
+    delete value.data.logistic[NUMBER].receiverCity;
+    expect(parseYunda(value, NUMBER)).not.toHaveProperty('receiver_address');
   });
 
   it.each(['order-map', 'history-map', 'mixed-scan', 'missing-scan', 'extra-result'])('rejects %s identity ambiguity', mode => {

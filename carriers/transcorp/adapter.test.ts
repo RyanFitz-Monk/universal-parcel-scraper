@@ -57,8 +57,8 @@ describe('Transcorp HTTP adapter', () => {
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-01-15T13:20:00+03:00', delivered_at: '2026-01-15T13:20:00+03:00',
-      expected_delivery: null, weight_kg: 1.25, service_name: 'Normal', destination_country: 'KW', timezone: 'Asia/Kuwait',
-      events: [
+      expected_delivery: null, weight_kg: 1.25, service_name: 'Normal', destination_country: 'KW', signed_by: 'Test Recipient',
+      timezone: 'Asia/Kuwait', events: [
         // The reply stamps 09:20Z: Kuwait's 13:20 read as Dubai time.
         event('2026-01-15T13:20:00+03:00', 'DELIVERED', 'Delivered', 'delivered', 'Sample Governorate, Kuwait'),
         event('2026-01-15T09:05:00+03:00', 'OUT_FOR_DELIVERY', 'Out For Delivery', 'out_for_delivery'),
@@ -75,8 +75,8 @@ describe('Transcorp HTTP adapter', () => {
         event('2026-01-12T23:30:00+03:00', 'ARRIVED_AT_CUSTOMS_CLEARANCE_FACILITY', 'Arrived At Customs Clearance Facility', 'customs'),
       ],
     });
-    // Names, remarks, references, the courier, the area and the coordinates are dropped.
-    expect(JSON.stringify(result)).not.toMatch(/Test (?:Driver|Recipient)|Synthetic|Block 0|EXAMPLE-HUB|0000000000|KWD|lat/);
+    // Who received the parcel is read; remarks, references, the courier, the area and the coordinates are dropped.
+    expect(JSON.stringify(result)).not.toMatch(/Test Driver|Synthetic|Block 0|EXAMPLE-HUB|0000000000|KWD|lat/);
   });
 
   it('reads a current history as instants, with the consignee country only', () => {
@@ -94,7 +94,10 @@ describe('Transcorp HTTP adapter', () => {
       ['2026-02-02T11:15:00Z', 'PICKED_UP', 'accepted', undefined],
       ['2026-02-01T09:00:00Z', 'PICKUP_SCHEDULED', 'registered', undefined],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Test Consignee|Example (?:Street|District|Shop|Area|Hub)|\+0|synthetic|DRIVER_APP/);
+    // The consignee's name and address are read; the phone, the coordinates and the drivers are not.
+    expect(result).toMatchObject({ receiver_name: 'Test Consignee', receiver_address: '0 Example Street\nExample District' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/Example (?:Shop|Area|Hub)|\+0|synthetic|DRIVER_APP/);
   });
 
   it('names the slot the shipment is booked for, which the adapter does not read yet, when the reply fills it', () => {

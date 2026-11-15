@@ -67,12 +67,12 @@ describe('TST-CF Express tracking adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'tst-cf-express', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads delivered freight as a summary on wall clocks, with its weight and Saia’s PRO, and nobody’s details', () => {
+  it('reads delivered freight as a summary on wall clocks, with its weight, Saia’s PRO and the consignee’s town', () => {
     const result = parseTstCf(page('delivered'), KNOWN);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered on 01/15/2026 at 14:05', last_update: null, last_update_local: '2026-01-15T14:05:00',
-      expected_delivery: null, weight_kg: 226.796, service_name: 'Road', destination_country: 'US',
+      expected_delivery: null, weight_kg: 226.796, service_name: 'Road', destination_country: 'US', receiver_address: 'EXAMPLE CITY, OH',
       delivery_carrier: 'saia', delivery_tracking_number: SAIA, summary_only: true,
       events: [
         { local_time: '2026-01-15T14:05:00', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
@@ -80,9 +80,9 @@ describe('TST-CF Express tracking adapter', () => {
         { local_time: '2026-01-06', description: 'Shipped', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    // Only the status line names places: the terminals of an in-transit lane.
+    // Only the status line and the consignee's town name places.
     for (const name of ['delivered', 'in-transit', 'pickup']) {
-      expect(JSON.stringify({ ...parseTstCf(page(name), KNOWN), last_status_text: null }), name)
+      expect(JSON.stringify({ ...parseTstCf(page(name), KNOWN), last_status_text: null, receiver_address: null }), name)
         .not.toMatch(/SAMPLETON|EXAMPLE|555-0100|Skids|Pieces/);
     }
   });
@@ -104,7 +104,7 @@ describe('TST-CF Express tracking adapter', () => {
     expect(result).toEqual({
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'In transit between SAMPLETON, QC and EXAMPLE TOWN, ON', last_update: null, expected_delivery: null,
-      weight_kg: 54.431, service_name: 'Road', destination_country: 'CA', summary_only: true,
+      weight_kg: 54.431, service_name: 'Road', destination_country: 'CA', receiver_address: 'EXAMPLE TOWN, ON', summary_only: true,
       events: [{ local_time: '2026-01-12', description: 'Shipped', stage: 'accepted', stage_source: 'carrier_map' }],
     });
     const call = /<a href="[^"]*">Please call [^<]*<\/a>/;

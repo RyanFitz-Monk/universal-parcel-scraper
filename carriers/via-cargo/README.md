@@ -38,9 +38,10 @@ the lookup its tracking page makes.
   type falls to the shared wording rules. `RECIBIDO EN DESTINO`, the arrival at the destination
   branch, stays in transit: the reply does not say whether the parcel waits there for collection
   or goes out to the door. The location is the branch's name.
+- The recipient's name is `receiver_name`, their street, postcode and town `receiver_address`,
+  and once the parcel is delivered, `nombreQuienRecibe` is `signed_by`.
 - The customer requests the page lists under the history, the parcel count and the parcels'
-  states are not kept, and neither are the sender's and the recipient's details nor who took
-  the parcel.
+  states are not kept, and neither are the sender's details nor phone and ID numbers.
 
 ## Limitations
 

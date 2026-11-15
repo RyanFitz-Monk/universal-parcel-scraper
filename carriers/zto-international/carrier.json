@@ -57,12 +57,12 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "signatory"
     ],
     "discarded": [
       "driver_name",
       "contact_details",
-      "signatory",
       "pickup_point",
       "office_contact_details"
     ],

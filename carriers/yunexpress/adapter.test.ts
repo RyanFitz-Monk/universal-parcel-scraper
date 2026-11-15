@@ -18,7 +18,7 @@ const captured = (body = fixture()): TrawlScrapeResponse => ({ url: 'https://www
   statusCode: 200, userAgent: null, cookies: [], raw: {}, capturedResponses: [{ url: API, status: 200, headers: {}, body: JSON.stringify(body), base64Encoded: false, truncated: false, error: null }] });
 
 describe('YunExpress captured response projection', () => {
-  it('binds both result identities and preserves per-event clock evidence', () => {
+  it('binds both result identities, preserves per-event clock evidence and reads the consignee', () => {
     const result = normalizeCarrierResult(parse(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_update: '2026-03-20T13:39:00-04:00',
       destination_country: 'US', delivery_tracking_number: '9000000000000000000001' });
@@ -27,7 +27,8 @@ describe('YunExpress captured response projection', () => {
     expect(result.events?.[1]).toMatchObject({ local_time: '2026-03-19T13:39:00' });
     expect(result.events?.[1]!.time).toBeUndefined();
     expect(result.events?.at(-1)?.stage).toBe('registered');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE_NAME', receiver_address: 'PRIVATE_ADDRESS' });
+    expect(JSON.stringify({ ...result, receiver_name: null, receiver_address: null })).not.toContain('PRIVATE');
   });
 
   it.each(['description', 'location', 'clock', 'missing summary'])('rejects a latest %s mismatch instead of returning older progress', mode => {
@@ -346,7 +347,8 @@ describe('YunExpress captured response projection', () => {
     // Against La Poste's own instants: its arrival in France at 18:08:37+02:00 came as 16:08:37.
     const relay = () => fixture('la-poste-relay');
     const delivered = parse(relay(), NUMBER);
-    expect(delivered).toMatchObject({ status: 'delivered', delivered_at: '2026-07-08T10:27:08+02:00' });
+    expect(delivered).toMatchObject({ status: 'delivered', delivered_at: '2026-07-08T10:27:08+02:00', receiver_name: 'PRIVATE_RECIPIENT' });
+    expect(delivered).not.toHaveProperty('receiver_address');
     expect(delivered.events?.slice(0, 8).map((event) => event.time ?? `local ${event.local_time}`)).toEqual([
       '2026-07-08T10:27:08+02:00', 'local 2026-07-08T08:56:20', 'local 2026-07-08T08:37:13', '2026-07-07T03:52:00Z',
       '2026-07-06T21:07:00Z', '2026-07-06T19:58:00Z', '2026-07-06T19:09:03Z', '2026-07-06T16:08:37Z']);

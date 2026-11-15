@@ -219,6 +219,34 @@ function destination(shipment: Record<string, unknown>, operating: string | null
   return shipment.__legacy === true && text(shipment, 'orderType', 32) === 'DELIVERY' ? operating : null;
 }
 
+/**
+ * The consignee's name and address: the street lines, then the area and the
+ * region, unless the region is a subdivision code.
+ */
+function consigneeOf(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const consignee = plain(shipment.consignee);
+  if (!isRecord(consignee)) return {};
+  const name = text(consignee, 'name');
+  const location = plain(consignee.location);
+  const street = plain(isRecord(location) ? location.streetAddress : undefined);
+  const region = text(location, 'subdivision', 60);
+  const area = [text(location, 'subregion', 80), /^[A-Z0-9]{1,3}$/.test(region) ? '' : region].filter(Boolean).join(', ');
+  const address = [text(street, 'line1', 200), text(street, 'line2', 200), area].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/** Who received the shipment at its newest delivery. */
+function receiverOf(rows: unknown[]): string {
+  let newest: { at: number; name: string } | null = null;
+  for (const row of rows) {
+    if (!isRecord(row) || text(row, 'type', 64).toUpperCase() !== 'DELIVERED') continue;
+    const name = text(row, 'receivedBy');
+    const at = explicitOffsetTime(row.timestamp)?.timestamp;
+    if (name && at !== undefined && (!newest || at > newest.at)) newest = { at, name };
+  }
+  return newest?.name ?? '';
+}
+
 function project(shipment: Record<string, unknown>): CarrierResult {
   const operating = countryCode(text(shipment, 'operatingCountry', 8));
   const zone = operating ? countryTimeZone(operating) : null;
@@ -233,6 +261,7 @@ function project(shipment: Record<string, unknown>): CarrierResult {
   const serviceCode = text(shipment, 'serviceType', 32);
   const service = SERVICES[serviceCode] ?? (serviceCode ? transcorpLabel(serviceCode) : '');
   const country = destination(shipment, operating);
+  const receiver = stage === 'delivered' ? receiverOf(rows) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(current ? { current_stage: stage, current_stage_source: current.stage_source } : {}),
@@ -246,6 +275,8 @@ function project(shipment: Record<string, unknown>): CarrierResult {
     ...(weight ? { weight_kg: weight } : {}),
     ...(service ? { service_name: service } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...consigneeOf(shipment),
+    ...(receiver ? { signed_by: receiver } : {}),
     ...(zone ? { timezone: zone } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
