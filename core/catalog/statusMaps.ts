@@ -19,6 +19,7 @@ import { statusMap as qtExpress } from '../../carriers/qt-express/status.js';
 import { statusMap as swissconnect } from '../../carriers/swissconnect/status.js';
 import { statusMap as timeMatters } from '../../carriers/time-matters/status.js';
 import { statusMap as tsbEs } from '../../carriers/tsb-es/status.js';
+import { statusMap as memphisCourier } from '../../carriers/memphis-courier/status.js';
 import { statusMap as lion360 } from '../../carriers/360lion/status.js';
 import { statusMap as xpressLogisticsLu } from '../../carriers/xpress-logistics-lu/status.js';
 import { statusMap as aeropost } from '../../carriers/aeropost/status.js';
@@ -803,6 +804,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'time-matters': timeMatters,
   'tsb-es': tsbEs,
   '360lion': lion360,
+  'memphis-courier': memphisCourier,
   'xpress-logistics-lu': xpressLogisticsLu,
   'zes-express': zesExpress,
   'j-and-t-br': jAndTBr,

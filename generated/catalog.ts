@@ -34830,6 +34830,31 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "memphis-courier": {
+    "displayName": "Memphis Courier",
+    "color": "#1f3c5b",
+    "countries": [
+      "BR",
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "memphis-courier",
+      "recognitionRank": 17,
+      "localClocks": true
+    },
+    "canaryUrl": "https://clients.memphiscourier.com.br/",
+    "trackingSearchUrl": "https://clients.memphiscourier.com.br/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^M\\d{7}MIA$",
+        "confidence": "low"
+      }
+    ]
+  },
   "mensajeros-urbanos": {
     "displayName": "Mensajeros Urbanos",
     "color": "#27adb8",
@@ -57723,6 +57748,7 @@ export const CARRIER_IDS = [
   "megacity-courier",
   "meihoo-pegasus",
   "meitetsu-unyu",
+  "memphis-courier",
   "mensajeros-urbanos",
   "meso-global",
   "messenger-cz",
@@ -59282,6 +59308,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "megacity-courier": [],
   "meihoo-pegasus": ["meihoo-pegasus-1"],
   "meitetsu-unyu": [],
+  "memphis-courier": ["memphis-courier-1"],
   "mensajeros-urbanos": [],
   "meso-global": ["meso-global-1"],
   "messenger-cz": [],

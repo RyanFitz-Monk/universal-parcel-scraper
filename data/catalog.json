@@ -34826,6 +34826,31 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "memphis-courier": {
+    "displayName": "Memphis Courier",
+    "color": "#1f3c5b",
+    "countries": [
+      "BR",
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "memphis-courier",
+      "recognitionRank": 17,
+      "localClocks": true
+    },
+    "canaryUrl": "https://clients.memphiscourier.com.br/",
+    "trackingSearchUrl": "https://clients.memphiscourier.com.br/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^M\\d{7}MIA$",
+        "confidence": "low"
+      }
+    ]
+  },
   "mensajeros-urbanos": {
     "displayName": "Mensajeros Urbanos",
     "color": "#27adb8",

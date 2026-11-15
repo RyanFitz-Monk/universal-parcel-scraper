@@ -1,0 +1,65 @@
+{
+  "carrier": "memphis-courier",
+  "entries": [
+    {
+      "code": "FLT",
+      "wording": "Seu pedido foi criado com sucesso",
+      "stage": "registered",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The order is created; the page counts it as its first step, \"Criado\"."
+    },
+    {
+      "code": "CHK",
+      "wording": "Entrada registrada no Centro de Distribuição",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "Checked in at a distribution centre the scan does not name."
+    },
+    {
+      "code": "ENO",
+      "wording": "Encomenda em trânsito",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "In transit."
+    },
+    {
+      "code": "TRA",
+      "wording": "Encomenda em transferência",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "Moved between sites."
+    },
+    {
+      "code": "BRP",
+      "wording": "Alfândega",
+      "stage": "customs",
+      "language": "pt",
+      "confirmedBy": "bundle",
+      "note": "The tracking page's customs step, which this code reaches; the scan's own wording is not known."
+    },
+    {
+      "code": "CLA",
+      "wording": "Liberado",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "bundle",
+      "note": "The tracking page's step for a parcel customs released, which this code reaches; the scan's own wording is not known."
+    },
+    {
+      "code": "DLV",
+      "wording": "Entregue",
+      "stage": "delivered",
+      "language": "pt",
+      "confirmedBy": "bundle",
+      "note": "The tracking page's delivered step, which this code reaches; the scan's own wording is not known."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "carrier": "memphis-courier",
+  "gap": "No public page shows a whole Memphis Courier code.",
+  "records": [
+    {
+      "number": "M9999998MIA",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "donated_real",
+      "shapeConfirmed": "2026-11-15",
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "memphis-courier"
+        ]
+      },
+      "note": "Made-up code in the shape of a shipment the app tracked, which Memphis Courier's own tracker lists under that whole code. Its serial sits far from the one in use."
+    }
+  ]
+}

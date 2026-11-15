@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "items": [
+    {
+      "codigo": "M9999991MIA",
+      "destCep": "00000-000",
+      "destMunicipio": "Cidade Exemplo",
+      "destEstado": "XX",
+      "totalPackageQuantity": 1,
+      "totalWeight": 0.75,
+      "startRelease": null,
+      "anvisa": "NÃO",
+      "map": "NÃO",
+      "ibama": "NÃO",
+      "clearence": null,
+      "clearenceEnd": null,
+      "events": [
+        { "code": "TRA", "date": "2026-03-12T09:15:00", "description": "Encomenda em transferência ", "comments": " ", "location": null },
+        { "code": "ENO", "date": "2026-03-10T07:20:11.5", "description": "Encomenda em trânsito", "comments": "", "location": null },
+        { "code": "CHK", "date": "2026-03-09T06:05:42", "description": "Entrada registrada no Centro de Distribuição", "comments": "", "location": "" },
+        { "code": "FLT", "date": "2026-03-03T14:30:27.123", "description": "Seu pedido foi criado com sucesso", "comments": null, "location": null }
+      ]
+    }
+  ]
+}

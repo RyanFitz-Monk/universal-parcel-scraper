@@ -312,6 +312,7 @@ export const CARRIER_RECOGNITION_RANKS: Readonly<Record<string, number>> = {
   "mayiyinfu": 751,
   "mds-collivery": 705,
   "meest": 340,
+  "memphis-courier": 17,
   "metropolitan-warehouse": 8,
   "micro-express": 697,
   "mng-kargo": 360,

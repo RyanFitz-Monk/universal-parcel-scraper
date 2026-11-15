@@ -1,0 +1,76 @@
+{
+  "id": "memphis-courier",
+  "displayName": "Memphis Courier",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "BR",
+      "US"
+    ]
+  },
+  "brand": {
+    "color": "#1f3c5b"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "memphis-courier",
+    "steps": [
+      "direct"
+    ],
+    "recognition": {
+      "rank": 17
+    },
+    "localClocks": true
+  },
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code",
+    "weight"
+  ],
+  "portal": {
+    "searchUrl": "https://clients.memphiscourier.com.br/",
+    "canaryUrl": "https://clients.memphiscourier.com.br/",
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "weight",
+      "parcel_count",
+      "postcodes",
+      "destination",
+      "remarks",
+      "progress_rail",
+      "customs_documents"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "weight"
+    ],
+    "discarded": [
+      "parcel_count",
+      "postcodes",
+      "destination",
+      "remarks",
+      "progress_rail",
+      "customs_documents"
+    ],
+    "unavailable": [
+      "eta",
+      "service_name"
+    ]
+  },
+  "links": [],
+  "detection": [
+    {
+      "id": "memphis-courier-1",
+      "pattern": "^M\\d{7}MIA$",
+      "confidence": "low"
+    }
+  ]
+}
