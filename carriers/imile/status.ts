@@ -92,6 +92,8 @@ const PHRASES: ReadonlyMap<string, Stage | null> = new Map<string, Stage | null>
   ['inventory count scan', null],
   // A delivery booked again, without its day, between a round out for delivery and the attempt's end or the next round.
   ['scheduled delivery', null],
+  // The delivery time changed during a round out for delivery, without a day or a reason.
+  ['change of delivery time', null],
   ['your order has been delivered successfully', 'delivered'],
   // The short form of a centre's delivery, "【centre】Delivered", as JS Express relays it, and the German centres' form
   // naming who took the parcel: "【centre】Delivered, receiver type:【Self or Family】.".
@@ -206,6 +208,7 @@ export const statusMap: CarrierStatusMap = {
     { code: DELIVERY, wording: 'lost order', note: 'A driver\'s reason during a delivery run, followed by the attempt\'s end; the parcel it was seen on went out again and was delivered, so it does not establish a loss.' },
     { code: DELIVERY, wording: 'the delivery method has been confirmed with the recipient as self-pickup.', note: 'The recipient chose to collect the parcel after a failed attempt; it keeps the stage of the scan before it until the pickup point has the parcel.' },
     { code: DELIVERY, wording: 'scheduled delivery', note: 'A delivery booked again, without its day, between a round out for delivery and the attempt\'s end or the next round: it moves nothing, so it keeps the stage of the scan before it.' },
+    { code: DELIVERY, wording: 'change of delivery time', note: 'The delivery time changed during a round out for delivery, without a day or a reason: it moves nothing, so it keeps the stage of the scan before it.' },
     ...cainiaoStatusMap.gaps,
   ],
   gapNote: (code, wording) => {
