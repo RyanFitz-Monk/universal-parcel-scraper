@@ -294,7 +294,7 @@ carrier.
   becomes the location, and a copy stored with the brackets takes the new form in place. XDP's
   scans come as their type and description ("CREATE, --"); they keep the description, or the
   type where XDP gives "--", as ParcelsApp words them, so the two copies of a scan meet.
-- Each scan keeps the `location` 17TRACK reports, unless it holds private delivery details or
+- Each scan keeps the `location` 17TRACK reports, unless it
   is Posti's "ULKOMAILLA" ("abroad") or the "目的国" ("destination country") China Post's feed
   gives an airline's arrival in place of a country's code: neither names a place. China
   Post's feed can also give the scan's status there, at times with the place after it in 【】

@@ -34,7 +34,7 @@ describe('UPU postal tracking', () => {
     const value = parseUpuResponse(payload([scan(), customs, delivered, delivered]), number);
     expect(value.current_stage).toBe('delivered');
     expect(value.events?.map((event) => event.stage)).toEqual(['delivered', 'customs', 'accepted']);
-    expect(value.events?.[0]!.description).toBe('Delivered');
+    expect(value.events?.[0]!.description).toBe('Final delivery');
     expect(parseUpuResponse(payload([scan('EDC', 'Item returned from Customs (import)')]), number).current_stage).toBe('in_transit');
   });
 

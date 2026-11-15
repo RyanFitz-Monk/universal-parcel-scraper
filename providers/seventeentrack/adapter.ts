@@ -822,8 +822,7 @@ export function parse17TrackResponse(payload: unknown, trackingNumber: string, p
       // China Post words its labels in Chinese only, on its own leg and on a forwarder's that relays them: they
       // show in English where it is known, staged as the Chinese was, with the place left to the location, or
       // taken from the label's 【】 where none is given.
-      // A delivery reads "Delivered" by now; its label still names the place.
-      const label = parsed.stage === 'delivered' ? text(scan.description).trim() : parsed.description;
+      const label = parsed.description;
       const english = CHINA_POST_LABELS.has(reported.key) && label ? chinaPostEnglish(label) : undefined;
       if (english) {
         const named = parsed.location ? '' : place(chinaPostLabelPlace(label ?? '') ?? '');

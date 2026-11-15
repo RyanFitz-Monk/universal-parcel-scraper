@@ -18,7 +18,8 @@ describe('classification provenance', () => {
     expect(parsed).toMatchObject({ stage, stage_source: source });
     const normalized = normalizeCarrierResult({ events: [parsed] });
     expect(resolveResult(normalized).events[0]).toMatchObject({ stage, stage_source: source });
-    if (stage === 'delivered') expect(parsed.description).toBe('Delivered');
+    // A delivery keeps its words, a signatory too: a host shows them only to the parcel's owner.
+    expect(parsed.description).toBe(description);
   });
 
   it('retains wording provenance for local clocks and the milestone chosen for the summary', () => {

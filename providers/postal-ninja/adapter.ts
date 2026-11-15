@@ -23,7 +23,7 @@ import type { TrawlClient, TrawlScrapeResponse } from '../../core/transport/inde
 import { scrapeUniversalPage, type UniversalBrowserOptions } from '../../core/transport/browser.js';
 import { isRecord } from '../../core/types.js';
 import { capturedBodies, captureFailure, loadCapture, type CaptureSpec } from '../shared/capture.js';
-import { classifyEvent, event, hasPrivateDeliveryDetails, isNotice, numberOf, result, text, type UniversalSource } from '../shared/result.js';
+import { classifyEvent, event, isNotice, numberOf, result, text, type UniversalSource } from '../shared/result.js';
 import { courierZone, universalCarrierHints } from '../shared/hints.js';
 import { borrowsRoutingZone, carrierHomeZone, lendsZone, originLeg, serviceZone, wallClock, type Zoned } from './clocks.js';
 
@@ -131,11 +131,10 @@ export function parsePostalNinjaResponse(payload: unknown, trackingNumber: strin
     } else {
       const classified = classifyEvent(description, serviceStage(service, description));
       const { stage } = classified;
-      if (stage !== 'delivered' && hasPrivateDeliveryDetails(description)) continue;
       // A scan's location (loc) is read only for its clock.
       const scan = { service, description, wall, location: text(raw.loc), delivered: stage === 'delivered' };
       scans.push({ wall, service, origin: originLeg(scan), lends: lendsZone(scan), zone: serviceZone(scan, journey),
-        event: { description: stage === 'delivered' ? 'Delivered' : description, ...classified, ...reporting } });
+        event: { description, ...classified, ...reporting } });
     }
   }
   // A scan whose service's clock is unknown here borrows a zone: that of the

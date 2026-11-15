@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Stage } from '../core/status/index.js';
-import { trackingLanguageStage } from '../core/status/index.js';
+import { hasPrivateDeliveryDetails, trackingLanguageStage } from '../core/status/index.js';
 import { inferStage, resolveResult, type CarrierResult } from '../index.js';
 const buildEvents = (_parcel: unknown, result: CarrierResult) => resolveResult(result).events;
 import { event } from '../providers/shared/result.js';
@@ -129,9 +129,9 @@ describe('intuitive language contrasts', () => {
     expect(event('2026-01-01T12:00:00Z', description)?.stage).toBe(expected);
   });
 
-  it('[observed universal] reduces a delivery that names its recipient to a safe description', () => {
-    expect(event('2026-01-01T12:00:00Z', 'Delivery complete. Recipient : () Result : Delivery complete'))
-      .toMatchObject({ stage: 'delivered', description: 'Delivered' });
+  it('[observed universal] keeps a delivery that names its recipient in its own words', () => {
+    const description = 'Delivery complete. Recipient : () Result : Delivery complete';
+    expect(event('2026-01-01T12:00:00Z', description)).toMatchObject({ stage: 'delivered', description });
   });
 
   // GENERATED phrasings around the bare word "delivered": handoffs, pickup
@@ -209,8 +209,10 @@ describe('intuitive language contrasts', () => {
     'Entregue, assinado por [recipient]',
     'Entregado; código de entrega: [code]',
     'Entregue; código de levantamento: [code]',
-  ])('[generated privacy] reduces delivery wording to a safe description: %s', (description) => {
-    expect(event('2026-01-01T12:00:00Z', description)?.description).toBe('Delivered');
+  ])('[generated privacy] keeps a delivery in its words and flags its details: %s', (description) => {
+    // Hosts show such a scan only to the parcel's owner.
+    expect(event('2026-01-01T12:00:00Z', description)).toMatchObject({ stage: 'delivered', description });
+    expect(hasPrivateDeliveryDetails(description)).toBe(true);
   });
 
   it.each([
@@ -227,14 +229,16 @@ describe('intuitive language contrasts', () => {
     'Disponível para levantamento; código de levantamento: [code]',
     'Aviso assinado por [recipient]',
     'Não entregue, porta nº [number]',
-  ])('[generated privacy] excludes access details: %s', (description) => {
-    expect(event('2026-01-01T12:00:00Z', description)).toBeNull();
+  ])('[generated privacy] keeps access details in the scan and flags them: %s', (description) => {
+    expect(event('2026-01-01T12:00:00Z', description)?.description).toBe(description);
+    expect(hasPrivateDeliveryDetails(description)).toBe(true);
   });
 
   it.each([
     'Recibido por Estafeta', 'Objeto recebido pelos Correios do Brasil', 'Firma geschlossen', 'Código de envío [number]',
-  ])('[generated privacy] keeps carrier handoffs and references: %s', (description) => {
+  ])('[generated privacy] keeps carrier handoffs and references unflagged: %s', (description) => {
     expect(event('2026-01-01T12:00:00Z', description)).not.toBeNull();
+    expect(hasPrivateDeliveryDetails(description)).toBe(false);
   });
 });
 

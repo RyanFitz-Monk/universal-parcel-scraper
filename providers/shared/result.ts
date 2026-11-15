@@ -10,7 +10,6 @@
  */
 import { DateTime } from 'luxon';
 import { trackingLanguageStage } from '../../core/status/index.js';
-import { hasPrivateDeliveryDetails } from '../../core/status/private.js';
 import { countryCode, countryKeepsOffset, usStateTimeZone } from '../../core/time/index.js';
 import { CHINESE_CITIES, CHINESE_PROVINCES } from './china.js';
 import { deliveryForecastRemainder, nonterminalEnglishReturn } from '../../core/status/language.js';
@@ -43,8 +42,6 @@ export function numberOf(raw: string): string {
   if (!/^(?=.*\d)[A-Z0-9]{4,40}$/.test(number)) throw new InvalidInputError('Tracking', 'Invalid tracking number');
   return number;
 }
-
-export { hasPrivateDeliveryDetails };
 
 export function text(value: unknown): string {
   return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, 500) : '';
@@ -195,9 +192,9 @@ function offsetPlace(location: string): string | undefined {
  * The place a provider reports for a scan, without the words before a depot's
  * town, a branch's postcode, which can narrow down a sender's or recipient's
  * area, a "Country" label or a status given before the place, unless it is a
- * label or placeholder ("--") that names no place, holds private delivery
- * details or is Posti's "abroad" label. A postcode given alone is the country
- * its code names, if any, and one given after the country goes. A place with its
+ * label or placeholder ("--") that names no place or Posti's "abroad" label. A
+ * postcode given alone is the country its code names, if any, and one given
+ * after the country goes. A place with its
  * row's offset after it is read without it (`offsetPlace`), and a US facility's town
  * and state without the town and ZIP code after them (`usFacilityPlace`). A part given twice in a
  * row is read once (`withoutRepeatedParts`)
@@ -207,7 +204,7 @@ export function place(value: unknown): string {
   const read = withoutRepeatedParts(text(value).slice(0, 200).replace(DEPOT_PREFIX, '').replace(BRACKETED_POSTCODE, '').replace(OFFICE_CODE, '').replace(COUNTRY_LABEL, ''));
   const location = statusPlace(read) ?? offsetPlace(read) ?? usFacilityPlace(read) ?? postcodeCountry(read)
     ?? withoutAddedCountry(withoutPostcodeAfterCountry(read));
-  return /[\p{L}\p{N}]/u.test(location) && !NOT_PLACES.test(location) && !hasPrivateDeliveryDetails(location) && !isPostiAbroadLabel(location)
+  return /[\p{L}\p{N}]/u.test(location) && !NOT_PLACES.test(location) && !isPostiAbroadLabel(location)
     ? location : '';
 }
 
@@ -782,11 +779,10 @@ function describe(description: unknown, stage?: unknown): { description: string;
   const declared = typeof stage !== 'string' ? undefined : Object.hasOwn(STAGES, stage) ? STAGES[stage]
     : (CATALOG_STAGES as readonly string[]).includes(stage) ? stage as Stage : undefined;
   // Established source semantics (e.g. handoff/negation) remain first. A real
-  // provider stage outranks the new intuitive translation fallback.
-  const classified = classifyEvent(label, declared);
-  if (classified.stage !== 'delivered' && hasPrivateDeliveryDetails(label)) return null;
-  // Delivery descriptions can include signatures, access codes or door numbers.
-  return { description: classified.stage === 'delivered' ? 'Delivered' : label, ...classified };
+  // provider stage outranks the new intuitive translation fallback. A scan naming
+  // a code, a door or a signatory keeps its words: a host shows it only to the
+  // parcel's owner (`hasPrivateDeliveryDetails`).
+  return { description: label, ...classifyEvent(label, declared) };
 }
 
 /** A timestamp's shape for an error: digits read 9 and letters a, but for ISO's `T` and `Z` (`9999-99-99T99:99:99Z`). */
@@ -980,11 +976,30 @@ function sameScan(left: CarrierEvent, right: CarrierEvent): boolean {
     && agree(readStage(left), readStage(right)) && agree(left.provider_code, right.provider_code);
 }
 
-/** One scan from two copies: the later copy, with what only the earlier one supplied, as a place a carrier's copy lacks. */
+/**
+ * The words two copies of one scan share. Carriers word one delivery each their own way
+ * ("Livraison effectuée", "Delivered"), so a delivery's are its stage; any other scan's are its wording.
+ */
+export function copyWording(value: Pick<CarrierEvent, 'stage' | 'description'>): string {
+  return value.stage === 'delivered' ? 'Delivered' : value.description ?? '';
+}
+
+// Words any delivery can be given, which say nothing a carrier's own wording does not.
+const BARE_DELIVERY = /^(?:(?:the )?(?:package|parcel|item|shipment) )?(?:has been |was )?delivered[.!]?$/i;
+const deliveryDetail = (value: CarrierEvent) => (BARE_DELIVERY.test(value.description?.trim() ?? '') ? 0 : 2) + (value.location ? 1 : 0);
+
+/**
+ * One scan from two copies: the later copy, with what only the earlier one supplied, as a place a
+ * carrier's copy lacks. Of two copies of a delivery in other words, the one that says more is kept
+ * instead: wording beyond a bare "Delivered", then a place.
+ */
 function mergedCopy(earlier: CarrierEvent, later: CarrierEvent): CarrierEvent {
-  const scan: CarrierEvent = { ...earlier };
-  for (const [field, value] of Object.entries(later)) if (value !== undefined && value !== '') scan[field] = value;
-  if (!readStage(later) && readStage(earlier)) Object.assign(scan, { stage: earlier.stage, stage_source: earlier.stage_source });
+  const richer = WORDING_KEY(earlier.description ?? '') !== WORDING_KEY(later.description ?? '')
+    && deliveryDetail(earlier) > deliveryDetail(later);
+  const [base, kept] = richer ? [later, earlier] : [earlier, later];
+  const scan: CarrierEvent = { ...base };
+  for (const [field, value] of Object.entries(kept)) if (value !== undefined && value !== '') scan[field] = value;
+  if (!readStage(kept) && readStage(base)) Object.assign(scan, { stage: base.stage, stage_source: base.stage_source });
   return scan;
 }
 
@@ -997,7 +1012,7 @@ export function result(events: CarrierEvent[], source: UniversalSource, preserve
   for (const entry of events) {
     const event = withoutWordingAsPlace(aheadStep(entry, now));
     if (lookupNotice(event, now)) continue;
-    const key = `${moment(event)}|${event.description}`;
+    const key = `${moment(event)}|${copyWording(event)}`;
     const rows = copies.get(key) ?? [];
     const copy = rows.find((index) => sameScan(scans[index]!, event));
     if (copy !== undefined) {
@@ -1020,7 +1035,7 @@ export function result(events: CarrierEvent[], source: UniversalSource, preserve
   if (!unique.length && written.size) {
     throw new NoHistoryError(source, `${source} relays only a timeline written to a schedule`, { reason: 'written_ahead' });
   }
-  // A well-formed reply with no scan left after notices and private details proves nothing about the parcel.
+  // A well-formed reply with no scan left after notices proves nothing about the parcel.
   if (!unique.length) throw new IndeterminateError(source, 'No usable tracking events');
   const currentEvent = unique.find((e) => e.stage && e.stage !== 'pending');
   const current = currentEvent?.stage as Stage | undefined;

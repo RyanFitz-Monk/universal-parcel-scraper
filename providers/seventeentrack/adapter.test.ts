@@ -5,6 +5,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { carrierIdFromName } from '../../core/catalog/hints.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { carrierErrorKind } from '../../core/errors/index.js';
+import { hasPrivateDeliveryDetails } from '../../core/status/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { TrawlClient } from '../../core/transport/index.js';
 import { universalCarrierHints } from '../shared/hints.js';
@@ -218,7 +219,7 @@ describe('17TRACK result parsing', () => {
     ['Exception_Returning', '退回中', 'exception', '退回中'],
     ['Exception_Returned', '已退回', 'returned', 'Returned'],
     ['OutForDelivery_Other', '正在投递', 'out_for_delivery', '正在投递'],
-    ['Delivered_Other', '已妥投', 'delivered', 'Delivered'],
+    ['Delivered_Other', '已妥投', 'delivered', '已妥投'],
   ])('uses %s with a null stage independently of scan language', (code, description, stage, shown) => {
     const result = parse17TrackResponse(postalHistory([postalScan(code, description)]), number);
     expect(result.current_stage).toBe(stage);
@@ -1017,7 +1018,7 @@ describe('17TRACK result parsing', () => {
     expect(read(191903, 'XC')).toEqual(staged);
     // Another line's leg keeps its wording; its exact Chinese final scan still gives the stage.
     expect(read(190000, 'Example Forwarder')?.slice(0, 2)).toEqual([
-      ['delivered', 'Delivered', undefined], ['failed_attempt', '已试投/投递失败(/已通知客户)', undefined]]);
+      ['delivered', '【西班牙】已妥投', undefined], ['failed_attempt', '已试投/投递失败(/已通知客户)', undefined]]);
   });
 
   it("reads the origin post's scans Japan Post relays on that post's clock, and Japan Post's own on Tokyo's", () => {
@@ -1292,17 +1293,19 @@ describe('17TRACK result parsing', () => {
     }
   });
 
-  it('uses matching history, keeps the reported carrier and scan places, and strips recipient data', () => {
+  it('uses matching history, keeps the reported carrier and the scans\' own wording and places, and leaves out recipient fields', () => {
     const result = parse17TrackResponse(delivered, number);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', tracking_provider: '17TRACK',
       last_update: '2026-08-31T18:50:50.000Z' });
-    expect(result.events?.[0]).toMatchObject({ stage: 'delivered', description: 'Delivered' });
+    // The delivery keeps its words and place, signatory and door included: a host shows them only to the parcel's owner.
+    expect(result.events?.[0]).toMatchObject({ stage: 'delivered', description: 'Delivered, signed by PRIVATE', location: 'PRIVATE door number 4' });
+    expect(hasPrivateDeliveryDetails(result.events![0]!.description!)).toBe(true);
     expect(result.events?.[1]).toMatchObject({ stage: 'out_for_delivery', time: '2026-08-31T17:12:44.000Z',
       location: 'EXAMPLE TOWN, CH' });
-    // A place holding private delivery details is dropped, and the street-level address never read.
-    expect(result.events?.[0]?.location).toBeUndefined();
     expect(result).toMatchObject({ reported_carriers: ['Swiss Post'], discovered_carrier: 'swiss-post' });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    // The recipient's street and phone and the operator's are never read.
+    expect(JSON.stringify({ ...result, last_status_text: undefined, events: result.events?.slice(1) })).not.toContain('PRIVATE');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE street');
   });
 
   it('names DER KURIER Slovakia’s leg by its key, 100777, as 17TRACK writes it with the German network’s name', () => {

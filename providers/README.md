@@ -88,8 +88,12 @@ and [the benchmark](../benchmark/README.md) holds what was measured.
   once to the second in the same words and place or with one place left out, as its copy to the
   second ([ARCHITECTURE.md](../ARCHITECTURE.md)): ParcelsApp gives YFH's scans at :00 with their
   place and Cainiao's copies of them at the second.
-- Privacy: a non-delivered event that mentions a PIN, access code, door number or
-  signature is dropped, and a delivered event's text becomes `Delivered`. Recipient
+- Carriers word one delivery each their own way, so two deliveries at one instant are copies
+  of one scan in any words. The scan keeps the copy that says more than a bare "Delivered",
+  else the one with a place, and a place only the other gives.
+- Privacy: a scan keeps the carrier's wording and place, also when they name a PIN, an
+  access or pickup code, a door number or a signatory. A host shows such a scan only to the
+  parcel's owner (`hasPrivateDeliveryDetails`). Recipient
   fields are never read. A place leaves out a branch's postcode, and a postcode given
   alone as a place, as UPU posting scans relay it, becomes the country its code names
   or no place. A place loses a country given twice, the destination's country a line

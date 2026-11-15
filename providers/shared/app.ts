@@ -45,14 +45,27 @@ function matchesYtoContacts(incoming: SameInstantScan, stored: SameInstantScan):
     && (!incoming.providerCode || !stored.providerCode || incoming.providerCode === stored.providerCode);
 }
 
+/**
+ * A delivery stored as a bare "Delivered", before the providers kept the
+ * carrier's own wording and a place naming a door or a signatory: a delivery
+ * in any words, at the location stored or where none was, with provider codes
+ * that agree.
+ */
+function matchesBareDelivery(incoming: SameInstantScan, stored: SameInstantScan): boolean {
+  return incoming.stage === 'delivered' && stored.stage === 'delivered' && normalized(stored.description) === 'delivered'
+    && (!stored.location.trim() || normalized(incoming.location) === normalized(stored.location))
+    && (!incoming.providerCode || !stored.providerCode || incoming.providerCode === stored.providerCode);
+}
+
 // A copy may add a place, or drop a label it was once stored with that names
 // no place (Posti's "abroad", a feed's system user) or the words before a
 // depot's town, show a China Post label in English, or take the place from
-// after its wording, or leave out a YTO courier's contact.
+// after its wording, or leave out a YTO courier's contact. A delivery stored
+// as a bare "Delivered" takes the carrier's own words.
 export const sameInstantIdentityPolicy: SameInstantIdentityPolicy = {
   sourceCarrierId: 'unknown', storedSources: ['unknown'], requireProviderCode: false,
   matchEachScan: true,
   matches: (incoming, stored) => matchesLocationEnrichment(incoming, stored)
     || matchesRereadLocation(incoming, stored, place) || matchesChinaPostEnglish(incoming, stored)
-    || matchesTrailingPlace(incoming, stored) || matchesYtoContacts(incoming, stored),
+    || matchesTrailingPlace(incoming, stored) || matchesYtoContacts(incoming, stored) || matchesBareDelivery(incoming, stored),
 };

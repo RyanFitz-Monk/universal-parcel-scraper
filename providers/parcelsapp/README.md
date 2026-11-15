@@ -264,7 +264,8 @@ step exists for future protocol changes.
   takes the first zone of:
   1. its place: the state or province (North American scans below) or the single-clock
      country its location names;
-  2. a copy: the zone of another carrier's scan at the same minute with the same wording
+  2. a copy: the zone of another carrier's scan at the same minute with the same wording,
+     or a delivery in any words,
      that the reply places by its carrier's zone, its place or its offset, not by a guess
      (EMS's "Delivered" and Japan Post's "Final delivery" in the UK). The copy then reads
      as the same instant and merges into that scan's row. Two such scans on different
@@ -757,7 +758,7 @@ step exists for future protocol changes.
   the line carrier is a hand-over, not a new start. An acceptance on a wall clock that
   would sort above another carrier's dated move is one too, though within a day it may
   come first, so it never sets the stage back over that move.
-- A bare "Delivered" is left out when a scan of the reply moves the parcel on (accepted,
+- A delivery, or a bare "Delivered", is left out when a scan of the reply moves the parcel on (accepted,
   in transit, in customs, out for delivery or a failed attempt) more than a day later.
   ParcelsApp words a leg's end so: a first carrier's on the day it hands the parcel to the
   next, and MailAmericas' "Delivered by Airline" before the destination's customs. The day

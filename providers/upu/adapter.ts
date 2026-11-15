@@ -10,7 +10,7 @@ import { runSteps } from '../../core/runner/index.js';
 import { isoTime, postalOfficeZone } from '../../core/time/index.js';
 import { decodeText, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { classifyEvent, hasPrivateDeliveryDetails, isNotice, numberOf, result, text } from '../shared/result.js';
+import { classifyEvent, isNotice, numberOf, result, text } from '../shared/result.js';
 
 const SOURCE = 'UPU';
 export const UPU_BUDGET_MS = 8_000;
@@ -89,13 +89,11 @@ export function parseUpuResponse(payload: unknown, trackingNumber: string): Carr
     if (!description || isNotice(description)) throw new SchemaError(SOURCE, 'UPU returned no event label');
     const mapped = STAGES[raw.EventCd];
     const classified = mapped ? { stage: mapped, stage_source: 'carrier_map' } : classifyEvent(description);
-    const { stage } = classified;
-    if (stage !== 'delivered' && hasPrivateDeliveryDetails(description)) continue;
     const location = text(raw.EventLocation);
     const wall = localTime(raw.EventDT);
     events.push({ ...officeTime(wall, location, route), local_time: wall, provider_code: raw.EventCd,
-      description: stage === 'delivered' ? 'Delivered' : description, ...classified,
-      ...(location && !hasPrivateDeliveryDetails(location) ? { location } : {}),
+      description, ...classified,
+      ...(location ? { location } : {}),
     });
   }
   if (!events.length) throw new NotFoundError(SOURCE, 'UPU has no actual tracking scans');

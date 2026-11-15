@@ -78,13 +78,13 @@ it('keeps scan locations from the API while excluding a delivery-service label a
   }
 });
 
-it('keeps the reported place when another carrier repeats a delivery without a location', () => {
+it('keeps the reported wording and place when another carrier repeats a delivery in its own words without a location', () => {
   const result = parseParcelsAppResponse({ carriers: ['Chronopost', 'DHL'], states: [
     { date: '2026-07-12T10:15:00Z', status: 'Livraison effectuée', carrier: 0, location: 'Example Sorting Centre, France' },
     { date: '2026-07-12T10:15:00Z', status: 'Delivered', carrier: 1 },
   ] }, number, identity(), 'Europe/Paris');
   expect(result.events).toHaveLength(1);
-  expect(result.events?.[0]).toMatchObject({ description: 'Delivered', location: 'Example Sorting Centre, France' });
+  expect(result.events?.[0]).toMatchObject({ description: 'Livraison effectuée', location: 'Example Sorting Centre, France' });
 });
 
 const captured = (data: unknown, overrides: Record<string, unknown> = {}) => new Response(JSON.stringify({
@@ -364,10 +364,10 @@ describe('ParcelsApp result parsing', () => {
         date: `2026-05-${day}T${time}:00Z`, status: label + label, carrier: 0,
       })) }, number, identity())
       : parseParcelsAppHtml(rendered(scans.map(([day, time, label]) => carrierRow(`${day} May 2026`, time, label + label, 'TIPSA')).join('')), number);
-    expect(parsed).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered' });
+    expect(parsed).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'ENTREGADO' });
     // TIPSA's history is on Madrid time, Portuguese agencies included.
     expect(parsed.events?.map(({ time, description, stage }) => [time, description, stage])).toEqual([
-      ['2026-05-08T16:50:00.000Z', 'Delivered', 'delivered'],
+      ['2026-05-08T16:50:00.000Z', 'ENTREGADO', 'delivered'],
       ['2026-05-07T06:30:00.000Z', 'REPARTO', 'out_for_delivery'],
       ['2026-05-06T13:00:00.000Z', 'Ausente', 'failed_attempt'],
       ['2026-05-06T06:30:00.000Z', 'REPARTO', 'out_for_delivery'],
@@ -477,7 +477,7 @@ describe('ParcelsApp result parsing', () => {
       const states = [...dated, ...steps('2026-01-01T00:00:00Z')];
       const json = parseParcelsAppResponse({ carriers, states }, number, identity());
       expect(json).toMatchObject({ current_stage: 'delivered', last_update: '2026-09-24T12:05:00.000Z', undated_event_count: 4 });
-      expect(json.events?.map((scan) => scan.description)).toEqual(['Delivered', 'Colis en cours d\'acheminement', 'Colis pris en charge']);
+      expect(json.events?.map((scan) => scan.description)).toEqual(['Package delivered', 'Colis en cours d\'acheminement', 'Colis pris en charge']);
       const html = parseParcelsAppHtml(page(states), number);
       expect(html).toMatchObject({ undated_event_count: 4, last_update: json.last_update, current_stage: json.current_stage });
       expect(html.events).toEqual(json.events);
@@ -507,7 +507,8 @@ describe('ParcelsApp result parsing', () => {
     ] }, number, identity());
     expect(result.current_stage).toBe('delivered');
     expect(result.events?.[1]!.stage).toBe('pending');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    // The delivery keeps its words: a host shows them only to the parcel's owner.
+    expect(result.events?.[0]!.description).toBe('Delivered by mailbox, PIN: PRIVATE');
   });
 
   it('keeps a Quickpac pre-advice from reporting the parcel as delivered', () => {
@@ -1395,13 +1396,13 @@ describe('ParcelsApp result parsing', () => {
     // OnTrac's dates are already UTC.
     expect(times(['OnTrac'], [scan('2026-09-25T21:49:19Z', 'EXAMPLE CITY, CA, 92000'), scan('2026-09-24T02:25:10Z', 'EXAMPLE CITY, NY, 10001')]))
       .toEqual(['2026-09-25T21:49:19.000Z', '2026-09-24T02:25:10.000Z']);
-    // UniUni writes "City ST"; a copy of the same scan from another carrier moves with it.
+    // UniUni writes "City ST"; a copy of the same scan from another carrier, in its own words, moves with it.
     expect(parseParcelsAppResponse({ carriers: ['UNI Express', 'Cainiao'], states: [
       scan('2026-09-05T15:10:54Z', 'Example Township PA', 'Delivered. (Recipient\'s front door)'),
       scan('2026-09-05T15:10:54Z', '', 'Package delivered,front door/porch', 1),
       scan('2026-09-04T21:31:33Z', 'Example City NY', 'Gateway transit out'),
     ] }, number, identity()).events?.map((event) => [event.time, event.description])).toEqual([
-      ['2026-09-05T19:10:54.000Z', 'Delivered'],
+      ['2026-09-05T19:10:54.000Z', 'Delivered. (Recipient\'s front door)'],
       ['2026-09-05T01:31:33.000Z', 'Gateway transit out'],
     ]);
   });
@@ -1589,14 +1590,14 @@ describe('ParcelsApp result parsing', () => {
     const mixed = read(['CDEK', 'Example Parcel Co'], [scan('2026-10-18T08:30:00Z', 'Delivered', 1), ...cdek]);
     expect(mixed?.[0]).toMatch(/^2026-10-18T08:30:00/);
     expect(mixed?.slice(1)).toEqual(['2026-10-17', '2026-10-16', '2026-10-15', '2026-10-14', '2026-10-13', '2026-10-12']);
-    // Another network's copy of such a day's scan at 00:00:00 that day, in the same words as read and with no place, is
-    // that scan, as Cainiao relays a national post's delivery. Its other words, another day, a place or a time stay.
+    // Another network's copy of such a day's scan at 00:00:00 that day, in the same words as read (any delivery's alike) and with
+    // no place, is that scan, as Cainiao relays a national post's delivery. Its other words, another day, a place or a time stay.
     const counted = [scan('2026-10-15T00:59:59Z', 'The parcel was delivered.'), scan('2026-10-14T00:59:58Z', 'In transit'),
       scan('2026-10-13T00:59:57Z', 'Accepted')];
     const relayed = (...states: Record<string, unknown>[]) => parse(['Example Post', 'Cainiao'], [...states, ...counted]).events
       ?.map(({ time, local_time, description, location }) => `${time ?? local_time} ${description} ${location ?? ''}`.trim());
     expect(relayed(scan('2026-10-15T00:00:00Z', 'Delivered', 1), scan('2026-10-15T00:00:00Z', 'Delivery in process', 1)))
-      .toEqual(['2026-10-15 Delivered', '2026-10-15T00:00:00.000Z Delivery in process', '2026-10-14 In transit', '2026-10-13 Accepted']);
+      .toEqual(['2026-10-15 The parcel was delivered.', '2026-10-15T00:00:00.000Z Delivery in process', '2026-10-14 In transit', '2026-10-13 Accepted']);
     for (const copy of [scan('2026-10-14T00:00:00Z', 'Delivered', 1), scan('2026-10-15T09:30:00Z', 'Delivered', 1),
       { ...scan('2026-10-15T00:00:00Z', 'Delivered', 1), location: 'Example Hub' }]) {
       expect(relayed(copy), JSON.stringify(copy)).toHaveLength(4);
@@ -1639,13 +1640,13 @@ describe('ParcelsApp result parsing', () => {
       scan('2026-02-02T21:42:33Z', 'Example City Il, United States of America'),
       scan('2026-01-28T11:47:02Z', 'Example City, People\'s Republic of China'),
     ])).toEqual(['2026-02-18T19:12:47.000Z', '2026-02-03T03:42:33.000Z', '2026-01-28T03:47:02.000Z']);
-    // GOFO's US scans; a copy from another carrier, with no state, moves with its scan.
+    // GOFO's US scans; a copy from another carrier, with no state and in its own words, moves with its scan.
     expect(parseParcelsAppResponse({ carriers: ['GoFo Express', 'Cainiao'], states: [
       scan('2026-10-03T16:01:13Z', 'Example City, FL', 'Delivered, Door/Yard.'),
       scan('2026-10-03T16:01:13Z', 'Example City', 'Delivered', 1),
       scan('2026-10-03T08:54:20Z', 'Example City, FL', 'Out for Delivery'),
     ] }, number, identity()).events?.map((event) => [event.time, event.description])).toEqual([
-      ['2026-10-03T20:01:13.000Z', 'Delivered'],
+      ['2026-10-03T20:01:13.000Z', 'Delivered, Door/Yard.'],
       ['2026-10-03T12:54:20.000Z', 'Out for Delivery'],
     ]);
     // A town of Florida's Panhandle keeps Central time, as GOFO's own feed dates it, whichever way the state is written.
@@ -2341,7 +2342,7 @@ describe('ParcelsApp result parsing', () => {
     ];
     const result = parseParcelsAppResponse({ carriers: ['GoFo Express', '4PX Express'], states }, number, identity());
     expect(result.events?.map((event) => [event.time, event.description, event.location])).toEqual([
-      ['2026-10-27T14:31:45.000Z', 'Delivered', 'Example City, FL'],
+      ['2026-10-27T14:31:45.000Z', 'Delivered, PUDO.', 'Example City, FL'],
       ['2026-10-22T00:21:18.000Z', 'Arrived at GOFO Regional Hub', 'Example Town, TX'],
       // 4PX's own scan keeps the clock its copies give its network.
       ['2026-10-21T13:22:38.000Z', 'Empacando el punto de operación', 'USXXXA'],
@@ -2730,9 +2731,10 @@ describe('ParcelsApp result parsing', () => {
         { date: '2026-07-09T15:34:00Z', status: 'Departed From Port Of Origin', carrier: 0 },
         { date: '2026-07-06T03:53:06Z', status: 'Pre-Shipment Info Sent To Spain', carrier: 0 },
       ] }, number, identity());
-    // EcoScooting's delivery and SunYou's are one scan again.
+    // EcoScooting's delivery and SunYou's are one scan again, in EcoScooting's words at SunYou's place.
+    expect(parse('ES').events?.[0]).toMatchObject({ location: 'Example City' });
     expect(parse('ES').events?.map((scan) => [scan.time, scan.description])).toEqual([
-      ['2026-07-14T12:40:24.000Z', 'Delivered'],
+      ['2026-07-14T12:40:24.000Z', 'Delivery Success. Your shipment has been delivered successfully'],
       ['2026-07-13T16:48:40.000Z', 'Delivery Failed, Reason: Consignee Is Not Available'],
       ['2026-07-12T18:56:13.000Z', 'Hand Over To Last Mile'],
       ['2026-07-10T03:29:00.000Z', 'Arrived At Destination Country Airport'],
@@ -3015,13 +3017,13 @@ describe('ParcelsApp result parsing', () => {
       scan('2026-05-21T13:41:00Z', 'Out for Delivery. Example caption', 1),
     ];
     expect(read(relays, 'IT')).toEqual([
-      ['Delivered', '2026-05-21T12:48:00.000Z'],
+      ['Item has been delivered', '2026-05-21T12:48:00.000Z'],
       ['Parcel is out for delivery', '2026-05-21T11:41:00.000Z'],
       ['Out for Delivery. Example caption', '2026-05-21T11:41:00.000Z'],
     ]);
     // Bound for no single clock, they keep their wall clock, as Pitney Bowes's own adapter does.
     expect(read(relays)).toEqual([
-      ['Delivered', '2026-05-21T14:48:00.000'],
+      ['Item has been delivered', '2026-05-21T14:48:00.000'],
       ['Parcel is out for delivery', '2026-05-21T13:41:00.000'],
       ['Out for Delivery. Example caption', '2026-05-21T13:41:00.000'],
     ]);

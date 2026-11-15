@@ -66,7 +66,6 @@ export function seventeenTrackEvent(raw: JsonObject, operator: JsonObject, place
     if (label === 'loading into delivery vehicle') parsed.stage = 'out_for_delivery';
     else if (label === 'registered') parsed.stage = 'registered';
   }
-  if (parsed.stage === 'delivered') parsed.description = 'Delivered';
   const timeRaw = isRecord(raw.time_raw) ? raw.time_raw : null;
   // `address` is never read: it can be the recipient's street.
   const location = place(raw.location);

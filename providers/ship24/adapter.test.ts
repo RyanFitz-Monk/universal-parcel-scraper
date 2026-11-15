@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IndeterminateError, NoHistoryError, UpstreamHttpError } from '../../core/errors/index.js';
+import { hasPrivateDeliveryDetails } from '../../core/status/index.js';
 import { NOOP_RECORDER, type LookupRecord, type StepRecord, type StepRecorder } from '../../core/telemetry/index.js';
 import { scrapeUniversalPage } from '../../core/transport/browser.js';
 import { adapter, parseShip24Response, Ship24Tracker } from './adapter.js';
@@ -40,18 +41,21 @@ function fixture(executablePath: string | null = '/test/chromium') {
 afterEach(() => { vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 describe('Ship24 result parsing', () => {
-  it('retains the aggregated history, scan places and courier names without recipient or courier contact details', () => {
+  it('retains the aggregated history in the carriers\' words, scan places and courier names, without recipient fields or courier contacts', () => {
     const parsed = parseShip24Response(delivered, number);
     expect(parsed).toMatchObject({ status: 'delivered', current_stage: 'delivered', tracking_provider: 'Ship24' });
     expect(parsed.events?.length).toBeGreaterThan(0);
-    expect(parsed.events?.[0]).toMatchObject({ stage: 'delivered', description: 'Delivered' });
-    // A place holding private delivery details is dropped.
-    expect(parsed.events?.[0]?.location).toBeUndefined();
+    // The delivery keeps its words and place, PIN and signatory included: a host shows them only to the parcel's owner.
+    expect(parsed.events?.[0]).toMatchObject({ stage: 'delivered', description: 'Delivered by Mailbox, PIN: 4821, signed by PRIVATE',
+      location: 'PRIVATE door number 4' });
+    expect(hasPrivateDeliveryDetails(parsed.events![0]!.description!)).toBe(true);
     expect(parsed.events?.[1]).toMatchObject({ description: 'Out for delivery', location: 'Example Town, CH' });
     expect(parsed.reported_carriers).toEqual(['Swiss Post', 'UPS']);
     // Swiss Post's numbers all have a layout of their own and this one fits none: UPS's leg is the hint.
     expect(parsed.discovered_carrier).toBe('ups');
-    expect(JSON.stringify(parsed)).not.toMatch(/PRIVATE|PIN:|signed by/i);
+    // The recipient's name and address and the courier's phone and website are never read.
+    expect(JSON.stringify({ ...parsed, last_status_text: undefined, events: parsed.events?.slice(1) })).not.toMatch(/PRIVATE|PIN:|signed by/i);
+    expect(JSON.stringify(parsed)).not.toMatch(/PRIVATE (?:recipient|street|city)|private\.example/);
   });
 
   it('reads offset-less scans named "Correos de España" on Correos\'s Madrid clock', () => {

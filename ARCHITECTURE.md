@@ -267,9 +267,10 @@ with the answer's other wall clocks, read the same whatever the host's zone.
 A result's `receiver_name`, `receiver_address`, `signed_by` and `pickup_code` hold what the
 carrier shows about the recipient: the name the parcel is addressed to, the delivery address,
 who signed for or took the parcel, and the code that releases it at a locker or point. Adapters
-read them as the carrier gives them, masked or not. `hasPrivateDeliveryDetails` tells whether a
-scan's wording or place names a code, a door number or a signature, for a host that shows the
-history to people other than the parcel's owner.
+read them as the carrier gives them, masked or not. Adapters and universal providers keep a
+scan's wording and place as the carrier gives them too. `hasPrivateDeliveryDetails` tells whether
+they name a code, a door number or a signature, for a host that shows the history to people other
+than the parcel's owner: it shows such a scan only to the owner.
 
 A result's `pickup_point` is the point the parcel waits at for collection: its name, then its
 address on the following lines. On a delivered parcel it is the point the recipient collected

@@ -54,7 +54,7 @@ import { YUNEXPRESS_ORIGIN_ZONE, yunExpressOriginLeg } from '../../carriers/yune
 import { facilityZone, LatestScan, relaysFacilityClock } from '../shared/facilityClock.js';
 import { CHINESE_CITIES, CHINESE_PROVINCES } from '../shared/china.js';
 import { brandCarrierForNumber, universalCarrierHints } from '../shared/hints.js';
-import { event, eventStage, foreignEvent, isNotice, localEvent, numberOf, place as reportedPlace, result, type UniversalSource } from '../shared/result.js';
+import { copyWording, event, eventStage, foreignEvent, isNotice, localEvent, numberOf, place as reportedPlace, result, type UniversalSource } from '../shared/result.js';
 import { carrierScan, dropStepNotices, markLaterReceipts, markReturnLeg, type CarrierScan } from '../shared/scans.js';
 import { PARCELSAPP_API, ParcelsAppHttpClient } from './http.js';
 
@@ -1943,7 +1943,7 @@ function markHandovers(carried: readonly { event: CarrierEvent; carrier: string 
 const BARE_DELIVERY = /^delivered[.!]?$/i;
 const MOVEMENTS: ReadonlySet<string> = new Set(['accepted', 'in_transit', 'customs', 'out_for_delivery', 'failed_attempt']);
 /**
- * The bare "Delivered" rows a scan of the reply moves the parcel past more
+ * The deliveries, and the bare "Delivered" rows, a scan of the reply moves the parcel past more
  * than a day later. ParcelsApp words a leg's end so: SEUR's on the day it
  * handed a parcel to BRT, five days before BRT's own scans of it, and
  * MailAmericas' "Delivered by Airline" before the destination's customs. A
@@ -1951,7 +1951,8 @@ const MOVEMENTS: ReadonlySet<string> = new Set(['accepted', 'in_transit', 'custo
  */
 function passedDeliveries(events: readonly CarrierEvent[]): CarrierEvent[] {
   const moves = events.filter((event) => event.stage_source !== 'none' && MOVEMENTS.has(event.stage ?? '')).map((event) => moment(event));
-  return events.filter((event) => BARE_DELIVERY.test(event.description?.trim() ?? '') && moves.some((at) => at - moment(event, true) > DAY_MS));
+  return events.filter((event) => (event.stage === 'delivered' || BARE_DELIVERY.test(event.description?.trim() ?? ''))
+    && moves.some((at) => at - moment(event, true) > DAY_MS));
 }
 
 /**
@@ -2163,7 +2164,7 @@ function relayCopies<T extends { name: unknown; date: unknown }>(entries: readon
 
 /**
  * Another network's copy of a scan dated by its day alone (`datedOnly`, `dayOnlyNetworks`): the
- * same words at 00:00:00 that day, as read (a delivery's are "Delivered"), with no place.
+ * same words at 00:00:00 that day, as read (any delivery's are its stage, `copyWording`), with no place.
  * Cainiao relayed Czech Post's delivery so, beside Czech Post's own with its day and office.
  * The copy is not read as a scan.
  */
@@ -2171,7 +2172,10 @@ function midnightCopies<T extends { name: unknown; date: unknown; location: stri
   entries: readonly T[],
   dayOnly: ReadonlySet<string>,
 ): Set<T> {
-  const words = (entry: T, wall: string) => (localEvent(wall, entry.wording)?.description ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const words = (entry: T, wall: string) => {
+    const parsed = localEvent(wall, entry.wording);
+    return (parsed ? copyWording(parsed) : '').replace(/\s+/g, ' ').trim().toLowerCase();
+  };
   const dayOf = (entry: T) => datedOnly(entry.name, relayedLabel(entry.raw.status), entry.date) ?? networkDay(dayOnly, entry.name, entry.date);
   const dated = entries.flatMap((entry) => {
     const [day, wall] = [dayOf(entry), mislabeledWallTime(entry.date)];
@@ -2259,13 +2263,14 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
   if (destination === 'US') dropDhlinkCopies(entries);
   dropStepNotices(entries, eventStage);
   // Another carrier's copy of a scan placed in its state or province (Cainiao
-  // relaying UniUni's "Delivered" at the same minute, with no place) takes
-  // that scan's zone, so the two stay one scan. A copy of a GOFO scan with an
+  // relaying UniUni's delivery at the same minute in its own words, with no
+  // place) takes that scan's zone, so the two stay one scan. A copy of a GOFO scan with an
   // offset of its own writes the same digits under a UTC label (YTO's, Cirro's
   // and EQuick's of GOFO France's), and takes that offset. A wall-clock scan
   // with no place copies any other carrier's placed scan this way.
   const copyKey = ({ date, wording }: typeof entries[number], wall = mislabeledWallTime(date)) => {
-    const text = wall ? localEvent(wall, wording)?.description : undefined;
+    const parsed = wall ? localEvent(wall, wording) : null;
+    const text = parsed ? copyWording(parsed) : '';
     return wall && text ? `${wall}|${text}` : '';
   };
   const offsetClocks = entries.filter((entry) => entry.offset).map((entry) => [
@@ -2492,7 +2497,8 @@ function parseHtml(html: string, trackingNumber: string, timezone: string | null
   const zoneSteps = rows.map(({ state }): ZoneStep => state.zone ? 'carrier' : state.fallback ? 'routing' : state.known ? 'known' : 'labeled');
   copiedNetworkZones(rows.map(({ name, description, state, scan }, index) => {
     const wall = mislabeledWallTime(state.date);
-    const text = wall ? localEvent(wall, scan?.wording ?? description)?.description : undefined;
+    const parsed = wall ? localEvent(wall, scan?.wording ?? description) : null;
+    const text = parsed ? copyWording(parsed) : '';
     return { name, key: wall && text ? `${wall}|${text}` : '', zone: zones[index]!,
       fixed: Boolean(state.offset) || relaysFacilityClock(name), location: '' };
   })).forEach((zone, index) => {

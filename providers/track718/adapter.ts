@@ -5,7 +5,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { isRecord } from '../../core/types.js';
-import { classifyEvent, hasPrivateDeliveryDetails, isNotice, result, text } from '../shared/result.js';
+import { classifyEvent, isNotice, result, text } from '../shared/result.js';
 
 const SOURCE = 'Track718';
 export const TRACK718_API = 'https://apigetway.track718.net/track/real_query_multi';
@@ -41,7 +41,7 @@ export function parseTrack718(payloads: unknown[], raw: string): CarrierResult {
       for (const scan of row[field]) {
         if (!isRecord(scan) || typeof scan.ondate !== 'string' || typeof scan.status !== 'string') throw new SchemaError(SOURCE);
         const description = text(scan.status);
-        if (!description || isNotice(description) || hasPrivateDeliveryDetails(description)) continue;
+        if (!description || isNotice(description)) continue;
         const instant = explicitOffsetTime(scan.ondate);
         const wall = !instant && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(scan.ondate)
           ? DateTime.fromISO(scan.ondate.replace(' ', 'T'), { zone: 'utc' }) : null;

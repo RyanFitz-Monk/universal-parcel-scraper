@@ -248,7 +248,7 @@ describe('same-instant identity policies', () => {
     for (const different of [
       { ...depot, location: 'OTHER TOWN (Example Region)' },
       { ...depot, location: '' },
-      { ...depot, description: 'In transit' },
+      { ...depot, stage: 'in_transit', description: 'In transit' },
     ]) expect(policy?.matches?.(different, depot)).toBe(false);
     expect(policy?.matches?.({ ...stored, location: '' }, { ...stored, location: 'Example System Park, US' })).toBe(false);
   });
@@ -273,6 +273,25 @@ describe('same-instant identity policies', () => {
     ]) expect(policy?.matches?.(incoming, different)).toBe(false);
     // A row stored without a contact is the scan itself.
     expect(policy?.matches?.(incoming, { ...stored, description: '您的快件在【示例市】已揽收' })).toBe(false);
+  });
+
+  it('lets a universal delivery in the carrier\'s own words take over the row stored as a bare "Delivered"', () => {
+    const policy = sameInstantIdentityPolicy('unknown', { supportsScanMatching: true });
+    const stored = { stage: 'delivered', description: 'Delivered', location: '', providerCode: 'Delivered_Other' };
+    const incoming = { ...stored, description: 'Delivered, signed by EXAMPLE', location: 'Example door number 4' };
+    expect(policy?.matches?.(incoming, stored)).toBe(true);
+    expect(policy?.matches?.({ ...incoming, providerCode: '' }, { ...stored, description: ' delivered ' })).toBe(true);
+    const placed = { ...stored, location: 'Example Town, CH' };
+    expect(policy?.matches?.({ ...incoming, location: 'EXAMPLE TOWN, CH' }, placed)).toBe(true);
+    for (const [scan, row] of [
+      [incoming, placed],
+      [incoming, { ...stored, providerCode: 'Delivered_PickedUp' }],
+      [incoming, { ...stored, description: 'Delivered to a neighbour' }],
+      [{ ...incoming, stage: 'failed_attempt' }, stored],
+      [incoming, { ...stored, stage: '' }],
+      // A bare "Delivered" does not take over a row stored in the carrier's words.
+      [stored, { ...stored, description: 'Delivered, signed by EXAMPLE' }],
+    ] as const) expect(policy?.matches?.(scan, row), JSON.stringify([scan, row])).toBe(false);
   });
 
   it("lets a Yanwen relay of a J&T Australia scan without its customer service line take over its stored row", () => {

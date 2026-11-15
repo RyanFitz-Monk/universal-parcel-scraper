@@ -4,15 +4,16 @@ import { chromium } from 'playwright-core';
 import { scrapeUniversalPage } from '../core/transport/browser.js';
 import { PostalNinjaTracker, parsePostalNinjaResponse } from '../providers/postal-ninja/adapter.js';
 import { Ship24Tracker, parseShip24Response } from '../providers/ship24/adapter.js';
+import { hasPrivateDeliveryDetails } from '../core/status/index.js';
 
 vi.mock('playwright-core', () => ({ chromium: { launch: vi.fn() } }));
 const number = 'ZZ12345678900';
 const ninja = (events: unknown[] = [
   { dt: '2026-08-17T07:22:00', dsc: 'Out for delivery' },
-  { dt: '2026-08-17T11:17:00', dsc: 'Delivered by Mailbox, PIN: PRIVATE' },
+  { dt: '2026-08-17T11:17:00', dsc: 'Delivered by Mailbox, PIN: 0000' },
 ]) => ({ status: 'FOUND', hid: 'sample', track: { hid: 'sample', tc: number, state: 'FINISHED', toAddress: 'PRIVATE', events } });
 const ship = (events: unknown[] = [
-  { datetime: '2026-08-17T11:17:00Z', timestamp: '2026-08-17T11:17:00+02:00', status: 'Delivered by Mailbox, PIN: PRIVATE' },
+  { datetime: '2026-08-17T11:17:00Z', timestamp: '2026-08-17T11:17:00+02:00', status: 'Delivered by Mailbox, PIN: 0000' },
   { datetime: '2026-08-12T20:05:00Z', timestamp: '2026-08-12T20:05:00+02:00', status: 'Delivered to local carrier' },
 ]) => ({ data: { tracking_number: number, recipient: 'PRIVATE', events } });
 
@@ -30,11 +31,11 @@ describe('Postal Ninja and Ship24 result parsing', () => {
     expect(parsed.discovered_carrier).toBe('ups');
     expect(JSON.stringify(parsed)).not.toContain('PRIVATE');
   });
-  it('preserves Postal Ninja chronology without inventing time zones or exposing recipient details', () => {
+  it('preserves Postal Ninja chronology and wording without inventing time zones or reading the recipient\'s address', () => {
     const parsed = parsePostalNinjaResponse(ninja(), number);
     expect(parsed).toMatchObject({ tracking_provider: 'Postal Ninja', current_stage: 'delivered', last_update: null });
     expect(parsed.events).toEqual([
-      { local_time: '2026-08-17T11:17:00', description: 'Delivered', stage: 'delivered', stage_source: 'wording:provider' },
+      { local_time: '2026-08-17T11:17:00', description: 'Delivered by Mailbox, PIN: 0000', stage: 'delivered', stage_source: 'wording:provider' },
       { local_time: '2026-08-17T07:22:00', description: 'Out for delivery', stage: 'out_for_delivery', stage_source: 'wording:provider' },
     ]);
     expect(JSON.stringify(parsed)).not.toContain('PRIVATE');
@@ -68,10 +69,18 @@ describe('Postal Ninja and Ship24 result parsing', () => {
     expect(JSON.stringify(parsed)).not.toContain('PRIVATE');
   });
 
-  it('drops private delivery details even when an upstream carrier ignores the requested English language', () => {
-    const raw = { timestamp: '2026-08-17T11:17:00+02:00', status: 'Consegnato da Cassetta postale, PIN: PRIVATE' };
-    expect(JSON.stringify(parseShip24Response(ship([raw, ...ship().data.events]), number))).not.toContain('PRIVATE');
-    expect(parseShip24Response(ship([{ ...raw, dispatch_code_id: 7 }]), number).events?.[0]!.description).toBe('Delivered');
+  it('keeps a delivery\'s PIN in its own words even when an upstream carrier ignores the requested English language', () => {
+    // A host shows such a scan only to the parcel's owner.
+    const raw = { timestamp: '2026-08-17T11:17:00+02:00', status: 'Consegnato da Cassetta postale, PIN: 0000' };
+    const parsed = parseShip24Response(ship([raw, ship().data.events[1]]), number);
+    expect(parsed.events?.[0]!.description).toBe(raw.status);
+    expect(hasPrivateDeliveryDetails(raw.status)).toBe(true);
+    expect(JSON.stringify(parsed)).not.toContain('PRIVATE');
+    // Beside the English copy of that delivery at its instant, it is one scan.
+    expect(parseShip24Response(ship([raw, ...ship().data.events]), number).events?.filter((scan) => scan.stage === 'delivered'))
+      .toHaveLength(1);
+    expect(parseShip24Response(ship([{ ...raw, dispatch_code_id: 7 }]), number).events?.[0])
+      .toMatchObject({ stage: 'delivered', description: raw.status });
   });
 
   it('keeps offset-less carrier legs as local wall time instead of rejecting the shipment', () => {

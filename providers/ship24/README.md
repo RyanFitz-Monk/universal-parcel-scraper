@@ -191,8 +191,7 @@ No account, cookie, fingerprint or issued token is used.
   that midnight as UTC's. A "Flight departure" or "Flight arrival" at midnight UTC keeps
   its day alone, as ECMS's own result does (carriers/ecms-express).
 - Each scan keeps its `location`, a town, region and country or a hub's code, unless it
-  holds private delivery details or is Posti's "ULKOMAILLA" ("abroad"), which names no
-  place. A hub's code such as "GOFO-PR" stays: the places module pins nothing for it, and
+  is Posti's "ULKOMAILLA" ("abroad"), which names no place. A hub's code such as "GOFO-PR" stays: the places module pins nothing for it, and
   its suffix is the hub's province for a reader who knows the codes.
 - `dispatch_code_id: 7` is treated as delivered.
 - `couriers[].translation.name` becomes `reported_carriers`, and becomes
