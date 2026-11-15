@@ -54,13 +54,24 @@ function text(row: Record<string, unknown>, key: string, maxLength = 500): strin
   return cleanScalar(value, maxLength);
 }
 
+/** The US state and the offset JCEX writes after a delivering partner's place ("TOWN;ST;00000;-05:00"). */
+interface WrittenPlace {
+  readonly state: string;
+  readonly offset: string;
+}
+
+function writtenPlace(location: string): WrittenPlace | null {
+  const written = OFFSET_PLACE.exec(location);
+  return written ? { state: written[2]!, offset: written[3]! } : null;
+}
+
 /**
  * A place as JCEX writes it, "TOWN,TOWN,FR,00000" or "TOWN, ST 00000", without its postcode and
- * each part once. A place written with its offset keeps its form without the postcode.
+ * each part once. A place written with its offset reads as its town, its state and the US.
  */
 function placeOf(location: string): string {
   const written = OFFSET_PLACE.exec(location);
-  if (written) return `${written[1]};${written[2]};;${written[3]}`;
+  if (written) return [written[1]!.trim(), written[2], 'US'].filter(Boolean).join(', ');
   const parts: string[] = [];
   for (const raw of location.split(',')) {
     const part = raw.trim().replace(/\s+\d{4,6}(?:-\d{4})?$/, '');
@@ -76,9 +87,8 @@ function placeOf(location: string): string {
  * destination with the destination's offset. A US place settles a zone
  * through its state, and so does a place written with its offset.
  */
-function placeZone(location: string, country: string): string | null {
-  const written = OFFSET_PLACE.exec(location);
-  if (written) return usStateTimeZone(written[2]);
+function placeZone(location: string, country: string, written: WrittenPlace | null): string | null {
+  if (written) return usStateTimeZone(written.state);
   const place = /^[A-Z]{2}$/.test(location) && countryCode(location) ? location : country;
   if (place !== 'US') return countryTimeZone(place);
   if (place === location) return null;
@@ -108,10 +118,9 @@ function keptTime(local: string, label: string | undefined, zone: string | null)
  * clocks: an offset the place does not have is someone else's clock, and a
  * place without one clock does not say which offset is its own.
  */
-function placedTime(local: string, label: string, location: string, country: string): ParsedTime | null {
-  const zone = placeZone(location, country);
-  const written = OFFSET_PLACE.exec(location);
-  const stated = written ? [zone, ...otherRegionZones('US', written[2]!)].map((own) => keptTime(local, written[3], own)).find(Boolean) : null;
+function placedTime(local: string, label: string, location: string, country: string, written: WrittenPlace | null): ParsedTime | null {
+  const zone = placeZone(location, country, written);
+  const stated = written ? [zone, ...otherRegionZones('US', written.state)].map((own) => keptTime(local, written.offset, own)).find(Boolean) : null;
   return stated ?? keptTime(local, label, zone);
 }
 
@@ -120,6 +129,8 @@ interface Row {
   readonly index: number;
   readonly description: string;
   readonly location: string;
+  /** The state and offset written after its place, which `location` reads as a place. */
+  readonly written: WrittenPlace | null;
   readonly country: string;
   readonly code: string;
   readonly label: string;
@@ -138,7 +149,8 @@ function rowOf(row: unknown, index: number): Row | null {
   const home = local ? firstOccurrence(DateTime.fromISO(local, { zone: HOME_ZONE })) : null;
   // Luxon rolls 24:00:00 over to the next day; only a clock that reads back unchanged is kept.
   if (!home?.isValid || home.toFormat("yyyy-MM-dd'T'HH:mm:ss") !== local) throw new SchemaError(PROVIDER, 'JCEX returned an invalid scan time');
-  return { index, description, location: placeOf(text(row, 'location', 200)), country: text(row, 'countryCode', 8).toUpperCase(),
+  const location = text(row, 'location', 200);
+  return { index, description, location: placeOf(location), written: writtenPlace(location), country: text(row, 'countryCode', 8).toUpperCase(),
     code: text(row, 'platformEventCode', 64), label: text(row, 'timeZone', 16), local, home: home.toMillis() };
 }
 
@@ -189,10 +201,10 @@ function rewordedCopies(rows: readonly Row[]): Set<Row> {
  */
 function clockOf(row: Row, offsets: ReadonlySet<string>): { clock: { time: string } | { local_time: string }; at: number; order: number } {
   const time = !row.country && !row.location ? labelledTime(row.local, HOME_OFFSET)
-    : offsets.has(row.label) ? labelledTime(row.local, row.label) : placedTime(row.local, row.label, row.location, row.country);
+    : offsets.has(row.label) ? labelledTime(row.local, row.label) : placedTime(row.local, row.label, row.location, row.country, row.written);
   if (time) return { clock: { time: time.iso }, at: time.timestamp, order: time.timestamp };
   // A wall clock is ordered on its place's clock where the place keeps one.
-  const zone = placeZone(row.location, row.country);
+  const zone = placeZone(row.location, row.country, row.written);
   const placed = zone ? firstOccurrence(DateTime.fromISO(row.local, { zone })) : null;
   return { clock: { local_time: row.local }, at: row.home, order: placed?.isValid ? placed.toMillis() : row.home };
 }
@@ -281,7 +293,7 @@ export function parseJcex(payload: unknown, raw: string, readAt = Date.now()): C
 
   const seen = new Set<string>();
   const listed = rows.map(rowOf).filter((row): row is Row => {
-    const key = row && JSON.stringify([row.local, row.label, row.code, row.description, row.location]);
+    const key = row && JSON.stringify([row.local, row.label, row.code, row.description, row.location, row.written?.offset]);
     if (!key || seen.has(key)) return false;
     seen.add(key);
     return true;

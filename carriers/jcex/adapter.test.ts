@@ -152,27 +152,28 @@ describe('JCEX HTTP adapter', () => {
     expect(labels(parsed.events!)).toEqual([
       // A label that is not the state's keeps the wall clock, ordered on the state's clock after the receipt.
       [null, '2026-04-10T15:30:47', null, 'IL, US'],
-      ['2026-04-10T15:30:00-05:00', null, null, ';IL;;-05:00'],
+      // The copy's place reads as a place: its state and the US.
+      ['2026-04-10T15:30:00-05:00', null, null, 'IL, US'],
     ]);
     const receipt = parsed.events!.findIndex((event) => event.description === 'Arrive at the delivery point');
     expect(parsed.events!.findIndex((event) => event.description === 'Synthetic order created.;WC;')).toBeLessThan(receipt);
     // Both rows are one moment on Illinois' clock, not the copy on Beijing's, which the receipt in China would lend it.
     expect(labels(dateLocalClocks('jcex', parsed, READ).events!)).toEqual([
       ['2026-04-10T15:30:47-05:00', '2026-04-10T15:30:47', 'place', 'IL, US'],
-      ['2026-04-10T15:30:00-05:00', null, null, ';IL;;-05:00'],
+      ['2026-04-10T15:30:00-05:00', null, null, 'IL, US'],
     ]);
     // A state named before its country settles the label's offset too.
     expect(labels(parseJcex(withLabel({ eventTime: '2026-04-10 15:30:47', timeZone: '-05:00', location: 'IL,US' },
       { eventTime: '2026-04-10 15:30:00', timeZone: '-05:00', location: 'Example Town;IL;00000;-05:00' }), NUMBER, READ).events!)).toEqual([
       ['2026-04-10T15:30:47-05:00', null, null, 'IL, US'],
       // The postcode is not read.
-      ['2026-04-10T15:30:00-05:00', null, null, 'Example Town;IL;;-05:00'],
+      ['2026-04-10T15:30:00-05:00', null, null, 'Example Town, IL, US'],
     ]);
     // An offset the state does not keep then, or a region no state is, dates nothing.
-    for (const location of [';IL;;-06:00', ';IL;;+08:00', ';ZZ;;-05:00']) {
+    for (const [location, place] of [[';IL;;-06:00', 'IL, US'], [';IL;;+08:00', 'IL, US'], [';ZZ;;-05:00', 'ZZ, US']]) {
       expect(labels(parseJcex(withLabel({ eventTime: '2026-04-10 15:30:47', timeZone: '+08:00', location: 'IL,US' },
-        { eventTime: '2026-04-10 15:30:00', timeZone: '+08:00', location }), NUMBER, READ).events!).at(-1), location)
-        .toEqual([null, '2026-04-10T15:30:00', null, location]);
+        { eventTime: '2026-04-10 15:30:00', timeZone: '+08:00', location: location! }), NUMBER, READ).events!).at(-1), location)
+        .toEqual([null, '2026-04-10T15:30:00', null, place]);
     }
     // In a state of two clocks, an offset either keeps dates the copy: East Tennessee's Eastern time, northwest Indiana's
     // Central, as well as each state's main clock. Mountain time is neither's.
@@ -180,9 +181,10 @@ describe('JCEX HTTP adapter', () => {
       [';TN;;-05:00', '2026-04-10T15:30:00-05:00'], [';IN;;-05:00', '2026-04-10T15:30:00-05:00'], [';IN;;-04:00', '2026-04-10T15:30:00-04:00'],
       [';TN;;-06:00', null]]) {
       const state = location!.split(';')[1];
-      expect(labels(parseJcex(withLabel({ eventTime: '2026-04-10 15:30:47', timeZone: '+08:00', location: `${state},US` },
-        { eventTime: '2026-04-10 15:30:00', timeZone: '+08:00', location: location! }), NUMBER, READ).events!)
-        .find((label) => label[3] === location)?.[0], location!).toBe(time);
+      const copy = parseJcex(withLabel({ eventTime: '2026-04-10 15:30:47', timeZone: '+08:00', location: `${state},US` },
+        { eventTime: '2026-04-10 15:30:00', timeZone: '+08:00', location: location! }), NUMBER, READ).events!
+        .find((event) => event.description === 'Synthetic order created.;WC;');
+      expect(copy?.time ?? null, location!).toBe(time);
     }
   });
 
