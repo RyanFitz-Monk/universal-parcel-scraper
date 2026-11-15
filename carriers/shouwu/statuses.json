@@ -41,6 +41,14 @@
       "note": "An order scan before Shouwu has the parcel."
     },
     {
+      "wording": "MANIFESTED OR RECORDED",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The last mile's manifest record of a parcel, under Shouwu's order scans, before its courier has it."
+    },
+    {
       "wording": "Shipment information received",
       "stage": "registered",
       "language": "en",
@@ -163,6 +171,22 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-13",
       "note": "Shouwu's partner collecting the parcel from the seller, the first scan after the order data."
+    },
+    {
+      "wording": "TRNSIT HUB",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The last mile's transit hub, as its wording spells it."
+    },
+    {
+      "wording": "DESTIN HUB",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The last mile's destination hub, as its wording spells it."
     },
     {
       "wording": "Shipment departed from facility",

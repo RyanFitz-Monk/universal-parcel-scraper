@@ -445,6 +445,13 @@ describe('Shouwu International numbers', () => {
 });
 
 describe('Shouwu International status vocabulary', () => {
+  it('reads the last mile\'s manifest record and its hubs, as its wording spells them, and leaves its stationed rows unmapped', () => {
+    expect(shouwuStage('MANIFESTED OR RECORDED')).toEqual({ stage: 'registered', source: 'carrier_map' });
+    expect(shouwuStage('TRNSIT HUB')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+    expect(shouwuStage('DESTIN HUB')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+    expect(shouwuStage('STATIONED SHIPMENT')).toBeNull();
+  });
+
   it('reads the last mile\'s return as on its way back, whatever reason it names', () => {
     expect(shouwuStage('Back to Sender for reason: refused by the recipient')).toEqual({ stage: 'exception', source: 'carrier_map' });
     expect(statusMap.stage(null, 'back to sender for reason: sample reason')).toBe('exception');
