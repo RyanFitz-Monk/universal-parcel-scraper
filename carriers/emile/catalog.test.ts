@@ -27,7 +27,7 @@ describe('Emile catalog and tracking', () => {
       result: { status: 'delivered', current_stage: 'delivered' },
     });
     expect(answer.result.events.map(event => [event.time, event.description])).toEqual([
-      ['2026-01-06T15:00:00.000Z', 'Delivered'],
+      ['2026-01-06T15:00:00.000Z', 'DELIVERED'],
       ['2026-01-06T13:00:00.000Z', 'OUT FOR DELIVERY'],
       ['2026-01-05T18:00:00.000Z', 'ORDER SORTED'],
       ['2026-01-05T09:00:00.000Z', 'ARRIVE TRANSITHUB'],

@@ -49,14 +49,14 @@ describe('Emile status vocabulary', () => {
       current_stage: 'in_transit', events: [{ description: 'Task assigned' }, { description: 'Waybill generated', stage: 'registered' }],
     });
     const delivered = await track([['DELIVERED'], ['OUT FOR DELIVERY']]);
-    expect(delivered.events[0]).toMatchObject({ description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' });
+    expect(delivered.events[0]).toMatchObject({ description: 'DELIVERED', stage: 'delivered', stage_source: 'carrier_map' });
   });
 
   it('reads a return as finished, without rewording the scans after it', async () => {
     const result = await track([['DELIVERED'], ['OUT FOR DELIVERY'], ['RETURNED TO SENDER'], ['DELIVERY EXCEPTION']]);
     expect(result).toMatchObject({ current_stage: 'delivered' });
     expect(result.events.map((event) => [event.description, event.stage, event.provider_leg])).toEqual([
-      ['Delivered', 'delivered', undefined],
+      ['DELIVERED', 'delivered', undefined],
       ['OUT FOR DELIVERY', 'out_for_delivery', undefined],
       ['RETURNED TO SENDER', 'returned', undefined],
       ['DELIVERY EXCEPTION', 'exception', undefined],
