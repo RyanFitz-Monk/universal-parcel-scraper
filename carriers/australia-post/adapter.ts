@@ -15,7 +15,8 @@ import { canadaProvinceTimeZone, countryCode, countryTimeZone, explicitOffsetTim
 import { clean, fetchBounded, TRAWL_TRANSPORT_ALLOWANCE_MS, TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
-import { budgetWhenOutOfTime } from '../../core/transport/trawl.js';
+import { envChoice } from '../../core/adapter/envChoice.js';
+import { budgetWhenOutOfTime, trawlOutOfTime } from '../../core/transport/trawl.js';
 import { australiaPostCode, australiaPostCodeParts, australiaPostStatus } from './status.js';
 
 const PROVIDER = 'Australia Post';
@@ -337,6 +338,8 @@ export class AustraliaPostTracker {
         networkAttempt: reads > 1 ? 'retry' : 'initial', historyAvailable: history } : record),
       lookup: record => recorder.lookup(record),
     } : recorder;
+    // The browser service's own server errors: such a read carries no word from Australia Post.
+    const serviceFailures = new WeakSet<object>();
     const browser = async (signal: AbortSignal, remainingMs: number, proxy: string | null): Promise<CarrierResult> => {
       const timeoutMs = Math.floor(remainingMs - TRAWL_TRANSPORT_ALLOWANCE_MS);
       if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, budgetMs);
@@ -345,7 +348,10 @@ export class AustraliaPostTracker {
       const page = await trawl!.scrape({ url: australiaPostTrackingUrl(number), skipHttp: true, maxTier: 3,
         maxTimeout: timeoutMs, captureResponses: [apiUrl], ...(proxy ? { proxy } : {}), settleTimeout: Math.min(timeoutMs, 10_000),
       }, { provider: 'TRAWL while fetching Australia Post', timeoutMs, signal, maxBytes: 6_000_000, requireSolved: false })
-        .catch(budgetWhenOutOfTime(PROVIDER, budgetMs));
+        .catch((error: unknown) => {
+          if (error instanceof UpstreamHttpError && error.status >= 500 && !trawlOutOfTime(error)) serviceFailures.add(error);
+          return budgetWhenOutOfTime(PROVIDER, budgetMs)(error);
+        });
       signal.throwIfAborted();
       if (![2, 3].includes(page.tier) || ![200, 304].includes(page.statusCode)) {
         throw new TransportError(PROVIDER, 'The browser service did not load Australia Post tracking');
@@ -404,9 +410,10 @@ export class AustraliaPostTracker {
       id: 'trawl', run: ({ signal, remainingMs }) => read(signal, remainingMs, proxyFirst ? this.fallbackProxy : null),
     }, {
       // The other route after a challenge. A first read through the proxy also falls back when the
-      // proxy fails to carry it, so a proxy outage leaves the original route.
+      // proxy fails to carry it or the browser service fails on it, so a proxy outage leaves the original route.
       id: 'trawl', enabled: trawl !== null && this.fallbackProxy !== null,
-      recovers: error => (error instanceof ChallengeError || (proxyFirst && carrierErrorKind(error) === 'transport'))
+      recovers: error => (error instanceof ChallengeError
+        || (proxyFirst && (carrierErrorKind(error) === 'transport' || (error instanceof Error && serviceFailures.has(error)))))
         && deadline - performance.now() >= TRAWL_TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
       run: ({ signal, remainingMs }) => read(signal, remainingMs, proxyFirst ? null : this.fallbackProxy),
     }]);
@@ -416,7 +423,7 @@ export class AustraliaPostTracker {
 export const adapter: AdapterFactory = (environment) => {
   const tracker = new AustraliaPostTracker({ trawl: environment.trawl, fetcher: environment.fetcher, recorder: environment.recorder,
     fallbackProxyUrl: environment.env.AUSTRALIA_POST_FALLBACK_PROXY_URL,
-    firstRoute: (environment.env.AUSTRALIA_POST_FIRST_ROUTE?.trim() || undefined) as AustraliaPostTrackerOptions['firstRoute'] });
+    firstRoute: envChoice(environment.env, 'AUSTRALIA_POST_FIRST_ROUTE', ['default', 'residential', 'adaptive'], 'default') });
   // Recognition is plain HTTP: it asks the gateway alone, and a refusal there fails instead of starting a browser.
   // A recognition budget can be longer than the minute a lookup takes at most.
   const gateway = new AustraliaPostTracker({ trawl: null, fetcher: environment.fetcher, recorder: environment.recorder });

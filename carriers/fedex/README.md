@@ -202,7 +202,8 @@ any of them.
 
 Optional independent workers behind proxies can take the qualifying second browser
 attempt; the first attempt keeps the original route unless `FEDEX_FIRST_ROUTE=datacenter`
-(the tracker's `firstRoute`) sends it to the datacenter worker as well. FedEx challenges
+(the tracker's `firstRoute`) sends it to the datacenter worker as well; an unknown value is read as
+`default`, with one warning. FedEx challenges
 an address in spells that follow neither its request rate nor the hour, so a deployment
 whose own address is often challenged can keep it out of FedEx lookups. A worker serves
 one lookup at a time and answers 503 with `Retry-After` while busy; the lookup waits for

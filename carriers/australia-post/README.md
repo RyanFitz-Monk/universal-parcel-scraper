@@ -33,12 +33,14 @@ HTTP recognition never uses either browser route.
 `AUSTRALIA_POST_FIRST_ROUTE=residential` (the tracker's `firstRoute`) sends the first browser read
 through that proxy instead, and the retry after a challenge takes the original route. DataDome can
 challenge the browser service's own address on every read for hours, so a deployment can keep that
-address for the retry. A first read the proxy fails to carry also retries on the original route.
+address for the retry. A first read the proxy fails to carry, or the browser service fails on with a
+server error, also retries on the original route.
 `AUSTRALIA_POST_FIRST_ROUTE=adaptive` reads through the proxy first only for 15 minutes after the
 original route was last refused, and on the original route otherwise. Refusals come in spells, and
 the retry after one starts with what the refusal left of the budget, so it often runs out; outside
 a spell the original route answers sooner and needs no proxy request. The window is kept per
-tracker instance. Without a proxy the setting changes nothing.
+tracker instance. Without a proxy the setting changes nothing. An unknown value is read as `default`,
+with one warning.
 
 Budget: 45 s by default (max 60 s). `trawl` keeps a 15 s transport allowance and fails when less
 remains. A browser read TRAWL gives up for lack of time (its deadline passed, or the page step ran

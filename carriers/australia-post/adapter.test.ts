@@ -563,7 +563,10 @@ describe('Australia Post browser retrieval', () => {
 describe('Australia Post opt-in browser proxy recovery', () => {
   const proxy = 'http://test-user:test-pass@proxy.example.test:8080';
   function routed(replies: unknown[], budgetMs?: number, firstRoute?: AustraliaPostTrackerOptions['firstRoute']) {
-    const browser = vi.fn<typeof fetch>().mockImplementation(async () => Response.json(replies.shift()));
+    const browser = vi.fn<typeof fetch>().mockImplementation(async () => {
+      const reply = replies.shift();
+      return typeof reply === 'function' ? reply() : Response.json(reply);
+    });
     const recorder = { step: vi.fn(), lookup: vi.fn() };
     const client = new AustraliaPostTracker({ trawl: browserService(browser),
       fetcher: refused(), recorder, fallbackProxyUrl: proxy, timeoutMs: budgetMs, firstRoute });
@@ -663,6 +666,29 @@ describe('Australia Post opt-in browser proxy recovery', () => {
     }
   });
 
+  const trawlFailure = (reason: string, error = 'Max tier reached without success', status = 500) => () => new Response(
+    JSON.stringify({ error, timings: [{ tier: 3, status: 'error', reason }] }), { status, headers: { 'Content-Type': 'application/json' } });
+
+  it('reads on the original route when the browser service fails on the first read through the proxy, but not when it ran out of time', async () => {
+    for (const failure of [trawlFailure('Navigation failed'), trawlFailure('proxy-connection-failed'), trawlFailure('busy', 'Service unavailable', 503)]) {
+      const { client, browser, recorder } = routed([failure, service()], undefined, 'residential');
+      await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+      expect(bodies(browser).map(body => body.proxy ?? null)).toEqual([proxy, null]);
+      expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'trawl', outcome: 'ok', networkRoute: 'default', networkAttempt: 'retry' }));
+    }
+    // Out of time, refused by TRAWL itself, or a server error Australia Post answered: no second read.
+    for (const [failure, failed] of [[trawlFailure('Scrape deadline exceeded', 'Scrape deadline exceeded'), { kind: 'budget' }],
+      [trawlFailure('busy', 'Too many requests', 429), { kind: 'rate_limited' }], [service([capture({}, 503)]), { provider: 'Australia Post', status: 503 }]] as const) {
+      const { client, browser } = routed([failure, service()], undefined, 'residential');
+      await expect(client.fetch(NUMBER)).rejects.toMatchObject(failed);
+      expect(browser).toHaveBeenCalledTimes(1);
+    }
+    // On the original route first, a browser service failure takes no proxy request.
+    const { client, browser } = routed([trawlFailure('Navigation failed'), service()]);
+    await expect(client.fetch(NUMBER)).rejects.toMatchObject({ status: 500 });
+    expect(browser).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the original route first without a proxy, and refuses an unknown first route', async () => {
     const browser = vi.fn<typeof fetch>().mockImplementation(async () => Response.json(service([capture({}, 403)])));
     for (const firstRoute of ['residential', 'adaptive'] as const) {
@@ -729,6 +755,13 @@ describe('Australia Post opt-in browser proxy recovery', () => {
       expect(lookups.routes()).toEqual([null, proxy, proxy, null, null]);
     });
 
+    it('reads on the original route in the window when the browser service fails on the proxy read', async () => {
+      const lookups = adaptive([service([capture({}, 403)]), service(), trawlFailure('Navigation failed'), service()]);
+      await lookups.client.fetch(NUMBER);
+      await expect(lookups.client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+      expect(lookups.routes()).toEqual([null, proxy, proxy, null]);
+    });
+
     it('opens no window on a reply the original route answers', async () => {
       const missing = empty(); missing[0].trackingIds = [NUMBER];
       const lookups = adaptive([service([capture(missing)]), service([capture({}, 429)]), service([capture({}, 500)]), service()]);
@@ -792,5 +825,15 @@ describe('Australia Post opt-in browser proxy recovery', () => {
       env: { AUSTRALIA_POST_FALLBACK_PROXY_URL: proxy, AUSTRALIA_POST_FIRST_ROUTE: 'adaptive' }, browserExecutablePath: null });
     await expect(adaptive.track({ number: NUMBER })).resolves.toMatchObject({ status: 'delivered' });
     expect(bodies(browser).map(body => body.proxy ?? null)).toEqual([proxy, null]);
+    // A misspelt value is the original route, with one warning however many trackers read it.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    for (const value of ['Residential', 'proxy']) {
+      const misspelt = adapter({ trawl: browserService(browser), fetcher: refused(), recorder: NOOP_RECORDER,
+        env: { AUSTRALIA_POST_FALLBACK_PROXY_URL: proxy, AUSTRALIA_POST_FIRST_ROUTE: value }, browserExecutablePath: null });
+      await expect(misspelt.track({ number: NUMBER })).resolves.toMatchObject({ status: 'delivered' });
+    }
+    expect(bodies(browser).map(body => body.proxy ?? null)).toEqual([proxy, null, null, null]);
+    expect(warn.mock.calls).toEqual([['AUSTRALIA_POST_FIRST_ROUTE must be default, residential, adaptive; using default']]);
+    warn.mockRestore();
   });
 });

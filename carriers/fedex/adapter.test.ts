@@ -876,12 +876,21 @@ describe('FedEx lookup steps', () => {
     expect(fetcher.mock.calls.map(c => String(c[0]))).toEqual(['http://datacenter.test/scrape', 'http://datacenter.test/scrape']);
     expect(records[0]).toMatchObject({ networkRoute: 'datacenter', networkAttempt: 'initial', networkBytes: 700 });
     expect(records[1]).toMatchObject({ networkRoute: 'datacenter', networkAttempt: 'retry', historyAvailable: true });
-    // Without a datacenter service the setting changes nothing; any other value is refused.
-    fetcher.mockReset().mockResolvedValueOnce(Response.json({ tier: 3, statusCode: 200, html: '',
-      capturedResponses: [{ url: TRACK_API, status: 200, body: JSON.stringify(deliveredFixture()) }] }));
+    // Without a datacenter service the setting changes nothing; any other value is the original
+    // route, with one warning however many trackers read it.
+    const delivered = () => Response.json({ tier: 3, statusCode: 200, html: '',
+      capturedResponses: [{ url: TRACK_API, status: 200, body: JSON.stringify(deliveredFixture()) }] });
+    fetcher.mockReset().mockImplementation(async () => delivered());
     await expect(adapter({ ...environment, trawlRoutes: undefined }).track({ number: DELIVERED_NUMBER })).resolves.toMatchObject({ status: 'delivered' });
     expect(fetcher.mock.calls.map(c => String(c[0]))).toEqual([`${TRAWL_URL}/scrape`]);
-    expect(() => adapter({ ...environment, env: { FEDEX_FIRST_ROUTE: 'residential' } })).toThrow(TypeError);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    fetcher.mockClear();
+    for (const value of ['residential', 'Datacenter']) {
+      await expect(adapter({ ...environment, env: { FEDEX_FIRST_ROUTE: value } }).track({ number: DELIVERED_NUMBER })).resolves.toMatchObject({ status: 'delivered' });
+    }
+    expect(fetcher.mock.calls.map(c => String(c[0]))).toEqual([`${TRAWL_URL}/scrape`, `${TRAWL_URL}/scrape`]);
+    expect(warn.mock.calls).toEqual([['FEDEX_FIRST_ROUTE must be default, datacenter; using default']]);
+    warn.mockRestore();
   });
 
   it('waits for a busy route worker within the budget, and not for one that is stopping', async () => {
