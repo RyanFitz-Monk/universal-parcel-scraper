@@ -84,6 +84,8 @@ const ENTRIES: ReadonlyArray<readonly [string, ClassifiedStatus]> = [
   ['At parcel delivery centre.', { status: 'in_transit', stage: 'in_transit' }],
   ['Out for delivery.', { status: 'out_for_delivery', stage: 'out_for_delivery' }],
   ['Shipping Label Created', { status: 'pending', stage: 'registered' }],
+  // The US partner's collection of the parcel for the last-mile carrier, its first scan after the label, as GOFO's and 4PX's maps read it.
+  ['Picked up by Shipping Partner, Carrier\'s Awaiting Item', { status: 'in_transit', stage: 'accepted' }],
   ['POD available', { status: 'delivered', stage: 'delivered' }],
   ['Shipment not yet received or processed', { status: 'pending', stage: 'registered' }],
   ['Order information received. We\'re expecting your parcel to arrive with us.', { status: 'pending', stage: 'registered' }],

@@ -106,6 +106,22 @@
       "note": "The UPU's measure after a missed delivery: the item waits at the delivery office while its addressee is notified to collect it. The destination post's own rows deposit it there and the addressee collected it the next day; 17TRACK files the same wording as available for pickup."
     },
     {
+      "wording": "ITEM ARRIVED AT THE COLLECTION POINT WAITING FOR YOUR COLLECT",
+      "language": "en",
+      "stage": "ready_for_pickup",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "A destination post's English in capitals: the item waits at its collection point for the addressee."
+    },
+    {
+      "wording": "NOT DELIVERED - TO KEEP DURING THE PRESCRIBED TERM BECAUSE THE ADDRESSEE IS NOT AT HOME LEFT MESSAGE IN THE LETTERBOX",
+      "language": "en",
+      "stage": "failed_attempt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The same post's missed delivery: the addressee was out, a notice went in the letterbox and the item is kept for the collection period."
+    },
+    {
       "wording": "Out for delivery",
       "language": "en",
       "stage": "out_for_delivery",

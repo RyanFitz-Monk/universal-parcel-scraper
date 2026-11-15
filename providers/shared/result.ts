@@ -517,6 +517,10 @@ function providerWordingStage(description: string): Stage | undefined {
   // as its own map reads "presa in carico presso il Punto Poste" and "la spedizione è in consegna".
   if (/^the shipment was taken care of at the post office[.!]?$/i.test(value)) return 'accepted';
   if (/^the shipment is on delivery[.!]?$/i.test(value)) return 'out_for_delivery';
+  // Its own Italian as Ship24 relays it, in capitals with an apostrophe for the accent: the shipment collected from
+  // the sender, then gone on its way.
+  if (/^la spedizione e'? stata ritirata presso il mittente[.!]?$/i.test(value)) return 'accepted';
+  if (/^la spedizione e'? partita[.!]?$/i.test(value)) return 'in_transit';
   // An Post's item waiting at the post office it names (code 52), and GLS Italy's delivery round, as their own maps read them.
   if (/^your delivery is in [^,]{1,60}, post office[.!]?$/i.test(value)) return 'ready_for_pickup';
   // An item waiting for its recipient at a post office, as ParcelsApp relayed it for one bound for Slovenia.

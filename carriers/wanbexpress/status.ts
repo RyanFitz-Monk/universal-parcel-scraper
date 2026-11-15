@@ -22,6 +22,7 @@ const UNCODED: ReadonlyMap<string, Stage | null> = new Map<string, Stage | null>
   // The same partner's departure from its facility and its local facility's receipt before the delivery run.
   ['parcel departed from facility.', 'in_transit'],
   ['parcel received by local facility.', 'in_transit'],
+  ['parcel received by transit facility.', 'in_transit'],
   ['in transit to next facility.', 'in_transit'],
   ['in transit to next facility', 'in_transit'],
   // SpeedX's way to the delivering facility, at the same second as its line coded 57112.

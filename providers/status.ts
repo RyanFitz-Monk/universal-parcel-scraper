@@ -136,4 +136,8 @@ export const statusMap: CarrierStatusMap = {
     wording: 'information on delivery transmitted',
     note: "The delivery's details sent to the recipient, as ParcelsApp relays it for DHL parcels between the hub's sorting and the planned delivery: not a scan, so it keeps the stage the parcel already had.",
   }, ...NO_STEP.map(([wording, note]) => ({ wording, note }))],
+  // USPS's closing of a customer's missing-mail search, which ParcelsApp follows with the place of the scan.
+  gapNote: (code, wording) => (code === null && /^package research case closed(?:, [^,]{1,60}){0,2}$/.test(wording)
+    ? "USPS's closing of a customer's missing-mail search, as ParcelsApp relays it with a place: not a scan, so it keeps the stage the parcel already had."
+    : undefined),
 };

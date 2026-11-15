@@ -436,6 +436,14 @@
       "note": "The first line of a parcel for the United States, placed at a US facility: a data record, not a scan."
     },
     {
+      "wording": "Picked up by Shipping Partner, Carrier's Awaiting Item",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "A shipping partner collecting the parcel for the last-mile carrier, the first scan after the label; GOFO's and 4PX's maps read the same wording with their own name as accepted."
+    },
+    {
       "wording": "POD available",
       "stage": "delivered",
       "language": "en",

@@ -537,6 +537,14 @@
       "note": "Arrived at the port of departure, waiting for a flight."
     },
     {
+      "wording": "Arrived at the Port",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The parcel at a port on its way, in English without the port's name."
+    },
+    {
       "wording": "预计23号的航班",
       "stage": "in_transit",
       "language": "zh",

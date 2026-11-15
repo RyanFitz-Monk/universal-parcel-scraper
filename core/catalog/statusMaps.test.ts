@@ -1899,6 +1899,8 @@ describe("universal providers' answers", () => {
       ['Cambio disposizioni di consegna', 'in_transit'],
       // Poste Italiane's intake and delivery round in an aggregator's English.
       ['The shipment was taken care of at the post office', 'accepted'], ['The shipment is on delivery', 'out_for_delivery'],
+      // Its own Italian as Ship24 relays it: the collection from the sender, then the departure.
+      ["LA SPEDIZIONE E' STATA RITIRATA PRESSO IL MITTENTE", 'accepted'], ["LA SPEDIZIONE E' PARTITA", 'in_transit'],
       ['Shipment expected, but not yet arrived or processed at PostNL', 'registered'],
       ['Parcel linked to packaging tool', 'in_transit'], ['Your parcel has crossed the border', 'in_transit'],
       ['Shipment received from sender', 'accepted'],
@@ -2010,6 +2012,25 @@ describe("universal providers' answers", () => {
 
 describe('declared status maps', () => {
   const declared = Object.entries<CarrierStatusMap>(STATUS_MAPS);
+
+  it("read the carriers' wordings Peek recorded unmapped", () => {
+    for (const [carrier, wording, stage] of [
+      ['yunexpress', "Picked up by Shipping Partner, Carrier's Awaiting Item", 'accepted'],
+      ['dhlink', 'Parcel received by Transit Facility.', 'in_transit'],
+      ['wanbexpress', 'Parcel received by Transit Facility.', 'in_transit'],
+      ['speedpak', 'ITEM ARRIVED AT THE COLLECTION POINT WAITING FOR YOUR COLLECT', 'ready_for_pickup'],
+      ['speedpak', 'NOT DELIVERED - TO KEEP DURING THE PRESCRIBED TERM BECAUSE THE ADDRESSEE IS NOT AT HOME LEFT MESSAGE IN THE LETTERBOX', 'failed_attempt'],
+      ['shouwu', 'Arrived at the Port', 'in_transit'],
+    ] as const) expect(answer(carrier, null, wording), `${carrier}: ${wording}`).toEqual(mapped(stage));
+    // A truncated or longer sentence stays unread.
+    expect(answer('speedpak', null, 'ITEM ARRIVED AT THE COLLECTION POINT')).toEqual(unknown);
+    expect(answer('unknown', null, "La spedizione e' partita dal centro")).toEqual(unknown);
+    // USPS's closed missing-mail search, with and without the scan's place, is left out with its reason.
+    for (const wording of ['Package Research Case Closed', 'Package Research Case Closed, Example City, ZZ']) {
+      expect(answer('unknown', null, wording), wording).toEqual(gap);
+    }
+    expect(answer('unknown', null, 'Package Research Case Closed, Example City, ZZ, Example')).toEqual(unknown);
+  });
 
   it('registers every carrier that declares one', async () => {
     const found: string[] = [];

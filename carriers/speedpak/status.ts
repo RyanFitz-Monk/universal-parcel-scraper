@@ -21,6 +21,10 @@ const MAP: Readonly<Record<string, ClassifiedStatus>> = {
   'Item is cleared by customs': { status: 'in_transit', stage: 'in_transit' },
   'Arrival at Delivery Post Office': { status: 'in_transit', stage: 'in_transit' },
   'The item is being held, addressee being notified': { status: 'out_for_delivery', stage: 'ready_for_pickup' },
+  // A destination post's English in capitals: the item waiting at its collection point, and a missed delivery with a
+  // notice left in the letterbox, the item kept for the collection period.
+  'ITEM ARRIVED AT THE COLLECTION POINT WAITING FOR YOUR COLLECT': { status: 'out_for_delivery', stage: 'ready_for_pickup' },
+  'NOT DELIVERED - TO KEEP DURING THE PRESCRIBED TERM BECAUSE THE ADDRESSEE IS NOT AT HOME LEFT MESSAGE IN THE LETTERBOX': { status: 'exception', stage: 'failed_attempt' },
   'Out for delivery': { status: 'out_for_delivery', stage: 'out_for_delivery' },
   // SpeedX's last-mile wording, relayed without its Chinese label.
   'Attempted Delivery: No access': { status: 'exception', stage: 'failed_attempt' },

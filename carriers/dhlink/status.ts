@@ -94,6 +94,7 @@ const WORDINGS: ReadonlyMap<string, Stage> = new Map([
   // The last-mile carrier's pickup on a row without DHLink's node, then its local facility's receipt.
   ['package picked up by last-mile carrier', 'in_transit'],
   ['parcel received by local facility.', 'in_transit'],
+  ['parcel received by transit facility.', 'in_transit'],
   ['parcel departed from facility.', 'in_transit'],
   // The US line's order, before its warehouse has the parcel.
   ['shipping order created.', 'registered'],
