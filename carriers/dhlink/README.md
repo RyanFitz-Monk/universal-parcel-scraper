@@ -25,8 +25,9 @@ page makes.
   air line from China, are asked too, as is `YLE`, two letters, ten digits and `YQ`, a line ParcelsApp names
   YLE beside DHLink, `AUS`, two letters, ten digits and `YQ`, on a US line GOFO delivers, which
   it names Asus International beside DHLink, `QYE`, two letters, ten digits and `YQ`, on a US line
-  17TRACK names QYEXP beside DHLink, and `CYS` and eleven digits, on a US line UniUni delivers, which it names
-  beside DHLink and UniUni. Juxi Express's waybills on two of its lines, `JXC`, `YI` or `ZO`,
+  17TRACK names QYEXP beside DHLink, `CYS` and eleven digits, on a US line UniUni delivers, which it names
+  beside DHLink and UniUni, `JAS`, eight digits and `CN`, on a US line, and `XYL`, nine digits and `CH`, on a
+  line to Switzerland. Juxi Express's waybills on two of its lines, `JXC`, `YI` or `ZO`,
   ten digits and `YQ`, are numbers DHLink's tracker knows, so that rule is preferred and DHLink
   is asked and named first; the tracker does not know Juxi's other lines. Their rules are low confidence, so
   DHLink is asked before it is named. Providers name XZG, QYEXP and Asus International for their

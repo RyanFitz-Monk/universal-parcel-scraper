@@ -159,6 +159,16 @@
       "confidence": "low"
     },
     {
+      "id": "dhlink-jas",
+      "pattern": "^JAS\\d{8}CN$",
+      "confidence": "low"
+    },
+    {
+      "id": "dhlink-xyl",
+      "pattern": "^XYL\\d{9}CH$",
+      "confidence": "low"
+    },
+    {
       "id": "dhlink-jxc",
       "pattern": "^JXC(?:YI|ZO)\\d{10}YQ$",
       "confidence": "low",

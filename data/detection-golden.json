@@ -85499,6 +85499,17 @@
     "candidates": []
   },
   {
+    "input": "JAS99999999CN",
+    "carrier": "unknown",
+    "confidence": "low",
+    "candidates": [
+      "dhlink"
+    ],
+    "asked": [
+      "dhlink"
+    ]
+  },
+  {
     "input": "JAY21011201329621MY",
     "carrier": "unknown",
     "confidence": "none",
@@ -104420,6 +104431,17 @@
     "confidence": "high",
     "candidates": [
       "chronopost"
+    ]
+  },
+  {
+    "input": "XYL999999999CH",
+    "carrier": "unknown",
+    "confidence": "low",
+    "candidates": [
+      "dhlink"
+    ],
+    "asked": [
+      "dhlink"
     ]
   },
   {

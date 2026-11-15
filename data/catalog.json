@@ -17314,6 +17314,14 @@
         "confidence": "low"
       },
       {
+        "pattern": "^JAS\\d{8}CN$",
+        "confidence": "low"
+      },
+      {
+        "pattern": "^XYL\\d{9}CH$",
+        "confidence": "low"
+      },
+      {
         "pattern": "^JXC(?:YI|ZO)\\d{10}YQ$",
         "confidence": "low",
         "preferred": true
