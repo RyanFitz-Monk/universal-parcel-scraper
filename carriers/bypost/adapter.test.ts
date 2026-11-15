@@ -79,7 +79,7 @@ describe('Bypost guest adapter', () => {
     expect(delivered.weight_kg).toBeUndefined();
   });
 
-  it('reads a registered shipment without scans as a summary, and a cancelled one as stopped', () => {
+  it('reads a registered shipment without scans as a summary, and a cancelled one or one with an exception as stopped', () => {
     const registered = changed(d => { d.status = 'PREPARING'; d.packages[0].events = []; delete d.packages[0].detail; });
     expect(parseBypost(registered, NUMBER)).toEqual({ status: expect.any(String), current_stage: 'registered', current_stage_source: 'carrier_map',
       last_status_text: 'Sendingen er registrert og gjøres klar for transport.', last_update: null, expected_delivery: null,
@@ -87,6 +87,14 @@ describe('Bypost guest adapter', () => {
     const cancelled = parseBypost(changed(d => { d.status = 'CANCELLED'; }), NUMBER);
     expect(cancelled).toMatchObject({ current_stage: 'exception', last_status_text: 'Sendingen er kansellert.' });
     expect(cancelled.events).toHaveLength(4);
+    // No event states an exception ("Avvik"), so the shipment's stands over its scans, unless they end in a delivery.
+    const exception = parseBypost(changed(d => { d.status = 'EXCEPTION'; d.packages[0].status = 'EXCEPTION'; delete d.packages[0].detail; }), NUMBER);
+    expect(exception).toMatchObject({ current_stage: 'exception', last_status_text: 'Det er et avvik på sendingen. Ta kontakt om du lurer på noe.' });
+    expect(exception.events).toHaveLength(4);
+    expect(parseBypost(changed(d => { d.status = 'EXCEPTION'; d.packages[0].events = []; delete d.packages[0].detail; }), NUMBER))
+      .toMatchObject({ current_stage: 'exception', last_status_text: 'Det er et avvik på sendingen. Ta kontakt om du lurer på noe.', summary_only: true });
+    const delivered = parseBypost(changed(d => { d.status = 'EXCEPTION'; d.packages[0].events.push(scan('DELIVERED', '2026-03-04T09:00:00+01:00')); }), NUMBER);
+    expect(delivered).toMatchObject({ current_stage: 'delivered', delivered_at: '2026-03-04T09:00:00+01:00', last_status_text: 'Levert' });
     expect(() => parseBypost(changed(d => { d.status = null; d.packages[0].events = []; delete d.packages[0].detail; }), NUMBER))
       .toThrowError(expect.objectContaining({ kind: 'schema' }));
   });

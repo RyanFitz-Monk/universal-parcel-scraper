@@ -94,7 +94,10 @@ export function parseBypost(payload: unknown, rawNumber: string): CarrierResult 
     ? waiting.flatMap(({ scans }) => scans).sort((left, right) => right.at - left.at).find(({ event }) => event.stage)?.event.stage as Stage | undefined
     : events.find(event => event.stage)?.stage as Stage | undefined;
   const declared = status ? bypostCode(status)?.stage : undefined;
-  const stage = status === 'CANCELLED' ? 'exception' : scanned ?? declared;
+  // A cancelled shipment is stopped whatever its scans say. No event states an exception ("Avvik"),
+  // so the shipment's is newer than its scans, unless they end in a delivery or a return.
+  const stopped = status === 'CANCELLED' || (status === 'EXCEPTION' && scanned !== 'delivered' && scanned !== 'returned') ? status : undefined;
+  const stage = stopped ? 'exception' : scanned ?? declared;
   const delivered = stage === 'delivered' ? events.find(event => event.stage === 'delivered') : undefined;
   const destination = isRecord(payload.destination) ? clean(payload.destination.country_code, 8).toUpperCase() : '';
   const weight = weightOf(packages);
@@ -116,7 +119,7 @@ export function parseBypost(payload: unknown, rawNumber: string): CarrierResult 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
-    last_status_text: status === 'CANCELLED' ? SHIPMENT_NOTES.CANCELLED! : events[0]!.description!,
+    last_status_text: stopped ? SHIPMENT_NOTES[stopped]! : events[0]!.description!,
     last_update: events[0]!.time ?? null,
     ...extras,
     ...(delivered ? { delivered_at: delivered.time } : {}),
