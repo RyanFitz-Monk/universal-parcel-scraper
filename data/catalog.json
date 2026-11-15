@@ -48344,7 +48344,7 @@
     "timezone": "Europe/Zurich",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "swissconnect"
     },
     "canaryUrl": "https://swissconnect.ch/de/",
     "trackingSearchUrl": "https://swissconnect.ch/de/",

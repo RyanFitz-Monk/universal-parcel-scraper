@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "result": {
+    "state": "inDelivery",
+    "fbNumber": "000-0S00001",
+    "from": "PRIVATE Synthetic Sender, Synthetic Street 1",
+    "to": "PRIVATE Synthetic Recipient, Synthetic Street 2",
+    "visierName": null,
+    "startTime": { "date": "2026-03-02 09:00:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "pickupFrom": { "date": "2026-03-02 09:00:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "pickupTo": { "date": "2026-03-02 10:00:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "pickupTime": { "date": "2026-03-02 09:24:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "endTime": { "date": "2026-03-02 15:00:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "dropFrom": { "date": "2026-03-02 13:00:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "dropTo": { "date": "2026-03-02 15:00:00.000000", "timezone_type": 3, "timezone": "Europe/Zurich" },
+    "deliveryTime": null
+  },
+  "list": { "created": true, "pickedUp": true, "inDelivery": true, "delivered": false }
+}

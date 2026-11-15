@@ -655,6 +655,7 @@ import { adapter as suratKargo } from '../carriers/surat-kargo/adapter.js';
 import { adapter as swiftx } from '../carriers/swiftx/adapter.js';
 import { adapter as swissPost } from '../carriers/swiss-post/adapter.js';
 import { adapter as swissPostCargo } from '../carriers/swiss-post-cargo/adapter.js';
+import { adapter as swissconnect } from '../carriers/swissconnect/adapter.js';
 import { adapter as sxwExpress } from '../carriers/sxw-express/adapter.js';
 import { adapter as tCat } from '../carriers/t-cat/adapter.js';
 import { adapter as tGroup } from '../carriers/t-group/adapter.js';
@@ -1424,6 +1425,7 @@ export const REGISTRY: RegistryDefinition = {
     "swiftx": swiftx,
     "swiss-post": swissPost,
     "swiss-post-cargo": swissPostCargo,
+    "swissconnect": swissconnect,
     "sxw-express": sxwExpress,
     "t-cat": tCat,
     "t-group": tGroup,
@@ -2826,7 +2828,7 @@ export const REGISTRY: RegistryDefinition = {
     "swiftx": "swiftx",
     "swiss-post": "swiss-post",
     "swiss-post-cargo": "swiss-post-cargo",
-    "swissconnect": "universal",
+    "swissconnect": "swissconnect",
     "sxjd-freight": "universal",
     "sxw-express": "sxw-express",
     "syd": "universal",

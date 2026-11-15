@@ -48348,7 +48348,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Zurich",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "swissconnect"
     },
     "canaryUrl": "https://swissconnect.ch/de/",
     "trackingSearchUrl": "https://swissconnect.ch/de/",

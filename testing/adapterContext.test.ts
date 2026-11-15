@@ -91,6 +91,7 @@ const UNSAMPLED: Readonly<Record<string, readonly string[]>> = {
   hrx: ['TRK0000000001'],
   bypost: ['BYP000000001'],
   'night-star-express': ['NSE0000000001'],
+  swissconnect: ['0000S00001'],
   'dpd-hu': ['16400000000001'],
   homexpress: ['TMS00000000000'],
   'mongol-infinity-post': ['1000000'],

@@ -16,17 +16,45 @@
   "timezone": "Europe/Zurich",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "swissconnect",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at",
+    "eta"
+  ],
   "portal": {
     "searchUrl": "https://swissconnect.ch/de/",
     "canaryUrl": "https://swissconnect.ch/de/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "eta",
+      "origin",
+      "destination",
+      "signatory"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "provider_code",
+      "delivered_at",
+      "eta"
+    ],
+    "discarded": [
+      "origin",
+      "destination",
+      "signatory"
+    ],
+    "unavailable": [
+      "location",
+      "service_name",
+      "weight"
+    ]
   },
   "links": [],
   "detection": []

@@ -1,4 +1,42 @@
 {
   "carrier": "swissconnect",
-  "entries": []
+  "entries": [
+    {
+      "code": "created",
+      "wording": "In Vorbereitung",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "pickedUp",
+      "wording": "Abgeholt",
+      "stage": "accepted",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The courier has collected the shipment from its sender."
+    },
+    {
+      "code": "inDelivery",
+      "wording": "In Zustellung",
+      "stage": "out_for_delivery",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "delivered",
+      "wording": "Persönlich zugestellt",
+      "stage": "delivered",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "annullated",
+      "wording": "Annulliert",
+      "stage": "exception",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The shipment was cancelled."
+    }
+  ]
 }
