@@ -324,6 +324,30 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-10",
       "note": "A label of PostNL's domestic tracker, with observation code Y10, on a parcel it delivers abroad, after a round; written with a straight or curly apostrophe."
+    },
+    {
+      "wording": "Accepted at FedEx Processing Centre",
+      "language": "en",
+      "stage": "accepted",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-10",
+      "note": "FedEx International Connect's acceptance on the line it carries (its code 198), recorded without a category."
+    },
+    {
+      "wording": "Shipment manifested for departure",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-10",
+      "note": "The same line's departure manifest (its code 200), recorded without a category."
+    },
+    {
+      "wording": "Departed Site",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-10",
+      "note": "The same line's departure (its code 222), recorded without a category."
     }
   ]
 }

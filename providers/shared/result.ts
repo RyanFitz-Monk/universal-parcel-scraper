@@ -517,6 +517,10 @@ function providerWordingStage(description: string): Stage | undefined {
   // as its own map reads "presa in carico presso il Punto Poste" and "la spedizione è in consegna".
   if (/^the shipment was taken care of at the post office[.!]?$/i.test(value)) return 'accepted';
   if (/^the shipment is on delivery[.!]?$/i.test(value)) return 'out_for_delivery';
+  // Chunghwa Post's scans in its own Chinese, as a provider relays them and its own map reads them: the item posted,
+  // at the outward office of exchange, and exported.
+  if (/^交寄郵件$/u.test(value)) return 'accepted';
+  if (/^到達出口互換局$|^已出口[-－–]資料詳如右方$/u.test(value)) return 'in_transit';
   // Its own Italian as Ship24 relays it, in capitals with an apostrophe for the accent: the shipment collected from
   // the sender, then gone on its way.
   if (/^la spedizione e'? stata ritirata presso il mittente[.!]?$/i.test(value)) return 'accepted';
@@ -737,11 +741,22 @@ const BARE_TIME = /^[(（]\s*\d{1,2}\s*[:：.．]\s*\d{1,2}\s*[)）]$/;
 // A language's label with nothing after it, as 17TRACK relayed a JCEX row beside the warehouse's receipt.
 const EMPTY_LABEL = /^[(（]\s*(?:中文|英文|chinese|english)\s*[:：]\s*[)）]$/i;
 
+// A label the providers leave out of a history: a notice, a flight or schedule still to come, a bare time or an empty language label.
+const leftOut = (label: string): boolean => isNotice(label) || flightToCome(label) || SCHEDULE.test(label) || BARE_TIME.test(label)
+  || EMPTY_LABEL.test(label);
+
+/** A copy of SunYou's departure drops the last-mile number, as SunYou's own result does. */
+const relayedLabel = (description: unknown): string => sunYouWording(relayedNotice(text(description)).replace(CLEARANCE_STATUS, ''));
+
+/** Whether the providers leave a relayed row out of a history as no scan, as they do while reading it. */
+export function relayedRowLeftOut(description: string): boolean {
+  const label = relayedLabel(description);
+  return label !== '' && leftOut(label);
+}
+
 function describe(description: unknown, stage?: unknown): { description: string; stage: Stage; stage_source: string } | null {
-  // A copy of SunYou's departure drops the last-mile number, as SunYou's own result does.
-  const label = sunYouWording(relayedNotice(text(description)).replace(CLEARANCE_STATUS, ''));
-  if (!label || isNotice(label) || flightToCome(label) || SCHEDULE.test(label) || BARE_TIME.test(label)
-    || EMPTY_LABEL.test(label)) return null;
+  const label = relayedLabel(description);
+  if (!label || leftOut(label)) return null;
   // A provider's name for the stage (InTransit), or a catalog stage a carrier's map gave the scan.
   const declared = typeof stage !== 'string' ? undefined : Object.hasOwn(STAGES, stage) ? STAGES[stage]
     : (CATALOG_STAGES as readonly string[]).includes(stage) ? stage as Stage : undefined;

@@ -59,6 +59,14 @@
       "note": "Seen in the German app's scan list, which carries wording only."
     },
     {
+      "wording": "Your parcel has been dropped off in the retrieval point",
+      "language": "en",
+      "stage": "accepted",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-10",
+      "note": "The sender's drop-off at a Pickup point in DPD's newer English, recorded without a code after the data exchange and before the depot's first scan."
+    },
+    {
       "wording": "In transit.",
       "language": "en",
       "stage": "in_transit",

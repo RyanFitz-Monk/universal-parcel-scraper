@@ -66,7 +66,12 @@ const PORTUGUESE_SCANS = new Set(dpdPtStatuses.entries.filter((entry) => entry.c
 const portugueseScanStage = (code: string, wording: string): Stage | undefined =>
   PORTUGUESE_SCANS.has(`${code} ${normalizeStatusWording(wording)}`) ? dpdPt.stage(code, wording) ?? undefined : undefined;
 
-const NORMALIZED_SCANS = new Map(Object.entries(DPD_DE_APP_SCANS).map(([wording, stage]) => [normalizeStatusWording(wording), stage]));
+// DPD's newer English recorded without its code: the sender's drop-off at a Pickup point, after the data exchange and
+// before the depot's first scan.
+const UNCODED_SCANS: Readonly<Record<string, Stage>> = { 'Your parcel has been dropped off in the retrieval point': 'accepted' };
+
+const NORMALIZED_SCANS = new Map(Object.entries({ ...DPD_DE_APP_SCANS, ...UNCODED_SCANS })
+  .map(([wording, stage]) => [normalizeStatusWording(wording), stage]));
 
 /**
  * What the map says about one scan: the app's scans by their wording, the guest API's by DPD's

@@ -124,6 +124,9 @@ const OPENINGS: readonly (readonly [RegExp, Stage | null])[] = [
   [/^the parcel has been delivered to\b.*\. please collect your parcel\b.* using your pickup code$/, 'ready_for_pickup'],
 ];
 
+// iMile's support footer or hotline after the sentence, which the adapter drops and a stored wording may keep.
+const SUPPORT = /\s*(?:If you have any questions?|Customer service hotline)\b[\s\S]*$/i;
+
 // Who took a delivered parcel or where it was left, after the sentence: ", Receiver Type: Mail box".
 export const RECEIVER_TYPE = /\s*[,，;；]?\s*\breceiver type\b[^.。]*/i;
 
@@ -132,8 +135,8 @@ export const RECEIVER_TYPE = /\s*[,，;；]?\s*\breceiver type\b[^.。]*/i;
  * delivery names, single spaces, no closing full stop.
  */
 export function imilePhrase(wording: string): string {
-  return wording.replace(/【[^】]*】/g, ' ').replace(RECEIVER_TYPE, '').toLocaleLowerCase('en-US').replace(/\s+/g, ' ').trim()
-    .replace(/\s*\.$/, '');
+  return wording.replace(/【[^】]*】/g, ' ').replace(RECEIVER_TYPE, '').replace(SUPPORT, '').toLocaleLowerCase('en-US')
+    .replace(/\s+/g, ' ').trim().replace(/\s*\.$/, '');
 }
 
 /** Drivers' reasons iMile also gives a parcel held up before its delivery run. */

@@ -113,6 +113,10 @@ const RELAYED_STAGE = new Map<string, Stage>([
   ['the item is received by postnl', 'in_transit'],
   ['the item is at the postnl sorting center', 'in_transit'],
   ['the item is processed at the postnl sorting center', 'in_transit'],
+  // FedEx International Connect's scans on the line it carries, as its own map reads its codes 198, 200 and 222.
+  ['accepted at fedex processing centre', 'accepted'],
+  ['shipment manifested for departure', 'in_transit'],
+  ['departed site', 'in_transit'],
 ]);
 
 function labelKey(description: string): string {

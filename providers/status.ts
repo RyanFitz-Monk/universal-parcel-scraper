@@ -14,7 +14,7 @@
 import { CHRONOPOST_NOTIFICATION } from '../carriers/chronopost/status.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../core/status/statusMap.js';
 import { subStatusStage } from './seventeentrack/status.js';
-import { classifyEvent } from './shared/result.js';
+import { classifyEvent, relayedRowLeftOut } from './shared/result.js';
 
 /** Relayed wording that names no step of its own, and why: the app's review closes it as left out. */
 const NO_STEP: ReadonlyArray<readonly [wording: string, note: string]> = [
@@ -137,7 +137,14 @@ export const statusMap: CarrierStatusMap = {
     note: "The delivery's details sent to the recipient, as ParcelsApp relays it for DHL parcels between the hub's sorting and the planned delivery: not a scan, so it keeps the stage the parcel already had.",
   }, ...NO_STEP.map(([wording, note]) => ({ wording, note }))],
   // USPS's closing of a customer's missing-mail search, which ParcelsApp follows with the place of the scan.
-  gapNote: (code, wording) => (code === null && /^package research case closed(?:, [^,]{1,60}){0,2}$/.test(wording)
-    ? "USPS's closing of a customer's missing-mail search, as ParcelsApp relays it with a place: not a scan, so it keeps the stage the parcel already had."
-    : undefined),
+  gapNote: (code, wording) => {
+    if (code !== null) return undefined;
+    if (/^package research case closed(?:, [^,]{1,60}){0,2}$/.test(wording)) {
+      return "USPS's closing of a customer's missing-mail search, as ParcelsApp relays it with a place: not a scan, so it keeps the stage the parcel already had.";
+    }
+    // Rows recorded before the providers left them out.
+    return relayedRowLeftOut(wording)
+      ? 'A notice, a flight or schedule still to come, or a bare time, which the providers leave out of a history: not a scan, so it keeps the stage the parcel already had.'
+      : undefined;
+  },
 };

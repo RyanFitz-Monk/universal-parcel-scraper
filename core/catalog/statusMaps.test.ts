@@ -2021,7 +2021,18 @@ describe('declared status maps', () => {
       ['speedpak', 'ITEM ARRIVED AT THE COLLECTION POINT WAITING FOR YOUR COLLECT', 'ready_for_pickup'],
       ['speedpak', 'NOT DELIVERED - TO KEEP DURING THE PRESCRIBED TERM BECAUSE THE ADDRESSEE IS NOT AT HOME LEFT MESSAGE IN THE LETTERBOX', 'failed_attempt'],
       ['shouwu', 'Arrived at the Port', 'in_transit'],
+      ['dpd-de', 'Your parcel has been dropped off in the retrieval point', 'accepted'],
+      ['spring-gds', 'Accepted at FedEx Processing Centre', 'accepted'],
+      ['spring-gds', 'Shipment manifested for departure', 'in_transit'],
+      ['spring-gds', 'Departed Site', 'in_transit'],
+      ['unknown', '交寄郵件', 'accepted'], ['unknown', '到達出口互換局', 'in_transit'], ['unknown', '已出口－資料詳如右方', 'in_transit'],
     ] as const) expect(answer(carrier, null, wording), `${carrier}: ${wording}`).toEqual(mapped(stage));
+    // iMile's round out for delivery with the hotline a stored wording keeps.
+    expect(answer('imile', '1003', 'Our delivery associate is out for delivery. Customer Service Hotline:')).toEqual(mapped('out_for_delivery'));
+    // Rows recorded before the providers left them out as no scan: a notice, a booked flight and a bare time.
+    for (const wording of ['DATA PREVISTA DE ENTREGA', '预计11.4航班/Scheduled flight on November 4st', '(10:20)']) {
+      expect(answer('unknown', null, wording), wording).toEqual(gap);
+    }
     // A truncated or longer sentence stays unread.
     expect(answer('speedpak', null, 'ITEM ARRIVED AT THE COLLECTION POINT')).toEqual(unknown);
     expect(answer('unknown', null, "La spedizione e' partita dal centro")).toEqual(unknown);
