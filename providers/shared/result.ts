@@ -360,8 +360,10 @@ function providerWordingStage(description: string): Stage | undefined {
   // Spring GDS recording the parcel's data, as Postal Ninja relays it after the parcel was created there.
   if (/^information\. parcel recorded successfully[.!]?$/i.test(value)) return 'registered';
   // Cainiao's warehouse packing the order, between the order it received and the parcel leaving it, in
-  // ParcelsApp's words and in Postal Ninja's.
-  if (/^package finished[.!]?$|^package is ready for shipping from the warehouse[.!]?$/i.test(value)) return 'registered';
+  // ParcelsApp's, Postal Ninja's and Ship24's words, and the parcel leaving it, as Cainiao's own map reads
+  // GWMS_PACKAGE and GWMS_OUTBOUND.
+  if (/^package finished[.!]?$|^package (?:is )?ready for shipping from (?:the )?warehouse[.!]?$/i.test(value)) return 'registered';
+  if (/^package shipped out from (?:the )?warehouse[.!]?$/i.test(value)) return 'in_transit';
   // KTD's steps as ParcelsApp relays them: the first carrier's local warehouse taking the parcel in and
   // sending it on to KTD's warehouse, the parcel leaving that, its export declared and its flight taking off.
   if (/^package received and scanned at the carrier['’]s local warehouse[.!]?$/i.test(value)) return 'accepted';
