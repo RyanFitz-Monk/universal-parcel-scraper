@@ -425,7 +425,7 @@ describe('classifyWording', () => {
       'Export customs release', 'Export customs/release [Example City]',
       'The package was released by the clearing agency.',
       // 17TRACK's entry allowed after an inspection hold.
-      'Import allowed by destination customs',
+      'Import allowed by destination customs', 'Import has been allowed by destination customs',
       'Problème douanier résolu, colis en cours d’acheminement', 'Colis dédouané', 'Dédouanement effectué', 'Sorti de la douane',
       'Verzollung abgeschlossen', 'Sendung verzollt', 'Zollfreigabe erfolgt', 'Die Sendung hat den Zoll verlassen',
       'Spedizione sdoganata', 'Sdoganamento effettuato', 'Svincolo avvenuto', 'Uscito dalla dogana',
@@ -444,6 +444,8 @@ describe('classifyWording', () => {
       'Awaiting release from customs', 'Released to customs broker', 'Held for export customs inspection', 'Submitted to customs',
       'Destination customs: Released to customs broker',
       'Import not allowed by destination customs', "Shipment wasn't allowed by customs",
+      'Waiting to be allowed by customs', 'Import to be allowed by destination customs',
+      'The import will be allowed by customs after payment of duties', 'Import has yet to be allowed by destination customs',
       "Le colis n'a pas encore été dédouané", "Colis en attente d'être dédouané", 'Die Sendung wird verzollt', 'Noch nicht verzollt',
       'Non ancora sdoganato', 'In attesa di essere sdoganato', 'Pendiente de liberación por aduana', 'No ha sido liberado por aduana',
       'Envío en aduana', 'Não foi liberado pela alfândega', 'Encaminhado para fiscalização aduaneira',
