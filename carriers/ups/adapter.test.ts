@@ -276,6 +276,13 @@ describe('UPS structured response', () => {
     ], { progressBarType: 'Exception' }), TRACKING_NUMBER, TODAY))
       .toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map' });
 
+    // UPS searching for a package after its delivered scan puts the delivery in doubt.
+    expect(parseUPSTrackingResponse(withScans([
+      scan('UP', 'We&#39;ve begun an investigation to locate the package.', '20260906 18:43:00'),
+      scan('KB', 'DELIVERED', '20260905 11:07:00'),
+    ], { progressBarType: 'Delivered' }), TRACKING_NUMBER, TODAY))
+      .toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map' });
+
     // A code the map does not know leaves the stage to the shared classifier.
     const unmapped = parseUPSTrackingResponse(withScans([
       scan('X9', 'Wording UPS has not used before', '20260806 15:50:00'),

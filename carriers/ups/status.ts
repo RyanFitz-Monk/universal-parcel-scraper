@@ -117,6 +117,8 @@ const ACTIVITY_STAGES: ReadonlyMap<string, Stage> = new Map<string, Stage>([
   // The receiver's or company's name is wrong, which holds the delivery until
   // UPS has the right one.
   ['AD', 'exception'],
+  // UPS's search for a package it cannot find, opened here the day after a delivered scan: the delivery is in doubt.
+  ['UP', 'exception'],
   // Delivered to an access point, held there, and UPS's reminder to collect a parcel it holds
   // before the hold ends: it is returned only if no one collects it.
   ['2Q', 'ready_for_pickup'], ['ZP', 'ready_for_pickup'], ['5G', 'ready_for_pickup'],
