@@ -12,7 +12,11 @@ makes, with the China leg Cainiao's global tracker holds under the same number.
    `code` is the MD5 of the number followed by a salt from the same script. Both values are the
    same for every visitor and ship with the adapter. No cookie, account or browser. The JSON
    reply has the shipment and its scans, newest first, in English.
-2. `retry`: the same read once more when the first did not reach the site.
+2. `retry`: the same read once more when the first did not reach the site, or a second and a
+   half after iMile throttled it, when the wait and a request fit in the budget. iMile refuses
+   a lookup that comes within about a second of the one before it, with HTTP 429 and
+   `TRACK_QUERY_RATE_LIMIT`, naming no wait; recognition's read and the lookup after it come
+   that close. A read throttled again stays rate limited.
 3. `cainiao`: once iMile has answered with scans, Cainiao's
    `GET https://global.cainiao.com/global/detail.json?mailNos={number}&lang=en-US`, read as the
    AliExpress adapter reads it. For a parcel Cainiao carries out of China, it has the pickup,

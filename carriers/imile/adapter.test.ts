@@ -1,6 +1,6 @@
 import { constants, createHash, generateKeyPairSync, privateDecrypt, type KeyObject } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { recognitionAskedCarriers } from '../../core/catalog/recognition.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
@@ -40,6 +40,13 @@ const changed = (name: string, change: (shipment: Shipment, reply: Reply) => voi
 const reply = (body: unknown, init: ResponseInit = {}) => new Response(typeof body === 'string' ? body : JSON.stringify(body),
   { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } });
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
+/** iMile's refusal of a lookup that came too soon after the one before it. */
+const throttled = () => reply({ status: 'failure', resultCode: 'TRACK_QUERY_RATE_LIMIT', resultObject: null, message: 'Too many requests', traceId: '' },
+  { status: 429 });
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 // Two synthetic key pairs: the page's values, and the ones it changes to.
 const pair = (salt: string) => {
@@ -400,7 +407,8 @@ describe('iMile HTTP adapter', () => {
   it.each([[403, 'challenge'], [429, 'rate_limited'], [500, 'indeterminate'], [502, 'indeterminate'], [503, 'maintenance']] as const)(
     'preserves HTTP %s as %s', async (status, kind) => {
       const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => new Response('', { status }));
-      await expect(carrier(fetcher).track({ number: IN_TRANSIT })).rejects.toMatchObject({ kind });
+      // Too short a budget to sit out a throttle.
+      await expect(carrier(fetcher).track({ number: IN_TRANSIT }, { budgetMs: 3_000 })).rejects.toMatchObject({ kind });
       expect(fetcher).toHaveBeenCalledTimes(1);
     });
 
@@ -422,6 +430,49 @@ describe('iMile HTTP adapter', () => {
     expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
+  it.each([
+    ['HTTP 429', throttled],
+    ['a reply that says so', () => reply({ ...fixture('not-found'), status: 'failure', message: 'Too many requests' })],
+  ])('sends a read iMile throttled with %s once more after a second and a half', async (_name, refusal) => {
+    vi.useFakeTimers();
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(refusal()).mockResolvedValueOnce(reply(fixture('in-transit')))
+      .mockResolvedValueOnce(reply(cainiaoUnknown(IN_TRANSIT)));
+    const recorder = { ...NOOP_RECORDER, step: vi.fn(), lookup: vi.fn() };
+    const answer = new ImileTracker({ fetcher, recorder }).fetch(IN_TRANSIT, { budgetMs: 20_000 });
+    await vi.advanceTimersByTimeAsync(1_499);
+    expect(imileCalls(fetcher)).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(answer).resolves.toMatchObject({ current_stage: 'customs' });
+    expect(imileCalls(fetcher)).toHaveLength(2);
+    expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'retry', outcome: 'ok', fallbackFrom: 'direct', fallbackReason: 'rate_limited' }));
+  });
+
+  it('keeps the throttle when the read sent again is throttled too, or when the wait does not fit the budget', async () => {
+    vi.useFakeTimers();
+    const twice = vi.fn<typeof fetch>().mockResolvedValueOnce(throttled()).mockResolvedValueOnce(throttled()).mockResolvedValue(reply(fixture('in-transit')));
+    const failure = expect(carrier(twice).track({ number: IN_TRANSIT }, { budgetMs: 20_000 })).rejects.toMatchObject({ kind: 'rate_limited' });
+    await vi.advanceTimersByTimeAsync(5_000);
+    await failure;
+    expect(imileCalls(twice)).toHaveLength(2);
+    // The wait and the request after it need three and a half seconds.
+    const short = vi.fn<typeof fetch>().mockResolvedValueOnce(throttled()).mockResolvedValue(reply(fixture('in-transit')));
+    await expect(carrier(short).track({ number: IN_TRANSIT }, { budgetMs: 3_000 })).rejects.toMatchObject({ kind: 'rate_limited' });
+    expect(short).toHaveBeenCalledOnce();
+  });
+
+  it('stops waiting out the throttle when the caller cancels', async () => {
+    vi.useFakeTimers();
+    const controller = new AbortController();
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(throttled()).mockResolvedValue(reply(fixture('in-transit')));
+    const failure = expect(carrier(fetcher).track({ number: IN_TRANSIT }, { signal: controller.signal, budgetMs: 20_000 }))
+      .rejects.toMatchObject({ kind: 'rate_limited' });
+    await vi.advanceTimersByTimeAsync(500);
+    controller.abort(new Error('cancelled'));
+    await failure;
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('ends a hanging read inside the caller’s budget', async () => {
     const fetcher = vi.fn<typeof fetch>((_input, init) => new Promise((_resolve, reject) => {
       const signal = init?.signal;
@@ -437,7 +488,7 @@ describe('iMile HTTP adapter', () => {
     await expect(carrier(known).recognize!(DATED)).resolves.toMatchObject({ known: true });
     // The page still signs with the values the adapter holds, so the empty reply is an unknown number.
     await expect(carrier(site({ privateKey: FIRST.privateKey, signing: IMILE_SIGNING }, {})).recognize!(DATED)).resolves.toEqual({ known: false });
-    await expect(carrier(vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 429 }))).recognize!(DATED))
+    await expect(carrier(vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 429 }))).recognize!(DATED, { budgetMs: 3_000 }))
       .rejects.toMatchObject({ kind: 'rate_limited' });
     const unasked = vi.fn<typeof fetch>();
     await expect(carrier(unasked).recognize!('SAMPLETRACKING')).resolves.toEqual({ known: false });

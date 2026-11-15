@@ -1,9 +1,11 @@
 import { constants, createHash, createPublicKey, publicEncrypt, type KeyObject } from 'node:crypto';
 import { accepted, recognizeFromLookup, type AdapterFactory, type TrackingContext } from '../../core/adapter/index.js';
-import { BudgetExceededError, ChallengeError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
+import {
+  BudgetExceededError, carrierErrorKind, ChallengeError, NotFoundError, retryAfterMsOf, SchemaError, TransportError,
+} from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
-import { firstAttemptMs, networkRetryStep } from '../../core/runner/networkRetry.js';
+import { firstAttemptMs, isNetworkFailure } from '../../core/runner/networkRetry.js';
 import { errorTypeOf, NOOP_RECORDER, outcomeOf, safeRecorder, type StepRecorder } from '../../core/telemetry/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { CainiaoTracker } from '../aliexpress/adapter.js';
@@ -43,6 +45,33 @@ const DEFAULT_BUDGET_MS = 20_000;
 const CAINIAO_MS = 8_000;
 // Less than this left for Cainiao is no time for a request.
 const CAINIAO_MIN_MS = 250;
+// iMile refuses a lookup that comes within about a second of the one before it, with HTTP 429
+// and `TRACK_QUERY_RATE_LIMIT`, naming no wait. Recognition's read and the lookup after it come
+// that close, and so do two parcels' lookups. A refused read is sent once more after this long.
+const THROTTLE_WAIT_MS = 1_500;
+// What the read sent again after the throttle keeps at least for its request.
+const RESEND_MS = 2_000;
+
+/** The wait before a throttled read is sent again: iMile's own, when it names a longer one. Null for any other failure. */
+function throttleWaitMs(error: unknown): number | null {
+  return carrierErrorKind(error) === 'rate_limited' ? Math.max(THROTTLE_WAIT_MS, retryAfterMsOf(error) ?? 0) : null;
+}
+
+/** Waits `ms`; false when the lookup's signal ended the wait first. */
+function paused(ms: number, signal: AbortSignal): Promise<boolean> {
+  if (signal.aborted) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const abort = () => {
+      clearTimeout(timer);
+      resolve(false);
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', abort);
+      resolve(true);
+    }, ms);
+    signal.addEventListener('abort', abort, { once: true });
+  });
+}
 
 function publicKey(key: string): KeyObject {
   return createPublicKey({ key: Buffer.from(key, 'base64'), format: 'der', type: 'spki' });
@@ -124,12 +153,27 @@ export class ImileTracker {
         return parseImile(await this.#query(number, current, signal, left()), number);
       }
     };
+    const deadline = performance.now() + context.budgetMs;
+    // The throttle is sat out only when its wait and the request after it fit in what is left.
+    const throttleFits = (error: unknown) => {
+      const wait = throttleWaitMs(error);
+      return wait !== null && wait + RESEND_MS <= deadline - performance.now();
+    };
     // A request that fails to reach the site, or hangs, gets one more try: the
-    // first gets half of the budget, so the retry fits in the rest.
+    // first gets half of the budget, so the retry fits in the rest. So does one
+    // iMile throttled, once the wait is over.
     return runSteps({ carrier: 'imile', budgetMs: context.budgetMs, signal: context.signal,
       recorder: this.options.recorder ?? NOOP_RECORDER }, [
       { id: 'direct', run: ({ signal, remainingMs, attempt }) => { attempted(attempt); return read(signal, firstAttemptMs(remainingMs)); } },
-      networkRetryStep(({ signal, remainingMs, attempt }) => { attempted(attempt); return read(signal, remainingMs); }),
+      { id: 'retry', recovers: (error) => isNetworkFailure(error) || throttleFits(error),
+        run: async ({ signal, remainingMs, attempt, previousError }) => {
+          attempted(attempt);
+          const wait = isNetworkFailure(previousError) ? null : throttleWaitMs(previousError);
+          if (wait === null) return read(signal, remainingMs);
+          // A wait the lookup's end cuts short leaves the throttle as the answer.
+          if (wait + RESEND_MS > remainingMs || !await paused(wait, signal)) throw previousError;
+          return read(signal, remainingMs - wait);
+        } },
     ]);
   }
 
