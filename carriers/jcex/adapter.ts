@@ -13,6 +13,14 @@ import { withJcexOrigin } from './origin.js';
 export const JCEX_API = 'https://track.jcex.com/api/track/tracking';
 const JCEX_ORIGIN = 'https://track.jcex.com';
 const REDIRECTS = [301, 302, 303, 307, 308];
+/**
+ * How long lookups ask JCEX's origin first after its CDN failed to connect. The first lookup after
+ * that asks the CDN first again, and a lookup the origin fails to answer still falls back to it.
+ */
+export const CDN_REST_MS = 6 * 3_600_000;
+// When lookups through each transport may ask the CDN first again: a host's registries share their
+// transport, and every test its own. A restart forgets it.
+const cdnRestedUntil = new WeakMap<typeof fetch, number>();
 // Bot checks a CDN or firewall could put in place of the reply.
 const CHALLENGE = /acw_sc__v2|aliyun_waf|_____tmd_____|<title>\s*(?:Just a moment|Attention Required|Access Denied|滑动验证|验证码)|_cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i;
 
@@ -41,16 +49,29 @@ export class JcexTracker {
       }
       return parseJcex(payload, number);
     };
-    // A failed CDN connection first tries the origin with verified TLS. A
-    // second failed connection can still use the existing ordinary retry.
+    // A failed CDN connection first tries the origin with verified TLS, and
+    // later lookups start there for a while. A second failed connection can
+    // still use the existing ordinary retry.
+    const transport = this.options.fetcher ?? globalThis.fetch;
     return runSteps({ carrier: 'jcex', budgetMs: context.budgetMs ?? 30_000, signal: context.signal,
       recorder: this.options.recorder ?? NOOP_RECORDER }, [
-      { id: 'direct', run: ({ signal, remainingMs }) => read(signal, firstAttemptMs(Math.min(15_000, remainingMs))) },
+      { id: 'direct', enabled: (cdnRestedUntil.get(transport) ?? 0) <= Date.now(), run: async ({ signal, remainingMs }) => {
+        try {
+          return await read(signal, firstAttemptMs(Math.min(15_000, remainingMs)));
+        } catch (error) {
+          if (isNetworkFailure(error)) cdnRestedUntil.set(transport, Date.now() + CDN_REST_MS);
+          throw error;
+        }
+      } },
       { id: 'origin', recovers: isNetworkFailure, run: ({ signal, remainingMs }) => {
         const timeoutMs = Math.max(1, Math.min(10_000, Math.floor(remainingMs)));
         return withJcexOrigin(signal, timeoutMs, dispatcher => read(signal, timeoutMs, dispatcher));
       } },
-      networkRetryStep(({ signal, remainingMs }) => read(signal, remainingMs)),
+      networkRetryStep(async ({ signal, remainingMs }) => {
+        const result = await read(signal, remainingMs);
+        cdnRestedUntil.delete(transport);
+        return result;
+      }),
     ]);
   }
 }

@@ -14,8 +14,11 @@ Tracked through the lookup its tracking page makes.
 2. `origin`: after a connection failure, send the same request to JCEX's origin using a
    request-scoped DNS override. The URL, HTTP host, TLS server name and certificate verification
    remain those of `track.jcex.com`. This uses the supplied Node fetch transport's Undici
-   dispatcher support; no global resolver or TLS setting changes.
-3. `retry`: one more ordinary connection attempt if the origin also fails to connect.
+   dispatcher support; no global resolver or TLS setting changes. After a failed CDN connection,
+   lookups through the same transport start here for six hours, as the CDN can stay unreachable
+   for days.
+3. `retry`: one more ordinary connection attempt if the origin also fails to connect. When it
+   answers, lookups start at the CDN again.
 
 - The shipment counts only when its waybill or order number is the one asked.
 - An unknown number comes back with neither number and the status `NotFound`. A waybill JCEX
