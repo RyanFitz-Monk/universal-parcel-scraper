@@ -1650,7 +1650,7 @@
     "result": {
       "status": "delivered",
       "current_stage": "delivered",
-      "last_status_text": "Delivered",
+      "last_status_text": "Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL",
       "last_update": "2026-01-04T12:00:00-05:00",
       "last_update_local": "2026-01-04T12:00:00",
       "expected_delivery": null,
@@ -1659,7 +1659,7 @@
       "events": [
         {
           "local_time": "2026-01-04T12:00:00",
-          "description": "Delivered",
+          "description": "Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL",
           "provider_code": "205",
           "location": "Example City, EX",
           "stage": "delivered",
@@ -2555,7 +2555,7 @@
     "result": {
       "status": "delivered",
       "current_stage": "delivered",
-      "last_status_text": "Delivered",
+      "last_status_text": "Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL",
       "last_update": "2026-01-20T15:00:00-05:00",
       "last_update_local": "2026-01-20T15:00:00",
       "expected_delivery": null,
@@ -2563,7 +2563,7 @@
       "events": [
         {
           "local_time": "2026-01-20T15:00:00",
-          "description": "Delivered",
+          "description": "Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL",
           "provider_code": "205",
           "location": "Example City, EX",
           "stage": "delivered",
