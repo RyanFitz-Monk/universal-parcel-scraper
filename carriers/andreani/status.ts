@@ -14,6 +14,11 @@ const LINES: readonly (readonly [RegExp, Stage])[] = [
   [/^la sucursal .+ ya está procesando tu envío\./, 'in_transit'],
   [/^hoy te visitaremos para entregarte tu envío\.?$/, 'out_for_delivery'],
   [/^ya entregamos tu envío\./, 'delivered'],
+  [/^te visitamos y no logramos realizar la entrega\./, 'failed_attempt'],
+  [/^ya podés retirar tu envío en (?:la )?sucursal /, 'ready_for_pickup'],
+  // Not collected from the branch by its deadline: a return is still to come, so an exception.
+  [/^no logramos realizar la entrega de tu envío\. motivo: sin retiro de custodia\b/, 'exception'],
+  [/^no logramos realizar la entrega de tu envío\./, 'failed_attempt'],
 ];
 
 /** The milestones the page heads scans with, and the parcel's current one. */

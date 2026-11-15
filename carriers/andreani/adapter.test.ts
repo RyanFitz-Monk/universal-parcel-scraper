@@ -94,6 +94,15 @@ describe('Andreani HTTP adapter', () => {
     expect(empty.events).toHaveLength(4);
   });
 
+  it('reads an uncollected parcel as an exception, and a line the map does not know as its milestone', () => {
+    const uncollected = parseAndreani(changed('in-transit', (body) => {
+      body.timelines[1]!.traducciones[0]!.traduccion = 'No logramos realizar la entrega de tu envío. Motivo: Sin Retiro De Custodia -.';
+    }), IN_TRANSIT);
+    expect(uncollected).toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map',
+      last_status_text: 'No logramos realizar la entrega de tu envío. Motivo: Sin Retiro De Custodia -.' });
+    expect(uncollected.events![0]).toMatchObject({ stage: 'exception', stage_source: 'carrier_map' });
+  });
+
   it('reads an announced parcel as registered', () => {
     const result = parseAndreani(changed('delivered', (body) => {
       body.timelines = body.timelines.slice(0, 1);
@@ -269,11 +278,25 @@ describe('Andreani HTTP adapter', () => {
 });
 
 describe('Andreani status vocabulary', () => {
+  it('reads a failed visit, a branch pickup, an uncollected parcel and an absent recipient by their lines, before the milestone', () => {
+    for (const [wording, stage] of [
+      ['Te visitamos y no logramos realizar la entrega. Motivo: Direccion Incorrecta No Existe Calle. Pronto tendrás novedades.', 'failed_attempt'],
+      ['Ya podés retirar tu envío en sucursal Ejemplo. Tenés tiempo hasta el 01/01/2026.', 'ready_for_pickup'],
+      ['No logramos realizar la entrega de tu envío. Motivo: Sin Retiro De Custodia -.', 'exception'],
+      ['No logramos realizar la entrega de tu envío. Motivo: Ausente -.', 'failed_attempt'],
+    ] as const) {
+      expect(andreaniStage('En camino', wording), wording).toEqual({ stage, source: 'carrier_map' });
+      expect(statusMapAnswer({ carrier: 'andreani', providerCode: null, description: wording }), wording).toEqual({ kind: 'mapped', stage });
+    }
+    expect(andreaniStage('En camino', 'Ya podés retirar tu envío en Sucursal Ejemplo.')).toEqual({ stage: 'ready_for_pickup', source: 'carrier_map' });
+    expect(andreaniStage('En camino', 'No logramos realizar la entrega de tu envío. Motivo: Sin Retiro De Custodia -.')).toEqual({ stage: 'exception', source: 'carrier_map' });
+  });
+
   it('records every line and milestone seen live with the stage the map gives it', () => {
     const entries = (statuses.entries as { code?: string; wording: string; stage: string; confirmedBy: string }[])
       .filter((entry) => entry.confirmedBy === 'live');
     const lines = entries.filter((entry) => andreaniLineStage(entry.wording));
-    expect(lines).toHaveLength(7);
+    expect(lines).toHaveLength(11);
     for (const entry of entries) {
       expect(andreaniLineStage(entry.wording) ?? andreaniMilestoneStage(entry.wording), entry.wording).toBe(entry.stage);
       expect(statusMap.stage(null, normalizeStatusWording(entry.wording)), entry.wording).toBe(entry.stage);
