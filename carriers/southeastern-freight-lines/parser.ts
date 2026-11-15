@@ -22,6 +22,7 @@ const NOT_FOUND = /^The tracing information you requested for Pro Number (\S+) w
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|\/cdn-cgi\/challenge-platform\/|<title>\s*(?:Just a moment|Attention Required)/i;
 // Who signed for a delivery, after its wording: "Delivered - Signed By: …".
 const SIGNER = /\s*[-–,;]?\s*\b(?:Signed|Recvd|Received) By\s*:.*$/i;
+const SIGNED_BY = /\b(?:Signed|Recvd|Received) By\s*:\s*([^;]+)/i;
 const APPOINTMENT = /\bAppointment scheduled for (\d{2}\/\d{2}\/\d{4})\b/i;
 const POUNDS = /^\d{1,7}(?:\.\d+)?$/;
 const POUNDS_TO_KG = 0.453_592_37;
@@ -79,25 +80,43 @@ function clockOf(date: string, time: string, offset: string): { time?: string; l
   return { time: instant.iso };
 }
 
-/** A scan's wording, without the name of whoever signed for a delivery. */
+/** A scan's wording, without the name of whoever signed for a delivery, for its stage. */
 export function seflWording(message: string): string {
   return clean(message.replace(SIGNER, ''), 300);
 }
 
+/** Who signed for the freight, as a delivery's wording or the shipment's status names them, or an empty string. */
+export function seflSigner(wording: string): string {
+  const name = clean(SIGNED_BY.exec(wording)?.[1] ?? '', 100).replace(/[\s.,:-]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
+}
+
+/** The consignee's town, state and ZIP code, as `TOWN, ST 00000`, or what of them the reply gives. */
+function consigneeAddress(shipment: XmlNode): string {
+  const consignee = element(shipment, 'consignee');
+  if (!consignee) return '';
+  const town = text(consignee, 'city', 80);
+  const state = text(consignee, 'state', 8);
+  const zip = text(consignee, 'zip', 16);
+  const place = [town, state].filter(Boolean).join(', ');
+  return [place, zip].filter(Boolean).join(' ');
+}
+
 /**
  * One scan: its clock, the service center's town and state (the center
- * itself when the reply names no town), the wording and its code. The
- * center's ZIP code is not kept.
+ * itself when the reply names no town), the wording and its code. A
+ * delivery keeps its signer, and is staged without it. The center's ZIP
+ * code is not kept.
  */
 function scanOf(row: XmlNode): CarrierEvent {
-  const description = seflWording(text(row, 'message', 500));
+  const description = clean(text(row, 'message', 500), 300);
   if (!description) throw new SchemaError(PROVIDER, 'Southeastern Freight Lines returned a scan without wording');
   const clock = clockOf(text(row, 'date', 16), text(row, 'time', 16), text(row, 'utcOffset', 8));
   const town = text(row, 'city', 80);
   const state = text(row, 'state', 8);
   const location = town && state ? `${town}, ${state}` : town || text(row, 'location', 80);
   const code = text(row, 'statusCode', 8).toUpperCase();
-  const staged = seflStage(code, description);
+  const staged = seflStage(code, seflWording(description) || description);
   return {
     ...clock,
     ...(location ? { location } : {}),
@@ -132,9 +151,10 @@ function dayOfScan(event: CarrierEvent | undefined): string | null {
 /**
  * The reply of SEFL's Web Connect tracing service for one PRO, in its XML
  * form, without a MySEFL login: the condensed shipment with its scans, oldest
- * first. An unknown PRO gets an `error` naming it. The shipper and consignee,
- * the pieces, the delay reason, the appointment's hours, the service centers'
- * phones and the interline fields are never read.
+ * first. An unknown PRO gets an `error` naming it. The consignee's town, state
+ * and ZIP code are read; the shipper, the pieces, the delay reason, the
+ * appointment's hours, the service centers' phones and the interline fields
+ * are not.
  */
 export function parseSefl(xml: string, raw: string): CarrierResult {
   const pro = normalizeSeflNumber(raw);
@@ -189,6 +209,9 @@ export function parseSefl(xml: string, raw: string): CarrierResult {
   // A delivery the history does not show yet keeps the location's wording.
   const shown = delivered ? delivery : newest;
   const weight = weightKg(text(shipment, 'weight', 16));
+  const signer = stage === 'delivered'
+    ? seflSigner(events.find((event) => event.stage === 'delivered')?.description ?? '') || seflSigner(text(shipment, 'status', 500)) : '';
+  const address = consigneeAddress(shipment);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -198,6 +221,8 @@ export function parseSefl(xml: string, raw: string): CarrierResult {
     expected_delivery: stage && FINAL.has(stage) ? null : estimate(shipment, dayOfScan(newest)),
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
     ...(weight !== null ? { weight_kg: weight } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

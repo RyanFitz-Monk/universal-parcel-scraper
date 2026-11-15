@@ -9,7 +9,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, SHIPGLOBAL_API, ShipGlobalTracker, shipGlobalLookupUrl } from './adapter.js';
-import { normalizeShipGlobalNumber, parseShipGlobal, SHIPGLOBAL_MAX_BYTES, shipGlobalWording } from './parser.js';
+import { normalizeShipGlobalNumber, parseShipGlobal, SHIPGLOBAL_MAX_BYTES, shipGlobalSigner, shipGlobalWording } from './parser.js';
 import { shipGlobalMappedStage, shipGlobalStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -27,6 +27,8 @@ const reply = (body: unknown, status = 200, headers?: Record<string, string>) =>
   { status, headers: { 'Content-Type': 'application/json', ...headers } });
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 const PRIVATE = /SYNTHETIC (?:SENDER|RECEIVER|POSTCODE|BAG|ACCOUNT)|SYNTHETIC_CAPABILITY|example\.invalid|awbPostCode|awbSenderName|awbReceiverName|partnerLastMileTrackingUrl|vendorId|dispatchBagCode/i;
+// The fields a reply keeps out of the result; the consignee the page shows is read.
+const LEFT_OUT = /SYNTHETIC (?:SENDER|POSTCODE|BAG|ACCOUNT)|SYNTHETIC_CAPABILITY|example\.invalid|awbPostCode|awbSenderName|awbReceiverName|partnerLastMileTrackingUrl|vendorId|dispatchBagCode/i;
 const evidence = (value: unknown): string => JSON.stringify(value, (_key, item: unknown) => item instanceof Error
   ? Object.fromEntries(Object.getOwnPropertyNames(item).map((key) => [key, (item as unknown as Row)[key]])) : item);
 
@@ -49,10 +51,13 @@ describe('ShipGlobal India guest tracking', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('retains the combined history, minute precision and foreign wall clocks without personal data', () => {
+  it('retains the combined history, minute precision, foreign wall clocks and the consignee, without the sender or account data', () => {
     const result = parseShipGlobal(fixture('delivered'), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_update: null, last_update_local: '2026-02-10T15:20:01', destination_country: 'US', delivery_tracking_number: 'SYNTHETIC00000029' });
+      last_update: null, last_update_local: '2026-02-10T15:20:01', destination_country: 'US', delivery_tracking_number: 'SYNTHETIC00000029',
+      receiver_name: 'SYNTHETIC RECEIVER' });
+    expect(result).not.toHaveProperty('receiver_address');
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events).toHaveLength(9);
     expect(result.events!.map((event) => [event.local_time, event.stage])).toEqual([
       ['2026-02-10T15:20:01', 'delivered'], ['2026-02-10T08:00:00', 'out_for_delivery'],
@@ -67,7 +72,7 @@ describe('ShipGlobal India guest tracking', () => {
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('summary_only');
     expect(result).not.toHaveProperty('history_truncated');
-    expect(evidence(result)).not.toMatch(PRIVATE);
+    expect(evidence(result)).not.toMatch(LEFT_OUT);
     expect(result.events!.at(-1)).not.toHaveProperty('location');
   });
 
@@ -88,7 +93,7 @@ describe('ShipGlobal India guest tracking', () => {
     expect(result.events!.map((event) => event.stage)).toEqual(['returned', 'returned', 'returned', 'exception', 'out_for_delivery']);
     expect(result.events![3]!.description).toBe('Refused by the Recipient, Hold for Instructions Requested.');
     expect(result).not.toHaveProperty('delivered_at');
-    expect(evidence(result)).not.toMatch(/support@|555|https?:\/\/|SYNTHETIC (?:SENDER|RECEIVER)/);
+    expect(evidence(result)).not.toMatch(/support@|555|https?:\/\/|SYNTHETIC SENDER/);
     const oldestFirst = fixture('returned');
     oldestFirst.data.trackingInfo.reverse();
     expect(parseShipGlobal(oldestFirst, NUMBER).events).toEqual(result.events);
@@ -241,7 +246,15 @@ describe('ShipGlobal India status vocabulary', () => {
     }
     expect(shipGlobalMappedStage('0', 'Synthetic activity')).toBeUndefined();
     expect(shipGlobalStage('', 'Synthetic activity')).toBeNull();
-    expect(shipGlobalWording('Delivered. Signed by SYNTHETIC RECEIVER')).toBe('Delivered');
+    expect(shipGlobalWording('Delivered. Signed by SYNTHETIC RECEIVER')).toBe('Delivered. Signed by SYNTHETIC RECEIVER');
+    expect(shipGlobalWording('Delivered with OTP 1234')).toBe('Delivered with OTP 1234');
+    expect(shipGlobalSigner('Delivered. Signed by SYNTHETIC RECEIVER')).toBe('SYNTHETIC RECEIVER');
+    expect(shipGlobalSigner('Delivered by Sample Courier')).toBeUndefined();
+    const signed = parseShipGlobal(changed((payload) => {
+      payload.data.trackingInfo[0]!.awbHistoryComment = 'Delivered, received by Sample Person';
+    }), NUMBER);
+    expect(signed).toMatchObject({ current_stage: 'delivered', signed_by: 'Sample Person', last_status_text: 'Delivered, received by Sample Person' });
+    expect(signed.events![0]).toMatchObject({ stage: 'delivered', description: 'Delivered, received by Sample Person' });
     expect(shipGlobalWording('Shipment Delivered | https://example.invalid/handoff?token=SYNTHETIC_CAPABILITY')).toBe('Shipment Delivered');
   });
 });

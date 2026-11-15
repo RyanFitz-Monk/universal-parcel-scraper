@@ -62,11 +62,11 @@ describe('SkyBox tracking', () => {
     expect(skyboxTrackingUrl(NUMBER)).toBe(fetcher.mock.calls[0]![0]);
   });
 
-  it('reads the tracking table newest first, on wall clocks with no zone, without the card or the status bar', () => {
+  it('reads the tracking table newest first, on wall clocks with no zone, and the card’s consignee, without the status bar', () => {
     const result = parseSkybox(delivered(), NUMBER);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'PROOF OF DELIVERY',
-      last_update: null, last_update_local: '2030-02-20T18:00:00', expected_delivery: null,
+      last_update: null, last_update_local: '2030-02-20T18:00:00', expected_delivery: null, receiver_name: 'SAMPLE RECIPIENT',
       events: [
         { local_time: '2030-02-20T18:00:00', location: 'SAMPLE TOWN', description: 'PROOF OF DELIVERY', stage: 'delivered', stage_source: 'carrier_map' },
         { local_time: '2030-02-19T17:17:00', location: 'SAMPLE TOWN', description: 'IN TRANSIT', stage: 'in_transit', stage_source: 'carrier_map' },
@@ -77,8 +77,8 @@ describe('SkyBox tracking', () => {
         { local_time: '2030-01-10T18:00:00', location: 'TEST GATEWAY', description: 'SKYBILL CREATED', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    // The consignee, the suite, the origin and destination, the weight and the items stay out.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE RECIPIENT|SBX000017|Test Gateway|Sample Town|Lbs|SAMPLE ITEM/);
+    // The suite, the origin and destination, the weight and the items stay out.
+    expect(JSON.stringify(result)).not.toMatch(/SBX000017|Test Gateway|Sample Town|Lbs|SAMPLE ITEM/);
   });
 
   it('keeps scans of one minute in the table’s order, a row without a place without one, and stages another wording by the shared rules or not at all', () => {

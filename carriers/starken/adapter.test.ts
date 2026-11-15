@@ -98,12 +98,23 @@ describe('Starken HTTP adapter', () => {
       ['2026-03-09T18:02:11', 'EMITIDO', 'registered', 'EMITIDO'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.location === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PERSONA|FICTICIA|TIENDA|VILLA PRUEBA|569|example\.invalid|9000000000000|CENTRO DE PRUEBA|PAGADO/);
+    // The recipient's masked name, home address and who took the parcel are read; the rest stays out.
+    expect(result).toMatchObject({ receiver_name: 'PERSONA *********', receiver_address: 'CALLE FICTICIA 123, 0000000\nVILLA PRUEBA',
+      signed_by: 'PERSONA*******' });
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined, signed_by: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/PERSONA|FICTICIA|TIENDA|VILLA PRUEBA|569|example\.invalid|9000000000000|CENTRO DE PRUEBA|PAGADO/);
   });
 
   it('reads a parcel on its way, with the page’s estimate, and one ready to collect', () => {
-    expect(parseStarken(fixture('in-transit'), IN_TRANSIT)).toMatchObject({ status: 'in_transit', current_stage: 'in_transit',
-      last_status_text: 'EN TRANSITO HACIA SUCURSAL AGENCIA EJEMPLO', last_update_local: '2026-04-03T06:25:57', expected_delivery: '2026-04-06' });
+    const moving = parseStarken(fixture('in-transit'), IN_TRANSIT);
+    expect(moving).toMatchObject({ status: 'in_transit', current_stage: 'in_transit',
+      last_status_text: 'EN TRANSITO HACIA SUCURSAL AGENCIA EJEMPLO', last_update_local: '2026-04-03T06:25:57', expected_delivery: '2026-04-06',
+      receiver_name: 'PERSONA *********' });
+    // Nobody has taken a parcel still on its way, and a masked or branch address is not the recipient's.
+    expect(moving).not.toHaveProperty('signed_by');
+    for (const address of ['****', 'AGENCIA: SUCURSAL AGENCIA EJEMPLO']) {
+      expect(parseStarken(changed('in-transit', (order) => { order.destinatarioDireccion = address; }), IN_TRANSIT)).not.toHaveProperty('receiver_address');
+    }
     const ready = parseStarken(changed('in-transit', (order) => {
       order.encargos[0]!.encargo[1]!.pinchazos.push({ ...scansOf(order).at(-1)!, senfecha: '03-04-2026 10:52:11', macro_estado: 'DESTINO',
         estado: 'PENDIENTE ENTREGA', estado_interno: 'LISTO PARA RETIRO EN AGENCIA EJEMPLO' });

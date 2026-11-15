@@ -435,9 +435,16 @@ describe('Swiss Post projection', () => {
     });
   });
 
-  it('discards the recipient, address, signature and contact fields', () => {
+  it('reads the addressee’s name and address and discards the signature and contact fields', () => {
     const { shipment, events, translations } = outForDelivery();
-    const serialized = JSON.stringify(parseSwissPostShipment(shipment, events, translations));
+    const result = parseSwissPostShipment(shipment, events, translations);
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET 7\n8000 Zurich' });
+    // An anonymous lookup gets the postcode and town alone.
+    expect(parseSwissPostShipment({ ...shipment, addressee: { name1: null, street: null, number: null, zip: '8000', city: 'Zurich',
+      streetAndNumber: '' } }, events, translations)).toMatchObject({ receiver_address: '8000 Zurich' });
+    expect(parseSwissPostShipment({ ...shipment, addressee: null }, events, translations)).not.toHaveProperty('receiver_address');
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
+    const serialized = JSON.stringify(rest);
     for (const privateValue of [
       'PRIVATE RECIPIENT',
       'PRIVATE STREET 7',
@@ -489,7 +496,10 @@ describe('Swiss Post pickup point', () => {
       pickup_point: 'My Post 24 9999 Example Town Station\nMP Example\n9999 Example Town' });
     expect(app.urls.filter((url) => url.includes('/autocomplete/'))).toEqual([
       'https://service.post.ch/ekp-web/api/autocomplete/postoffice/id/999973']);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|9998|2026-09-11/);
+    // The addressee is the recipient, not the pickup point; the notice's deadline is not kept.
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET 7\n9998 PRIVATE TOWN' });
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/PRIVATE|9998|2026-09-11/);
     const done = lookup(waiting, [deposited, collected]);
     const delivered = await done.tracker.fetch(WRONG_SWISS_POST_NUMBER);
     expect(delivered).toMatchObject({ current_stage: 'delivered' });

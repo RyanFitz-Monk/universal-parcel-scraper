@@ -67,6 +67,8 @@ export function parseSpeedpak(payload: unknown, rawNumber: string): CarrierResul
     events: events.slice(0, 100) };
   const country = countryCode(shipment.consigneeCountryCode);
   if (country) output.destination_country = country;
+  const postcode = clean(shipment.consigneeZipCode, 16);
+  if (/\d/.test(postcode)) output.receiver_address = postcode;
   if (handoffs.size === 1) {
     const [reference, name] = [...handoffs][0]!;
     // Named only when the catalog knows the carrier and its detection offers the reference. A bare

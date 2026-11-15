@@ -45,16 +45,20 @@ describe('Spee-Dee package progress', () => {
     expect(result.events?.every((event) => event.time === undefined)).toBe(true);
     expect(result.timezone).toBeUndefined();
     expect(Object.keys(result).sort()).toEqual(['current_stage', 'current_stage_source', 'events', 'expected_delivery',
-      'last_status_text', 'last_update', 'last_update_local', 'status']);
+      'last_status_text', 'last_update', 'last_update_local', 'receiver_address', 'signed_by', 'status']);
   });
 
-  it('never reads the comments, the signer, the address or the route', () => {
-    const result = JSON.stringify(parseSpeeDee(DELIVERED, NUMBER));
+  it('reads the summary’s signer and delivery address, and never the comments or the route', () => {
+    const { signed_by: signer, receiver_address: address, ...rest } = parseSpeeDee(DELIVERED, NUMBER);
+    expect(signer).toBe('PRIVATE SIGNER');
+    expect(address).toBe('1 PRIVATE STREET\nEXAMPLE CITY, IL');
+    const result = JSON.stringify(rest);
     expect(result).not.toMatch(/PRIVATE|00000\)|SP000000000000000025|1700000000|Signed|Delivered to/);
     // A comment that never closes is dropped too.
     const unclosed = DELIVERED.replace(/ -->/, '');
     expect(() => parseSpeeDee(unclosed, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
-    expect(JSON.stringify(parseSpeeDee(DELIVERED.replace('<!-- Array', '<!-- PRIVATE <!-- Array'), NUMBER))).not.toContain('PRIVATE');
+    const nested = { ...parseSpeeDee(DELIVERED.replace('<!-- Array', '<!-- PRIVATE <!-- Array'), NUMBER), signed_by: undefined, receiver_address: undefined };
+    expect(JSON.stringify(nested)).not.toContain('PRIVATE');
   });
 
   it('keeps only the shipment since the previous delivery of a reused barcode', () => {
@@ -77,6 +81,9 @@ describe('Spee-Dee package progress', () => {
       const result = parseSpeeDee(moving, SHORT);
       expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', last_update_local: '2026-05-12T07:45:10' });
       expect(result.events).toHaveLength(2);
+      // The summary's signer and address belong to an earlier delivery.
+      expect(result).not.toHaveProperty('signed_by');
+      expect(result).not.toHaveProperty('receiver_address');
       expect(JSON.stringify(result)).not.toMatch(/2023|OTHER/);
     }
   });

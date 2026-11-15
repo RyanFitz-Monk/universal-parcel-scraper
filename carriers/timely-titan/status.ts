@@ -16,16 +16,28 @@ const WORDINGS: readonly (readonly [RegExp, Stage])[] = (statuses.entries as rea
     entry.stage as Stage,
   ]);
 
+// "【本人签收，…】", "【他人代收，…】": who signed for a delivery, after the delivery's own words.
+const SIGNING = /【[^【】]*(?:签收|代收)[^【】]*】/g;
+// "signed by …", "签收人：…": who took a delivered parcel, to the end of the text.
+const RECEIVER = /\s*[,;:.\-–，；：]?\s*(?:(?:signed(?: for)? by|signatory|received by)\b|签收人)[\s\S]*$/i;
+
+/** A wording without who signed for the parcel, as the map and the shared rules read it. */
+export function timelyTitanUnsigned(wording: string): string {
+  return wording.replace(SIGNING, '').replace(RECEIVER, '').trim();
+}
+
 /** The stage Timely Titan's map gives a wording in `normalizeStatusWording` form. */
 export function timelyTitanMappedStage(wording: string): Stage | undefined {
-  return WORDINGS.find(([pattern]) => pattern.test(wording))?.[1];
+  const unsigned = timelyTitanUnsigned(wording);
+  return WORDINGS.find(([pattern]) => pattern.test(unsigned))?.[1];
 }
 
 /** A wording's stage: the map, else the shared wording rules, else nothing. */
 export function timelyTitanStage(wording: string): ClassifiedWording | null {
-  const mapped = timelyTitanMappedStage(normalizeStatusWording(wording));
+  const unsigned = timelyTitanUnsigned(wording);
+  const mapped = timelyTitanMappedStage(normalizeStatusWording(unsigned));
   if (mapped) return { stage: mapped, source: 'carrier_map' };
-  const worded = classifyWording(wording, 'in_transit');
+  const worded = classifyWording(unsigned, 'in_transit');
   return worded.source === 'none' ? null : worded;
 }
 

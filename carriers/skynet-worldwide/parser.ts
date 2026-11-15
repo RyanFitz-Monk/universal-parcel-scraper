@@ -26,7 +26,7 @@ export function normalizeSkynetNumber(raw: string): string {
 
 export const SKYNET: GetOnlineMember = {
   carrier: 'skynet-worldwide', provider: PROVIDER, name: 'SkyNet', stid: 'skynet', tracker: SKYNET_TRACKER,
-  normalize: normalizeSkynetNumber, stage: skynetStage,
+  normalize: normalizeSkynetNumber, stage: skynetStage, recipient: true,
 };
 
 /** The zone of a scan's location, when its country keeps one clock. */

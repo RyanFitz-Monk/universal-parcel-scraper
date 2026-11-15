@@ -32,9 +32,9 @@ Tracked through the lookup its tracking page makes.
   stay wall clocks. Scans on one clock keep the reply's order, as on the page.
 - A delay notice and a request to pay the delivery fee say nothing of where the parcel is and
   have no stage. The codes of the former parcel page on starex.az are still mapped.
-- The reply also carries the recipient's masked name, phone and personal identification code,
-  their chosen branch, and the shop's order number for the leg to Starex's warehouse abroad.
-  The adapter keeps none of them. The order number tracks the parcel before Starex has it, so
+- The reply also carries the recipient's masked name, which is read, and their phone, personal
+  identification code and chosen branch, and the shop's order number for the leg to Starex's
+  warehouse abroad, which are not. The order number tracks the parcel before Starex has it, so
   there is no hand-off.
 
 ## Limitations

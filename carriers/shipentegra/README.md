@@ -32,8 +32,9 @@ carrier for delivery abroad. Tracked through the lookup its tracking page makes.
 - ShipEntegra words its own three scans. Its partners' scans come as one of the tracker's fixed
   sentences, often followed by the partner's own words, as in
   `Package is out for delivery.En Route`. The sentence stages the scan: the shared rules read
-  some of those endings as another stage. Wording loses a clause naming who signed for or took
-  the parcel, and phone numbers.
+  some of those endings as another stage. A clause naming who signed for or took the parcel
+  stays in the wording but does not stage it, and the name after "Signed by", "received by" or
+  "Teslim alan" in a delivery scan is `signed_by`. Wording loses phone numbers.
 - The tracker's status (`status_description`, else `realCarrierStatusDescription`) decides a
   delivery, a return or an exception, and stands in when no scan has a stage. Otherwise the
   newest scan with a stage decides.

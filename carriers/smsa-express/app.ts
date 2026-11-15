@@ -5,8 +5,7 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { calendarDay, countryCode, explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { xmlDocument, type XmlNode } from '../../core/transport/xml.js';
-import { normalizeSmsaNumber, PROVIDER, SMSA_BLOCKED, SMSA_MAX_SCANS, smsaWording } from './parser.js';
-import { smsaStage } from './status.js';
+import { normalizeSmsaNumber, PROVIDER, SMSA_BLOCKED, SMSA_MAX_SCANS, smsaScanStageOf, smsaSignedBy, smsaWording } from './parser.js';
 
 /** The tracking service of SMSA's Android app, which answers plain HTTP only. */
 export const SMSA_APP_ENDPOINT = 'http://strack.cloudapp.net/trackSMSA.svc';
@@ -57,7 +56,8 @@ function estimate(value: string): string | null {
 /**
  * The app's reply for one airway bill: the shipment's details and its scans,
  * newest first, each with SMSA's code and an instant with an offset. The
- * details must name the airway bill asked. Names, references, the delivery
+ * details must name the airway bill asked. The recipient's name and the
+ * delivery scan's signer are kept; the shipper, references, the delivery
  * code and the scans' comments, which can hold a phone number, are dropped.
  */
 export function parseSmsaApp(xml: string, raw: string): CarrierResult {
@@ -107,7 +107,7 @@ export function parseSmsaApp(xml: string, raw: string): CarrierResult {
     const identity = JSON.stringify([time.timestamp, code, description, location]);
     if (seen.has(identity)) continue;
     seen.add(identity);
-    const staged = smsaStage(description);
+    const staged = smsaScanStageOf(description);
     dated.push({ timestamp: time.timestamp, event: {
       time: time.iso,
       description,
@@ -131,6 +131,8 @@ export function parseSmsaApp(xml: string, raw: string): CarrierResult {
   const weight = text(details, 'ShipmentWeight', TRACK, 20);
   const kilograms = WEIGHT.test(weight) ? Number(weight) : 0;
   const country = countryCode(text(details, 'ShipmentDestCountry', TRACK, 20));
+  const recipient = text(details, 'RecepientName', TRACK, 100);
+  const signer = smsaSignedBy(events, stage);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source } : {}),
@@ -139,6 +141,8 @@ export function parseSmsaApp(xml: string, raw: string): CarrierResult {
     expected_delivery: done ? null : estimate(text(details, 'EDD', TRACK, 20)),
     ...(kilograms > 0 ? { weight_kg: kilograms } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

@@ -143,10 +143,29 @@ export function starkenMissing(payload: unknown): never {
   throw new SchemaError(PROVIDER, 'Starken returned an unexpected missing-order reply');
 }
 
+/** A recipient field as text, masked as the service masks it, or nothing; these never fail a lookup. */
+function detail(payload: Record<string, unknown>, key: string): string {
+  const value = payload[key];
+  return typeof value === 'string' ? clean(value, 200) : '';
+}
+
+/**
+ * The home delivery address, `DOMICILIO: street, flat - commune`, as the
+ * street then the commune. A branch delivery's address is the branch's and
+ * is not the recipient's.
+ */
+function homeAddress(payload: Record<string, unknown>): string {
+  const match = /^DOMICILIO\s*:\s*(.+)$/i.exec(detail(payload, 'destinatarioDireccion'));
+  if (!match || !/[\p{L}\d]/u.test(match[1]!)) return '';
+  const parts = /^(.+?)\s+-\s+([^-]+)$/.exec(match[1]!);
+  return parts ? `${parts[1]!.trim()}\n${parts[2]!.trim()}` : match[1]!.trim();
+}
+
 /**
  * The opened reply of the tracking page's `historialClOfs` for one order: its
  * summary and, per package, its days of scans. It must name the order asked,
- * both as the order consulted and as the order found.
+ * both as the order consulted and as the order found. Of the recipient's
+ * masked details, the name, the home address and who took the parcel are read.
  */
 export function parseStarken(payload: unknown, raw: string): CarrierResult {
   const number = normalizeStarkenNumber(raw);
@@ -166,6 +185,9 @@ export function parseStarken(payload: unknown, raw: string): CarrierResult {
   const stage = closed === null ? scannedStage : starkenMappedStage(closed) ?? 'exception';
   const source = closed === null ? scanned?.stage_source : 'carrier_map';
   const expected = ended || closed !== null ? null : estimate(payload);
+  const receiver = [detail(payload, 'destinatarioNombres'), detail(payload, 'destinatarioApellidos')].filter(Boolean).join(' ');
+  const address = homeAddress(payload);
+  const taker = stage === 'delivered' ? detail(payload, 'nombreEntregado') : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -174,6 +196,9 @@ export function parseStarken(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: expected,
+    ...(/\p{L}/u.test(receiver) ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(/\p{L}/u.test(taker) ? { signed_by: taker } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

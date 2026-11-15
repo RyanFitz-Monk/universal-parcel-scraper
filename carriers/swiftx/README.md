@@ -57,8 +57,9 @@ page in place of the reply, rate limits and incomplete captures keep their own f
   with its phone number and email. The note is kept and the help line is not.
 - Scans at SwiftX's hubs, stations and warehouses carry the town and state the reply gives for the
   site. Delivery and failed-delivery rows give the recipient's town, state and postcode as their
-  place; they are not read, nor are pickup and return rows' places, any postcode or the
-  proof-of-delivery images the page offers.
+  place; the newest is read as the recipient's address, not as a scan's place. Pickup and return
+  rows' places, the sites' postcodes and the proof-of-delivery images the page offers are not
+  read.
 
 ## Limitations
 

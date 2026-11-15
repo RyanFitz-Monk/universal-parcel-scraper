@@ -2,19 +2,23 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { InvalidInputError } from '../../core/errors/index.js';
+import type { CarrierResult } from '../../core/result/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, SeflTracker, seflTracingUrl } from './adapter.js';
-import { normalizeSeflNumber, parseSefl, seflWording } from './parser.js';
+import { normalizeSeflNumber, parseSefl, seflSigner, seflWording } from './parser.js';
 import { seflStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
 const DELIVERED = '9100007';
 const IN_TRANSIT = '910000009';
 const UNKNOWN = '999999999';
-// The shipper and consignee, their ZIP codes and the service centers', the signer, the phones and the appointment's hours.
-const PRIVATE = /SHIPPERVILLE|CONSIGNEETON|SAMPLE SIGNER|Signed By|Recvd|\b\d{5}\b|1\(000\)|\b(?:SMC|HBT|DSC)\b|08:00 AM|05:00 PM/;
+// The shipper, its ZIP code and the service centers', the phones and the appointment's hours.
+const PRIVATE = /SHIPPERVILLE|\b\d{5}\b|1\(000\)|\b(?:SMC|HBT|DSC)\b|08:00 AM|05:00 PM/;
+/** A result without the consignee's address and the delivery's signer, which it keeps. */
+const unsigned = (result: CarrierResult) => ({ ...result, receiver_address: undefined, signed_by: undefined,
+  last_status_text: undefined, events: result.events?.filter((event) => event.stage !== 'delivered') });
 // Cloudflare's browser check, as it stands in for a reply.
 const CHALLENGE = '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title></head><body>'
   + '<script>window._cf_chl_opt={cvId: \'3\'};</script></body></html>';
@@ -53,7 +57,8 @@ describe('Southeastern Freight Lines Web Connect tracing', () => {
     const result = parseSefl(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Closed Trailer SOR530004 to HUB TOWN service center Hold for Appointment',
-      last_update: '2026-10-13T10:02:00-05:00', expected_delivery: '2026-10-15', weight_kg: 172.365 });
+      last_update: '2026-10-13T10:02:00-05:00', expected_delivery: '2026-10-15', weight_kg: 172.365, receiver_address: 'CONSIGNEETON, TN 00094' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result).not.toHaveProperty('last_update_local');
     expect(result).not.toHaveProperty('summary_only');
     expect(result.events!.map((event) => [event.time, event.stage, event.provider_code, event.location])).toEqual([
@@ -65,14 +70,14 @@ describe('Southeastern Freight Lines Web Connect tracing', () => {
       ['2026-10-12T16:05:00-04:00', 'accepted', 'LOD', 'SAMPLE CITY, SC'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('local_time' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(JSON.stringify(unsigned(result))).not.toMatch(PRIVATE);
   });
 
-  it('keeps the delivery and the repeated scan once, without the signer, the people or their addresses', () => {
+  it('keeps the delivery with its signer, the repeated scan once, and the consignee’s town, without the shipper', () => {
     const result = parseSefl(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-07-08T10:42:00-05:00', delivered_at: '2026-07-08T10:42:00-05:00',
-      expected_delivery: null, weight_kg: 566.99 });
+      last_status_text: 'Delivered - Signed By: SAMPLE SIGNER', last_update: '2026-07-08T10:42:00-05:00', delivered_at: '2026-07-08T10:42:00-05:00',
+      expected_delivery: null, weight_kg: 566.99, receiver_address: 'CONSIGNEETON, AL 00092', signed_by: 'SAMPLE SIGNER' });
     expect(result.events!.map((event) => [event.time, event.stage, event.provider_code])).toEqual([
       ['2026-07-08T10:42:00-05:00', 'delivered', 'DLV'],
       ['2026-07-08T06:30:00-05:00', 'out_for_delivery', 'CDY'],
@@ -86,9 +91,15 @@ describe('Southeastern Freight Lines Web Connect tracing', () => {
       ['2026-07-06T15:10:00-04:00', 'accepted', 'SPU'],
     ]);
     expect(result.events![6]).toMatchObject({ description: 'Dispatched Trailer 280001F ETA: 07/07/2026 01:30 AM', location: 'SAMPLE CITY, GA' });
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(JSON.stringify(unsigned(result))).not.toMatch(PRIVATE);
     expect(seflWording('Delivered - Signed By: SAMPLE SIGNER')).toBe('Delivered');
     expect(seflWording('Delivered, Recvd by: SAMPLE SIGNER')).toBe('Delivered');
+    expect(seflSigner('Delivered, Recvd by: SAMPLE SIGNER')).toBe('SAMPLE SIGNER');
+    expect(seflSigner('Delivered 07/08/2026 10:42 AM;Recvd by: SAMPLE SIGNER;')).toBe('SAMPLE SIGNER');
+    expect(seflSigner('Delivered - Signed By:')).toBe('');
+    // A delivery the history does not show yet takes its signer from the status.
+    const summary = parseSefl(fixture('delivered').replace(/<detailInformation>[\s\S]*<\/detailInformation>/, ''), DELIVERED);
+    expect(summary).toMatchObject({ current_stage: 'delivered', signed_by: 'SAMPLE SIGNER', summary_only: true });
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     expect(metadata.tracking).toMatchObject({ adapter: 'southeastern-freight-lines', steps: ['direct', 'retry'], recognition: { rank: 919 },
       localClocks: true });
@@ -181,7 +192,6 @@ describe('Southeastern Freight Lines Web Connect tracing', () => {
       ['zone name', withScan({ utcOffset: 'CDT' })],
       ['impossible offset', withScan({ utcOffset: '-25:00' })],
       ['empty message', withScan({ message: ' ' })],
-      ['signer only', withScan({ message: 'Signed By: SAMPLE SIGNER' })],
       ['repeated field', withScan({ message: 'Synthetic note</message><message>Another note' })],
       ['nested field', withScan({ message: '<b>Synthetic note</b>' })],
       ['too many rows', edited('in-transit', ['</detailInformation>', `${row({}).repeat(300)}</detailInformation>`])],

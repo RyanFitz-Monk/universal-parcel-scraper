@@ -21,7 +21,7 @@ const instance = (fetcher: typeof fetch) =>
 const PRIVATE = /1300000000|0571-|0510-|示例快递员|示例收件人|示例揽收员|示例操作员|示例驿站|示例路|取件码|000001001/;
 
 describe('STO trace parser', () => {
-  it('returns identity-bound scans on China time without courier, signer or station details', () => {
+  it('returns identity-bound scans on China time and the signer, without courier or station details', () => {
     const result = normalizeCarrierResult(parseSto(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', timezone: 'Asia/Shanghai',
       last_status_text: 'Delivered', last_update: '2026-01-03T18:00:00+08:00', delivered_at: '2026-01-03T18:00:00+08:00', weight_kg: 1.25 });
@@ -30,7 +30,20 @@ describe('STO trace parser', () => {
     expect(result.events?.[0]).toMatchObject({ description: 'Delivered', location: '示例目的公司, 浙江省示例市', stage_source: 'carrier_map' });
     expect(result.events?.[4]).toMatchObject({ description: 'Departed for 示例转运中心', location: '示例始发公司, 江苏省示例始发市', time: '2026-01-01T22:00:00+08:00' });
     expect(result.events?.every(event => event.provider_leg === undefined && event.time?.endsWith('+08:00'))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(result.signed_by).toBe('示例收件人');
+    expect(result).not.toHaveProperty('pickup_code');
+    const rest = { ...result, signed_by: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(PRIVATE);
+  });
+
+  it('reads the pickup code of a parcel waiting at a station', () => {
+    const waiting = fixture();
+    waiting.data = waiting.data.slice(1);
+    const result = normalizeCarrierResult(parseSto(waiting, NUMBER));
+    expect(result).toMatchObject({ current_stage: 'ready_for_pickup', pickup_code: '0-0-0000' });
+    expect(result).not.toHaveProperty('signed_by');
+    const rest = { ...result, pickup_code: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(PRIVATE);
   });
 
   it('accepts current and older waybill lengths and rejects other forms', () => {

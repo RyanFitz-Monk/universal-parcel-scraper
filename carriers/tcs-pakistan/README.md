@@ -36,8 +36,8 @@ tracking page makes.
   greet, give TCS's contact numbers or name who signed.
 - The expected delivery date comes from the summary's `Expected Delivery Date` line, which TCS
   writes before the delivery round.
-- The shipper's and consignee's names, the signatory and the merchant's reference in the reply
-  are not kept. The origin and destination stations are not kept either.
+- The consignee's name and, once delivered, the delivery record's signatory are read. The
+  shipper's name, the merchant's reference and the origin and destination stations are not kept.
 
 ## Limitations
 

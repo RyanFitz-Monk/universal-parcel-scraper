@@ -55,10 +55,11 @@ describe('SkyKing HTTP adapter', () => {
   it('reads Indian wall clocks at UTC+5:30 and stages each scan by its wording, newest first', () => {
     const result = parseSkyking(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-09-14T10:48:09Z', delivered_at: '2026-09-14T10:48:09Z',
+      last_status_text: 'Delivered,Stamp/Signature (Item No.: 12)', last_update: '2026-09-14T10:48:09Z', delivered_at: '2026-09-14T10:48:09Z',
       expected_delivery: null, timezone: 'Asia/Kolkata' });
     expect(result.events!.map((event) => [event.time, event.location, event.stage, event.description])).toEqual([
-      ['2026-09-14T10:48:09Z', 'MARKET ROAD, SAMPLEPUR', 'delivered', 'Delivered'],
+      // A delivery keeps how it was signed for.
+      ['2026-09-14T10:48:09Z', 'MARKET ROAD, SAMPLEPUR', 'delivered', 'Delivered,Stamp/Signature (Item No.: 12)'],
       ['2026-09-14T04:32:31Z', 'MARKET ROAD, SAMPLEPUR', 'out_for_delivery', 'Out For Delivery'],
       // The repeated forwarding scan is kept once; its wording keeps the place it names.
       ['2026-09-12T07:45:44Z', 'SAMPLEPUR HUB FACILITY', 'in_transit', 'FORWARDED TO MARKET ROAD, SAMPLEPUR'],
@@ -70,14 +71,18 @@ describe('SkyKing HTTP adapter', () => {
     expect(parseSkyking(edited('delivered', (rows) => { rows.at(-1)!.DateTime = '5/1/2027 - 9:05:07'; }), DELIVERED)).toMatchObject({ last_update: '2027-01-05T03:35:07Z' });
   });
 
-  it('keeps no courier, delivery area, signing detail, phone number, reference, id or image link', () => {
+  it('keeps no courier, delivery area, phone number, reference, id or image link', () => {
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
       const text = JSON.stringify(parseSkyking(fixture(name), number));
-      expect(text, name).not.toMatch(/ASHA|RAVI|SAMPLE"|Area|Boy|GREEN PARK|LAKE VIEW|Stamp|Signature|Item|98765|43210|SMPL|0412|MNF|DRS|pod\.example|BKG|View POD/);
+      expect(text, name).not.toMatch(/ASHA|RAVI|SAMPLE"|Area|Boy|GREEN PARK|LAKE VIEW|98765|43210|SMPL|0412|MNF|DRS|pod\.example|BKG|View POD/);
     }
+    // How a delivery was signed for names no one.
+    expect(parseSkyking(fixture('delivered'), DELIVERED)).not.toHaveProperty('signed_by');
     expect(skykingWording('Out For Delivery, Area Name: SAMPLE AREA., Delivery Boy: SAMPLE NAME')).toBe('Out For Delivery');
-    expect(skykingWording('Delivered,Stamp/Signature (Item No.: 12)', 'delivered')).toBe('Delivered');
-    expect(skykingWording('Delivered, RECEIVED BY SAMPLE NAME', 'delivered')).toBe('Delivered');
+    expect(skykingWording('Delivered,Stamp/Signature (Item No.: 12)', 'delivered')).toBe('Delivered,Stamp/Signature (Item No.: 12)');
+    expect(skykingWording('Delivered, RECEIVED BY SAMPLE NAME', 'delivered')).toBe('Delivered, RECEIVED BY SAMPLE NAME');
+    expect(parseSkyking(edited('delivered', (rows) => { rows.at(-1)!.Status = 'Delivered, RECEIVED BY SAMPLE NAME'; }), DELIVERED))
+      .toMatchObject({ current_stage: 'delivered', signed_by: 'SAMPLE NAME', last_status_text: 'Delivered, RECEIVED BY SAMPLE NAME' });
     expect(skykingWording('Un-Delivered, DOOR LOCKED, CALL +91 98765-43210', 'failed_attempt')).toBe('Un-Delivered, DOOR LOCKED, CALL');
     expect(skykingWording('FORWARDED TO MARKET ROAD, SAMPLEPUR', 'in_transit')).toBe('FORWARDED TO MARKET ROAD, SAMPLEPUR');
   });
@@ -103,7 +108,7 @@ describe('SkyKing HTTP adapter', () => {
     expect(skykingStage('RTO DELIVERED TO SHIPPER')).toEqual({ stage: 'returned', source: 'carrier_map' });
     expect(skykingStage('RTO IN TRANSIT')).toEqual({ stage: 'exception', source: 'carrier_map' });
     const returned = parseSkyking(edited('delivered', (rows) => { rows.at(-1)!.Status = 'RTO Delivered, Stamp/Signature (Item No.: 3)'; }), DELIVERED);
-    expect(returned).toMatchObject({ status: 'exception', current_stage: 'returned', last_status_text: 'RTO Delivered' });
+    expect(returned).toMatchObject({ status: 'exception', current_stage: 'returned', last_status_text: 'RTO Delivered, Stamp/Signature (Item No.: 3)' });
     expect(returned).not.toHaveProperty('delivered_at');
   });
 
@@ -114,9 +119,9 @@ describe('SkyKing HTTP adapter', () => {
     expect(unknown).toMatchObject({ current_stage: 'failed_attempt', last_status_text: 'SAMPLE NOTE' });
     expect(skykingStage('SAMPLE NOTE')).toBeNull();
     const sameSecond = parseSkyking(edited('delivered', (rows) => { rows.at(-1)!.DateTime = rows.at(-2)!.DateTime; }), DELIVERED);
-    expect(sameSecond.events!.slice(0, 2).map((event) => event.description)).toEqual(['Delivered', 'Out For Delivery']);
+    expect(sameSecond.events!.slice(0, 2).map((event) => event.description)).toEqual(['Delivered,Stamp/Signature (Item No.: 12)', 'Out For Delivery']);
     const reversed = parseSkyking(edited('delivered', (rows) => { rows.reverse(); }), DELIVERED);
-    expect(reversed.events![0]).toMatchObject({ description: 'Delivered' });
+    expect(reversed.events![0]).toMatchObject({ description: 'Delivered,Stamp/Signature (Item No.: 12)' });
     const long = parseSkyking(edited('in-transit', (rows) => {
       rows.splice(0, rows.length, ...Array.from({ length: 120 }, (_, index) => ({ ...fixture('in-transit')[2]!,
         DateTime: `15/10/2026 - ${String(Math.floor(index / 60)).padStart(2, '0')}:${String(index % 60).padStart(2, '0')}:00` })));

@@ -6,7 +6,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { recognitionCandidates } from '../../core/recognition/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, STONE3PL_API, Stone3plTracker } from './adapter.js';
-import { normalizeStone3plNumber, parseStone3pl, stone3plWording } from './parser.js';
+import { normalizeStone3plNumber, parseStone3pl, stone3plSigner, stone3plWording } from './parser.js';
 import { stone3plStage } from './status.js';
 
 const NUMBER = 'S999999999999999980';
@@ -31,12 +31,13 @@ describe('Stone3PL', () => {
     expect(result).not.toHaveProperty('delivered_at');
   });
 
-  it('keeps destination and origin scans, including the explicit partner, without a signer', () => {
+  it('keeps destination and origin scans, including the explicit partner, and the signer', () => {
     const result = parseStone3pl(fixture('delivered'), NUMBER);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivery_carrier: 'australia-post' });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivery_carrier: 'australia-post',
+      signed_by: 'Synthetic Recipient' });
     expect(result.events).toHaveLength(7);
-    expect(result.events![0]).toMatchObject({ description: 'Delivered', stage: 'delivered', local_time: '2030-01-22T12:30:00' });
-    expect(JSON.stringify(result)).not.toContain('Synthetic Recipient');
+    expect(result.events![0]).toMatchObject({ description: 'Delivered, signed by Synthetic Recipient', stage: 'delivered',
+      stage_source: 'wording:language', local_time: '2030-01-22T12:30:00' });
   });
 
   it('uses no-information front_status rather than raw status 1 or lookup-time dates', async () => {
@@ -120,7 +121,9 @@ describe('Stone3PL', () => {
     expect(parseTrackingInput(`https://stone3pl.com/?route=services/track&nums=${NUMBER}`)).toMatchObject({ trackingNumber: NUMBER, carrier: 'stone3pl' });
     expect(normalizeStone3plNumber(' s999 999999999999980 ')).toBe(NUMBER);
     expect(() => normalizeStone3plNumber('S123&other=1')).toThrow(expect.objectContaining({ kind: 'invalid_input' }));
-    expect(stone3plWording('Delivered, signed by Synthetic Recipient')).toBe('Delivered');
+    expect(stone3plWording('Delivered, signed by Synthetic Recipient')).toBe('Delivered, signed by Synthetic Recipient');
+    expect(stone3plSigner('Delivered, signed by: Synthetic Recipient, front door')).toBe('Synthetic Recipient');
+    expect(stone3plSigner('Delivered, signed by 0000')).toBe('');
     expect(stone3plWording('Call +61 400 000 000')).not.toContain('400');
     expect(statusMapAnswer({ carrier: 'stone3pl', providerCode: '1', description: 'Pickup Scan' })).toMatchObject({ kind: 'mapped', stage: 'accepted' });
   });

@@ -51,6 +51,13 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+/** The recipient's name and address; a street before the postcode and town goes on its own line. */
+function recipient(item: JsonObject): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = cleanScalar(item.receiverName, 200);
+  const address = cleanScalar(item.receiverAddress, 300).replace(/,\s*(?=[^,]*$)/, '\n');
+  return { ...(/\p{L}/u.test(name) ? { receiver_name: name } : {}), ...(/[\p{L}\d]/u.test(address) ? { receiver_address: address } : {}) };
+}
+
 function comparableIdentifier(value: unknown): string {
   return text(value).toLocaleUpperCase('en-US').replace(/[^A-Z0-9]/g, '');
 }
@@ -153,6 +160,7 @@ export function parseSunYouTrackingResponse(value: unknown, trackingNumber: stri
       ? { delivered_at: newest.time } : {}),
     ...(delivery ? { delivery_tracking_number: delivery, ...(partner ? { delivery_carrier: partner } : {}) } : {}),
     ...(destination ? { destination_country: destination } : {}),
+    ...recipient(item),
     events,
   };
 }

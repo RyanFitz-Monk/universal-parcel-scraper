@@ -140,7 +140,8 @@ function responseData(payload: unknown): Record<string, unknown> {
  * `trackapinew` for one consignment: its booking details, its delivery
  * records newest first and its checkpoints newest first. A consignment TCS
  * does not know is answered with empty lists and "No Data Found/Invalid CN".
- * Names, the signatory and the merchant's reference are not read.
+ * The consignee's name and, once delivered, the delivery record's signatory
+ * are read; the shipper's name and the merchant's reference are not.
  */
 export function parseTcs(payload: unknown, raw: string): CarrierResult {
   const number = normalizeTcsNumber(raw);
@@ -181,6 +182,12 @@ export function parseTcs(payload: unknown, raw: string): CarrierResult {
 
   const delivered = recordStage === 'delivered';
   const expected = delivered ? null : expectedDate(summary);
+  const consignee = text(booking, 'consignee', 200);
+  const signatory = delivered ? text(record!, 'recievedby', 200) : '';
+  const people = {
+    ...(/\p{L}/u.test(consignee) ? { receiver_name: consignee } : {}),
+    ...(/\p{L}/u.test(signatory) ? { signed_by: signatory } : {}),
+  };
   if (!events.length) {
     const status = recordWording || summaryStatus(summary);
     if (!status) throw new NoHistoryError(PROVIDER);
@@ -194,6 +201,7 @@ export function parseTcs(payload: unknown, raw: string): CarrierResult {
       ...(recordClock?.local_time ? { last_update_local: recordClock.local_time } : {}),
       expected_delivery: expected,
       ...(delivered && recordClock?.time ? { delivered_at: recordClock.time } : {}),
+      ...people,
       summary_only: true,
       events: [],
     };
@@ -212,6 +220,7 @@ export function parseTcs(payload: unknown, raw: string): CarrierResult {
     ...(newest.time ? { last_update: newest.time } : { last_update: null, last_update_local: newest.local_time }),
     expected_delivery: expected,
     ...(delivered && recordClock?.time ? { delivered_at: recordClock.time } : {}),
+    ...people,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

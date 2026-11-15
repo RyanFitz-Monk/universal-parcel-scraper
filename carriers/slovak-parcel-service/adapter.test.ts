@@ -48,10 +48,11 @@ describe('Slovak Parcel Service HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel on wall clocks, keeps its cash steps after the delivery and reads none of the shipment’s parties', () => {
+  it('reads a delivered parcel on wall clocks, keeps its cash steps after the delivery and reads the recipient but not the shipper', () => {
     const result = parseSpsShipment(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Dobierka odoslaná zákaznikoví', last_update: null, last_update_local: '2026-09-19T07:50:09', expected_delivery: null });
+      last_status_text: 'Dobierka odoslaná zákaznikoví', last_update: null, last_update_local: '2026-09-19T07:50:09', expected_delivery: null,
+      receiver_name: 'Jana Example', receiver_address: 'Example Street 1\n99999 Sampleville' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage ?? null])).toEqual([
       ['2026-09-19T07:50:09', '68', null],
       ['2026-09-17T15:42:48', '41', null],
@@ -67,7 +68,11 @@ describe('Slovak Parcel Service HTTP adapter', () => {
     expect(result.weight_kg).toBeUndefined();
     expect(result.delivered_at).toBeUndefined();
     const kept = JSON.stringify(result);
-    for (const dropped of ['Example', 'Sampleville', 'ORDER', 'remark', '48123456', '17123456', '2026-09-14T00']) expect(kept).not.toContain(dropped);
+    for (const dropped of ['Example Shop', 'example.invalid', 'ORDER', 'remark', '48123456', '17123456', '2026-09-14T00']) expect(kept).not.toContain(dropped);
+    // A receiver that is not the service's record gives only the destination postcode.
+    const plain = fixture('delivered') as { shipment: Record<string, unknown> };
+    Object.assign(plain.shipment, { receiver: 'Jana Example', destinationZip: '99999' });
+    expect(parseSpsShipment(plain, DELIVERED)).toMatchObject({ receiver_name: 'Jana Example', receiver_address: '99999' });
   });
 
   it('reads a refused parcel’s depots and its return, which a later delivery to the sender keeps', () => {
@@ -153,12 +158,15 @@ describe('Slovak Parcel Service HTTP adapter', () => {
   it('asks for the scans of a shipment that comes without them under its dashed parcel number, as the page does', async () => {
     const fetcher = service({ shipment: () => reply('pending'), scans: () => reply('parcel-status') });
     const result = await carrier(fetcher).track({ number: PENDING });
-    expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup', last_status_text: 'Uložený v balíkomate', weight_kg: 1.5 });
+    expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup', last_status_text: 'Uložený v balíkomate', weight_kg: 1.5,
+      receiver_name: 'Jana Example' });
+    expect(result).not.toHaveProperty('receiver_address');
     expect(result.events!.map((event) => event.provider_code)).toEqual(['72', '30', '20', '10']);
     expect(String(fetcher.mock.calls[1]![0])).toBe(`${SPS_API}parcel-status?parcel_id=703-990-00000022`);
-    expect(JSON.stringify(result)).not.toMatch(/Example/);
+    expect(JSON.stringify(result)).not.toMatch(/Example Shop/);
     const empty = await carrier(service({ shipment: () => reply('pending'), scans: () => json({ ok: true, statuses: [] }) })).track({ number: PENDING });
-    expect(empty).toMatchObject({ summary_only: true, current_stage: 'ready_for_pickup', last_status_text: 'Uložený v balíkomate', provider_code: '72', events: [] });
+    expect(empty).toMatchObject({ summary_only: true, current_stage: 'ready_for_pickup', last_status_text: 'Uložený v balíkomate', provider_code: '72', events: [],
+      receiver_name: 'Jana Example' });
     const foreign = fixture('parcel-status');
     rows(foreign)[1]!.parcelNumber = '7039900000004415';
     await expect(carrier(service({ shipment: () => reply('pending'), scans: () => json(foreign) })).track({ number: PENDING }))

@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, TAXYDEMA_API, TaxydemaTracker, taxydemaLookupUrl } from './adapter.js';
-import { normalizeTaxydemaNumber, parseTaxydema, taxydemaWording } from './parser.js';
+import { normalizeTaxydemaNumber, parseTaxydema, taxydemaTaker, taxydemaWording } from './parser.js';
 import { statusMap, taxydemaStage } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
@@ -48,12 +48,12 @@ describe('Taxydema HTTP adapter', () => {
     const result = parseTaxydema(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ', last_update: '2026-10-26T13:58:27+02:00', expected_delivery: null,
-      delivered_at: '2026-10-26T13:27:05+02:00' });
+      delivered_at: '2026-10-26T13:27:05+02:00', receiver_address: 'ΠΡΟΟΡΙΣΜΟΣ', signed_by: 'ΔΕΙΓΜΑΤΟΣ' });
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result.events!.map((event) => [event.time, event.stage ?? null, event.location ?? null, event.description])).toEqual([
       // A message to the recipient moves nothing and names no place the parcel is.
       ['2026-10-26T13:58:27+02:00', null, null, 'ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ'],
-      ['2026-10-26T13:27:05+02:00', 'delivered', 'ΠΑΡΑΔΕΙΓΜΑ ΤΧ', 'Η αποστολή παραδόθηκε στον παραλήπτη'],
+      ['2026-10-26T13:27:05+02:00', 'delivered', 'ΠΑΡΑΔΕΙΓΜΑ ΤΧ', 'Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑΤΟΣ, Ημ/νια: 26/10/2026, Ώρα: 13:27'],
       ['2026-10-26T08:47:45+02:00', null, null, 'ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ'],
       ['2026-10-26T08:11:41+02:00', 'out_for_delivery', 'ΠΑΡΑΔΕΙΓΜΑ ΤΧ', 'Ανάθεση αποστολής για παράδοση σε διανομέα'],
       ['2026-10-26T07:15:04+02:00', 'in_transit', 'ΠΑΡΑΔΕΙΓΜΑ ΤΧ', 'Άφιξη τεμαχίου στο Σταθμό Παράδοσης ΠΑΡΑΔΕΙΓΜΑ ΤΧ'],
@@ -67,9 +67,11 @@ describe('Taxydema HTTP adapter', () => {
     expect(result.events!.filter((event) => event.stage).every((event) => event.stage_source === 'carrier_map')).toBe(true);
   });
 
-  it('keeps no recipient, phone, link, sender, origin or destination', () => {
+  it('keeps who took the parcel and the town it goes to, and no phone, link, sender or origin', () => {
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
-      const result = JSON.stringify(parseTaxydema(fixture(name), number));
+      const parsed = parseTaxydema(fixture(name), number);
+      const result = JSON.stringify({ ...parsed, receiver_address: undefined, signed_by: undefined, last_status_text: undefined,
+        events: parsed.events!.filter((event) => event.stage !== 'delivered') });
       expect(result, name).not.toMatch(/ΔΕΙΓΜΑΤΟΣ|\*{3}|00000\]|link\.example|example\.com|https?:|EvaluationLink|SAMPLE SENDER|ΘΕΜΑ|ΑΦΕΤΗΡΙΑ|ΠΡΟΟΡΙΣΜΟΣ|ΔΙΟΙΚΗΣΗ|ΤΗΛΕΦΩΝΟ|Ημ\/νια/);
     }
   });
@@ -99,8 +101,11 @@ describe('Taxydema HTTP adapter', () => {
   });
 
   it('takes people, phones, links and notice numbers out of the wording', () => {
+    // A delivery keeps who took the parcel and when.
     expect(taxydemaWording('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ ΔΕΙΓΜΑΤΟΣ, Ημ/νια: 26/10/2026, Ώρα: 13:27'))
-      .toBe('Η αποστολή παραδόθηκε στον παραλήπτη');
+      .toBe('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ ΔΕΙΓΜΑΤΟΣ, Ημ/νια: 26/10/2026, Ώρα: 13:27');
+    expect(taxydemaTaker('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ ΔΕΙΓΜΑΤΟΣ, Ημ/νια: 26/10/2026, Ώρα: 13:27')).toBe('ΔΕΙΓΜΑ ΔΕΙΓΜΑΤΟΣ');
+    expect(taxydemaTaker('Η αποστολή παραδόθηκε στον παραλήπτη')).toBe('');
     expect(taxydemaWording('ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ ΣΤΟ ΤΗΛΕΦΩΝΟ: [*******00000] ΜΕ ΘΕΜΑ: [ΕΧΕΤΕ ΔΕΜΑ ΑΠΟ SAMPLE ΕΔΩ: link.example/x]'))
       .toBe('ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ');
     expect(taxydemaWording('ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΑΦΙΞΗΣ ΣΤΟ EMAIL: sample@example.com')).toBe('ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΑΦΙΞΗΣ');
@@ -273,7 +278,9 @@ describe('Taxydema status vocabulary', () => {
   it('reads either casing, and leaves an unknown scan unmapped', () => {
     expect(taxydemaStage('ΑΝΑΘΕΣΗ ΑΠΟΣΤΟΛΗΣ ΓΙΑ ΠΑΡΑΔΟΣΗ ΣΕ ΔΙΑΝΟΜΕΑ')).toBe('out_for_delivery');
     expect(taxydemaStage('η αποστολη παραδοθηκε στον παραληπτη.')).toBe('delivered');
-    expect(taxydemaStage('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ')).toBeUndefined();
+    // A delivery stays one whoever took the parcel.
+    expect(taxydemaStage('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ, Ημ/νια: 26/10/2026, Ώρα: 13:27')).toBe('delivered');
+    expect(taxydemaStage('Η αποστολή παραδόθηκε στον παραλήπτη ΔΕΙΓΜΑ')).toBe('delivered');
     expect(statusMap.stage(null, 'synthetic scan')).toBeUndefined();
     expect(statusMap.stage('1', 'Αναχώρηση από κατάστημα')).toBeUndefined();
     expect(statusMapAnswer({ carrier: 'taxydema', providerCode: null, description: 'Synthetic scan' })).toEqual({ kind: 'unknown' });

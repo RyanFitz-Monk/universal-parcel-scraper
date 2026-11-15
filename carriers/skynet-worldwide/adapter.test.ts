@@ -39,7 +39,7 @@ describe('SkyNet Worldwide Express HTTP adapter', () => {
     const result = parseSkynet(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2025-10-29T14:47:00', expected_delivery: null,
-      destination_country: 'CA' });
+      destination_country: 'CA', receiver_address: 'SAMPLETOWN', signed_by: 'S*******' });
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.provider_code, event.stage ?? null, event.location])).toEqual([
       ['2025-10-29T14:47:00', '1', 'delivered', 'SAMPLETOWN - CANADA'],
       ['2025-10-29T08:05:00', '15', 'out_for_delivery', 'SAMPLETOWN - CANADA'],
@@ -58,8 +58,8 @@ describe('SkyNet Worldwide Express HTTP adapter', () => {
     ]);
     // Canada keeps several clocks: its scans stay wall clocks.
     expect(result.events!.filter((event) => event.location!.endsWith('CANADA')).every((event) => event.local_time && !event.time)).toBe(true);
-    // The masked signatory, the service type and the destination town are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/S\*{3}|Non Documents|SAMPLETOWN CANADA/);
+    // The service type is not kept.
+    expect(JSON.stringify(result)).not.toMatch(/Non Documents|SAMPLETOWN CANADA/);
     expect(result).not.toHaveProperty('service_name');
   });
 
@@ -67,7 +67,8 @@ describe('SkyNet Worldwide Express HTTP adapter', () => {
     const result = parseSkynet(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', current_stage_source: 'carrier_map',
       last_status_text: 'Info Message Sent to Recipient', last_update: null, last_update_local: '2026-05-06T10:02:00',
-      destination_country: 'US' });
+      destination_country: 'US', receiver_address: 'SAMPLE CITY,ST' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.provider_code, event.stage ?? null])).toEqual([
       ['2026-05-06T10:02:00', '148', null],
       ['2026-05-06T03:21:00', '10', 'customs'],

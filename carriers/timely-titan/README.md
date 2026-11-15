@@ -27,8 +27,9 @@ post delivers them. Tracked through its tracking page.
   they stay `local_time`, and they are not all on one clock: the shop's first row can show a
   later time than the warehouse row above it.
 - The delivering post's rows name the signer, the courier and their phone numbers. The parser
-  keeps the brackets that name an office, a city or a day, and drops the others and every
-  clause from the first that gives a contact.
+  keeps the brackets that name an office, a city, a day or who signed, and drops the others
+  and every clause from the first that gives a contact. The delivery's signer is read into
+  `signed_by`, and the stage is read from the wording without it.
 - A row `转寄单号:` gives the number the parcel is forwarded under, a postal one. It becomes
   the delivery number when the page gives only one. The page names no carrier for it, so no
   delivery carrier is set.

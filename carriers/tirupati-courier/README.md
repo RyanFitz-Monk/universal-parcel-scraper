@@ -43,8 +43,9 @@ lookup its website's tracking box makes.
   delivering office.
 - A delivered consignment's page hides its jobs and keeps only the booking and the status line,
   so its history is marked truncated.
-- The consignee, the destination, the offices' addresses and phone numbers in the names'
-  tooltips, and the phone numbers under the status line are not kept.
+- The consignee is read into `receiver_name`. The destination center, the offices' addresses
+  and phone numbers in the names' tooltips, and the phone numbers under the status line are
+  not kept.
 
 ## Limitations
 

@@ -42,8 +42,9 @@ each have a 10-second cap.
 - Scan times are wall clocks without an offset, kept in `local_time`. The footer states
   Central Time, but the network also serves Eastern-time states, so no zone is assigned,
   as for other US carriers spanning several zones.
-- The route number after "OUT FOR DELIVERY" is dropped. The signer, delivery address and
-  proof of delivery are never read.
+- The route number after "OUT FOR DELIVERY" is dropped. The summary's "Signed by:" and
+  "Delivered to:" rows give `signed_by` and `receiver_address` when the newest scan is the
+  delivery the summary describes. The proof of delivery is never read.
 - The canary probes the public tracking page, since the lookup host does not answer many
   networks.
 - The site's terms limit tracking to shipments sent by or for the person asking.

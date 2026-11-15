@@ -22,6 +22,6 @@
     {"wording": "预计【…】到达【…】，两地距离…km，将在【…】更新快件状态，请您放心", "language": "zh", "confirmedBy": "portal", "unmapped": true, "note": "The delivering post's estimate of the day the parcel reaches the next city, with the distance: no scan, so it sets no stage."},
     {"wording": "快件到达【…】", "stage": "in_transit", "language": "zh", "confirmedBy": "portal", "note": "The delivering post's scan: arrived at the office in brackets, such as the delivery office."},
     {"wording": "快件正在派送中，请耐心等待", "stage": "out_for_delivery", "language": "zh", "confirmedBy": "portal", "note": "Out for delivery; the courier's name and phone that follow are left out."},
-    {"wording": "您的快件已妥收", "stage": "delivered", "language": "zh", "confirmedBy": "portal", "note": "Delivered; who signed and the courier's contacts that follow are left out."}
+    {"wording": "您的快件已妥收", "stage": "delivered", "language": "zh", "confirmedBy": "portal", "note": "Delivered; the bracket naming who signed is kept, and the courier's contacts that follow are left out."}
   ]
 }

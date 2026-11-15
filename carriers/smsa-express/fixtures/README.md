@@ -3,8 +3,8 @@
 `app-delivered.xml`, `app-in-transit.xml` and `app-not-found.xml` follow the shape of the replies
 the app's tracking service sends: the shipment's details, then its scans newest first, each with a
 code, an instant, the office and a comment. `app-delivered.xml` holds the same shipment as
-`delivered.html`, with the recipient, shipper, reference, delivery code and the comments the
-adapter drops, and repeats one border scan. `app-in-transit.xml` holds the same shipment as
+`delivered.html`, with the recipient, shipper, reference, delivery code and comments, and repeats
+one border scan. `app-in-transit.xml` holds the same shipment as
 `in-transit.html`, with only its estimate among the details. `app-not-found.xml` is the reply for
 an airway bill SMSA does not know: the number and nothing else.
 

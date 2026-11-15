@@ -36,8 +36,8 @@ across India. Tracked through the lookup its tracking page makes.
   until it is delivered back, then returned.
 - The location is the branch or hub the scan names.
 - An out-for-delivery scan loses the delivery area and the courier's name listed after its
-  wording, a delivery loses how it was signed for and its run sheet item number, and every
-  wording loses phone numbers. The reference, branch and location ids, manifest kinds and the
+  wording, and every wording loses phone numbers. A delivery keeps how it was signed for and its
+  run sheet item number, and the name after "received by" or "signed by" is `signed_by`. The reference, branch and location ids, manifest kinds and the
   proof of delivery and booking images in the reply are not kept.
 
 ## Limitations

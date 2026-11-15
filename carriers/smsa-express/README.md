@@ -34,10 +34,11 @@ its tracking page as a fallback.
   as well. Its events keep `local_time` with no offset, and the result `last_update_local`.
 - The service's codes, such as `HOP` or `BTRO`, are the events' `provider_code`. The map reads the
   wording, which the page shares, since a code comes in variants such as `DEX93-5`.
-- The delivery scan goes on with `Signed by:` and the signer, which the adapter drops. The
-  recipient, shipper, reference and delivery code in the reply are not kept, nor the scans'
-  comments, which can hold a phone number, nor each scan's country code, which reads `SA` for
-  scans abroad too.
+- The delivery scan goes on with `Signed by:` and the signer. The scan keeps that wording, is
+  staged without it, and gives `signed_by`. The app's reply gives the recipient's name. Its
+  shipper, reference and delivery code are not kept, nor the scans' comments, which can hold a
+  phone number, nor each scan's country code, which reads `SA` for scans abroad too. The delivery
+  code is checked at the door, not at a pickup point.
 - The estimate is `03-Oct-2026` on the page and `10/3/2026`, month first, in the service's reply.
   Both give the weight in kilograms. The parcel count and the origin are not kept.
 - Not used: `track.smsaexpress.com/secom/smsamobileapp.asmx`, the app's lookup for fifteen-digit

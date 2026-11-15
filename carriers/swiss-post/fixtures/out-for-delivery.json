@@ -10,8 +10,8 @@
     "lastEventDateTime": "2026-09-12T08:00:00+02:00",
     "physicalProperties": { "weight": 720, "dimension1": 230, "dimension2": 160, "dimension3": 115 },
     "recipientCountry": "CH",
-    "recipientName": "PRIVATE RECIPIENT",
-    "deliveryAddress": { "street": "PRIVATE STREET 7", "zip": "8000", "city": "Zurich" },
+    "addressee": { "name1": "PRIVATE RECIPIENT", "name2": null, "name3": null, "street": "PRIVATE STREET", "number": "7",
+      "zip": "8000", "city": "Zurich", "streetAndNumber": "PRIVATE STREET 7" },
     "signature": "PRIVATE SIGNATURE",
     "recipientEmail": "private@example.test"
   },

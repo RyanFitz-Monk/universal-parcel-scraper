@@ -14,11 +14,15 @@ const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/delivered.json
 describe('SpeedPAK response projection', () => {
   it('binds history and a labelled last-mile handoff to the requested shipment', () => {
     const result = parseSpeedpak(fixture(), NUMBER);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', destination_country: 'US',
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', destination_country: 'US', receiver_address: '00000',
       delivery_carrier: 'uniuni', delivery_tracking_number: 'UUS00T0000000000000', delivered_at: '2026-01-03T17:00:00Z' });
     expect(result.events).toHaveLength(5);
     expect(result.events?.[0]).toMatchObject({ stage_source: 'carrier_map', location: 'Example City, US' });
     expect(JSON.stringify(result)).not.toContain('consigneeZipCode');
+    // A reply without the recipient's postcode has no address.
+    const payload = fixture();
+    delete payload.result.waybills[0].consigneeZipCode;
+    expect(parseSpeedpak(payload, NUMBER)).not.toHaveProperty('receiver_address');
   });
 
   it.each(['different', 'missing', 'duplicate', 'contradictory'])('rejects %s shipment identity', mode => {

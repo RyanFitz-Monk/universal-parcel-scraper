@@ -19,8 +19,8 @@ const ZONE = 'Asia/Kolkata';
 const CLOCK = 'dd/MM/yyyy - HH:mm:ss';
 // The details a wording lists after a comma, each under its label, such as "Area Name: …, Delivery Boy: …".
 const DETAILS = /,\s*[^,:]{1,60}:[\s\S]*$/;
-// What a delivery or return lists after its wording, such as how it was signed for.
-const REMARK = /\s*,[\s\S]*$/;
+// The name after the words saying who received or signed for a delivery, up to a comma, semicolon or bracket.
+const SIGNER = /\b(?:received|signed(?:\s+for)?)\s+by\s*[:\-–]?\s*([^,;()]+)/i;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<!\d)\+?\d(?:[\s().-]{0,2}\d){8,}(?!\d)/g;
 const MAX_ROWS = 500;
@@ -53,11 +53,17 @@ function scanTime(raw: string): string {
 /**
  * A scan's wording without the details listed after it, which name the courier
  * and the delivery area, and without phone numbers. A delivery or return keeps
- * its wording alone.
+ * what it lists after its wording, such as how it was signed for.
  */
 export function skykingWording(status: string, stage?: string): string {
-  const own = stage === 'delivered' || stage === 'returned' ? status.replace(REMARK, '') : status.replace(DETAILS, '');
+  const own = stage === 'delivered' || stage === 'returned' ? status : status.replace(DETAILS, '');
   return clean(own.replace(PHONE, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** Who received or signed for a delivery, as its wording names them. */
+export function skykingSigner(wording: string): string | undefined {
+  const name = clean(SIGNER.exec(wording)?.[1] ?? '', 100).replace(/[\s.:\-–]+$/, '');
+  return /\p{L}/u.test(name) ? name : undefined;
 }
 
 /** The branch or hub a scan names, as "SAMPLE MARKET, SAMPLE CITY". */
@@ -117,6 +123,7 @@ export function parseSkyking(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const signer = stage === 'delivered' ? skykingSigner(current!.description!) : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -124,6 +131,7 @@ export function parseSkyking(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: current!.time! } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     timezone: ZONE,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

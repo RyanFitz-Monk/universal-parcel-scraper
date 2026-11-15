@@ -27,8 +27,8 @@ flies their purchases to Latin America for delivery. Its site is skybox.net.
 - The map stages the wordings seen. Other wordings go through the shared wording rules, and one they do not read
   has no stage.
 - The status bar above the table repeats the table's milestones by day, so it is not read.
-- The card's number the parcel arrived under, reception date, suite, origin, destination, consignee, weight and
-  items are not read.
+- The card's consignee is `receiver_name`. Its number the parcel arrived under, reception date, suite, origin,
+  destination, weight and items are not read.
 
 ## Limitations
 

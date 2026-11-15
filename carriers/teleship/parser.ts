@@ -53,21 +53,33 @@ export function teleshipLocation(raw: string): string {
 // Who signed for the parcel, after a delivery scan's wording, and phone
 // numbers anywhere in it. "Received by" names the carrier that took it over.
 const RECEIVER = /\s*[,;:.\-–]?\s*\bsigned\s+(?:for\s+)?by\b[\s\S]*$/i;
+const SIGNED_BY = /\bsigned\s+(?:for\s+)?by\b\s*:?\s*([^,;\n]+)/i;
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 
-/** A scan's wording without who signed for the parcel or a phone number. */
+/** A scan's wording without a phone number; a delivery keeps who signed for it. */
 export function teleshipWording(raw: string): string {
-  return clean(raw.replace(RECEIVER, '').replace(PHONE, '')).replace(/[\s,;:\-–]+$/, '');
+  return clean(raw.replace(PHONE, '')).replace(/[\s,;:\-–]+$/, '');
 }
 
-function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent; type: string } {
+/** A scan's wording without who signed for the parcel, as its stage reads it. */
+export function teleshipUnsigned(wording: string): string {
+  return clean(wording.replace(RECEIVER, '')).replace(/[\s,;:\-–]+$/, '');
+}
+
+/** Who signed for the parcel, as a delivery scan's wording names them. */
+export function teleshipSigner(wording: string): string {
+  const name = clean(SIGNED_BY.exec(wording)?.[1] ?? '').replace(/[\s.]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
+}
+
+function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent; type: string; signer: string } {
   const time = instant(text(row, 'timestamp', 40));
   const code = cleanScalar(row.code, 40).toUpperCase();
   const type = text(row, 'type', 40).toLowerCase();
   const description = teleshipWording(text(row, 'description'));
-  if (!description) throw new SchemaError(PROVIDER, 'Teleship returned a scan without wording');
+  if (!teleshipUnsigned(description)) throw new SchemaError(PROVIDER, 'Teleship returned a scan without wording');
   const location = teleshipLocation(text(row, 'location', 160));
-  const staged = teleshipStage(type, description);
+  const staged = teleshipStage(type, teleshipUnsigned(description));
   const event: CarrierEvent = {
     time,
     ...(location ? { location } : {}),
@@ -75,7 +87,18 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([time, code, description, location]), event, type };
+  return { key: JSON.stringify([time, code, description, location]), event, type, signer: type === 'delivered' ? teleshipSigner(description) : '' };
+}
+
+/** The recipient the reply ships to: their name, then the street and the postcode and town. */
+function shipTo(data: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const to = isRecord(data.shipTo) ? data.shipTo : {};
+  const address = isRecord(to.address) ? to.address : {};
+  const field = (from: Record<string, unknown>, key: string) => (typeof from[key] === 'string' ? clean(from[key], 160) : '');
+  const name = field(to, 'name');
+  const lines = [field(address, 'line1'), field(address, 'line2'), [field(address, 'postcode'), field(address, 'city')].filter(Boolean).join(' ')]
+    .filter(Boolean).join('\n');
+  return { ...(/\p{L}/u.test(name) ? { receiver_name: name } : {}), ...(/[\p{L}\d]/u.test(lines) ? { receiver_address: lines } : {}) };
 }
 
 /**
@@ -121,7 +144,7 @@ export function parseTeleship(payload: unknown, raw: string): CarrierResult {
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Teleship returned an oversized history');
 
   const seen = new Set<string>();
-  const scans: { event: CarrierEvent; type: string; at: number }[] = [];
+  const scans: { event: CarrierEvent; type: string; signer: string; at: number }[] = [];
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Teleship returned an invalid scan');
     const scan = projectRow(row);
@@ -150,6 +173,8 @@ export function parseTeleship(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: estimate(payload, stage),
     ...(delivery ? { delivered_at: delivery.event.time! } : {}),
+    ...(delivery?.signer ? { signed_by: delivery.signer } : {}),
+    ...shipTo(payload),
     ...lastMile(payload, number),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

@@ -30,8 +30,9 @@ local number once the parcel reaches the destination country.
   made. A return to the sender is `returned`, a cancelled, failed, terminated or discarded
   shipment and an alert are exceptions.
 - The page leaves the line-haul partners' names (Mark 3, SEKO, Pro Carrier) out of a scan's
-  place, and so does the adapter. A delivery scan loses who signed for it, and every scan loses
-  phone numbers. Teleship's shipment ID and the merchant's order reference are not kept.
+  place, and so does the adapter. A delivery scan keeps who signed for it, which is read as the
+  signer, and every scan loses phone numbers. The recipient's name and address under `shipTo`
+  are read. Teleship's shipment ID and the merchant's order reference are not kept.
 - `lastMile` is the hand-off: its number becomes `delivery_tracking_number`, and its carrier
   `delivery_carrier` when the catalog knows the name and the link, if any, is that carrier's.
 

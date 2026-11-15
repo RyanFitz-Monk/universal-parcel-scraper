@@ -46,13 +46,13 @@ describe('SP Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery relayed from the partner, with its places, weight, size and destination country', () => {
+  it('reads a delivery relayed from the partner, with its places, signer, weight, size, destination country and postcode', () => {
     const result = parseSpExpress(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Parcel Delivered', last_update: null, last_update_local: '2026-03-09T15:42:00', expected_delivery: null,
-      weight_kg: 1.25, dimensions_text: '30 × 20 × 10 cm', destination_country: 'AT' });
+      weight_kg: 1.25, dimensions_text: '30 × 20 × 10 cm', destination_country: 'AT', receiver_address: '0001', signed_by: 'A Sample' });
     expect(summary(result)).toEqual([
-      // The place column names who signed, which is not kept.
+      // The place column names who signed, which is the signer and no place.
       ['2026-03-09T15:42:00', 'Parcel Delivered', null, 'delivered'],
       // The repeated scan is kept once.
       ['2026-03-09T07:05:00', 'Parcel In Delivery', null, 'out_for_delivery'],
@@ -68,8 +68,13 @@ describe('SP Express HTTP adapter', () => {
     ]);
     // Scan clocks name no zone and stay local.
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    // Who signed, the postcodes, the sending date and the partner's site are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/Sample\b|A SAMPLE|00-001|0001\b|2026-03-02"|dpd\.com|Poland/i);
+    // The sender's postcode, the sending date and the partner's site are not kept.
+    const rest = { ...result, signed_by: undefined, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/Sample\b|A SAMPLE|00-001|0001\b|2026-03-02"|dpd\.com|Poland/i);
+    // The status bar names the signer in brackets when the history does not.
+    const bar = parseSpExpress(page('delivered').replace('<td>Signed By: A Sample</td>', '<td></td>'), DELIVERED);
+    expect(bar).toMatchObject({ signed_by: 'A SAMPLE' });
+    expect(bar.events![0]).not.toHaveProperty('location');
     // The page names no partner number, so there is nothing to hand off.
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(deliveryHandoff('sp-express', DELIVERED, result)).toBeNull();
@@ -79,7 +84,8 @@ describe('SP Express HTTP adapter', () => {
     const result = parseSpExpress(page('in-transit'), TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Przesyłka została zeskanowana w centrum doręczeniowym', last_update_local: '2026-04-14T06:51:00',
-      weight_kg: 5, dimensions_text: '10 × 10 × 10 cm', destination_country: 'DE' });
+      weight_kg: 5, dimensions_text: '10 × 10 × 10 cm', destination_country: 'DE', receiver_address: '00002' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(summary(result)).toEqual([
       ['2026-04-14T06:51:00', 'Przesyłka została zeskanowana w centrum doręczeniowym', 'Sampletown (DE)', 'in_transit'],
       ['2026-04-14T03:03:00', 'W przewozie', 'Sampletown (DE)', 'in_transit'],
@@ -102,7 +108,7 @@ describe('SP Express HTTP adapter', () => {
     const result = parseSpExpress(page('archived'), ARCHIVED);
     expect(result).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'The shipment has been successfully delivered', last_update: null, expected_delivery: null,
-      weight_kg: 15, dimensions_text: '60 × 30 × 35 cm', destination_country: 'FR', summary_only: true, events: [] });
+      weight_kg: 15, dimensions_text: '60 × 30 × 35 cm', destination_country: 'FR', receiver_address: '00003', summary_only: true, events: [] });
     // A status the map does not know takes the furthest step of the progress rail.
     const rail = parseSpExpress(page('archived').replace('The shipment has been successfully delivered (/France)', 'Zzz'), ARCHIVED);
     expect(rail).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
@@ -114,7 +120,7 @@ describe('SP Express HTTP adapter', () => {
     const result = await carrier(fetcher).track({ number: CAINIAO.toLowerCase() });
     expect(String(fetcher.mock.calls[0]![0])).toBe(`https://en.sp.express/tt-cainiao/${CAINIAO}`);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'PRZESYŁKA DOTARŁA DO ODDZIAŁU',
-      weight_kg: 0.065, destination_country: 'CZ' });
+      weight_kg: 0.065, destination_country: 'CZ', receiver_address: '00004' });
     expect(summary(result)).toEqual([
       ['2026-05-08T10:34:47', 'PRZESYŁKA DOTARŁA DO ODDZIAŁU', null, 'in_transit'],
       ['2026-05-08', 'Inbound scan', 'Nysa', 'accepted'],
@@ -123,7 +129,7 @@ describe('SP Express HTTP adapter', () => {
       ['2026-05-01T12:13:56', 'Zlecenie zaakceptowane', null, 'registered'],
       ['2026-05-01T12:13:56', 'Nowe zlecenie', null, 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SINT|00004\b/);
+    expect(JSON.stringify(result)).not.toMatch(/SINT/);
   });
 
   it('follows the redirect for an unknown number to the search page\'s notice, in the session it opened', async () => {

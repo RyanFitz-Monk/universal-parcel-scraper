@@ -30,15 +30,15 @@ keeps the `/tt/` path, so its name and links route here.
   the second. The hub's manifest and inbound scans come at midnight and are kept as a day.
 - The tracker has two layouts. One has a place column; the other puts the place in brackets
   after the wording, as `In Transit (Nysa)`. The place is kept as the location. Brackets that
-  hold a reference, such as a Cainiao consignment, or who signed are dropped, and so is a place
-  column that names who signed.
+  hold a reference, such as a Cainiao consignment, are dropped. A place column or brackets that
+  name who signed give `signed_by` and no location.
 - Wordings are the tracker's own steps in English and the partners' scans it relays, in
   English or Polish and in any letter case, mapped in [`statuses.json`](statuses.json).
 - The history of an older parcel is archived: the page then shows only the status bar, without
   a clock. The adapter returns that status as a summary. When the map and the shared rules do
   not know the status, the furthest lit step of the progress rail gives the stage.
-- Of the order details, the weight, the size and the receiver's country are kept. The
-  postcodes beside the countries, the sender's country and the sending date are not.
+- Of the order details, the weight, the size, the receiver's country and the receiver's
+  postcode beside it are kept. The sender's country and postcode and the sending date are not.
 - A box links to the delivering partner's tracker, but the page never gives the partner's
   number, and on the Cainiao page the link can name a post that does not serve the destination,
   so there is no hand-off.

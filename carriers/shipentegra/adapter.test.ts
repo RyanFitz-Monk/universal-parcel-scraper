@@ -6,7 +6,7 @@ import { UpstreamNetworkError } from '../../core/errors/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, SHIPENTEGRA_API, ShipentegraTracker } from './adapter.js';
-import { normalizeShipentegraNumber, parseShipentegra, shipentegraWording } from './parser.js';
+import { normalizeShipentegraNumber, parseShipentegra, shipentegraSigner, shipentegraWording } from './parser.js';
 import { shipentegraStage, shipentegraSummaryStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
@@ -53,10 +53,10 @@ describe('ShipEntegra HTTP adapter', () => {
   it('keeps each scan’s wall clock and stages it by the tracker’s sentence', () => {
     const result = parseShipentegra(fixture('delivered'), `1SE${DELIVERED}`);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Package has been delivered.', last_update: null, last_update_local: '2026-05-14T13:05:00',
-      expected_delivery: null, destination_country: 'DE' });
+      last_status_text: 'Package has been delivered.Signed by SAMPLE PERSON', last_update: null, last_update_local: '2026-05-14T13:05:00',
+      expected_delivery: null, destination_country: 'DE', signed_by: 'SAMPLE PERSON' });
     expect(result.events!.map((event) => [event.local_time, event.stage ?? null, event.description])).toEqual([
-      ['2026-05-14T13:05:00', 'delivered', 'Package has been delivered.'],
+      ['2026-05-14T13:05:00', 'delivered', 'Package has been delivered.Signed by SAMPLE PERSON'],
       // The sentence outranks the partner's words after it.
       ['2026-05-14T08:40:00', 'out_for_delivery', 'Package is out for delivery.En Route'],
       ['2026-05-13T17:22:00', 'failed_attempt', 'Delivery was attempted, but was unsuccessful.Delivery failed ( no answer, call )'],
@@ -79,9 +79,9 @@ describe('ShipEntegra HTTP adapter', () => {
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
   });
 
-  it('keeps neither the signer, a phone number, the seller’s account nor the summary’s delivery date', () => {
+  it('keeps neither a phone number, the seller’s account nor the summary’s delivery date', () => {
     const result = parseShipentegra(fixture('delivered'), DELIVERED);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE PERSON|000 000 0000|10001|12:05|1778060700/);
+    expect(JSON.stringify(result)).not.toMatch(/000 000 0000|10001|12:05|1778060700/);
     // Widect's tracker takes the delivering carrier's number, which the reply does not name.
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivery_tracking_number');
@@ -138,11 +138,18 @@ describe('ShipEntegra HTTP adapter', () => {
     expect(result.events!.at(-1)).toMatchObject({ stage: 'registered' });
   });
 
-  it('takes signers and phone numbers out of the wording', () => {
-    expect(shipentegraWording('Package has been delivered.Signed by Sample Person')).toBe('Package has been delivered.');
-    expect(shipentegraWording('Package has been delivered.Delivered to Sample Person')).toBe('Package has been delivered.');
-    expect(shipentegraWording('Package has been delivered.Delivered, received by Sample Person')).toBe('Package has been delivered.Delivered');
-    expect(shipentegraWording('Package has been delivered.Teslim alan: Sample Person')).toBe('Package has been delivered.');
+  it('keeps who signed in the wording, reads them, and takes phone numbers out', () => {
+    expect(shipentegraWording('Package has been delivered.Signed by Sample Person')).toBe('Package has been delivered.Signed by Sample Person');
+    expect(shipentegraWording('Package has been delivered.Delivered to Sample Person')).toBe('Package has been delivered.Delivered to Sample Person');
+    expect(shipentegraSigner('Package has been delivered.Signed by Sample Person')).toBe('Sample Person');
+    expect(shipentegraSigner('Package has been delivered.Delivered, received by Sample Person, front door')).toBe('Sample Person');
+    expect(shipentegraSigner('Package has been delivered.Teslim alan: Sample Person')).toBe('Sample Person');
+    expect(shipentegraSigner('Package has been delivered.Delivered to the neighbour')).toBeUndefined();
+    // A clause naming who took the parcel does not stage the scan.
+    expect(parseShipentegra(changed('in-transit', (body) => {
+      body.activities = [{ date: '2026-04-03 10:00', event: 'Synthetic note, received by Sample Person' }];
+      body.status_description = 'PENDING';
+    }), IN_TRANSIT)).toMatchObject({ current_stage: 'registered', last_status_text: 'Synthetic note, received by Sample Person' });
     expect(shipentegraWording('Delivery was attempted, but was unsuccessful.Call +00 (0) 000 000 0000 back'))
       .toBe('Delivery was attempted, but was unsuccessful.Call back');
     // A date and the partner's own reason stay.

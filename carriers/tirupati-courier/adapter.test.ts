@@ -70,12 +70,12 @@ describe('Shree Tirupati Courier HTTP adapter', () => {
     const result = parseTirupati(fixture('delivered'), DELIVERED);
     expect(result).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered On Dated 12-09-26 By SAMPLEPUR', last_update: null, last_update_local: '2026-09-12',
-      expected_delivery: null, timezone: 'Asia/Kolkata', history_truncated: true, events: [
+      expected_delivery: null, timezone: 'Asia/Kolkata', receiver_name: 'SAMPLE TRADERS', history_truncated: true, events: [
         { local_time: '2026-09-12', location: 'SAMPLEPUR', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2026-09-11T09:19:00Z', location: 'SAMPLE NAGAR (12)', description: 'Booked', stage: 'accepted', stage_source: 'carrier_map' },
       ] });
-    // The consignee, the destination and the offices' phone numbers are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE TRADERS|SAMPLEPUR - MAIN|Contact|9000000/);
+    // The destination and the offices' phone numbers are not kept.
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLEPUR - MAIN|Contact|9000000/);
   });
 
   it('reads a consignment on its way: the jobs newest first, each on its day, at the office it names first', () => {
@@ -85,7 +85,7 @@ describe('Shree Tirupati Courier HTTP adapter', () => {
     // The status line repeats the newest job, which is kept once.
     expect(result).toEqual({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Received At SAMPLEPUR-MAIN (19) On Dated 03-08-26', last_update: null, last_update_local: '2026-08-03',
-      expected_delivery: null, timezone: 'Asia/Kolkata', events: [
+      expected_delivery: null, timezone: 'Asia/Kolkata', receiver_name: 'ASHA EXAMPLE', events: [
         job('2026-08-03', 'SAMPLEPUR-MAIN (19)', 'Received At SAMPLEPUR-MAIN (19)', 'IN'),
         job('2026-08-03', 'SAMPLE R.O.', 'Out To SAMPLEPUR-MAIN (19)', 'OUT'),
         job('2026-08-03', 'SAMPLE R.O.', 'Received At SAMPLE R.O.', 'IN'),
@@ -93,8 +93,9 @@ describe('Shree Tirupati Courier HTTP adapter', () => {
         job('2026-08-02', 'SAMPLE NAGAR (WB)', 'Out To SAMPLE R.O.-AIR PORT', 'OUT'),
         { time: '2026-08-02T11:32:00Z', location: 'SAMPLE NAGAR (WB)', description: 'Booked', stage: 'accepted', stage_source: 'carrier_map' },
       ] });
-    // The offices' tooltips hold their addresses and phone numbers; the consignee is not kept either.
-    expect(JSON.stringify(result)).not.toMatch(/EXAMPLE|SERVICE|Ph:|9000000|OTC/);
+    // The offices' tooltips hold their addresses and phone numbers, which are not kept.
+    const rest = { ...result, receiver_name: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/EXAMPLE|SERVICE|Ph:|9000000|OTC/);
   });
 
   it('reads jobs in bold, a status line newer than the jobs, and a job not seen yet by its code alone', () => {

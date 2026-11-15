@@ -6,7 +6,7 @@ import { delayedFetcher } from '../../core/testing/hang.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, TIMELY_TITAN_TRACKER, TimelyTitanTracker } from './adapter.js';
-import { normalizeTimelyTitanNumber, parseTimelyTitan, timelyTitanText } from './parser.js';
+import { normalizeTimelyTitanNumber, parseTimelyTitan, timelyTitanSigner, timelyTitanText } from './parser.js';
 import { statusMap, timelyTitanMappedStage, timelyTitanStage } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -42,12 +42,13 @@ describe('Timely Titan HTTP adapter', () => {
 
   it('keeps the statuses as wall clocks in the page’s order, with their regions, and the number the parcel is forwarded under', () => {
     const result = parseTimelyTitan(text('delivered.html'), PARCEL);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: '您的快件已妥收',
-      last_update: null, last_update_local: '2026-03-18T19:43:53', expected_delivery: null, delivery_tracking_number: FORWARDED });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: '您的快件已妥收【本人签收，示例人】',
+      last_update: null, last_update_local: '2026-03-18T19:43:53', expected_delivery: null, delivery_tracking_number: FORWARDED,
+      signed_by: '示例人' });
     // The page names no partner, only its number.
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result.events!.map((event) => [event.local_time, event.description, event.location, event.stage])).toEqual([
-      ['2026-03-18T19:43:53', '您的快件已妥收', 'China', 'delivered'],
+      ['2026-03-18T19:43:53', '您的快件已妥收【本人签收，示例人】', 'China', 'delivered'],
       ['2026-03-18T14:15:47', '快件正在派送中，请耐心等待', 'China', 'out_for_delivery'],
       ['2026-03-18T09:29:11', '快件到达【示例市样本街揽投部】', 'China', 'in_transit'],
       ['2026-03-18T07:50:49', '快件离开【示例市样本包件车间】，正在发往下一站', 'China', 'in_transit'],
@@ -77,8 +78,8 @@ describe('Timely Titan HTTP adapter', () => {
       ['2026-03-04T09:50:37', '面单已创建', undefined, 'registered'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && (!event.stage || event.stage_source === 'carrier_map'))).toBe(true);
-    // Who signed, the courier and their phones are left out.
-    expect(JSON.stringify(result)).not.toMatch(/示例人|样本员|电话|10000000000|10999999980|11183|Sampleshop/);
+    // The courier and the phones are left out.
+    expect(JSON.stringify(result)).not.toMatch(/样本员|电话|10000000000|10999999980|11183|Sampleshop/);
   });
 
   it('reads a parcel on its way, and one at customs', () => {
@@ -91,7 +92,7 @@ describe('Timely Titan HTTP adapter', () => {
     expect(early).toMatchObject({ current_stage: 'in_transit', last_status_text: '打托转运中' });
     expect(early).not.toHaveProperty('delivery_tracking_number');
     // A status the map does not know goes to the shared wording rules, and one they do not know has no stage.
-    const returned = parseTimelyTitan(text('delivered.html').replace('[中国]您的快件已妥收', '[Hong Kong]Returned to sender'), PARCEL);
+    const returned = parseTimelyTitan(text('delivered.html').replace('[中国]您的快件已妥收【本人签收，示例人】', '[Hong Kong]Returned to sender'), PARCEL);
     expect(returned).toMatchObject({ current_stage: 'returned', current_stage_source: 'wording:language', last_status_text: 'Returned to sender' });
     const odd = parseTimelyTitan(text('delivered.html').replace(/\[中国\]您的快件已妥收[^<]*/, '[中国]示例状态'), PARCEL);
     expect(odd).toMatchObject({ current_stage: 'out_for_delivery', last_status_text: '示例状态' });
@@ -110,10 +111,18 @@ describe('Timely Titan HTTP adapter', () => {
     expect(parseTimelyTitan(again, PARCEL)).toMatchObject({ delivery_tracking_number: FORWARDED });
   });
 
-  it('leaves out who signed, couriers, phones and rows that gave only contacts', () => {
-    expect(timelyTitanText('您的快件已妥收【本人签收，示例人】，如有疑问请电联快递员【样本员，电话:10000000000】。服务热线11183。')).toBe('您的快件已妥收');
+  it('keeps who signed, and leaves out couriers, phones and rows that gave only contacts', () => {
+    expect(timelyTitanText('您的快件已妥收【本人签收，示例人】，如有疑问请电联快递员【样本员，电话:10000000000】。服务热线11183。')).toBe('您的快件已妥收【本人签收，示例人】');
     expect(timelyTitanText('快件到达【示例市样本街揽投部】，投递员：样本员，电话 100 0000 0000')).toBe('快件到达【示例市样本街揽投部】');
-    expect(timelyTitanText('Delivered, signed by Sample Person')).toBe('Delivered');
+    expect(timelyTitanText('Delivered, signed by Sample Person')).toBe('Delivered, signed by Sample Person');
+    expect(timelyTitanSigner('您的快件已妥收【本人签收，示例人】')).toBe('示例人');
+    expect(timelyTitanSigner('Delivered, signed by Sample Person')).toBe('Sample Person');
+    expect(timelyTitanSigner('已签收，签收人：示例人')).toBe('示例人');
+    expect(timelyTitanSigner('您的快件已妥收【本人签收】')).toBe('');
+    expect(timelyTitanStage('Delivered, signed by Sample Person')).toMatchObject({ stage: 'delivered' });
+    const signed = parseTimelyTitan(text('delivered.html').replace('[中国]您的快件已妥收【本人签收，示例人】', '[Hong Kong]Delivered, signed by Sample Person'), PARCEL);
+    expect(signed).toMatchObject({ current_stage: 'delivered', last_status_text: 'Delivered, signed by Sample Person', signed_by: 'Sample Person' });
+    expect(parseTimelyTitan(from(1), PARCEL)).not.toHaveProperty('signed_by');
     expect(timelyTitanText('Held at Sample Hub, mail sample@example.com, call +31 10 000 0000')).toBe('Held at Sample Hub, mail, call');
     const contacts = parseTimelyTitan(text('delivered.html').replace('[中国]车辆发车', '[中国]联系电话:10000000000'), PARCEL);
     expect(contacts.events).toHaveLength(26);
@@ -239,6 +248,9 @@ describe('Timely Titan status vocabulary', () => {
     expect(timelyTitanMappedStage('快件到达【示例市】，准备发往【样本市】')).toBeUndefined();
     expect(timelyTitanMappedStage('入库收件 示例镇 sampleville')).toBe('in_transit');
     expect(timelyTitanMappedStage(`转寄单号:${FORWARDED.toLowerCase()}`)).toBe('in_transit');
+    // Who signed follows the delivery's words, and the app reads it.
+    expect(statusMapAnswer({ carrier: 'timely-titan', providerCode: null, description: '您的快件已妥收【本人签收，示例人】' }))
+      .toEqual({ kind: 'mapped', stage: 'delivered' });
   });
 
   it('leaves the estimate and an unknown wording to the shared rules', () => {

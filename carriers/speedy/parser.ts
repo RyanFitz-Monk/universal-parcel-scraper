@@ -67,6 +67,15 @@ function officeOf(row: Record<string, unknown>): string {
   return office ? clean(office.text, 160) : '';
 }
 
+/** Who took the parcel, as a delivery scan's "received from: …" note names them, masked as Speedy shows them. */
+function takerOf(row: Record<string, unknown>): string {
+  for (const comment of comments(row)) {
+    const name = clean(/^received (?:from|by)\s*:\s*(.+)$/i.exec(clean(comment.text, 160))?.[1] ?? '', 100);
+    if (/\p{L}/u.test(name)) return name;
+  }
+  return '';
+}
+
 /** The partner a reply's `externalCarriermappings` names for the receiving leg, with its number, when it is one that can be asked. */
 export function speedyDeliveryPartner(mappings: unknown, number: string): Pick<CarrierResult, 'delivery_carrier' | 'delivery_tracking_number'> {
   if (!Array.isArray(mappings)) return {};
@@ -122,6 +131,8 @@ export function parseSpeedy(payload: unknown, rawNumber: string): CarrierResult 
   const pickupPoint = prepared ? officeOf(prepared.row) : '';
 
   const estimate = stage && ON_THE_WAY.has(stage) ? ordered.map(({ row }) => estimateOf(row)).find(Boolean) ?? null : null;
+  const deliveryRow = delivered ? ordered.find(({ event }) => event === delivered)?.row : undefined;
+  const taker = deliveryRow ? takerOf(deliveryRow) : '';
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -132,6 +143,7 @@ export function parseSpeedy(payload: unknown, rawNumber: string): CarrierResult 
     expected_delivery: estimate,
     ...(delivered ? { delivered_at: delivered.time } : {}),
     ...(pickupPoint ? { pickup_point: pickupPoint } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     ...speedyDeliveryPartner(payload.externalCarriermappings, number),
     events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),

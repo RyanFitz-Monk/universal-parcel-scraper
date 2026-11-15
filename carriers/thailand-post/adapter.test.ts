@@ -74,11 +74,16 @@ describe('Thailand Post history', () => {
     ]);
   });
 
-  it('projects no recipient, officer, signature, proof of delivery or phone field', () => {
+  it('reads the addressee and who took the delivery, and no relation, officer, signature, proof of delivery or phone field', () => {
     for (const [text, number] of [[DELIVERED, DOMESTIC], [ABROAD, INTERNATIONAL]] as const) {
-      const serialized = JSON.stringify(parseThailandPostReply(text, number));
-      expect(serialized).not.toMatch(/PRIVATE-SYNTHETIC|SYNTHETIC-USER|example\.invalid|\*{3}|1545|Successful"|call 30/);
+      const { receiver_name: receiver, signed_by: signer, ...rest } = parseThailandPostReply(text, number);
+      expect({ receiver, signer }).toEqual({ receiver: 'PRIVATE-SYNTHETIC ADDRESSEE', signer: 'PRIVATE-SYNTHETIC RECIPIENT' });
+      expect(JSON.stringify(rest)).not.toMatch(/PRIVATE-SYNTHETIC|SYNTHETIC-USER|example\.invalid|\*{3}|1545|Successful"|call 30/);
     }
+    // Before the delivery the addressee comes from the posting scan, and nobody has taken the item.
+    const posted = parseThailandPostReply(reply(DOMESTIC, scans(DELIVERED, DOMESTIC).slice(1)), DOMESTIC);
+    expect(posted.receiver_name).toBe('PRIVATE-SYNTHETIC ADDRESSEE');
+    expect(posted.signed_by).toBeUndefined();
     // A contact scan stays its label even when it is the newest scan.
     const contactLast = scans(DELIVERED, DOMESTIC).slice(1);
     const result = parseThailandPostReply(reply(DOMESTIC, contactLast), DOMESTIC);

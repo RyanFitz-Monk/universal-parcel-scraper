@@ -8,7 +8,7 @@
     "shippingDate": "2026-09-14T00:00:00",
     "destinationZip": null,
     "shipper": "Example Shop s.r.o.",
-    "receiver": "Example Street 1, Sampleville",
+    "receiver": "Jana Example SK~99999~Sampleville~Example Street 1~~jana@example.invalid",
     "status": "Doručenie",
     "statusCode": 40,
     "nameOfReceiver": "Jana Example",

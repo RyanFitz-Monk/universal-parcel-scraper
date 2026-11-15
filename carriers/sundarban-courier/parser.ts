@@ -95,6 +95,14 @@ function counter(events: CarrierEvent[]): string | undefined {
   return ready?.location;
 }
 
+/** The recipient's name and address as the shipment gives them; a changed field never fails the lookup. */
+function recipient(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const field = (key: string) => (typeof shipment[key] === 'string' ? clean(shipment[key], 200) : '');
+  const name = field('receiver');
+  const address = field('receiverAdd');
+  return { ...(/\p{L}/u.test(name) ? { receiver_name: name } : {}), ...(/[\p{L}\d]/u.test(address) ? { receiver_address: address } : {}) };
+}
+
 /** The shipment's current status alone, when the service lists no history for it. */
 function summary(shipment: Record<string, unknown>): CarrierResult {
   const status = text(shipment, 'status', 120);
@@ -109,6 +117,7 @@ function summary(shipment: Record<string, unknown>): CarrierResult {
     ...(code ? { provider_code: code } : {}),
     last_update: null,
     ...(date ? { last_update_local: wallClock(date) } : {}),
+    ...recipient(shipment),
     summary_only: true,
     events: [],
   };
@@ -129,6 +138,7 @@ function project(shipment: Record<string, unknown>): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(point ? { pickup_point: point } : {}),
+    ...recipient(shipment),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

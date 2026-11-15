@@ -82,7 +82,7 @@ function lastMile(parcel: Record<string, unknown>, number: string): Pick<Carrier
  *
  * The parcel must be the whole number asked. Its events come newest first,
  * each with a wall clock, a title from a short list and a text that can end
- * with the place and its country. The recipient's town is not read.
+ * with the place and its country. The recipient's town is read as their address.
  */
 export function parseStarlinksGlobal(html: string, raw: string): CarrierResult {
   const number = normalizeStarlinksGlobalNumber(raw);
@@ -149,6 +149,7 @@ export function parseStarlinksGlobal(html: string, raw: string): CarrierResult {
   const latest = events.find((event) => event.stage);
   const stage = latest?.stage as Stage | undefined;
   const destination = typeof parcel.consignee_country === 'string' && /^[A-Z]{2}$/.test(parcel.consignee_country) ? parcel.consignee_country : undefined;
+  const town = typeof parcel.consignee_city === 'string' && parcel.consignee_city.length <= 120 ? text(parcel.consignee_city, 'town') : '';
   const weight = typeof parcel.weight === 'number' && Number.isFinite(parcel.weight) && parcel.weight > 0 && parcel.weight_unit === 'kg' ? parcel.weight : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -158,6 +159,7 @@ export function parseStarlinksGlobal(html: string, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(destination ? { destination_country: destination } : {}),
+    ...(/\p{L}/u.test(town) ? { receiver_address: town } : {}),
     ...(weight !== undefined ? { weight_kg: weight } : {}),
     ...lastMile(parcel, number),
     events,

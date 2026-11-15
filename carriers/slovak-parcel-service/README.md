@@ -37,8 +37,10 @@ Anonymous: no key, cookie, `Origin` or browser.
 - In a shipment of several parcels, the requested parcel keeps its own scans when the reply
   names them.
 - Whether a reply comes in its full or its limited view does not change what is read. The
-  sender, recipient, recipient's name, postcode, references, remarks and the handheld's
-  coordinates in the reply are never read.
+  recipient's name is `receiver_name`. The service writes the recipient as one record joined by
+  tildes, with the name and country, postcode, town, street, a blank and an email address; its
+  street, postcode and town are `receiver_address`. The sender, the email address, references,
+  remarks and the handheld's coordinates in the reply are not read.
 - Recognition asks the same service. Detection offers SPS only for fourteen digits starting
   `703`, at low confidence.
 

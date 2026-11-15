@@ -18,6 +18,8 @@ const CLOCK = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/;
 const UNKNOWN_NUMBER = '10001';
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
+// A delivery's comment naming who took the parcel: "Entregue a …", "Recibido por: …", "Signed by …".
+const TAKEN_BY = /^(?:(?:entregue|entregad[oa]|delivered)\s+(?:a|ao|à|para|to)|(?:recebid[oa]|recibid[oa]|received|signed(?:\s+for)?)\s+(?:por|by))\s*:?\s*(.+)$/i;
 // Stages a delivery recorded earlier is not undone by.
 const BEFORE_DELIVERY = new Set<Stage>(['pending', 'registered', 'accepted', 'in_transit', 'customs', 'out_for_delivery',
   'failed_attempt', 'ready_for_pickup']);
@@ -61,12 +63,19 @@ function waybillOf(row: Record<string, unknown>): number {
   return value;
 }
 
-interface Scan { key: string; label: string; event: CarrierEvent }
+interface Scan { key: string; label: string; event: CarrierEvent; signer: string }
+
+/** Who took the parcel, as a delivery's comment names them. */
+function signerOf(comment: string): string {
+  const name = clean(TAKEN_BY.exec(comment)?.[1] ?? '', 100).replace(/[\s.,;:]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
+}
 
 /**
  * A scan as the page lists it: its code, its wording, the partner's town or
- * else SkyPostal's station, and its clock. The comments column, the proof of
- * delivery and the partner's own number are not kept.
+ * else SkyPostal's station, and its clock. The comments column is read only
+ * for who took the parcel; the proof of delivery and the partner's own number
+ * are not kept.
  */
 function scanOf(row: Record<string, unknown>): Scan {
   const code = text(row, 'track_cdg', 16).toUpperCase();
@@ -82,7 +91,8 @@ function scanOf(row: Record<string, unknown>): Scan {
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local, code, description, location]), label: text(row, 'order_label', 64).toUpperCase(), event };
+  return { key: JSON.stringify([local, code, description, location]), label: text(row, 'order_label', 64).toUpperCase(), event,
+    signer: staged?.stage === 'delivered' ? signerOf(text(row, 'track_obs', 200)) : '' };
 }
 
 /** What a lookup read: the shipment's history, its waybill, and whether the reply itself names the number asked. */
@@ -148,6 +158,7 @@ export function readSkypostal(payload: unknown, raw: string): SkypostalReading {
   const delivered = events.find((event) => event.stage === 'delivered');
   const current = delivered && BEFORE_DELIVERY.has(staged?.stage as Stage) ? delivered : staged;
   const stage = current?.stage as Stage | undefined;
+  const signer = stage === 'delivered' ? scans.find((scan) => scan.event === current)?.signer : '';
   return {
     waybill,
     named: String(waybill) === number || scans.some((scan) => scan.label === number),
@@ -158,6 +169,7 @@ export function readSkypostal(payload: unknown, raw: string): SkypostalReading {
       last_update: null,
       last_update_local: newest.local_time,
       expected_delivery: null,
+      ...(signer ? { signed_by: signer } : {}),
       events: events.slice(0, MAX_EVENTS),
       ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
     },

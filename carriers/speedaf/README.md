@@ -40,8 +40,9 @@ own but use the same tracker. Tracked through the lookup its tracking page makes
 - The wording is English, else Chinese. The local-language wording can be in a language whose
   labels the adapter does not know. Pickup, delivery and signature scans name the courier, the
   scanning clerk and the recipient, and in some countries the courier's phone. The adapter
-  removes the names and phone numbers, and ends the wording where it introduces the courier,
-  whose name is not always in brackets.
+  removes the clerk's name and phone numbers, and ends the wording where it introduces the
+  courier, whose name is not always in brackets. The recipient who signed stays in the wording,
+  which is staged without them, and gives `signed_by`.
 - The page hides action `-2` unless the waybill carries its exception flag, and the adapter does
   the same.
 - Sites are Speedaf's own names and codes inside the wording, so scans have no location.
@@ -51,7 +52,7 @@ own but use the same tracker. Tracked through the lookup its tracking page makes
 
 ## Limitations
 
-- No delivery estimate, weight, service, location, sender or recipient.
+- No delivery estimate, weight, service, location or sender, and no recipient beyond who signed.
 - The tracker does not know Cainiao's own references for the same parcels.
 
 ## Numbers

@@ -17,8 +17,11 @@ const CLOCK = /^(\d{4})-(\d{2})-(\d{2})[ T]([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
 const NAMED_RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:received|collected|signed|delivered)(?:\s+for)?\s+by|(?:recipient|consignee|sender)\s*(?:name)?\s*[:=])[\s\S]*$/i;
+// The name after the words saying who signed for or took the parcel, up to a comma, semicolon or bracket.
+const SIGNER = /\b(?:received|collected|signed)(?:\s+for)?\s+by\s*[:\-–]?\s*([^,;|()]+)/i;
 const CONTACT = /\s*\bfor delivery issues\b[\s\S]*$/i;
-const CAPABILITY = /https?:\/\/|mailto:|tel:|\S+@\S+|\b(?:OTP|PIN)\s*[:=]?\s*\d|(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/i;
+const CAPABILITY = /https?:\/\/|mailto:|tel:|\S+@\S+|(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/i;
+const CODE = /\b(?:OTP|PIN)\s*[:=]?\s*\d/i;
 
 export function normalizeShipGlobalNumber(raw: string): string {
   const number = raw.length <= 64 ? normalizeTrackingNumber(raw) : '';
@@ -37,11 +40,17 @@ function text(row: Record<string, unknown>, field: string, limit = 500): string 
   return clean(value, limit);
 }
 
-/** Keep the scan, leaving out named recipients, support contacts and capability links. */
+/** Keep the scan, leaving out support contacts and capability links. */
 export function shipGlobalWording(raw: string): string {
-  const wording = raw.replace(CONTACT, '').replace(NAMED_RECEIVER, '');
+  const wording = raw.replace(CONTACT, '');
   const privateAt = wording.search(CAPABILITY);
   return clean(privateAt < 0 ? wording : wording.slice(0, privateAt), 500).replace(/[\s|;,]+$/, '');
+}
+
+/** Who signed for or took the parcel, as a scan's wording names them. */
+export function shipGlobalSigner(wording: string): string | undefined {
+  const name = clean(SIGNER.exec(wording)?.[1] ?? '', 100).replace(/[\s.:\-–]+$/, '');
+  return /\p{L}/u.test(name) ? name : undefined;
 }
 
 function clockOf(value: unknown): Pick<CarrierEvent, 'time' | 'local_time'> {
@@ -61,12 +70,13 @@ function eventOf(row: unknown): CarrierEvent {
   const description = shipGlobalWording(text(row, 'awbHistoryComment', 2_000));
   if (!description) invalid('ShipGlobal returned a scan without its activity');
   const place = text(row, 'awbHistoryLocation', 300);
-  const location = place === '-' || CAPABILITY.test(place) ? '' : place;
+  const location = place === '-' || CAPABILITY.test(place) || CODE.test(place) ? '' : place;
   const type = text(row, 'type', 40);
   const code = text(row, 'awbEventCode', 40);
   // awbHistoryCode is a shared zero placeholder on unrelated partner and domestic scans.
   const providerCode = type === 'bag' && /^SGE_\d{3}$/.test(code) ? code : '';
-  const staged = shipGlobalStage(providerCode, description);
+  // A named person after the activity does not stage it.
+  const staged = shipGlobalStage(providerCode, clean(description.replace(NAMED_RECEIVER, ''), 500) || description);
   return {
     ...clockOf(row.awbHistoryDatetime), description,
     ...(location ? { location } : {}),
@@ -76,8 +86,9 @@ function eventOf(row: unknown): CarrierEvent {
 }
 
 /**
- * One identity-bound guest reply. All domestic, flight and partner rows are read;
- * names, postal addresses, account data and handoff URLs are never projected.
+ * One identity-bound guest reply. All domestic, flight and partner rows are read,
+ * with the consignee the page shows; the sender, the postcode, account data and
+ * handoff URLs are never projected.
  * The site's foreign scans have no stated zone, so their clocks remain local.
  */
 export function parseShipGlobal(payload: unknown, raw: string): CarrierResult {
@@ -98,6 +109,8 @@ export function parseShipGlobal(payload: unknown, raw: string): CarrierResult {
   if (returnedTrackingNumber(info.awbNumber) !== number) throw new IndeterminateError(PROVIDER, 'ShipGlobal answered for another shipment');
   if (data.trackingInfo.length > MAX_ROWS) invalid('ShipGlobal returned an oversized history');
   const summary = shipGlobalWording(text(info, 'awbStatus'));
+  // The page shows this name as the consignee.
+  const receiver = text(info, 'awbReceiverName', 200);
   const seen = new Set<string>();
   const events = data.trackingInfo.map(eventOf).filter((event) => {
     const key = JSON.stringify(event);
@@ -118,12 +131,14 @@ export function parseShipGlobal(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const dated = events.find((event) => event.time || event.local_time)!;
   const staged = events.find((event) => event.stage);
-  const summaryStage = staged ? null : shipGlobalStage('', summary);
+  const summaryStage = staged ? null : shipGlobalStage('', clean(summary.replace(NAMED_RECEIVER, ''), 500) || summary);
   const stage = (staged?.stage ?? summaryStage?.stage) as Stage | undefined;
   const source = staged?.stage_source ?? summaryStage?.source;
   const country = countryCode(text(info, 'awbDestination', 100));
   const partner = returnedTrackingNumber(info.partnerLastMileAwb);
   const delivery = stage === 'delivered' ? events.find((event) => event.stage === 'delivered' && event.time) : undefined;
+  const signer = stage === 'delivered' ? events.filter((event) => event.stage === 'delivered')
+    .map((event) => shipGlobalSigner(event.description!)).find(Boolean) : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -133,6 +148,8 @@ export function parseShipGlobal(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(partner !== number && /^[A-Z0-9]{4,40}$/.test(partner) ? { delivery_tracking_number: partner } : {}),
     ...(events.length > MAX_EVENTS || events.some((event) => !event.time && !event.local_time) ? { history_truncated: true } : {}),
     events: events.slice(0, MAX_EVENTS),

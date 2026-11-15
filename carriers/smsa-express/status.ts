@@ -9,7 +9,7 @@ export function smsaKey(wording: string): string {
 /**
  * The scans SMSA writes in English, on its page without a code and in its
  * app's service with one; the wording is the same in both. The delivery scan
- * loses its signer before it gets here. A parcel waiting for its clearance,
+ * is staged without its signer. A parcel waiting for its clearance,
  * held for duties or held for its customs papers before delivery is customs;
  * released by customs it moves on. `Picked Up` and the hub scans are the
  * former tracker's wording.

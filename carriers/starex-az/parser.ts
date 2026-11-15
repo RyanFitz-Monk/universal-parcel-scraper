@@ -52,8 +52,9 @@ function text(scan: Record<string, unknown>, key: string): string {
  * The reply of `/api/v1/starex/packages/{number}/history`: the parcel's
  * scans, each with a status code, the tracking page's title and sentence for
  * it, and a wall clock. The reply does not repeat the number; the lookup is
- * bound to it by its path. The recipient's details, chosen branch and the
- * shop's order number that come with it are not read.
+ * bound to it by its path. Of the recipient's details only the masked name
+ * is read; their phone, code and chosen branch and the shop's order number
+ * are not.
  */
 export function parseStarex(payload: unknown, raw: string): CarrierResult {
   normalizeStarexNumber(raw);
@@ -86,6 +87,9 @@ export function parseStarex(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  // The recipient's masked name, when the reply gives one as text.
+  const user = isRecord(payload.user) && typeof payload.user.name === 'string' ? payload.user : {};
+  const receiver = text(user, 'name');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -93,6 +97,7 @@ export function parseStarex(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(/\p{L}/u.test(receiver) ? { receiver_name: receiver } : {}),
     events,
   };
 }

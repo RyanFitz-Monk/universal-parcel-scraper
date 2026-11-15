@@ -36,6 +36,8 @@ export interface GetOnlineMember {
   readonly normalize: (raw: string) => string;
   /** A scan's stage from its event number and wording, or null. */
   readonly stage: (code: string, wording: string) => ClassifiedWording | null;
+  /** Whether the result names the recipient's town and a delivery's signatory, as the page shows them. */
+  readonly recipient?: boolean;
 }
 
 // A long history is under 200 kB; the page carries its styles and scripts inline.
@@ -58,6 +60,8 @@ const SHIPMENT_NUMBER = new RegExp(String.raw`\$\("\.cn"\)\.html\(${LITERAL}\);`
 const DESTINATION = new RegExp(String.raw`\$\("\.destination"\)\.html\(${LITERAL}\);`);
 const WORDING = new RegExp(String.raw`langtag="event_'\s*\+\s*(\d{1,6})\s*\+\s*'">'\s*\+\s*${LITERAL}\s*\+\s*'</span>'`);
 const LOCATION = new RegExp(String.raw`var TrackingLocation = ${LITERAL};`);
+// The notes the page shows under a scan, such as a delivery's masked signatory.
+const NOTES = new RegExp(String.raw`var TrackingNotes = ${LITERAL};`);
 // A second part the page appends to the location when it has one.
 const LOCATION_DETAIL = new RegExp(String.raw`TrackingLocation \+= " - " \+ ${LITERAL};`);
 const DATE = /<span class="text14 t-faded-1">(\d{1,2} [A-Z][a-z]{2} \d{4})<\/span>/;
@@ -133,12 +137,29 @@ function scanOf(segment: string, member: GetOnlineMember): CarrierEvent {
 
 /** The country at the end of the shipment's destination, "MISSISSAUGA CANADA"; the town is not kept. */
 function destinationCountry(script: string): string | null {
+  return destinationParts(script)?.country ?? null;
+}
+
+/** The shipment's destination, "MISSISSAUGA CANADA", as the town before the country and the country's code. */
+function destinationParts(script: string): { town: string; country: string } | null {
   const words = textFromHtml(literal(DESTINATION.exec(script)?.[1] ?? ''), 120).split(' ');
   for (let count = Math.min(4, words.length); count > 0; count--) {
     const code = countryCode(words.slice(-count).join(' '));
-    if (code) return code;
+    if (code) return { town: words.slice(0, -count).join(' '), country: code };
   }
   return null;
+}
+
+/**
+ * The recipient as the page shows them: the destination's town, before its country,
+ * and on a delivered shipment the delivery's notes, its masked signatory.
+ */
+function recipientOf(script: string, segments: readonly string[], events: readonly CarrierEvent[], stage: Stage | undefined):
+  Pick<CarrierResult, 'receiver_address' | 'signed_by'> {
+  const town = destinationParts(script)?.town ?? '';
+  const delivery = stage === 'delivered' ? events.findIndex((event) => event.stage === 'delivered') : -1;
+  const signer = delivery < 0 ? '' : textFromHtml(literal(NOTES.exec(segments[delivery]!)?.[1] ?? ''), 120);
+  return { ...(town ? { receiver_address: town } : {}), ...(signer ? { signed_by: signer } : {}) };
 }
 
 /**
@@ -166,7 +187,8 @@ export function parseGetOnline(html: string, rawNumber: string, member: GetOnlin
   if (heads.some((head) => normalizeTrackingNumber(literal(head[1]!)).toUpperCase() !== number)) {
     throw new IndeterminateError(member.provider, `${member.name} answered for another shipment`);
   }
-  const events = heads.map((head, index) => scanOf(script.slice(head.index, heads[index + 1]?.index), member));
+  const segments = heads.map((head, index) => script.slice(head.index, heads[index + 1]?.index));
+  const events = segments.map((segment) => scanOf(segment, member));
   const newest = events[0]!;
   // A notice has no stage; the newest scan with one sets the parcel's.
   const current = events.find((event) => event.stage);
@@ -180,6 +202,7 @@ export function parseGetOnline(html: string, rawNumber: string, member: GetOnlin
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(member.recipient ? recipientOf(script, segments, events, stage) : {}),
     events,
   };
 }

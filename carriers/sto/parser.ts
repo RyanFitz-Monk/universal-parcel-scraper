@@ -37,6 +37,9 @@ function scanWeight(value: unknown): number | undefined {
   return weight > 0 && weight <= 100_000 ? weight : undefined;
 }
 
+// A station or locker scan's memo gives the code that releases the parcel: "取件码：0-0-0000".
+const PICKUP_CODE = /取件码\s*[：:]\s*([0-9A-Za-z][0-9A-Za-z-]{0,31})/;
+
 /** The getExternalTrace reply: an envelope around the requested waybill's scans, newest first. */
 export function parseSto(payload: unknown, trackingNumber: string): CarrierResult {
   const number = normalizeStoNumber(trackingNumber);
@@ -65,6 +68,9 @@ export function parseSto(payload: unknown, trackingNumber: string): CarrierResul
   const events: CarrierEvent[] = [];
   let returning = false;
   let weight: number | undefined;
+  // Who signed for the newest delivery, and the code of the newest station or locker scan.
+  let signer = '';
+  let code = '';
   // Read oldest first, so that a return scan puts the later delivery-side scans on the way back.
   for (const scan of [...scans as Record<string, unknown>[]].reverse()) {
     const type = clean(scan.scanType, 32);
@@ -74,8 +80,10 @@ export function parseSto(payload: unknown, trackingNumber: string): CarrierResul
     const returnScan = isStoReturnScan(type);
     if (returnScan) returning = true;
     const stage = returnScan ? 'exception' : returning && mapped?.stage === 'delivered' ? 'returned' : mapped?.stage;
-    // Only scan types, facility places and weights are projected. STO's memo text
-    // names couriers and stations with their phones, pickup addresses and signers.
+    if (stage === 'delivered') signer = clean(scan.signoffPeople, 100);
+    if (stage === 'ready_for_pickup') code = PICKUP_CODE.exec(clean(scan.memo, 500))?.[1] ?? '';
+    // Only scan types, facility places, weights, the signer and the pickup code
+    // are projected. STO's memo text names couriers and stations with their phones.
     const next = type === '发件' ? clean(scan.nextOrgName, 100) : '';
     const description = returnScan ? STO_RETURN_STARTED
       : (returning && mapped ? STO_RETURN_LEG[mapped.stage] : undefined)
@@ -108,6 +116,8 @@ export function parseSto(payload: unknown, trackingNumber: string): CarrierResul
     last_update: latest.time ?? null,
     ...(latest.stage === 'delivered' && latest.time ? { delivered_at: latest.time } : {}),
     expected_delivery: null,
+    ...(latest.stage === 'delivered' && /\p{L}/u.test(signer) ? { signed_by: signer } : {}),
+    ...(latest.stage === 'ready_for_pickup' && code ? { pickup_code: code } : {}),
     ...(weight === undefined ? {} : { weight_kg: weight }),
     timezone: ZONE,
     events: unique,

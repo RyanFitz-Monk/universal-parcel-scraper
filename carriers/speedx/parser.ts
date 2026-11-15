@@ -141,12 +141,12 @@ function projectScan(row: unknown): { id: string; scan: Scan } {
   const time = scanTime(row);
   const code = field(row, 'eventCode', 16);
   const status = speedxStatus(code, field(row, 'category', 64));
-  // The page prints the wording, then the scan's note. A delivery's note says
-  // where the parcel was left, so a delivery keeps its wording alone.
+  // The page prints the wording, then the scan's note; a delivery's note says
+  // where the parcel was left.
   const delivered = status?.stage === 'delivered';
   const wording = field(row, 'eventDescription');
-  const note = delivered ? '' : field(row, 'eventSupplementalInfo');
-  const description = wording ? [wording, note].filter(Boolean).join('. ') : delivered ? 'Delivered' : field(row, 'description');
+  const note = field(row, 'eventSupplementalInfo');
+  const description = wording ? [wording, note].filter(Boolean).join('. ') : field(row, 'description') || (delivered ? 'Delivered' : '');
   if (!description) throw new SchemaError(PROVIDER, 'SpeedX returned a scan without wording');
   // The town of the scan. Coordinates, postcodes and references are never read:
   // a delivery's coordinates are the recipient's door.
@@ -168,8 +168,8 @@ function estimatedDay(value: unknown): string | null {
 /**
  * The RSC reply of `tracking.speedx.io/{number}`: the shipment view's `data`
  * object, bound to the requested number, or the page's absence sentence
- * naming it. Recipient address, merchant, references and proof of delivery in
- * the same object are never read.
+ * naming it. Its recipient address is the recipient's town and state; the
+ * merchant, references and proof of delivery in the same object are never read.
  */
 export function parseSpeedx(body: string, contentType: string | null, raw: string): CarrierResult {
   const number = normalizeSpeedxNumber(raw);
@@ -214,6 +214,7 @@ export function parseSpeedx(body: string, contentType: string | null, raw: strin
   const current = newest.status;
   // The country of the recipient's postcode, which the page's proof-of-delivery check uses.
   const country = field(data, 'country', 8);
+  const address = field(data, 'recipientAddress', 200);
   return {
     status: current?.status ?? 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: 'carrier_map' } : {}),
@@ -222,6 +223,7 @@ export function parseSpeedx(body: string, contentType: string | null, raw: strin
     expected_delivery: current?.stage === 'delivered' || current?.stage === 'returned' ? null : estimatedDay(data.edd),
     ...(current?.stage === 'delivered' ? { delivered_at: newest.event.time } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: scans.slice(0, 100).map((scan) => scan.event),
   };
 }

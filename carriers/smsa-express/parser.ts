@@ -25,6 +25,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const WEIGHT = /^(\d{1,6}(?:\.\d{1,3})?) KG$/;
 // The delivery scan goes on with who signed for the parcel.
 const SIGNER = /\s*,?\s*\bSigned by\b[\s\S]*$/i;
+const SIGNED_BY = /\bSigned by\b\s*:?\s*([^,;]+)/i;
 const PHONE = /(?<!\d)\+?\d(?:[\s().-]{0,2}\d){7,}(?!\d)/g;
 export const SMSA_MAX_SCANS = 300;
 
@@ -35,9 +36,27 @@ export function normalizeSmsaNumber(raw: string): string {
   return number;
 }
 
-/** A scan's wording without the signer after a delivery, or a phone number. */
+/** A scan's wording without a phone number; the delivery scan keeps its signer. */
 export function smsaWording(text: string): string {
-  return clean(clean(text, 300).replace(SIGNER, '').replace(PHONE, ''), 200).replace(/[\s,;:-]+$/, '');
+  return clean(clean(text, 300).replace(PHONE, ''), 200).replace(/[\s,;:-]+$/, '');
+}
+
+/** A scan's stage, read from its wording without the signer after a delivery. */
+export function smsaScanStageOf(wording: string): ReturnType<typeof smsaStage> {
+  return smsaStage(wording.replace(SIGNER, '').replace(/[\s,;:-]+$/, '') || wording);
+}
+
+/** Who signed for the parcel, as the delivery scan names them, or an empty string. */
+export function smsaSigner(wording: string): string {
+  const name = clean(SIGNED_BY.exec(wording)?.[1] ?? '', 100).replace(/[\s.:-]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
+}
+
+/** The signer the newest delivery scan names, when the parcel is delivered. */
+export function smsaSignedBy(events: readonly CarrierEvent[], stage: Stage | undefined): string {
+  if (stage !== 'delivered') return '';
+  const delivery = events.find((event) => event.stage === 'delivered');
+  return delivery ? smsaSigner(delivery.description ?? '') : '';
 }
 
 /** The date in a `05-Oct-2026` heading, as `2026-10-05`, or null. */
@@ -136,7 +155,7 @@ export function parseSmsa(html: string, raw: string): CarrierResult {
       const identity = JSON.stringify([local, description, location]);
       if (seen.has(identity)) continue;
       seen.add(identity);
-      const staged = smsaStage(description);
+      const staged = smsaScanStageOf(description);
       events.push({
         local_time: local,
         description,
@@ -154,6 +173,7 @@ export function parseSmsa(html: string, raw: string): CarrierResult {
   const estimate = calendarDay(labelled($, details, 'Expected Delivery Date'));
   const kilograms = weight(labelled($, details, 'Shipment Weight'));
   const country = destination(labelled($, details, 'To'));
+  const signer = smsaSignedBy(events, stage);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source } : {}),
@@ -163,6 +183,7 @@ export function parseSmsa(html: string, raw: string): CarrierResult {
     expected_delivery: done ? null : estimate,
     ...(kilograms ? { weight_kg: kilograms } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

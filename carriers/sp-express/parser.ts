@@ -30,6 +30,9 @@ const DIMENSIONS = /^(\d{1,4}(?:[.,]\d{1,2})?) x (\d{1,4}(?:[.,]\d{1,2})?) x (\d
 const REFERENCE = /^[A-Z]{0,8}\d{5,}[A-Z]{0,4}$/i;
 // Who took the parcel, which partners put where the place goes: "Signed by: …", "Odebrał: …".
 const PERSON = /:|\b(?:sign|podpis|odebra|odbior|receiv|recipient|empf)/i;
+const SIGNED = /\b(?:sign|podpis|odebra|odbior|receiv|recipient|empf)[\p{L}]*(?:\s+(?:by|przez|von))?\s*:\s*(.+)$/iu;
+// The receiver's postcode in brackets after the country: "France (71580)".
+const POSTCODE = /\(([^()]{1,16})\)\s*$/;
 const MAX_ROWS = 300;
 // The progress rail's steps, in their order, and the stage each one reaches.
 const RAIL: readonly (readonly [string, Stage])[] = [
@@ -89,13 +92,19 @@ function place(text: string): string {
   return value;
 }
 
+/** Who took the parcel, where a partner puts them in the place ("Signed By: …"), or an empty string. */
+function signer(text: string): string {
+  const name = clean(SIGNED.exec(clean(text, 160))?.[1] ?? '', 100).replace(/[\s.,;:-]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
+}
+
 /**
  * A wording and what the tracker puts in brackets after it: the place of the
- * scan, a reference or who signed. Only a place is kept.
+ * scan, a reference or who signed. A place and who signed are kept.
  */
-function split(text: string): { wording: string; place: string } {
+function split(text: string): { wording: string; place: string; signer: string } {
   const value = clean(text, 400);
-  if (!value.endsWith(')')) return { wording: value, place: '' };
+  if (!value.endsWith(')')) return { wording: value, place: '', signer: '' };
   let depth = 0;
   for (let index = value.length - 1; index >= 0; index -= 1) {
     if (value[index] === ')') depth += 1;
@@ -103,14 +112,18 @@ function split(text: string): { wording: string; place: string } {
       const wording = clean(value.slice(0, index), 300);
       // A wording that is all brackets is kept whole.
       if (!wording) break;
-      return { wording, place: place(value.slice(index + 1, -1)) };
+      const inner = value.slice(index + 1, -1);
+      return { wording, place: place(inner), signer: signer(inner) };
     }
   }
-  return { wording: value, place: '' };
+  return { wording: value, place: '', signer: '' };
 }
 
+/** A scan and who signed for it, where the partner names them. */
+interface Scan { event: CarrierEvent; signer: string }
+
 /** The History table's rows, newest first, with or without a column for the place. */
-function scans($: CheerioAPI): CarrierEvent[] {
+function scans($: CheerioAPI): Scan[] {
   const tables = $('table.list.hTop');
   if (tables.length > 1) throw new SchemaError(PROVIDER, 'SP Express returned several histories');
   if (!tables.length) return [];
@@ -123,20 +136,21 @@ function scans($: CheerioAPI): CarrierEvent[] {
   }
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'SP Express returned an oversized history');
   const seen = new Set<string>();
-  const events: CarrierEvent[] = [];
+  const events: Scan[] = [];
   for (const row of rows) {
     const cells = $(row).children('td').toArray().map((cell) => $(cell).text());
     if (cells.length !== columns.length) throw new SchemaError(PROVIDER, 'SP Express returned an invalid scan');
     const local = wallClock(clean(cells[0], 40));
-    const { wording, place: bracketed } = split(cells[1]!);
+    const { wording, place: bracketed, signer: named } = split(cells[1]!);
     if (!wording) throw new SchemaError(PROVIDER, 'SP Express returned a scan without wording');
     const location = (withPlace ? place(cells[2]!) : '') || bracketed;
     const key = JSON.stringify([local, wording.toLowerCase(), location]);
     if (seen.has(key)) continue;
     seen.add(key);
     const staged = spExpressStage(wording);
-    events.push({ local_time: local, description: wording, ...(location ? { location } : {}),
-      ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) });
+    events.push({ event: { local_time: local, description: wording, ...(location ? { location } : {}),
+      ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) },
+    signer: (withPlace ? signer(cells[2]!) : '') || named });
   }
   return events;
 }
@@ -214,22 +228,26 @@ export function parseSpExpress(html: string, raw: string): CarrierResult {
   if (!echoed) throw new SchemaError(PROVIDER, 'SP Express returned a shipment without its number');
   if (echoed !== number) throw new IndeterminateError(PROVIDER, 'SP Express answered for another number');
 
-  const events = scans($);
+  const rows = scans($);
+  const events = rows.map((row) => row.event);
   const archived = $('.alert.alert-warning').toArray().some((element) => ARCHIVED.test(clean($(element).text(), 80)));
   if (!$('table.list.hTop').length && !archived) throw new SchemaError(PROVIDER, 'SP Express returned a shipment without its history');
-  const current = split(bar.text()).wording;
+  const { wording: current, signer: barSigner } = split(bar.text());
   if (!events.length && !current) throw new NoHistoryError(PROVIDER);
 
   const values = details($);
   const kilograms = weight(values.get('package weight') ?? values.get('weight'));
   const dimensions = DIMENSIONS.exec(values.get('parcel dimensions') ?? '');
-  // "France (71580)": the recipient's postcode is not kept.
-  const country = countryCode(clean((values.get('receiver country') ?? '').replace(/\s*\([^()]*\)\s*$/, ''), 60));
+  // "France (71580)": the country, and the receiver's postcode in brackets.
+  const receiver = values.get('receiver country') ?? '';
+  const country = countryCode(clean(receiver.replace(/\s*\([^()]*\)\s*$/, ''), 60));
+  const postcode = clean(POSTCODE.exec(receiver)?.[1] ?? '', 16);
   const facts = {
     expected_delivery: null,
     ...(kilograms ? { weight_kg: kilograms } : {}),
     ...(dimensions ? { dimensions_text: `${dimensions[1]} × ${dimensions[2]} × ${dimensions[3]} cm` } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(/\d/.test(postcode) ? { receiver_address: postcode } : {}),
   };
 
   if (!events.length) {
@@ -242,6 +260,7 @@ export function parseSpExpress(html: string, raw: string): CarrierResult {
       last_status_text: current,
       last_update: null,
       ...facts,
+      ...(stage === 'delivered' && barSigner ? { signed_by: barSigner } : {}),
       summary_only: true,
       events: [],
     };
@@ -251,6 +270,8 @@ export function parseSpExpress(html: string, raw: string): CarrierResult {
   const newest = events[0]!;
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined ?? railStage($);
+  const delivered = stage === 'delivered' ? rows.find((row) => row.event.stage === 'delivered') : undefined;
+  const signedBy = stage === 'delivered' ? delivered?.signer || barSigner : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned?.stage_source ?? 'carrier_map' } : {}),
@@ -258,6 +279,7 @@ export function parseSpExpress(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     ...facts,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events,
   };
 }

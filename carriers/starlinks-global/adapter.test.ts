@@ -57,8 +57,8 @@ describe('Starlinks Global HTTP adapter', () => {
   it('keeps the events as wall clocks with their places, newest first, and hands the parcel to its courier', () => {
     const result = parseStarlinksGlobal(text('delivered.html'), PARCEL);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
-      last_update: null, last_update_local: '2026-03-12T10:32:09', expected_delivery: null, destination_country: 'US', weight_kg: 0.2,
-      delivery_carrier: 'gofo', delivery_tracking_number: COURIER });
+      last_update: null, last_update_local: '2026-03-12T10:32:09', expected_delivery: null, destination_country: 'US', receiver_address: 'Sampleville',
+      weight_kg: 0.2, delivery_carrier: 'gofo', delivery_tracking_number: COURIER });
     expect(result.events!.map((event) => [event.local_time, event.description, event.location, event.stage])).toEqual([
       ['2026-03-12T10:32:09', 'Delivered', undefined, 'delivered'],
       ['2026-03-12T07:05:03', 'Out for Delivery', undefined, 'out_for_delivery'],
@@ -70,8 +70,9 @@ describe('Starlinks Global HTTP adapter', () => {
       ['2026-03-06T18:25:21', 'Accepted at Processing Hub', undefined, 'accepted'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    // The recipient's town and the shop are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/Sampleville|Example Shop|Example Regional/);
+    // The recipient's town is their address; the shop is not kept.
+    const rest = { ...result, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/Sampleville|Example Shop|Example Regional/);
   });
 
   it('reads a parcel on its way, and one no courier has yet', () => {

@@ -42,8 +42,9 @@ through the lookup its tracking page makes.
 - A row's location is the hub or branch that scanned it. The dispatch row names the sender's
   address instead, so it and any location with a comma or a PIN code are left out, as is the
   placeholder `default`.
-- The reply carries the recipient's and sender's names, phones and addresses, the delivery
-  agent's name and phone and links to proof-of-delivery images. None of them are kept.
+- The order gives the recipient's name, kept as `receiver_name`, and the destination's PIN code
+  and town, kept as `receiver_address`. The sender's name, the phones, the delivery agent's
+  details and the links to proof-of-delivery images are not kept.
 - The site's support form looks numbers up through `apis.delcaper.com/tracking/v2/{number}`,
   which answers the same rows with a higher rate limit. The adapter uses the tracker's own
   host.

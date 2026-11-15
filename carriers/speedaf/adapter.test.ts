@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, SPEEDAF_API, SpeedafTracker } from './adapter.js';
-import { normalizeSpeedafNumber, parseSpeedaf, speedafCode, speedafWording } from './parser.js';
+import { normalizeSpeedafNumber, parseSpeedaf, speedafCode, speedafSigner, speedafStageWording, speedafWording } from './parser.js';
 import { speedafStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -61,13 +61,14 @@ describe('Speedaf HTTP adapter', () => {
     expect(result.events!.every((event) => event.local_time === undefined && event.location === undefined)).toBe(true);
   });
 
-  it('keeps the delivery without the people it names, the hidden action or the repeated scan', () => {
+  it('keeps the delivery with its signer, without the courier, the clerk, the hidden action or the repeated scan', () => {
     const result = parseSpeedaf(fixture('delivered'), DELIVERED);
+    const wording = 'Parcel delivered 【Collected】and Received by 【SAMPLE RECIPIENT】; Collection site is 【SMP01-Site】.';
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Parcel delivered 【Collected】; Collection site is 【SMP01-Site】.', last_update: '2026-04-29T16:51:35+02:00',
-      delivered_at: '2026-04-29T16:51:35+02:00', destination_country: 'ZA' });
+      last_status_text: wording, last_update: '2026-04-29T16:51:35+02:00',
+      delivered_at: '2026-04-29T16:51:35+02:00', destination_country: 'ZA', signed_by: 'SAMPLE RECIPIENT' });
     expect(result.events!.map((event) => [event.provider_code, event.stage, event.description])).toEqual([
-      ['5', 'delivered', 'Parcel delivered 【Collected】; Collection site is 【SMP01-Site】.'],
+      ['5', 'delivered', wording],
       ['4', 'out_for_delivery', '【SMP01-Site】scanned for delivery'],
       ['-1:IP06', 'failed_attempt', 'Issue Parcel Reason【Rescheduled delivery】,Reschedule Time【2026-04-28】'],
       ['80', 'in_transit', 'In Transit'],
@@ -84,7 +85,7 @@ describe('Speedaf HTTP adapter', () => {
       ['402', 'customs', 'clearance in progress'],
       ['150', 'accepted', '[Guangzhou warehouse] [InternationalLogistics] processing, order has been inbounded'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Courier|Picker)|SAMPLE RECIPIENT|0000000000|Problem|pod\/view|topay|Android/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Courier|Picker)|0000000000|Problem|pod\/view|topay|Android/);
   });
 
   it('shows the hidden action when the waybill carries its exception flag', () => {
@@ -92,23 +93,31 @@ describe('Speedaf HTTP adapter', () => {
     expect(result.events!.find((event) => event.provider_code === '-2')).toMatchObject({ description: 'Problem parcel' });
   });
 
-  it('takes the people and phone numbers out of the English and Chinese wording', () => {
+  it('takes the courier, the clerk and phone numbers out of the English and Chinese wording, and keeps the recipient who signed', () => {
     expect(speedafWording('【Sample Courier】in 【SMP01-Site】scanned for delivery; The delivery courier is 【Sample Courier】【0000000000】.'))
       .toBe('【SMP01-Site】scanned for delivery');
     expect(speedafWording('Received in 【ZA speedaf】，Pick-Up Courier is【Sample Picker】')).toBe('Received in 【ZA speedaf】');
     expect(speedafWording('Received in【Sample Site】，The pick-up is 【Sample Picker】')).toBe('Received in【Sample Site】');
-    expect(speedafWording('包裹【已签收】,签收人是【样本】,签收网点是【SMP01-Site】')).toBe('包裹【已签收】,签收网点是【SMP01-Site】');
+    expect(speedafWording('包裹【已签收】,签收人是【样本】,签收网点是【SMP01-Site】')).toBe('包裹【已签收】,签收人是【样本】,签收网点是【SMP01-Site】');
+    expect(speedafStageWording('包裹【已签收】,签收人是【样本】,签收网点是【SMP01-Site】')).toBe('包裹【已签收】,签收网点是【SMP01-Site】');
+    expect(speedafSigner('包裹【已签收】,签收人是【样本】,签收网点是【SMP01-Site】')).toBe('样本');
     expect(speedafWording('【SMP01-Site】已做派件扫描，扫描员是【样本】，派件员是【样本】【+000 00 000 0000】')).toBe('【SMP01-Site】已做派件扫描');
     expect(speedafWording('【ISB CITY】scanned for delivery;The courier is 【Sample Rider】')).toBe('【ISB CITY】scanned for delivery');
-    expect(speedafWording('【Parcel delivered】 and Received by【Sample Person】')).toBe('【Parcel delivered】');
+    expect(speedafWording('【Parcel delivered】 and Received by【Sample Person】')).toBe('【Parcel delivered】 and Received by【Sample Person】');
+    expect(speedafStageWording('【Parcel delivered】 and Received by【Sample Person】')).toBe('【Parcel delivered】');
+    expect(speedafSigner('【Parcel delivered】 and Received by【Sample Person】')).toBe('Sample Person');
     // A rescheduled delivery's new day stays.
     expect(speedafWording('Issue Parcel Reason【Rescheduled delivery】,Reschedule Time【2026-04-28】'))
       .toBe('Issue Parcel Reason【Rescheduled delivery】,Reschedule Time【2026-04-28】');
     // The courier's label ends the wording, whatever follows it.
     expect(speedafWording('【Sample Site】scanned for delivery;The courier is Sample Person 000(0)000 00 00 00')).toBe('【Sample Site】scanned for delivery');
-    expect(speedafWording('包裹【已签收】,签收人：样本')).toBe('包裹【已签收】');
-    // A label without its brackets takes the rest of the wording with it, and a phone number goes wherever it is.
-    expect(speedafWording('Delivered, signed by Sample Person at the door')).toBe('Delivered');
+    expect(speedafWording('包裹【已签收】,签收人：样本')).toBe('包裹【已签收】,签收人：样本');
+    expect(speedafStageWording('包裹【已签收】,签收人：样本')).toBe('包裹【已签收】');
+    expect(speedafSigner('包裹【已签收】,签收人：样本')).toBe('样本');
+    // A phone number goes wherever it is; a recipient without brackets stays, and its stage is read without them.
+    expect(speedafWording('Delivered, signed by Sample Person at the door')).toBe('Delivered, signed by Sample Person at the door');
+    expect(speedafStageWording('Delivered, signed by Sample Person at the door')).toBe('Delivered');
+    expect(speedafWording('【Sample Site】已做派件扫描，扫描员：样本')).toBe('【Sample Site】已做派件扫描');
     expect(speedafWording('Call the site on 0000000000 to arrange delivery')).toBe('Call the site on to arrange delivery');
     expect(speedafWording('Call the site on +000 (0)00 00 00 00 or 000-000-0000.')).toBe('Call the site on or.');
     expect(speedafWording('Arrived at Site【Sample Site 0216】')).toBe('Arrived at Site【Sample Site 0216】');

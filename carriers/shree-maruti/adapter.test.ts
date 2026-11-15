@@ -75,13 +75,15 @@ describe('Shree Maruti HTTP adapter', () => {
       ['2026-03-02T11:00:00+05:30', 'order_confirmed', 'registered', 'SAMPLE CITY', 'Shipment Confirmed'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE (?:AGENT|RECIPIENT|SENDER|ROAD|AREA|LANE|MARKET)|0000000000|example\.com|00000[12]|softdata|updated/i);
+    expect(result).toMatchObject({ receiver_name: 'SAMPLE RECIPIENT', receiver_address: '000002 SAMPLE TOWN' });
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/SAMPLE (?:AGENT|RECIPIENT|SENDER|ROAD|AREA|LANE|MARKET)|0000000000|example\.com|00000[12]|softdata|updated/i);
   });
 
   it('reads an in-transit history, with the hub system’s rows filed under its own number field', () => {
     const result = parseShreeMaruti(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'In Transit',
-      last_update: '2026-04-11T08:35:00+05:30' });
+      last_update: '2026-04-11T08:35:00+05:30', receiver_name: 'SAMPLE RECIPIENT', receiver_address: '000002 SAMPLE TOWN' });
     expect(result).not.toHaveProperty('delivered_at');
     expect(rows(result).map(([, code, , location]) => [code, location])).toEqual([
       ['inscan_at_hub', 'SAMPLE TOWN HUB'], ['outscan_at_hub', 'SAMPLE CITY HUB'], ['inscan_at_hub', 'SAMPLE CITY HUB'],

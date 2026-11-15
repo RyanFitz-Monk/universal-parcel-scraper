@@ -33,11 +33,11 @@ or a browser.
   for the shared wording rules. `statusMap` answers the app's review by code alone, so a code
   staged only by its category is not answered.
 - The page prints each event's wording, then its note. A delivery's note says where the
-  parcel was left, so a delivery keeps its wording alone.
-- The reply also carries the recipient address, the merchant, references, delivery
-  coordinates and proof-of-delivery links. None of it is read. Its `country` is the
-  country of the recipient's postcode, which the page's proof-of-delivery check uses, and
-  becomes the destination country.
+  parcel was left.
+- The reply's recipient address is the recipient's town and state, and becomes
+  `receiver_address`. The merchant, references, delivery coordinates and proof-of-delivery
+  links are not read. Its `country` is the country of the recipient's postcode, which the
+  page's proof-of-delivery check uses, and becomes the destination country.
 - `POST /api/tracks`, which the page calls too, returns only the latest event and is not
   used. An HTML reply means a page was served instead of tracking data, and is a
   challenge. A 404 or 410 means the page moved, never an unknown number.

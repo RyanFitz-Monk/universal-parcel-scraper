@@ -49,7 +49,7 @@ describe('TCS HTTP adapter', () => {
     const result = parseTcs(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Shipment Delivered', last_update: '2026-03-05T14:42:00+05:00', expected_delivery: null,
-      delivered_at: '2026-03-05T14:42:00+05:00' });
+      delivered_at: '2026-03-05T14:42:00+05:00', receiver_name: 'SAMPLE RECEIVER', signed_by: 'FICTIVE SIGNER' });
     expect(result.events!.map((event) => [event.time, event.description, event.location ?? null, event.stage ?? null])).toEqual([
       // The delivery checkpoint's `recievedby` is the signatory, not a place.
       ['2026-03-05T14:42:00+05:00', 'Shipment Delivered', null, 'delivered'],
@@ -59,8 +59,9 @@ describe('TCS HTTP adapter', () => {
       ['2026-03-02T21:30:00+05:00', 'Departed From TCS Facility', 'NORTHVILLE', 'in_transit'],
       ['2026-03-02T18:05:00+05:00', 'Shipment Picked Up', 'NORTHVILLE', 'accepted'],
     ]);
-    // Names, the signatory and the merchant's reference stay out.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|FICTIVE|Fictive|ORDER-0001/);
+    // The shipper's name and the merchant's reference stay out.
+    const rest = { ...result, receiver_name: undefined, signed_by: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/SAMPLE|FICTIVE|Fictive|ORDER-0001/);
   });
 
   it('reads a consignment on its way, with the expected delivery date of its summary', () => {
@@ -87,11 +88,13 @@ describe('TCS HTTP adapter', () => {
   it('reads a consignment listed without checkpoints as a summary of its status line or newest delivery record', () => {
     const booked = parseTcs(fixture('booked'), BOOKED);
     expect(booked).toEqual({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Your shipment is in Transit', last_update: null, expected_delivery: null, summary_only: true, events: [] });
+      last_status_text: 'Your shipment is in Transit', last_update: null, expected_delivery: null, receiver_name: 'SAMPLE RECEIVER',
+      summary_only: true, events: [] });
     expect(JSON.stringify(booked)).not.toMatch(/000-000|WhatsApp/);
     expect(parseTcs(changed('delivered', (data) => { data.checkpoints = null; }), DELIVERED)).toEqual({ status: 'delivered',
       current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered', provider_code: 'OK',
-      last_update: '2026-03-05T14:42:00+05:00', expected_delivery: null, delivered_at: '2026-03-05T14:42:00+05:00', summary_only: true, events: [] });
+      last_update: '2026-03-05T14:42:00+05:00', expected_delivery: null, delivered_at: '2026-03-05T14:42:00+05:00',
+      receiver_name: 'SAMPLE RECEIVER', signed_by: 'FICTIVE SIGNER', summary_only: true, events: [] });
     expect(() => parseTcs(changed('booked', (data) => { data.shipmentsummary = 'Dear Customer'; }), BOOKED))
       .toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate' }));
   });

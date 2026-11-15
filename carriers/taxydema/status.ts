@@ -19,7 +19,8 @@ const SCANS: ReadonlyArray<readonly [RegExp, Stage]> = [
   [/^αφιξη τεμαχιου νο[.:]? ?[a-z0-9]+ στο καταστημα(?: παραλαβησ: .+)?$/, 'in_transit'],
   [/^αφιξη τεμαχιου στο σταθμο παραδοσησ(?: .+)?$/, 'in_transit'],
   [/^αναθεση αποστολησ για παραδοση σε διανομεα$/, 'out_for_delivery'],
-  [/^η αποστολη παραδοθηκε στον παραληπτη$/, 'delivered'],
+  // A delivery names who took the parcel and when after it.
+  [/^η αποστολη παραδοθηκε στον παραληπτη(?:[\s:.,].*)?$/, 'delivered'],
   // The tracker's earlier wording, with the date after it.
   [/^δημιουργια αποστολησ απο πελατη(?: \(.+\))?$/, 'registered'],
   [/^κλεισιμο σε συσκευασια$/, 'accepted'],

@@ -18,7 +18,7 @@ Orange Connex tracking links (`orangeconnex.com`, `orangeconnex.cn`) name SpeedP
 
 ## Limitations
 
-Only SpeedPAK's 28-character `EE`, `ES` and `EX` numbers are accepted. [eBay Japan](https://wwwcojp.ebay.com/speedpak/detail) also names `EM` as a SpeedPAK prefix, but its shape is unknown, so `EM` numbers are refused. Older numbers expire within months. Recipient postcodes are discarded. An unknown status remains unmapped, and a missing scan timestamp stays unresolved.
+Only SpeedPAK's 28-character `EE`, `ES` and `EX` numbers are accepted. [eBay Japan](https://wwwcojp.ebay.com/speedpak/detail) also names `EM` as a SpeedPAK prefix, but its shape is unknown, so `EM` numbers are refused. Older numbers expire within months. The recipient's postcode is `receiver_address`. An unknown status remains unmapped, and a missing scan timestamp stays unresolved.
 
 ## Testing
 

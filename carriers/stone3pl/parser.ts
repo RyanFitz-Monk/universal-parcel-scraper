@@ -6,13 +6,14 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { calendarDay, countryCode } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { stone3plScanStage } from './status.js';
+import { stone3plScanStage, stone3plUnsigned } from './status.js';
 
 export const PROVIDER = 'Stone3PL';
 const NUMBER = /^(?=.*\d)[A-Z0-9]{4,40}$/;
 const CLOCK = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/;
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:signed(?: for)? by|signatory|received by)\b[\s\S]*$/i;
+// The name after a delivery's signer label, up to the next clause.
+const SIGNED_BY = /\b(?:signed(?: for)? by|signatory|received by)\b\s*[:\-–]?\s*([^,;\n]+)/i;
 
 export function normalizeStone3plNumber(raw: string): string {
   const number = raw.length <= 64 ? normalizeTrackingNumber(raw) : '';
@@ -37,9 +38,16 @@ function identity(row: Record<string, unknown>, key: string): string {
   return number;
 }
 
+/** A scan's wording without phone numbers; a delivery keeps its signer. */
 export function stone3plWording(value: string): string {
-  return clean(value.replace(RECEIVER, '').replace(PHONE, '').replace(/\s+([,;:.])/g, '$1'))
+  return clean(value.replace(PHONE, '').replace(/\s+([,;:.])/g, '$1'))
     .replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** Who signed for the parcel, as a delivery's wording names them. */
+export function stone3plSigner(wording: string): string {
+  const name = clean(SIGNED_BY.exec(wording)?.[1] ?? '', 100).replace(/[\s.]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
 }
 
 function wallClock(value: string): string {
@@ -95,7 +103,8 @@ function scans(value: unknown, destination: boolean): CarrierEvent[] {
     const local = wallClock(timestamp);
     const description = stone3plWording(wording);
     const providerCode = code(raw.status);
-    if (!description) continue;
+    // A row that says nothing but who signed is no scan of its own.
+    if (!stone3plUnsigned(description)) continue;
     const staged = stone3plScanStage(description);
     events.push({ local_time: local, description,
       ...(providerCode === undefined ? {} : { provider_code: String(providerCode) }),
@@ -152,15 +161,19 @@ export function parseStone3pl(payload: unknown, raw: string): CarrierResult {
   const from = countryCode(text(shipment, 'departure_country_code', 100));
   const service = text(shipment, 'shipping_method', 80);
   const canonical = identity(shipment, 'number');
+  const summary = stone3plWording(text(shipment, 'track_desc', 2000));
+  const signer = stage === 'delivered'
+    ? stone3plSigner(events.find(event => event.stage === 'delivered')?.description ?? '') || stone3plSigner(summary) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
-    last_status_text: stone3plWording(text(shipment, 'track_desc', 2000)) || newest.description!,
+    last_status_text: summary || newest.description!,
     last_update: null, last_update_local: newest.local_time, expected_delivery: null,
     ...(headline && !events.some(event => event.stage === headline) ? { summary_only: true } : {}),
     ...(country ? { destination_country: country } : {}),
     ...(from ? { origin_country: from } : {}),
     ...(service ? { service_name: service } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(canonical !== number ? { canonical_tracking_number: canonical } : {}),
     ...(partnerNumber && partnerNumber !== canonical ? { delivery_tracking_number: partnerNumber } : {}),
     ...(partner && partner !== 'stone3pl' && partner !== 'unknown' ? { delivery_carrier: partner } : {}),

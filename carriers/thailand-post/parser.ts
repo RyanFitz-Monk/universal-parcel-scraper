@@ -46,7 +46,16 @@ export function thailandPostRequestBody(number: string): string {
     checkBot: '1', check: 'AA', tnt: '', turnstileToken: null });
 }
 
-interface Scan { event: CarrierEvent; instant: number | null; activity: boolean; mapped: ClassifiedWording | null }
+interface Scan {
+  event: CarrierEvent; instant: number | null; activity: boolean; mapped: ClassifiedWording | null;
+  addressee: string; taker: string;
+}
+
+/** A name field of a scan: a string with a letter, anything else nothing. */
+function nameOf(value: unknown): string {
+  const name = typeof value === 'string' ? clean(value, 120) : '';
+  return /\p{L}/u.test(name) ? name : '';
+}
 
 function scan(raw: unknown, number: string): Scan {
   if (!isRecord(raw)) throw new SchemaError(PROVIDER, 'Thailand Post returned an invalid scan');
@@ -82,6 +91,8 @@ function scan(raw: unknown, number: string): Scan {
       description, ...(location ? { location } : {}), provider_code: code,
     },
     instant: foreign ? null : created, activity, mapped: activity ? null : thailandPostStage(code, label, group, result),
+    // The addressee the item was posted to, and on a final delivery who took it.
+    addressee: nameOf(raw.addressFullName), taker: code === FINAL_DELIVERY ? nameOf(raw.recipientName) : '',
   };
 }
 
@@ -160,8 +171,10 @@ export function parseThailandPostReply(text: string, requested: string): Carrier
   // The newest final delivery to the addressee dates the delivery; activity
   // after it does not. A delivery abroad has only the destination post's wall
   // clock, so no delivery instant.
-  const delivered = current?.stage === 'delivered'
-    ? unique.find((row) => row.event.provider_code === FINAL_DELIVERY && row.mapped?.stage === 'delivered')?.event.time : undefined;
+  const delivery = current?.stage === 'delivered'
+    ? unique.find((row) => row.event.provider_code === FINAL_DELIVERY && row.mapped?.stage === 'delivered') : undefined;
+  const delivered = delivery?.event.time;
+  const receiver = unique.find((row) => row.addressee)?.addressee;
   return {
     status: current ? languageStageStatus(current.stage) : 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: current.source } : {}),
@@ -170,6 +183,8 @@ export function parseThailandPostReply(text: string, requested: string): Carrier
     ...(typeof latest.local_time === 'string' ? { last_update_local: latest.local_time } : {}),
     ...(delivered ? { delivered_at: delivered } : {}),
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(delivery?.taker ? { signed_by: delivery.taker } : {}),
     events,
   };
 }

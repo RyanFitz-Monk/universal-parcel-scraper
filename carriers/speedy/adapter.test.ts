@@ -32,11 +32,11 @@ describe('Speedy HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a parcel collected from an office newest first, by the office name only', () => {
+  it('reads a parcel collected from an office newest first, by the office name only, and who took it', () => {
     const result = parseSpeedy(fixture('collected'), COLLECTED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-03-04T17:01:30+02:00', delivered_at: '2026-03-04T17:01:30+02:00',
-      expected_delivery: null, pickup_point: '999 - SAMPLE TOWN - EXAMPLE SQUARE' });
+      expected_delivery: null, pickup_point: '999 - SAMPLE TOWN - EXAMPLE SQUARE', signed_by: 'ABC**********' });
     expect(result.events!.map(event => [event.time, event.provider_code, event.stage ?? null, event.location ?? null])).toEqual([
       ['2026-03-04T17:01:30+02:00', '-14', 'delivered', 'Example City'],
       ['2026-03-04T17:01:00+02:00', '195', null, null],
@@ -49,7 +49,7 @@ describe('Speedy HTTP adapter', () => {
       ['2026-03-02T09:15:00+02:00', '148', 'registered', null],
     ]);
     expect(result.events![1]).toEqual({ time: '2026-03-04T17:01:00+02:00', description: 'Refuse contents check/test', provider_code: '195' });
-    const kept = JSON.stringify(result);
+    const kept = JSON.stringify({ ...result, signed_by: undefined });
     for (const dropped of ['ul. Example', 'ABC**', 'received from', 'SYNTHETIC-POD-TOKEN', 'officesmap', 'Expected Delivery']) {
       expect(kept).not.toContain(dropped);
     }

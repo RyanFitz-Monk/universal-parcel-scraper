@@ -47,9 +47,10 @@ No key, session or browser is needed.
 - `statusMap` in [status.ts](status.ts) answers the app's review queue by scan code. It
   leaves the call and the COD payment without a stage on purpose; a final delivery, a
   utility row and other codes depend on the rest of the scan, so it does not answer them.
-- Recipient name and relation, signature and photo, delivery officer, office phone, GPS
-  point and staff identifiers are never read. The signature and location endpoints are not
-  called.
+- The addressee's name is read into `receiver_name`, and the name a final delivery to the
+  addressee records into `signed_by`. The recipient's relation and phone, the signature
+  and photo, the delivery officer, the office phone, the GPS point and staff identifiers
+  are not read. The signature and location endpoints are not called.
 
 ## Mobile app and other routes
 

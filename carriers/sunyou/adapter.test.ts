@@ -228,8 +228,11 @@ describe('SunYou declared capabilities and privacy', () => {
     expect(check!(coded)).toBe(true);
   });
 
-  it('drops the recipient and the signature', () => {
-    const projected = JSON.stringify([delivered, coded]);
+  it('reads the recipient’s name and address and drops the signature', () => {
+    expect(delivered).toMatchObject({ receiver_name: 'Made Up Recipient', receiver_address: 'Example Street 1\n8000 Example City' });
+    expect(coded).not.toHaveProperty('receiver_name');
+    const rest = { ...delivered, receiver_name: undefined, receiver_address: undefined };
+    const projected = JSON.stringify([rest, coded]);
     for (const value of ['Made Up Recipient', 'Example Street 1', 'proof-of-delivery']) {
       expect(projected).not.toContain(value);
     }

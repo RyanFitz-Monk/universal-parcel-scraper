@@ -54,14 +54,35 @@ export const spxBrShipment = (number: string): string => number.slice(0, 15);
 
 // Who took the parcel: "Recebido por: …" after a delivery, or the bracketed
 // name the tracker's pt-BR wording puts after "entregue a", which a partner
-// carrier's delivery leaves empty.
+// carrier's delivery leaves empty. The wording keeps the name; its stage is
+// read without it.
 const RECEIVER = /\s*[.,;]?\s*\b(?:recebid[oa]|retirad[oa]|assinad[oa]) por\s*:[\s\S]*$/i;
 const NAMED = /\b(entregue)\s+(?:a|ao|à|para)(?:\s+\[[^\]]*\][\s\S]*|\s*)$/i;
+const UNNAMED = /\b(entregue)\s+(?:a|ao|à|para)\s*$/i;
+const TAKEN_BY = /\b(?:(?:recebid[oa]|retirad[oa]|assinad[oa]) por\s*:\s*([^[\]]+)|entregue\s+(?:a|ao|à|para)\s+\[([^\]]*)\])/i;
+// The bracketed name the fleet feed's lines put last after a delivery, in English as well.
+const LAST_NAMED = /\s*\[([^\]]*)\]\s*$/;
 
-/** A scan's wording without the name of whoever took the parcel. */
-export function spxBrWording(text: string): string {
+function tidy(text: string): string {
   // A line whose template left its place empty ("está a caminho .") ends on a spaced stop.
-  return clean(clean(text, 1000).replace(RECEIVER, '').replace(NAMED, '$1'), 500).replace(/[\s,;:]+$/, '').replace(/\s+\.$/, '.');
+  return clean(text, 500).replace(/[\s,;:]+$/, '').replace(/\s+\.$/, '.');
+}
+
+/** A scan's wording; a partner carrier's delivery that names no one loses its dangling "a". */
+export function spxBrWording(text: string): string {
+  return tidy(clean(text, 1000).replace(UNNAMED, '$1'));
+}
+
+/** A scan's wording without the name of whoever took the parcel, for its stage. */
+export function spxBrStageWording(text: string): string {
+  return tidy(clean(text, 1000).replace(RECEIVER, '').replace(NAMED, '$1')) || text;
+}
+
+/** Who took the parcel, as a delivery's wording names them, or an empty string. */
+export function spxBrSigner(text: string): string {
+  const match = TAKEN_BY.exec(text);
+  const name = clean(match?.[1] ?? match?.[2] ?? '', 100).replace(/[\s.,;:]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
 }
 
 /**
@@ -84,7 +105,10 @@ function text(row: Record<string, unknown>, key: string): string {
   return value;
 }
 
-function projectRow(row: Record<string, unknown>): CarrierEvent | null {
+/** A scan and who took the parcel, when it is a delivery that names them. */
+interface Scan { event: CarrierEvent; signer: string }
+
+function projectRow(row: Record<string, unknown>): Scan | null {
   // The page leaves out the rows SPX flags hidden; its milestones among them stay.
   if (row.display_flag === 0 && !isSpxHiddenMilestone(row)) return null;
   const code = text(row, 'tracking_code').trim().toUpperCase();
@@ -102,12 +126,22 @@ function projectRow(row: Record<string, unknown>): CarrierEvent | null {
   const place = facility && isRecord(row.current_location) ? row.current_location : null;
   const location = (place ? clean(text(place, 'location_name'), 120) : '') || clean(named.location, 120);
   const point = place && location ? eventPoint(place.lat, place.lng) : null;
-  const staged = spxBrStage(code, named.description);
-  return {
+  const staged = spxBrStage(code, spxBrStageWording(named.description));
+  const delivered = staged?.stage === 'delivered';
+  // The buyer's line adds who received the parcel, which the page's own line leaves out.
+  const signer = delivered ? spxBrSigner(named.description) || spxBrSigner(clean(text(row, 'buyer_description'), 500)) : '';
+  return { signer, event: {
     time, ...(location ? { location } : {}), ...(point ? { point } : {}), description: named.description,
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
-  };
+  } };
+}
+
+/** The recipient's name a reply gives, masked or not. */
+function recipient(record: Record<string, unknown>, key: string): Pick<CarrierResult, 'receiver_name'> {
+  const value = record[key];
+  const name = typeof value === 'string' ? clean(value, 100) : '';
+  return /\p{L}/u.test(name) ? { receiver_name: name } : {};
 }
 
 /** The refusal's codes, failing step and count, for the logs; none of the reply's own text. */
@@ -144,20 +178,21 @@ export function parseSpxBr(payload: unknown, raw: string): CarrierResult {
   if (!Array.isArray(rows)) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned a shipment with invalid scans');
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned an oversized history');
 
-  const events: CarrierEvent[] = [];
+  const scans: Scan[] = [];
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned an invalid scan');
-    const event = projectRow(row);
-    if (event) events.push(event);
+    const scan = projectRow(row);
+    if (scan) scans.push(scan);
   }
-  return summarize(events);
+  return { ...summarize(scans), ...recipient(tracking, 'receiver_name') };
 }
 
-/** The result for a history's scans, each once and newest first. */
-function summarize(scans: readonly CarrierEvent[]): CarrierResult {
+/** The result for a history's scans, each once and newest first, with who took a delivered parcel. */
+function summarize(scans: readonly Scan[]): CarrierResult {
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
-  for (const event of scans) {
+  const signers = new Map(scans.map((scan) => [scan.event, scan.signer]));
+  for (const { event } of scans) {
     const key = JSON.stringify(event);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -179,12 +214,14 @@ function summarize(scans: readonly CarrierEvent[]): CarrierResult {
   const staged = events.find((event) => event.stage);
   const stage = staged?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? staged!.time : undefined;
+  const signer = delivered ? signers.get(staged!) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
     last_status_text: newest.description!,
     last_update: newest.time!,
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };
@@ -195,8 +232,6 @@ const FLEET_NO_HISTORY = -1217;
 const FLEET_STATUS = /^[A-Za-z0-9_]{1,64}$/;
 // The hub a fleet line opens with: "[LM Hub_RJ_Exemplo] Seu pacote foi recebido pelo centro de distribuição".
 const HUB = /^\[((?:FM|LM) ?Hub_[^\]]{1,100}|SoC_[^\]]{1,100})\]\s*/i;
-// The bracketed name the feed's English line puts after a delivery.
-const LAST_NAMED = /\s*\[[^\]]*\]\s*$/;
 // A drop-off point's line opens with the point's name, often its keeper's: "[Nome] Seu pacote foi recebido pelo ponto de coleta".
 // A partner carrier's delivery opens with the partner's code: "[00000] Pacote foi entregue a".
 const OPENING_NAME = /^\[[^\]]{1,200}\]\s*/;
@@ -213,12 +248,12 @@ const UNWORDED: ReadonlyMap<string, string> = new Map([
   ['START_CONFISCATION', 'Parcel has entered confiscation process'],
 ]);
 
-function projectFleetRow(row: Record<string, unknown>): CarrierEvent {
+function projectFleetRow(row: Record<string, unknown>): Scan {
   if (typeof row.status !== 'string' || !FLEET_STATUS.test(row.status.trim())) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned an invalid fleet status');
   const code = row.status.trim();
   if (typeof row.message !== 'string') throw new SchemaError(PROVIDER, 'SPX Express Brazil returned a scan without wording');
   const worded = spxBrWording(row.message) || (UNWORDED.get(code.toUpperCase()) ?? '');
-  const line = code === 'Delivered' ? clean(worded.replace(LAST_NAMED, ''), 500) : worded;
+  const line = worded;
   // The hub leaves the wording, so it reads the same from hub to hub, and is the place of
   // the hub taking the parcel in. A pickup or a delivery names the hub that made it, not
   // where it happened.
@@ -236,11 +271,13 @@ function projectFleetRow(row: Record<string, unknown>): CarrierEvent {
   const time = typeof clock === 'number' && Number.isSafeInteger(clock) && clock >= 1_000_000_000 && clock < 10_000_000_000
     ? epochSecondsTime(clock)?.iso : undefined;
   if (!time) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned an invalid scan time');
-  const staged = spxBrStage(code, description);
-  return {
+  const staged = spxBrStage(code, spxBrStageWording(code === 'Delivered' ? description.replace(LAST_NAMED, '') : description));
+  const signer = staged?.stage === 'delivered'
+    ? spxBrSigner(description) || (code === 'Delivered' ? clean(LAST_NAMED.exec(description)?.[1] ?? '', 100) : '') : '';
+  return { signer: /\p{L}/u.test(signer) ? signer : '', event: {
     time, ...(location ? { location } : {}), description, provider_code: code,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
-  };
+  } };
 }
 
 /**
@@ -267,10 +304,10 @@ export function parseSpxBrFleet(payload: unknown, raw: string): CarrierResult {
   const rows = data.tracking_list ?? [];
   if (!Array.isArray(rows)) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned a shipment with invalid scans');
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned an oversized history');
-  return summarize(withoutUnloading(rows.map((row) => {
+  return { ...summarize(withoutUnloading(rows.map((row) => {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'SPX Express Brazil returned an invalid scan');
     return projectFleetRow(row);
-  })));
+  }))), ...recipient(data, 'recipient_name') };
 }
 
 /**
@@ -278,8 +315,9 @@ export function parseSpxBrFleet(payload: unknown, raw: string): CarrierResult {
  * it, within a day: that scan stands for the arrival. An unloading the hub has not yet
  * followed with its scan stays.
  */
-function withoutUnloading(events: readonly CarrierEvent[]): CarrierEvent[] {
-  return events.filter((event) => !/_LHUnload(?:ing|ed)$/i.test(event.provider_code ?? '') || !event.location
+function withoutUnloading(scans: readonly Scan[]): Scan[] {
+  const events = scans.map((scan) => scan.event);
+  return scans.filter(({ event }) => !/_LHUnload(?:ing|ed)$/i.test(event.provider_code ?? '') || !event.location
     || !events.some((taken) => /_Received$/i.test(taken.provider_code ?? '') && taken.location === event.location
       && Date.parse(taken.time!) >= Date.parse(event.time!) && Date.parse(taken.time!) - Date.parse(event.time!) <= UNLOADING_MS));
 }

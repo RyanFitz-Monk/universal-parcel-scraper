@@ -3,7 +3,7 @@
 Both files follow the reply of `/api/v1/starex/packages/{number}/history` in English: the
 parcel's scans newest first, each with its status code, the tracking page's title and sentence
 for it, an icon and a `DD-MM-YYYY HH:mm` clock, then the package's flags and the recipient's
-masked details, which the adapter does not read.
+masked details, of which the adapter reads the name.
 
 - `delivered.json` is a parcel from Starex's warehouse abroad through customs, collected at a
   branch. Two scans share a clock.

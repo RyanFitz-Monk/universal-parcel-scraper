@@ -47,11 +47,12 @@ describe('SLGTrax HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel newest first at its Karachi instants, once per scan, without the consignee or the order', () => {
+  it('reads a delivered parcel newest first at its Karachi instants, once per scan, with the consignee and without the order', () => {
     const result = parseSlgtrax(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Shipment - Delivered', last_update: '2026-03-12T16:40:21+05:00', expected_delivery: null,
-      delivered_at: '2026-03-12T16:40:21+05:00' });
+      delivered_at: '2026-03-12T16:40:21+05:00', receiver_name: 'Sample Person',
+      receiver_address: 'House 0, Sample Street, Sample Town\nOther City' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage])).toEqual([
       ['2026-03-12T16:40:21+05:00', 'Shipment - Delivered', 'delivered'],
       ['2026-03-12T10:05:09+05:00', 'Shipment - Out for Delivery', 'out_for_delivery'],
@@ -66,7 +67,13 @@ describe('SLGTrax HTTP adapter', () => {
     ]);
     expect(result.events![2]).toMatchObject({ description: 'Shipment - Delivery Unsuccessful: Consignee Unavailable' });
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !event.location && !event.local_time)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Store|Person|Street|Goods|item)|House 0|Other City|Sample City|SMPL|000000000000|900001/);
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/Sample (?:Store|Person|Street|Goods|item)|House 0|Other City|Sample City|SMPL|000000000000|900001/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Store|Goods|item)|Sample City|SMPL|000000000000|900001/);
+    // An address that already ends with the city does not repeat it.
+    const reply = fixture('delivered') as unknown as { details: Record<string, { consignee: Record<string, unknown> }> };
+    Object.values(reply.details)[0]!.consignee.destination = 'Sample Town';
+    expect(parseSlgtrax(reply, DELIVERED).receiver_address).toBe('House 0, Sample Street, Sample Town');
   });
 
   it('reads a parcel on its way, dropped at the origin office', async () => {

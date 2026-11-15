@@ -66,13 +66,13 @@ describe('SpeedX tracking page', () => {
     }
   });
 
-  it('reads the shipment view as instants in each scan\'s zone, newest first, without recipient details', () => {
+  it('reads the shipment view as instants in each scan\'s zone, newest first, with the recipient\'s town and where the parcel was left', () => {
     const result = normalizeCarrierResult(parse(DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-03-19T13:14:05-07:00', delivered_at: '2026-03-19T13:14:05-07:00',
-      expected_delivery: null, destination_country: 'US' });
+      last_status_text: 'Delivered. Position: Front Door', last_update: '2026-03-19T13:14:05-07:00', delivered_at: '2026-03-19T13:14:05-07:00',
+      expected_delivery: null, destination_country: 'US', receiver_address: 'Recipient Town, EX' });
     expect(result.events?.map(({ time, description, location, provider_code, stage }) => [time, description, location, provider_code, stage])).toEqual([
-      ['2026-03-19T13:14:05-07:00', 'Delivered', 'Example City, EX', '57201', 'delivered'],
+      ['2026-03-19T13:14:05-07:00', 'Delivered. Position: Front Door', 'Example City, EX', '57201', 'delivered'],
       ['2026-03-19T08:02:40-07:00', 'Out for Delivery', 'Example City, EX', '57104', 'out_for_delivery'],
       ['2026-03-18T19:45:11-07:00', 'Processing at Designated Facility', 'Sample Hub, EX', '57102', 'in_transit'],
       ['2026-03-18T18:10:30-07:00', 'Arrival at Destination Facility', 'Sample Hub, EX', '57101', 'in_transit'],
@@ -81,8 +81,8 @@ describe('SpeedX tracking page', () => {
       ['2026-03-16T00:41:45-04:00', 'Shipping Label Created', 'Origin Town, EX', '50001', 'registered'],
     ]);
     expect(result.events?.every((event) => event.stage_source === 'carrier_map')).toBe(true);
-    // Recipient, merchant, references, coordinates, masked postcodes and the delivery spot stay out.
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|12\.345678|98\.765432|\*\*\*\*\*|Position|America\//);
+    // The merchant, references, coordinates and masked postcodes stay out.
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|12\.345678|98\.765432|\*\*\*\*\*|America\//);
     for (const entry of statuses.entries) expect(speedxStatus(entry.code)?.stage).toBe(entry.stage);
   });
 
@@ -108,7 +108,7 @@ describe('SpeedX tracking page', () => {
     expect(result.events?.[0]).toEqual({ time: '2026-03-19T13:14:05-07:00', description: 'Held for review', location: 'Example City, EX', provider_code: '59999' });
   });
 
-  it('prints the wording and its note as the page does, except where a delivery was left', () => {
+  it('prints the wording and its note as the page does', () => {
     const attempted = parse(withData((_data, events) => {
       Object.assign(events[1]!, { eventCode: '57614', category: 'LAST_MILE_ATTEMPTED', description: 'Ignored',
         eventDescription: 'Attempted Delivery: No access', eventSupplementalInfo: 'Back to the facility' });
@@ -118,8 +118,10 @@ describe('SpeedX tracking page', () => {
       Object.assign(events[0]!, { eventDescription: null });
       Object.assign(events[1]!, { eventDescription: '$undefined', description: 'Out for Delivery today' });
     }));
-    expect(bare.events?.slice(0, 2).map((event) => event.description)).toEqual(['Delivered', 'Out for Delivery today']);
-    expect(JSON.stringify(bare)).not.toMatch(/PRIVATE|Position/);
+    expect(bare.events?.slice(0, 2).map((event) => event.description)).toEqual(['Delivered. Position: Front Door', 'Out for Delivery today']);
+    const unworded = parse(withData((_data, events) => { Object.assign(events[0]!, { eventDescription: null, description: null }); }));
+    expect(unworded.events?.[0]?.description).toBe('Delivered');
+    expect(JSON.stringify(bare)).not.toMatch(/PRIVATE/);
   });
 
   it('reads the view\'s delivery estimate as a day while the parcel is on its way', () => {

@@ -32,10 +32,10 @@ counter. Tracked through the lookup its tracking page makes.
 - A status's location is the branch it happened at, in Bengali as the page shows it.
 - `Ready for C/D` is a parcel waiting at a branch counter: that branch is the pickup point, also
   after a delivery that follows it directly.
-- The reply also carries the recipient's phone, which the page shows masked, the contents, the
-  booking and destination branches, the lot quantity, vehicle, bag and manifest numbers and
-  remarks, and fields for the sender's and recipient's names and addresses. None of them is
-  kept.
+- The recipient's name and address are read. The reply also carries the recipient's phone,
+  which the page shows masked, the sender's name, address and phone, the contents, the booking
+  and destination branches, the lot quantity, vehicle, bag and manifest numbers and remarks.
+  None of those is kept.
 - No recognition: the tracker never says a number is unknown, and fourteen digits are a shape
   many carriers print.
 

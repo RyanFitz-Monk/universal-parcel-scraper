@@ -78,14 +78,19 @@ describe('TForce Freight tracking page', () => {
       ['2026-10-13T19:35:00', 'accepted', 'Origin City, IL'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('time' in event) && !event.provider_code)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    // The consignee and their city line are read; nobody has signed yet.
+    expect(result).toMatchObject({ receiver_name: 'SAMPLE CONSIGNEE', receiver_address: 'SAMPLETOWN OH US' });
+    expect(result).not.toHaveProperty('signed_by');
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(PRIVATE);
   });
 
-  it('keeps the delivery, its failed attempt and the repeated scan once, without the people, references or trailers', () => {
+  it('keeps the delivery, its failed attempt and the repeated scan once, with the consignee and signer, without the shipper, references or trailers', () => {
     const result = parseTforceFreight(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'SHIPMENT HAS BEEN DELIVERED TO THE CONSIGNEE.', last_update: null, last_update_local: '2026-06-18T12:13:00',
-      expected_delivery: null, weight_kg: 566.99, service_name: 'TForce Freight LTL', destination_country: 'US' });
+      expected_delivery: null, weight_kg: 566.99, service_name: 'TForce Freight LTL', destination_country: 'US',
+      receiver_name: 'SAMPLE CONSIGNEE', receiver_address: 'SAMPLETOWN OH US', signed_by: 'SAMPLE SIGNER' });
     expect(result.events!.map((event) => [event.local_time, event.stage])).toEqual([
       ['2026-06-18T12:13:00', 'delivered'],
       // The tracker lists records in its own order: the appointment recorded after the delivery comes below it.
@@ -102,7 +107,8 @@ describe('TForce Freight tracking page', () => {
       ['2026-06-15T13:30:00', 'accepted'],
     ]);
     expect(result.events![4]).toMatchObject({ description: NOT_DELIVERED, location: 'Sampleton, OH' });
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined, signed_by: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(PRIVATE);
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     expect(metadata.tracking).toMatchObject({ adapter: 'tforce-freight', steps: ['direct', 'retry'], recognition: { rank: 946 }, localClocks: true });
   });

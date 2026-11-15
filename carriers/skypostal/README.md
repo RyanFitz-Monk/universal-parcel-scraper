@@ -39,8 +39,9 @@ on its tracker. Tracked through the lookup its tracking page makes.
   fuel surcharge and `OTH`, seen as a hold's release, have no stage.
 - The location is the partner's town when the scan gives one, otherwise SkyPostal's station code,
   such as `MIA`.
-- The comments column, the proof-of-delivery image and each scan's label are not kept. Comments
-  can name the person who took the parcel.
+- The comments column, the proof-of-delivery image and each scan's label are not kept, but a
+  delivery's comment that names the person who took the parcel, as in `Entregue a …` or
+  `Recibido por …`, gives `signed_by`.
 - A scan's label is the number the parcel then travelled under: SkyPostal's own label at the hub,
   then the partner's. On recent shipments the partner's is the number asked, so there is no
   hand-off.

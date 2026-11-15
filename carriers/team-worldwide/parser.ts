@@ -28,7 +28,7 @@ const TIME = /^(\d{2})(\d{2})$/;
 // "2016-12-13", the header's day.
 const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 // Whoever signed for the freight, after the words that introduce them.
-const SIGNER = /^(SIGNED FOR)\b.*$/i;
+const SIGNER = /^(SIGNED FOR)\b(?:\s+BY\b)?\s*:?\s*(.*)$/i;
 // A delivery or pickup appointment, stamped when it was booked, and the day it is
 // booked for; its window, "BET 0800-1200", or a time it is due by, and the booking
 // agent's name can follow.
@@ -68,14 +68,21 @@ function clockOf(date: string, time: string): string {
 
 interface Row {
   event: CarrierEvent;
+  /** Who signed for the freight, as a delivery row names them. */
+  signer: string;
   /** The day a delivery appointment is booked for, with its window, which is an estimate and not a scan. */
   appointment: string | null;
 }
 
-/** A row's wording without the signer, the booking agent or other free text, and its place when it names one. */
-function wordingOf(raw: string): { description: string; location?: string; appointment: string | null } {
+interface Wording { description: string; location?: string; appointment: string | null; staged?: string; signer?: string }
+
+/**
+ * A row's wording without the booking agent or other free text, and its place
+ * when it names one. A delivery keeps its signer, and is staged without them.
+ */
+function wordingOf(raw: string): Wording {
   const signed = SIGNER.exec(raw);
-  if (signed) return { description: signed[1]!.toUpperCase(), appointment: null };
+  if (signed) return { description: raw, appointment: null, staged: signed[1]!.toUpperCase(), signer: signed[2]! };
   const booked = APPOINTMENT.exec(raw);
   if (booked) {
     const date = booked[3] ? DAY.exec(booked[3]) : null;
@@ -99,8 +106,8 @@ function rowOf($: CheerioAPI, row: Element): Row | null {
   const local_time = clockOf(date, time);
   if (!wording) invalid('Team Trac returned a history row without its wording');
   if (teamHiddenRow(code)) return null;
-  const { description, location, appointment } = wordingOf(wording);
-  const staged = teamStage(code, description);
+  const { description, location, appointment, staged: unsigned, signer } = wordingOf(wording);
+  const staged = teamStage(code, unsigned ?? description);
   return {
     event: {
       local_time,
@@ -109,6 +116,7 @@ function rowOf($: CheerioAPI, row: Element): Row | null {
       provider_code: code,
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
     },
+    signer: signer && /\p{L}/u.test(signer) ? signer : '',
     appointment,
   };
 }
@@ -119,6 +127,10 @@ interface Shipment {
   status: string;
   /** The header's estimated delivery day. */
   requested: string | null;
+  /** The header's town, state and ZIP code the shipment goes to. */
+  to: string;
+  /** The header's signer of the delivery. */
+  signer: string;
   rows: Row[];
 }
 
@@ -158,6 +170,8 @@ function shipmentOf($: CheerioAPI, block: Cheerio<Element>, asked: string): Ship
     number,
     status,
     requested: isoDay(header.get('requested delivery')),
+    to: header.get('delivery to') ?? '',
+    signer: header.get('signed for by') ?? '',
     rows: rows.map((row) => rowOf($, row)).filter((row): row is Row => row !== null),
   };
 }
@@ -179,8 +193,8 @@ function distinct(events: readonly CarrierEvent[]): CarrierEvent[] {
  * status, the shipper's reference, the town and ZIP code it goes to, the
  * signer and an estimate, and its status details newest first; or a notice
  * that no status is available for the bill. Only the block of the bill asked
- * is read. The reference, the town and ZIP code, the signer, the remarks, the
- * booking agents and the office's phone number are not.
+ * is read. The town and ZIP code are the recipient's address. The reference,
+ * the remarks, the booking agents and the office's phone number are not read.
  */
 export function parseTeam(html: string, raw: string): CarrierResult {
   const asked = normalizeTeamNumber(raw);
@@ -231,6 +245,8 @@ export function parseTeam(html: string, raw: string): CarrierResult {
   // header's estimate; a day before the newest row's is stale.
   const estimate = shipment.rows.find((entry) => entry.appointment)?.appointment ?? shipment.requested;
   const settled = decided !== null && FINAL.has(decided.stage);
+  const signer = decided?.stage === 'delivered'
+    ? shipment.rows.find((entry) => entry.event === delivery)?.signer || (/\p{L}/u.test(shipment.signer) ? shipment.signer : '') : '';
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -238,6 +254,8 @@ export function parseTeam(html: string, raw: string): CarrierResult {
     last_update: null,
     ...(current?.local_time ? { last_update_local: current.local_time } : {}),
     expected_delivery: !settled && estimate && !(newest && estimate.slice(0, 10) < newest) ? estimate : null,
+    ...(/[\p{L}\d]/u.test(shipment.to) ? { receiver_address: shipment.to } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events,
   };

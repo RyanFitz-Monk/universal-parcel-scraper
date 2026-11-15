@@ -38,7 +38,8 @@ label's first fifteen characters.
 - The feed holds domestic parcels the order index finds none of.
 - The feed's `-1217` is a parcel without scans. It answers an unknown number with a server error
   and a rejected checksum with empty data, so these leave the order lookup's answer;
-  the reply must also name the number asked. The recipient and phone fields are not read.
+  the reply must also name the number asked. The recipient's name is read, and the phone is not.
+  A delivery keeps the recipient's name it puts in brackets.
 - In Portuguese the feed sends `Start_Confiscation` with an empty message. The scan takes SPX's
   English wording for it, "Parcel has entered confiscation process", as ParcelsApp relays it.
 - Recognition makes the same requests.
@@ -50,7 +51,8 @@ label's first fifteen characters.
   derived.
 - `pt` is the page's own language code. Its lines name no one; the `pt-BR` lines put the
   recipient's name in brackets after a delivery, and the buyer's line adds who received the
-  parcel. The adapter reads the `pt` line and still drops a clause naming who received it.
+  parcel. The adapter reads the `pt` line, which keeps a clause naming who received it and is
+  staged without it. Who received the parcel is `signed_by`, from that line or the buyer's.
   Scans without a Portuguese line keep their English tracking name.
 - The page leaves out the rows SPX flags hidden. Most are bookkeeping and stay out. A pickup
   that collected nothing, import clearance, the arrival at the last-mile hub and a return's way

@@ -134,10 +134,19 @@ function projectRow(row: Record<string, unknown>, courier: boolean): Scan | null
   return { key: JSON.stringify([when, code, description, location]), at, stored: stored ?? clock, event };
 }
 
+/** The order's recipient: the name, and the destination's PIN code and town on one line. */
+function recipientOf(order: Record<string, unknown> | null): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = isRecord(order?.receiverDetails) ? clean(order.receiverDetails.receiver_name, 200) : '';
+  const destination = isRecord(order?.destinationLocation) ? order.destinationLocation : {};
+  const address = [clean(destination.pincode, 20), clean(destination.city, 120)].filter(Boolean).join(' ');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 /**
  * The reply of `tracking/v2/{number}`: the order and its rows, newest first.
  * An unknown number is an empty list, or no order and no rows. The order and
- * every row kept must name the number asked.
+ * every row kept must name the number asked. The order gives the recipient's
+ * name and the destination's PIN code and town.
  */
 export function parseShreeMaruti(payload: unknown, raw: string): CarrierResult {
   const number = normalizeShreeMarutiNumber(raw);
@@ -188,6 +197,7 @@ export function parseShreeMaruti(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time ?? null,
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...recipientOf(order),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

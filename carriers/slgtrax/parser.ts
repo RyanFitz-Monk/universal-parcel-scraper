@@ -114,14 +114,25 @@ function shipmentFor(details: Record<string, unknown>, number: string): Record<s
   return matching[0]!;
 }
 
+/** The consignee's name, and their address with the destination city on the next line. */
+function consigneeOf(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const consignee = isRecord(shipment.consignee) ? shipment.consignee : {};
+  const name = clean(consignee.name, 200);
+  const street = clean(consignee.address, 300);
+  const city = clean(consignee.destination, 120);
+  // An address that already ends with the city does not repeat it.
+  const lines = [street, street.toLowerCase().endsWith(city.toLowerCase()) ? '' : city].filter(Boolean);
+  return { ...(name ? { receiver_name: name } : {}), ...(lines.length ? { receiver_address: lines.join('\n') } : {}) };
+}
+
 /**
  * The reply of `/api/shipment/track/consignee/public`, the lookup slgtrax.com's
  * tracking box makes: `status` 1 with the shipment under `details`, keyed by
  * Trax's own id, or `status` 0 with the number listed under `errors` when Trax
  * has no shipment under it. A shipment names its tracking number, the shipper,
- * pickup city, consignee, order and its scans newest first. Only the number
- * and the scans are read: the shipper, the consignee's name, phones, address
- * and city, the order's contents, weight and amount to collect are not kept.
+ * pickup city, consignee, order and its scans newest first. The number, the
+ * scans and the consignee's name, address and city are read: the shipper, the
+ * phones, the order's contents, weight and amount to collect are not kept.
  */
 export function parseSlgtrax(payload: unknown, raw: string): CarrierResult {
   const number = normalizeSlgtraxNumber(raw);
@@ -163,6 +174,7 @@ export function parseSlgtrax(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: current!.time } : {}),
+    ...consigneeOf(shipment),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

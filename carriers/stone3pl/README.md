@@ -43,7 +43,8 @@ bucket establishes no information. An empty history without it is inconclusive.
 
 ## Limitations
 
-- No ETA or location is invented. Contact details and signer names are discarded.
+- No ETA or location is invented. Phone numbers are discarded. A delivery keeps the signer it
+  names, which is also read as who signed for the parcel.
 
 ## Testing
 

@@ -30,7 +30,7 @@ export function normalizeTaxydemaNumber(raw: string): string {
 // A message to the recipient: where it went, a phone or an email address, then its subject.
 const CONTACT = /\s*ΣΤΟ\s+(?:ΤΗΛΕΦΩΝΟ|EMAIL)\s*:[\s\S]*$/iu;
 // The rest of a delivery's wording names who took the parcel, then the delivery's date and time.
-const DELIVERY = /^((?:Η αποστολή )?παραδόθηκε στον παραλήπτη)(?:[\s:.,][\s\S]*)?$/iu;
+const TAKER = /^(?:Η αποστολή )?παραδόθηκε στον παραλήπτη\s*:\s*([^,]+)/iu;
 // The notice number of a failed delivery, and all after it.
 const NOTICE_NUMBER = /\s*,?\s*Αρ\.?\s*Ειδοποίησης\s*:[\s\S]*$/iu;
 // A link, with or without its scheme, and a template's placeholder for one.
@@ -42,16 +42,21 @@ const PHONE = /(?<![\dA-Z])(?:\+?30)?[26]\d{9}(?![\dA-Z])/g;
 const EMAIL = /\S+@\S+\.\S+/g;
 
 /**
- * A scan's wording without what it says about the recipient. A message keeps
- * only that it was sent, without where it went and its subject, which carries
- * links to the parcel's delivery options; a delivery loses who took the parcel;
- * a failed delivery loses its notice number; every line loses links, phone
- * numbers and email addresses.
+ * A scan's wording. A message keeps only that it was sent, without where it
+ * went and its subject, which carries links to the parcel's delivery options;
+ * a delivery keeps who took the parcel and when; a failed delivery loses its
+ * notice number; every line loses links, phone numbers and email addresses.
  */
 export function taxydemaWording(raw: string): string {
-  const text = clean(raw, 1_000).replace(CONTACT, '').replace(DELIVERY, '$1').replace(NOTICE_NUMBER, '');
+  const text = clean(raw, 1_000).replace(CONTACT, '').replace(NOTICE_NUMBER, '');
   return clean(text.replace(LINK, '').replace(MASKED, '').replace(EMAIL, '').replace(PHONE, '').replace(/\s+([,.:;)])/g, '$1'), 300)
     .replace(/^[\s,.:;(-]+|[\s,:;(-]+$/g, '');
+}
+
+/** Who took the parcel, as a delivery's wording names them. */
+export function taxydemaTaker(wording: string): string {
+  const name = clean(TAKER.exec(wording)?.[1] ?? '', 100);
+  return /\p{L}/u.test(name) ? name : '';
 }
 
 /** A station's name; the head office, which sends the messages, is no place the parcel is. */
@@ -157,7 +162,12 @@ export function parseTaxydema(payload: unknown, raw: string): CarrierResult {
 
   const newest = events[0]!;
   const stage = (settlement?.stage ?? events.find((event) => event.stage)?.stage) as Stage | undefined;
-  const delivery = stage === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time ?? settlement?.at : undefined;
+  const delivered = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  const delivery = stage === 'delivered' ? delivered?.time ?? settlement?.at : undefined;
+  const taker = delivered ? taxydemaTaker(delivered.description!) : '';
+  // The town the parcel goes to is the recipient's.
+  const info = isRecord(result.info) ? result.info : {};
+  const town = typeof info.destinationTo === 'string' ? clean(info.destinationTo, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -165,6 +175,8 @@ export function parseTaxydema(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(delivery ? { delivered_at: delivery } : {}),
+    ...(/\p{L}/u.test(town) ? { receiver_address: town } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     events,
   };
 }

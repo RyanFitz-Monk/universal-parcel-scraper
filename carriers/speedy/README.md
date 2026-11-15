@@ -40,8 +40,9 @@ The estimate is the expected delivery day on the shipment-data scan, kept while 
 on its way. The pickup point is the name of the office or locker Speedy prepared the shipment
 at, once it waits there or was collected from it; contents checks at the counter do not move
 it. When Speedy hands the receiving leg to ACS, the adapter names ACS and its number so the
-partner can be asked about a ten-digit voucher. The office address, the masked recipient, the proof-of-delivery link and
-the return waybill number are dropped.
+partner can be asked about a ten-digit voucher. The delivery scan's "received from:" note names
+who took the parcel, masked, and gives `signed_by`. The office address, the proof-of-delivery link
+and the return waybill number are dropped.
 
 ## Limitations
 

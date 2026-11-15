@@ -11,8 +11,10 @@ const PROVIDER = 'Spee-Dee';
 const NOT_FOUND = 'No packages were found matching the barcode supplied.';
 const NUMBER_LABEL = 'Tracking Number:';
 const PROGRESS_HEADERS = 'Date / Time|Location|Activity';
-// Only these summary rows are read; "Signed by:" and "Delivered to:" never are.
-const SUMMARY_LABELS = new Set(['Status:', 'Delivered on:', NUMBER_LABEL]);
+const SIGNED_BY = 'Signed by:';
+const DELIVERED_TO = 'Delivered to:';
+// Only these summary rows are read.
+const SUMMARY_LABELS = new Set(['Status:', 'Delivered on:', SIGNED_BY, DELIVERED_TO, NUMBER_LABEL]);
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
 const DAY_MS = 86_400_000;
@@ -59,7 +61,12 @@ function summaryFields($: CheerioAPI): Map<string, string> {
     const label = cells.length === 2 ? clean(cells.eq(0).children('strong').text(), 64) : '';
     if (!SUMMARY_LABELS.has(label)) continue;
     if (fields.has(label)) throw new SchemaError(PROVIDER, 'Spee-Dee summary repeats a field');
-    fields.set(label, clean(cells.eq(1).text(), 64));
+    // The delivery address keeps its lines: the street, then the town and state.
+    const value = cells.eq(1).clone();
+    value.find('br').replaceWith('\n');
+    fields.set(label, label === DELIVERED_TO
+      ? value.text().split('\n').map((line) => clean(line, 100)).filter(Boolean).join('\n')
+      : clean(value.text(), 64));
   }
   return fields;
 }
@@ -68,12 +75,13 @@ function summaryFields($: CheerioAPI): Map<string, string> {
  * Spee-Dee's package progress page. The page must name the requested barcode
  * in its summary and above the progress table, and nowhere name another.
  * Barcodes are reused: only the rows since the previous delivery are kept.
- * Signer, delivery address and the HTML comments are never read.
+ * The summary's signer and delivery address are read when it describes the
+ * newest delivery; the HTML comments never are.
  */
 export function parseSpeeDee(html: string, raw: string): CarrierResult {
   const number = normalizeSpeeDeeNumber(raw);
   // Comments have held print_r dumps with the recipient's address, the signer
-  // and device data; none of it is read.
+  // and device data, one per scan; none of it is read.
   const page = html.replace(/<!--[\s\S]*?(?:-->|$)/g, '');
   const $ = load(page);
   $('script, style, noscript, template').remove();
@@ -149,6 +157,10 @@ export function parseSpeeDee(html: string, raw: string): CarrierResult {
     return { local_time: scan.localTime, description: scan.description, ...(scan.location ? { location: scan.location } : {}),
       ...(mapped ? { stage: mapped.stage, stage_source: 'carrier_map' } : {}) };
   });
+  // Only a delivery the summary describes is the one its signer and address belong to.
+  const delivery = latest?.stage === 'delivered';
+  const signer = delivery ? summary.get(SIGNED_BY) ?? '' : '';
+  const address = delivery ? summary.get(DELIVERED_TO) ?? '' : '';
   return {
     status: latest?.status ?? 'unknown',
     ...(latest ? { current_stage: latest.stage, current_stage_source: 'carrier_map' } : {}),
@@ -156,6 +168,8 @@ export function parseSpeeDee(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.localTime,
     expected_delivery: null,
+    ...(address ? { receiver_address: address } : {}),
+    ...(/\p{L}/u.test(signer) ? { signed_by: signer } : {}),
     events,
   };
 }

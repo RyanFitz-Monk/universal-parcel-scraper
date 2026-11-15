@@ -28,9 +28,10 @@ parcel's weight in kilograms.
 ## Non-obvious choices
 
 The scan's `memo` text, the page's own description, names couriers and station keepers with
-their phones, and gives collection addresses, pickup codes and delivery places. It is never
-read. Neither are the courier, operator, signer, facility phone and facility code fields. The
-description is built from the scan type and facility names alone.
+their phones, and gives collection addresses, pickup codes and delivery places. Only the pickup
+code of the newest station or locker scan is read from it, while the parcel waits there. The
+signer field of a delivery is read too. The courier, operator, facility phone and facility code
+fields are not. The description is built from the scan type and facility names alone.
 
 Facility names abbreviate the province and city ("广东广州转运中心"), which the places lookup
 cannot read, so the location adds the province and city fields STO sends with each scan.

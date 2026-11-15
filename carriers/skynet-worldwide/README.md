@@ -30,8 +30,8 @@ mix the two. Tracked through the network's tracking page.
   lookup gives a UTC field, but its offsets are wrong for North America.
 - The event number stages a scan. Holds in branch, returns to the sending station and messages
   to the recipient move nothing.
-- The destination's town, the service type, the masked signatory and the references are not
-  kept.
+- The destination's town, before its country, is `receiver_address`, and a delivery's notes, the
+  masked signatory, are `signed_by`. The service type and the references are not kept.
 - `POST go/plm-tracking_search` with `action=gettrack-summary` answers the newest scan only, so
   the adapter reads the page.
 - A run of zeros is a placeholder, not an air waybill, and is refused without a request.

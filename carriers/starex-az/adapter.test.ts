@@ -69,8 +69,10 @@ describe('Starex HTTP adapter', () => {
     ]);
     expect(result.events![1]!.description).toBe('Ready for Pickup: The package is ready for pickup at the branch.');
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map' && !event.location)).toBe(true);
-    // The recipient's masked name, phone and code, their branch and the shop's order number stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Te\*\*|\*{5}0000|0\*{6}|Sample|0{16}/);
+    // The recipient's masked name is read; their phone and code, their branch and the shop's order number stay out.
+    expect(result.receiver_name).toBe('Te** Re*******');
+    const rest = { ...result, receiver_name: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/Te\*\*|\*{5}0000|0\*{6}|Sample|0{16}/);
     expect(result).not.toHaveProperty('pickup_point');
   });
 

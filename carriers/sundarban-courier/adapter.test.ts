@@ -64,8 +64,11 @@ describe('Sundarban Courier HTTP adapter', () => {
     expect(result).not.toHaveProperty('pickup_point');
   });
 
-  it('keeps no sender, recipient, phone, address, contents, vehicle, manifest, bag, delivery man or remark', () => {
-    const json = JSON.stringify(parseSundarban(fixture('delivered'), DELIVERED));
+  it('reads the recipient’s name and address, and keeps no sender, phone, contents, vehicle, manifest, bag, delivery man or remark', () => {
+    const result = parseSundarban(fixture('delivered'), DELIVERED);
+    expect(result).toMatchObject({ receiver_name: 'Sample Receiver', receiver_address: '2 Example Lane' });
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
+    const json = JSON.stringify(rest);
     expect(json).not.toMatch(/Sample (?:Sender|Receiver|Goods|Rider|booking)|Example (?:Road|Lane|Branch)|Sample Town|01000000|SAMPLE-VEHICLE|900001|SMP-DOC|N\/A|10009999999980/);
   });
 

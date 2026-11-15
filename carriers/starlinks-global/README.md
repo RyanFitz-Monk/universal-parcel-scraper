@@ -33,8 +33,8 @@ Starlinks. Tracked through its tracking page.
 - The courier the tracking link's address names becomes the delivery carrier, with the
   courier's number when it differs from the one asked. The page's name for the courier is
   Starlinks Global's label for its service, so it names none.
-- The destination country and the weight in kilograms are read. The shop and the recipient's
-  town are not.
+- The destination country, the recipient's town as their address and the weight in kilograms
+  are read. The shop is not.
 
 ## Limitations
 

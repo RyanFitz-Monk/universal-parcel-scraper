@@ -46,7 +46,8 @@ lookup its tracking page makes.
 - The estimate is the date part of `fechaEntEstimada`, as the page shows it, until the order
   ends or closes.
 - The reply carries the sender's and recipient's masked names, RUT, phone, email and address,
-  the payment, the declared value, the proof of delivery and coordinates. None are kept.
+  the payment, the declared value, the proof of delivery and coordinates. The recipient's name,
+  their home address and, once delivered, who took the parcel are read; the rest is not kept.
 - There is no recognition. Starken numbers its orders in sequence, so nearly any nine digits in
   its current range are some order of its, and a known answer would not tell a Starken parcel
   from another carrier's number.

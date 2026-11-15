@@ -56,10 +56,12 @@ describe('SPX Express Taiwan HTTP adapter', () => {
     expect((fetcher.mock.calls[0]![1]!.headers as Record<string, string>)['User-Agent']).not.toBe('SyntheticHost/1.0');
   });
 
-  it('keeps a parcel waiting at the buyer’s store once, as instants, with the store and without the buyer', () => {
+  it('keeps a parcel waiting at the buyer’s store once, as instants, with the store and the buyer’s name', () => {
     const result = parseSpxTw(fixture('ready-for-pickup'), READY);
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map',
-      last_status_text: '包裹已配達買家取件門市 - [範例門市]', last_update: '2026-05-18T12:40:00Z', pickup_point: '範例門市' });
+      last_status_text: '包裹已配達買家取件門市 - [範例門市]', last_update: '2026-05-18T12:40:00Z', pickup_point: '範例門市',
+      receiver_name: '王小明' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result).not.toHaveProperty('delivered_at');
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null])).toEqual([
       ['2026-05-18T12:40:00Z', 'SP_Ready_Collection', 'ready_for_pickup', '範例門市'],
@@ -70,15 +72,15 @@ describe('SPX Express Taiwan HTTP adapter', () => {
       ['2026-05-17T06:40:00Z', 'Created', 'registered', null],
     ]);
     expect(result.events!.every((event) => !('local_time' in event) && !('store' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/王小明|0900000000|COD|Order Created/);
+    expect(JSON.stringify({ ...result, receiver_name: undefined })).not.toMatch(/王小明|0900000000|COD|Order Created/);
   });
 
-  it('reads a collected parcel as delivered without the name after it, and a name it does not know by its wording', () => {
+  it('reads a collected parcel as delivered with the name after it as who took it, and a name it does not know by its wording', () => {
     const collected = parseSpxTw(changed((rows) => {
       rows.unshift({ timestamp: 1_779_200_000, status: 'Delivered', message: '買家已取件 [王小明]' });
     }), READY);
-    expect(collected).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: '買家已取件',
-      delivered_at: '2026-05-19T14:13:20Z', pickup_point: '範例門市' });
+    expect(collected).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: '買家已取件 [王小明]',
+      delivered_at: '2026-05-19T14:13:20Z', pickup_point: '範例門市', signed_by: '王小明' });
     const unknown = parseSpxTw(changed((rows) => {
       rows.unshift({ timestamp: 1_779_200_000, status: 'SP_Synthetic', message: '合成狀態' });
     }), READY);

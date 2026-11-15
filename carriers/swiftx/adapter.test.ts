@@ -66,14 +66,17 @@ describe('SwiftX tracking reply', () => {
       ['2026-03-05T06:31:58-07:00', 'CREATED', 'registered', undefined],
     ]);
     expect(result.events![2]!.description).toBe('Delivery failed Note: Business was closed during delivery attempt. Please provide alternative delivery instructions.');
-    // The recipient's town and postcode, the sites' postcodes, the help line and the proof of delivery stay out.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLETOWN|0000[1-8]|555|example\.com|For assistance|pod/i);
+    // The delivery row's place is the recipient's address; it stays out of the scans, as do the sites' postcodes, the help line and the proof of delivery.
+    expect(result.receiver_address).toBe('SAMPLETOWN, NY 00001');
+    const rest = { ...result, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/SAMPLETOWN|0000[1-8]|555|example\.com|For assistance|pod/i);
   });
 
   it('keeps a quoted note without its help line and calls a missing package an exception', () => {
     const result = parseSwiftx(fixture('failed-attempt'), FAILED, READ_AT);
     expect(result).toMatchObject({ status: 'exception', current_stage: 'failed_attempt',
-      last_status_text: 'Delivery failed Note: Delivery address could not be located. Please verify the address.' });
+      last_status_text: 'Delivery failed Note: Delivery address could not be located. Please verify the address.',
+      receiver_address: 'SAMPLETOWN, CA 00007' });
     expect(result.delivered_at).toBeUndefined();
     // A label a station created carries its town.
     expect(result.events!.map((event) => event.location)).toEqual([undefined, 'LAKEMONT, CA', 'LAKEMONT, CA']);

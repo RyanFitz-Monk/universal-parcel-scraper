@@ -36,16 +36,17 @@ the terminal is scheduling the delivery. Tracked through Team Trac.
   which the page calls an estimate. A day before the newest row's is stale. The estimated arrival at the destination terminal is not a
   delivery estimate and is not read.
 - A town and state after a row's wording, `OUT FOR DELIVERY - {town}, {state}`, is the row's
-  location. Other text after the wording, the booking agent after an appointment, and the
-  signer after `SIGNED FOR` are not kept.
+  location. Other text after the wording and the booking agent after an appointment are not
+  kept. A delivery row keeps its signer after `SIGNED FOR BY:`, which is read as who signed for
+  the freight, as is the header's `Signed For By` when no row names them.
 - Remarks (`FRE`, formerly `CMT`) are free text the station types and can name people, so they
   are left out of the history.
-- The shipper's reference, the town and ZIP code the shipment goes to, the delivery's clock in
-  the header and the office's phone number are not kept.
+- The town and ZIP code the shipment goes to are read as the recipient's address. The shipper's
+  reference, the delivery's clock in the header and the office's phone number are not kept.
 
 ## Limitations
 
-- No weight, piece count, service, sender or recipient, and no scan time as an instant.
+- No weight, piece count, service, sender or recipient's name, and no scan time as an instant.
 - A bill reaches the adapter when it is filed under Team Worldwide or opened from a Team Trac
   link: station codes are airport codes other carriers print too, so no rule claims them and
   preflight does not ask it.

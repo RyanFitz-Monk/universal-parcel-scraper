@@ -31,12 +31,14 @@ Tracked through the Web Connect tracing service behind its tracer's live tracing
   calls scheduled for pickup, to the pickup itself. `VOD`, a voided record, is left unstaged.
 - "Delivered to Customer" in the shipment's location decides a delivery. Otherwise the newest
   scan with a stage decides, since the location stays "At destination" through the delivery run.
-- The signer's name after "Delivered - Signed By:" is left out.
+- A delivery keeps "Delivered - Signed By:" and the signer's name in its wording, and is staged
+  without it. The name is `signed_by`, from the delivery or else from the shipment's status.
 - The estimate is the appointment's day when the status names one, else the committed day. It
   is dropped once the freight is delivered, or when it falls before the newest scan's day.
 - The weight in pounds becomes kilograms.
-- The shipper's and consignee's towns and ZIP codes, the piece count, the delay reason, the
-  appointment's hours, the service centers' phones and the interline fields are not read.
+- The consignee's town, state and ZIP code are `receiver_address`. The shipper's, the piece
+  count, the delay reason, the appointment's hours, the service centers' phones and the interline
+  fields are not read.
 
 ## Limitations
 

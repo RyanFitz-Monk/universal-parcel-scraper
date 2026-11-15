@@ -9,7 +9,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, SMSA_ENDPOINT, SmsaTracker } from './adapter.js';
 import { parseSmsaApp, SMSA_APP_ENDPOINT } from './app.js';
-import { parseSmsa, smsaWording } from './parser.js';
+import { parseSmsa, smsaScanStageOf, smsaSigner, smsaWording } from './parser.js';
 import { smsaScanStage, smsaStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -61,12 +61,13 @@ describe('SMSA Express app service', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered cross-border history as instants with SMSA’s codes, without names, comments or the repeated scan', () => {
+  it('reads a delivered cross-border history as instants with SMSA’s codes, the recipient and the signer, without the shipper, comments or the repeated scan', () => {
     const result = parseSmsaApp(app('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-10-05T08:32:45Z', expected_delivery: null, weight_kg: 12.5, destination_country: 'SA' });
+      last_status_text: 'Delivered, Signed by: Sample Person', last_update: '2026-10-05T08:32:45Z', expected_delivery: null, weight_kg: 12.5,
+      destination_country: 'SA', receiver_name: 'Sample Person', signed_by: 'Sample Person' });
     expect(appRows(result)).toEqual([
-      ['2026-10-05T08:32:45Z', 'DL', 'Delivered', 'Example Town', 'delivered'],
+      ['2026-10-05T08:32:45Z', 'DL', 'Delivered, Signed by: Sample Person', 'Example Town', 'delivered'],
       ['2026-10-05T06:06:00Z', 'OD', 'Out for Delivery', 'Example Town', 'out_for_delivery'],
       ['2026-10-04T11:00:00Z', 'DEX93-5', 'Delivery on Hold - Waiting Customs Info/Invoice Completion', 'Example Town', 'customs'],
       ['2026-10-02T04:45:00Z', 'HOP', 'Shipment Departed SMSA Sorting Facility', 'Example Town', 'in_transit'],
@@ -83,7 +84,8 @@ describe('SMSA Express app service', () => {
       ['2026-09-17T21:10:00Z', 'PU', 'Shipment Picked up from the shipper.', 'Sample City', 'accepted'],
     ]);
     expect(result.events!.every((event) => event.local_time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample Person|Sample Shop|SAMPLE-REF|SYNTHETIC|Sample Courier|PIN Verified|0500000000|Signed|Forward|"AE"|2026-09-17T10:29/);
+    const rest = { ...result, receiver_name: undefined, signed_by: undefined, last_status_text: undefined, events: result.events?.slice(1) };
+    expect(JSON.stringify(rest)).not.toMatch(/Sample Person|Sample Shop|SAMPLE-REF|SYNTHETIC|Sample Courier|PIN Verified|0500000000|Signed|Forward|"AE"|2026-09-17T10:29/);
   });
 
   it('reads the same scans as the page, three hours earlier, and an estimate when the parcel is still on its way', () => {
@@ -180,13 +182,14 @@ describe('SMSA Express app service', () => {
 });
 
 describe('SMSA Express tracking page', () => {
-  it('reads a delivered cross-border history newest first as wall clocks, without the signer, the origin or the repeated scan', () => {
+  it('reads a delivered cross-border history newest first as wall clocks, with the signer, without the origin or the repeated scan', () => {
     const result = parseSmsa(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-10-05T11:32:00', expected_delivery: null,
-      weight_kg: 12.5, destination_country: 'SA' });
+      last_status_text: 'Delivered, Signed by: Sample Person', last_update: null, last_update_local: '2026-10-05T11:32:00', expected_delivery: null,
+      weight_kg: 12.5, destination_country: 'SA', signed_by: 'Sample Person' });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(rows(result)).toEqual([
-      ['2026-10-05T11:32:00', 'Delivered', 'Example Town', 'delivered'],
+      ['2026-10-05T11:32:00', 'Delivered, Signed by: Sample Person', 'Example Town', 'delivered'],
       ['2026-10-05T09:06:00', 'Out for Delivery', 'Example Town', 'out_for_delivery'],
       ['2026-10-04T14:00:00', 'Delivery on Hold - Waiting Customs Info/Invoice Completion', 'Example Town', 'customs'],
       ['2026-10-02T07:45:00', 'Shipment Departed SMSA Sorting Facility', 'Example Town', 'in_transit'],
@@ -205,7 +208,8 @@ describe('SMSA Express tracking page', () => {
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
     expect(result.delivered_at).toBeUndefined();
-    expect(JSON.stringify(result)).not.toMatch(/Sample Person|Signed|"AE"|, AE|, SA|KG|Picked Up|In Transit"/);
+    const rest = { ...result, signed_by: undefined, last_status_text: undefined, events: result.events?.slice(1) };
+    expect(JSON.stringify(rest)).not.toMatch(/Sample Person|Signed|"AE"|, AE|, SA|KG|Picked Up|In Transit"/);
     // The app's reply for the same shipment holds the same scans.
     expect(parseSmsaApp(app('delivered'), DELIVERED).events!.map((event) => event.description)).toEqual(result.events!.map((event) => event.description));
   });
@@ -246,10 +250,15 @@ describe('SMSA Express tracking page', () => {
     expect(shared.events![0]!.stage_source).toMatch(/^wording:/);
   });
 
-  it('takes the signer and phone numbers out of the wording', () => {
-    expect(smsaWording('Delivered, Signed by: Sample Person ')).toBe('Delivered');
-    expect(smsaWording('Delivered,Signed by:')).toBe('Delivered');
-    expect(smsaWording('Delivered signed by SAMPLE')).toBe('Delivered');
+  it('keeps the signer in the wording and stages it without, and takes phone numbers out', () => {
+    expect(smsaWording('Delivered, Signed by: Sample Person ')).toBe('Delivered, Signed by: Sample Person');
+    expect(smsaWording('Delivered,Signed by:')).toBe('Delivered,Signed by');
+    for (const wording of ['Delivered, Signed by: Sample Person', 'Delivered,Signed by', 'Delivered signed by SAMPLE']) {
+      expect(smsaScanStageOf(wording), wording).toEqual({ stage: 'delivered', source: 'carrier_map' });
+    }
+    expect(smsaSigner('Delivered, Signed by: Sample Person')).toBe('Sample Person');
+    expect(smsaSigner('Delivered signed by SAMPLE')).toBe('SAMPLE');
+    expect(smsaSigner('Delivered,Signed by')).toBe('');
     expect(smsaWording('Call the branch on +966 00 000 0000')).toBe('Call the branch on');
     expect(smsaWording('  Shipment Departed SMSA Sorting Facility ')).toBe('Shipment Departed SMSA Sorting Facility');
     expect(smsaWording('Shipment Picked up from the shipper.')).toBe('Shipment Picked up from the shipper.');

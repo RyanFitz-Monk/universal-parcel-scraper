@@ -17,8 +17,9 @@ const STATUS = /^[A-Za-z0-9_]{1,64}$/;
 const READY = 'SP_Ready_Collection';
 // The pickup store, in brackets at the end of the arrival line.
 const STORE = /\[([^\]]{1,100})\]\s*$/;
-// The bracketed name the feed puts after a delivery elsewhere.
-const NAMED = /\s*\[[^\]]*\]\s*$/;
+// The bracketed name the feed puts after a delivery elsewhere: who took the
+// parcel. The wording keeps it; its stage is read without it.
+const NAMED = /\s*\[([^\]]*)\]\s*$/;
 const MAX_ROWS = 1000;
 const MAX_EVENTS = 100;
 
@@ -29,23 +30,25 @@ export function normalizeSpxTwNumber(raw: string): string {
   return number;
 }
 
-function projectRow(row: Record<string, unknown>): CarrierEvent {
+function projectRow(row: Record<string, unknown>): { event: CarrierEvent; signer: string } {
   if (typeof row.status !== 'string' || !STATUS.test(row.status.trim())) throw new SchemaError(PROVIDER, 'SPX Express Taiwan returned an invalid status');
   const code = row.status.trim();
   if (typeof row.message !== 'string') throw new SchemaError(PROVIDER, 'SPX Express Taiwan returned a scan without wording');
   const line = clean(row.message, 500);
-  const description = code === 'Delivered' ? clean(line.replace(NAMED, ''), 500) : line;
+  const description = line;
   if (!description) throw new SchemaError(PROVIDER, 'SPX Express Taiwan returned a scan without wording');
   const clock = row.timestamp;
   const time = typeof clock === 'number' && Number.isSafeInteger(clock) && clock >= 1_000_000_000 && clock < 10_000_000_000
     ? epochSecondsTime(clock)?.iso : undefined;
   if (!time) throw new SchemaError(PROVIDER, 'SPX Express Taiwan returned an invalid scan time');
   const store = code === READY ? clean(STORE.exec(line)?.[1], 100) : '';
-  const staged = spxTwStage(code, description);
-  return {
+  const delivery = code === 'Delivered';
+  const staged = spxTwStage(code, (delivery && clean(line.replace(NAMED, ''), 500)) || description);
+  const signer = delivery ? clean(NAMED.exec(line)?.[1], 100) : '';
+  return { signer: /\p{L}/u.test(signer) ? signer : '', event: {
     time, ...(store ? { location: store } : {}), description, provider_code: code,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
-  };
+  } };
 }
 
 /**
@@ -74,9 +77,11 @@ export function parseSpxTw(payload: unknown, raw: string): CarrierResult {
 
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signers = new Map<CarrierEvent, string>();
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'SPX Express Taiwan returned an invalid scan');
-    const event = projectRow(row);
+    const { event, signer } = projectRow(row);
+    signers.set(event, signer);
     const key = JSON.stringify(event);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -91,6 +96,8 @@ export function parseSpxTw(payload: unknown, raw: string): CarrierResult {
   const delivered = stage === 'delivered' ? staged!.time : undefined;
   // The store a parcel waits at is the place of its newest arrival there.
   const store = events.find((event) => event.provider_code === READY && event.location)?.location;
+  const signer = delivered ? signers.get(staged!) : '';
+  const recipient = typeof data.recipient_name === 'string' ? clean(data.recipient_name, 100) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
@@ -98,6 +105,8 @@ export function parseSpxTw(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     ...(delivered ? { delivered_at: delivered } : {}),
     ...(store ? { pickup_point: store } : {}),
+    ...(/\p{L}/u.test(recipient) ? { receiver_name: recipient } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

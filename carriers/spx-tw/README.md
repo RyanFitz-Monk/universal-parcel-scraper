@@ -29,8 +29,8 @@ at a pickup store. Its tracker and numbers are separate from the other SPX netwo
   derived.
 - Status names give the stages. A parcel at the buyer's store is ready for pickup; the store in
   brackets after that line is the pickup point and the scan's place. A name in brackets after a
-  collection is dropped.
-- The reply also carries the recipient's name, phone and payment type, which are not read.
+  collection stays in the wording, which is staged without it, and gives `signed_by`.
+- The reply's recipient's name is `receiver_name`. Its phone and payment type are not read.
   Repeated scans are kept once.
 
 ## Limitations

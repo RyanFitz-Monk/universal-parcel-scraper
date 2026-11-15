@@ -44,7 +44,7 @@ for the last mile. This folder covers the journey up to that handoff.
 
 - Scan locations are not read, and the endpoint has no ETA. At most 20 scans are kept.
 - Recent replies put every scan in the origin leg, the last-mile ones included.
-- The recipient block and signature image are never read.
+- The recipient's name and address are read when the reply has them; the signature image is not.
 
 ## Testing
 

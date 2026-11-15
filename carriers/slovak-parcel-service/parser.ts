@@ -141,13 +141,29 @@ export function parseSpsParcelStatus(payload: unknown, parcel: string): unknown[
   return rows;
 }
 
+// A postcode in the recipient's record, as "99001".
+const POSTCODE = /^[A-Z\d][A-Z\d -]{1,9}$/i;
+
+/**
+ * The recipient's street, then postcode and town. The service writes the
+ * recipient as one record joined by tildes: the name and country, the postcode,
+ * the town, the street, a blank and an email address, which is not read. A
+ * receiver in another form gives only the destination postcode, when there is one.
+ */
+function receiverAddress(shipment: Record<string, unknown>): string {
+  const parts = text(shipment, 'receiver', 500).split('~').map((part) => clean(part, 200));
+  const record = parts.length >= 4 && POSTCODE.test(parts[1]!);
+  const [postcode, town, street] = record ? [parts[1]!, parts[2]!, parts[3]!] : [text(shipment, 'destinationZip', 20), '', ''];
+  return [street, [postcode, town].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+}
+
 /**
  * The reply of `GET /api/tracking/shipment`. The shipment, each parcel and
  * each scan name their numbers; one of them must be the requested parcel or
- * the barcode it is short for. The shipper, receiver, receiver's name,
- * destination postcode, references, remarks and the handheld's coordinates in
- * the same reply are never read. `rows` replaces the reply's scans with those
- * a `parcel-status` request returned.
+ * the barcode it is short for. The recipient's name and address are read; the
+ * shipper, the recipient's email, references, remarks and the handheld's
+ * coordinates in the same reply are not. `rows` replaces the reply's scans
+ * with those a `parcel-status` request returned.
  */
 export function parseSpsShipment(payload: unknown, raw: string, rows?: readonly unknown[]): CarrierResult {
   const number = normalizeSpsNumber(raw);
@@ -176,6 +192,9 @@ export function parseSpsShipment(payload: unknown, raw: string, rows?: readonly 
 
   const weight = shipment.weight;
   const weightKg = typeof weight === 'number' && Number.isFinite(weight) && weight > 0 && weight < 10_000 ? { weight_kg: weight } : {};
+  const name = text(shipment, 'nameOfReceiver', 200);
+  const address = receiverAddress(shipment);
+  const recipient = { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
   const newest = scans[0];
   if (!newest) {
     // A shipment without scans keeps the status the service gives it.
@@ -186,7 +205,7 @@ export function parseSpsShipment(payload: unknown, raw: string, rows?: readonly 
     return { status: stage ? languageStageStatus(stage) : 'unknown',
       ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
       last_status_text: summary, last_update: null, ...(typeof code === 'number' ? { provider_code: String(code) } : {}),
-      expected_delivery: null, summary_only: true, ...weightKg, events: [] };
+      expected_delivery: null, summary_only: true, ...weightKg, ...recipient, events: [] };
   }
   // Cash and notice steps move nothing: the newest milestone stays current.
   // From a return to the sender on, a later delivery hands the parcel back.
@@ -200,6 +219,7 @@ export function parseSpsShipment(payload: unknown, raw: string, rows?: readonly 
     last_update_local: newest.event.local_time,
     expected_delivery: null,
     ...weightKg,
+    ...recipient,
     events: scans.slice(0, MAX_EVENTS).map(scan => scan.event),
     ...(scans.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -79,7 +79,7 @@ function eventsOf($: CheerioAPI): CarrierEvent[] {
  * date, the suite, the origin, the destination, the consignee, the weight and
  * the items, a status bar and the tracking table. SkyBox's number must be the
  * one asked. An unknown number has the skybill id 0, one message and no card.
- * Only the tracking table is kept.
+ * The tracking table and the consignee are kept.
  */
 export function parseSkybox(html: string, raw: string): CarrierResult {
   const number = normalizeSkyboxNumber(raw);
@@ -110,6 +110,7 @@ export function parseSkybox(html: string, raw: string): CarrierResult {
   if (!newest) throw new NoHistoryError(PROVIDER);
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const consignee = field($, 'trackinginfosearch-lblConsignee');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -117,6 +118,7 @@ export function parseSkybox(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     expected_delivery: null,
+    ...(consignee ? { receiver_name: consignee } : {}),
     events,
   };
 }

@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, TELESHIP_API, TeleshipTracker, teleshipLookupUrl } from './adapter.js';
-import { normalizeTeleshipNumber, parseTeleship, parseTeleshipNotFound, teleshipLocation, teleshipWording } from './parser.js';
+import { normalizeTeleshipNumber, parseTeleship, parseTeleshipNotFound, teleshipLocation, teleshipSigner, teleshipUnsigned, teleshipWording } from './parser.js';
 import { statusMap, teleshipStage, teleshipStatusStage } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
@@ -48,8 +48,9 @@ describe('Teleship HTTP adapter', () => {
   it('reads a delivered journey as instants, newest first, with the last-mile carrier and its number', () => {
     const result = parseTeleship(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-03-09T18:44:00Z', expected_delivery: null,
-      delivered_at: '2026-03-09T18:44:00Z', delivery_carrier: 'usps', delivery_tracking_number: '9400100000000000000001' });
+      last_status_text: 'Delivered, signed for by SAMPLE PERSON', last_update: '2026-03-09T18:44:00Z', expected_delivery: null,
+      delivered_at: '2026-03-09T18:44:00Z', delivery_carrier: 'usps', delivery_tracking_number: '9400100000000000000001',
+      signed_by: 'SAMPLE PERSON', receiver_name: 'Sample Recipient', receiver_address: '1 Sample Street\n00000 Sample City' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null])).toEqual([
       ['2026-03-09T18:44:00Z', 'L_901', 'delivered', 'Sample City, US'],
       ['2026-03-09T13:05:00Z', 'L_301', 'out_for_delivery', 'Sample City, US'],
@@ -63,8 +64,11 @@ describe('Teleship HTTP adapter', () => {
       ['2026-03-02T10:05:12.345Z', 'S_102', 'registered', null],
     ]);
     expect(result.events!.every((event) => event.local_time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    // Neither who signed, the recipient, the merchant's order nor Teleship's shipment ID is kept.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE PERSON|Sample Recipient|Sample Street|#0001|00000000-0000|signed|Mark 3|Pro Carrier/i);
+    expect(result.events![0]!.description).toBe('Delivered, signed for by SAMPLE PERSON');
+    // Neither the merchant's order nor Teleship's shipment ID is kept.
+    const rest = { ...result, signed_by: undefined, receiver_name: undefined, receiver_address: undefined, last_status_text: undefined };
+    expect(JSON.stringify({ ...rest, events: rest.events!.slice(1) }))
+      .not.toMatch(/SAMPLE PERSON|Sample Recipient|Sample Street|#0001|00000000-0000|signed|Mark 3|Pro Carrier/i);
   });
 
   it('reads clearance as customs, and drops a phone number and a place that is only a partner’s name', () => {
@@ -123,9 +127,11 @@ describe('Teleship HTTP adapter', () => {
     expect(result).toMatchObject({ current_stage: 'customs', last_status_text: 'Synthetic note' });
   });
 
-  it('takes people and phone numbers out of the wording and partners out of the place', () => {
-    expect(teleshipWording('Delivered, signed for by SAMPLE PERSON')).toBe('Delivered');
-    expect(teleshipWording('Delivered - Signed by: Sample Person')).toBe('Delivered');
+  it('takes phone numbers out of the wording and partners out of the place, and reads who signed', () => {
+    expect(teleshipWording('Delivered, signed for by SAMPLE PERSON')).toBe('Delivered, signed for by SAMPLE PERSON');
+    expect(teleshipUnsigned('Delivered - Signed by: Sample Person')).toBe('Delivered');
+    expect(teleshipSigner('Delivered - Signed by: Sample Person')).toBe('Sample Person');
+    expect(teleshipSigner('Delivered')).toBe('');
     // "Received by" names the carrier that took the parcel over.
     expect(teleshipWording('Received by last-mile carrier')).toBe('Received by last-mile carrier');
     expect(teleshipWording('Call +00 (0) 000 000 0000 to arrange delivery')).toBe('Call to arrange delivery');

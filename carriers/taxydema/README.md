@@ -31,14 +31,16 @@ Greece parcels Meest International sends there. Tracked through its tracking pag
   recipient and is no place the parcel is.
 - A message to the recipient names the masked phone it went to, then a subject with the sender
   and links to the parcel's delivery options or a survey. The adapter keeps only that a message
-  was sent, which moves nothing. A delivery's line names who took the parcel and when; that
-  part is dropped. Every line loses links, phone numbers and email addresses.
+  was sent, which moves nothing. A delivery's line names who took the parcel and when; it is
+  kept, and the name is read as who signed for it. Every line loses links, phone numbers and
+  email addresses.
 - The rail's last step, dated once the parcel got there, settles a delivery, or a return when
   the reply marks the parcel as going back to its sender. Otherwise the newest scan with a stage
   decides.
 - The page also shows the towns the parcel goes from and to, and an incoming or outgoing waybill
-  for a parcel another network handed over or took on. None of these is kept: the towns are the
-  recipient's area, and no reply seen carries a waybill that shows which network it belongs to.
+  for a parcel another network handed over or took on. The town it goes to is read as the
+  recipient's address. The other town and the waybills are not kept: no reply seen carries a
+  waybill that shows which network it belongs to.
 - An earlier version of the tracker answered in another format, with other wording. Its
   wording stays in the map.
 

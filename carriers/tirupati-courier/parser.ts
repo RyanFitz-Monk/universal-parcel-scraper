@@ -219,7 +219,7 @@ function statusLine(element: Cheerio<Element>): string {
  * it holds no booking for gets the same page with the number and every field
  * empty. A delivered consignment's page hides its jobs and keeps only the
  * booking and the status line. The page must name the number asked. The
- * destination, the consignee and the phone numbers are not kept.
+ * consignee is kept; the destination and the phone numbers are not.
  */
 export function parseTirupati(html: string, raw: string): CarrierResult {
   const number = normalizeTirupatiNumber(raw);
@@ -286,6 +286,7 @@ export function parseTirupati(html: string, raw: string): CarrierResult {
   }
 
   const summed = line ? tirupatiStage(null, parts ? clean(parts[1], 120) : line) : null;
+  const receiver = /\p{L}/u.test(consignee) ? { receiver_name: consignee } : {};
   const newest = events[0];
   if (!newest) {
     if (!line) throw new NoHistoryError(PROVIDER);
@@ -296,6 +297,7 @@ export function parseTirupati(html: string, raw: string): CarrierResult {
       last_update: null,
       expected_delivery: null,
       timezone: ZONE,
+      ...receiver,
       summary_only: true,
       events: [],
     };
@@ -313,6 +315,7 @@ export function parseTirupati(html: string, raw: string): CarrierResult {
     ...(typeof newest.local_time === 'string' ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     timezone: ZONE,
+    ...receiver,
     events: events.slice(0, MAX_EVENTS),
     ...(hidden || events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

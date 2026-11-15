@@ -83,7 +83,20 @@ function sitePlace(row: Record<string, unknown>, code: string): string {
   return /^[A-Z]{2}$/.test(state) ? `${town}, ${state}` : town;
 }
 
-interface Row { event: CarrierEvent & { time: string; description: string; provider_code: string }; timestamp: number; index: number }
+// Rows at the recipient's door, whose place is the recipient's.
+const AT_DOOR = new Set(['DELIVERED', 'DELIVERY_FAILED', 'DELIVERY_ATTEMPT']);
+
+/** The recipient's town, state and postcode, as a row at their door gives them. */
+function doorPlace(row: Record<string, unknown>, code: string): string {
+  if (!AT_DOOR.has(code)) return '';
+  const town = clean(row.cityUppercase, 100);
+  const state = clean(row.iso3166Sc, 8);
+  const postcode = clean(row.postalCode, 16);
+  const area = [/^[A-Z]{2}$/.test(state) ? state : '', /^[A-Z0-9 -]{3,10}$/i.test(postcode) ? postcode : ''].filter(Boolean).join(' ');
+  return [/\p{L}/u.test(town) ? town : '', area].filter(Boolean).join(', ');
+}
+
+interface Row { event: CarrierEvent & { time: string; description: string; provider_code: string }; timestamp: number; index: number; door: string }
 
 /**
  * The tracker's reply for one number, read at `readAt`. Only a reply naming
@@ -130,7 +143,7 @@ export function parseSwiftx(payload: unknown, raw: string, readAt = Date.now()):
     const key = JSON.stringify(event);
     if (seen.has(key)) return;
     seen.add(key);
-    rows.push({ event, timestamp: time.timestamp, index });
+    rows.push({ event, timestamp: time.timestamp, index, door: doorPlace(item, code) });
   });
   // Newest first, as the tracker lists them; equal clocks keep its order.
   rows.sort((left, right) => right.timestamp - left.timestamp || left.index - right.index);
@@ -147,12 +160,14 @@ export function parseSwiftx(payload: unknown, raw: string, readAt = Date.now()):
   }
   const stage = decider?.event.stage as Stage | undefined;
   const events = rows.map((row) => row.event);
+  const address = rows.find((row) => row.door)?.door;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: decider!.event.stage_source } : {}),
     last_status_text: newest.event.description,
     last_update: newest.event.time,
     ...(stage === 'delivered' && decider!.event.provider_code === 'DELIVERED' ? { delivered_at: decider!.event.time } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS || info.unlockStatus === 'BASIC' ? { history_truncated: true } : {}),
   };

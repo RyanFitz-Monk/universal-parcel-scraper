@@ -40,7 +40,8 @@ Tracked through the search its tracking page makes.
   "Shipment not delivered." is a failed attempt, whatever reason follows.
 - The estimate shows only before the delivery. The weight in pounds becomes kilograms, and the
   consignee's city line gives the destination country.
-- The consignee and shipper, the signer, the delivery appointment, the bill of lading and PO
+- The consignee's name and city line are read as the recipient's, and the signer once the
+  freight is delivered. The shipper, the delivery appointment, the bill of lading and PO
   numbers, the piece count, the trailers and the service centers' codes are not kept.
 
 ## Limitations

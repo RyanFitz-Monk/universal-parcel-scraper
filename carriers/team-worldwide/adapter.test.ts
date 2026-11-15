@@ -51,17 +51,18 @@ describe('Team Worldwide HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'team-worldwide', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads a delivered history as wall clocks, without the signer, the remarks, the booking agent, the reference or the ZIP code', () => {
+  it('reads a delivered history as wall clocks, with the signer and the town and ZIP code, without the remarks, the booking agent or the reference', () => {
     const result = parseTeam(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'SIGNED FOR', last_update: null, last_update_local: '2026-03-12T14:40:00', expected_delivery: null,
+      last_status_text: 'SIGNED FOR BY: PAT SAMPLETON', last_update: null, last_update_local: '2026-03-12T14:40:00', expected_delivery: null,
+      receiver_address: 'EXAMPLETOWN, TX 75000', signed_by: 'PAT SAMPLETON',
     });
     for (const field of ['summary_only', 'history_truncated', 'delivered_at', 'receiver_name', 'sender_name']) {
       expect(result).not.toHaveProperty(field);
     }
     expect(events(result)).toEqual([
-      ['2026-03-12T14:40:00', 'POD', 'SIGNED FOR', null, 'delivered'],
+      ['2026-03-12T14:40:00', 'POD', 'SIGNED FOR BY: PAT SAMPLETON', null, 'delivered'],
       ['2026-03-12T08:15:00', 'OFD', 'OUT FOR DELIVERY', 'EXAMPLETOWN, TX', 'out_for_delivery'],
       // Stamped when it was booked; the day it is booked for is an estimate, and the agent is not kept.
       ['2026-03-11T09:10:00', 'ADS', 'APPT FOR DEL SCHED', null, 'in_transit'],
@@ -78,10 +79,12 @@ describe('Team Worldwide HTTP adapter', () => {
       ['2026-03-03T08:07:00', 'ESN', 'SHIPMENT NOTIFICATION RECEIVED FROM API', null, 'registered'],
     ]);
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PAT|SAMPLETON|ROBIN|CASEY|EXAMPLE\b|555-0|SAMPLE-REF|75000|THURSDAY|BET|0800|2026-03-12"/);
+    const rest = { ...result, receiver_address: undefined, signed_by: undefined, last_status_text: undefined };
+    expect(JSON.stringify({ ...rest, events: rest.events!.slice(1) })).not.toMatch(/PAT|SAMPLETON|ROBIN|CASEY|EXAMPLE\b|555-0|SAMPLE-REF|75000|THURSDAY|BET|0800|2026-03-12"/);
     // A delivery row the page lists under a later row still settles the shipment, with its own clock.
     const later = parseTeam(withRows(fixture('delivered'), [['ITR', '20260312', '1450', 'IN TRANSIT'], ['POD', '20260312', '1440', 'SIGNED FOR BY: PAT SAMPLETON']]), DELIVERED);
-    expect(later).toMatchObject({ current_stage: 'delivered', last_status_text: 'SIGNED FOR', last_update_local: '2026-03-12T14:40:00' });
+    expect(later).toMatchObject({ current_stage: 'delivered', last_status_text: 'SIGNED FOR BY: PAT SAMPLETON', last_update_local: '2026-03-12T14:40:00',
+      signed_by: 'PAT SAMPLETON' });
   });
 
   it('reads an in-transit history, and the estimate from the newest delivery appointment, else the header', () => {
@@ -97,7 +100,11 @@ describe('Team Worldwide HTTP adapter', () => {
       ['2026-10-15T15:48:00', 'CPR', 'CUSTOMER PICKUP REQUESTED', null, 'registered'],
       ['2026-10-15T12:57:00', 'NEW', 'SHIPMENT CREATED', null, 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|46000|555-0/);
+    // The town and ZIP code are the recipient's address; nobody has signed yet.
+    expect(result.receiver_address).toBe('SAMPLE CITY, IN 46000');
+    expect(result).not.toHaveProperty('signed_by');
+    const rest = { ...result, receiver_address: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/SAMPLE|46000|555-0/);
     const booked = withRows(fixture('in-transit'), [
       ['ADS', '20261020', '0824', 'APPT FOR DEL SCHED 20261022 BY 1700 SAMPLE/JFK'],
       ['ADS', '20261019', '1100', 'APPT FOR DEL SCHED 20261021 BET 0800-1200'],
@@ -105,14 +112,16 @@ describe('Team Worldwide HTTP adapter', () => {
     ]);
     // A time the delivery is due by is the day alone; a window keeps its hours on the booked day.
     expect(parseTeam(booked, IN_TRANSIT)).toMatchObject({ last_status_text: 'APPT FOR DEL SCHED', expected_delivery: '2026-10-22' });
-    expect(JSON.stringify(parseTeam(booked, IN_TRANSIT))).not.toMatch(/SAMPLE|JFK|1700/);
+    const appointed = { ...parseTeam(booked, IN_TRANSIT), receiver_address: undefined };
+    expect(JSON.stringify(appointed)).not.toMatch(/SAMPLE|JFK|1700/);
     const slot = withRows(fixture('in-transit'), [
       ['ADS', '20261020', '0824', 'APPT FOR DEL SCHED 20261021 BET 0800-1200 SAMPLE/JFK'],
       ['RCU', '20261019', '0930', 'FREIGHT RECOVERED'],
     ]);
     expect(parseTeam(slot, IN_TRANSIT)).toMatchObject({ last_status_text: 'APPT FOR DEL SCHED', expected_delivery: '2026-10-21 08:00–12:00' });
     expect(parseTeam(slot, IN_TRANSIT)).not.toHaveProperty('expected_delivery_from');
-    expect(JSON.stringify(parseTeam(slot, IN_TRANSIT))).not.toMatch(/SAMPLE|JFK/);
+    const slotted = { ...parseTeam(slot, IN_TRANSIT), receiver_address: undefined };
+    expect(JSON.stringify(slotted)).not.toMatch(/SAMPLE|JFK/);
     // A window booked for the newest row's day still stands; one that ends before it starts is its day.
     expect(parseTeam(withRows(fixture('in-transit'), [['ADS', '20261021', '0705', 'APPT FOR DEL SCHED 20261021 BET 1300-1700']]), IN_TRANSIT))
       .toMatchObject({ expected_delivery: '2026-10-21 13:00–17:00' });

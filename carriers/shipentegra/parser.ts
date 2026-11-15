@@ -41,13 +41,22 @@ function text(row: Record<string, unknown>, key: string, maxLength = 500): strin
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 // A clause naming who took or signed for the parcel, in a partner's words after the sentence.
 const RECEIVER = /\s*\b(?:signed|signature|received by|picked up by|collected by|left with|delivered to|teslim alan|imza)[\s\S]*$/i;
+// The name after the words saying who signed for or received the parcel, up to a comma, semicolon or bracket.
+const SIGNER = /\b(?:signed(?:\s+for)?\s+by|received by|teslim alan)\s*[:\-–]?\s*([^,;()]+)/i;
 
-/**
- * A scan's wording, as the page shows it, without a clause naming who took
- * the parcel and without phone numbers.
- */
+/** A scan's wording, as the page shows it, without phone numbers. */
 export function shipentegraWording(event: string): string {
-  return clean(event.replace(RECEIVER, '').replace(PHONE, '')).replace(/\s+([,;:.])/g, '$1').replace(/[\s,;:\-–(]+$/, '');
+  return tidy(event.replace(PHONE, ''));
+}
+
+function tidy(wording: string): string {
+  return clean(wording).replace(/\s+([,;:.])/g, '$1').replace(/[\s,;:\-–(]+$/, '');
+}
+
+/** Who signed for or received the parcel, as a delivery scan's wording names them. */
+export function shipentegraSigner(wording: string): string | undefined {
+  const name = clean(SIGNER.exec(wording)?.[1] ?? '', 100).replace(/[\s.:\-–]+$/, '');
+  return /\p{L}/u.test(name) ? name : undefined;
 }
 
 /**
@@ -70,7 +79,8 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
   const description = shipentegraWording(text(row, 'event'));
   if (!description) throw new SchemaError(PROVIDER, 'ShipEntegra returned a scan without wording');
   const local = scanClock(text(row, 'date', 32));
-  const staged = shipentegraStage(description);
+  // The sentence and the partner's words stage the scan; a clause naming who took the parcel does not.
+  const staged = shipentegraStage(tidy(description.replace(RECEIVER, '')) || description);
   const event: CarrierEvent = {
     local_time: local,
     description,
@@ -114,6 +124,7 @@ function handoff(payload: Record<string, unknown>, number: string): Pick<Carrier
  * `NOTFOUND` is a number it does not know, which it echoes as an integer
  * ("0" for nine zeros). A shipment must name the number asked. The seller's
  * account id, the summary's delivery date and the domestic carrier are not read.
+ * Who signed for a delivered parcel comes from its delivery scan's wording.
  */
 export function parseShipentegra(payload: unknown, raw: string): CarrierResult {
   const number = normalizeShipentegraNumber(raw);
@@ -154,6 +165,8 @@ export function parseShipentegra(payload: unknown, raw: string): CarrierResult {
   const stage = (decisive ?? scanned?.stage) as Stage | undefined;
   const source = decisive && decisive !== scanned?.stage ? 'carrier_map' : scanned?.stage_source;
   const destination = text(payload, 'destination_country', 8).toUpperCase();
+  const signer = stage === 'delivered' ? newestFirst.filter((event) => event.stage === 'delivered')
+    .map((event) => shipentegraSigner(event.description!)).find(Boolean) : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -162,6 +175,7 @@ export function parseShipentegra(payload: unknown, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(countryCode(destination) === destination ? { destination_country: destination } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...handoff(payload, number),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),

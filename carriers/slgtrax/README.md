@@ -35,8 +35,8 @@ on slgtrax.com makes.
   `Shipment - Arrived at Origin`, the first scan of a parcel dropped at an office.
 - A failed attempt's `status_reason` follows its status in the description, without phone
   numbers or amounts to collect.
-- Only the number and the scans are kept; the reply's shipper, recipient and order details are
-  not.
+- The consignee's name is `receiver_name`, and their address, with the destination city on the
+  next line, is `receiver_address`. The shipper, the phones and the order details are not kept.
 
 ## Limitations
 

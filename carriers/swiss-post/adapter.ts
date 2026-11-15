@@ -315,6 +315,19 @@ function heldForPickup(events: readonly CarrierEvent[]): boolean {
   return ready > 0 && events.slice(0, ready).every((event) => !LEFT_THE_POINT.has(event.stage ?? ''));
 }
 
+/**
+ * The recipient as the summary's `addressee` gives them: the name lines, then
+ * the street and number on one line and the postcode and town on the next.
+ * An anonymous lookup gets the postcode and town alone.
+ */
+function addressee(item: JsonObject): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const to = isRecord(item.addressee) ? item.addressee : {};
+  const line = (...parts: unknown[]) => parts.map((part) => text(part, 200)).filter(Boolean).join(' ');
+  const name = line(to.name1, to.name2, to.name3);
+  const address = [text(to.streetAndNumber, 200) || line(to.street, to.number), line(to.zip, to.city)].filter(Boolean).join('\n');
+  return { ...(/\p{L}/u.test(name) ? { receiver_name: name } : {}), ...(/[\p{L}\d]/u.test(address) ? { receiver_address: address } : {}) };
+}
+
 export function parseSwissPostShipment(
   item: JsonObject,
   rawEvents: unknown[],
@@ -394,6 +407,7 @@ export function parseSwissPostShipment(
     ...(weight !== null ? { weight_kg: weight } : {}),
     ...(dimensions ? { dimensions_text: dimensions } : {}),
     ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}),
+    ...addressee(item),
     timezone: 'Europe/Zurich',
     global_status: globalStatus,
     canonical_tracking_number: comparableShipmentNumber(item.shipmentNumber) || undefined,

@@ -47,10 +47,11 @@ describe('Spee-Dee adapter', () => {
     expect(new Headers(fetcher.mock.calls[0]![1]?.headers).get('User-Agent')).toBe(DEFAULT_USER_AGENT);
   });
 
-  it('keeps recipient, signer, route and comment data out of the result', async () => {
+  it('keeps the signer and delivery address, and route and comment data out of the result', async () => {
     const fetcher = vi.fn<typeof fetch>(async () => html(DELIVERED));
-    const result = await adapter(environment(fetcher)).track({ number: NUMBER });
+    const { signed_by: signer, receiver_address: address, ...result } = await adapter(environment(fetcher)).track({ number: NUMBER });
     expect(result.events).toHaveLength(5);
+    expect([signer, address]).toEqual(['PRIVATE SIGNER', '1 PRIVATE STREET\nEXAMPLE CITY, IL']);
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|Signed|Delivered to|00000\)|SP000000000000000025/);
   });
 
@@ -191,7 +192,7 @@ describe('Spee-Dee adapter', () => {
     const dumps = `<!-- Array\n(\n${'    [scanloc] => PRIVATE\n    [scanepoch] => 1700000000\n'.repeat(3_000)})\n-->`;
     const page = DELIVERED.replace('</body>', `${dumps}</body>`);
     expect(page.length).toBeGreaterThan(128 * 1024);
-    const result = await adapter(environment(vi.fn<typeof fetch>(async () => html(page)))).track({ number: NUMBER });
+    const result = { ...(await adapter(environment(vi.fn<typeof fetch>(async () => html(page)))).track({ number: NUMBER })), signed_by: undefined, receiver_address: undefined };
     expect(result.events).toHaveLength(5);
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|1700000000/);
   });
@@ -216,10 +217,10 @@ describe('Spee-Dee remote network recovery', () => {
   const setup = (fetcher: typeof fetch, recorder = NOOP_RECORDER) => adapter({ ...environment(fetcher), recorder,
     trawl: new TrawlClient('https://browser.invalid') });
 
-  it('recovers through the configured transport, keeps the failed attempt and drops private fields', async () => {
+  it('recovers through the configured transport, keeps the failed attempt and drops the route and comments', async () => {
     const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(refused()).mockResolvedValueOnce(reply(DELIVERED));
     const step = vi.fn(), lookup = vi.fn();
-    const result = await setup(fetcher, { step, lookup }).track({ number: NUMBER }, { budgetMs: 25_000 });
+    const result = { ...(await setup(fetcher, { step, lookup }).track({ number: NUMBER }, { budgetMs: 25_000 })), signed_by: undefined, receiver_address: undefined };
     expect(result.events).toHaveLength(5);
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|Signed|Delivered to|00000\)/);
     const [url, init] = fetcher.mock.calls[1]!;

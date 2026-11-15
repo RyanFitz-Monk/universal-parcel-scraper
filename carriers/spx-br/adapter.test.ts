@@ -7,7 +7,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { sameInstantIdentityPolicy } from '../../app.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, SPX_BR_API, SPX_BR_FLEET_API, spxBrFleetQuery, SpxBrTracker } from './adapter.js';
-import { normalizeSpxBrNumber, parseSpxBr, parseSpxBrFleet, spxBrPlacedText, spxBrWording } from './parser.js';
+import { normalizeSpxBrNumber, parseSpxBr, parseSpxBrFleet, spxBrPlacedText, spxBrSigner, spxBrStageWording, spxBrWording } from './parser.js';
 import { spxBrStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -50,10 +50,11 @@ describe('SPX Express Brazil HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the scans of a delivery once, as instants, without the recipient or the seller’s town', () => {
+  it('keeps the scans of a delivery once, as instants, with the recipient and who received it, without the seller’s town', () => {
     const result = parseSpxBr(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Pedido entregue', last_update: '2026-05-19T12:53:20Z', delivered_at: '2026-05-19T12:53:20Z' });
+      last_status_text: 'Pedido entregue', last_update: '2026-05-19T12:53:20Z', delivered_at: '2026-05-19T12:53:20Z',
+      receiver_name: 'Pessoa Exemplo', signed_by: 'Pessoa Exemplo' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null])).toEqual([
       ['2026-05-19T12:53:20Z', 'F980', 'delivered', null],
       ['2026-05-19T08:26:40Z', 'F600', 'out_for_delivery', null],
@@ -76,7 +77,8 @@ describe('SPX Express Brazil HTTP adapter', () => {
       description: 'Seu pedido chegou ao centro logístico' });
     expect(result.events![3]).not.toHaveProperty('point');
     expect(result.events!.every((event) => !('local_time' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Pessoa Exemplo|Recebido|Vendedor|Rua |Avenida|R101|1000000000000000001/);
+    const rest = { ...result, receiver_name: undefined, signed_by: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/Pessoa Exemplo|Recebido|Vendedor|Rua |Avenida|R101|1000000000000000001/);
   });
 
   it('files a parcel from abroad under customs, newest scan first by its clock', () => {
@@ -222,11 +224,19 @@ describe('SPX Express Brazil HTTP adapter', () => {
     const posting = { stage: 'accepted', description: 'Pedido postado', location: '', providerCode: 'F098' };
     expect(policy?.matches?.(posting, { ...posting, description: 'Pedido postado Cidade Exemplo - SP' })).toBe(true);
     expect(policy?.matches?.(posting, { ...posting, description: 'Pedido postado Cidade Exemplo - SP', providerCode: 'F100' })).toBe(false);
+    // A delivery stored without who received it.
+    const delivery = { stage: 'delivered', description: 'Seu pacote foi entregue a [Pessoa Exemplo]', location: '', providerCode: 'Delivered' };
+    expect(policy?.matches?.(delivery, { ...delivery, description: 'Seu pacote foi entregue' })).toBe(true);
+    expect(policy?.matches?.(delivery, { ...delivery, description: 'Seu pacote foi coletado' })).toBe(false);
   });
 
-  it('takes whoever received the parcel out of the wording', () => {
-    expect(spxBrWording('Pedido entregue. Recebido por: Pessoa Exemplo')).toBe('Pedido entregue');
-    expect(spxBrWording('[LM Hub_SP_Exemplo] Seu pacote foi entregue a [Pessoa Exemplo] ')).toBe('[LM Hub_SP_Exemplo] Seu pacote foi entregue');
+  it('keeps whoever received the parcel in the wording, and stages it without them', () => {
+    expect(spxBrWording('Pedido entregue. Recebido por: Pessoa Exemplo')).toBe('Pedido entregue. Recebido por: Pessoa Exemplo');
+    expect(spxBrStageWording('Pedido entregue. Recebido por: Pessoa Exemplo')).toBe('Pedido entregue');
+    expect(spxBrSigner('Pedido entregue. Recebido por: Pessoa Exemplo')).toBe('Pessoa Exemplo');
+    expect(spxBrWording('[LM Hub_SP_Exemplo] Seu pacote foi entregue a [Pessoa Exemplo] ')).toBe('[LM Hub_SP_Exemplo] Seu pacote foi entregue a [Pessoa Exemplo]');
+    expect(spxBrStageWording('[LM Hub_SP_Exemplo] Seu pacote foi entregue a [Pessoa Exemplo]')).toBe('[LM Hub_SP_Exemplo] Seu pacote foi entregue');
+    expect(spxBrSigner('[LM Hub_SP_Exemplo] Seu pacote foi entregue a [Pessoa Exemplo]')).toBe('Pessoa Exemplo');
     // A partner carrier's delivery leaves the name empty.
     expect(spxBrWording('[00000] Pacote foi entregue a  ')).toBe('[00000] Pacote foi entregue');
     expect(spxBrWording('Pacote [TO0000] está sendo transportado para [SoC_SP_Exemplo]'))
@@ -320,9 +330,10 @@ describe('SPX Express Brazil HTTP adapter', () => {
       expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'direct', outcome: 'indeterminate' }));
       expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'legacy', outcome: 'ok', fallbackFrom: 'direct' }));
       expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-        last_status_text: 'Seu pacote foi entregue', last_update: '2026-05-19T12:53:20Z', delivered_at: '2026-05-19T12:53:20Z' });
+        last_status_text: 'Seu pacote foi entregue a [Destinatária Sintética]', last_update: '2026-05-19T12:53:20Z', delivered_at: '2026-05-19T12:53:20Z',
+        receiver_name: 'Destinatária Sintética', signed_by: 'Destinatária Sintética' });
       expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null, event.description])).toEqual([
-        ['2026-05-19T12:53:20Z', 'Delivered', 'delivered', null, 'Seu pacote foi entregue'],
+        ['2026-05-19T12:53:20Z', 'Delivered', 'delivered', null, 'Seu pacote foi entregue a [Destinatária Sintética]'],
         ['2026-05-19T08:26:40Z', 'Delivering', 'out_for_delivery', null, 'Seu pacote está sendo entregue pelo entregador'],
         // A hub taking the parcel in is the scan's place; the hub leaves the wording.
         // A hub's own scan stands for the line haul's unloading there, which leaves.
@@ -337,7 +348,7 @@ describe('SPX Express Brazil HTTP adapter', () => {
         ['2026-05-16T13:36:40Z', 'Created', 'registered', null, 'O pedido foi criado'],
       ]);
       const text = JSON.stringify(result);
-      for (const value of ['Destinatária Sintética', '******0000', 'SYNTHETIC', 'TO2026', 'LT0TEST']) expect(text, value).not.toContain(value);
+      for (const value of ['******0000', 'SYNTHETIC', 'TO2026', 'LT0TEST']) expect(text, value).not.toContain(value);
     } finally {
       vi.useRealTimers();
     }
@@ -432,7 +443,9 @@ describe('SPX Express Brazil HTTP adapter', () => {
     // The feed's English lines name the recipient last, in brackets.
     const english = fleet();
     english.data.tracking_list[0]!.message = '[LM Hub_RJ_Porto Modelo] Your parcel has been delivered [Destinatária Sintética]';
-    expect(parseSpxBrFleet(english, FLEET).events![0]).toMatchObject({ description: 'Your parcel has been delivered', stage: 'delivered' });
+    const delivered = parseSpxBrFleet(english, FLEET);
+    expect(delivered).toMatchObject({ signed_by: 'Destinatária Sintética' });
+    expect(delivered.events![0]).toMatchObject({ description: 'Your parcel has been delivered [Destinatária Sintética]', stage: 'delivered' });
     expect(() => parseSpxBrFleet({ ...fleet(), data: { ...fleet().data, tracking_list: [] } }, FLEET)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
   });
 

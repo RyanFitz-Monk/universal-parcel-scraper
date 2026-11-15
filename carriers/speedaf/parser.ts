@@ -43,31 +43,50 @@ function text(row: Record<string, unknown>, key: string, maxLength = 500): strin
 const COURIER = /\s*[,，;；.]?\s*(?:the\s+)?(?:(?:pick-?up|delivery)\s+courier|courier|pick-?up)\s+is\b[\s\S]*$|\s*[,，;；]?\s*(?:收件员|派件员|快递员)[\s\S]*$/i;
 // The English delivery scan opens with the clerk's name: "【name】in 【site】scanned for delivery".
 const LEADING_CLERK = /^\s*【[^】]*】\s*in\s*(?=【)/i;
-// The recipient who signed and the scanning clerk, in 【】 after their label
-// inside the wording: the label and its brackets go.
-const PERSON = /\s*[,，;；]?\s*(?:and\s+)?(?:received by|signed by|签收人是|签收人|扫描员是)\s*(?:【[^】]*】\s*)+/gi;
+// The scanning clerk, in 【】 after their label inside the wording: the label
+// and its brackets go.
+const CLERK = /\s*[,，;；]?\s*(?:and\s+)?扫描员是\s*(?:【[^】]*】\s*)+/gi;
 // Such a label left without its brackets: the rest of the wording goes with it.
-const PERSON_LABEL = /\s*[,，;；]?\s*(?:received by|signed by|签收人|扫描员)[\s\S]*$/i;
+const CLERK_LABEL = /\s*[,，;；]?\s*扫描员[\s\S]*$/i;
+// The recipient who signed, in 【】 after their label or after it without
+// brackets. The wording keeps them; its stage is read without them.
+const RECIPIENT = /\s*[,，;；]?\s*(?:and\s+)?(?:received by|signed by|签收人是|签收人)\s*(?:【[^】]*】\s*)+/gi;
+const RECIPIENT_LABEL = /\s*[,，;；]?\s*(?:received by|signed by|签收人)[\s\S]*$/i;
+const SIGNER = /(?:received by|signed by|签收人是|签收人)\s*[:：]?\s*(?:【([^】]*)】|([^【】,，;；.。]+))/i;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 
+/** Spaces before punctuation, empty brackets and separators at either end removed. */
+function tidy(text: string): string {
+  return clean(text.replace(/【\s*】/g, '').replace(/\s+([,，;；.。])/g, '$1')).replace(/^[\s,，;；]+|[\s,，;；]+$/g, '');
+}
+
 /**
- * A scan's wording without the people it names. Pickup, delivery and
- * signature scans name the courier, the scanning clerk and the recipient, and
- * in some countries the courier's phone, in 【】 after fixed English and
- * Chinese labels.
+ * A scan's wording without the courier, the scanning clerk or a phone number.
+ * Pickup, delivery and signature scans name the courier, the scanning clerk
+ * and the recipient, and in some countries the courier's phone, in 【】 after
+ * fixed English and Chinese labels. The recipient who signed stays.
  */
 export function speedafWording(raw: string): string {
-  return clean(raw
+  return tidy(raw
     .replace(LEADING_CLERK, '')
     .replace(COURIER, '')
-    .replace(PERSON, '')
-    .replace(PERSON_LABEL, '')
-    .replace(PHONE, '')
-    .replace(/【\s*】/g, '')
-    .replace(/\s+([,，;；.。])/g, '$1'))
-    .replace(/^[\s,，;；]+|[\s,，;；]+$/g, '');
+    .replace(CLERK, '')
+    .replace(CLERK_LABEL, '')
+    .replace(PHONE, ''));
+}
+
+/** A wording without the recipient who signed, for its stage. */
+export function speedafStageWording(wording: string): string {
+  return tidy(wording.replace(RECIPIENT, '').replace(RECIPIENT_LABEL, '')) || wording;
+}
+
+/** The recipient a delivery's wording says signed, or an empty string. */
+export function speedafSigner(wording: string): string {
+  const match = SIGNER.exec(wording);
+  const name = clean(match?.[1] ?? match?.[2] ?? '', 100).replace(/[\s.:-]+$/, '');
+  return /\p{L}/u.test(name) ? name : '';
 }
 
 /** The offset `timezone` gives in hours, in minutes; null when it gives none a clock can have. */
@@ -119,7 +138,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
   const description = speedafWording(text(row, 'msgEng') || text(row, 'message') || text(row, 'actionName', 200));
   if (!description) throw new SchemaError(PROVIDER, 'Speedaf returned a scan without wording');
   const when = scanTime(row);
-  const staged = speedafStage(code, description);
+  const staged = speedafStage(code, speedafStageWording(description));
   const event: CarrierEvent = {
     ...when,
     description,
@@ -188,6 +207,7 @@ export function parseSpeedaf(payload: unknown, raw: string): CarrierResult {
   const current = newestFirst.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const delivered = stage === 'delivered' && typeof current!.time === 'string' ? current!.time : null;
+  const signer = stage === 'delivered' ? speedafSigner(current!.description ?? '') : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -196,6 +216,7 @@ export function parseSpeedaf(payload: unknown, raw: string): CarrierResult {
     ...(typeof newest.local_time === 'string' ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(COUNTRY.test(country) ? { destination_country: country } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),

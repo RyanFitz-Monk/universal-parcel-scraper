@@ -148,9 +148,9 @@ function heading(card: Selection): { pro: string; status: string } {
  * The tracking page after its search: one card per PRO, under a group for the
  * PRO asked, with the shipment's status, its history newest first in the
  * page's order (the clocks are each service center's own), and its details.
- * The consignee and shipper, the signer, the delivery appointment, the bill of
- * lading and PO numbers, the pieces, the trailers and the service centers'
- * codes are never read.
+ * The consignee's name and city line and, once delivered, the signer are read.
+ * The shipper, the delivery appointment, the bill of lading and PO numbers, the
+ * pieces, the trailers and the service centers' codes are never read.
  */
 export function parseTforceFreight(html: string, raw: string): CarrierResult {
   const pro = normalizeTforceFreightNumber(raw);
@@ -214,6 +214,9 @@ export function parseTforceFreight(html: string, raw: string): CarrierResult {
   const weight = weightKg(labelled($, card, 'Weight'));
   const service = labelled($, card, 'Service');
   const country = destinationCountry(card);
+  const consignee = labelled($, card, 'Ship To') ?? '';
+  const town = clean(card.find('#lblOrigShipToCityState').first().text(), 120);
+  const signer = delivered ? labelled($, card, 'Signed By') ?? '' : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -224,6 +227,9 @@ export function parseTforceFreight(html: string, raw: string): CarrierResult {
     ...(weight !== null ? { weight_kg: weight } : {}),
     ...(service ? { service_name: service } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(/\p{L}/u.test(consignee) ? { receiver_name: consignee } : {}),
+    ...(/\p{L}/u.test(town) ? { receiver_address: town } : {}),
+    ...(/\p{L}/u.test(signer) ? { signed_by: signer } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

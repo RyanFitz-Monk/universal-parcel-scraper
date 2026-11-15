@@ -36,12 +36,13 @@ const FORWARDED = /^转寄单号[:：]\s*([A-Z0-9]{6,40})$/i;
 // numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
-// Who took a delivered parcel, after the delivery's own words.
-const RECEIVER = /\s*[,;:.\-–，；：]?\s*(?:(?:signed(?: for)? by|signatory|received by)\b|签收人)[\s\S]*$/i;
+// Who signed for a delivery: the name after a signing bracket's comma, or after "signed by" or 签收人.
+const SIGNER = [/【[^【】]*(?:签收|代收)\s*[,，:：]\s*([^【】]+)】/, /(?:signed(?: for)? by|signatory|received by|签收人)\s*[:：-]?\s*([^,;，；。【】]+)/i];
 // A clause of a relayed Chinese post scan that gives a courier, a phone, a hotline or a complaint line.
 const CONTACT = /电话|手机|致电|联系|电联|热线|投诉|呼叫|快递员|投递员|揽投员|揽收员|派送员|派件员|收派员|配送员|司机|姓名|(?<![A-Z\d])\d{5,}/i;
-// A bracketed office, centre, workshop or city, a day, or the warehouse's own step; any other
-// bracket can name a person or a signer.
+// A bracketed office, centre, workshop or city, a day, the warehouse's own step, or a signing;
+// any other bracket can name a person.
+const SIGNING = /签收|代收/;
 const OFFICE = /(?:局|部|中心|站|所|处|公司|仓|港|场|口岸|海关|网点|营业厅|厅|机场|航空|车间|市|县|自治州|报关行)$/;
 const DAY = /^\d{1,2}月\d{1,2}日(?:上午|中午|下午|晚上)?$/;
 const STEP = /^[出入]库$/;
@@ -68,25 +69,35 @@ function wallClock(text: string): string {
 }
 
 /**
- * A status's text without who signed for it, phone numbers or e-mail addresses.
- * A relayed Chinese post scan also loses the brackets that name no office, day
- * or warehouse step, and every clause from the first that gives a contact.
+ * A status's text without phone numbers or e-mail addresses. A relayed Chinese
+ * post scan also loses the brackets that name no office, day, warehouse step or
+ * signing, and every clause from the first that gives a contact.
  */
 export function timelyTitanText(value: string): string {
-  let text = value.replace(RECEIVER, '').replace(EMAIL, '').replace(PHONE, '');
+  let text = value.replace(EMAIL, '').replace(PHONE, '');
   if (HAN.test(text)) {
     text = text.replace(/【([^【】]*)】/g, (whole, inner: string) => {
       const name = inner.trim();
-      return (OFFICE.test(name) || DAY.test(name) || STEP.test(name)) && !CONTACT.test(name) ? whole : '';
+      return (OFFICE.test(name) || DAY.test(name) || STEP.test(name) || SIGNING.test(name)) && !CONTACT.test(name) ? whole : '';
     });
     const kept: string[] = [];
-    for (const clause of text.split(/(?<=[，,。；;！!？?])/)) {
+    // A comma inside a bracket ends no clause.
+    for (const clause of text.split(/(?<=[，,。；;！!？?])(?![^【】]*】)/)) {
       if (CONTACT.test(clause)) break;
       kept.push(clause);
     }
     text = kept.join('');
   }
   return clean(text.replace(/\s+([,，;；.。])/g, '$1')).replace(/^[\s,，;；:：]+|[\s,，;；:：。\-–]+$/g, '');
+}
+
+/** Who signed for a delivery, as its text names them. */
+export function timelyTitanSigner(description: string): string {
+  for (const pattern of SIGNER) {
+    const name = clean(pattern.exec(description)?.[1] ?? '', 100).replace(/[\s.,;:，；：。]+$/, '');
+    if (/\p{L}/u.test(name)) return name;
+  }
+  return '';
 }
 
 /** A row's source tag and the region it names, if it names one. */
@@ -165,6 +176,7 @@ export function parseTimelyTitan(html: string, raw: string): CarrierResult {
   const newest = events[0]!;
   const latest = events.find((event) => event.stage);
   const stage = latest?.stage as Stage | undefined;
+  const signer = stage === 'delivered' ? timelyTitanSigner(latest!.description!) : '';
   // Only one number the parcel is forwarded under, other than the one asked, names it.
   const [partner] = forwarded.size === 1 ? [...forwarded] : [];
   return {
@@ -175,6 +187,7 @@ export function parseTimelyTitan(html: string, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(partner && partner !== number ? { delivery_tracking_number: partner } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

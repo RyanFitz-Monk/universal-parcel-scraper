@@ -75,11 +75,12 @@ describe('SkyPostal sealed lookup', () => {
     await expect(openSkypostalText('a.b.c')).rejects.toThrow(TypeError);
   });
 
-  it('keeps each scan’s wall clock, place, wording and code, newest first, without the comments, proof or labels', () => {
+  it('keeps each scan’s wall clock, place, wording and code, newest first, and who took the parcel, without the comments, proof or labels', () => {
     const { result, waybill, named } = readSkypostal(fixture('delivered'), DELIVERED);
     expect({ waybill, named }).toEqual({ waybill: DELIVERED_WAYBILL, named: true });
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED', last_update: null, last_update_local: '2026-05-20T16:40:12', expected_delivery: null });
+      last_status_text: 'DELIVERED', last_update: null, last_update_local: '2026-05-20T16:40:12', expected_delivery: null,
+      signed_by: 'Persona Ejemplo' });
     expect(result.events!.slice(0, 5)).toEqual([
       { local_time: '2026-05-20T16:40:12', location: 'VILLA MUESTRA', description: 'DELIVERED', provider_code: 'DEL', stage: 'delivered', stage_source: 'carrier_map' },
       { local_time: '2026-05-20T08:05:40', location: 'VILLA MUESTRA', description: 'OUT FOR DELIVERY', provider_code: 'OFD', stage: 'out_for_delivery',
@@ -97,7 +98,14 @@ describe('SkyPostal sealed lookup', () => {
       description: 'FUEL SURCHARGE', provider_code: 'FSC' });
     expect(result.events!.at(-1)).toMatchObject({ local_time: '2026-05-12T01:46:50', provider_code: 'DRC', stage: 'registered' });
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Persona|example\.invalid|operador|postrac|MANIFEST|BAG|em rota|SP0+1BR|SKAMZUS|10000000|GMT/);
+    expect(JSON.stringify(result.events)).not.toMatch(/Persona|example\.invalid|operador|postrac|MANIFEST|BAG|em rota|SP0+1BR|SKAMZUS|10000000|GMT/);
+    expect(JSON.stringify(result)).not.toMatch(/Entregue|example\.invalid|operador|postrac|MANIFEST|BAG|em rota|SP0+1BR|SKAMZUS|10000000|GMT/);
+    // Only a delivery's comment that names who took the parcel gives the signatory.
+    const commented = (comment: string) => readSkypostal(changed('delivered', (rows) => {
+      rows.find((row) => row.track_cdg === 'DEL')!.track_obs = comment;
+    }), DELIVERED).result;
+    expect(commented('Recibido por: Persona Ejemplo')).toMatchObject({ signed_by: 'Persona Ejemplo' });
+    expect(commented('conferido')).not.toHaveProperty('signed_by');
   });
 
   it('reads a history whose scans carry only SkyPostal’s label, named by the page’s summary view', async () => {

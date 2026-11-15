@@ -21,8 +21,11 @@ Scan clocks without an offset remain local, including minute-only flight scans. 
 legs cannot inherit India's zone. An offset the service states is preserved.
 
 A generic delivery after return-to-sender activity completes the return. Placeholder zero codes
-are ignored because unrelated sources share them. Names, postcodes, account data, signatures,
-contacts and handoff URLs are discarded. Ambiguous partner labels do not assign a delivery carrier.
+are ignored because unrelated sources share them. The adapter reads `awbReceiverName`, which the
+page shows as the consignee, and the name a delivery's wording gives after "signed by",
+"received by" or "collected by". The sender, the postcode the page never shows, account data,
+contacts and handoff URLs are discarded. Ambiguous partner labels do not assign a delivery
+carrier.
 
 ## Limitations
 
