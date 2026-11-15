@@ -1,0 +1,42 @@
+{
+  "id": "ruiqi",
+  "displayName": "Ruiqi Logistics",
+  "aliases": [
+    "Ruiqi",
+    "Ruiqi Express",
+    "锐骑物流",
+    "深圳市锐骑物流有限公司"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#014285"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.ruiqiexpress.com/",
+    "canaryUrl": "https://www.ruiqiexpress.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": [
+    {
+      "id": "ruiqi-1",
+      "pattern": "^RQ(?:US|GB|DE|Y2|VK|AC)\\d{12}$",
+      "confidence": "high"
+    }
+  ]
+}

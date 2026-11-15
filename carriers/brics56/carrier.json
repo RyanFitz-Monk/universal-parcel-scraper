@@ -1,0 +1,47 @@
+{
+  "id": "brics56",
+  "displayName": "Brics56",
+  "aliases": [
+    "金专特快",
+    "深圳市金专特快物流有限公司",
+    "Jinzhuan Expert Express"
+  ],
+  "region": {
+    "countries": [
+      "CN",
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#004098"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.brics56.com/track.html?no={trackingNumber}",
+    "searchUrl": "https://www.brics56.com/track.html",
+    "canaryUrl": "https://www.brics56.com/track.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "brics56.com"
+      ],
+      "pathPattern": "^/(?:pt/)?track\\.html$",
+      "params": [
+        "no"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,34 @@
+{
+  "id": "santos-e-vale",
+  "displayName": "Santos e Vale",
+  "aliases": [
+    "Grupo Santos e Vale"
+  ],
+  "region": {
+    "countries": [
+      "PT",
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#006657"
+  },
+  "selectable": true,
+  "timezone": "Europe/Lisbon",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://santosevale.pt/track/",
+    "canaryUrl": "https://santosevale.pt/track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

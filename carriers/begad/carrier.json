@@ -1,0 +1,34 @@
+{
+  "id": "begad",
+  "displayName": "Begad Logistics",
+  "aliases": [
+    "Begad",
+    "بيجاد"
+  ],
+  "region": {
+    "countries": [
+      "AE"
+    ]
+  },
+  "brand": {
+    "color": "#f15a24"
+  },
+  "selectable": true,
+  "timezone": "Asia/Dubai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://logistics.begad.ae/tracking/",
+    "canaryUrl": "https://logistics.begad.ae/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

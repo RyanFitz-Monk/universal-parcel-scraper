@@ -1,0 +1,47 @@
+{
+  "id": "xinsu",
+  "displayName": "Xinsu International",
+  "aliases": [
+    "新速国际",
+    "新速物流",
+    "广州新速国际供应链有限公司",
+    "Xinsu International Supply Chain"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#0045e7"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://xinsu.kingtrans.net/WebTrack?action=list&language=en&istrack=false&bills={trackingNumber}",
+    "searchUrl": "https://xinsu.kingtrans.net/tracken.jsp",
+    "canaryUrl": "https://www.ixinsu.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "xinsu.kingtrans.net"
+      ],
+      "pathPattern": "^/WebTrack$",
+      "params": [
+        "bills"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,48 @@
+{
+  "id": "yqs",
+  "displayName": "YQS Logistics",
+  "aliases": [
+    "YQS",
+    "悦其胜",
+    "悦其胜国际物流",
+    "深圳市悦其胜物流有限公司",
+    "天凡国际物流",
+    "Tianfan International Logistics"
+  ],
+  "region": {
+    "countries": [
+      "CN",
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#f1000b"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.nextsls.com/trace?app=686f63bc81cc2241b447ab39&numbers={trackingNumber}",
+    "searchUrl": "https://tracking.nextsls.com/trace?app=686f63bc81cc2241b447ab39",
+    "canaryUrl": "https://tracking.nextsls.com/trace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.nextsls.com"
+      ],
+      "pathPattern": "^/trace$",
+      "query": "^(?=(?:.*&)?app=686f63bc81cc2241b447ab39(?:&|$))(?:.*&)?numbers=([^&]+)(?=&|$)"
+    }
+  ],
+  "detection": []
+}

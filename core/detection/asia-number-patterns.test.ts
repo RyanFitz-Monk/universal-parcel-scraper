@@ -1658,3 +1658,17 @@ describe('TipTop', () => {
     for (const number of ['YH000000000017CN', 'TT00000017']) expect(detectCarrierMatch(number).candidates ?? [], number).not.toContain('tiptop');
   });
 });
+
+describe('Ruiqi Logistics', () => {
+  it('names Ruiqi for RQ, a channel code its site lists and twelve digits, and only that layout', () => {
+    for (const number of ['RQUS999999999980', 'rqgb 0000 0000 0017', 'RQY2000000000017', 'RQAC000000000017']) {
+      expect(detectCarrierMatch(number), number).toMatchObject({ carrier: 'ruiqi', confidence: 'high' });
+    }
+    for (const number of ['RQUS00000000017', 'RQUS0000000000017', 'RQFR000000000017', 'RQ00000000000017', 'RXUS000000000017']) {
+      expect(detectCarrierMatch(number).candidates ?? [], number).not.toContain('ruiqi');
+    }
+  });
+  it('reads its Latin and Chinese names', () => {
+    for (const name of ['Ruiqi', 'ruiqi', '锐骑物流']) expect(carrierIdFromName(name), name).toBe('ruiqi');
+  });
+});

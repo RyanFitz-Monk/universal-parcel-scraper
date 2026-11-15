@@ -1,0 +1,34 @@
+{
+  "id": "ghapex",
+  "displayName": "Ghapex Courier",
+  "aliases": [
+    "Ghapex",
+    "GhApex"
+  ],
+  "region": {
+    "countries": [
+      "GH"
+    ]
+  },
+  "brand": {
+    "color": "#ff4b26"
+  },
+  "selectable": true,
+  "timezone": "Africa/Accra",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://ghapex.com/public-tracking",
+    "canaryUrl": "https://ghapex.com/public-tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

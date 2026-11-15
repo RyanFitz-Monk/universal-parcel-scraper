@@ -1,0 +1,17 @@
+{
+  "carrier": "ruiqi",
+  "records": [
+    {
+      "number": "RQUS999999999980",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "official_shape",
+      "shapeConfirmed": "2026-11-15",
+      "expect": {
+        "carrier": "ruiqi",
+        "confidence": "high"
+      },
+      "note": "Made-up number in the layout the site's tracking script checks: RQ, a channel code and twelve digits. Its serial sits far beyond the range in use."
+    }
+  ]
+}

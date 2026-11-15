@@ -1,0 +1,42 @@
+{
+  "id": "extrans",
+  "displayName": "Extrans Global",
+  "aliases": [
+    "Extrans",
+    "EXTRANS International",
+    "EXTRANS International (HK) Co., Ltd.",
+    "瑛特仕",
+    "广州瑛特仕国际货运代理有限公司",
+    "旭晖空运国际",
+    "엑스트란스 글로벌"
+  ],
+  "region": {
+    "countries": [
+      "HK",
+      "CN",
+      "KR",
+      "VN"
+    ]
+  },
+  "brand": {
+    "color": "#005daa"
+  },
+  "selectable": true,
+  "timezone": "Asia/Hong_Kong",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://extrans.itdida.com/",
+    "canaryUrl": "https://extrans.itdida.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -760,6 +760,7 @@ import { adapter as yto } from '../carriers/yto/adapter.js';
 import { adapter as yunda } from '../carriers/yunda/adapter.js';
 import { adapter as yunexpress } from '../carriers/yunexpress/adapter.js';
 import { adapter as yurticiKargo } from '../carriers/yurtici-kargo/adapter.js';
+import { adapter as yusuda } from '../carriers/yusuda/adapter.js';
 import { adapter as ywe } from '../carriers/ywe/adapter.js';
 import { adapter as yypost } from '../carriers/yypost/adapter.js';
 import { adapter as zajil } from '../carriers/zajil/adapter.js';
@@ -1534,6 +1535,7 @@ export const REGISTRY: RegistryDefinition = {
     "yunda": yunda,
     "yunexpress": yunexpress,
     "yurtici-kargo": yurticiKargo,
+    "yusuda": yusuda,
     "ywe": ywe,
     "yypost": yypost,
     "zajil": zajil,
@@ -1678,6 +1680,7 @@ export const REGISTRY: RegistryDefinition = {
     "bcs-courier": "universal",
     "bee-fast": "universal",
     "beexprss": "universal",
+    "begad": "universal",
     "bel": "universal",
     "belpost": "belpost",
     "best-courier-ro": "universal",
@@ -1722,6 +1725,7 @@ export const REGISTRY: RegistryDefinition = {
     "branding-worldwide": "universal",
     "braspress": "universal",
     "brauns-express": "universal",
+    "brics56": "universal",
     "bridge-intl": "universal",
     "bring-posten": "bring-posten",
     "bringer-parcel": "bringer-parcel",
@@ -1752,6 +1756,7 @@ export const REGISTRY: RegistryDefinition = {
     "cargo-trans-logistik": "universal",
     "cargobus": "universal",
     "cargoline": "universal",
+    "cargomini": "universal",
     "cargus": "cargus",
     "carry-flap": "universal",
     "carrybee": "universal",
@@ -2024,6 +2029,7 @@ export const REGISTRY: RegistryDefinition = {
     "express-one-bg": "express-one-bg",
     "express-one-me": "universal",
     "express-ru": "universal",
+    "extrans": "universal",
     "ezship": "universal",
     "f2-logistics": "universal",
     "famafutar": "universal",
@@ -2106,6 +2112,7 @@ export const REGISTRY: RegistryDefinition = {
     "geodis-pl": "geodis-pl",
     "geswl": "universal",
     "ghana-post": "universal",
+    "ghapex": "universal",
     "ghn": "universal",
     "ghtk": "universal",
     "gibraltar-post": "universal",
@@ -2693,6 +2700,7 @@ export const REGISTRY: RegistryDefinition = {
     "rr-express-sg": "universal",
     "rrs-logistics": "universal",
     "rtt": "universal",
+    "ruiqi": "universal",
     "runforint": "universal",
     "runner-express": "universal",
     "russian-post": "russian-post",
@@ -2709,6 +2717,7 @@ export const REGISTRY: RegistryDefinition = {
     "sameday": "sameday",
     "samoa-post": "universal",
     "samus": "universal",
+    "santos-e-vale": "universal",
     "sapx-express": "sapx-express",
     "sat-ukraine": "sat-ukraine",
     "saudi-post": "saudi-post",
@@ -3037,6 +3046,7 @@ export const REGISTRY: RegistryDefinition = {
     "xgs": "xgs",
     "xinghe-freight": "xinghe-freight",
     "xingyunyi": "universal",
+    "xinsu": "universal",
     "xlcourier": "xlcourier",
     "xlmiles": "universal",
     "xls-futar": "universal",
@@ -3067,6 +3077,7 @@ export const REGISTRY: RegistryDefinition = {
     "yingtu": "universal",
     "yoseus": "universal",
     "youbang-express": "universal",
+    "yqs": "universal",
     "yto": "yto",
     "yto-ph": "universal",
     "yuema-express": "universal",
@@ -3074,6 +3085,7 @@ export const REGISTRY: RegistryDefinition = {
     "yunda": "yunda",
     "yunexpress": "yunexpress",
     "yurtici-kargo": "yurtici-kargo",
+    "yusuda": "yusuda",
     "ywe": "ywe",
     "yypost": "yypost",
     "z-leading": "universal",

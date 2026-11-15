@@ -1,0 +1,43 @@
+{
+  "id": "cargomini",
+  "displayName": "CargoMini",
+  "aliases": [
+    "KargomKolay",
+    "DRN Lojistik A.Ş.",
+    "CargoMini Express"
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#ff0026"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.cargomini.com/{trackingNumber}",
+    "searchUrl": "https://tracking.cargomini.com/",
+    "canaryUrl": "https://tracking.cargomini.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.cargomini.com"
+      ],
+      "path": "^/([A-Za-z0-9]+)/?$"
+    }
+  ],
+  "detection": []
+}

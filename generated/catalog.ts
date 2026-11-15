@@ -9935,6 +9935,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "begad": {
+    "displayName": "Begad Logistics",
+    "color": "#f15a24",
+    "aliases": [
+      "Begad",
+      "بيجاد"
+    ],
+    "countries": [
+      "AE"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Dubai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://logistics.begad.ae/tracking/",
+    "trackingSearchUrl": "https://logistics.begad.ae/tracking/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "bel": {
     "displayName": "BEL",
     "color": "#293e86",
@@ -11436,6 +11457,40 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "brics56": {
+    "displayName": "Brics56",
+    "color": "#004098",
+    "aliases": [
+      "金专特快",
+      "深圳市金专特快物流有限公司",
+      "Jinzhuan Expert Express"
+    ],
+    "countries": [
+      "CN",
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.brics56.com/track.html",
+    "trackingUrlTemplate": "https://www.brics56.com/track.html?no={trackingNumber}",
+    "trackingSearchUrl": "https://www.brics56.com/track.html",
+    "linkRules": [
+      {
+        "domains": [
+          "brics56.com"
+        ],
+        "pathPattern": "^/(?:pt/)?track\\.html$",
+        "params": [
+          "no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "bridge-intl": {
     "displayName": "Bridge Intl",
     "color": "#f1a135",
@@ -12204,6 +12259,36 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
           "trackandtrace.cepra.de"
         ],
         "path": "^/Track/(\\d{20})(?:/\\d{5})?/?$"
+      }
+    ],
+    "detectionRules": []
+  },
+  "cargomini": {
+    "displayName": "CargoMini",
+    "color": "#ff0026",
+    "aliases": [
+      "KargomKolay",
+      "DRN Lojistik A.Ş.",
+      "CargoMini Express"
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.cargomini.com/",
+    "trackingUrlTemplate": "https://tracking.cargomini.com/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.cargomini.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.cargomini.com"
+        ],
+        "path": "^/([A-Za-z0-9]+)/?$"
       }
     ],
     "detectionRules": []
@@ -21423,6 +21508,35 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "extrans": {
+    "displayName": "Extrans Global",
+    "color": "#005daa",
+    "aliases": [
+      "Extrans",
+      "EXTRANS International",
+      "EXTRANS International (HK) Co., Ltd.",
+      "瑛特仕",
+      "广州瑛特仕国际货运代理有限公司",
+      "旭晖空运国际",
+      "엑스트란스 글로벌"
+    ],
+    "countries": [
+      "HK",
+      "CN",
+      "KR",
+      "VN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Hong_Kong",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://extrans.itdida.com/",
+    "trackingSearchUrl": "https://extrans.itdida.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "ezship": {
     "displayName": "ezShip",
     "color": "#ff8000",
@@ -24200,6 +24314,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://epstools.ghanapost.com.gh/tracklocal.php",
     "trackingSearchUrl": "https://epstools.ghanapost.com.gh/tracklocal.php",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "ghapex": {
+    "displayName": "Ghapex Courier",
+    "color": "#ff4b26",
+    "aliases": [
+      "Ghapex",
+      "GhApex"
+    ],
+    "countries": [
+      "GH"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Accra",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ghapex.com/public-tracking",
+    "trackingSearchUrl": "https://ghapex.com/public-tracking",
     "linkRules": [],
     "detectionRules": []
   },
@@ -43508,6 +43643,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "ruiqi": {
+    "displayName": "Ruiqi Logistics",
+    "color": "#014285",
+    "aliases": [
+      "Ruiqi",
+      "Ruiqi Express",
+      "锐骑物流",
+      "深圳市锐骑物流有限公司"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.ruiqiexpress.com/",
+    "trackingSearchUrl": "https://www.ruiqiexpress.com/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^RQ(?:US|GB|DE|Y2|VK|AC)\\d{12}$",
+        "confidence": "high"
+      }
+    ]
+  },
   "runforint": {
     "displayName": "Runforint Logistics",
     "color": "#c51e32",
@@ -44095,6 +44258,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "santos-e-vale": {
+    "displayName": "Santos e Vale",
+    "color": "#006657",
+    "aliases": [
+      "Grupo Santos e Vale"
+    ],
+    "countries": [
+      "PT",
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Lisbon",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://santosevale.pt/track/",
+    "trackingSearchUrl": "https://santosevale.pt/track/",
+    "linkRules": [],
     "detectionRules": []
   },
   "sapx-express": {
@@ -54871,6 +55055,40 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "xinsu": {
+    "displayName": "Xinsu International",
+    "color": "#0045e7",
+    "aliases": [
+      "新速国际",
+      "新速物流",
+      "广州新速国际供应链有限公司",
+      "Xinsu International Supply Chain"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.ixinsu.com/",
+    "trackingUrlTemplate": "https://xinsu.kingtrans.net/WebTrack?action=list&language=en&istrack=false&bills={trackingNumber}",
+    "trackingSearchUrl": "https://xinsu.kingtrans.net/tracken.jsp",
+    "linkRules": [
+      {
+        "domains": [
+          "xinsu.kingtrans.net"
+        ],
+        "pathPattern": "^/WebTrack$",
+        "params": [
+          "bills"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "xlcourier": {
     "displayName": "XLCourier",
     "color": "#044ad6",
@@ -55783,6 +56001,41 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "yqs": {
+    "displayName": "YQS Logistics",
+    "color": "#f1000b",
+    "aliases": [
+      "YQS",
+      "悦其胜",
+      "悦其胜国际物流",
+      "深圳市悦其胜物流有限公司",
+      "天凡国际物流",
+      "Tianfan International Logistics"
+    ],
+    "countries": [
+      "CN",
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.nextsls.com/trace",
+    "trackingUrlTemplate": "https://tracking.nextsls.com/trace?app=686f63bc81cc2241b447ab39&numbers={trackingNumber}",
+    "trackingSearchUrl": "https://tracking.nextsls.com/trace?app=686f63bc81cc2241b447ab39",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.nextsls.com"
+        ],
+        "pathPattern": "^/trace$",
+        "query": "^(?=(?:.*&)?app=686f63bc81cc2241b447ab39(?:&|$))(?:.*&)?numbers=([^&]+)(?=&|$)"
+      }
+    ],
+    "detectionRules": []
+  },
   "yto-ph": {
     "displayName": "YTO Express Philippines",
     "color": "#47086c",
@@ -55906,6 +56159,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "yusuda": {
+    "displayName": "Yusuda",
+    "color": "#0b2338",
+    "aliases": [
+      "YUSUDA",
+      "YUSUDA Global Logistics",
+      "裕速达",
+      "广州裕速达货运代理有限公司"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "yusuda"
+    },
+    "canaryUrl": "https://t.17track.net/",
+    "linkRules": [],
     "detectionRules": []
   },
   "ywe": {
@@ -56747,6 +57022,7 @@ export const CARRIER_IDS = [
   "bcs-courier",
   "bee-fast",
   "beexprss",
+  "begad",
   "bel",
   "belpost",
   "best-courier-ro",
@@ -56789,6 +57065,7 @@ export const CARRIER_IDS = [
   "branding-worldwide",
   "braspress",
   "brauns-express",
+  "brics56",
   "bridge-intl",
   "bringer-parcel",
   "brink-transport",
@@ -56814,6 +57091,7 @@ export const CARRIER_IDS = [
   "cargo-trans-logistik",
   "cargobus",
   "cargoline",
+  "cargomini",
   "cargus",
   "carry-flap",
   "carrybee",
@@ -57063,6 +57341,7 @@ export const CARRIER_IDS = [
   "express-one-bg",
   "express-one-me",
   "express-ru",
+  "extrans",
   "ezship",
   "f2-logistics",
   "famafutar",
@@ -57142,6 +57421,7 @@ export const CARRIER_IDS = [
   "geodis-pl",
   "geswl",
   "ghana-post",
+  "ghapex",
   "ghn",
   "ghtk",
   "gibraltar-post",
@@ -57691,6 +57971,7 @@ export const CARRIER_IDS = [
   "rr-express-sg",
   "rrs-logistics",
   "rtt",
+  "ruiqi",
   "runforint",
   "runner-express",
   "russian-post",
@@ -57707,6 +57988,7 @@ export const CARRIER_IDS = [
   "sameday",
   "samoa-post",
   "samus",
+  "santos-e-vale",
   "sapx-express",
   "sat-ukraine",
   "saudi-post",
@@ -58015,6 +58297,7 @@ export const CARRIER_IDS = [
   "xgs",
   "xinghe-freight",
   "xingyunyi",
+  "xinsu",
   "xlcourier",
   "xlmiles",
   "xls-futar",
@@ -58043,10 +58326,12 @@ export const CARRIER_IDS = [
   "yingtu",
   "yoseus",
   "youbang-express",
+  "yqs",
   "yto-ph",
   "yuema-express",
   "yuexi-logistics",
   "yurtici-kargo",
+  "yusuda",
   "ywe",
   "yypost",
   "z-leading",
@@ -58296,6 +58581,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "bcs-courier": [],
   "bee-fast": [],
   "beexprss": [],
+  "begad": [],
   "bel": [],
   "belpost": ["belpost-s10"],
   "best-courier-ro": [],
@@ -58338,6 +58624,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "branding-worldwide": [],
   "braspress": [],
   "brauns-express": [],
+  "brics56": [],
   "bridge-intl": [],
   "bringer-parcel": ["bringer-parcel-1"],
   "brink-transport": [],
@@ -58363,6 +58650,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "cargo-trans-logistik": [],
   "cargobus": [],
   "cargoline": [],
+  "cargomini": [],
   "cargus": ["cargus-1","cargus-2"],
   "carry-flap": [],
   "carrybee": [],
@@ -58612,6 +58900,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "express-one-bg": [],
   "express-one-me": [],
   "express-ru": ["express-ru-1"],
+  "extrans": [],
   "ezship": [],
   "f2-logistics": [],
   "famafutar": [],
@@ -58691,6 +58980,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "geodis-pl": ["geodis-pl-1"],
   "geswl": [],
   "ghana-post": [],
+  "ghapex": [],
   "ghn": [],
   "ghtk": ["ghtk-1"],
   "gibraltar-post": [],
@@ -59240,6 +59530,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "rr-express-sg": [],
   "rrs-logistics": [],
   "rtt": [],
+  "ruiqi": ["ruiqi-1"],
   "runforint": [],
   "runner-express": [],
   "russian-post": ["russian-post-1","russian-post-s10"],
@@ -59256,6 +59547,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "sameday": ["sameday-1","sameday-2","sameday-3"],
   "samoa-post": [],
   "samus": [],
+  "santos-e-vale": [],
   "sapx-express": [],
   "sat-ukraine": [],
   "saudi-post": ["saudi-post-1","saudi-post-s10"],
@@ -59564,6 +59856,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "xgs": [],
   "xinghe-freight": ["xinghe-freight-1"],
   "xingyunyi": [],
+  "xinsu": [],
   "xlcourier": ["xlcourier-1"],
   "xlmiles": [],
   "xls-futar": [],
@@ -59592,10 +59885,12 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "yingtu": [],
   "yoseus": [],
   "youbang-express": ["youbang-express-1"],
+  "yqs": [],
   "yto-ph": [],
   "yuema-express": [],
   "yuexi-logistics": [],
   "yurtici-kargo": [],
+  "yusuda": [],
   "ywe": ["ywe-1"],
   "yypost": ["yypost-1"],
   "z-leading": ["z-leading-1"],
