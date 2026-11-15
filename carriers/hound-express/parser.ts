@@ -93,6 +93,8 @@ export function parseHound(payload: unknown, rawNumber: string, language: HoundL
   // A delivery stands only while no newer status may have undone it (`leadingScan`).
   const stage = leadingScan(events, statusMap)?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? events.find(event => event.stage === 'delivered') : undefined;
+  // The person who took the parcel, which the page shows with the delivery.
+  const receiver = isRecord(guide.realReceiverPerson) ? clean(guide.realReceiverPerson.givenName, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -100,6 +102,7 @@ export function parseHound(payload: unknown, rawNumber: string, language: HoundL
     last_update: events[0]!.time ?? null,
     expected_delivery: null,
     ...(delivered ? { delivered_at: delivered.time } : {}),
+    ...(delivered && receiver ? { signed_by: receiver } : {}),
     events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),
   };

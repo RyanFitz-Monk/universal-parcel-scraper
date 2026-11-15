@@ -24,8 +24,8 @@ means the service moved, not that the guide is missing.
 The reply lists the scans oldest first. Each has a `statusObj` with a numeric id and Spanish
 and English wordings, which the adapter shows in the reader's language. A `dateTimeISO` keeps
 the offset it states; a bare `dateTime` is read on UTC−06:00, as the API documentation gives
-it and central Mexico keeps all year. The receiver's name, the client reference, the notes and
-the coordinates are left out.
+it and central Mexico keeps all year. A delivered guide's `realReceiverPerson` names who took
+it. The client reference, the notes and the coordinates are left out.
 
 ## Stages
 

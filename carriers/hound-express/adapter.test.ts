@@ -38,7 +38,7 @@ describe('Hound Express guest adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'hound-express', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads the scans newest first in the reader\'s language, without the receiver or the notes', () => {
+  it('reads the scans newest first in the reader\'s language, without the reference, the notes or the coordinates', () => {
     expect(parseHound(fixture(), NUMBER)).toEqual({ status: languageStageStatus('in_transit'), current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'SYNTHETIC ON ROUTE', last_update: '2026-01-06T09:30:00-06:00', expected_delivery: null,
       events: [
@@ -80,10 +80,15 @@ describe('Hound Express guest adapter', () => {
     expect(delivered).toMatchObject({ status: languageStageStatus('delivered'), current_stage: 'delivered', last_status_text: 'ENTREGADO POD EN SISTEMA',
       last_update: '2026-01-06T10:30:00-06:00', delivered_at: '2026-01-06T10:30:00-06:00' });
     expect(delivered.events).toHaveLength(5);
+    // Who took the parcel, named with the delivery only.
+    expect(delivered.signed_by).toBe('SYNTHETIC RECEIVER');
+    expect(parseHound(then(2), NUMBER, 'es').signed_by).toBe('SYNTHETIC RECEIVER');
+    expect(parseHound(changed(guide => { delete guide.realReceiverPerson; guide.resultDetails.push({ dateTime: '2026-01-06 10:30:00', statusObj: { id: 2, description: 'ENTREGADO' } }); }), NUMBER).signed_by).toBeUndefined();
     for (const id of [31, 63, 1012, 1014]) expect(parseHound(then(id), NUMBER)).toMatchObject({ current_stage: 'delivered', delivered_at: '2026-01-06T10:30:00-06:00' });
     const missed = parseHound(then(46, 'NO ONE TO RECEIVE'), NUMBER);
     expect(missed).toMatchObject({ status: languageStageStatus('failed_attempt'), current_stage: 'failed_attempt', last_status_text: 'NO ONE TO RECEIVE' });
     expect(missed.delivered_at).toBeUndefined();
+    expect(missed.signed_by).toBeUndefined();
   });
 
   it('keeps a problem or a status the script does not list with its wording and no stage', () => {

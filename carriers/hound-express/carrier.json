@@ -48,10 +48,10 @@
       "location",
       "provider_code",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "signatory"
     ],
     "discarded": [
-      "signatory",
       "customer_reference",
       "remarks",
       "coordinates",
