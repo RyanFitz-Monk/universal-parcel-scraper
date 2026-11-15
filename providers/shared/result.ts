@@ -211,6 +211,21 @@ export function place(value: unknown): string {
     ? location : '';
 }
 
+// A country named in capitals after a comma, ending the text: "Acceptance, RUSSIAN FEDERATION".
+const FOREIGN_EVENT = /^(.*\S)\s*,\s*(\p{Lu}[\p{Lu} .'’-]{2,}\p{Lu})$/u;
+
+/**
+ * The US post's words for a scan abroad with the country after them, as ParcelsApp relays its copies of
+ * an origin post's scans ("Acceptance, RUSSIAN FEDERATION", "Processed Through Facility, EXAMPLE OFFICE,
+ * RUSSIAN FEDERATION"): the wording before the country and the country's code. A code ("CA") is no
+ * country here: after a town it is a state.
+ */
+export function foreignEvent(description: string): { wording: string; country: string } | undefined {
+  const match = FOREIGN_EVENT.exec(description.trim());
+  const country = match ? countryCode(match[2]) : null;
+  return match && country ? { wording: match[1]!, country } : undefined;
+}
+
 /** A place written in brackets after the wording, "Airline received【Hong Kong】": the wording before it and the place. */
 export function trailingPlace(description: string): { wording: string; place: string } | undefined {
   const match = /^(.*\S)\s*(?:\[([^[\]]{1,60})\]|【([^【】]{1,60})】)$/u.exec(description.trim());
@@ -704,7 +719,10 @@ export function classifyEvent(description: string, declared?: Stage): { stage: S
   const translated = trackingLanguageStage(description);
   if (translated) return { stage: translated, stage_source: 'wording:language' };
   const broad = sourceEventStage(description);
-  return { stage: broad ?? 'pending', stage_source: broad ? 'wording:provider' : 'none' };
+  if (broad) return { stage: broad, stage_source: 'wording:provider' };
+  // The US post's scan abroad, its country after it (`foreignEvent`), reads as its wording does.
+  const foreign = foreignEvent(description);
+  return foreign ? classifyEvent(foreign.wording) : { stage: 'pending', stage_source: 'none' };
 }
 
 // ParcelsApp appends the message type and medium to Chronopost's notice to the recipient

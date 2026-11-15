@@ -302,6 +302,15 @@ describe('shared provider result', () => {
     expect(event('2026-01-07T12:45:00+03:00', 'Обработка, Прибыло в место вручения')).toMatchObject({ stage_source: 'none' });
   });
 
+  it("reads the US post's scan abroad, the country in capitals after it, by its wording", () => {
+    expect(classifyEvent('Acceptance, RUSSIAN FEDERATION')).toEqual({ stage: 'accepted', stage_source: 'wording:provider' });
+    expect(classifyEvent('Processed Through Facility, MOSKVA EXAMPLE, RUSSIAN FEDERATION').stage).toBe('in_transit');
+    // A code after a town is a state, a country in other letters a place, and a town no country.
+    for (const wording of ['Acceptance, CA', 'Acceptance, Russian Federation', 'Acceptance, EXAMPLE TOWN']) {
+      expect(classifyEvent(wording), wording).toEqual({ stage: 'pending', stage_source: 'none' });
+    }
+  });
+
   it("reads Yanwen's scan after its pickup, as ParcelsApp relays it", () => {
     expect(event('2026-01-07T12:45:00+08:00', 'Processing information input'))
       .toMatchObject({ stage: 'accepted', stage_source: 'wording:provider' });
