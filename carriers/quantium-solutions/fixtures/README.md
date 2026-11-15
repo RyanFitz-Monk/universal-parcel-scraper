@@ -1,6 +1,6 @@
 # Fixtures
 
-`delivered.json` and `in-transit.json` follow the reply of the tracker's `general_sql` lookup: a
+`delivered.json` and `in-transit.json` follow the reply of the tracker's `order_track_maint` lookup: a
 list with one shipment, its order and tracking numbers, the shipper's and recipient's
 addresses, countries and states, the current milestone and the history as an XML string of
 `<history>` elements, newest first, each with its milestone, wall clock and remark.

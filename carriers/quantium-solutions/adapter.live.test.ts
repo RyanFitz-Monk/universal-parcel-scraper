@@ -12,8 +12,8 @@ describe('Quantium Solutions live retrieval', () => {
     expect(answer).toMatchObject({ carrier: 'quantium-solutions', source: 'quantium-solutions' });
     expect(answer.attempts[0]).toMatchObject({ source: 'quantium-solutions', kind: 'ok' });
     expect(answer.result.events.length).toBeGreaterThan(0);
-    // Every scan is a wall clock to the second, with no zone.
-    expect(answer.result.events.every((event) => event.description && !event.time
+    // Every scan is a wall clock to the second; an instant the facade deduces for it names how.
+    expect(answer.result.events.every((event) => event.description && (!event.time || event.time_zone_basis)
       && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(String(event.local_time)))).toBe(true);
   }, 45_000);
 

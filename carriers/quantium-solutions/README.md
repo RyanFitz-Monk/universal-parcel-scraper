@@ -5,11 +5,11 @@ and last-mile services in Asia Pacific. Tracked through the lookup its tracking 
 
 ## How it works
 
-1. `direct`: one `POST https://itapps.quantiumworldwide.com/itcms_tracking/api/itcommon/general_sql`
-   with the body
-   `{"query_name":"itcms_sql\\d_order_track","query_json":"{\"cust_code\":\"\",\"order_no\":\"{number}\"}"}`,
-   as the page that `track.quantiumworldwide.com` frames sends it. It needs no cookie, token or
-   browser. The JSON reply lists the shipments found, each with its history as an XML string.
+1. `direct`: one `POST https://itapps.quantiumworldwide.com/itcms_tracking/api/Widget/order_track_maint`
+   with the body `{"order_no":"{number}"}`, as the page that `track.quantiumworldwide.com` frames
+   sends it. It needs no cookie, token or browser. The JSON reply lists the shipments found, each
+   with its history as an XML string. The page's former lookup, a stored query through
+   `api/itcommon/general_sql`, now answers guests HTTP 401.
 2. `retry`: the request once more when it fails to reach the service or hangs. The first try gets
    half of the budget, so the retry fits in the rest.
 

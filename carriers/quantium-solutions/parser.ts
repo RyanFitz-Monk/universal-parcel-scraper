@@ -159,7 +159,7 @@ function shipmentFor(rows: unknown[], number: string): Record<string, unknown> {
 }
 
 /**
- * The reply of the tracking page's `general_sql` lookup for one number: a
+ * The reply of the tracking page's `order_track_maint` lookup for one number: a
  * list of the shipments it found, empty for a number it does not know, which
  * the page shows as "No record!". The reply also holds the shipper's and the
  * recipient's addresses, which the page does not show; they are never read.

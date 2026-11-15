@@ -7,10 +7,11 @@ import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js'
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { normalizeQuantiumNumber, parseQuantium, PROVIDER, QUANTIUM_MAX_BYTES } from './parser.js';
 
-/** The lookup the tracker on track.quantiumworldwide.com makes, from the page it frames, for the number typed in. */
-export const QUANTIUM_API = 'https://itapps.quantiumworldwide.com/itcms_tracking/api/itcommon/general_sql';
-/** The stored query that page names for an order lookup. */
-export const QUANTIUM_QUERY = 'itcms_sql\\d_order_track';
+/**
+ * The lookup the tracker on track.quantiumworldwide.com makes, from the page it frames, for the number typed in.
+ * The page's former lookup, a stored query through `itcommon/general_sql`, now refuses guests.
+ */
+export const QUANTIUM_API = 'https://itapps.quantiumworldwide.com/itcms_tracking/api/Widget/order_track_maint';
 const REDIRECTS = [301, 302, 303, 307, 308];
 // Bot checks a CDN or firewall could put in place of the reply.
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|challenge-platform|<title>\s*(?:Just a moment|Attention Required|Access denied)|AwsWafIntegration|awswaf\.com|incapsula|ddos-guard/i;
@@ -29,8 +30,7 @@ export class QuantiumTracker {
 
   async fetch(raw: string, context: TrackingContext = {}): Promise<CarrierResult> {
     const number = normalizeQuantiumNumber(raw);
-    // The page sends the stored query's arguments as a JSON string inside the JSON body.
-    const body = JSON.stringify({ query_name: QUANTIUM_QUERY, query_json: JSON.stringify({ cust_code: '', order_no: number }) });
+    const body = JSON.stringify({ order_no: number });
     const read = async (signal: AbortSignal, timeoutMs: number): Promise<CarrierResult> => {
       const { response, bytes } = await fetchBounded(QUANTIUM_API, { method: 'POST', signal, headers: {
         Accept: 'application/json', 'Content-Type': 'application/json; charset=UTF-8', 'User-Agent': userAgentOf(this.options.userAgent),

@@ -6,7 +6,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { delayedFetcher } from '../../core/testing/hang.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { createTracker } from '../../facade/index.js';
-import { adapter, QUANTIUM_API, QUANTIUM_QUERY, QuantiumTracker } from './adapter.js';
+import { adapter, QUANTIUM_API, QuantiumTracker } from './adapter.js';
 import { normalizeQuantiumNumber, parseQuantium, quantiumWording } from './parser.js';
 import { quantiumMappedStage, quantiumStage, quantiumWordingStage } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
@@ -32,7 +32,7 @@ const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_REC
 const CLOUDFLARE = '<html><head><title>Just a moment...</title></head><script>window._cf_chl_opt={}</script></html>';
 
 describe('Quantium Solutions HTTP adapter', () => {
-  it('asks the tracking page’s stored query for the whole number in capitals once, through the supplied transport', async () => {
+  it('asks the tracking page’s order lookup for the whole number in capitals once, through the supplied transport', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json(fixture('in-transit')));
     const recorder = { ...NOOP_RECORDER, step: vi.fn(), lookup: vi.fn() };
     await expect(new QuantiumTracker({ fetcher, recorder, userAgent: 'SyntheticHost/1.0' }).fetch(' 123-406 7891 ', { budgetMs: 1000.5 }))
@@ -42,8 +42,8 @@ describe('Quantium Solutions HTTP adapter', () => {
     expect(String(url)).toBe(QUANTIUM_API);
     expect(init).toMatchObject({ method: 'POST', redirect: 'manual', signal: expect.any(AbortSignal),
       headers: { 'User-Agent': 'SyntheticHost/1.0', 'Content-Type': 'application/json; charset=UTF-8' } });
-    expect(JSON.parse(String(init!.body))).toEqual({ query_name: QUANTIUM_QUERY, query_json: `{"cust_code":"","order_no":"${IN_TRANSIT}"}` });
-    expect(QUANTIUM_QUERY).toBe('itcms_sql\\d_order_track');
+    expect(String(url)).toBe('https://itapps.quantiumworldwide.com/itcms_tracking/api/Widget/order_track_maint');
+    expect(JSON.parse(String(init!.body))).toEqual({ order_no: IN_TRANSIT });
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'quantium-solutions', step: 'direct', outcome: 'ok' }));
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
