@@ -94,6 +94,9 @@ opening a browser.
   as an unknown one, with HTTP 502 and "Unsuccessful Action!", which stays indeterminate; it is
   not asked to add that number again for half an hour. A block page or a 401/403 is a challenge,
   429 is rate limited, and 404/410 means the route is unavailable.
+- While Magyar Posta's systems are down, its hosts answer every page and API request with a
+  maintenance notice under HTTP 200. The app's API answering it is maintenance, before any
+  browser is opened.
 - The app's guest API limits requests per address. Generating ids and adding numbers share a
   small allowance; reads have a larger one.
 - Google can answer the tracker's audio challenge with its automated-traffic page at the first

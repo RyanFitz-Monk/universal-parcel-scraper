@@ -47,6 +47,8 @@ function appApi(held: Record<string, unknown> = {}, ids = [APPLICATION]) {
 const added = (body: unknown, overrides: Record<string, unknown> = {}) => ({ url: MAGYAR_POSTA_APP_TRACKING, status: 200,
   headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body), truncated: false,
   base64Encoded: false, error: null, trackingNumberSubmitted: PARCEL, ...overrides });
+// The notice Magyar Posta serves under HTTP 200 while its systems are down.
+const MAINTENANCE = '<!DOCTYPE html>\n<html><head>\n  <title>Magyar Posta Zrt. - Karbantart&#225;s</title>\n</head><body>Karbantart&#225;s</body></html>';
 const widgetRefused = { url: MAGYAR_POSTA_APP_PAGE, status: 200, headers: {}, body: null, truncated: false, base64Encoded: false,
   error: 'Google refused the audio challenge' };
 const appTracker = (rows: unknown[] = [added(appFixture('app-delivered'))], held: Record<string, unknown> = {}) => {
@@ -361,6 +363,7 @@ describe('Magyar Posta app route', () => {
       [[added('{}', { status: 404 })], 'transport'],
       [[added('{}', { status: 500 })], 'indeterminate'],
       [[added('{}', { status: 503 })], 'maintenance'],
+      [[added(MAINTENANCE, { headers: { 'content-type': 'text/html' } })], 'maintenance'],
       [[added(reply, { truncated: true })], 'transport'],
       [[added('', { body: null, error: 'Magyar Posta app reply is not JSON' })], 'transport'],
       [[added('', { body: null })], 'schema'],
@@ -406,6 +409,8 @@ describe('Magyar Posta app route', () => {
       [async () => { throw new TypeError('fetch failed'); }, 'transport'],
       [async () => json({ data: 'PRIVATE' }), 'schema'],
       [async () => new Response('<html></html>', { status: 200 }), 'schema'],
+      [async () => new Response(MAINTENANCE, { status: 200 }), 'maintenance'],
+      [async () => new Response(MAINTENANCE.replace('&#225;', 'á'), { status: 200 }), 'maintenance'],
     ] as const) {
       scrape.mockClear();
       await expect(new MagyarPostaTracker({ trawl, fetcher: fetcher as unknown as typeof fetch }).fetch(PARCEL)).rejects.toMatchObject({ kind });

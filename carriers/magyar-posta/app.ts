@@ -1,4 +1,4 @@
-import { BudgetExceededError, ChallengeError, IndeterminateError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
+import { BudgetExceededError, ChallengeError, IndeterminateError, MaintenanceError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { normalizeMagyarPostaNumber, parseMagyarPostaApp, PROVIDER } from './parser.js';
@@ -36,9 +36,15 @@ export function magyarPostaAppFailure(status: number, retryAfter?: string | null
   return status === 200 ? null : new UpstreamHttpError(PROVIDER, status, retryAfterMs(retryAfter));
 }
 
-/** The JSON reply, or a schema error for anything else. */
+// The notice Magyar Posta's hosts serve under HTTP 200 in place of every page and reply while its systems are down.
+const MAINTENANCE_PAGE = /<title>\s*Magyar Posta Zrt\.\s*-\s*Karbantart(?:&#225;|&aacute;|á)s/i;
+
+/** The JSON reply; Magyar Posta's maintenance notice is maintenance, and anything else a schema error. */
 export function magyarPostaAppJson(body: string): unknown {
-  try { return JSON.parse(body.replace(/^\uFEFF/, '')); } catch { throw new SchemaError(PROVIDER, 'Magyar Posta\'s app returned invalid JSON'); }
+  try { return JSON.parse(body.replace(/^\uFEFF/, '')); } catch {
+    if (MAINTENANCE_PAGE.test(body.slice(0, 8_000))) throw new MaintenanceError(PROVIDER, 'Magyar Posta is down for maintenance');
+    throw new SchemaError(PROVIDER, 'Magyar Posta\'s app returned invalid JSON');
+  }
 }
 
 async function request(url: string, options: MagyarPostaAppOptions): Promise<unknown> {
