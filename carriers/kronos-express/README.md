@@ -10,6 +10,13 @@ public number seen is a voucher of six letters and seven digits, which the WooCo
 connecting shops to Kronos Express shows in its screenshots. A single shop's voucher cannot
 tell which part of it is fixed, so no rule claims it.
 
+## Retrieval lead
+
+`tracking.kronosexpress.com/tracking_system_en.aspx?tracking_number={number}` looks the number up
+on the server, without a challenge, and fills boxes for date, service, weight and pieces above a
+results grid. An unknown number answers a Greek alert, "Το δελτιο με αριθμό: … δεν υπάρχει!", on
+the English page too. No found reply has been seen, so there is no adapter.
+
 ## Links
 
 The tracker on `tracking.kronosexpress.com` reads the number from `tracking_number`, so

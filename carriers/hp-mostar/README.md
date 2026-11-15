@@ -11,6 +11,12 @@ and [Pošte Srpske](../poste-srpske/README.md), Republika Srpska's, also issue S
 in `BA`, so the suffix does not name the operator. Generic postal
 detection handles S10 numbers, so no Hrvatska pošta Mostar rule claims them.
 
+## Retrieval lead
+
+`post.ba/servisi/pracenje-posiljke?tntnumber={number}` renders the answer on the server, without
+a challenge. An unknown number shows "Nema podataka za uneseni prijemni broj pošiljke" with the
+number under the form. No found reply has been seen, so there is no adapter.
+
 ## Links
 
 The tracking form submits the number as `tntnumber` on the same page, so

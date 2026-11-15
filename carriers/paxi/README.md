@@ -8,6 +8,13 @@ PAXI's tracking page asks for the parcel number from the PAXI SMS, and its searc
 thirteen-digit example. No rule claims it: thirteen digits are a bare digit run many carriers
 share.
 
+## Retrieval lead
+
+PAXI's tracking app posts the parcel number as `customerRefCode`, with `customerVisibleOnly` "Y",
+to `tracking.paxiplatform.com/parcel/tracking`, without credentials. A number it holds nothing for
+answers HTTP 500 with "No parcels found for" and the number. The only public number is the search
+field's example, which is not found, so there is no adapter.
+
 ## Links
 
 The tracking page opens one parcel at `paxi.co.za/track-a-parcel?id={number}`, which embeds

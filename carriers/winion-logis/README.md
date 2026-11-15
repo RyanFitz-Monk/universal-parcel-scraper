@@ -12,6 +12,13 @@ Its tracker takes ten to fourteen digits. Customers report twelve-digit waybills
 for AliExpress parcels; older waybills started WL. Twelve digits are a shape many carriers
 share, so no rule claims them.
 
+## Retrieval lead
+
+The home page reads the waybill from `winionlogistics.com/api/winion_home/WIN_Tracking?T={number}`,
+which answers JSON in three lists without credentials and does not repeat the number. A waybill
+it does not hold comes back with all three lists empty. The only public waybill answers with a
+delivered notice and no scans, so there is no adapter.
+
 ## Links
 
 The home page's lookup reads the number from `num`, so

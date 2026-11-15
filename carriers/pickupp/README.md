@@ -12,6 +12,14 @@ A Pickupp order number is PU, twelve digits and the region code, HK in Hong Kong
 documentation shows it. `pickupp-1` claims PU, twelve digits and HK; no other carrier uses that
 layout.
 
+## Retrieval lead
+
+The tracking page frames the merchant portal, which asks
+`gateway.hk.pickupp.io/v2/public/backbone/order/?order_number={number}&source=MP` without a key.
+The portal reads the order's timeline (`old_order_timeline`) and waypoints. An unknown order
+answers HTTP 400 with error type `020023`, "Order ID not found". The sample order in Pickupp's API
+documentation is not found, so there is no adapter.
+
 ## Links
 
 `hk.pickupp.io/en/tracking?orderNumber={number}` opens one order, and so does the merchant

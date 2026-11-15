@@ -7,6 +7,14 @@ Botswana Post parcels use enabled universal providers. There is no dedicated ada
 Botswana Post's letters, parcels and EMS items carry UPU S10 numbers ending in `BW`. Generic
 postal detection handles these numbers, so no rule for Botswana Post claims them.
 
+## Retrieval lead
+
+The Post Global tracker answers the page's Ajax partial postback of the item number on
+`posttracking.botswanapost.co.bw/postglobal/vpo/Track.aspx` without credentials. Sending the view
+state back can fail with "Validation of viewstate MAC failed", since the servers sign it with
+different keys, and the postback works without it. No public number has returned a found reply,
+so there is no adapter.
+
 ## Links
 
 The track and trace page on `botswanapost.post` posts the number to the Post Global tracker at

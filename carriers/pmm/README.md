@@ -10,6 +10,14 @@ Its tracker takes a tracking number or a business waybill of ten to twenty lette
 The only example seen, in the help chat on its website, is twelve digits, a letter and four
 digits. One example is too little to claim the layout, so no rule is proposed.
 
+## Retrieval lead
+
+The tracking page asks `apibase.pmm.com.mx/pagepmm/api/v1/rastreo?numero={number}` without a key.
+The page reads a `guia` summary with origin, destination, shipping and expected delivery dates, a
+`detalle` list of movements with state, date and location, and five delivery milestones. An
+unknown number answers HTTP 404 `NOT_FOUND`, "El numero de rastreo no existe." No found reply has
+been seen, so there is no adapter.
+
 ## Links
 
 The tracker's route `pmm.com.mx/rastreo/{number}` looks the number up on load, and is read as a

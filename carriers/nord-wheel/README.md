@@ -11,6 +11,15 @@ its API specification shows. The library accepts only Latin letters and digits, 
 waybill is not recognised. The tracker also accepts the digits alone, without the prefix and
 leading zeros; that short form is a bare digit run and is not claimed.
 
+## Retrieval lead
+
+The tracking page posts `code`, the waybill as НФ-0 and seven digits, to
+`nordw.ru/ajax/track-consignment/` as an Ajax form, without a challenge. A found waybill answers
+JSON with the waybill, the origin and destination cities, a status wording such as "Груз выдан,
+заказ завершен" and four dates without a time: the request, the expected delivery, ready for
+collection and handed over. There is no list of scans, and the library cannot take the waybill's
+Cyrillic prefix, so there is no adapter.
+
 ## Links
 
 The tracker reads the number from `n` on `nordw.ru/tracking/` and writes the short form there

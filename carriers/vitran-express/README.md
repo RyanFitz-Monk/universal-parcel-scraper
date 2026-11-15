@@ -13,6 +13,13 @@ spaces, up to 20. The archived lookup on that page shows eight digits. Bare digi
 length are other carriers' numbers and references too, so no rule claims them and a gap
 declaration covers the layout.
 
+## Retrieval lead
+
+`www.vitran.com/quicktrack.aspx?p={number}` renders the answer on the server: the status, the
+pickup and delivery days, the estimate, the weight and the destination. A number it does not hold
+shows "Not found." above the form, which echoes the number. The host does not answer from every
+country, and no found reply has been seen, so there is no adapter.
+
 ## Links
 
 `vitran.com/quicktrack.aspx?p={number}` opens one shipment: an archived lookup on Vitran's own

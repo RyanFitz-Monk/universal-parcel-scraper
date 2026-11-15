@@ -12,6 +12,14 @@ carrier or to the shop, so no rule claims the layout and the gap is declared. Ma
 numbers quoted in reviews stay out: the same report shows a shop order number that differs from
 the code Vestovoy used.
 
+## Retrieval lead
+
+The tracking page embeds a form from the PostService platform at
+`nextgen2.postsrvs.ru/lk2/5/tracking/cipher`, which opens a session; the form posts
+`{"cypher": code}` to `/lk2/tracking/cipher/get`. The page reads summary rows and a history of
+date and time, status and note; an unknown code answers `success: false`, shown as "Заказ не
+найден". No found reply has been seen, so there is no adapter.
+
 ## Links
 
 The tracking page embeds a form on the carrier's platform host that posts the code and draws

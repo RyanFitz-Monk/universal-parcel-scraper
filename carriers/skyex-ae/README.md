@@ -9,6 +9,15 @@ Sky Express International is a Dubai courier. Its airwaybills are ten digits; on
 lookup on its tracker that a search engine indexed. Ten-digit runs are shared by many carriers,
 so no rule claims them and the gap is declared.
 
+## Retrieval lead
+
+The tracking page posts `{"TrackingIdList": [number], "TrackingType": "AWB"}` to `/API/Track/`
+on `skyexpressinternational.com`, without a key, and gets one entry per airwaybill: origin,
+destination, booking and delivery dates, `DeliveryStatus` and a `Milestones` list of date and time,
+location and description. An unknown airwaybill comes back with only its number and the status
+"Tracking information is not available at this moment. Please try again later." No found reply
+has been seen, so there is no adapter.
+
 ## Links
 
 The tracking page reads `trackingType` and `tid` from its address, so
