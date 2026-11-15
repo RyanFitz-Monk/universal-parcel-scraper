@@ -6,7 +6,7 @@ import { UpstreamNetworkError } from '../../core/errors/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, M_AND_P_TRACKING, MAndPTracker } from './adapter.js';
-import { mAndPSentence, normalizeMAndPNumber, parseMAndP } from './parser.js';
+import { mAndPReceiver, mAndPSentence, normalizeMAndPNumber, parseMAndP } from './parser.js';
 import { mAndPStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
@@ -40,14 +40,15 @@ describe('M&P HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered consignment newest first in Karachi time, once per scan, without who took it', () => {
+  it('reads a delivered consignment newest first in Karachi time, once per scan, with its consignee and who took it', () => {
     const result = parseMAndP(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'The shipment has been delivered at the consignee\'s address',
+      last_status_text: 'The shipment has been delivered at the consignee\'s address and has been recieved by Fictive Signer 12',
       last_update: '2026-02-12T16:05:00+05:00', expected_delivery: null, delivered_at: '2026-02-12T16:05:00+05:00',
+      receiver_name: 'Fictive Person', receiver_address: 'Southport', signed_by: 'Fictive Signer 12',
       events: [
-        { time: '2026-02-12T16:05:00+05:00', description: 'The shipment has been delivered at the consignee\'s address', location: 'SOUTHPORT',
+        { time: '2026-02-12T16:05:00+05:00', description: 'The shipment has been delivered at the consignee\'s address and has been recieved by Fictive Signer 12', location: 'SOUTHPORT',
           provider_code: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
         // The page lists this scan twice.
         { time: '2026-02-12T09:40:00+05:00', location: 'SOUTHPORT', provider_code: 'Out-for-Delivery', stage: 'out_for_delivery', stage_source: 'carrier_map',
@@ -62,16 +63,18 @@ describe('M&P HTTP adapter', () => {
           location: 'NORTHVILLE', provider_code: 'Booked', stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    // Names, cities of the booking and the order reference are not read.
-    expect(JSON.stringify(result)).not.toMatch(/Fictive|Northville|Southport|SYN0001/);
+    // The shipper, their city and the order reference are not read.
+    expect(JSON.stringify(result)).not.toMatch(/Fictive Shop|Northville|SYN0001/);
   });
 
   it('reads a twelve-digit consignment in transit through the adapter', async () => {
     const result = await carrier(answering(() => page(fixture('in-transit')))).track({ number: IN_TRANSIT });
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_update: '2026-03-01T06:45:00+05:00',
-      last_status_text: 'The shipment has been dispatched and is on its way to the destination city' });
+      last_status_text: 'The shipment has been dispatched and is on its way to the destination city',
+      receiver_name: 'Fictive Receiver', receiver_address: 'Eastmoor' });
     expect(result.events!.map((event) => [event.location, event.stage])).toEqual([['MIDVALE', 'in_transit'], ['WESTBROOK', 'in_transit'], ['WESTBROOK', 'registered']]);
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('reads a failed attempt with its reason and the line under it, and a scan without a city', () => {
@@ -111,10 +114,13 @@ describe('M&P HTTP adapter', () => {
     expect(parseMAndP(bare, IN_TRANSIT).events![0]).toMatchObject({ description: 'In-transit', stage: 'in_transit' });
   });
 
-  it('takes who took the parcel, phone numbers and amounts out of a sentence', () => {
+  it('takes phone numbers and amounts out of a sentence, and keeps who took the parcel', () => {
     expect(mAndPSentence('The shipment has been delivered at the consignee\'s address and has been received by Fictive Signer 12'))
-      .toBe('The shipment has been delivered at the consignee\'s address');
-    expect(mAndPSentence('Shipment delivered, signed by FICTIVE SIGNER')).toBe('Shipment delivered');
+      .toBe('The shipment has been delivered at the consignee\'s address and has been received by Fictive Signer 12');
+    expect(mAndPReceiver('The shipment has been delivered at the consignee\'s address and has been received by Fictive Signer 12'))
+      .toEqual({ activity: 'The shipment has been delivered at the consignee\'s address', receiver: 'Fictive Signer 12' });
+    expect(mAndPReceiver('Shipment delivered, signed by FICTIVE SIGNER')).toEqual({ activity: 'Shipment delivered', receiver: 'FICTIVE SIGNER' });
+    expect(mAndPReceiver('Arrived at hub')).toEqual({ activity: 'Arrived at hub', receiver: '' });
     expect(mAndPSentence('Rider will call you from 0300-0000000, keep Rs. 1,250 ready')).toBe('Rider will call you from, keep ready');
     expect(mAndPSentence('Arrived at hub on 12 Feb 2026')).toBe('Arrived at hub on 12 Feb 2026');
   });

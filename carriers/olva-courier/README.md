@@ -45,8 +45,9 @@ Peru. Tracked through the lookup its tracking page makes.
   intake after the delivery, so the stage comes from the newest scan the map stages.
 - A guide's shipment names Olva's own number, which the adapter returns as the canonical
   number.
-- The recipient's name, district, masked phone and ID document, the shipment's contents, its
-  progress rail and its origin and destination in the reply are not kept.
+- The recipient's name and district (`consignee` and `destinationAddress`) are read. The masked
+  phone and ID document, the shipment's contents, its progress rail and its origin and
+  destination in the reply are not kept.
 
 ## Limitations
 

@@ -34,9 +34,14 @@ const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', '
 // A booking row's wording names the consignor and consignee, with an address, then the pieces; a
 // delivery row the delivery staff and their phone. The wording ends before the first of them.
 const LABELS = /\s*\b(?:Consignor|Consignee|Mobile|Phone|Contact|Pcs)\b[\s\S]*$/i;
-// "DELIVERED TO <receiver> AREA:<area> IN <city> BY <staff>": a delivery sheet's row keeps the words before the names.
+// "DELIVERED TO <receiver> AREA:<area> IN <city> BY <staff>": a delivery keeps the receiver and
+// the area and ends before the staff. Other delivery sheet rows, and "SENT TO <staff>", keep the
+// words before the names. A row is staged by the words before the names.
 const NAMES = /\s*\b(?:TO|BY|AREA)\b[\s\S]*$/i;
+const STAFF = /\s+BY\b[\s\S]*$/i;
 const NAMED = /^(?:DELIVERED|SENT)\s+TO\b/i;
+const DELIVERED_TO = /^DELIVERED\s+TO\b/i;
+const RECEIVER = /^DELIVERED\s+TO\s+(.+?)\s+AREA\s*:/i;
 const OUT_FOR_DELIVERY = 'OUT FOR DELIVERY';
 // A run of ten or more digits, as a phone number is written.
 const PHONE = /(?<!\d)\+?\d(?:[\s-]?\d){9,}(?!\d)/g;
@@ -118,15 +123,22 @@ function fieldNumber(form: Cheerio<Element>): string {
 }
 
 /**
- * A row's wording without the people it names. A delivery sheet's row keeps
- * the words before the receiver or the staff, and an out-for-delivery row its
- * transaction type, since its wording opens with the staff's name.
+ * A row's wording and the words it is staged by. A delivery keeps the receiver
+ * and the area and drops the staff; another delivery sheet row keeps the words
+ * before the names. An out-for-delivery row keeps its transaction type, since
+ * its wording opens with the staff's name.
  */
-function wordingOf(code: string, status: string): string {
-  if (code === OUT_FOR_DELIVERY) return code;
-  const named = code === DELIVERY_SHEET || NAMED.test(status);
-  const wording = (named ? status.replace(NAMES, '') : status).replace(LABELS, '').replace(PHONE, '');
-  return clean(wording, 300) || code;
+function wordingOf(code: string, status: string): { description: string; activity: string } {
+  if (code === OUT_FOR_DELIVERY) return { description: code, activity: code };
+  const own = (text: string) => clean(text.replace(LABELS, '').replace(PHONE, ''), 300) || code;
+  if (code !== DELIVERY_SHEET && !NAMED.test(status)) return { description: own(status), activity: own(status) };
+  const activity = own(status.replace(NAMES, ''));
+  return { description: DELIVERED_TO.test(status) ? own(status.replace(STAFF, '')) : activity, activity };
+}
+
+/** Who a delivery sheet's row says took the consignment. */
+function receiverOf(description: string): string | undefined {
+  return RECEIVER.exec(description)?.[1]?.trim() || undefined;
 }
 
 /** The text of a cell, with its parts spaced apart. */
@@ -151,10 +163,10 @@ function rowsOf($: CheerioAPI, grid: Cheerio<Element>): Row[] {
     const [, date, type, status, , branch] = cells as [Cheerio<Element>, Cheerio<Element>, Cheerio<Element>, Cheerio<Element>, Cheerio<Element>, Cheerio<Element>];
     const code = madhurCode(clean(type.text(), 60));
     if (!code) invalid('Madhur returned a row without its transaction type');
-    const description = wordingOf(code, clean(status.text(), 1000));
+    const { description, activity } = wordingOf(code, clean(status.text(), 1000));
     // The branch that made the entry comes first, then the one it came from or goes to.
     const location = clean(branch.find('a').first().text() || textOf(branch, 200).split('|')[0], 120);
-    const staged = madhurStage(code, description);
+    const staged = madhurStage(code, activity);
     const day = dayOf(clean(date.text(), 40));
     const event: CarrierEvent = {
       local_time: day,
@@ -173,8 +185,8 @@ function rowsOf($: CheerioAPI, grid: Cheerio<Element>): Row[] {
  * request: the form comes back with the number asked in its field and the
  * C-Note option chosen, and lists one booking at most. A C-Note the tracker
  * holds nothing under gets the same page without a history and without any
- * notice. Who sent, received and delivered the consignment, their phones and
- * the remarks are not read.
+ * notice. A delivery sheet's row names who took the consignment; the sender,
+ * the delivery staff, their phones and the remarks are not read.
  */
 export function parseMadhurCourier(html: string, rawNumber: string): CarrierResult {
   const number = normalizeMadhurNumber(rawNumber);
@@ -206,6 +218,7 @@ export function parseMadhurCourier(html: string, rawNumber: string): CarrierResu
   // A delivery settles the consignment; otherwise the newest row with a known stage decides.
   const decisive = events.find((event) => event.stage === 'delivered') ?? events.find((event) => event.stage);
   const newest = events[0]!;
+  const signatory = decisive?.stage === 'delivered' ? receiverOf(decisive.description ?? '') : undefined;
   return {
     status: decisive ? languageStageStatus(decisive.stage as Stage) : 'unknown',
     ...(decisive ? { current_stage: decisive.stage, current_stage_source: decisive.stage_source } : {}),
@@ -213,6 +226,7 @@ export function parseMadhurCourier(html: string, rawNumber: string): CarrierResu
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

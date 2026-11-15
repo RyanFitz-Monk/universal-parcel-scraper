@@ -58,12 +58,12 @@
       "provider_code",
       "location",
       "weight",
-      "destination_country"
+      "destination_country",
+      "recipient_name"
     ],
     "discarded": [
       "parcel_count",
       "sender_name",
-      "recipient_name",
       "origin_country"
     ],
     "unavailable": [

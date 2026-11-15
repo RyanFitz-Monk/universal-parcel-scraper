@@ -24,7 +24,8 @@ redirects there.
   consumers fall back on the catalog's New York clock.
 - A shipment Optima has not received yet has the status `Created` and no history; it is read
   from that status alone.
-- The delivery address, the signatory, the delivery photos and each status's note are not read.
+- The delivery town, state and ZIP code are the recipient's address, and a delivered package's
+  `signedBy` is the signatory. The delivery photos and each status's note are not read.
 
 ## Limitations
 

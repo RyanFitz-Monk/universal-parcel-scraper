@@ -39,6 +39,8 @@ destination. Tracked through the lookup its tracking page makes.
   clearance". The town, with its state, becomes the location so the wording stays the same
   from town to town; the postcode is dropped. A processing center's town inside the wording
   stays there, and the map reads it as "…".
+- A delivery's wording can name who took the parcel ("Delivered, signed by …"). It stays in the
+  wording and is the result's signatory; the stage is read from the words before it.
 - The tracker has no codes. [`status.ts`](status.ts) stages the scans by their wording, and
   other wording goes through the shared rules. The newest staged scan decides the parcel's
   stage, and the summary's status only when no scan has one.

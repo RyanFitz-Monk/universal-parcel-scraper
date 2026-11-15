@@ -212,7 +212,7 @@ describe('Paack status vocabulary', () => {
 });
 
 describe('Paack response normalization', () => {
-  it('parses a provider-shaped fixture while excluding order and event variables', () => {
+  it('parses a provider-shaped fixture with the recipient, while excluding contacts and event variables', () => {
     const result = parsePaackTrackingResponse(successRoute(), OFFICIAL_EXAMPLE_POSTCODE);
 
     expect(result).toMatchObject({
@@ -221,6 +221,8 @@ describe('Paack response normalization', () => {
       last_update: '2024-07-28T13:02:00.000Z',
       expected_delivery: null,
       timezone: 'Europe/Paris',
+      receiver_name: 'Sample Recipient',
+      receiver_address: '10 Sample Street',
     });
     expect(result.events).toEqual([
       {
@@ -463,6 +465,8 @@ describe('Paack label barcode lookup', () => {
       last_update: '2024-07-27T16:38:19.000Z',
       // The page shows the day's window, 07:00 to 20:00 UTC, on the Paris clock.
       expected_delivery: '2024-07-28 09:00–22:00',
+      // The reply names no recipient; its delivery postcode is the address.
+      receiver_address: LABEL_POSTCODE,
       timezone: 'Europe/Paris',
       // The steps still to come carry no timestamp and are not history.
       events: [
@@ -471,7 +475,7 @@ describe('Paack label barcode lookup', () => {
       ],
     });
     const serialized = JSON.stringify(result);
-    for (const privateValue of ['PRIVATE', LABEL_POSTCODE]) expect(serialized).not.toContain(privateValue);
+    expect(serialized).not.toContain('PRIVATE');
   });
 
   it('compares the echoed delivery postcode by its letters and digits', () => {
@@ -646,21 +650,28 @@ describe('Paack PaackGo Point', () => {
       last_status_text: 'Ready for pickup',
       last_update: '2024-07-29T09:12:00.000Z',
       pickup_point: 'Relais Exemple\n1 Rue Exemple, 75002, Paris, France',
+      pickup_code: '000000',
+      receiver_name: 'Sample Recipient',
+      receiver_address: PUDO_POSTCODE,
     });
     // The collection still to come carries no timestamp and is not history.
     expect(result.events?.map((event) => event.stage))
       .toEqual(['ready_for_pickup', 'accepted', 'in_transit', 'registered']);
   });
 
-  it('never copies the pickup code, QR link or recipient fields beside it', () => {
+  it('reads the pickup code and never copies the QR link, the delivery passcode or the recipient’s contacts', () => {
     const numericCode = '738201';
-    for (const route of [pudoRoute(), pudoRoute({ pudo_passcode: numericCode, pudo_pickup_link: null })]) {
-      const serialized = JSON.stringify(parsePaackTrackingResponse(route, PUDO_POSTCODE));
-      for (const privateValue of ['PRIVATE', 'private@', numericCode, 'example.test', PUDO_POSTCODE]) {
+    for (const [route, code] of [[pudoRoute(), '000000'], [pudoRoute({ pudo_passcode: Number(numericCode), pudo_pickup_link: null }), numericCode]] as const) {
+      const result = parsePaackTrackingResponse(route, PUDO_POSTCODE);
+      expect(result.pickup_code).toBe(code);
+      const serialized = JSON.stringify(result);
+      for (const privateValue of ['PRIVATE', 'private@', 'example.test']) {
         expect(serialized).not.toContain(privateValue);
       }
       expect(serialized).not.toMatch(/passcode|pickup_link|expiration/);
     }
+    // Once collected, the code is no longer given.
+    expect(parsePaackTrackingResponse(successRoute(), OFFICIAL_EXAMPLE_POSTCODE)).not.toHaveProperty('pickup_code');
   });
 
   it('keeps the name alone without an address and the lines the address holds', () => {

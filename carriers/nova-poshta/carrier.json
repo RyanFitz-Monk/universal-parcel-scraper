@@ -57,7 +57,8 @@
       "pickup_point",
       "destination_country",
       "delivery_partner",
-      "delivery_partner_reference"
+      "delivery_partner_reference",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -69,7 +70,8 @@
       "pickup_point",
       "destination_country",
       "delivery_partner",
-      "delivery_partner_reference"
+      "delivery_partner_reference",
+      "recipient_address"
     ],
     "discarded": [
       "recipient_details",

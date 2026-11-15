@@ -83,11 +83,12 @@ describe('MailAmericas HTTP adapter', () => {
     expect(result.events!.at(-1)).toMatchObject({ description: 'Order created: Label generated', stage_source: 'carrier_map' });
   });
 
-  it('keeps the delivery without the buyer, the tax ID, the proof of delivery or the repeated scan', () => {
+  it('keeps the delivery and the buyer with their town, without the tax ID, the proof of delivery or the repeated scan', () => {
     const result = parseMailamericas(fixture('delivered'), DELIVERED, READ_AT);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Finished: Delivered', last_update: '2026-03-24T16:47:00-03:00', delivered_at: '2026-03-24T16:47:00-03:00',
-      expected_delivery: null, service_name: 'Registered', destination_country: 'AR' });
+      expected_delivery: null, service_name: 'Registered', destination_country: 'AR',
+      receiver_name: 'Sample Buyer', receiver_address: 'Sample Town, Sample Province' });
     expect(result).not.toHaveProperty('last_update_local');
     expect(result.events).toHaveLength(28);
     expect(result.events!.filter((event) => !event.time).map((event) => event.provider_code))
@@ -100,7 +101,7 @@ describe('MailAmericas HTTP adapter', () => {
       ['LM-2', 'out_for_delivery', 'Delivery office: In distribution with postman'],
     ]);
     expect(result.events!.filter((event) => event.stage === undefined).map((event) => event.provider_code)).toEqual(['AV-1', 'SM-4', 'SM-1', 'SM-2']);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Buyer|Courier|Marketplace|Province)|0000000000|PR0001|SMPL02AR|Argentina|China|lastMile/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Courier|Marketplace)|0000000000|PR0001|SMPL02AR|Argentina|China|lastMile/);
   });
 
   it('takes the summary’s word for a return, a claim or a parcel held back', () => {
@@ -217,19 +218,18 @@ describe('MailAmericas HTTP adapter', () => {
     expect(clocks(result)).toEqual([['2026-03-24T16:47:00-03:00', 'PF-1'], ['2026-03-24T15:00:00', 'WH-3'], ['2026-03-04T11:26:00-05:00', 'WH-1']]);
   });
 
-  it('takes people and phone numbers out of the wording', () => {
-    expect(mailamericasWording('Finished', 'Delivered by Sample Person', 'PF-1')).toBe('Finished: Delivered');
-    expect(mailamericasWording('Delivery office', 'Recibido por Sample Person, DNI 00000000', 'LM-1')).toBe('Delivery office: Recibido');
-    expect(mailamericasWording('Finished', 'Entregue pelo carteiro a Sample Person', 'pf-1')).toBe('Finished: Entregue');
-    // Other legs name organisations, not people.
-    expect(mailamericasWording('Received in destination office', 'Received by Last Mile Provider', 'RC-1'))
+  it('keeps who took the parcel in the wording and takes phone numbers out', () => {
+    expect(mailamericasWording('Finished', 'Delivered by Sample Person')).toBe('Finished: Delivered by Sample Person');
+    expect(mailamericasWording('Delivery office', 'Recibido por Sample Person')).toBe('Delivery office: Recibido por Sample Person');
+    expect(mailamericasWording('Finished', 'Entregue pelo carteiro a Sample Person')).toBe('Finished: Entregue pelo carteiro a Sample Person');
+    expect(mailamericasWording('Received in destination office', 'Received by Last Mile Provider'))
       .toBe('Received in destination office: Received by Last Mile Provider');
-    expect(mailamericasWording('Notification', 'Call +00 (0) 000 000 0000 or 000-000-0000.', 'AV-1')).toBe('Notification: Call or.');
+    expect(mailamericasWording('Notification', 'Call +00 (0) 000 000 0000 or 000-000-0000.')).toBe('Notification: Call or.');
     // A date stays, and a line that repeats its leg is not doubled.
-    expect(mailamericasWording('Notification', 'New delivery date 2026-05-20', 'AV-1')).toBe('Notification: New delivery date 2026-05-20');
-    expect(mailamericasWording('Delivered', 'Delivered', 'PF-1')).toBe('Delivered');
-    expect(mailamericasWording('Order created', '', 'OC-1')).toBe('Order created');
-    expect(mailamericasWording('', 'Label generated', 'OC-1')).toBe('Label generated');
+    expect(mailamericasWording('Notification', 'New delivery date 2026-05-20')).toBe('Notification: New delivery date 2026-05-20');
+    expect(mailamericasWording('Delivered', 'Delivered')).toBe('Delivered');
+    expect(mailamericasWording('Order created', '')).toBe('Order created');
+    expect(mailamericasWording('', 'Label generated')).toBe('Label generated');
   });
 
   it('reads an unknown number as not found, a failed lookup as inconclusive and a record without scans as no history', () => {

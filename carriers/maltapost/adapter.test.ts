@@ -50,7 +50,7 @@ describe('MaltaPost tracking adapter', () => {
     const result = parseMaltaPost(JSON.parse(text('sendon')), SENDON);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Item delivered/collected by recipient', last_update: '2026-03-13T11:42:07+01:00', last_update_local: '2026-03-13T11:42:07',
-      expected_delivery: null });
+      expected_delivery: null, receiver_name: 'A***e E*****e', receiver_address: 'Example Town' });
     expect(result.events![0]).toMatchObject({ time: '2026-03-13T11:42:07+01:00', time_zone: 'Europe/Malta', time_zone_basis: 'carrier' });
     // Brought to the door: no pickup point.
     expect(result.pickup_point).toBeUndefined();
@@ -75,8 +75,6 @@ describe('MaltaPost tracking adapter', () => {
     // The reason and the action follow the scan's wording, as on the tracking page.
     expect(result.events![6]!.description).toBe('Item held at inbound mail sorting centre. Awaiting payment of charges. Unsuccessful attempt-Recipient notified');
     expect(result.events![8]!.description).toBe('Item undergoing border agency clearance. Awaiting presentation to border security');
-    // The masked recipient and the locality are never read.
-    expect(JSON.stringify(result)).not.toMatch(/Example Town|A\*\*\*e|E\*\*\*\*\*e/);
     expect(parseMaltaPost(JSON.parse(text('sendon')), SENDON_FOREIGN)).toEqual(result);
     // A notice newest of all leaves the stage and the text to the movement before it.
     const declared = edited('sendon', payload => { payload.movements!.splice(0, 12); });

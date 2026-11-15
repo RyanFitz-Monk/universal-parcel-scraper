@@ -51,8 +51,8 @@ wall clock MaltaPost gives them. Places are the post office or the country of a 
 event; MaltaPost's own name and a foreign office number are dropped. The pickup point is the
 MaltaPost office an item waits at, while it waits there or once it was collected there.
 
-The reply also carries the recipient's locality, a masked recipient name and payment flags; none of
-them is read.
+The reply also carries the recipient's name, masked, and their locality, which are read as the
+recipient's name and address. Its payment flags are not read.
 
 ## Limitations
 

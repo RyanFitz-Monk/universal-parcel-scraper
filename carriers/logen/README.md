@@ -32,8 +32,10 @@ across Korea, through hub terminals between them. Tracked through its tracking p
 - The receiver column of an out-for-delivery scan gives the delivery window, such as
   `16시~18시`, on the scan's day. It becomes `expected_delivery_from` and `expected_delivery`
   while that scan is the newest. A later delivery day given there is not read.
-- The staff, receiver, office and phone columns are not kept, and lines lose phone numbers. The
-  sender, recipient, address, goods and parcel count in the details are not kept either.
+- The receiver column of the delivery names who took the parcel or where it was left, such as
+  `현관/문앞`, kept as the signatory. The details' recipient, masked, and address are kept too.
+- The staff, office and phone columns are not kept, and lines lose phone numbers. The sender,
+  goods and parcel count in the details are not kept either.
 - The mobile page `/m/personal/trace/{number}` and its pop-up `/m/personal/trace.pop/{number}`
   show the same scans without their labels and sites.
 

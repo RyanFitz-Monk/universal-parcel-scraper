@@ -47,14 +47,18 @@
       "destination",
       "proof_of_delivery",
       "delivery_instructions",
-      "sender_name"
+      "sender_name",
+      "recipient_address",
+      "signatures"
     ],
     "scraped": [
       "status",
       "history",
       "location",
       "estimated_delivery",
-      "provider_code"
+      "provider_code",
+      "recipient_address",
+      "signatures"
     ],
     "discarded": [
       "milestones",
@@ -63,12 +67,10 @@
       "proof_of_delivery",
       "delivery_instructions",
       "sender_name",
-      "recipient_address",
       "postcodes",
       "coordinates",
       "references",
       "weight",
-      "signatures",
       "contacts"
     ],
     "unavailable": [

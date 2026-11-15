@@ -24,7 +24,7 @@ const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who took the box, after a delivery's wording.
+// Who took the box, after a delivery's wording. It stays in the wording, and the row is staged without it.
 const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:to|by)\b[\s\S]*$/i;
 const DELIVERY = /^(?:BOX\s+)?DELIVERED\b/i;
 const MAX_ROWS = 500;
@@ -88,18 +88,22 @@ function rows($: CheerioAPI): Row[] {
   });
 }
 
-/** An activity's wording, without phone numbers or who took a delivered box. */
+/** An activity's wording, without phone numbers. */
 function wording(activity: string): string {
-  const own = (DELIVERY.test(activity) ? activity.replace(RECEIVER, '') : activity).replace(PHONE, '');
-  return clean(own.replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+  return clean(activity.replace(PHONE, '').replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** The words a row is staged by: a delivery's wording without who took the box. */
+function activityOf(description: string): string {
+  return DELIVERY.test(description) ? wording(description.replace(RECEIVER, '')) : description;
 }
 
 /**
  * The tracking page after its form posted one AWB. A known AWB adds a summary
  * (the booking day, shipper, consignee, their city, the box count, a status,
  * the delivery day and who received it) and the progress table, one day and
- * activity per row, numbered from the oldest. Only the progress is kept. An
- * unknown AWB adds the tracker's "Data not found" line. Either names the AWB,
+ * activity per row, numbered from the oldest. The progress, the consignee,
+ * their city and who received the box are kept. An unknown AWB adds the tracker's "Data not found" line. Either names the AWB,
  * which must be the one asked.
  */
 export function parseMakatiExpress(html: string, raw: string): CarrierResult {
@@ -126,7 +130,7 @@ export function parseMakatiExpress(html: string, raw: string): CarrierResult {
     const key = JSON.stringify([row.day, description]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = makatiExpressStage(description);
+    const staged = makatiExpressStage(activityOf(description));
     kept.push({ ...row, event: {
       local_time: row.day,
       description,
@@ -138,16 +142,26 @@ export function parseMakatiExpress(html: string, raw: string): CarrierResult {
   const events = newestFirst.map((row) => row.event);
 
   const status = wording(field($, 'Status') ?? '');
+  const recipient = field($, "Consignee's Name");
+  const city = field($, 'City of Consignee');
+  const consignee = { ...(recipient ? { receiver_name: recipient } : {}), ...(city ? { receiver_address: city } : {}) };
+  // Who received the box, once it is delivered.
+  const signatory = (stage?: Stage) => {
+    const receiver = stage === 'delivered' ? field($, 'Receiver Name') : null;
+    return receiver ? { signed_by: receiver } : {};
+  };
   if (!events.length) {
     // A booking without progress yet: the summary's status is all there is.
     if (!status || MAKATI_EXPRESS_FORECAST.test(status)) throw new NoHistoryError(PROVIDER);
-    const staged = makatiExpressStage(status);
+    const staged = makatiExpressStage(activityOf(status));
     return {
       status: staged ? languageStageStatus(staged.stage) : 'unknown',
       ...(staged ? { current_stage: staged.stage, current_stage_source: staged.source } : {}),
       last_status_text: status,
       last_update: null,
       expected_delivery: null,
+      ...consignee,
+      ...signatory(staged?.stage),
       summary_only: true,
       events: [],
     };
@@ -162,6 +176,8 @@ export function parseMakatiExpress(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...consignee,
+    ...signatory(stage),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

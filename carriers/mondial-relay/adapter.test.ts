@@ -230,6 +230,8 @@ describe('Mondial Relay response normalization', () => {
       last_update: '2026-08-30T10:30:00+02:00',
       expected_delivery: '2026-08-31',
       pickup_point: 'EXAMPLE RELAY\n1 EXAMPLE STREET\n00000 EXAMPLE CITY',
+      receiver_name: 'EXAMPLE RECIPIENT',
+      receiver_address: '00001',
       timezone: 'Europe/Paris',
       source: 'mondial_relay_public_web',
     });
@@ -258,7 +260,6 @@ describe('Mondial Relay response normalization', () => {
       'PRIVATE LATITUDE',
       'PRIVATE LONGITUDE',
       'PRIVATE INFO',
-      'PRIVATE RECIPIENT',
       'PRIVATE DEPOT ADDRESS',
       'PRIVATE REPLACEMENT ADDRESS',
       'private-replacement@example.test',

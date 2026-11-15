@@ -216,9 +216,9 @@ eight-digit shipment number; the brand remains part of the identity.
 - Scans at a relay or locker have no location: the website names the relay on
   drop-off and collection scans, but the app does not, and one scan would then
   differ by source.
-- A relay's contacts, opening hours and coordinates, the app's pickup code and
-  the recipient's name and postcode are never read; the offline tests assert
-  none reach the result.
+- A relay's contacts, opening hours and coordinates are never read; the
+  offline tests assert none reach the result. The app's pickup code is read,
+  and so are the recipient's name and postcode on the website.
 
 ## Testing
 

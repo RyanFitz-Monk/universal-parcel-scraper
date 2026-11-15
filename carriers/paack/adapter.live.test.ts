@@ -27,7 +27,8 @@ describe('Paack live anonymous tracking', () => {
     expect(result.events?.length).toBeGreaterThan(0);
     expect(result.status).not.toBe('unknown');
     expect(result.events?.map((event) => event.description)).not.toContain('Shipment update');
-    expect(JSON.stringify(result)).not.toContain(postcode);
+    // The postcode is only the recipient's address.
+    expect(JSON.stringify({ ...result, receiver_address: undefined })).not.toContain(postcode);
   });
 
   it.runIf(Boolean(number && postcode))('answers the same number with another postcode as not found', async () => {

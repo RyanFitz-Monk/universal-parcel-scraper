@@ -72,13 +72,15 @@ function wallClock(value: string): string | null {
 interface Scan {
   readonly event: CarrierEvent & { local_time: string; description: string };
   readonly code: string;
+  /** The person who signed or handed the parcel over. */
+  readonly contact: string;
 }
 
 /**
- * One parcel's scans: the clock, the code, the depot that scanned it and the
- * English wording. The handheld's position, the person who signed or handed
- * the parcel over, and the photo and signature ids on the same rows are never
- * read.
+ * One parcel's scans: the clock, the code, the depot that scanned it, the
+ * English wording and the person who signed or handed the parcel over. The
+ * handheld's position and the photo and signature ids on the same rows are
+ * never read.
  */
 function parcelScans(parcel: Record<string, unknown>): Scan[] {
   const rows = parcel.History;
@@ -93,8 +95,17 @@ function parcelScans(parcel: Record<string, unknown>): Scan[] {
     const depot = text(row, 'CityDepot', 100);
     const event: Scan['event'] = { local_time: local, description,
       ...(depot ? { location: depot } : {}), ...(code ? { provider_code: code } : {}) };
-    return { event, code };
+    return { event, code, contact: text(row, 'Contact', 200) };
   });
+}
+
+/** The recipient's street, then their postcode and town, as far as the reply gives them. */
+function destinationOf(payload: Record<string, unknown>): string {
+  const destination = payload.Destination;
+  if (!isRecord(destination)) return '';
+  const streets = [text(destination, 'Address1', 200), text(destination, 'Address2', 200)].filter(Boolean);
+  const town = [text(destination, 'PostalCode', 16), text(destination, 'City', 100)].filter(Boolean).join(' ');
+  return [...streets, town].filter(Boolean).join('\n');
 }
 
 /** The latest expected day of the parcels in view, while the tracker would show one and no newer day's scan has come. */
@@ -149,9 +160,9 @@ function notShipment(payload: Record<string, unknown>): never {
  * shipment, parcel, delivery-notice and sender reference numbers alike, so the
  * reply counts only when its shipment number, or one of its parcel numbers,
  * is the one requested. A shipment number covers every parcel in it; a parcel
- * number only that parcel. The recipient's postcode, town, address and map
- * position, the driver's position, the sender, references, weights, notes and
- * the tracker's help texts are never read.
+ * number only that parcel. The recipient's address and the delivery's signer
+ * are read; the recipient's map position, the driver's position, the sender,
+ * references, weights, notes and the tracker's help texts are not.
  */
 export function parseNationex(payload: unknown, raw: string): CarrierResult {
   const number = normalizeNationexNumber(raw);
@@ -173,13 +184,13 @@ export function parseNationex(payload: unknown, raw: string): CarrierResult {
   const seen = new Set<string>();
   const scans: Scan[] = [];
   for (const parcel of scope) {
-    for (const { event, code } of parcelScans(parcel)) {
+    for (const { event, code, contact } of parcelScans(parcel)) {
       const key = JSON.stringify(event);
       if (seen.has(key)) continue;
       seen.add(key);
       const stage = nationexStage(code, event.description);
       if (stage) Object.assign(event, { stage: stage.stage, stage_source: stage.source });
-      scans.push({ event, code });
+      scans.push({ event, code, contact });
     }
     if (scans.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Nationex returned too many scans');
   }
@@ -205,11 +216,14 @@ export function parseNationex(payload: unknown, raw: string): CarrierResult {
   const newest = events[0];
   const expected = expectedDay(scope, stage, newest?.local_time);
   const unread = unreadParcelEstimates(scope);
+  const address = destinationOf(payload);
+  const recipient = address ? { receiver_address: address } : {};
+  const signer = stage === 'delivered' ? scans.find((scan) => scan.event.stage === 'delivered')?.contact : '';
 
   if (!newest) {
     if (!stateStage) throw new NoHistoryError(PROVIDER);
     return { status: languageStageStatus(stateStage), current_stage: stateStage, current_stage_source: 'carrier_map',
-      last_status_text: nationexStateLabel(state), last_update: null, expected_delivery: expected, ...unread, summary_only: true, events: [] };
+      last_status_text: nationexStateLabel(state), last_update: null, expected_delivery: expected, ...unread, ...recipient, summary_only: true, events: [] };
   }
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -220,6 +234,8 @@ export function parseNationex(payload: unknown, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: expected,
     ...unread,
+    ...recipient,
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

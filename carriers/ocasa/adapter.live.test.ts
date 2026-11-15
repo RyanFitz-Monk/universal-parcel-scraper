@@ -13,7 +13,6 @@ describe('OCASA live retrieval', () => {
     // Every event keeps its wall clock, without an offset, and no place.
     expect(answer.result.events.every((event) => event.description && !event.time && event.location === undefined
       && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00$/.test(String(event.local_time)))).toBe(true);
-    expect(answer.result.receiver_name).toBeUndefined();
     expect(answer.result.sender_name).toBeUndefined();
   }, 30_000);
 

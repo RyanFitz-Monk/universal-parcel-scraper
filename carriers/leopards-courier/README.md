@@ -29,14 +29,14 @@ Pakistan. Tracked through the lookup the tracking box on its site makes.
 - Scans read as an action and the city it happened in, as `Inter Transfer at KARACHI`. The city
   is the location. A pending delivery gives its reason in capitals instead.
 - A delivery's wording goes on to name who took the parcel and their relation to the consignee,
-  as `Delivered at CITY NAME ~ STAFF`. The name is cut when it is the one the page's "Signed for
-  by" line gives; otherwise only the wording before the city is kept. The signatory is not kept.
+  as `Delivered at CITY NAME ~ STAFF`, and is kept whole. Its city is read only when the name is
+  the one the page's "Signed for by" line gives, which is kept as the signatory.
 - `Assigned to Leopards in CITY` comes shortly before a delivery in the same city: the courier
   taking the parcel out, whom the page names as Leopards. It reads as out for delivery.
 - The tracker pads a nine-digit number with a leading zero and shows the consignment under the
   padded number, which the result gives as the canonical number.
-- The origin and destination, shipper, consignee, reference, booking date and piece count are
-  not kept. The progress bar is not read.
+- The booking details' consignee is kept as the recipient's name. Their origin and destination,
+  shipper, reference, booking date and piece count are not kept. The progress bar is not read.
 
 ## Limitations
 

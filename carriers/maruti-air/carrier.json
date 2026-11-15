@@ -45,18 +45,20 @@
       "origin",
       "destination",
       "signatory",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "recipient_name"
     ],
     "scraped": [
       "status",
       "history",
       "location",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "origin",
       "destination",
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

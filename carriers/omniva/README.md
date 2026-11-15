@@ -46,10 +46,12 @@ so the item reads as waiting at the parcel machine. Alone, it is kept.
 
 A scan's site is kept by its English name, else its own, only when it is one of Omniva's or its
 partners' sites, such as a parcel machine, post office or terminal. Sender and recipient
-addresses, postcodes, internal workstation codes and the event parameters, such as notification
-channels and failure reasons, are dropped. The pickup point is the parcel machine or post office
-an item waits at, or was collected from, else the recipient's chosen one while it waits. A reply
-without scans is read from the item's state as a summary.
+addresses at scans, postcodes, internal workstation codes and the event parameters, such as
+notification channels and failure reasons, are dropped. The street and postcode a courier item
+is delivered to, its chosen delivery location, are read as the recipient's address. The pickup
+point is the parcel machine or post office an item waits at, or was collected from, else the
+recipient's chosen one while it waits. A reply without scans is read from the item's state as a
+summary.
 
 ## Limitations
 

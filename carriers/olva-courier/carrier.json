@@ -46,7 +46,9 @@
       "order_contents",
       "progress_rail",
       "origin",
-      "destination"
+      "destination",
+      "recipient_name",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -54,14 +56,15 @@
       "location",
       "provider_code",
       "weight",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "order_contents",
       "progress_rail",
       "origin",
       "destination",
-      "recipient_name",
       "recipient_contact",
       "recipient_id"
     ],

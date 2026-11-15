@@ -28,7 +28,8 @@ function placeOf(value: unknown): string | undefined {
 
 /**
  * The tracker's answer to `/api/tracking` for one number: a list whose first entry is the parcel,
- * with its events. The sender's and recipient's names, the carrier's name and weights are never read.
+ * with its events and the recipient's name. The sender's name, the carrier's name and weights are
+ * never read.
  */
 export function parseLogisticsSolution(body: unknown, raw: string): CarrierResult {
   const number = logisticsSolutionNumber(raw);
@@ -66,10 +67,12 @@ export function parseLogisticsSolution(body: unknown, raw: string): CarrierResul
   const newest = events[0]!;
   // Each event's stage came from the status map or the shared rules.
   const stage = newest.stage as Stage | undefined;
+  const recipient = text(parcel.recipientName, 200);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: newest.stage_source! } : {}),
-    last_status_text: newest.description!, last_update: newest.time!, expected_delivery: null, events: events.slice(0, 100),
+    last_status_text: newest.description!, last_update: newest.time!, expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}), events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),
   };
 }

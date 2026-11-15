@@ -69,10 +69,11 @@ describe('MHI HTTP adapter', () => {
     // Of two events on one minute, the row higher on the page is the newer.
     expect(result.events!.filter((event) => event.local_time === '2026-03-26T10:50:00').map((event) => event.description))
       .toEqual(['Dispatched from sorting center', 'Arrived at sorting center']);
-    // The catalog knows no courier at the link's address; the link and the recipient's postcode in it are not kept.
+    // The catalog knows no courier at the link's address, so the link is not kept; the recipient's postcode in it is their address.
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivery_tracking_number');
-    expect(JSON.stringify(result)).not.toMatch(/gls-info|zipcode|00-000|GLSX/);
+    expect(result).toMatchObject({ receiver_address: '00-000' });
+    expect(JSON.stringify(result)).not.toMatch(/gls-info|zipcode|GLSX/);
   });
 
   it('hands off only to a courier its link names, for the number beside it', () => {

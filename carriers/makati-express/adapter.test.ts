@@ -27,10 +27,11 @@ const reply = (body = delivered, status = 200, headers: Record<string, string> =
 const environment = (fetcher: typeof fetch) => ({ fetcher, env: {}, trawl: null, browserExecutablePath: null, recorder: { step() {}, lookup() {} } });
 
 describe('Makati Express direct tracking', () => {
-  it('reads a delivered air cargo from an older branch page, without the people and notes', () => {
+  it('reads a delivered air cargo from an older branch page with its consignee and receiver, without the shipper and notes', () => {
     const result = normalizeCarrierResult(parseMakatiExpress(delivered, AIR));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED', last_update: null, last_update_local: '2026-03-08', expected_delivery: null });
+      last_status_text: 'DELIVERED', last_update: null, last_update_local: '2026-03-08', expected_delivery: null,
+      receiver_name: 'SAMPLE CONSIGNEE', receiver_address: 'SAMPLETOWN', signed_by: 'SAMPLE RECEIVER' });
     expect(result.events).toEqual([
       { local_time: '2026-03-08', description: 'DELIVERED', stage: 'delivered', stage_source: 'carrier_map', tie_order: 1 },
       { local_time: '2026-03-08', description: 'OUT FOR DELIVERY', stage: 'out_for_delivery', stage_source: 'carrier_map', tie_order: 0 },
@@ -38,14 +39,15 @@ describe('Makati Express direct tracking', () => {
       { local_time: '2026-03-03', description: 'DEPARTURE DATE', stage: 'in_transit', stage_source: 'carrier_map' },
       { local_time: '2026-03-02', description: 'SHIPMENT HANDED OVER TO THE AIRLINES', stage: 'in_transit', stage_source: 'carrier_map' },
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|0000 000|FROM DOHA|2026-03-01|delivered_at|receiver|sender/i);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SHIPPER|0000 000|FROM DOHA|2026-03-01|delivered_at|sender/i);
   });
 
   it('reads a box on its way from the newer branch page, without forecasts, repeats or office notes', () => {
     const result = normalizeCarrierResult(parseMakatiExpress(transit, BOX));
     // The summary's status is a forecast; the stage comes from the rows.
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'ACTUAL DEPARTURE',
-      last_update: null, last_update_local: '2026-03-15' });
+      last_update: null, last_update_local: '2026-03-15', receiver_name: 'SAMPLE CONSIGNEE', receiver_address: 'SAMPLETOWN' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events?.map((event) => [event.local_time, event.description, event.stage])).toEqual([
       ['2026-03-15', 'ACTUAL DEPARTURE', 'in_transit'],
       ['2026-03-11', 'CONTAINER HANDED OVER TO JEBEL ALI PORT', 'in_transit'],
@@ -56,17 +58,17 @@ describe('Makati Express direct tracking', () => {
       ['2026-03-02', 'SHIPMENT MOVED TO MAKATI HUB', 'accepted'],
       ['2026-03-02', 'AWB CREATED', 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|ESTIMATED|EXPECTED|2026-04-20/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE (?:SHIPPER|RECEIVER|OFFICE)|ESTIMATED|EXPECTED|2026-04-20/);
     // A box only just booked is registered.
     const booked = parseMakatiExpress(edit(($) => progress($).find('tr').slice(2).remove(), transit), BOX);
     expect(booked).toMatchObject({ status: 'pending', current_stage: 'registered', last_status_text: 'AWB CREATED' });
   });
 
-  it('turns a newest-first table round, drops phone numbers and who took the box, and leaves unknown activities unstaged', () => {
+  it('turns a newest-first table round, drops phone numbers, keeps who took the box and leaves unknown activities unstaged', () => {
     const result = parseMakatiExpress(history(row(3, '2026-03-08', 'BOX DELIVERED TO SAMPLE RECEIVER 0917 000 0000'),
       row(2, '2026-03-07', 'CALL 0917 000 0000 FOR DELIVERY'), row(1, '2026-03-06', 'BOX INSPECTED')), AIR);
     expect(result.events?.map((event) => [event.local_time, event.description, event.stage, event.stage_source])).toEqual([
-      ['2026-03-08', 'BOX DELIVERED', 'delivered', 'carrier_map'],
+      ['2026-03-08', 'BOX DELIVERED TO SAMPLE RECEIVER', 'delivered', 'carrier_map'],
       ['2026-03-07', 'CALL FOR DELIVERY', undefined, undefined],
       ['2026-03-06', 'BOX INSPECTED', undefined, undefined],
     ]);
@@ -80,7 +82,8 @@ describe('Makati Express direct tracking', () => {
   it('reports a booking without rows by its status alone', () => {
     const bare = edit(($) => { progress($).closest('tr').prev('tr').remove(); progress($).closest('tr').remove(); });
     expect(parseMakatiExpress(bare, AIR)).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED', last_update: null, expected_delivery: null, summary_only: true, events: [] });
+      last_status_text: 'DELIVERED', last_update: null, expected_delivery: null, receiver_name: 'SAMPLE CONSIGNEE',
+      receiver_address: 'SAMPLETOWN', signed_by: 'SAMPLE RECEIVER', summary_only: true, events: [] });
     const forecasts = history(row(1, '2026-03-14', 'ESTIMATED DEPARTURE'));
     const estimated = edit(($) => $('td').filter((_, node) => $(node).text().trim() === 'Status').next('td').text('ESTIMATED DEPARTURE'), forecasts);
     expect(() => parseMakatiExpress(estimated, AIR)).toThrowError(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));

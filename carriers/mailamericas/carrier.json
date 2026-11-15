@@ -77,13 +77,13 @@
       "eta",
       "delivered_at",
       "service_name",
-      "destination_country"
+      "destination_country",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "origin_country",
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "recipient_id",
       "delivery_partner",
       "proof_of_delivery",

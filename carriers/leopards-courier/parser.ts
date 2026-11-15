@@ -92,6 +92,13 @@ function clock(date: string, minute: string): { time: string; at: number } {
   return { time: zoned.toISO({ suppressMilliseconds: true })!, at: zoned.toMillis() };
 }
 
+/** Who the consignment is addressed to, as the booking details' "Consignee" cell names them. */
+function consigneeOf($: CheerioAPI): string {
+  const label = $('td').filter((_, cell) => clean($(cell).text(), 40) === 'Consignee :').first();
+  const name = clean(label.next('td').text(), 200);
+  return /^(?:N\/A|-)?$/i.test(name) ? '' : name;
+}
+
 /** Who signed for the parcel, as the page's "Signed for by" line names them before a dash. */
 function signatoryOf($: CheerioAPI): string {
   const label = $('td').filter((_, cell) => clean($(cell).text(), 40) === 'Signed for by :').first();
@@ -99,9 +106,10 @@ function signatoryOf($: CheerioAPI): string {
 }
 
 /**
- * A wording without who took the parcel. A delivery reads "Delivered at
- * LAHORE NAME ~ RELATION": the name is cut when it is the signatory's, else
- * only the wording before the city is kept, or its first word without a city.
+ * A wording without who took the parcel, to stage it and find its city. A
+ * delivery reads "Delivered at LAHORE NAME ~ RELATION": the name is cut when
+ * it is the signatory's, else only the wording before the city is kept, or its
+ * first word without a city.
  */
 function withoutReceiver(wording: string, signatory: string): string {
   const tilde = wording.indexOf('~');
@@ -120,9 +128,8 @@ interface Scan { event: CarrierEvent; at: number; order: number }
 /**
  * The tracking page for the consignment the lookup kept in the session: its
  * number, a delivery box naming who signed, the booking details and its scans
- * newest first, each with a date, a minute and Leopards' wording. The booking
- * details, the signatory and the receiver named in a delivery's wording are
- * not read.
+ * newest first, each with a date, a minute and Leopards' wording. The
+ * consignee and the signatory are read; the other booking details are not.
  */
 export function parseLeopards(html: string, raw: string): CarrierResult {
   const number = normalizeLeopardsNumber(raw);
@@ -150,10 +157,12 @@ export function parseLeopards(html: string, raw: string): CarrierResult {
     if (date.length !== 1 || content.length !== 1) throw new SchemaError(PROVIDER, 'Leopards returned an invalid scan');
     const minute = clean(date.find('span').text(), 16);
     const when = clock(clean(date.clone().children().remove().end().text(), 40), minute);
-    const description = withoutReceiver(clean(content.text(), 300), signatory);
+    const description = clean(content.text(), 300);
     if (!description) throw new SchemaError(PROVIDER, 'Leopards returned a scan without wording');
-    const location = PLACED.exec(description)?.[2];
-    const staged = leopardsStage(description);
+    // A delivery's wording goes on to name who took the parcel, which neither stages it nor is its city.
+    const own = withoutReceiver(description, signatory);
+    const location = PLACED.exec(own)?.[2];
+    const staged = leopardsStage(own);
     const event: CarrierEvent = {
       time: when.time, description, ...(location ? { location } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
@@ -171,6 +180,7 @@ export function parseLeopards(html: string, raw: string): CarrierResult {
   const current = events.find(event => event.stage);
   const stage = current?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? current : undefined;
+  const consignee = consigneeOf($);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -178,6 +188,8 @@ export function parseLeopards(html: string, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(delivered ? { delivered_at: delivered.time } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     ...(normalizeTrackingNumber(raw) !== number ? { canonical_tracking_number: number } : {}),
     events,
   };

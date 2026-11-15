@@ -40,9 +40,10 @@ its tracker's result page.
   without delivering, sending the buyer to the shop, is an exception; the return follows.
 - Distribution-centre sentences name a centre in brackets that is the same for every shipment
   wherever it goes. It is left out, and events have no location.
-- The delivery sentence names whoever took the parcel and becomes "Entregamos el envio.".
-  Sentences also lose a receiver's clause and ID and phone numbers. The panel's origin, the
-  recipient's name and address and the map of the address are not kept.
+- The delivery sentence names whoever took the parcel. It is kept, its stage is read from
+  "Entregamos el envio." alone, and the name is the signatory. Sentences lose ID and phone
+  numbers. The panel's recipient and delivery address are read; its origin and the map of the
+  address are not kept.
 - The tracker holds a Mercado Libre shipment number only when OCASA handled the shipment: its
   events are OCASA's own scans.
 

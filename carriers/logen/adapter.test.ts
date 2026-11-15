@@ -54,7 +54,8 @@ describe('Logen HTTP adapter', () => {
     const result = parseLogen(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: '고객님께 물품을 전달하였습니다.', last_update: '2026-09-29T07:43:00Z',
-      delivered_at: '2026-09-29T07:43:00Z', expected_delivery: null });
+      delivered_at: '2026-09-29T07:43:00Z', expected_delivery: null, receiver_name: '홍**', receiver_address: '서울 가상구 샘플동',
+      signed_by: '현관/문앞' });
     expect(result).not.toHaveProperty('expected_delivery_from');
     expect(result.events!.map((event) => [event.time, event.location, event.provider_code, event.stage, event.description])).toEqual([
       ['2026-09-29T07:43:00Z', '마바', '배송완료', 'delivered', '고객님께 물품을 전달하였습니다.'],
@@ -71,9 +72,13 @@ describe('Logen HTTP adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map')).toBe(true);
   });
 
-  it('keeps no sender, recipient, address, goods, staff, receiver or phone number', () => {
+  it('keeps the recipient, their address and who took the parcel, and no sender, goods, staff or phone number', () => {
     const text = JSON.stringify(parseLogen(fixture('delivered'), DELIVERED));
-    expect(text).not.toMatch(/홍|김철수|샘|서울|현관|010-|0505|배송예정|16시/);
+    expect(text).not.toMatch(/김철수|샘\*|010-|0505|배송예정|16시/);
+    // Before the delivery, the receiver column holds the window, which names no one.
+    const out = parseLogen(fixture('out-for-delivery'), OUT_FOR_DELIVERY);
+    expect(out).toMatchObject({ receiver_name: '이**', receiver_address: '부산 가상구 예시동' });
+    expect(out).not.toHaveProperty('signed_by');
   });
 
   it('gives the window of an out-for-delivery scan on its day while it is the newest scan', () => {

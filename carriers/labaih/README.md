@@ -26,8 +26,8 @@ tracking page.
 - Each scan has a wording and a wall clock without a zone, kept in `local_time`. The page gives
   no zone, so the clocks are not read as Riyadh time.
 - An arrival at a distribution centre also gives its city, kept as the scan's place.
-- A failed attempt keeps the reason after its colon. The page can follow it, after another colon,
-  with the district or city as the recipient gave it, which is dropped, and so are phone numbers.
+- A failed attempt keeps the reason after its colon, and the district or city as the recipient
+  gave it, which the page can add after another colon. Phone numbers are dropped.
 - The tracker shows no codes; [`status.ts`](status.ts) stages the wordings. A return to the
   facility after an attempt stays in transit, as the parcel goes out again from there. The
   messages asking for and giving the delivery location move nothing.

@@ -13,8 +13,8 @@ import statuses from './statuses.json' with { type: 'json' };
 
 const NUMBER = '12345078901235';
 const OTHER = '00000000000000';
-// The shop, its reference and the recipient's district, which the result must not keep.
-const PRIVATE = /Sample Shop|Sample Item|REF0|Sample District|Sample Street|whatsapp/i;
+// The shop, its reference and address, which the result must not keep.
+const PRIVATE = /Sample Shop|Sample Item|REF0|Sample Street|whatsapp/i;
 const CHALLENGE = '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title></head><body>'
   + '<script>(function(){window._cf_chl_opt={cvId:"3",cType:"managed"};})();</script></body></html>';
 const NOT_FOUND_LOCATION = 'https://track.mylabaih.com/error/404';
@@ -50,7 +50,7 @@ describe('LaBaih tracking page', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps each scan\'s wall clock and city, and drops the shop, its reference and the recipient\'s district', () => {
+  it('keeps each scan\'s wall clock and city and the recipient\'s district, and drops the shop and its reference', () => {
     const result = parseLabaih(fixture('delivered'), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Shipment Delivered', last_update: null, last_update_local: '2026-10-14T21:05:10', expected_delivery: null });
@@ -58,7 +58,7 @@ describe('LaBaih tracking page', () => {
     expect(result.events!.map((event) => [event.local_time, event.description, event.location, event.stage])).toEqual([
       ['2026-10-14T21:05:10', 'Shipment Delivered', undefined, 'delivered'],
       ['2026-10-13T16:20:30', 'Returned To Facility', undefined, 'in_transit'],
-      ['2026-10-13T01:10:00', 'Unsuccessful Delivery: Wrong Customer District', undefined, 'failed_attempt'],
+      ['2026-10-13T01:10:00', 'Unsuccessful Delivery: Wrong Customer District: Sample District, Exampleville', undefined, 'failed_attempt'],
       ['2026-10-12T18:00:45', 'In-Transit to Customer', undefined, 'out_for_delivery'],
       ['2026-10-11T22:40:05', 'Arrived at Exampleville Facility', 'Exampleville', 'in_transit'],
       ['2026-10-11T20:15:00', 'Customer sent location', undefined, undefined],
@@ -102,8 +102,9 @@ describe('LaBaih tracking page', () => {
       .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
   });
 
-  it('keeps a failed attempt\'s reason only, and drops phone numbers', () => {
-    expect(labaihWording('Unsuccessful Delivery: Wrong Customer City: Sample Town')).toBe('Unsuccessful Delivery: Wrong Customer City');
+  it('keeps a failed attempt\'s reason and the recipient\'s district or city, and drops phone numbers', () => {
+    expect(labaihWording('Unsuccessful Delivery: Wrong Customer City: Sample Town')).toBe('Unsuccessful Delivery: Wrong Customer City: Sample Town');
+    expect(labaihWording('Unsuccessful Delivery: Wrong Customer City: Sample Town 0500000000')).toBe('Unsuccessful Delivery: Wrong Customer City: Sample Town');
     expect(labaihWording('Unsuccessful Delivery: Waiting time exceed')).toBe('Unsuccessful Delivery: Waiting time exceed');
     expect(labaihWording('Unsuccessful Delivery: Call 0500000000')).toBe('Unsuccessful Delivery');
     expect(labaihWording('Unsuccessful Delivery:')).toBe('Unsuccessful Delivery');
@@ -111,8 +112,7 @@ describe('LaBaih tracking page', () => {
     const result = parseLabaih(edited('in-transit', ($) => {
       history($).prepend(entry('Unsuccessful Delivery: Wrong Customer City: Sample Town', '2026-10-17 01:00:00'));
     }), NUMBER);
-    expect(result).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: 'Unsuccessful Delivery: Wrong Customer City' });
-    expect(JSON.stringify(result)).not.toContain('Sample Town');
+    expect(result).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: 'Unsuccessful Delivery: Wrong Customer City: Sample Town' });
   });
 
   it('counts a shipment only when its page names the number asked', () => {

@@ -58,16 +58,16 @@
       "history",
       "location",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "signatory",
+      "destination"
     ],
     "discarded": [
       "origin",
-      "destination",
       "sender_name",
-      "recipient_name",
       "customer_reference",
-      "booking_details",
-      "signatory"
+      "booking_details"
     ],
     "unavailable": [
       "eta",

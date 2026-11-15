@@ -111,14 +111,14 @@ describe('Naqel HTTP adapter', () => {
       '2026-10-14T22:00:00', '2026-10-14T19:38:00', '2026-10-14T18:58:00', '2026-10-13T11:21:00']);
   });
 
-  it('takes the signer and phone numbers out of a scan’s wording', () => {
-    expect(naqelWording('Shipment Delivered – signed by  Sample Person')).toBe('Shipment Delivered');
+  it('keeps the signer in a scan’s wording and takes phone numbers out', () => {
+    expect(naqelWording('Shipment Delivered – signed by  Sample Person')).toBe('Shipment Delivered – signed by Sample Person');
     expect(naqelWording('\n  Out For Delivery with Courier 0500000000\n')).toBe('Out For Delivery with Courier');
     expect(naqelWording('On Hold : Technical : 2026-9-12')).toBe('On Hold : Technical : 2026-9-12');
     expect(naqelWording('Load to Trip : SAMPLE1 - tripID - 1234')).toBe('Load to Trip : SAMPLE1 - tripID - 1234');
     const signed = parseNaqel(changed('delivered', '>Delivered</p>', '>Shipment Delivered – signed by Sample Person</p>'), DELIVERED);
-    expect(signed.events![0]).toMatchObject({ description: 'Shipment Delivered', stage: 'delivered', stage_source: 'carrier_map' });
-    expect(JSON.stringify(signed)).not.toContain('Sample Person');
+    expect(signed.events![0]).toMatchObject({ description: 'Shipment Delivered – signed by Sample Person', stage: 'delivered',
+      stage_source: 'carrier_map' });
   });
 
   it('binds a piece label to its waybill and keeps the waybill as the canonical number', () => {

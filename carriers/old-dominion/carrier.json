@@ -53,11 +53,11 @@
       "eta",
       "eta_window",
       "delivered_at",
-      "weight"
+      "weight",
+      "signature",
+      "recipient_address"
     ],
     "discarded": [
-      "signature",
-      "recipient_address",
       "sender_details",
       "customer_reference",
       "parcel_count"

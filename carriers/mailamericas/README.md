@@ -66,9 +66,9 @@ Tracked through the lookup its tracking page makes.
   adapter keeps the scan's own wording and makes no second request.
 - The summary's `status` decides a delivery, a return or a claim. A parcel retained at origin or
   held by customs is an exception.
-- Delivery and delivery-office lines lose a clause naming who took the parcel, and every line
-  loses phone numbers. The buyer's name and tax ID, the merchant, the recipient's town and the
-  proof of delivery in the reply are not kept.
+- Every line loses phone numbers; a clause naming who took the parcel stays. The buyer's name is
+  the recipient's, and the recipient's town and state are their address. The buyer's tax ID, the
+  merchant and the proof of delivery in the reply are not kept.
 - The reply names the courier that delivers, which can be MailAmericas' own arm in the country,
   but not that courier's tracking number, so there is no hand-off.
 

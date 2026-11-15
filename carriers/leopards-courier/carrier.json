@@ -56,18 +56,18 @@
       "location",
       "delivered_at",
       "offset_timestamps",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "origin",
       "destination",
       "sender_name",
-      "recipient_name",
       "customer_reference",
       "booking_details",
-      "piece_count",
-      "signatory"
+      "piece_count"
     ],
     "unavailable": [
       "eta",

@@ -58,14 +58,15 @@ describe('Optima Overnight tracking', () => {
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-05T14:12:40',
+      receiver_address: 'Synthetic Town, MA 00000', signed_by: 'Synthetic Signer',
     });
     expect(result.events).toEqual([
       { local_time: '2026-03-05T14:12:40', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
       { local_time: '2026-03-05T07:15:30', description: 'Out for Delivery', stage: 'out_for_delivery', stage_source: 'carrier_map' },
       { local_time: '2026-03-04T22:41:05', description: 'Received at Optima Warehouse', stage: 'accepted', stage_source: 'carrier_map' },
     ]);
-    // The address, the signatory and the photos stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic (?:Town|Signer)|example\.invalid|00000"/);
+    // The photos stay out.
+    expect(JSON.stringify(result)).not.toMatch(/example\.invalid/);
   });
 
   it('keeps scans of one second in the order Optima listed them, and an unlisted status without a stage', () => {
@@ -76,6 +77,7 @@ describe('Optima Overnight tracking', () => {
     expect(result.events!.slice(0, 3).map((event) => [event.description, event.stage])).toEqual([
       ['Synthetic note', undefined], ['No Attempt', 'failed_attempt'], ['Delivered', 'delivered']]);
     expect(result).toMatchObject({ current_stage: 'failed_attempt', status: 'exception', last_status_text: 'Synthetic note' });
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('reads a shipment Optima has not received yet from its status alone', () => {
@@ -86,7 +88,7 @@ describe('Optima Overnight tracking', () => {
       data.statusTime = '2026-03-04 16:02:11';
     }), NUMBER);
     expect(result).toMatchObject({ status: 'pending', current_stage: 'registered', last_status_text: 'Created',
-      last_update_local: '2026-03-04T16:02:11', summary_only: true, events: [] });
+      last_update_local: '2026-03-04T16:02:11', receiver_address: 'Synthetic Town, MA 00000', summary_only: true, events: [] });
   });
 
   it('reads the lookup’s 404 for the number asked as not found', async () => {

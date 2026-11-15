@@ -24,6 +24,9 @@ const MALFORMED = /^Ο κωδικός δεν έχει σωστή μορφή/u;
 // A firewall's or bot check's page in place of the search page.
 const BLOCKED = /_cf_chl_opt|cf-turnstile|<title>\s*(?:Just a moment|Attention Required|Access denied|Captcha)|imunify360|sgcaptcha/i;
 const MAX_ROWS = 300;
+// A delivery's remark naming who took the parcel, "Παρέλαβε η …", and the phone after it.
+const RECEIVED = /^Παρέλαβε\s+(?:(?:ο|η|οι|το)\s+)?(.+)$/u;
+const PHONE = /[\s,;]*\+?\d(?:[\s().-]{0,2}\d){8,}\s*$/;
 
 /** Whether a page is a firewall's or bot check's instead of the search page. */
 export function isPackManBlockPage(html: string): boolean {
@@ -46,10 +49,10 @@ function scanTime(time: Cheerio<Element>): string {
 
 /**
  * The scans of the timeline, oldest first as the page draws them: each one's
- * wording and clock. The invoicing steps after the delivery are billing, not
- * the parcel's movement, and are left out. The remark under a scan is not read.
+ * wording and clock, and the remark under it apart. The invoicing steps after
+ * the delivery are billing, not the parcel's movement, and are left out.
  */
-function scansOf($: CheerioAPI, items: Cheerio<Element>): CarrierEvent[] {
+function scansOf($: CheerioAPI, items: Cheerio<Element>, notes: Map<CarrierEvent, string>): CarrierEvent[] {
   if (items.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Pack-Man returned an oversized history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
@@ -66,7 +69,9 @@ function scansOf($: CheerioAPI, items: Cheerio<Element>): CarrierEvent[] {
     if (seen.has(identity)) continue;
     seen.add(identity);
     const stage = packManStage(description);
-    events.push({ ...(time ? { time } : {}), description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) });
+    const event: CarrierEvent = { ...(time ? { time } : {}), description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
+    notes.set(event, clean(item.find('.tl-note').first().text(), 200));
+    events.push(event);
   }
   return events;
 }
@@ -100,12 +105,15 @@ export function parsePackMan(html: string, raw: string): CarrierResult {
   const timeline = shipment.find('ol.timeline');
   if (timeline.length !== 1) throw new SchemaError(PROVIDER, 'Pack-Man returned a shipment without its timeline');
   // Newest first; the page draws the current scan last.
-  const events = scansOf($, timeline.children('li')).reverse();
+  const notes = new Map<CarrierEvent, string>();
+  const events = scansOf($, timeline.children('li'), notes).reverse();
   if (!events.length) throw new NoHistoryError(PROVIDER);
 
   const newest = events[0]!;
   const stage = events.find((event) => event.stage)?.stage as Stage | undefined;
   const delivery = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  // Who took the parcel, from the delivery's remark without the phone.
+  const receiver = delivery ? clean(RECEIVED.exec(notes.get(delivery) ?? '')?.[1]?.replace(PHONE, ''), 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -113,6 +121,7 @@ export function parsePackMan(html: string, raw: string): CarrierResult {
     last_update: newest.time ?? null,
     expected_delivery: null,
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
+    ...(receiver ? { signed_by: receiver } : {}),
     events,
   };
 }

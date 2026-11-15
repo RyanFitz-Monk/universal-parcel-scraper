@@ -48,12 +48,12 @@
     ],
     "scraped": [
       "status",
-      "history"
-    ],
-    "discarded": [
+      "history",
       "destination",
       "postcodes",
-      "signatory",
+      "signatory"
+    ],
+    "discarded": [
       "proof_of_delivery",
       "remarks"
     ],

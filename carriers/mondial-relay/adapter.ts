@@ -44,6 +44,8 @@ const DEFAULT_ESTIMATE_TIMEOUT_MS = 15_000;
 /** The stages of a parcel on its way, whose app answer the website's estimate completes. */
 const ON_THE_WAY = new Set(['accepted', 'in_transit', 'customs', 'out_for_delivery']);
 const ZONE = 'Europe/Paris';
+// A recipient postcode as the website gives it, in any country's format.
+const POSTCODE = /^[A-Z0-9](?:[A-Z0-9 -]{0,8}[A-Z0-9])?$/i;
 const CREDENTIAL_MESSAGE = 'Mondial Relay tracking requires a 26-digit label barcode or its first 14 digits, a 10- or 12-digit shipment '
   + 'number, an 8-digit shipment number with the recipient postcode, or an InPost Spain number (FV and eight digits)';
 // Portugal's postcodes: four digits, then three. Mondial Relay holds them as 1234-567.
@@ -344,6 +346,10 @@ function parseTrackingResponse(payload: unknown, credential: MondialRelayCredent
   const pickup = stay.slice(0, arrived < 0 ? undefined : arrived).find((event) => event.relay)?.relay;
   const deliveredAt = status === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
   const destination = cleanScalar(expedition.DeliveryCountryParcel, 8);
+  // The recipient a scan names, and their postcode.
+  const recipient = (Array.isArray(expedition.Evenements) ? expedition.Evenements : [])
+    .map((raw) => (isRecord(raw) ? plainText(raw.Destinataire, 200) : '')).find(Boolean);
+  const postcode = plainText(expedition.DestinataireCodePostal, 16);
 
   return {
     status,
@@ -358,6 +364,8 @@ function parseTrackingResponse(payload: unknown, credential: MondialRelayCredent
     ...(pickup ? { pickup_point: pickup } : {}),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(POSTCODE.test(postcode) ? { receiver_address: postcode } : {}),
     timezone: ZONE,
     events,
     source: 'mondial_relay_public_web',

@@ -45,7 +45,7 @@ describe('Nova Poshta movement parser', () => {
   it('projects only actual dated movements and keeps the carrier current point', () => {
     const result = parseNovaPoshtaHistory(history(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivered_at: '2026-01-03T10:00:00Z',
-      last_update: '2026-01-03T10:00:00Z', weight_kg: 2.5, destination_country: 'UA' });
+      last_update: '2026-01-03T10:00:00Z', weight_kg: 2.5, destination_country: 'UA', receiver_address: 'Sample Town' });
     expect(result.expected_delivery).toBeUndefined();
     expect(result.events).toHaveLength(3); expect(result.summary_only).toBeUndefined();
     expect(result.events?.map(row => row.stage)).toEqual(['delivered', 'ready_for_pickup', 'accepted']);
@@ -77,6 +77,7 @@ describe('Nova Poshta movement parser', () => {
     expect(result.events?.slice(0, 2).map(row => row.stage)).toEqual(['returned', 'returned']);
     expect(result.delivered_at).toBeUndefined(); expect(result.pickup_point).toBeUndefined();
     expect(result.expected_delivery).toBeUndefined(); expect(result.destination_country).toBeUndefined();
+    expect(result.receiver_address).toBeUndefined();
   });
   it('maps customs clearance in progress and a changed delivery time', () => {
     const value = history();

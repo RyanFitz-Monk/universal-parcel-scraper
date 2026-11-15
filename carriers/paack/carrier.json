@@ -71,13 +71,13 @@
       "history",
       "eta",
       "eta_window",
-      "pickup_point"
-    ],
-    "discarded": [
+      "pickup_point",
       "pickup_code",
-      "sender_name",
       "recipient_name",
       "recipient_address"
+    ],
+    "discarded": [
+      "sender_name"
     ],
     "unavailable": []
   },

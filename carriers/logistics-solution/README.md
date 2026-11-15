@@ -26,7 +26,8 @@ page and a changed answer keep their failure kinds.
 - Events are read only with a clock that names its offset; the tracker shows them in the visitor's
   zone. No live answer for a parcel has been seen yet, so another clock is a changed answer.
 - A place loses its postcode; one that still holds a number is an address and is left out. The
-  sender's and recipient's names, the partner carrying the parcel and weights are never read.
+  recipient's name, which the tracker shows, is read. The sender's name, the partner carrying the
+  parcel and weights are not.
 
 ## Numbers
 

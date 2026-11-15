@@ -25,6 +25,8 @@ const CLOCK_PREFIX = /^\s*(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})[ T]\d{1,
 const HANDOVER = /\b(?:deliver(?:ed|y)|signed|POD)\b/i;
 // Who signed for or took the parcel, after a delivery's wording.
 const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:signed(?:\s+for)?(?:\s+by)?|received\s+by|collected\s+by|left\s+with)\b[\s\S]*$/i;
+// A postcode: letters, digits, a space or a hyphen.
+const POSTCODE = /^[A-Z0-9](?:[A-Z0-9 -]{0,8}[A-Z0-9])?$/i;
 // A sentence with an e-mail address, such as the depot the page asks a held parcel to be sent to.
 const EMAIL_SENTENCE = /[^.!?]*?\S+@[\w-]+(?:\.[\w-]+)+[^.!?]*[.!?]?/g;
 // A run of nine or more digits written as a phone number; a date stays.
@@ -97,15 +99,21 @@ function scanClock(raw: string): { clock: Pick<CarrierEvent, 'time'> & { local_t
 
 /**
  * A scan's message without the clock it starts with, a sentence with an
- * e-mail address or a phone number. A delivery loses the clause naming who
- * signed for it, and is "Delivered" when nothing else is left.
+ * e-mail address or a phone number. A delivery keeps the clause naming who
+ * signed for it.
  */
 export function norskGlobalWording(raw: string): string {
   const line = clean(raw.replace(CLOCK_PREFIX, '').replace(EMAIL_SENTENCE, ' ').replace(PHONE, ''));
-  const handover = HANDOVER.test(line);
-  const own = clean((handover ? line.replace(RECEIVER, '') : line).replace(/\s+([,;:.])/g, '$1'))
-    .replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
-  return own || (handover ? 'Delivered' : '');
+  return tidy(line);
+}
+
+function tidy(line: string): string {
+  return clean(line.replace(/\s+([,;:.])/g, '$1')).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** A delivery's wording without who signed for it, "Delivered" when nothing else is left: the stage is read from it. */
+function activityOf(description: string): string {
+  return HANDOVER.test(description) ? tidy(description.replace(RECEIVER, '')) || 'Delivered' : description;
 }
 
 interface Scan { key: string; order: string; event: CarrierEvent }
@@ -117,7 +125,7 @@ function projectScan(row: unknown): Scan {
   if (!description) throw new SchemaError(PROVIDER, 'Norsk Global returned a scan without wording');
   // The place of the scan: a depot, a town or a country.
   const location = text(row, 'location', 120);
-  const staged = norskGlobalScanStage(description);
+  const staged = norskGlobalScanStage(activityOf(description));
   const event: CarrierEvent = {
     ...clock,
     description,
@@ -152,12 +160,27 @@ function destination(shipment: Record<string, unknown>): Pick<CarrierResult, 'de
   return code ? { destination_country: code } : name ? { destination_country_name: name } : {};
 }
 
+/** The recipient's name and postcode, as the destination gives them. */
+function recipient(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const place = shipment.destination;
+  if (!isRecord(place)) return {};
+  const name = text(place, 'contact', 200);
+  const postcode = text(place, 'zipcode', 16);
+  return { ...(name ? { receiver_name: name } : {}), ...(POSTCODE.test(postcode) ? { receiver_address: postcode } : {}) };
+}
+
+/** Who signed for a delivered shipment, from its proof of delivery. */
+function signatory(shipment: Record<string, unknown>): string {
+  const pod = shipment.pod;
+  return isRecord(pod) ? text(pod, 'signedBy', 200) : '';
+}
+
 /**
  * The reply of `POST /api/public/{token}/tracking` on Norsk's portal: an
  * array of the shipments that carry the reference asked, empty for one it
  * does not know. A shipment counts only when its own `hawb` is the number
  * asked. The recipient's name and postcode and the proof of delivery's
- * signatory are never read.
+ * signatory are read; the time of signing is not.
  */
 export function parseNorskGlobal(payload: unknown, raw: string): CarrierResult {
   const number = normalizeNorskGlobalNumber(raw);
@@ -202,6 +225,7 @@ export function parseNorskGlobal(payload: unknown, raw: string): CarrierResult {
   const source = summary && summary !== scanned?.stage ? 'carrier_map' : scanned?.stage_source;
   const partner = deliveryPartner(text(shipment, 'agentName', 80));
   const delivery = partnerNumber(reference(shipment, 'trackingNumber'), number);
+  const signer = stage === 'delivered' ? signatory(shipment) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -212,6 +236,8 @@ export function parseNorskGlobal(payload: unknown, raw: string): CarrierResult {
     ...(partner ? { delivery_carrier: partner } : {}),
     ...(delivery ? { delivery_tracking_number: delivery } : {}),
     ...destination(shipment),
+    ...recipient(shipment),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

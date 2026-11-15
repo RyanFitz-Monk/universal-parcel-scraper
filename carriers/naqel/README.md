@@ -32,9 +32,9 @@ delivers there. Tracked through its tracking page.
   status `Delivered` settles a delivered shipment; other summary wording is left to the scans.
 - Scans the system records, such as the waybill's creation, give `SYSTEM` as their place,
   which is not kept as a location.
-- The former page named who signed for a delivery after its wording. That name, and any phone
-  number, is taken out of a scan's wording. The destination city, pickup date, payment method,
-  piece count and progress rail are not kept.
+- The former page named who signed for a delivery after its wording. That name stays in the
+  scan's wording, and any phone number is taken out. The destination city, pickup date, payment
+  method, piece count and progress rail are not kept.
 - The UAE site's form at `/en/ae/tracking/` finds the same waybills and words some scans
   differently. The Arabic page `/ar/Track/TrackShipment/{number}` has the same scans in Arabic.
 

@@ -42,12 +42,14 @@
       "status",
       "history",
       "location",
-      "weight"
+      "weight",
+      "recipient_name"
     ],
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "recipient_name"
     ],
     "discarded": [
       "weight"

@@ -8,7 +8,7 @@ type Event = { eventCode?: unknown; eventMessage?: unknown; eventTime?: unknown;
 const event = (overrides: Event = {}): Event => ({ eventCode: 'SYNTHETIC_CODE', eventMessage: 'Synthetic unmapped wording',
   eventTime: '2026-03-10T09:15:00Z', eventLocation: 'Cologne', weightGrams: 1200, ...overrides });
 const answer = (events: unknown, parcelNr: unknown = NUMBER) => [{ parcelNr, carrier: 'PRIVATE partner', originCountry: 'DE', destinationCountry: 'AM',
-  senderName: 'PRIVATE sender', recipientName: 'PRIVATE recipient', events }];
+  senderName: 'PRIVATE sender', recipientName: 'Sample Recipient', events }];
 const history = [
   event({ eventCode: 'DELIVERED', eventMessage: 'Delivered', eventTime: '2026-03-16T14:02:00+04:00', eventLocation: '12 Private Street, 0010 Yerevan' }),
   event({ eventCode: 'ITEM_AT_DELIVERY_DEPOT', eventMessage: 'Arrived at the delivery depot', eventTime: '2026-03-15T08:00:00+04:00', eventLocation: '0010 Yerevan' }),
@@ -19,10 +19,10 @@ const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_REC
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 describe('Logistics Solution tracking', () => {
-  it('reads the events as instants with their codes and towns, and nothing about the people, the partner or the weight', () => {
+  it('reads the events as instants with their codes and towns, and the recipient, but not the sender, the partner or the weight', () => {
     const result = parseLogisticsSolution(answer(history), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-03-16T14:02:00+04:00' });
+      last_status_text: 'Delivered', last_update: '2026-03-16T14:02:00+04:00', receiver_name: 'Sample Recipient' });
     expect(result.events).toEqual([
       { time: '2026-03-16T14:02:00+04:00', description: 'Delivered', provider_code: 'DELIVERED', stage: 'delivered', stage_source: 'carrier_map' },
       { time: '2026-03-15T08:00:00+04:00', description: 'Arrived at the delivery depot', provider_code: 'ITEM_AT_DELIVERY_DEPOT', location: 'Yerevan',

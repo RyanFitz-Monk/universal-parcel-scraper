@@ -33,9 +33,10 @@ and other countries to addresses across the Philippines. Tracked through its tra
   `EXPECTED ARRIVAL AT MANILA PORT`, carry the day the branch expects. They are forecasts, not
   scans, and are dropped. The summary's status can be one of them, so the stage comes from the
   rows. A booking without rows is reported with the summary's status alone.
-- Only the progress is kept. The summary's shipper, consignee, their city, receiver, box count,
-  booking day and delivery day are not, nor are the rows' customer and office notes. Delivery
-  rows lose a clause naming who took the box, and every row loses phone numbers.
+- The summary's consignee is the recipient and their city is the address; its receiver is who
+  took a delivered box. The shipper, the box count, the booking day and the delivery day are not
+  kept, nor are the rows' customer and office notes. A delivery row keeps who took the box, and
+  every row loses phone numbers.
 
 ## Limitations
 

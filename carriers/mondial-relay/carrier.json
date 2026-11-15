@@ -74,7 +74,8 @@
       "delivered_at",
       "destination_country",
       "recipient_name",
-      "recipient_address"
+      "recipient_address",
+      "pickup_code"
     ],
     "scraped": [
       "status",
@@ -83,12 +84,12 @@
       "eta",
       "pickup_point",
       "delivered_at",
-      "destination_country"
-    ],
-    "discarded": [
+      "destination_country",
       "recipient_name",
-      "recipient_address"
+      "recipient_address",
+      "pickup_code"
     ],
+    "discarded": [],
     "unavailable": []
   },
   "links": [

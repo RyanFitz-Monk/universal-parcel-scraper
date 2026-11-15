@@ -39,13 +39,16 @@ export function assertNotChallenged(html: string): void {
 /**
  * A scan's wording. A failed attempt's reason follows a colon and can go on,
  * after another colon, with the recipient's district or city as given:
- * "Unsuccessful Delivery: Wrong Customer District: …". Only the reason is
- * kept, and only when it is words; phone numbers are dropped.
+ * "Unsuccessful Delivery: Wrong Customer District: …". The reason is kept
+ * when it is words, and the district or city after it too; phone numbers are
+ * dropped.
  */
 export function labaihWording(text: string): string {
-  const [head = '', reason = ''] = clean(text, 500).split(':').map((part) => clean(part, 500));
+  const [head = '', reason = '', ...rest] = clean(text, 500).split(':').map((part) => clean(part, 500));
   const label = clean(head.replace(PHONE, ''), 160).replace(/[\s,;\-–]+$/, '');
-  return REASON.test(reason) ? `${label}: ${reason}` : label;
+  if (!REASON.test(reason)) return label;
+  const given = clean(rest.join(':').replace(PHONE, ''), 160).replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
+  return given ? `${label}: ${reason}: ${given}` : `${label}: ${reason}`;
 }
 
 /** A scan's wall clock in `local_time` form, checked against the calendar. */

@@ -10,6 +10,8 @@ import { isRecord } from '../../core/types.js';
 import { oldDominionStatus } from './status.js';
 
 const PROVIDER = 'Old Dominion';
+// A postcode: letters, digits, a space or a hyphen.
+const POSTCODE = /^[A-Z0-9](?:[A-Z0-9 -]{0,8}[A-Z0-9])?$/i;
 export const OLD_DOMINION_ORIGIN = 'https://www.odfl.com';
 /** The trace page; the older `trace-track-ltl-freight/trace.html` address redirects here. */
 export const OLD_DOMINION_TRACE_PATH = '/us/en/tools/trace-track-ltl-freight.html';
@@ -133,6 +135,13 @@ function scan(raw: unknown): Scan {
     provider_code: status, ...(mapped ? { stage: mapped.stage, stage_source: 'carrier_map' } : {}) } };
 }
 
+/** The consignee's town, state and ZIP code, as "CITY, ST 00000". */
+function consigneeAddress(info: Record<string, unknown>): string {
+  const zip = clean(info.consigneeZip, 16);
+  const place = [clean(info.consigneeCity, 80), clean(info.consigneeState, 8)].filter(Boolean).join(', ');
+  return [place, POSTCODE.test(zip) ? zip : ''].filter(Boolean).join(' ');
+}
+
 function shipment(payload: Record<string, unknown>, pro: string, number: string): CarrierResult {
   const infos = payload.traceInfo;
   if (!Array.isArray(infos) || infos.length !== 1 || !isRecord(infos[0])) {
@@ -160,8 +169,10 @@ function shipment(payload: Record<string, unknown>, pro: string, number: string)
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });
-  // Shipper and consignee names and addresses, the signer, bill of lading and
-  // purchase order numbers and the pickup appointment are never read.
+  // The consignee's town and ZIP code and the signer are read. The shipper,
+  // bill of lading and purchase order numbers and the pickup appointment are not.
+  const address = consigneeAddress(info);
+  const signer = delivered ? clean(info.deliverySign, 120) : '';
   return {
     status: current?.status ?? 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: 'carrier_map' } : {}),
@@ -171,6 +182,8 @@ function shipment(payload: Record<string, unknown>, pro: string, number: string)
       : deliveryWindow(info.deliveryDetails) ?? { expected_delivery: etaDay(info.updatedEta) ?? etaDay(info.standardEta) }),
     delivered_at: handover?.event.time ?? null,
     ...(weight !== null ? { weight_kg: weight } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),
     tracking_url: oldDominionTraceUrl(number),

@@ -27,8 +27,8 @@ const rows = (result: ReturnType<typeof parseOcasa>) => result.events!.map((even
 const CAPTCHA = '<html><head><meta name="description" content="Validate Captcha"></head><body><form id="captchaform" action="../Tracking/ValidateCaptcha" method="POST">'
   + `<input type="hidden" id="airbillnumber" name="airbillnumber" value="${UNKNOWN}" /><div class="g-recaptcha" data-sitekey="synthetic"></div></form></body></html>`;
 const CHALLENGE = '<!DOCTYPE html><html><head><title>Just a moment...</title></head><body><script>window._cf_chl_opt={cType: \'interactive\'};</script></body></html>';
-const PRIVATE = ['perez', 'PEREZ', 'JUANA', 'TIENDA', 'CALLE', '1234', '9999', 'VILLA INVENTADA', 'Villa Inventada', 'Z999', 'SYNTHETIC-MAPS-KEY',
-  'CARLOS', 'GOMEZ', 'MERCADO DE PRUEBA', 'AVENIDA', 'MARIA', 'LOPEZ', 'ANA TORRES', 'PASAJE', 'BARRIO'];
+// The sender, the centre in brackets and the map stay out.
+const PRIVATE = ['TIENDA', 'Villa Inventada', 'Z999', 'SYNTHETIC-MAPS-KEY', 'PROVINCIA', 'MERCADO DE PRUEBA', 'MARIA', 'LOPEZ'];
 
 describe('OCASA tracking adapter', () => {
   it('asks the result page once for the whole number through the supplied transport and records the step', async () => {
@@ -46,14 +46,15 @@ describe('OCASA tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery in the page’s order as wall clocks, without the recipient, the address, the sender or the centre', () => {
+  it('reads a delivery in the page’s order as wall clocks, with the recipient, the address and whom it was handed to, without the sender or the centre', () => {
     const result = parseOcasa(page('delivered'), DELIVERED, MARCH);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Entregamos el envio. Gracias por utilizar el servicio de OCASA para tus entregas.',
+      last_status_text: 'Entregamos el envio a perez juana. Gracias por utilizar el servicio de OCASA para tus entregas.',
       last_update: null, last_update_local: '2026-03-12T16:41:00', expected_delivery: null,
+      receiver_name: 'JUANA PEREZ', receiver_address: 'CALLE INVENTADA 1234 - 9999 - VILLA INVENTADA - ARGENTINA', signed_by: 'perez juana',
       events: [
-        { local_time: '2026-03-12T16:41:00', description: 'Entregamos el envio. Gracias por utilizar el servicio de OCASA para tus entregas.',
+        { local_time: '2026-03-12T16:41:00', description: 'Entregamos el envio a perez juana. Gracias por utilizar el servicio de OCASA para tus entregas.',
           stage: 'delivered', stage_source: 'carrier_map' },
         { local_time: '2026-03-12T08:07:00', description: 'Hoy estamos pasando a entregar el envío por el domicilio de destino en el rango horario de 9 a 18 horas.',
           stage: 'out_for_delivery', stage_source: 'carrier_map' },
@@ -75,7 +76,8 @@ describe('OCASA tracking adapter', () => {
   it('gives each yearless clock the latest year before the lookup, across New Year, and an older one when it is still to come', () => {
     const result = parseOcasa(page('in-transit'), TRANSIT, JANUARY);
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', current_stage_source: 'carrier_map',
-      last_update_local: '2026-01-03T07:40:00' });
+      last_update_local: '2026-01-03T07:40:00', receiver_name: 'CARLOS GOMEZ', receiver_address: 'AVENIDA FICTICIA 567 - 8888 - PUEBLO DE PRUEBA - ARGENTINA' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-01-03T07:40:00', 'Hoy estamos pasando a entregar el envío por el domicilio de destino en el rango horario de 9 a 18 horas.', 'out_for_delivery'],
       ['2026-01-02T18:35:00', 'El envío ha llegado al centro de distribución OCASA.', 'in_transit'],
@@ -103,7 +105,9 @@ describe('OCASA tracking adapter', () => {
   it('reads a closed delivery and its return, keeping each event once', () => {
     const result = parseOcasa(page('returned'), RETURNED, SEPTEMBER);
     expect(result).toMatchObject({ status: 'exception', current_stage: 'returned', current_stage_source: 'carrier_map',
-      last_status_text: 'El envío está en proceso de devolución al remitente.', last_update_local: '2026-09-15T06:51:00' });
+      last_status_text: 'El envío está en proceso de devolución al remitente.', last_update_local: '2026-09-15T06:51:00',
+      receiver_name: 'ANA TORRES', receiver_address: 'PASAJE SIN NOMBRE 89 - 7777 - BARRIO EJEMPLO - ARGENTINA' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-09-15T06:51:00', 'El envío está en proceso de devolución al remitente.', 'returned'],
       ['2026-09-14T06:19:00', 'Te informo que el proceso de envío ha finalizado. Por favor contactate con la marca por la cual realizaste la compra para obtener mayor información', 'exception'],
@@ -132,12 +136,12 @@ describe('OCASA tracking adapter', () => {
     expect(bare.events![0]).toEqual({ local_time: '2026-03-12T16:41:00', description: 'Entregado', stage: 'delivered', stage_source: 'carrier_map' });
   });
 
-  it('drops who took a parcel, phone and ID numbers and the bracketed centre from a sentence, and keeps a branch', () => {
+  it('keeps who took a parcel, drops phone and ID numbers and the bracketed centre from a sentence, and keeps a branch', () => {
     expect(ocasaWording('Entregamos el envío a J. Perez. Gracias por utilizar el servicio de OCASA para tus entregas.'))
-      .toBe('Entregamos el envío. Gracias por utilizar el servicio de OCASA para tus entregas.');
-    expect(ocasaWording('Entregamos el envio a Juana Perez')).toBe('Entregamos el envio.');
-    expect(ocasaWording('Envío entregado. Recibió: Juana Perez, DNI 12.345.678')).toBe('Envío entregado.');
-    expect(ocasaWording('Envío entregado, firmado por Juana Perez')).toBe('Envío entregado');
+      .toBe('Entregamos el envío a J. Perez. Gracias por utilizar el servicio de OCASA para tus entregas.');
+    expect(ocasaWording('Entregamos el envio a Juana Perez')).toBe('Entregamos el envio a Juana Perez');
+    expect(ocasaWording('Envío entregado. Recibió: Juana Perez, DNI 12.345.678')).toBe('Envío entregado. Recibió: Juana Perez');
+    expect(ocasaWording('Envío entregado, firmado por Juana Perez')).toBe('Envío entregado, firmado por Juana Perez');
     expect(ocasaWording('Llamar al 011 4000-0000 para coordinar')).toBe('Llamar al para coordinar');
     expect(ocasaWording('El envío ha llegado al centro de distribución OCASA responsable de la entrega final (Villa Inventada - Argentina).'))
       .toBe('El envío ha llegado al centro de distribución OCASA responsable de la entrega final.');
@@ -270,7 +274,7 @@ describe('OCASA tracking adapter', () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => reply(page('delivered')));
     const answer = await createTracker({ fetcher, providers: [], env: {} }).track({ number: DELIVERED, carrier: 'ocasa' }, { budgetMs: 3000 });
     expect(answer).toMatchObject({ carrier: 'ocasa', source: 'ocasa', result: { current_stage: 'delivered' } });
-    expect(answer.result.receiver_name).toBeUndefined();
+    expect(answer.result).toMatchObject({ receiver_name: 'JUANA PEREZ', signed_by: 'perez juana' });
     expect(fetcher.mock.calls.every(([url]) => String(url).startsWith(`${OCASA_ENDPOINT}?`))).toBe(true);
   });
 });

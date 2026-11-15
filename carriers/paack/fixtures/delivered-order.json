@@ -7,10 +7,10 @@
       "end": "2024-07-28T20:00:00+02:00"
     },
     "retailer_name": "PRIVATE RETAILER",
-    "full_name": "PRIVATE RECIPIENT",
+    "full_name": "Sample Recipient",
     "email": "private@example.test",
     "phone_number": "+34 PRIVATE PHONE",
-    "address": "10 PRIVATE STREET"
+    "address": "10 Sample Street"
   },
   "eventList": [
     {

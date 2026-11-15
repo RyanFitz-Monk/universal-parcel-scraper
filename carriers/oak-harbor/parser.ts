@@ -22,6 +22,7 @@ const TIME = /^(\d{1,2}):(\d{2})$/;
 const PHONE = /\s*,\s*\(?\d{3}\)?[\s.-]*\d{3}-\d{4}\s*$/;
 // The signer's name a delivery row ends with: "Delivered Signature-J SMITH".
 const SIGNATURE = /\s+Signature\b.*$/i;
+const SIGNER = /\s+Signature\s*-\s*(.+)$/i;
 // The answer for a PRO the tracker does not have.
 const NOT_FOUND = 'Pro Not Found';
 // The support notice the tracker gives for an unknown PRO and for one it cannot show.
@@ -82,15 +83,17 @@ interface Row { key: string; event: CarrierEvent }
 /**
  * One row of the trace history: its date, its time, the action and the
  * place. A terminal's place carries its address in a tooltip and its phone
- * number after the town, and neither is read.
+ * number after the town, and neither is read. A delivery row keeps its
+ * signer, and its stage is read without it.
  */
 function row(cells: Cheerio<AnyNode>): Row {
   if (cells.length !== 4) throw new SchemaError(PROVIDER, 'Oak Harbor changed its trace history');
   const local_time = wallClock(clean(cells.eq(0).text(), 32), clean(cells.eq(1).text(), 32));
-  const description = clean(cells.eq(2).text(), 300).replace(SIGNATURE, '');
-  if (!local_time || !description) throw new SchemaError(PROVIDER, 'Oak Harbor returned a row without its clock and action');
+  const description = clean(cells.eq(2).text(), 300);
+  const activity = description.replace(SIGNATURE, '');
+  if (!local_time || !activity) throw new SchemaError(PROVIDER, 'Oak Harbor returned a row without its clock and action');
   const location = place(cells.eq(3));
-  const staged = oakHarborStage(description);
+  const staged = oakHarborStage(activity);
   const event: CarrierEvent = {
     local_time,
     ...(location ? { location } : {}),
@@ -138,7 +141,8 @@ function notice(text: string): never {
  * number it looked up in hidden fields, then either a notice or the
  * shipment's information (its PRO, references, parties, destination
  * terminal, delivery status and estimate) and its trace history, newest
- * first, with a form to request documents by email.
+ * first, with a form to request documents by email. The consignee, the town
+ * and ZIP code it is shipped to and a delivery's signer are read.
  */
 export function parseOakHarbor(html: string, rawNumber: string): CarrierResult {
   const number = normalizeOakHarborNumber(rawNumber);
@@ -174,6 +178,10 @@ export function parseOakHarbor(html: string, rawNumber: string): CarrierResult {
   const settled = headline !== null && (SETTLED.has(headline.stage) || !scanned);
   const decided = settled ? headline : scanned ? { stage: scanned.stage as Stage, source: scanned.stage_source! } : null;
   const done = decided !== null && SETTLED.has(decided.stage);
+  const consignee = labelled($, block, 'Consignee:');
+  const shipTo = labelled($, block, 'Ship To:');
+  const signer = decided?.stage === 'delivered'
+    ? clean(SIGNER.exec(events.find((event) => event.stage === 'delivered')?.description ?? '')?.[1], 120) : '';
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -181,6 +189,9 @@ export function parseOakHarbor(html: string, rawNumber: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     expected_delivery: done ? null : calendarDay(labelled($, block, 'Estimated Delivery:')),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(shipTo ? { receiver_address: shipTo } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

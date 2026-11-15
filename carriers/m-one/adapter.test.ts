@@ -43,11 +43,11 @@ describe('M-ONE HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps a delivered history newest first, with wall clocks, codes and depots, and without names', () => {
+  it('keeps a delivered history newest first, with wall clocks, codes, depots and the recipient’s name, and without the sender', () => {
     const result = parseMOne(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Uručena pošiljka', last_update: null, last_update_local: '2026-04-05T16:12:03', expected_delivery: null,
-      weight_kg: 1.25, destination_country: 'RS' });
+      weight_kg: 1.25, destination_country: 'RS', receiver_name: 'Sample Recipient' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage, event.location ?? null])).toEqual([
       ['2026-04-05T16:12:03', 'ST07', 'delivered', null],
       ['2026-04-05T07:40:58', 'ST48', 'ready_for_pickup', null],
@@ -63,7 +63,7 @@ describe('M-ONE HTTP adapter', () => {
     ]);
     expect(result.events!.at(-1)).toMatchObject({ description: 'Kreiran nalog za preuzimanje', stage_source: 'carrier_map' });
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Sender|Recipient)|RAZ01|brojKoleta/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Sender|RAZ01|brojKoleta/);
   });
 
   it('keeps a parcel redirected at the depot in transit', () => {

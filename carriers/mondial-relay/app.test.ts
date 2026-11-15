@@ -101,18 +101,19 @@ describe('Mondial Relay app service', () => {
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|0100000000000000/);
   });
 
-  it('names the delivery point only while the parcel waits there', async () => {
+  it('names the delivery point only while the parcel waits there, and gives the pickup code', async () => {
     const point = (address: Record<string, unknown>) => ({ deliveryPointId: 'PRIVATE_POINT_ID', locker: true,
       imageUrl: 'PRIVATE_IMAGE', businessHours: [{ PRIVATE_HOURS: true }], address: { latitude: 1.5, longitude: 2.5, ...address } });
     const parse = (hint: string, deliveryPointModel: unknown) => {
       const [parcel] = detail(UID, hint) as unknown as [{ detail: Record<string, unknown> }];
-      Object.assign(parcel.detail, { deliveryPointModel, pinCode: 'PRIVATE_PIN', printQrCode: 'PRIVATE_QR' });
+      Object.assign(parcel.detail, { deliveryPointModel, pinCode: '000000', printQrCode: 'PRIVATE_QR' });
       return parseMondialRelayApp([parcel], UID);
     };
     const locker = point({ line1: 'EXAMPLE LOCKER', line2: '', line3: '1 EXAMPLE STREET', line4: null, postcode: '00000', city: 'EXAMPLE CITY', country: 'FR' });
     const waiting = parse('Colis disponible au Locker', locker);
-    expect(waiting).toMatchObject({ current_stage: 'ready_for_pickup', pickup_point: 'EXAMPLE LOCKER\n1 EXAMPLE STREET\n00000 EXAMPLE CITY' });
-    expect(JSON.stringify(waiting)).not.toMatch(/PRIVATE|1\.5|2\.5/);
+    expect(waiting).toMatchObject({ current_stage: 'ready_for_pickup', pickup_point: 'EXAMPLE LOCKER\n1 EXAMPLE STREET\n00000 EXAMPLE CITY',
+      pickup_code: '000000' });
+    expect(JSON.stringify(waiting)).not.toMatch(/PRIVATE_(?:POINT|IMAGE|HOURS|QR)|1\.5|2\.5/);
     expect(parse('Colis disponible au Locker', point({ line1: 'EXAMPLE LOCKER', city: 'EXAMPLE CITY' })).pickup_point).toBe('EXAMPLE LOCKER');
     expect(parse('Colis disponible au Locker', point({ line1: '', line3: '1 EXAMPLE STREET', city: 'EXAMPLE CITY' })).pickup_point).toBeUndefined();
     expect(parse('Colis disponible au Locker', undefined).pickup_point).toBeUndefined();

@@ -35,8 +35,10 @@ C-Note tracking page makes.
   the consignment was delivered.
 - A booking's wording names the consignor and the consignee with an address, and the delivery
   rows name the receiver and the delivery staff with their phone. The adapter keeps the booking's
-  route, the opening words of a delivery sheet update and the out-for-delivery row's transaction
-  type, and drops the rest, the pieces and the remarks.
+  route and the out-for-delivery row's transaction type. A delivery keeps its receiver and area,
+  and its receiver is the signatory; another delivery sheet update keeps its opening words. The
+  staff, the phones, the pieces and the remarks are dropped. The consignee's name runs into
+  their address, so it is not read as the recipient's name.
 
 ## Limitations
 

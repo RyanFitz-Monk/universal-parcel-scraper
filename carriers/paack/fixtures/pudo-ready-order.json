@@ -109,7 +109,7 @@
       "start": "2024-07-29T07:00:00.000Z",
       "end": "2024-07-29T20:00:00.000Z"
     },
-    "full_name": "PRIVATE RECIPIENT",
+    "full_name": "Sample Recipient",
     "email": "private@example.test",
     "phone_number": "+33 PRIVATE PHONE",
     "delivery_address": { "country": "FR", "post_code": "75001" },
@@ -126,7 +126,7 @@
       }
     ],
     "passcode": "PRIVATE PASSCODE",
-    "pudo_passcode": "PRIVATE PICKUP CODE",
+    "pudo_passcode": "000000",
     "pudo_pickup_link": "https://example.test/PRIVATE-PICKUP-LINK"
   },
   "profileMismatch": false,

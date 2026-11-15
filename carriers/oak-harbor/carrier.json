@@ -54,16 +54,16 @@
       "status",
       "history",
       "location",
-      "eta"
+      "eta",
+      "recipient_name",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "customer_reference",
       "sender_name",
-      "recipient_name",
       "origin",
-      "destination",
       "postcodes",
-      "signatory",
       "office_contact_details",
       "office_addresses",
       "proof_of_delivery"

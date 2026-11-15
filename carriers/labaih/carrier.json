@@ -48,14 +48,14 @@
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
       "sender_name",
       "order_contents",
-      "customer_reference",
-      "recipient_address"
+      "customer_reference"
     ],
     "unavailable": [
       "eta",

@@ -37,20 +37,13 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who took the parcel, after a delivery or delivery-office scan's wording
-// ("Recibido por …"). The organisations other legs name ("Received by Last
-// Mile Provider") are on codes this does not read.
-const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:by|por|pelo|pela)\b[\s\S]*$/i;
-// Delivered (PF) and delivery-office (LM) scans.
-const HANDOVER = /^(?:PF|LM)-/i;
-
 /**
  * A scan's wording: the leg the page heads it with, then its own line, as
- * "Destination customs: Released". A delivery or delivery-office scan loses
- * a clause naming who took the parcel, and every scan loses phone numbers.
+ * "Destination customs: Released". A delivery's clause naming who took the
+ * parcel stays, and every scan loses phone numbers.
  */
-export function mailamericasWording(group: string, detail: string, code = ''): string {
-  const own = (HANDOVER.test(code) ? detail.replace(RECEIVER, '') : detail).replace(PHONE, '');
+export function mailamericasWording(group: string, detail: string): string {
+  const own = detail.replace(PHONE, '');
   const line = clean(own.replace(/\s+([,;:.])/g, '$1')).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
   const leg = clean(group.replace(PHONE, ''));
   if (!line) return leg;
@@ -77,7 +70,7 @@ function scanClock(row: Record<string, unknown>): string {
 
 function projectRow(row: Record<string, unknown>): { key: string; wall: string; code: string; event: CarrierEvent } {
   const code = cleanScalar(row.code, 16).toUpperCase();
-  const description = mailamericasWording(text(row, 'status'), text(row, 'description'), code);
+  const description = mailamericasWording(text(row, 'status'), text(row, 'description'));
   if (!description) throw new SchemaError(PROVIDER, 'MailAmericas returned a scan without wording');
   const local = scanClock(row);
   const location = text(row, 'location', 120);
@@ -164,6 +157,9 @@ export function parseMailamericas(payload: unknown, raw: string, readAt = new Da
   const service = label(data, 'service');
   const expected = stage === 'delivered' || stage === 'returned' ? null : estimate(data);
   const deliveredAt = stage === 'delivered' ? newestFirst.find((event) => event.stage === 'delivered')?.time : undefined;
+  // The buyer the marketplace ships to, and the town and state the parcel goes to.
+  const recipient = label(data, 'buyerName');
+  const address = [label(data, 'city'), label(data, 'state')].filter(Boolean).join(', ');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -174,6 +170,8 @@ export function parseMailamericas(payload: unknown, raw: string, readAt = new Da
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(service ? { service_name: service } : {}),
     ...(country ? { destination_country: country } : destination ? { destination_country_name: destination } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

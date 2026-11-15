@@ -53,13 +53,13 @@
       "location",
       "event_details",
       "provider_code",
-      "pickup_point"
+      "pickup_point",
+      "recipient_details"
     ],
     "discarded": [
       "progress_rail",
       "tracking_alias",
-      "payment_details",
-      "recipient_details"
+      "payment_details"
     ],
     "unavailable": [
       "eta",

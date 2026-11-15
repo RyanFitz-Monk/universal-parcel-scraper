@@ -155,16 +155,19 @@ export function parseNovaPoshtaHistory(payload: unknown, raw: string): CarrierRe
   const expected = settled ? undefined : movementTime(payload.scheduled_delivery_date);
   const weight = typeof payload.total_weight === 'number' && Number.isFinite(payload.total_weight) && payload.total_weight > 0 ? payload.total_weight : undefined;
   const pickupPoint = latest.stage === 'ready_for_pickup' || latest.stage === 'delivered' ? points.get(latest) : undefined;
-  // A return names the sender's country as the recipient's.
-  const destination = isRecord(payload.recipient) && !unique.some(event => event.stage === 'returned')
-    ? clean(payload.recipient.country_code, 8).toUpperCase() : '';
+  // A return names the sender's country and town as the recipient's.
+  const forward = isRecord(payload.recipient) && !unique.some(event => event.stage === 'returned') ? payload.recipient : undefined;
+  const destination = forward ? clean(forward.country_code, 8).toUpperCase() : '';
+  // The recipient's town, the only part of the address the movement feed gives.
+  const town = forward ? clean(forward.settlement, 200) : '';
   const partner = partnerOf(payload);
   return { status, ...(latest.stage ? { current_stage: latest.stage, current_stage_source: latest.stage_source } : {}),
     last_status_text: latest.description, last_update: latest.time ?? null,
     ...(status === 'delivered' && latest.time ? { delivered_at: latest.time } : {}),
     ...(expected ? { expected_delivery: expected } : {}), ...(weight ? { weight_kg: weight } : {}),
     ...(dimensionsOf(payload.parcels) ?? {}), ...(pickupPoint ? { pickup_point: pickupPoint } : {}),
-    ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}), ...(partner ?? {}),
+    ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}), ...(town ? { receiver_address: town } : {}),
+    ...(partner ?? {}),
     timezone: 'Europe/Kyiv', events: unique.slice(0, 100) };
 }
 /** A single parcel's declared size; a multi-piece waybill has no one size. */

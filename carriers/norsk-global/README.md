@@ -34,9 +34,11 @@ Global, for delivery. Tracked through the lookup its tracker makes.
 - A scan's `timeStamp` with an offset is an instant. One without is the scanning site's wall
   clock, which can be a partner's abroad, so it stays `local_time`.
 - A message loses the copy of its clock it starts with, as the page drops it, any sentence with
-  an e-mail address and phone numbers. A delivery loses the clause naming who signed for it.
-  The recipient's name and postcode and the proof of delivery's signatory and time are not
-  read.
+  an e-mail address and phone numbers. A delivery keeps the clause naming who signed for it,
+  and its stage is read without it.
+- The destination's contact and postcode become the recipient's name and address, and the
+  proof of delivery's `signedBy` the signatory of a delivered shipment. The time of signing is
+  not read.
 - The shipment's `statusDescription` of `POD` is a delivery, as is a summary worded as a
   delivery or a return. Otherwise the newest staged scan gives the stage, read by the shared
   wording rules. The older tracker wrote each scan as `Status changed to:` and the status.

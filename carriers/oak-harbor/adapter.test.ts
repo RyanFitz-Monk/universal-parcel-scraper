@@ -18,7 +18,7 @@ const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_REC
 const rows = (result: ReturnType<typeof parseOakHarbor>) =>
   result.events!.map(event => [event.local_time, event.location ?? null, event.description, event.stage ?? null]);
 // The references, parties, terminals' addresses and phone numbers, the signer and the documents form.
-const PRIVATE = /4455667|SAMPLE-778|PO-0001|SAMPLE SUPPLY|EXAMPLE FARM|00001|00002|Sample Way|Example Road|555|SIGNER|Signature|Enter Email/i;
+const PRIVATE = /4455667|SAMPLE-778|PO-0001|SAMPLE SUPPLY|00001|Sample Way|Example Road|555|Enter Email/i;
 
 describe('Oak Harbor tracking adapter', () => {
   it('posts the whole PRO once to the tracing page’s action through the supplied transport and records the step', async () => {
@@ -39,12 +39,13 @@ describe('Oak Harbor tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the trace history newest first, as wall clocks, without the signer, phone numbers or parties', () => {
+  it('reads the trace history newest first, as wall clocks, with the consignee and signer, without phone numbers or the shipper', () => {
     const result = parseOakHarbor(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-12T14:41:00', expected_delivery: null });
+      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-12T14:41:00', expected_delivery: null,
+      receiver_name: 'EXAMPLE FARM STORE', receiver_address: 'FICTIONVILLE, OR 00002', signed_by: 'SAMPLE SIGNER' });
     expect(rows(result)).toEqual([
-      ['2026-03-12T14:41:00', 'Fictionville, OR', 'Delivered', 'delivered'],
+      ['2026-03-12T14:41:00', 'Fictionville, OR', 'Delivered Signature-SAMPLE SIGNER', 'delivered'],
       ['2026-03-12T08:05:00', 'Testburg, OR', 'Dispatched for delivery', 'out_for_delivery'],
       // Repeated rows appear once.
       ['2026-03-11T15:30:00', 'Fictionville, OR', 'Refused-not delivered', 'failed_attempt'],
@@ -57,7 +58,7 @@ describe('Oak Harbor tracking adapter', () => {
       ['2026-03-09T15:55:00', 'Exampleton, WA', 'Picked Up', 'accepted'],
     ]);
     expect(result.events!.every(event => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    for (const field of ['summary_only', 'delivered_at', 'sender_name', 'receiver_name']) expect(result).not.toHaveProperty(field);
+    for (const field of ['summary_only', 'delivered_at', 'sender_name']) expect(result).not.toHaveProperty(field);
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
       expect(JSON.stringify(parseOakHarbor(page(name), number)), name).not.toMatch(PRIVATE);
     }
@@ -71,7 +72,9 @@ describe('Oak Harbor tracking adapter', () => {
   it('follows the newest row past a delivery status the page has not moved on, and keeps the estimate until a delivery', () => {
     const result = parseOakHarbor(page('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Arrived at terminal', last_update_local: '2026-11-01T01:30:00', expected_delivery: '2026-11-03' });
+      last_status_text: 'Arrived at terminal', last_update_local: '2026-11-01T01:30:00', expected_delivery: '2026-11-03',
+      receiver_name: 'EXAMPLE FARM STORE', receiver_address: 'FICTIONVILLE, OR 00002' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-11-01T01:30:00', 'Midtown, WA', 'Arrived at terminal', 'in_transit'],
       ['2026-10-31T22:20:00', 'Sample Falls, ID', 'Leaving Terminal', 'in_transit'],

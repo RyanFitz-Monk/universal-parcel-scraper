@@ -30,7 +30,7 @@ makes.
 - The home page shows only the newest status, with the sender, the recipient, the weight and
   the piece count. The API's history is kept with the weight, the destination country and the
   depot some scans name. `posiljalacMesto` and `primalacMesto`, which the page labels as places,
-  hold the sender's and the recipient's names and are never read.
+  hold the sender's and the recipient's names; the recipient's is kept.
 - When its lookup fails, the page shows a fixed delivered reply for a sample number. The
   adapter reads only the API.
 - The reply names no partner and no other number, so there is no hand-off.

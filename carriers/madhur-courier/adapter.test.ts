@@ -23,8 +23,8 @@ const flow = (answer: Response) => vi.fn<typeof fetch>().mockResolvedValueOnce(m
   .mockResolvedValueOnce(answer);
 const rows = (result: ReturnType<typeof parseMadhurCourier>) =>
   result.events!.map(event => [event.local_time, event.location ?? null, event.provider_code, event.description, event.stage ?? null]);
-// The sender, the consignee and their address, the receiver, the delivery staff and their phone, and the pieces.
-const PRIVATE = /SAMPLE (?:SENDER|RECEIVER|STAFF|RIDER)|EXAMPLE (?:ROAD|COLONY)|0000000000|Consignor|Consignee|Mobile|Pcs/i;
+// The sender, the consignee and their address, the delivery staff and their phone, and the pieces.
+const PRIVATE = /SAMPLE (?:SENDER|STAFF|RIDER)|EXAMPLE ROAD|0000000000|Consignor|Consignee|Mobile|Pcs/i;
 const GRID = /<table class="table[\s\S]*?<\/table>/;
 const ROW = /<tr>\s*<td>[\s\S]*?<\/tr>/g;
 
@@ -53,13 +53,15 @@ describe('Madhur Courier tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history newest first by its days and drops every name, address and phone', () => {
+  it('reads a delivered history newest first by its days and its receiver, without the sender, the staff or a phone', () => {
     const result = parseMadhurCourier(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED', last_update: null, last_update_local: '2026-10-09', expected_delivery: null });
+      last_status_text: 'DELIVERED TO SAMPLE RECEIVER AREA:EXAMPLE COLONY IN TESTABAD', last_update: null,
+      last_update_local: '2026-10-09', expected_delivery: null, signed_by: 'SAMPLE RECEIVER' });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(rows(result)).toEqual([
-      // The receiver, the area and the delivery staff after the delivery's wording are dropped.
-      ['2026-10-09', 'TESTABAD', 'RUNSHEET UPDATE', 'DELIVERED', 'delivered'],
+      // The delivery keeps its receiver and area; the delivery staff and the pieces after them are dropped.
+      ['2026-10-09', 'TESTABAD', 'RUNSHEET UPDATE', 'DELIVERED TO SAMPLE RECEIVER AREA:EXAMPLE COLONY IN TESTABAD', 'delivered'],
       // The out-for-delivery row names the staff and their phone, so it keeps its transaction type.
       ['2026-10-09', 'TESTABAD', 'OUT FOR DELIVERY', 'OUT FOR DELIVERY', 'out_for_delivery'],
       ['2026-10-08', 'TESTABAD', 'PARCEL RECEIVED', 'RECEIVED IN TESTABAD FROM EXAMPLEGANJ FOR TESTABAD Location', 'in_transit'],
@@ -110,9 +112,12 @@ describe('Madhur Courier tracking adapter', () => {
     expect(missed.current_stage).not.toBe('delivered');
     expect(sheet('Pcs:2').events![0]).toMatchObject({ description: 'RUNSHEET UPDATE' });
     expect(sheet('Pcs:2').events![0]).not.toHaveProperty('stage');
-    // A delivery named under another transaction type keeps only its opening word too.
+    expect(missed).not.toHaveProperty('signed_by');
+    // A delivery named under another transaction type keeps its receiver too, and is staged by its opening word.
     const other = parseMadhurCourier(delivered.replace('RUNSHEET UPDATE', 'POD ENTRY'), DELIVERED);
-    expect(other.events![0]).toMatchObject({ provider_code: 'POD ENTRY', description: 'DELIVERED', stage: 'delivered', stage_source: 'wording:language' });
+    expect(other.events![0]).toMatchObject({ provider_code: 'POD ENTRY', description: 'DELIVERED TO SAMPLE RECEIVER AREA:EXAMPLE COLONY IN TESTABAD',
+      stage: 'delivered', stage_source: 'wording:language' });
+    expect(other).toMatchObject({ signed_by: 'SAMPLE RECEIVER' });
     expect(JSON.stringify(missed)).not.toMatch(PRIVATE);
   });
 

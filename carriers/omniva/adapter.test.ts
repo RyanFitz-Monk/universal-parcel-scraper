@@ -98,10 +98,10 @@ describe('Omniva tracking adapter', () => {
     }
   });
 
-  it('keeps a courier item’s failed attempt current past the notices and drops the recipient’s address and the reason', () => {
+  it('keeps a courier item’s failed attempt current past the notices, reads the recipient’s address and drops the reason', () => {
     const result = parseOmniva(JSON.parse(text('courier')), COURIER);
     expect(result).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: 'Delivery attempt made',
-      last_update: '2026-03-10T09:32:00.500Z', destination_country: 'LT' });
+      last_update: '2026-03-10T09:32:00.500Z', destination_country: 'LT', receiver_address: 'Example Lane 7-1\n60006' });
     expect(result.pickup_point).toBeUndefined();
     expect(rows(result).slice(0, 4)).toEqual([
       ['2026-03-10T09:32:00.500Z', 'TRT_COURIER_PRE_DELIVERY_RECIPIENT_NOTIFICATION', 'failed_attempt', 'none', null],
@@ -109,7 +109,9 @@ describe('Omniva tracking adapter', () => {
       ['2026-03-10T09:15:00.250Z', 'TRT_COURIER_CALLED_TO_RECEIVER', 'out_for_delivery', 'none', null],
       ['2026-03-10T06:02:10.300Z', 'TRT_SHIPMENT_COURIER_DELIVERY_STARTED', 'out_for_delivery', 'carrier_map', null],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Example Lane|60006|70007|RECIPIENT_NOT_HOME|EMAIL|Sample sorting line/);
+    // The address is not a scan's place.
+    expect(JSON.stringify(result.events)).not.toMatch(/Example Lane|60006/);
+    expect(JSON.stringify(result)).not.toMatch(/70007|RECIPIENT_NOT_HOME|EMAIL|Sample sorting line/);
   });
 
   it('reads a delivery after a return as the sender’s, without a pickup point', () => {

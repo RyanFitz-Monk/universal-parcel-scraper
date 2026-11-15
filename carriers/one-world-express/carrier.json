@@ -53,7 +53,8 @@
       "customer_reference",
       "related_awb_numbers",
       "transit_time",
-      "parcel_image"
+      "parcel_image",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -62,7 +63,8 @@
       "provider_code",
       "service_name",
       "destination_country",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",

@@ -47,10 +47,10 @@
       "history",
       "location",
       "eta",
-      "eta_window"
+      "eta_window",
+      "recipient_name"
     ],
     "discarded": [
-      "recipient_name",
       "delivery_partner"
     ],
     "unavailable": [

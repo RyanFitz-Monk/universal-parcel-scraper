@@ -2,6 +2,7 @@ import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
+import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { optimaMappedStage } from './status.js';
 
@@ -53,13 +54,21 @@ function scan(row: unknown): CarrierEvent {
   return { local_time: wallClock(row.time), description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
 }
 
+/** The delivery town, state and ZIP code, as "Town, ST 00000". */
+function deliveryAddress(value: unknown): string {
+  if (!isRecord(value)) return '';
+  const place = [clean(value.city, 80), clean(value.state, 8)].filter(Boolean).join(', ');
+  return [place, clean(value.zip, 16)].filter(Boolean).join(' ');
+}
+
 /**
  * The lookup's reply for one number: the shipment's status, its delivery town,
  * its packages, each with its barcode, status, signatory and delivery photos,
  * and its history, oldest first, each status a wall clock with no zone.
  *
- * A package must carry the whole number asked. The address, the signatory,
- * the photos and each status's note are not read.
+ * A package must carry the whole number asked. The delivery town and a
+ * delivered package's signatory are read; the photos and each status's note
+ * are not.
  */
 export function parseOptima(payload: unknown, raw: string): CarrierResult {
   const number = normalizeOptimaNumber(raw);
@@ -70,6 +79,8 @@ export function parseOptima(payload: unknown, raw: string): CarrierResult {
   const packages = Array.isArray(data.packages) ? data.packages.filter(isRecord) : [];
   const parcel = packages.find((item) => text(item.barcode).toUpperCase() === number);
   if (!parcel) throw new IndeterminateError(PROVIDER, 'Optima Overnight answered for another shipment');
+  const address = deliveryAddress(data.address);
+  const recipient = address ? { receiver_address: address } : {};
   const history = data.trackingHistory;
   if (!Array.isArray(history) || history.length > MAX_EVENTS) throw new SchemaError(PROVIDER, 'Optima Overnight returned an invalid history');
 
@@ -81,7 +92,7 @@ export function parseOptima(payload: unknown, raw: string): CarrierResult {
     return {
       status: languageStageStatus(stage), current_stage: stage, current_stage_source: 'carrier_map',
       last_status_text: status, last_update: null, last_update_local: wallClock(data.statusTime ?? data.dateCreated),
-      expected_delivery: null, summary_only: true, events: [],
+      expected_delivery: null, ...recipient, summary_only: true, events: [],
     };
   }
 
@@ -91,6 +102,7 @@ export function parseOptima(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const signer = stage === 'delivered' ? clean(parcel.signedBy, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -98,6 +110,8 @@ export function parseOptima(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     expected_delivery: null,
+    ...recipient,
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

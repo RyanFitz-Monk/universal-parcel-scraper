@@ -24,7 +24,8 @@ const MISSING = 'Sorry Tracking information is not available';
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|<title>\s*Just a moment|g-recaptcha|h-captcha|AwsWafIntegration|awswaf\.com|_Incapsula_Resource/i;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// The former page's delivery named who signed for it: "Shipment Delivered – signed by …".
+// The former page's delivery named who signed for it: "Shipment Delivered – signed by …". It stays
+// in the wording, and the scan is staged without it.
 const SIGNATORY = /\s*[–—-]?\s*\bsigned by\b[\s\S]*$/i;
 // Scans the system records, such as the waybill's creation, give SYSTEM as their place.
 const SYSTEM = 'SYSTEM';
@@ -41,9 +42,14 @@ export function normalizeNaqelNumber(raw: string): string {
   return number;
 }
 
-/** A scan's wording without the name of whoever signed for it or a phone number. */
+/** A scan's wording without a phone number. */
 export function naqelWording(text: string): string {
-  return clean(text.replace(SIGNATORY, '').replace(PHONE, ' '), 300).replace(/[\s,;:–—-]+$/, '');
+  return clean(text.replace(PHONE, ' '), 300).replace(/[\s,;:–—-]+$/, '');
+}
+
+/** The words a scan is staged by: its wording without whoever signed for it. */
+function activityOf(description: string): string {
+  return clean(description.replace(SIGNATORY, ''), 300).replace(/[\s,;:–—-]+$/, '');
 }
 
 /** The summary's labelled values; the page gives each once. */
@@ -132,7 +138,7 @@ export function parseNaqel(html: string, raw: string): CarrierResult {
       const key = JSON.stringify([local, description, location]);
       if (seen.has(key)) continue;
       seen.add(key);
-      const staged = naqelStage(description);
+      const staged = naqelStage(activityOf(description));
       events.push({
         local_time: local,
         ...(location ? { location } : {}),

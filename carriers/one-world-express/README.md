@@ -37,13 +37,14 @@ United States. Tracked through SmartTrack, the tracker it links for its parcels.
   barcode, and becomes the delivery tracking number. The page does not name that carrier, so
   there is no delivery carrier; the hand-off proposes the one whose high-confidence rule claims
   the number. When the box holds the parcel's own number or its order number, there is none.
-- Descriptions lose who signed, phone numbers, e-mail addresses and any links or names set off
-  in their own element. The order number (HAWB), the master air waybill, the origin country,
-  the transit time and the parcel image are not kept.
+- Descriptions keep who signed, which is the signatory of a delivered parcel, and lose phone
+  numbers, e-mail addresses and any links or names set off in their own element. The order
+  number (HAWB), the master air waybill, the origin country, the transit time and the parcel
+  image are not kept.
 
 ## Limitations
 
-- No delivery estimate, weight, sender or recipient, and no delivery time as an instant.
+- No delivery estimate, weight, sender or recipient's name, and no delivery time as an instant.
 - SmartTrack also finds a parcel by its delivering carrier's number. The adapter asks it only
   about One World Express's own numbers.
 

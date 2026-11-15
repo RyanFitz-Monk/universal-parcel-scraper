@@ -54,16 +54,16 @@
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "recipient_name",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "awb_date",
       "sender_name",
-      "recipient_name",
-      "destination",
       "parcel_count",
       "delivered_at",
-      "signatory",
       "event_details",
       "remarks"
     ],

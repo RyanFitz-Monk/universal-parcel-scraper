@@ -50,11 +50,10 @@
       "location",
       "service_name",
       "delivery_partner",
-      "delivery_tracking_number"
-    ],
-    "discarded": [
+      "delivery_tracking_number",
       "recipient_address"
     ],
+    "discarded": [],
     "unavailable": [
       "eta",
       "provider_code",

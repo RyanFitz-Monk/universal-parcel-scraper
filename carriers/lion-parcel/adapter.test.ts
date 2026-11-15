@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, LION_PARCEL_API, LionParcelTracker } from './adapter.js';
-import { lionParcelWording, normalizeLionParcelNumber, parseLionParcel } from './parser.js';
+import { lionParcelReceiver, lionParcelWording, normalizeLionParcelNumber, parseLionParcel } from './parser.js';
 import { lionParcelStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -43,11 +43,12 @@ describe('Lion Parcel HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history at each site’s offset, newest first, without the people named in it', () => {
+  it('reads a delivered history at each site’s offset, newest first, with who took the parcel and without the couriers', () => {
     const result = parseLionParcel(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Paketmu telah sampai di tujuan & diterima', last_update: '2026-03-10T17:05:00+08:00',
-      delivered_at: '2026-03-10T17:05:00+08:00', expected_delivery: null, service_name: 'REGPACK' });
+      last_status_text: 'Paketmu telah sampai di tujuan & diterima oleh Sample Recipient (YBS)', last_update: '2026-03-10T17:05:00+08:00',
+      delivered_at: '2026-03-10T17:05:00+08:00', expected_delivery: null, service_name: 'REGPACK', signed_by: 'Sample Recipient',
+      receiver_address: 'CONTOH KELURAHAN, CONTOH KECAMATAN, CONTOH KOTA' });
     expect(result).not.toHaveProperty('expected_delivery_from');
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage ?? null, event.location ?? null])).toEqual([
       // The destination's scans are shown in central Indonesia's zone, as the page does.
@@ -73,7 +74,7 @@ describe('Lion Parcel HTTP adapter', () => {
       'Kurir dalam perjalanan untuk Pick Up paketmu',
       'Mencari kurir untuk Pick Up paketmu',
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Recipient|Courier|Pickup)|SAMPLE PICKUP|YBS|storage\.example|SAMPLE01|Kecamatan Sampel|Daerah Sampel|SAMPLE KELURAHAN, SAMPLE KECAMATAN, SAMPLE KOTA|CONTOH KOTA/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Courier|Pickup)|SAMPLE PICKUP|storage\.example|SAMPLE01|Kecamatan Sampel|Daerah Sampel|SAMPLE KELURAHAN, SAMPLE KECAMATAN, SAMPLE KOTA/);
   });
 
   it('reads a parcel on its way with its delivery window, in eastern Indonesia’s zone at the destination', () => {
@@ -135,18 +136,22 @@ describe('Lion Parcel HTTP adapter', () => {
   it('keeps an older parcel the tracker lists without scans as a summary', () => {
     const summary = parseLionParcel(changed('delivered', (shipment) => { shipment.histories = null as never; }), DELIVERED);
     expect(summary).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      provider_code: 'POD', summary_only: true, events: [], expected_delivery: null, service_name: 'REGPACK' });
+      provider_code: 'POD', summary_only: true, events: [], expected_delivery: null, service_name: 'REGPACK',
+      receiver_address: 'CONTOH KELURAHAN, CONTOH KECAMATAN, CONTOH KOTA' });
     expect(() => parseLionParcel(changed('delivered', (shipment) => { shipment.histories = []; shipment.current_status = ''; }), DELIVERED))
       .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
   });
 
-  it('takes the courier, the person who took the parcel and phone numbers out of the wording', () => {
+  it('takes the courier and phone numbers out of the wording, and keeps the person who took the parcel', () => {
     expect(lionParcelWording('Paketmu diantar ke alamat penerima oleh kurir M. Sample Courier. Pastikan nomor penerima dapat dihubungi oleh kurir'))
       .toBe('Paketmu diantar ke alamat penerima oleh kurir. Pastikan nomor penerima dapat dihubungi oleh kurir');
     expect(lionParcelWording('Paketmu diantar ke alamat penerima oleh kurir LION PARCEL.')).toBe('Paketmu diantar ke alamat penerima oleh kurir.');
     expect(lionParcelWording('Paketmu gagal diantar oleh kurir Sample Courier karena alamat tidak ditemukan'))
       .toBe('Paketmu gagal diantar oleh kurir karena alamat tidak ditemukan');
-    expect(lionParcelWording('Paketmu telah sampai di tujuan & diterima oleh  Sample Person (KAR)')).toBe('Paketmu telah sampai di tujuan & diterima');
+    expect(lionParcelWording('Paketmu telah sampai di tujuan & diterima oleh  Sample Person (KAR)')).toBe('Paketmu telah sampai di tujuan & diterima oleh Sample Person (KAR)');
+    expect(lionParcelReceiver('Paketmu telah sampai di tujuan & diterima oleh Sample Person (KAR)')).toBe('Sample Person');
+    expect(lionParcelReceiver('Paketmu telah sampai di tujuan & diterima oleh Sample Person')).toBe('Sample Person');
+    expect(lionParcelReceiver('Paketmu diantar ke alamat penerima oleh kurir.')).toBe('');
     expect(lionParcelWording('Hubungi 0812-0000-0000 untuk info')).toBe('Hubungi untuk info');
     expect(lionParcelWording('Paket sedang menunggu kurir untuk diantar')).toBe('Paket sedang menunggu kurir untuk diantar');
     // A scan without a description takes its label; one without either is skipped.

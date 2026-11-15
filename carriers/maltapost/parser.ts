@@ -101,7 +101,8 @@ function scanOf(row: unknown): Scan {
  * and foreign barcode, flags for charges and declarations, and its scans,
  * newest first, each with a UPU event code, wording, a wall clock and a
  * place. A barcode MaltaPost does not know comes back with neither barcode
- * and no scans. The recipient's masked name and locality are never read.
+ * and no scans. The recipient's name, masked as the reply gives it, and
+ * their locality are read too.
  */
 export function parseMaltaPost(payload: unknown, rawNumber: string): CarrierResult {
   const number = normalizeMaltaPostNumber(rawNumber);
@@ -180,6 +181,8 @@ export function parseMaltaPost(payload: unknown, rawNumber: string): CarrierResu
   }
   const point = waiting && !waiting.foreign ? waiting.event.location ?? '' : '';
   const events = scans.map(scan => scan.event);
+  const recipient = clean(payload.obfuscatedRecipient, 200);
+  const locality = clean(payload.destination, 200);
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -189,6 +192,8 @@ export function parseMaltaPost(payload: unknown, rawNumber: string): CarrierResu
     last_update_local: scans[0]!.event.local_time!,
     expected_delivery: null,
     ...(point ? { pickup_point: point } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(locality ? { receiver_address: locality } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

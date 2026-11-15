@@ -68,30 +68,41 @@ function plusDays(local: string, days: number): string {
 
 // The delivery sentence names whoever took the parcel: "Entregamos el envio a … Gracias …".
 const DELIVERED = /^Entregamos el env[ií]o\b/i;
+const HANDED_TO = /^Entregamos el env[ií]o a\s+(.+?)\.?(?:\s+Gracias por utilizar\b.*)?$/i;
 const THANKS = /\bGracias por utilizar\b.*$/i;
 // A clause naming who received or signed, or an ID, to the end of the sentence.
 // A parcel "para ser recibido por la sucursal" is on its way to a branch.
 const RECEIVER = /\s*[,;:\-–]?\s*(?<![\p{L}])(?:recibi[óo]|(?<!\bser )recibid[oa] por|firm[óo]|firmad[oa] por|D\.?N\.?I\.?|documento)(?![\p{L}])[\s\S]*$/iu;
+// An ID number and the word that introduces it.
+const ID = /\s*[,;:\-–]?\s*(?<![\p{L}])(?:D\.?N\.?I\.?|documento)(?![\p{L}])[\s:#°º.n]*\+?\d(?:[\s().-]{0,2}\d)*/giu;
 // A run of seven or more digits, as phone and ID numbers are written.
 const DIGITS = /\+?\d(?:[\s().-]{0,2}\d){6,}/g;
 // The centre a sentence names in brackets after "OCASA": the same for every
 // shipment wherever it goes, so it is no place.
 const CENTRE = /\s*\([^()]*\)(?=\s*(?:[,.]|$|responsable\b))/giu;
 
+function tidy(text: string): string {
+  return clean(text.replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+/, '');
+}
+
 /**
- * An event's sentence without what the tracker should not have put there: the
- * person a delivery was handed to, a receiver's clause, phone and ID numbers,
- * and the bracketed centre of a distribution centre's sentence.
+ * An event's sentence without phone and ID numbers or the bracketed centre of
+ * a distribution centre's sentence. Who received or signed for the parcel stays.
  */
 export function ocasaWording(sentence: string): string {
-  let text = clean(sentence, 400);
+  let text = clean(sentence, 400).replace(ID, '').replace(DIGITS, '');
+  if (/centro de distribuci[óo]n/i.test(text)) text = text.replace(CENTRE, '');
+  return tidy(text);
+}
+
+/** The wording the stage is read from: a sentence without the person a delivery was handed to or a receiver's clause. */
+function activityOf(description: string): string {
+  let text = description;
   if (DELIVERED.test(text)) {
     const thanks = THANKS.exec(text)?.[0];
     text = `${text.match(DELIVERED)![0]}.${thanks ? ` ${thanks}` : ''}`;
   }
-  text = text.replace(RECEIVER, '').replace(DIGITS, '');
-  if (/centro de distribuci[óo]n/i.test(text)) text = text.replace(CENTRE, '');
-  return clean(text.replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+/, '');
+  return tidy(text.replace(RECEIVER, '')) || description;
 }
 
 type Row = { heading: string; sentence: string; clock: string };
@@ -115,7 +126,8 @@ function hasDetails($: CheerioAPI): boolean {
  * up, the timeline of events, newest first, each with a heading, a day and a
  * clock, and a sentence, and a panel with the origin, the recipient and the
  * delivery address. A number it does not hold gets "No hay registros para
- * mostrar." in place of the timeline and an empty panel.
+ * mostrar." in place of the timeline and an empty panel. The recipient, the
+ * delivery address and whom a delivery was handed to are read.
  */
 export function parseOcasa(html: string, raw: string, now = Date.now()): CarrierResult {
   const number = normalizeOcasaNumber(raw);
@@ -155,7 +167,7 @@ export function parseOcasa(html: string, raw: string, now = Date.now()): Carrier
     const identity = JSON.stringify(event);
     if (seen.has(identity)) return;
     seen.add(identity);
-    const staged = ocasaStage(description, row.heading);
+    const staged = ocasaStage(activityOf(description), row.heading);
     if (staged) Object.assign(event, { stage: staged.stage, stage_source: staged.source });
     events.push(event);
   });
@@ -163,6 +175,10 @@ export function parseOcasa(html: string, raw: string, now = Date.now()): Carrier
   const newest = events[0]!;
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  const recipient = clean($('.detalle .destinatario').first().text(), 200);
+  const address = clean($('.detalle .direccion').first().text(), 400);
+  const handedTo = stage === 'delivered'
+    ? clean(HANDED_TO.exec(events.find((event) => event.stage === 'delivered')?.description ?? '')?.[1], 200) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source! } : {}),
@@ -170,6 +186,9 @@ export function parseOcasa(html: string, raw: string, now = Date.now()): Carrier
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(handedTo ? { signed_by: handedTo } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

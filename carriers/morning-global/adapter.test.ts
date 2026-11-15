@@ -75,11 +75,11 @@ describe('Morning Global HTTP adapter', () => {
   it('keeps each scan once, newest first, as an instant where its location names the offset and as a wall clock elsewhere', () => {
     const result = parseMorningGlobal(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-05-18T14:02:00-04:00', delivered_at: '2026-05-18T14:02:00-04:00',
+      last_status_text: 'Delivered, signed by Sample Person', last_update: '2026-05-18T14:02:00-04:00', delivered_at: '2026-05-18T14:02:00-04:00',
       expected_delivery: null, service_name: 'MGIE', destination_country: 'CA' });
     expect(result).not.toHaveProperty('last_update_local');
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.location ?? null, event.description, event.stage])).toEqual([
-      ['2026-05-18T14:02:00-04:00', 'CA', 'Delivered', 'delivered'],
+      ['2026-05-18T14:02:00-04:00', 'CA', 'Delivered, signed by Sample Person', 'delivered'],
       ['2026-05-18T07:10:00-04:00', 'CA', 'Out for Delivery', 'out_for_delivery'],
       ['2026-05-14T12:30:00-04:00', 'CA', 'Handed Over for Delivery', 'in_transit'],
       ['2026-05-13T15:50:00-04:00', 'CA', 'Customs Cleared', 'in_transit'],
@@ -94,8 +94,9 @@ describe('Morning Global HTTP adapter', () => {
       ['2026-05-08T16:05:00+08:00', 'HK', 'Order Created', 'registered'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !(event.time && event.local_time))).toBe(true);
-    // The signatory, origin, reference, weight, pieces and estimate stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Person|Origin)|SAMPLEREF|1\.25|2026-05-20|signed/i);
+    // The signatory is read; the origin, reference, weight, pieces and estimate stay out.
+    expect(result).toMatchObject({ signed_by: 'Sample Person' });
+    expect(JSON.stringify(result)).not.toMatch(/Sample Origin|SAMPLEREF|1\.25|2026-05-20/i);
   });
 
   it('keeps a wall clock whose named offset the country’s own clock did not have then', () => {
@@ -104,6 +105,7 @@ describe('Morning Global HTTP adapter', () => {
       last_update: null, last_update_local: '2026-07-09T09:45:00', destination_country: 'GB' });
     expect(result).not.toHaveProperty('service_name');
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.location ?? null])).toEqual([
       // British clocks were an hour ahead of UTC in July.
       ['2026-07-09T09:45:00', 'GB'],
@@ -137,13 +139,13 @@ describe('Morning Global HTTP adapter', () => {
 
   it('reads a history listed newest first in that order', () => {
     const result = parseMorningGlobal(changed('delivered', (shipment) => { shipment.events.reverse(); }), DELIVERED);
-    expect(result).toMatchObject({ last_status_text: 'Delivered', current_stage: 'delivered' });
+    expect(result).toMatchObject({ last_status_text: 'Delivered, signed by Sample Person', current_stage: 'delivered' });
     expect(result.events!.at(-1)).toMatchObject({ description: 'Order Created' });
   });
 
-  it('adds a description that says more than the status, without a signatory or phone numbers', () => {
-    expect(morningGlobalWording('Delivered', 'Delivered, signed by Sample Person')).toBe('Delivered');
-    expect(morningGlobalWording('Delivered', 'Received by Sample Person')).toBe('Delivered');
+  it('adds a description that says more than the status, with its signatory and without phone numbers', () => {
+    expect(morningGlobalWording('Delivered', 'Delivered, signed by Sample Person')).toBe('Delivered, signed by Sample Person');
+    expect(morningGlobalWording('Delivered', 'Received by Sample Person')).toBe('Delivered: Received by Sample Person');
     expect(morningGlobalWording('Handed Over for Delivery', 'Call +00 (0) 000 000 0000 for help'))
       .toBe('Handed Over for Delivery: Call for help');
     expect(morningGlobalWording('Arrive Hub', 'arrive hub')).toBe('Arrive Hub');

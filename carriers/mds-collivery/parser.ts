@@ -56,14 +56,21 @@ function instantOf(row: Record<string, unknown>): { time: string; millis: number
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between
 // them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who signed for or took the parcel, after the step it ends: "Delivered, signed by …".
+// Who signed for or took the parcel, after the step it ends: "Delivered, signed by …". It stays
+// in the line, and the line is staged without it.
 const RECEIVER = /\s*[,;:.\-–(]?\s*\b(?:signed(?:\s+for)?|received|collected|accepted)\s+by\b[\s\S]*$/i;
 
-/** A scan's line without the name of whoever took the parcel, or a phone number. */
+const TRAILING = /[\s,;:\-–(]+$/;
+
+/** A scan's line without a phone number. */
 export function colliveryWording(line: string): string {
-  const receiver = RECEIVER.exec(line);
-  const own = receiver && receiver.index > 0 ? line.slice(0, receiver.index) : line;
-  return clean(own.replace(PHONE, '')).replace(/[\s,;:\-–(]+$/, '');
+  return clean(line.replace(PHONE, '')).replace(TRAILING, '');
+}
+
+/** The words a line is staged by: the line without the clause naming whoever took the parcel. */
+function activityOf(description: string): string {
+  const receiver = RECEIVER.exec(description);
+  return receiver && receiver.index > 0 ? description.slice(0, receiver.index).replace(TRAILING, '') : description;
 }
 
 // The branch a "Received in … branch" line names.
@@ -82,7 +89,7 @@ function projectRow(row: Record<string, unknown>, index: number): Scan {
   if (!/^[a-z_]{1,32}$/.test(text(row, 'type', 40))) throw new SchemaError(PROVIDER, 'Collivery returned an invalid scan type');
   const { time, millis } = instantOf(row);
   const branch = clean(BRANCH.exec(description)?.[1], 80);
-  const staged = colliveryStage(description);
+  const staged = colliveryStage(activityOf(description));
   const event: CarrierEvent = {
     time,
     ...(branch ? { location: branch } : {}),

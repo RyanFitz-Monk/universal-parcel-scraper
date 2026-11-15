@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { adapter, LINEAR_API, LinearTracker } from './adapter.js';
-import { LINEAR_MAX_BYTES, linearEstimate, linearWording, normalizeLinearNumber, parseLinear } from './parser.js';
+import { LINEAR_MAX_BYTES, linearActivity, linearEstimate, linearSignatory, linearWording, normalizeLinearNumber, parseLinear } from './parser.js';
 import { linearStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -39,11 +39,11 @@ describe('Linear Logistics HTTP adapter', () => {
     expect(carrier(fetcher).recognize).toBeUndefined();
   });
 
-  it('keeps the complete dated timeline, with the original local clocks and explicit stages', () => {
+  it('keeps the complete dated timeline, with the original local clocks, explicit stages and who took the parcel', () => {
     const result = parseLinear(fixture(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Item has been delivered as requested', last_update: null, last_update_local: '2026-03-05T14:32:00',
-      expected_delivery: null });
+      last_status_text: 'Item has been delivered as requested and received by SYNTHETIC RECIPIENT', last_update: null,
+      last_update_local: '2026-03-05T14:32:00', expected_delivery: null, signed_by: 'SYNTHETIC RECIPIENT' });
     expect(result.events).toHaveLength(10);
     expect(result.events!.map((event) => event.stage ?? null)).toEqual([
       'delivered', 'out_for_delivery', 'in_transit', null, 'failed_attempt', 'out_for_delivery', 'in_transit',
@@ -51,7 +51,9 @@ describe('Linear Logistics HTTP adapter', () => {
     ]);
     expect(result.events![8]).toMatchObject({ local_time: '2026-03-03T18:07:00', location: 'Sample Hub' });
     expect(result.events!.every((event) => event.local_time && !event.time)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SYNTHETIC RECIPIENT|received by (?!DX\b)|ETA:|Due for delivery|lpn|"carrier"/i);
+    expect(JSON.stringify(result)).not.toMatch(/ETA:|Due for delivery|lpn|"carrier"/i);
+    // Before the delivery, no one took the parcel.
+    expect(parseLinear(changed((body) => { body.data = body.data.slice(1); }), NUMBER)).not.toHaveProperty('signed_by');
   });
 
   it('reads the newest estimate a scan appends, the round’s window on its day, until the delivery', () => {
@@ -88,10 +90,18 @@ describe('Linear Logistics HTTP adapter', () => {
     expect(linearStage('Redelivery has been booked')).toBeNull();
   });
 
-  it('removes recipient, delivery place, contacts and capability links before retaining text', () => {
-    expect(linearWording('Item has been delivered as requested and received by SYNTHETIC RECEIVER')).toBe('Item has been delivered as requested');
-    expect(linearWording('Item delivered to Sample Recipient, 12 Example Street')).toBe('Item delivered');
-    expect(linearWording('Item left at 12 Example Street')).toBe('Item left');
+  it('keeps the receiver and delivery place, and removes contacts and capability links before retaining text', () => {
+    expect(linearWording('Item has been delivered as requested and received by SYNTHETIC RECEIVER'))
+      .toBe('Item has been delivered as requested and received by SYNTHETIC RECEIVER');
+    expect(linearWording('Item delivered to Sample Recipient, 12 Example Street')).toBe('Item delivered to Sample Recipient, 12 Example Street');
+    expect(linearWording('Item left at 12 Example Street')).toBe('Item left at 12 Example Street');
+    // The stage comes from the activity alone.
+    expect(linearActivity('Item has been delivered as requested and received by SYNTHETIC RECEIVER')).toBe('Item has been delivered as requested');
+    expect(linearActivity('Item delivered to Sample Recipient, 12 Example Street')).toBe('Item delivered');
+    expect(linearActivity('Calling card has been left at the address')).toBe('Calling card has been left at the address');
+    expect(linearSignatory('Item has been delivered as requested and received by SYNTHETIC RECEIVER')).toBe('SYNTHETIC RECEIVER');
+    expect(linearSignatory(linearWording('Item delivered, signed by SYNTHETIC RECEIVER 07000 000000'))).toBe('SYNTHETIC RECEIVER');
+    expect(linearSignatory('Item received by DX and awaiting route scan')).toBe('');
     expect(linearWording('Arrived at Hub https://example.invalid/private?token=synthetic')).toBe('Arrived at Hub');
     expect(linearWording('Delivery delayed, call +44 0000 000000')).toBe('Delivery delayed, call');
     expect(linearWording('Delivery delayed, synthetic@example.invalid')).toBe('Delivery delayed');
@@ -102,7 +112,8 @@ describe('Linear Logistics HTTP adapter', () => {
       body.data[0]!.postcode = 'AA1 1AA';
       body.data[0]!.photo = 'https://example.invalid/photo';
     }), NUMBER);
-    expect(JSON.stringify(result)).not.toMatch(/example\.invalid|SYNTHETIC|AA1 1AA/);
+    // Fields the lookup does not return are not read.
+    expect(JSON.stringify(result)).not.toMatch(/example\.invalid|SYNTHETIC RECEIVER|AA1 1AA/);
     expect(result.events![0]).not.toHaveProperty('location');
   });
 

@@ -36,6 +36,15 @@ const PICKUP = new Set(['PARCEL_MACHINE', 'POST_OFFICE', 'POST_STATION', 'PICK_U
 
 interface Place { readonly name: string; readonly type: string }
 
+// The recipient's own address, chosen for a courier delivery.
+const RECIPIENT_ADDRESS = 'CUSTOMER_DELIVERY_PREFERENCE';
+
+/** The street and postcode of the address a courier delivers to. */
+function recipientAddress(value: unknown): string {
+  if (!isRecord(value) || clean(value.servicePointTypeCode, 64) !== RECIPIENT_ADDRESS) return '';
+  return [clean(value.locationName, 160), clean(value.zip, 16)].filter(Boolean).join('\n');
+}
+
 /** A site's English name, else its own, as the trackers show it. Postcodes are left out. */
 function placeOf(value: unknown): Place | null {
   if (!isRecord(value)) return null;
@@ -140,6 +149,7 @@ export function parseOmniva(payload: unknown, rawNumber: string): CarrierResult 
     }
   }
   const destination = isRecord(payload.deliveryLocation) ? countryCode(payload.deliveryLocation.countryCode) : null;
+  const address = recipientAddress(payload.deliveryLocation);
   const delivered = stage === 'delivered' && decider?.event.stage === 'delivered' ? decider.event.time : undefined;
   // An old item's history keeps only its delivery.
   const trimmed = events.length > 0 && events.every(event => event.stage === 'delivered' || event.stage === 'returned');
@@ -154,6 +164,7 @@ export function parseOmniva(payload: unknown, rawNumber: string): CarrierResult 
     ...(delivered ? { delivered_at: delivered } : {}),
     ...(point ? { pickup_point: point } : {}),
     ...(destination ? { destination_country: destination } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS || trimmed ? { history_truncated: true } : {}),
   };

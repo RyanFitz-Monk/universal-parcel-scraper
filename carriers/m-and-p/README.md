@@ -29,11 +29,12 @@ through its tracker's page.
   earlier page's labels and details, such as `Booking` and `Shipment is booked.`, stay in the
   map.
 - `Arrived at OPS Facility` is the origin hub taking the consignment in, and reads as accepted.
-- A delivery's sentence goes on to name who received the parcel, which is cut. Phone numbers
-  and amounts to collect are taken out of every sentence. A failed attempt's reason is
+- A delivery's sentence goes on to name who received the parcel, who is kept as the signatory;
+  the scan is staged by the words before. Phone numbers and amounts to collect are taken out of
+  every sentence. A failed attempt's reason is
   followed by a line on the next try; the two read as one sentence.
-- The booking date, the shipper, the consignee, their cities and the order reference above the
-  scans are not kept.
+- The consignee and their city above the scans are the recipient's name and address. The
+  booking date, the shipper, their city and the order reference are not kept.
 
 ## Limitations
 

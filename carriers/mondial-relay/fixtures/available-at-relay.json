@@ -30,7 +30,7 @@
           "Geolocalisation": { "Latitude": "PRIVATE LATITUDE", "Longitude": "PRIVATE LONGITUDE" },
           "InfosComplementaires": "PRIVATE INFO"
         },
-        "Destinataire": "PRIVATE RECIPIENT"
+        "Destinataire": "EXAMPLE RECIPIENT"
       },
       {
         "Date": "2026-08-29T14:00:00",
@@ -50,7 +50,7 @@
         "Evenement": { "Date": "2026-08-30T10:30:00" }
       }
     },
-    "DestinataireCodePostal": "PRIVATE RECIPIENT POSTCODE",
+    "DestinataireCodePostal": "00001",
     "Replace": {
       "parcelshop": {
         "address": "PRIVATE REPLACEMENT ADDRESS",

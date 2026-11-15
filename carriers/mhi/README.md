@@ -27,7 +27,8 @@ through its tracking page.
 - Event clocks are wall clocks to the minute with no zone, so they stay `local_time`. MHI's own
   scan is on British time and the courier's scans on the courier's.
 - The courier the tracking link's address names becomes the delivery carrier, with the number
-  beside the link. The link carries the recipient's postcode, so it is not kept.
+  beside the link. The link is not kept; the recipient's postcode it carries is read as their
+  address.
 - An untracked item can show the number the destination's post gives it, kept as the delivery
   tracking number when it passes its check. The suffix of that number names the post's country,
   kept as the destination country, so the hand-off asks that post even when the reader is there.

@@ -55,12 +55,12 @@
       "location",
       "destination_country",
       "delivery_partner",
-      "delivery_tracking_number"
-    ],
-    "discarded": [
+      "delivery_tracking_number",
       "recipient_name",
       "postcodes",
-      "signatory",
+      "signatory"
+    ],
+    "discarded": [
       "delivered_at"
     ],
     "unavailable": [

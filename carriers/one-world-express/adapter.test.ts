@@ -45,11 +45,11 @@ describe('One World Express HTTP adapter', () => {
   it('reads a delivery with its service, destination and the delivering carrier\'s number, once per scan', () => {
     const result = parseOneWorldExpress(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-06T18:20:00', expected_delivery: null,
-      service_name: 'OWE FLIGHT', destination_country: 'US', delivery_tracking_number: '9200190000000000000016' });
+      last_status_text: 'Delivered, signed by SAMPLE PERSON', last_update: null, last_update_local: '2026-03-06T18:20:00', expected_delivery: null,
+      service_name: 'OWE FLIGHT', destination_country: 'US', delivery_tracking_number: '9200190000000000000016', signed_by: 'SAMPLE PERSON' });
     expect(summary(result)).toEqual([
-      // Who signed and the driver's phone are dropped.
-      ['2026-03-06T18:20:00', 'SAMPLETOWN', 'Delivered', 'Delivered', 'delivered'],
+      // Who signed stays; the driver's phone is dropped.
+      ['2026-03-06T18:20:00', 'SAMPLETOWN', 'Delivered, signed by SAMPLE PERSON', 'Delivered', 'delivered'],
       ['2026-03-06T10:05:00', 'SAMPLETOWN', 'Out for delivery, driver', 'Out for delivery', 'out_for_delivery'],
       // The repeated arrival is kept once.
       ['2026-03-05T22:10:00', 'SAMPLE CITY HUB', 'Arrived at Destination Hub', 'Arrived', 'in_transit'],
@@ -63,7 +63,7 @@ describe('One World Express HTTP adapter', () => {
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
     // A label the map does not know falls to the shared rules on the description.
     expect(result.events![1]).toMatchObject({ stage_source: 'wording:language' });
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE PERSON|000 0000|10000001|000-00000000S|India|transit time|\.jpg/);
+    expect(JSON.stringify(result)).not.toMatch(/000 0000|10000001|000-00000000S|India|transit time|\.jpg/);
   });
 
   it('hands the parcel to the carrier whose number the page names', () => {
@@ -76,6 +76,7 @@ describe('One World Express HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Manifest Update', last_update_local: '2026-10-14T08:15:00', service_name: 'OWE ECONOMY', destination_country: 'GB' });
     expect(result).not.toHaveProperty('delivery_tracking_number');
+    expect(result).not.toHaveProperty('signed_by');
     expect(summary(result)).toEqual([
       // Neither the label nor the description says what this scan moved.
       ['2026-10-14T08:15:00', 'SAMPLE GATEWAY', 'Manifest Update', 'Relabel', null],
@@ -94,15 +95,16 @@ describe('One World Express HTTP adapter', () => {
     expect(result).not.toHaveProperty('delivery_tracking_number');
   });
 
-  it('drops who signed, phones and e-mail addresses from a description', () => {
-    expect(oneWorldExpressWording('Delivered, signed by Sample Person')).toBe('Delivered');
-    expect(oneWorldExpressWording('Delivered - received by Sample Person at 12 Sample Street')).toBe('Delivered');
+  it('keeps who signed and drops phones and e-mail addresses from a description', () => {
+    expect(oneWorldExpressWording('Delivered, signed by Sample Person')).toBe('Delivered, signed by Sample Person');
+    expect(oneWorldExpressWording('Delivered - received by Sample Person')).toBe('Delivered - received by Sample Person');
     expect(oneWorldExpressWording('Contact sample@example.com or +44 0000 000000 to rebook')).toBe('Contact or to rebook');
     expect(oneWorldExpressWording('Arrived at Sort Facility Sample Centre - IND')).toBe('Arrived at Sort Facility Sample Centre - IND');
     // The signatory or driver a cell sets off in its own element is dropped with it.
     const result = parseOneWorldExpress(page('delivered').replace('Delivered, signed by SAMPLE PERSON',
       'Delivered <i>SAMPLE PERSON</i> <a href="https://example.com/pod.jpg">Signature Image</a>'), DELIVERED);
     expect(result.events![0]).toMatchObject({ description: 'Delivered' });
+    expect(result.signed_by).toBeUndefined();
     expect(JSON.stringify(result)).not.toMatch(/SAMPLE PERSON|Signature|example\.com/);
   });
 

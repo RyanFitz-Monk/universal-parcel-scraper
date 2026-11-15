@@ -63,13 +63,13 @@
       "eta",
       "eta_window",
       "service_name",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "destination"
     ],
     "discarded": [
       "origin",
-      "destination",
       "driver_name",
-      "recipient_name",
       "proof_of_delivery"
     ],
     "unavailable": [

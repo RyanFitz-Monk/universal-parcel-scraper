@@ -28,13 +28,14 @@ Pack-Man is a courier for the Attica basin. Tracked through the search page on i
   after the delivery. They are billing, not the parcel's movement, so the adapter leaves them out
   and the delivery stays the newest scan.
 - The remark under each scan is the back office's, such as "Μαζική Αλλαγή" or "Ολοκληρώθηκε", and
-  is not kept.
+  is not kept. A delivery's remark can name who took the parcel ("Παρέλαβε η …") and a phone;
+  the name is the signatory.
 - The former voucher search on `courier.pack-man.gr` still answers, but the website no longer
   uses it; the adapter does not ask it.
 
 ## Limitations
 
-- No location, delivery estimate, weight, service, sender or recipient.
+- No location, delivery estimate, weight, service, sender or recipient's name.
 - A non-delivery reason, if the page gives one in a remark, is not kept.
 
 ## Numbers

@@ -32,15 +32,15 @@ through the lookup its tracker page makes.
   another offset then, and the location keeps the code. Hub and flight scans name no place and
   keep their wall clock in `local_time`.
 - Scans carry their status and a description that repeats it; a description that says more is
-  added after the status, without a signatory clause or phone numbers. The statuses stage the
-  scans. The former tracking API gave each a code; the current reply has none.
+  added after the status, or stands alone when it opens with it, without phone numbers. A
+  signatory clause stays. The statuses stage the scans. The former tracking API gave each a code; the current reply has none.
 - The destination country is the summary's destination when it names a country, else the
   country of the scan that reports the arrival at destination.
 - The summary's `reference` is another number of the parcel's, which the tracker shows as
   Reference. The former tracking API called it the foreign courier's waybill, but the archived
   reply of the public sample holds an AliExpress logistics reference there, and no field names
-  whose number it is, so there is no hand-off. The signatory, origin, weight, pieces and
-  estimate are not kept.
+  whose number it is, so there is no hand-off. The summary's signatory is read; the origin,
+  weight, pieces and estimate are not kept.
 
 ## Limitations
 

@@ -29,8 +29,10 @@ It is not Shree Maruti Courier.
   one, keeps only its day.
 - A delivery settles the document. Otherwise the newest row with a known stage decides, and the
   heading's status when no row has one.
-- The names after `Delivered` and `Out for delivery` are dropped. The sender's and consignee's
-  details, the receiver, the signature and the delivery image are not read.
+- A delivery row keeps the receiver's name after `Delivered`; the staff's name after `Out for
+  delivery` is dropped. The consignee is the recipient's name, and the receiver in the details,
+  without the note on how they signed, is the signatory. The sender's details and the delivery
+  image are not read.
 
 ## Limitations
 

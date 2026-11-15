@@ -50,11 +50,7 @@ function scanClock(row: Record<string, unknown>): string {
   return local;
 }
 
-/**
- * One row of the reply: the scan's code, wording, clock and depot. The
- * sender's and recipient's names the reply puts in its `posiljalacMesto` and
- * `primalacMesto` fields are never read.
- */
+/** One row of the reply: the scan's code, wording, clock and depot. */
 function projectRow(row: Record<string, unknown>, number: string): { key: string; event: CarrierEvent } {
   const named = text(row, 'brojPosiljke', 64).toUpperCase();
   if (!named) throw new SchemaError(PROVIDER, 'M-ONE returned a scan without its number');
@@ -85,7 +81,9 @@ function weight(row: Record<string, unknown>): number | undefined {
  * The reply of `api.m-one.rs/api/statushistory/{number}`: an array with one
  * row per scan, oldest first, each naming the parcel's number. A number the
  * tracker does not know is an HTTP 404, which the adapter reads. Every row
- * must name the number asked.
+ * must name the number asked. The recipient's name is in `primalacMesto`,
+ * which the page labels as a place; the sender's, in `posiljalacMesto`, is not
+ * read.
  */
 export function parseMOne(payload: unknown, raw: string): CarrierResult {
   const number = normalizeMOneNumber(raw);
@@ -104,13 +102,14 @@ export function parseMOne(payload: unknown, raw: string): CarrierResult {
   // Newest first, as the page reads it; a reply already newest first stays as it is.
   const newestFirst = (events[0]!.local_time as string) <= (events.at(-1)!.local_time as string) ? events.reverse() : events;
 
-  // Every row repeats the parcel's weight and countries.
+  // Every row repeats the parcel's weight, countries and recipient.
   const latest = payload.at(-1) as Record<string, unknown>;
   const newest = newestFirst[0]!;
   const scanned = newestFirst.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
   const kilograms = weight(latest);
   const country = text(latest, 'primalacSifraZemlje', 8).toUpperCase();
+  const recipient = text(latest, 'primalacMesto', 200);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source } : {}),
@@ -120,6 +119,7 @@ export function parseMOne(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...(kilograms ? { weight_kg: kilograms } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

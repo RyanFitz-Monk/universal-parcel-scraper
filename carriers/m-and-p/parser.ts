@@ -1,4 +1,4 @@
-import { load, type Cheerio } from 'cheerio';
+import { load, type Cheerio, type CheerioAPI } from 'cheerio';
 import type { AnyNode } from 'domhandler';
 import { DateTime } from 'luxon';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
@@ -25,7 +25,7 @@ const NOT_FOUND = /^No tracking record found with the provided consignment numbe
 // is no block.
 const BLOCKED = /<title>\s*(?:Just a moment|Attention Required|Access Denied|Request Rejected|403 Forbidden)|_cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|_Incapsula_Resource|AwsWafIntegration|awswaf\.com/i;
 // Who took a delivered parcel, from where the sentence names them to its end.
-const RECEIVER = /[\s,]*(?:\band\s+)?(?:has been\s+)?\b(?:rec(?:ie|ei)ved|signed|collected)\s+by\b.*$/i;
+const RECEIVER = /[\s,]*(?:\band\s+)?(?:has been\s+)?\b(?:rec(?:ie|ei)ved|signed|collected)\s+by\b\s*(.*)$/i;
 // A run of ten or more digits with spaces or hyphens, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s-]?\d){9,}(?![A-Z\d])/gi;
 // An amount to collect in rupees.
@@ -42,10 +42,24 @@ export function normalizeMAndPNumber(raw: string): string {
   return number;
 }
 
-/** A scan's sentence without who took the parcel, phone numbers or an amount to collect. */
+/** A scan's sentence without phone numbers or an amount to collect. */
 export function mAndPSentence(text: string): string {
-  return clean(text.replace(RECEIVER, '').replace(PHONE, '').replace(AMOUNT, ''), 300)
+  return clean(text.replace(PHONE, '').replace(AMOUNT, ''), 300)
     .replace(/\s+([,.;:])/g, '$1').replace(/[\s,;:]+$/, '');
+}
+
+/** A delivery's sentence split into what happened, which stages it, and who took the parcel. */
+export function mAndPReceiver(sentence: string): { activity: string; receiver: string } {
+  const match = RECEIVER.exec(sentence);
+  if (!match) return { activity: sentence, receiver: '' };
+  return { activity: sentence.slice(0, match.index).replace(/[\s,;:]+$/, ''), receiver: clean(match[1], 120).replace(/[\s,;:.]+$/, '') };
+}
+
+/** The booking details' "To" column: the consignee's name, then their city. */
+function consignee($: CheerioAPI): { name: string; city: string } {
+  const label = $('form#trackingForm label.form-label').filter((_, node) => clean($(node).text(), 20) === 'To');
+  const values = label.length === 1 ? label.parent().children('input').map((_, node) => clean($(node).attr('value'), 120)).get() : [];
+  return { name: values[0] ?? '', city: values[1] ?? '' };
 }
 
 /**
@@ -80,15 +94,16 @@ function clock(text: string): { time: string; at: number } {
   return { time: zoned.toISO({ suppressMilliseconds: true })!, at: zoned.toMillis() };
 }
 
-interface Scan { event: CarrierEvent; at: number }
+interface Scan { event: CarrierEvent; at: number; receiver: string }
 
 /**
  * The tracker's page for one consignment, which the server renders: a form
  * with the number as asked, the booking date, the shipper and consignee with
  * their cities, then the scans newest first, each with a date, a clock, a
  * status label, the city and a sentence. A consignment the tracker has no
- * record of gets its notice instead of scans. The booking details, names,
- * cities and the order reference are not read, nor who took the parcel.
+ * record of gets its notice instead of scans. The consignee's name and city
+ * and who took the parcel are read; the booking date, the shipper and the order
+ * reference are not.
  */
 export function parseMAndP(html: string, rawNumber: string): CarrierResult {
   const number = normalizeMAndPNumber(rawNumber);
@@ -126,7 +141,8 @@ export function parseMAndP(html: string, rawNumber: string): CarrierResult {
     const description = sentence || status;
     if (!description) throw new SchemaError(PROVIDER, 'M&P returned a scan without wording');
     const location = clean(place.text(), 120);
-    const staged = mAndPStage(status, sentence);
+    const { activity, receiver } = mAndPReceiver(sentence);
+    const staged = mAndPStage(status, activity);
     const event: CarrierEvent = {
       time: when.time, description, ...(location ? { location } : {}),
       ...(status ? { provider_code: status } : {}),
@@ -135,15 +151,18 @@ export function parseMAndP(html: string, rawNumber: string): CarrierResult {
     const identity = JSON.stringify([event.time, status, description, location]);
     if (seen.has(identity)) return;
     seen.add(identity);
-    scans.push({ event, at: when.at });
+    scans.push({ event, at: when.at, receiver });
   });
   // Newest first; scans at the same minute keep the page's order, which is newest first.
   if (listsNewestFirst(scans.map(({ event }) => event)) === false) scans.reverse();
-  const events = scans.sort((a, b) => b.at - a.at).map(({ event }) => event);
+  scans.sort((a, b) => b.at - a.at);
+  const events = scans.map(({ event }) => event);
 
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const receiver = stage === 'delivered' ? scans.find(({ event }) => event === current)!.receiver : '';
+  const to = consignee($);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -151,6 +170,9 @@ export function parseMAndP(html: string, rawNumber: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: current!.time } : {}),
+    ...(to.name ? { receiver_name: to.name } : {}),
+    ...(to.city ? { receiver_address: to.city } : {}),
+    ...(receiver ? { signed_by: receiver } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

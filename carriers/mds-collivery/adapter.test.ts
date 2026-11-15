@@ -98,14 +98,14 @@ describe('MDS Collivery HTTP adapter', () => {
       last_update: null, summary_only: true, events: [] });
   });
 
-  it('takes the name of whoever took the parcel and phone numbers out of a line, and leaves a line the map lacks to the shared rules', () => {
+  it('keeps the name of whoever took the parcel in a line without its phone number, and leaves a line the map lacks to the shared rules', () => {
     const result = parseCollivery(changed('in-transit', (data) => {
       data.status.text = 'Invoiced';
       data.history.push({ time: 1784030000, index: 5, type: 'status', text: 'Parcel delivered, signed by Sample Person 082 000 0000' });
     }), IN_TRANSIT);
     expect(result).toMatchObject({ current_stage: 'delivered', current_stage_source: expect.stringMatching(/^wording:/) });
-    expect(result.events![0]).toMatchObject({ description: 'Parcel delivered', stage: 'delivered' });
-    expect(JSON.stringify(result)).not.toMatch(/Sample Person|082/);
+    expect(result.events![0]).toMatchObject({ description: 'Parcel delivered, signed by Sample Person', stage: 'delivered' });
+    expect(JSON.stringify(result)).not.toMatch(/082/);
     expect(colliveryWording('Call 012 345 6789 to rebook')).toBe('Call to rebook');
   });
 

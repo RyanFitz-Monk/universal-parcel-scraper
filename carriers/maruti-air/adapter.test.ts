@@ -17,8 +17,8 @@ const reply = (body: string, status = 200) => new Response(body, { status, heade
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 const rows = (result: ReturnType<typeof parseMarutiAir>) =>
   result.events!.map(event => [event.time ?? event.local_time, event.location ?? null, event.description, event.stage ?? null]);
-// The sender, the consignee, the receiver, the delivery staff, the signature and the delivery image.
-const PRIVATE = /SAMPLE|STAFF SIGN|base64|imgViewFile|Consignor|Consignee/i;
+// The sender, the delivery staff and the delivery image.
+const PRIVATE = /SAMPLE (?:SENDER|COURIER)|base64|imgViewFile|Consignor/i;
 const ROW = (date: string, time: string, place: string, activity: string) => `<tr><td>${date}</td><td>${time}</td><td>${place}</td><td>${activity}</td></tr>`;
 const HISTORY = /(<tr><th>Date<\/th><th>Time<\/th><th>Location<\/th><th>Activity<\/th><\/tr>)[\s\S]*?(<\/table>)/;
 const withRows = (html: string, ...lines: string[]) => html.replace(HISTORY, (_, heading: string, end: string) => `${heading}${lines.join('')}${end}`);
@@ -41,14 +41,17 @@ describe('Maruti Air tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the history newest first on India’s clock, keeps a midnight delivery as its day and drops every name', () => {
+  it('reads the history newest first on India’s clock, keeps a midnight delivery as its day and reads the consignee and the receiver', () => {
     const result = parseMarutiAir(page('delivered'), DELIVERED);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language', last_status_text: 'DELIVERED',
-      last_update: null, last_update_local: '2026-10-13', expected_delivery: null });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
+      last_status_text: 'DELIVERED TO SAMPLE RECEIVER (STAFF SIGN & STAMP)', last_update: null, last_update_local: '2026-10-13',
+      expected_delivery: null, receiver_name: 'SAMPLE CONSIGNEE', signed_by: 'SAMPLE RECEIVER' });
+    expect(parseMarutiAir(page('in-transit'), IN_TRANSIT)).toMatchObject({ receiver_name: 'SAMPLE CONSIGNEE' });
+    expect(parseMarutiAir(page('in-transit'), IN_TRANSIT)).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
-      // The receiver's name and the signature after the wording are dropped.
-      ['2026-10-13', 'PUNE - KOTHRUD', 'DELIVERED', 'delivered'],
-      // So is the delivery staff's name.
+      // The receiver's name and the signature after the wording stay.
+      ['2026-10-13', 'PUNE - KOTHRUD', 'DELIVERED TO SAMPLE RECEIVER (STAFF SIGN & STAMP)', 'delivered'],
+      // The delivery staff's name is dropped.
       ['2026-10-13T09:40:00+05:30', 'PUNE - KOTHRUD', 'OUT FOR DELIVERY', 'out_for_delivery'],
       ['2026-10-12T22:15:00+05:30', 'PUNE', 'Received at PUNE - KOTHRUD', 'in_transit'],
       ['2026-10-11T19:30:00+05:30', 'SURAT', 'Forwarded to PUNE', 'in_transit'],

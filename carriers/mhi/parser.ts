@@ -15,6 +15,9 @@ export const MHI_MAX_BYTES = 1024 * 1024;
 
 // The courier's number beside the link to its tracker.
 const PARTNER_NUMBER = /^[A-Z0-9]{6,40}$/;
+// The query parameter of that link holding the recipient's postcode, and a postcode's shape.
+const POSTCODE_PARAMETER = /^(?:zip|zip_?code|post_?code|postal_?code|plz)$/i;
+const POSTCODE = /^[A-Z0-9](?:[A-Z0-9 -]{0,8}[A-Z0-9])?$/i;
 const UNKNOWN = /^No details found for Tracking Code, or Tracking Code not recognised\b/;
 // "24 Oct 2026" and "08:36": the event's day and minute.
 const DAY_FORMAT = 'd MMM yyyy';
@@ -60,12 +63,25 @@ function onwardCourier($: CheerioAPI, number: string): Pick<CarrierResult, 'deli
   } catch {
     return {};
   }
-  // Only a courier the link's address names, for the number beside it, is a
-  // hand-off. The link carries the recipient's postcode, so it is not kept.
+  // Only a courier the link's address names, for the number beside it, is a hand-off.
   const partner = ['https:', 'http:'].includes(url.protocol) && PARTNER_NUMBER.test(reference) && url.href.toUpperCase().includes(reference)
     ? carrierIdFromPartner('', url.href) : undefined;
   if (!partner || partner === CARRIER || partner === 'unknown') return {};
   return { delivery_carrier: partner, ...(reference !== number ? { delivery_tracking_number: reference } : {}) };
+}
+
+/** The recipient's postcode, which the link to the courier's tracker carries. */
+function linkPostcode($: CheerioAPI): string {
+  const blocks = $('.itemcarrier');
+  if (blocks.length !== 1) return '';
+  let url: URL;
+  try {
+    url = new URL(blocks.find('a[href]').first().attr('href') ?? '');
+  } catch {
+    return '';
+  }
+  const codes = [...url.searchParams].filter(([name]) => POSTCODE_PARAMETER.test(name)).map(([, value]) => value.trim());
+  return codes.length === 1 && POSTCODE.test(codes[0]!) ? codes[0]! : '';
 }
 
 /**
@@ -134,6 +150,7 @@ export function parseMhi(html: string, raw: string): CarrierResult {
   const stage = latest?.stage as Stage | undefined;
   const service = text($, $('.tracking-type-container .bg').first());
   const courier = onwardCourier($, number);
+  const postcode = linkPostcode($);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: latest!.stage_source! } : {}),
@@ -143,6 +160,7 @@ export function parseMhi(html: string, raw: string): CarrierResult {
     expected_delivery: null,
     ...(/^(?:TRACKED|UNTRACKED)$/.test(service) ? { service_name: service === 'TRACKED' ? 'Tracked' : 'Untracked' } : {}),
     ...(courier.delivery_carrier ? courier : localPostNumber($)),
+    ...(postcode ? { receiver_address: postcode } : {}),
     events,
   };
 }

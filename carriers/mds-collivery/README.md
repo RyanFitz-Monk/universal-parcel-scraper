@@ -29,9 +29,11 @@ MDS Collivery is a South African courier. Tracked through the lookup its trackin
   status leaves it to the newest staged scan.
 - A `Received in … branch` line gives its branch as the location. A booking change and billing
   move nothing.
-- The reply gives the collection and delivery addresses, which name the sender and the
-  recipient, a progress rail, a fraud warning and support links; none is kept. A line loses a
-  clause naming who signed for the parcel, and phone numbers.
+- The reply gives the collection and delivery addresses, a progress rail, a fraud warning and
+  support links; none is kept. Each address is one string that puts a company or contact name
+  before the building and street, or no name at all, so the recipient's name cannot be told
+  from the address. A line keeps a clause naming who signed for the parcel and loses phone
+  numbers.
 
 ## Limitations
 

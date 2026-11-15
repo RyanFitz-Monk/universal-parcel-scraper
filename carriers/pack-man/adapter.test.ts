@@ -110,10 +110,12 @@ describe('Pack-Man HTTP adapter', () => {
     expect(parsePackMan(unknown, IN_TRANSIT)).toMatchObject({ current_stage: 'in_transit', last_status_text: 'Συνθετικό βήμα' });
   });
 
-  it('keeps no remark, recipient or phone', () => {
+  it('reads who took a delivered parcel from its remark, and keeps no other remark or phone', () => {
+    expect(parsePackMan(fixture('delivered'), DELIVERED).signed_by).toBe('Δείγμα Δοκιμαστική');
+    expect(parsePackMan(fixture('in-transit'), IN_TRANSIT)).not.toHaveProperty('signed_by');
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
       const text = JSON.stringify(parsePackMan(fixture(name), number));
-      expect(text, name).not.toMatch(/Δείγμα|6900000000|Μαζική Αλλαγή|Προγραμματισμένο|auto|pack-man\.gr\/t\//);
+      expect(text, name).not.toMatch(/6900000000|Παρέλαβε|Μαζική Αλλαγή|Προγραμματισμένο|auto|pack-man\.gr\/t\//);
     }
   });
 

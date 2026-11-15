@@ -146,8 +146,8 @@ function weightOf(tracking: Record<string, unknown>): number | null {
  * `OlvaTracking`: how the tracker read the query, the query as it shows it,
  * and either the shipment or the message the page shows instead. The
  * shipment names Olva's own number, the external code it was booked under,
- * the recipient and the scans in groups by milestone. Only the number, the
- * code, the weight and the scans are read.
+ * the recipient and the scans in groups by milestone. The number, the code,
+ * the weight, the recipient's name and district and the scans are read.
  */
 export function parseOlvaPage(page: string, query: OlvaQuery, rawNumber: string): CarrierResult {
   const data = pageData(page);
@@ -195,6 +195,9 @@ export function parseOlvaPage(page: string, query: OlvaQuery, rawNumber: string)
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const weight = weightOf(tracking);
+  const consignee = clean(tracking.consignee, 200);
+  // The recipient's district and province, the part of the address the page shows.
+  const district = clean(tracking.destinationAddress, 200);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -203,6 +206,8 @@ export function parseOlvaPage(page: string, query: OlvaQuery, rawNumber: string)
     last_update_local: latest.local_time!,
     expected_delivery: null,
     ...(weight ? { weight_kg: weight } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(district ? { receiver_address: district } : {}),
     ...(normalizeTrackingNumber(number) !== normalizeTrackingNumber(rawNumber) ? { canonical_tracking_number: number } : {}),
     events,
   };

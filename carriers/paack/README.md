@@ -104,10 +104,11 @@ Spain and other carriers deliver them elsewhere, so that shape only suggests Paa
   Its clocks have no offset. Paack's, from "Arrived In Country" on, have the digits of
   Paack's own UTC instants to the second, so they become instants. Evri's are kept as
   `local_time`, and the catalog marks Paack's clocks local. It has no delivery window. Sender, destination and comments are never read.
-- Retailer, recipient name, e-mail, phone, address and per-event `variables` (which
-  interpolate them) are never read; a test asserts it. The PaackGo Point's pickup code
-  (`pudo_passcode`), QR link and collection deadline are not read either. The delivery
-  postcode is only compared with the requested one. The delivery country, and in Spain the
+- The recipient's name (`full_name`), street (`address`) and delivery postcode are read, and
+  the PaackGo Point's pickup code (`pudo_passcode`) while the parcel waits there. The delivery
+  postcode must also agree with the requested one. Retailer, e-mail, phone and per-event
+  `variables` (which interpolate them) are never read; a test asserts it. The point's QR link
+  and collection deadline are not read either. The delivery country, and in Spain the
   postcode's province, only pick the clock.
 
 ## Limitations

@@ -75,13 +75,14 @@ function deliveryWindow(scanned: DateTime, text: string): { from: string; to: st
   return { from: instant(day.plus({ hours: from })), to: instant(day.plus({ hours: to })) };
 }
 
-interface Scan { event: CarrierEvent; window: { from: string; to: string } | null }
+interface Scan { event: CarrierEvent; window: { from: string; to: string } | null; receiver: string }
 
 /**
  * The page `www.ilogen.com/web/personal/trace/{number}` answers. A parcel's
- * details must name the number asked; its history table lists the scans
- * oldest first. The staff, receiver, office and phone columns are not read,
- * except the out-for-delivery scan's window, which the receiver column holds.
+ * details must name the number asked, and name the recipient and their
+ * address; its history table lists the scans oldest first. The receiver column
+ * gives who took a delivered parcel, and an out-for-delivery scan's window. The
+ * staff, office and phone columns are not read.
  */
 export function parseLogen(html: string, raw: string): CarrierResult {
   const number = normalizeLogenNumber(raw);
@@ -98,8 +99,12 @@ export function parseLogen(html: string, raw: string): CarrierResult {
     if (history.length || !clean(empty.text()).includes(MISSING)) throw new SchemaError(PROVIDER, 'Logen returned an unexpected empty answer');
     throw new NotFoundError(PROVIDER);
   }
-  const labels = details.find('td.tit').filter((_, cell) => clean($(cell).text()) === '송장번호');
-  const echoed = labels.length === 1 ? normalizeTrackingNumber(clean(labels.next('td').text(), 32)) : '';
+  // A detail's value, after its label's cell.
+  const detail = (name: string, maxLength: number) => {
+    const labels = details.find('td.tit').filter((_, cell) => clean($(cell).text()) === name);
+    return labels.length === 1 ? clean(labels.next('td').text(), maxLength) : '';
+  };
+  const echoed = normalizeTrackingNumber(detail('송장번호', 32));
   if (!echoed) throw new SchemaError(PROVIDER, 'Logen returned parcel details without the waybill');
   if (echoed !== number) throw new IndeterminateError(PROVIDER, 'Logen answered for another parcel');
 
@@ -134,6 +139,8 @@ export function parseLogen(html: string, raw: string): CarrierResult {
         ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
       },
       window: staged?.stage === 'out_for_delivery' ? deliveryWindow(wall, clean(cells.eq(5).text(), 40)) : null,
+      // Who took a delivered parcel, or where it was left: "본인", "현관/문앞".
+      receiver: staged?.stage === 'delivered' ? clean(cells.eq(5).text().replace(PHONE, ' '), 80) : '',
     });
   }
   if (!scans.length) throw new NoHistoryError(PROVIDER);
@@ -141,11 +148,15 @@ export function parseLogen(html: string, raw: string): CarrierResult {
   const newestFirst = scans[0]!.event.time! <= scans.at(-1)!.event.time! ? scans.reverse() : scans;
 
   const newest = newestFirst[0]!;
-  const scanned = newestFirst.find((scan) => scan.event.stage)?.event;
+  const current = newestFirst.find((scan) => scan.event.stage);
+  const scanned = current?.event;
   const stage = scanned?.stage as Stage | undefined;
   // The window holds while the out-for-delivery scan is the newest.
   const window = stage === 'out_for_delivery' && scanned === newest.event ? newest.window : null;
   const events = newestFirst.map((scan) => scan.event);
+  // The recipient's name, masked, and their address down to the neighbourhood.
+  const recipient = detail('받으시는 분', 80);
+  const address = detail('주소', 200);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source! } : {}),
@@ -154,6 +165,9 @@ export function parseLogen(html: string, raw: string): CarrierResult {
     expected_delivery: window?.to ?? null,
     ...(window ? { expected_delivery_from: window.from } : {}),
     ...(stage === 'delivered' ? { delivered_at: scanned!.time! } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(stage === 'delivered' && current!.receiver ? { signed_by: current!.receiver } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

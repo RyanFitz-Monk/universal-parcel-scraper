@@ -68,40 +68,46 @@ describe('Leopards HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery in Karachi time with its cities, without who took the parcel, and a repeated scan once', () => {
+  it('reads a delivery in Karachi time with its cities, who signed for it, and a repeated scan once', () => {
     const result = parseLeopards(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered at SOUTHPORT', last_update: '2026-03-14T16:40:00+05:00', expected_delivery: null,
-      delivered_at: '2026-03-14T16:40:00+05:00' });
+      last_status_text: 'Delivered at SOUTHPORT FICTIVE SIGNER ~ STAFF', last_update: '2026-03-14T16:40:00+05:00', expected_delivery: null,
+      delivered_at: '2026-03-14T16:40:00+05:00', signed_by: 'FICTIVE SIGNER' });
     expect(rows(result)).toEqual([
-      ['2026-03-14T16:40:00+05:00', 'Delivered at SOUTHPORT', 'SOUTHPORT', 'delivered'],
+      ['2026-03-14T16:40:00+05:00', 'Delivered at SOUTHPORT FICTIVE SIGNER ~ STAFF', 'SOUTHPORT', 'delivered'],
       ['2026-03-14T11:05:00+05:00', 'Assigned to Leopards in SOUTHPORT', 'SOUTHPORT', 'out_for_delivery'],
       ['2026-03-12T21:15:00+05:00', 'Inter Transfer at NORTHVILLE', 'NORTHVILLE', 'in_transit'],
     ]);
+    // The booking details name no consignee.
     expect(result).not.toHaveProperty('canonical_tracking_number');
-    expect(JSON.stringify(result)).not.toMatch(/FICTIVE|SIGNER|STAFF|~/);
+    expect(result).not.toHaveProperty('receiver_name');
   });
 
-  it('keeps only the wording before the city when the receiver is not the signatory the page names', () => {
+  it('keeps a delivery\'s wording whole and finds its city only when the receiver is the signatory the page names', () => {
     const unsigned = parseLeopards(page('delivered').replace('FICTIVE SIGNER - ', ''), DELIVERED);
-    expect(unsigned.events![0]).toEqual({ time: '2026-03-14T16:40:00+05:00', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' });
+    expect(unsigned.events![0]).toEqual({ time: '2026-03-14T16:40:00+05:00', description: 'Delivered at SOUTHPORT FICTIVE SIGNER ~ STAFF',
+      stage: 'delivered', stage_source: 'carrier_map' });
+    expect(unsigned).not.toHaveProperty('signed_by');
     const other = parseLeopards(page('delivered').replace('FICTIVE SIGNER - ', 'ANOTHER PERSON - '), DELIVERED);
-    expect(other).toMatchObject({ last_status_text: 'Delivered', delivered_at: '2026-03-14T16:40:00+05:00' });
-    // Without a city, only the first word is kept.
+    expect(other).toMatchObject({ last_status_text: 'Delivered at SOUTHPORT FICTIVE SIGNER ~ STAFF', delivered_at: '2026-03-14T16:40:00+05:00',
+      signed_by: 'ANOTHER PERSON' });
+    expect(other.events![0]).not.toHaveProperty('location');
+    // Without a city, the wording still stages as a delivery.
     const placeless = parseLeopards(page('delivered').replace('Delivered at SOUTHPORT FICTIVE SIGNER ~ STAFF \n',
       'Delivered FICTIVE SIGNER ~ SELF \n'), DELIVERED);
-    expect(placeless.events![0]).toMatchObject({ description: 'Delivered', stage: 'delivered' });
-    for (const result of [unsigned, other, placeless]) expect(JSON.stringify(result)).not.toMatch(/FICTIVE|SIGNER|ANOTHER|PERSON|STAFF|SELF/);
+    expect(placeless.events![0]).toMatchObject({ description: 'Delivered FICTIVE SIGNER ~ SELF', stage: 'delivered' });
+    expect(placeless.events![0]).not.toHaveProperty('location');
   });
 
-  it('reads a consignment on its way without its booking details', () => {
+  it('reads a consignment on its way with its consignee and without its other booking details', () => {
     const result = parseLeopards(page('in-transit'), IN_TRANSIT);
     expect(result).toEqual({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Inter Transfer at NORTHVILLE', last_update: '2026-04-10T02:30:00+05:00', expected_delivery: null, events: [
+      last_status_text: 'Inter Transfer at NORTHVILLE', last_update: '2026-04-10T02:30:00+05:00', expected_delivery: null,
+      receiver_name: 'FICTIVE CONSIGNEE', events: [
         { time: '2026-04-10T02:30:00+05:00', description: 'Inter Transfer at NORTHVILLE', location: 'NORTHVILLE', stage: 'in_transit', stage_source: 'carrier_map' },
         { time: '2026-04-09T18:45:00+05:00', description: 'Shipment Picked in NORTHVILLE', location: 'NORTHVILLE', stage: 'accepted', stage_source: 'carrier_map' },
       ] });
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|FICTIVE|ORDER-0001|SOUTHPORT/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|ORDER-0001|SOUTHPORT/);
   });
 
   it('reads a delivery left pending for its reason', () => {

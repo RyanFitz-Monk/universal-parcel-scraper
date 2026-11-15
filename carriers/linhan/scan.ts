@@ -18,7 +18,7 @@ const POSTCODE_RUN = /(^|[^\p{L}\p{N}])\d{4,6}(?![\p{L}\p{N}])/gu;
 // A run of nine or more digits, with the separators phone numbers are written with; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 // Who took a delivered parcel, as a courier's delivery line can name them.
-const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signatory|signature)\b.*$/i;
+const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signatory|signature)\b\s*[:\-–]?\s*(.*)$/i;
 
 /** A town, without a postcode written beside it, or '' when the text is not one. */
 function town(value: string): string {
@@ -27,10 +27,20 @@ function town(value: string): string {
   return TOWN.test(name) && classifyWording(name, 'pending').source === 'none' ? name : '';
 }
 
-/** Scan text without postcodes, phone numbers or who took a delivered parcel. */
+/** Scan text without postcodes or phone numbers. */
 function scrub(value: string): string {
-  const unsigned = /^delivered\b/i.test(value) ? value.replace(RECEIVER, '') : value;
-  return clean(unsigned.replace(PHONE, ' ').replace(POSTCODE_RUN, '$1'), 300).replace(/^[\s,;:]+|[\s,;:]+$/g, '');
+  return clean(value.replace(PHONE, ' ').replace(POSTCODE_RUN, '$1'), 300).replace(/^[\s,;:]+|[\s,;:]+$/g, '');
+}
+
+/** A delivery's wording without who took the parcel, which the stage is read from. */
+export function linhanActivity(description: string): string {
+  return /^delivered\b/i.test(description) ? clean(description.replace(RECEIVER, ''), 300) : description;
+}
+
+/** Who took a delivered parcel, as its delivery's wording names them, or ''. */
+export function linhanSignatory(description: string): string {
+  const named = /^delivered\b/i.test(description) ? RECEIVER.exec(description)?.[1] ?? '' : '';
+  return clean(named, 120).replace(/^[\s,;:.\-–]+|[\s,;:.\-–]+$/g, '');
 }
 
 /**

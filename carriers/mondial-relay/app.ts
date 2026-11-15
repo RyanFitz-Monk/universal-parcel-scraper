@@ -112,9 +112,9 @@ function deliveryPoint(detail: JsonObject): string {
 }
 
 /**
- * The app's parcel detail: a headline, milestones and their dated events, and
- * the delivery point. It carries no delivery estimate, and its pickup code,
- * barcode and contact fields are never read.
+ * The app's parcel detail: a headline, milestones and their dated events, the
+ * delivery point and the pickup code. It carries no delivery estimate, and its
+ * barcode, QR code and contact fields are never read.
  */
 export function parseMondialRelayApp(payload: unknown, uid: string): CarrierResult {
   if (!Array.isArray(payload)) invalid();
@@ -152,6 +152,8 @@ export function parseMondialRelayApp(payload: unknown, uid: string): CarrierResu
   const pickup = current?.stage === 'ready_for_pickup' ? deliveryPoint(parcel.detail) : '';
   // As on the website, a delivered parcel takes its delivery scan's clock.
   const deliveredAt = current?.status === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
+  // The code that opens the locker or releases the parcel at the relay.
+  const code = cleanScalar(parcel.detail.pinCode, 32);
   return {
     status: current?.status ?? 'unknown',
     ...(current ? { current_stage: current.stage } : {}),
@@ -159,6 +161,7 @@ export function parseMondialRelayApp(payload: unknown, uid: string): CarrierResu
     last_update: events[0]?.time ?? null,
     expected_delivery: null,
     ...(pickup ? { pickup_point: pickup } : {}),
+    ...(code ? { pickup_code: code } : {}),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     timezone: ZONE,
     events,

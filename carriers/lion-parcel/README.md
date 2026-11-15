@@ -37,9 +37,10 @@ Indonesia and an international service. Tracked through the lookup its tracking 
   weight moves nothing.
 - A scan's location is the facility's city after its three-letter code. The pickup scans name
   the sender's district instead, which is not kept.
-- The courier's name and the person who took the parcel are taken out of the wording. The
-  sender's and the recipient's districts, payment flags, the booking code and delivery photos
-  are not kept.
+- The courier's name is taken out of the wording. A delivery's wording keeps the person who
+  took the parcel, who is also the result's signatory. The recipient's village, district and
+  city are the recipient's address. The sender's district, payment flags, the booking code and
+  delivery photos are not kept.
 - The delivery window is kept while the parcel is on its way, unless it ended before the newest
   scan's day.
 
@@ -48,7 +49,7 @@ Indonesia and an international service. Tracked through the lookup its tracking 
 - A shipment moved to a new STT, as for a return, is not followed.
 - Older parcels lose their scans and then drop out of the tracker, which then answers as for an
   unknown number. A parcel listed without scans is returned as a summary.
-- No weight, sender or recipient.
+- No weight, sender or recipient's name.
 
 ## Numbers
 

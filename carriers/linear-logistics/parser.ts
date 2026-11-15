@@ -28,9 +28,11 @@ const ROUND = /\(ETA:\s*([01]\d|2[0-3]):([0-5]\d)\s*-\s*([01]\d|2[0-3]):([0-5]\d
 // The day a booking or the hub gives: "(Due for delivery on Thursday 05 Mar 2026)", or "by" it.
 const DUE = /\(Due for delivery (?:on|by) [A-Z]+ (\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4})\)/i;
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-const RECEIVER = /\s+(?:and\s+)?(?:received|signed|collected)\s+by\b(?!\s+DX\b)[\s\S]*$/i;
+// Who took the parcel, after a delivery's activity: "… and received by NAME".
+const RECEIVER = /\s+(?:and\s+)?(?:received|signed|collected)\s+by\b(?!\s+DX\b)\s*([\s\S]*)$/i;
 const DELIVERY_PLACE = /\b(delivered|left)\s+(?:to|at)\b[\s\S]*$/i;
-const PRIVATE = /https?:\/\/|mailto:|tel:|\S+@\S+|\b(?:OTP|PIN)\s*[:=]?\s*\d|(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/i;
+// Links, e-mail addresses and phone numbers, which the wording is cut before.
+const PRIVATE = /https?:\/\/|mailto:|tel:|\S+@\S+|(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/i;
 
 export function normalizeLinearNumber(raw: string): string {
   const number = raw.length <= 128 ? normalizeTrackingNumber(raw) : '';
@@ -49,14 +51,25 @@ function text(row: Record<string, unknown>, field: string, limit = 500): string 
   return clean(value, limit);
 }
 
-/** Keep the activity without the receiver, delivery place, contact or future estimate. */
+/** Keep the wording, with who took the parcel and where, without a contact, a link or a future estimate. */
 export function linearWording(raw: string): string {
-  let wording = textFromHtml(raw, 4_000).replace(ESTIMATE, '').replace(RECEIVER, '');
-  // This fixed activity names no actual address; it is evidence of an attempted delivery.
-  if (!/^Calling card has been left at the address[.\s]*$/i.test(wording)) wording = wording.replace(DELIVERY_PLACE, '$1');
+  let wording = textFromHtml(raw, 4_000).replace(ESTIMATE, '');
   const privateAt = wording.search(PRIVATE);
   if (privateAt >= 0) wording = wording.slice(0, privateAt);
   return clean(wording, 500).replace(/[\s|,;:.\-–]+$/, '');
+}
+
+/** The activity a wording stages by, without who took the parcel or the place it was delivered to or left at. */
+export function linearActivity(wording: string): string {
+  let activity = wording.replace(RECEIVER, '');
+  // This fixed activity names no actual address; it is evidence of an attempted delivery.
+  if (!/^Calling card has been left at the address[.\s]*$/i.test(activity)) activity = activity.replace(DELIVERY_PLACE, '$1');
+  return clean(activity, 500).replace(/[\s|,;:.\-–]+$/, '');
+}
+
+/** Who took the parcel, as a delivery's wording names them: "… received by NAME". */
+export function linearSignatory(wording: string): string {
+  return clean(RECEIVER.exec(wording)?.[1] ?? '', 120).replace(/[\s|,;:.\-–]+$/, '');
 }
 
 /**
@@ -128,7 +141,7 @@ export function parseLinear(payload: unknown, raw: string): CarrierResult {
     const key = JSON.stringify([local, description, location]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = linearStage(description);
+    const staged = linearStage(linearActivity(description));
     const event: CarrierEvent = { local_time: local, description, ...(location ? { location } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) };
     const estimate = linearEstimate(wording, local.slice(0, 10));
@@ -144,6 +157,7 @@ export function parseLinear(payload: unknown, raw: string): CarrierResult {
   // The newest estimate a scan appends, until the delivery. A failed attempt after it, or a day
   // before the newest scan's, leaves it stale.
   const at = events.findIndex((event) => estimates.has(event));
+  const signatory = stage === 'delivered' ? linearSignatory(staged!.description!) : '';
   const estimate = at >= 0 && stage !== 'delivered' && stage !== 'returned'
     && !events.slice(0, at).some((event) => event.stage === 'failed_attempt') ? estimates.get(events[at]!)! : null;
   return {
@@ -151,6 +165,7 @@ export function parseLinear(payload: unknown, raw: string): CarrierResult {
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
     last_status_text: newest.description!, last_update: null, last_update_local: newest.local_time,
     expected_delivery: estimate && estimate.slice(0, 10) >= String(newest.local_time).slice(0, 10) ? estimate : null,
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

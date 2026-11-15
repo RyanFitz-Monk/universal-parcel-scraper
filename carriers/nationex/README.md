@@ -51,9 +51,10 @@ parcel in it and a parcel number only that parcel.
   `EstimatedDeliveryDateTimeStart`, `EstimatedDeliveryDateTimeEnd`,
   `EstimatedDeliveryDateTimeExact` or `EstimatedDeliveryTime`, which the adapter does not read
   yet, is named in `unread_estimates`.
-- The reply also carries the recipient's postcode, town and map position, the handheld's position
-  on each scan, the signer, photo and signature ids, sender references, weights, notes and the
-  tracker's help texts. None of them is read.
+- The recipient's postcode and town are their address, and the delivery scan's contact is the
+  signatory. The reply also carries the recipient's map position, the handheld's position on each
+  scan, photo and signature ids, sender references, weights, notes and the tracker's help texts.
+  None of them is read.
 
 ## Limitations
 

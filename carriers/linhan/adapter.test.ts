@@ -9,7 +9,7 @@ import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, LINHAN_API, LINHAN_PAGE, LinhanTracker } from './adapter.js';
 import { normalizeLinhanNumber, parseLinhan } from './parser.js';
-import { linhanScan } from './scan.js';
+import { linhanActivity, linhanScan, linhanSignatory } from './scan.js';
 import { linhanMappedStage, linhanStage, linhanStatusKey, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -102,6 +102,21 @@ describe('LinHan International HTTP adapter', () => {
     }
   });
 
+  it('keeps who took a delivered parcel in the wording, stages it as a delivery and reads them as the signatory', () => {
+    const result = parseLinhan(changed('delivered', (item) => {
+      item.details[0]!.content = 'Sample Town, 00000, Delivered, signed by A SAMPLE PERSON';
+    }), DELIVERED);
+    expect(result).toMatchObject({ current_stage: 'delivered', current_stage_source: 'carrier_map',
+      last_status_text: 'Delivered, signed by A SAMPLE PERSON', signed_by: 'A SAMPLE PERSON' });
+    expect(result.events![0]).toMatchObject({ location: 'Sample Town', description: 'Delivered, signed by A SAMPLE PERSON', stage: 'delivered' });
+    expect(parseLinhan(fixture('delivered'), DELIVERED)).not.toHaveProperty('signed_by');
+    expect(linhanActivity('Delivered, received by A SAMPLE PERSON')).toBe('Delivered');
+    expect(linhanSignatory('Delivered, signatory: A SAMPLE PERSON')).toBe('A SAMPLE PERSON');
+    // Only a delivery names who took the parcel.
+    expect(linhanActivity('Accepted by the local carrier')).toBe('Accepted by the local carrier');
+    expect(linhanSignatory('Accepted by the local carrier')).toBe('');
+  });
+
   it('moves a leading town into the location, drops postcodes and leaves other text whole', () => {
     expect(linhanScan('Sample Town, 00000, Delivered')).toEqual({ description: 'Delivered', location: 'Sample Town' });
     expect(linhanScan('Sample Town, 00-000, Delivered')).toEqual({ description: 'Delivered', location: 'Sample Town' });
@@ -114,7 +129,8 @@ describe('LinHan International HTTP adapter', () => {
     expect(linhanScan('Order information received')).toEqual({ description: 'Order information received', location: '' });
     // A town and postcode alone have no wording to split off.
     expect(linhanScan('Sample Town, 00000')).toEqual({ description: 'Sample Town', location: '' });
-    expect(linhanScan('Sample Town, 00000, Delivered, signed by A SAMPLE PERSON')).toEqual({ description: 'Delivered', location: 'Sample Town' });
+    expect(linhanScan('Sample Town, 00000, Delivered, signed by A SAMPLE PERSON'))
+      .toEqual({ description: 'Delivered, signed by A SAMPLE PERSON', location: 'Sample Town' });
     expect(linhanScan('Sample Town, Delivery attempted, call +49 000 0000000')).toEqual({ description: 'Delivery attempted, call', location: 'Sample Town' });
     expect(linhanScan('<b>Sample Town</b>, Leaving the sorting center')).toEqual({ description: 'Leaving the sorting center', location: 'Sample Town' });
     // In the United States the state comes between the town and the postcode, and the wording follows the postcode.

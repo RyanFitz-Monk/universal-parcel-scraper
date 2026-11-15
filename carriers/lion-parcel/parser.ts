@@ -30,8 +30,8 @@ const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8
 const CLAUSE = String.raw`(?:dalam|telah|sedang|akan|sudah|karena|untuk|ke|di|dan|pada|yang)\b`;
 // The courier's name after "kurir", up to the next sentence or clause.
 const COURIER = new RegExp(String.raw`(\bkurir)\s+(?!${CLAUSE})[\s\S]+?(?=\.\s+Pastikan\b|\s+${CLAUSE}|\.?\s*$)`, 'gi');
-// Who took a delivered parcel, and their relation to the recipient.
-const RECEIVER = /(\bditerima)\s+oleh\b[\s\S]*$/i;
+// Who took a delivered parcel, and their relation to the recipient: "diterima oleh NAME (YBS)".
+const RECEIVER = /(\bditerima)\s+oleh\b\s*([\s\S]*)$/i;
 
 /** A Lion Parcel STT, in capitals; anything else is not one Lion Parcel issues. */
 export function normalizeLionParcelNumber(raw: string): string {
@@ -62,13 +62,18 @@ function identity(row: Record<string, unknown>, key: string): string {
 }
 
 /**
- * A scan's wording without the courier's name, the person who took the parcel
- * and phone numbers: "Paketmu diantar ke alamat penerima oleh kurir …",
- * "Kurir … dalam perjalanan", "… & diterima oleh … (YBS)".
+ * A scan's wording without the courier's name and phone numbers: "Paketmu
+ * diantar ke alamat penerima oleh kurir …", "Kurir … dalam perjalanan". The
+ * person who took the parcel stays: "… & diterima oleh … (YBS)".
  */
 export function lionParcelWording(description: string): string {
-  return clean(description.replace(RECEIVER, '$1').replace(COURIER, '$1').replace(PHONE, '').replace(/\s+([,.;:])/g, '$1'))
+  return clean(description.replace(COURIER, '$1').replace(PHONE, '').replace(/\s+([,.;:])/g, '$1'))
     .replace(/^[\s,;:]+|[\s,;:\-–]+$/g, '');
+}
+
+/** Who took a delivered parcel, as its wording names them, without their relation to the recipient. */
+export function lionParcelReceiver(wording: string): string {
+  return clean(RECEIVER.exec(wording)?.[2]?.replace(/\s*\([^()]*\)\s*$/, ''), 120).replace(/[\s,;:.\-–]+$/, '');
 }
 
 /**
@@ -96,7 +101,8 @@ function projectRow(row: Record<string, unknown>): { key: string; timestamp: num
   if (!description) return null;
   // Only a facility's city: the scans before the agent name the sender's district.
   const location = clean(FACILITY.exec(text(row, 'location', 120))?.[1], 80);
-  const staged = lionParcelStage(code, description);
+  // The person who took the parcel is no part of what the scan says happened.
+  const staged = lionParcelStage(code, description.replace(RECEIVER, '$1'));
   const event: CarrierEvent = {
     time: iso,
     description,
@@ -154,8 +160,8 @@ function ownShipment(payload: unknown, number: string): Record<string, unknown> 
  * The reply of the tracking page's `/api/tracking` for one number. It has one
  * entry per number asked; an unknown number's entry echoes it with nothing
  * found. The tracker also finds a shipment by its booking code, so an entry
- * counts only when its own STT is the number asked. The sender's and the
- * recipient's districts, payment flags and delivery photos are never read.
+ * counts only when its own STT is the number asked. The recipient's district
+ * is read; the sender's, payment flags and delivery photos are not.
  */
 export function parseLionParcel(payload: unknown, raw: string): CarrierResult {
   const number = normalizeLionParcelNumber(raw);
@@ -180,7 +186,9 @@ export function parseLionParcel(payload: unknown, raw: string): CarrierResult {
   const code = text(shipment, 'current_status', 40).toUpperCase();
   const summary = summaryStage(shipment, code);
   const service = text(shipment, 'product_type', 40);
-  const facts = service ? { service_name: service } : {};
+  // The recipient's village, district and city, as the tracker shows the route's end.
+  const address = text(shipment, 'destination', 200);
+  const facts = { ...(service ? { service_name: service } : {}), ...(address ? { receiver_address: address } : {}) };
   if (!events.length) {
     // Older parcels keep their summary after their scans are gone.
     if (!summary) throw new NoHistoryError(PROVIDER);
@@ -194,6 +202,7 @@ export function parseLionParcel(payload: unknown, raw: string): CarrierResult {
   const stage = summary ?? scanned?.stage as Stage | undefined;
   const source = summary && summary !== scanned?.stage ? 'carrier_map' : scanned?.stage_source;
   const delivered = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  const receiver = delivered ? lionParcelReceiver(delivered.description!) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -201,6 +210,7 @@ export function parseLionParcel(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     ...estimate(shipment, stage, newest),
     ...(delivered ? { delivered_at: delivered.time! } : {}),
+    ...(receiver ? { signed_by: receiver } : {}),
     ...facts,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

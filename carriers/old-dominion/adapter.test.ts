@@ -63,6 +63,7 @@ describe('Old Dominion trace replies', () => {
       last_status_text: 'Delivery Confirmed', last_update: '2026-03-11T06:10:00-04:00',
       // The handover is the Delivered scan, not the later confirmation.
       delivered_at: '2026-03-10T14:20:10-04:00', expected_delivery: null, weight_kg: 453.592,
+      receiver_address: 'SAMPLE TOWN, TX 00003', signed_by: 'SAMPLE SIGNER',
       tracking_url: oldDominionTraceUrl(NUMBER), tracking_source: 'structured-web-response',
     });
     expect(result.events).toHaveLength(10);
@@ -102,11 +103,11 @@ describe('Old Dominion trace replies', () => {
     fails(line(payload), 'schema');
   });
 
-  it('never projects shipper, consignee, signer, references or a delivered shipment\'s appointment', () => {
+  it('never projects the shipper, references, a customer site\'s city or a delivered shipment\'s appointment', () => {
     const result = parse(fixture('delivered.ndjson'));
-    expect(JSON.stringify({ ...result, tracking_url: null })).not.toMatch(/PRIVATE|07:30|15:30|09:00:00|12:00:00|\b0000\d\b|\b2 ?pieces/i);
+    expect(JSON.stringify({ ...result, tracking_url: null })).not.toMatch(/PRIVATE|07:30|15:30|09:00:00|12:00:00|\b0000[12]\b|\b2 ?pieces/i);
     expect(Object.keys(result).sort()).toEqual(['current_stage', 'current_stage_source', 'delivered_at', 'events', 'expected_delivery',
-      'last_status_text', 'last_update', 'status', 'tracking_source', 'tracking_url', 'weight_kg']);
+      'last_status_text', 'last_update', 'receiver_address', 'signed_by', 'status', 'tracking_source', 'tracking_url', 'weight_kg']);
     // Customer sites keep their status and lose the city.
     for (const event of result.events ?? []) {
       if (['Pickup Completed', 'Arrived at Consignee', 'Delivered', 'Delivery Confirmed'].includes(event.provider_code ?? '')) {
@@ -124,7 +125,8 @@ describe('Old Dominion trace replies', () => {
     delete info.deliveryDetails;
     const result = parse(line(payload));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Arrived at TESTVILLE, TX (TST)',
-      expected_delivery: '2026-03-10', delivered_at: null });
+      expected_delivery: '2026-03-10', delivered_at: null, receiver_address: 'SAMPLE TOWN, TX 00003' });
+    expect(result.signed_by).toBeUndefined();
     expect(result.events?.[0]?.time).toBe('2026-03-09T05:40:40-04:00');
     delete info.updatedEta;
     expect(parse(line(payload)).expected_delivery).toBe('2026-03-09');

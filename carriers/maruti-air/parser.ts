@@ -40,8 +40,12 @@ const COLUMNS = {
   activity: /^(?:activity|status|event|description|details|particulars|tracking status)$/i,
 } as const;
 type Column = keyof typeof COLUMNS;
-// A delivery row names whoever received it after the wording, and an out-for-delivery row the delivery staff.
-const NAMED_AFTER = /^(delivered|out for delivery)\b/i;
+// An out-for-delivery row names the delivery staff after its wording, which is not kept. A
+// delivery row names whoever received it, which stays; the row is staged by its opening word.
+const STAFF_AFTER = /^(out for delivery)\b/i;
+const RECEIVED_AFTER = /^(delivered)\b/i;
+// A note after the receiver's name on how they signed, "(STAFF SIGN & STAMP)".
+const SIGN_NOTE = /\s*\([^()]*\)\s*$/;
 // Firewall and bot check pages, which could stand in for the tracker.
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|\/cdn-cgi\/challenge-platform\/|_Incapsula_Resource|errors\.edgesuite\.net|requested URL was rejected|g-recaptcha|h-captcha|<title>\s*(?:Just a moment|Attention Required|Access Denied|Request Rejected)/i;
 const MAX_ROWS = 300;
@@ -153,10 +157,10 @@ function historyOf($: CheerioAPI): Row[] {
     const { wall, ...clock } = clockOf(at('date'), at('time'));
     const activity = at('activity');
     if (!activity) invalid('Maruti Air returned a scan without its activity');
-    // The receiver's or the delivery staff's name after the wording is not kept.
-    const description = NAMED_AFTER.exec(activity)?.[1] ?? activity;
+    // The delivery staff's name after the wording is not kept.
+    const description = STAFF_AFTER.exec(activity)?.[1] ?? activity;
     const location = at('location');
-    const staged = marutiAirStage(description);
+    const staged = marutiAirStage(RECEIVED_AFTER.exec(description)?.[1] ?? description);
     const event: CarrierEvent = {
       ...clock,
       ...(location ? { location } : {}),
@@ -170,6 +174,12 @@ function historyOf($: CheerioAPI): Row[] {
   }
   // The newest row comes first; a history listed the other way round is turned round.
   return rows.length > 1 && rows[0]!.wall < rows.at(-1)!.wall ? rows.reverse() : rows;
+}
+
+/** The value beside a heading in the document's details table; '' when the heading is not there once. */
+function detailOf($: CheerioAPI, heading: string): string {
+  const headings = $('table.shipingtable th').filter((_, node) => clean($(node).text(), 60) === heading);
+  return headings.length === 1 ? textOf(headings.first().next('td'), 200) : '';
 }
 
 /** The number the tracker's field holds, which it fills with the number it looked up. */
@@ -192,8 +202,9 @@ function shownNumbers(block: Cheerio<AnyNode>): string[] {
  * too. A number the tracker holds nothing under gets the notice "DETAIL NOT
  * FOUND !" under the form, with the number left in the field. A document is
  * read as the tracker's stylesheet lays one out: a heading with the document
- * number and its status, then its history in a table. Its other details, who
- * sent and received it and the delivery image, are not read.
+ * number and its status, then its history in a table. The consignee and who
+ * received a delivered document are read; the sender and the delivery image
+ * are not.
  */
 export function parseMarutiAir(html: string, rawNumber: string): CarrierResult {
   const number = normalizeMarutiAirNumber(rawNumber);
@@ -232,6 +243,8 @@ export function parseMarutiAir(html: string, rawNumber: string): CarrierResult {
   const fromSummary = !delivery && headline !== null && (headline.stage === 'delivered' || !row);
   const decided = delivery ? { stage: 'delivered' as Stage, source: delivery.stage_source! } : fromSummary ? headline : row;
   const newest = events[0];
+  const consignee = detailOf($, 'Consignee');
+  const receiver = decided?.stage === 'delivered' ? detailOf($, 'Received By').replace(SIGN_NOTE, '') : '';
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -240,6 +253,8 @@ export function parseMarutiAir(html: string, rawNumber: string): CarrierResult {
     ...(newest?.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(receiver ? { signed_by: receiver } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events,
   };

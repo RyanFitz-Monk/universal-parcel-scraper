@@ -59,11 +59,11 @@ describe('Olva Courier HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history newest first on Peru’s wall clocks, without the recipient', () => {
+  it('reads a delivered history newest first on Peru’s wall clocks, with the recipient’s name and district', () => {
     const result = parse(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: '¡Entregado exitosamente!', last_update: null, last_update_local: '2026-10-07T11:02:18',
-      expected_delivery: null, weight_kg: 2.5 });
+      expected_delivery: null, weight_kg: 2.5, receiver_name: 'DESTINATARIA DE PRUEBA', receiver_address: 'SAN MUESTRA, EJEMPLO' });
     expect(result).not.toHaveProperty('canonical_tracking_number');
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage, event.description, event.location])).toEqual([
       ['2026-10-07T11:02:18', 'ENTREGADO', 'delivered', '¡Entregado exitosamente!', 'SAN MUESTRA'],
@@ -79,7 +79,8 @@ describe('Olva Courier HTTP adapter', () => {
       ['2026-10-03T01:12:40', 'REGISTRADO', 'registered', '¡Envío Registrado!', 'VILLA EJEMPLO'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/DESTINATARIA|SAN MUESTRA, EJEMPLO|\*{5}|DNI|MUESTRAS|\+00:00/);
+    // The masked phone and ID document and the contents stay out.
+    expect(JSON.stringify(result)).not.toMatch(/\*{5}|DNI|MUESTRAS|\+00:00/);
   });
 
   it('reads an AliExpress guide on its way, and names Olva’s own number for it', async () => {
@@ -87,7 +88,8 @@ describe('Olva Courier HTTP adapter', () => {
     const result = await carrier(fetcher).track({ number: GUIDE });
     expect(asked(fetcher)).toEqual(['ALI-OLVA99000001']);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'En almacén de PUERTO PRUEBA',
-      last_update_local: '2026-10-15T15:50:47', weight_kg: 0.75, canonical_tracking_number: '26-49900001' });
+      last_update_local: '2026-10-15T15:50:47', weight_kg: 0.75, canonical_tracking_number: '26-49900001',
+      receiver_name: 'DESTINATARIO DE PRUEBA', receiver_address: 'VILLA EJEMPLO, EJEMPLO' });
     expect(result.events!.map((event) => event.provider_code)).toEqual(['EN_RUTA', 'REPARTO', 'ALMACEN', 'ALMACEN', 'REGISTRADO']);
   });
 

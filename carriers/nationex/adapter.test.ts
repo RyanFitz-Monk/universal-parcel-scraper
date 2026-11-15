@@ -62,6 +62,7 @@ describe('Nationex tracking adapter', () => {
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivery completed - Parcel left at the front door', last_update: null,
       last_update_local: '2026-03-04T14:05:12', expected_delivery: null,
+      receiver_address: 'A1A 1A1 SYNTHETICTOWN', signed_by: 'SYNTHETIC SIGNER',
       events: [
         { local_time: '2026-03-04T14:05:12', description: 'Picture taken', location: 'EXAMPLEVILLE', provider_code: '730' },
         { local_time: '2026-03-04T14:05:12', description: 'Delivery completed - Parcel left at the front door', location: 'EXAMPLEVILLE',
@@ -80,9 +81,9 @@ describe('Nationex tracking adapter', () => {
         { local_time: '2026-03-02T17:16:11', description: 'Shipment created', provider_code: '538', stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    // The signer, the recipient's postcode and town, positions, references, notes and help texts stay behind.
+    // Positions, references, notes and help texts stay behind.
     const text = JSON.stringify(result);
-    for (const value of ['SYNTHETIC SIGNER', 'A1A 1A1', 'SYNTHETICTOWN', 'SYNTHETIC-REF-77', 'Synthetic note', 'Synthetic help', '46.75', '-71.25', '4242', 'Livraison']) {
+    for (const value of ['SYNTHETIC-REF-77', 'Synthetic note', 'Synthetic help', '46.75', '-71.25', '4242', 'Livraison']) {
       expect(text, value).not.toContain(value);
     }
     // The French wording stands in when the English is missing.
@@ -206,7 +207,8 @@ describe('Nationex tracking adapter', () => {
     const empty = fixture('created');
     empty.Parcels[0].History = [];
     expect(parseNationex(empty, CREATED)).toEqual({ status: 'pending', current_stage: 'registered', current_stage_source: 'carrier_map',
-      last_status_text: 'Creation', last_update: null, expected_delivery: null, summary_only: true, events: [] });
+      last_status_text: 'Creation', last_update: null, expected_delivery: null, receiver_address: 'A1A 1A1 SYNTHETICTOWN',
+      summary_only: true, events: [] });
     empty.ShipmentStatus = 'Mystery';
     expect(() => parseNationex(empty, CREATED)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
   });

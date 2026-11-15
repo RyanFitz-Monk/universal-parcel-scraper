@@ -42,13 +42,15 @@
       "history",
       "delivered_at",
       "offset_timestamps",
-      "remarks"
+      "remarks",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "signatory"
     ],
     "discarded": [
       "remarks"

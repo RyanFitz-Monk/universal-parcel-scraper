@@ -10,7 +10,7 @@ describe('Linear Logistics live retrieval', () => {
     const result = await direct().track({ number: process.env.LINEAR_LOGISTICS_TRACKING_NUMBER! });
     expect(result.events!.length).toBeGreaterThan(1);
     expect(result.events!.every((event) => event.description && event.local_time && !event.time)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/received by (?!DX\b)|https?:\/\//i);
+    expect(JSON.stringify(result)).not.toMatch(/https?:\/\//i);
   });
 
   it.skipIf(!process.env.LINEAR_LOGISTICS_TRACKING_NUMBER)('retrieves dated history through the facade with providers disabled', async () => {
@@ -19,7 +19,7 @@ describe('Linear Logistics live retrieval', () => {
     expect(answer.attempts[0]).toMatchObject({ source: 'linear-logistics', kind: 'ok' });
     expect(answer.result.events.length).toBeGreaterThan(1);
     expect(answer.result.events.every((event) => event.description && event.local_time)).toBe(true);
-    expect(JSON.stringify(answer.result)).not.toMatch(/received by (?!DX\b)|https?:\/\//i);
+    expect(JSON.stringify(answer.result)).not.toMatch(/https?:\/\//i);
   }, 45_000);
 
   it.skipIf(!process.env.LINEAR_LOGISTICS_UNKNOWN_NUMBER)('reads the carrier’s explicit unknown-number answer', async () => {

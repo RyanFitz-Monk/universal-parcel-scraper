@@ -65,17 +65,17 @@
       "provider_code",
       "eta",
       "eta_window",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "order_contents",
       "parcel_count",
       "driver_name",
-      "signatory",
       "office_contact_details"
     ],
     "unavailable": [

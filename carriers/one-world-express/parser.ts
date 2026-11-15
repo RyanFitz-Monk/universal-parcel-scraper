@@ -30,6 +30,7 @@ const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 // Who took a delivered parcel, after the delivery's own words.
 const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:signed(?: for)? by|signatory|received by)\b[\s\S]*$/i;
+const SIGNER = /\b(?:signed(?: for)? by|signatory|received by)\b\s*:?\s*(.+)$/i;
 const MAX_ROWS = 600;
 
 /** A One World Express number in capitals; anything else is not one it issues. */
@@ -47,10 +48,13 @@ function cellText(cell: Cheerio<AnyNode>, maxLength: number): string {
     .replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
 }
 
-/** A scan's description, without who signed for the parcel. */
+function tidy(text: string): string {
+  return clean(text.replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** A scan's description, without phone numbers or e-mail addresses. Who signed for the parcel stays. */
 export function oneWorldExpressWording(text: string): string {
-  return clean(text.replace(RECEIVER, '').replace(EMAIL, '').replace(PHONE, '').replace(/\s+([,;:.])/g, '$1'), 300)
-    .replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
+  return tidy(text.replace(EMAIL, '').replace(PHONE, ''));
 }
 
 /** "Thursday, February 26, 2026", a day heading; the weekday must fit the date. */
@@ -103,7 +107,8 @@ function scans($: CheerioAPI, table: Cheerio<AnyNode>): CarrierEvent[] {
     const key = JSON.stringify([local, location, description, label]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = oneWorldExpressStage(label, description);
+    // The stage is read without who signed.
+    const staged = oneWorldExpressStage(label, tidy(description.replace(RECEIVER, '')) || description);
     events.push({
       local_time: local,
       ...(location ? { location } : {}),
@@ -163,6 +168,7 @@ export function parseOneWorldExpress(html: string, raw: string): CarrierResult {
   const newest = events[0]!;
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  const signer = stage === 'delivered' ? clean(SIGNER.exec(scanned!.description ?? '')?.[1], 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source! } : {}),
@@ -173,6 +179,7 @@ export function parseOneWorldExpress(html: string, raw: string): CarrierResult {
     ...(service ? { service_name: service } : {}),
     ...(country ? { destination_country: country } : destination ? { destination_country_name: destination } : {}),
     ...(handoff ? { delivery_tracking_number: handoff } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

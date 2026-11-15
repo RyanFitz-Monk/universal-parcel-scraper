@@ -63,13 +63,14 @@ describe('Norsk Global HTTP adapter', () => {
     expect(String(delivered.mock.calls[0]![0])).toBe(LOOKUP);
   });
 
-  it('keeps a delivery and its hand-off to USPS without the recipient, the signatory or the repeated scan', () => {
+  it('keeps a delivery, its recipient, its signatory and its hand-off to USPS without the repeated scan', () => {
     const result = parseNorskGlobal(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-05-19T14:02:00', expected_delivery: null,
-      delivery_carrier: 'usps', delivery_tracking_number: PIC, destination_country: 'US' });
+      last_status_text: 'Delivered - Signed for by SAMPLE SIGNER', last_update: null, last_update_local: '2026-05-19T14:02:00', expected_delivery: null,
+      delivery_carrier: 'usps', delivery_tracking_number: PIC, destination_country: 'US',
+      receiver_name: 'Sample Recipient', receiver_address: '00000', signed_by: 'SAMPLE SIGNER' });
     expect(result.events!.map((event) => [event.local_time, event.description, event.location ?? null, event.stage ?? null])).toEqual([
-      ['2026-05-19T14:02:00', 'Delivered', 'SAMPLE CITY US', 'delivered'],
+      ['2026-05-19T14:02:00', 'Delivered - Signed for by SAMPLE SIGNER', 'SAMPLE CITY US', 'delivered'],
       ['2026-05-19T07:40:00', 'Out for delivery', 'SAMPLE CITY US', 'out_for_delivery'],
       ['2026-05-17T22:15:00', 'Arrived at USPS regional facility', 'SAMPLE HUB US', 'in_transit'],
       ['2026-05-15T03:30:00', 'Handed over to USPS', 'SAMPLE GATEWAY US', 'accepted'],
@@ -78,8 +79,8 @@ describe('Norsk Global HTTP adapter', () => {
       ['2026-05-11T09:12:00', 'Received at hub.', 'SAMPLE HUB GB', 'accepted'],
     ]);
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    // The routing barcode's ZIP code, the people, the depot's address and the phone number never come through.
-    expect(JSON.stringify(result)).not.toMatch(/SIGNER|Recipient|example\.com|\+00|SAMPLE0001|United States|420000009/);
+    // The routing barcode's ZIP code, the depot's address and the phone number never come through.
+    expect(JSON.stringify(result)).not.toMatch(/example\.com|\+00|SAMPLE0001|United States|420000009/);
     expect(deliveryHandoff('norsk-global', DELIVERED, result)).toEqual({ carrier: 'usps', number: PIC, basis: 'partner' });
   });
 
@@ -87,8 +88,9 @@ describe('Norsk Global HTTP adapter', () => {
     const result = parseNorskGlobal(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'In transit to bpost',
       last_update: '2026-06-02T09:10:00+02:00', delivery_carrier: 'landmark-global', delivery_tracking_number: LANDMARK,
-      destination_country: 'BE' });
+      destination_country: 'BE', receiver_name: 'Sample Recipient', receiver_address: '0000' });
     expect(result).not.toHaveProperty('last_update_local');
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.time, event.location ?? null, event.stage])).toEqual([
       ['2026-06-02T09:10:00+02:00', 'SAMPLE TOWN BE', 'in_transit'],
       ['2026-06-02T06:30:00+02:00', 'SAMPLE TOWN BE', 'in_transit'],
@@ -171,10 +173,11 @@ describe('Norsk Global HTTP adapter', () => {
     expect(long).toMatchObject({ history_truncated: true, last_update_local: '2026-06-01T11:40:00' });
   });
 
-  it('takes the clock, people, e-mail addresses and phone numbers out of the wording', () => {
-    expect(norskGlobalWording('2026-05-19 14:02:00 Delivered - Signed for by SAMPLE PERSON')).toBe('Delivered');
-    expect(norskGlobalWording('19/05/2026 14:02:00 Delivered, received by SAMPLE PERSON at the door')).toBe('Delivered');
-    expect(norskGlobalWording('Signed for by SAMPLE PERSON')).toBe('Delivered');
+  it('takes the clock, e-mail addresses and phone numbers out of the wording and keeps who signed', () => {
+    expect(norskGlobalWording('2026-05-19 14:02:00 Delivered - Signed for by SAMPLE PERSON')).toBe('Delivered - Signed for by SAMPLE PERSON');
+    expect(norskGlobalWording('19/05/2026 14:02:00 Delivered, received by SAMPLE PERSON at the door'))
+      .toBe('Delivered, received by SAMPLE PERSON at the door');
+    expect(norskGlobalWording('Signed for by SAMPLE PERSON')).toBe('Signed for by SAMPLE PERSON');
     expect(norskGlobalWording('POD')).toBe('POD');
     // Other scans name depots and partners, not people.
     expect(norskGlobalWording('Received by partner depot')).toBe('Received by partner depot');

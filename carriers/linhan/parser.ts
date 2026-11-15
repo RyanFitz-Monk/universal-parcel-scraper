@@ -6,7 +6,7 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, isoTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { linhanScan } from './scan.js';
+import { linhanActivity, linhanScan, linhanSignatory } from './scan.js';
 import { LINHAN_NOT_FOUND, linhanMappedStage, linhanStage } from './status.js';
 
 export const PROVIDER = 'LinHan International';
@@ -99,7 +99,7 @@ export function parseLinhan(payload: unknown, raw: string): CarrierResult {
     const key = JSON.stringify([local, location, description]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = linhanStage(description);
+    const staged = linhanStage(linhanActivity(description));
     // A German row has come before its wall clock's instant in Berlin, so the rows abroad are on Beijing time too.
     // China keeps one offset all year: every valid wall clock is an instant there.
     events.push({
@@ -116,6 +116,7 @@ export function parseLinhan(payload: unknown, raw: string): CarrierResult {
   // The newest staged scan decides; the summary's status only when no scan has a stage.
   const scanned = events.find((event) => event.stage);
   const stage = (scanned?.stage ?? linhanMappedStage(status)) as Stage | undefined;
+  const signatory = scanned?.stage === 'delivered' ? linhanSignatory(scanned.description!) : '';
   const destination = text(item, 'toCountry', 40);
   const country = COUNTRY_BY_NAME.get(destination) ?? countryCode(destination);
   return {
@@ -125,6 +126,7 @@ export function parseLinhan(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(country ? { destination_country: country } : destination ? { destination_country_name: destination } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

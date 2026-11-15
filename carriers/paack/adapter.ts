@@ -15,14 +15,14 @@
  * a label barcode (`external_id` is then the retailer's own reference), but it
  * does echo the delivery postcode, which must agree with the requested one.
  *
- * Privacy: the loader payload carries the retailer, the recipient's name,
- * e-mail, phone and address, the PaackGo Point pickup code and QR link, and
- * per-event `variables` that repeat them. `parse()` copies nothing from those:
- * each event is rebuilt from its timestamp, our own description and the mapped
- * stage, and the only order-level fields read are the delivery postcode,
- * compared and never copied, the delivery country, which picks the window's
- * clock, the delivery window, and the PaackGo Point's name and address while
- * the parcel waits there.
+ * The loader payload carries the retailer, the recipient's name, e-mail,
+ * phone and address, the PaackGo Point pickup code and QR link, and per-event
+ * `variables` that repeat them. Each event is rebuilt from its timestamp, our
+ * own description and the mapped stage. The order-level fields read are the
+ * recipient's name, street and delivery postcode, which must also agree with
+ * the requested one, the delivery country, which picks the window's clock,
+ * the delivery window, and the PaackGo Point's name, address and pickup code
+ * while the parcel waits there.
  */
 import { load } from 'cheerio';
 import { DateTime } from 'luxon';
@@ -34,7 +34,7 @@ import { windowEstimate, type WindowEstimate } from '../../core/result/window.js
 import { recoverableByDefault, runSteps } from '../../core/runner/index.js';
 import { firstAttemptMs } from '../../core/runner/networkRetry.js';
 import { countryCode, countryTimeZone, explicitOffsetTime, type ParsedTime } from '../../core/time/index.js';
-import { clean, decodeText, fetchBounded, UpstreamHttpError, userAgentOf } from '../../core/transport/index.js';
+import { clean, cleanScalar, decodeText, fetchBounded, UpstreamHttpError, userAgentOf } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
 import { PAACK_EVRI_NUMBER, trackPaackThroughEvri } from './evri.js';
 import { classifyPaackEvent, PAACK_NEW_ATTEMPT } from './status.js';
@@ -212,8 +212,7 @@ function redirectTarget(
  * The PaackGo Point the page names: `pudo_name`, then `pudo_address` on the
  * following lines. The address is one string Paack formats itself; the page
  * prints it as it comes and breaks it only where it holds a line break. The
- * pickup code (`pudo_passcode`), QR link and collection deadline beside them
- * are never read.
+ * QR link and collection deadline beside them are never read.
  */
 function pickupPoint(order: JsonObject): string {
   const name = clean(order.pudo_name, 120);
@@ -333,7 +332,13 @@ export function parsePaackTrackingResponse(
   const expected = isRecord(order.expected_delivery_ts) && !['delivered', 'returned', 'exception'].includes(current.stage)
     ? expectedDelivery(order.expected_delivery_ts, zone, newest)
     : { expected_delivery: null };
-  const pickup = current.stage === 'ready_for_pickup' ? pickupPoint(order) : '';
+  const waiting = current.stage === 'ready_for_pickup';
+  const pickup = waiting ? pickupPoint(order) : '';
+  const code = waiting ? cleanScalar(order.pudo_passcode, 32) : '';
+  const recipient = clean(order.full_name, 200);
+  const street = clean(order.address, 200);
+  const deliveryPostcode = typeof address?.post_code === 'string' ? clean(address.post_code, 16) : '';
+  const recipientAddress = [street, deliveryPostcode].filter(Boolean).join('\n');
   return {
     status: current.status,
     current_stage: current.stage,
@@ -341,6 +346,9 @@ export function parsePaackTrackingResponse(
     last_update: newer?.event.time ?? activeTime?.iso ?? events[0]?.time ?? null,
     ...expected,
     ...(pickup ? { pickup_point: pickup } : {}),
+    ...(code ? { pickup_code: code } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(recipientAddress ? { receiver_address: recipientAddress } : {}),
     timezone: zone,
     events,
   };

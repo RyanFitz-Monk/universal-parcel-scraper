@@ -34,20 +34,21 @@ tracing page calls.
   stay local times.
 - A terminal's place is its town, followed by its phone number, with its address in a tooltip.
   Neither is read. A delivery row's place is the consignee's town, as the page shows it.
-- A delivery row ends with the signer's name ("Delivered Signature-…"); the name is dropped and
-  the row reads "Delivered". An appointment row keeps its day and window after "Appointment-".
+- A delivery row ends with the signer's name ("Delivered Signature-…"). The row keeps it, its
+  stage is read without it, and it is the signatory of a delivered shipment. An appointment row
+  keeps its day and window after "Appointment-".
 - The delivery status settles a delivery, a return or a problem, and a shipment without a staged
   row. Otherwise the newest staged row is ahead of it. Repeated rows appear once.
 - The estimate is the shipment's `Estimated Delivery:` day, dropped once the freight is
   delivered.
 - The information block names the shipper and consignee with their towns and ZIP codes, and
-  holds the bill of lading, the shipper's number and the purchase order. None of them is read.
+  holds the bill of lading, the shipper's number and the purchase order. Only the consignee and
+  its `Ship To:` town and ZIP code are read, as the recipient's name and address.
   The form to email delivery receipts and bills of lading is not used.
 
 ## Limitations
 
-- No service, sender, recipient, signature, weight or delivery receipt, and scans have no
-  offset.
+- No service, sender, street address, weight or delivery receipt, and scans have no offset.
 - An unknown PRO ends inconclusive, so no recognition is declared.
 - A PRO reaches the adapter when it is filed under Oak Harbor or opened from an Oak Harbor link:
   eight digits are shared by many carriers, so no rule claims them and preflight does not ask it.

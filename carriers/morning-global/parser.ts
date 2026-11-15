@@ -31,7 +31,8 @@ const CLOCK = /^\d{2}:\d{2}(?::\d{2})?$/;
 const PLACE = /^([A-Z]{2})\s*\(UTC(?:([+-])(\d{1,2})(?::?(\d{2}))?)?\)$/;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who signed for or received the parcel, after a delivery's wording.
+// Who signed for or received the parcel, after a delivery's wording. It stays in the wording, and
+// the scan is staged without it.
 const SIGNATORY = /\s*[,;:.\-–(]?\s*\b(?:signed|received)\s+by\b[\s\S]*$/i;
 const ARRIVAL = 'arrive destination';
 const MAX_ROWS = 300;
@@ -70,12 +71,16 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
   return clean(value, maxLength);
 }
 
-/** A scan's wording: its status, then its description when that says more, without a signatory or phone numbers. */
+/**
+ * A scan's wording: its status, then its description when that says more,
+ * without phone numbers. A description that opens with the status stands alone.
+ */
 export function morningGlobalWording(status: string, description: string): string {
-  const tidy = (value: string) => clean(value.replace(SIGNATORY, '').replace(PHONE, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+  const tidy = (value: string) => clean(value.replace(PHONE, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
   const title = tidy(status);
   const line = tidy(description);
   if (!line || line.toLowerCase() === title.toLowerCase()) return title;
+  if (title && line.toLowerCase().startsWith(title.toLowerCase()) && !/[\p{L}\d]/u.test(line[title.length]!)) return line;
   return title ? `${title}: ${line}` : line;
 }
 
@@ -117,7 +122,7 @@ function projectRow(row: unknown): { key: string; event: CarrierEvent; country: 
   const country = place ? countryCode(place[1]) : null;
   const location = place ? place[1]! : label;
   const clock = scanClock(row, place && country ? place : null);
-  const staged = morningGlobalStage(status || description);
+  const staged = morningGlobalStage(status || description.replace(SIGNATORY, ''));
   const event: CarrierEvent = {
     ...clock,
     ...(location ? { location } : {}),
@@ -132,8 +137,8 @@ function projectRow(row: unknown): { key: string; event: CarrierEvent; country: 
  * The reply of the tracker's WordPress action for one number: one result per
  * number asked, each with `found`, a summary and its scans oldest first. An
  * unknown number is a result with `found: false`, which the page reports as
- * not found. The result must name the number asked. The signatory, origin,
- * reference, weight, pieces and estimate are never read.
+ * not found. The result must name the number asked. The signatory is read; the
+ * origin, reference, weight, pieces and estimate are not.
  */
 export function parseMorningGlobal(payload: unknown, raw: string): CarrierResult {
   const number = normalizeMorningGlobalNumber(raw);
@@ -173,6 +178,7 @@ export function parseMorningGlobal(payload: unknown, raw: string): CarrierResult
   const stage = current?.stage as Stage | undefined;
   const service = text(own, 'service', 80);
   const country = countryCode(text(own, 'destination', 80)) ?? scans.find((scan) => scan.arrival && scan.country)?.country ?? null;
+  const signatory = text(own, 'signed_by', 200);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -183,6 +189,7 @@ export function parseMorningGlobal(payload: unknown, raw: string): CarrierResult
     ...(stage === 'delivered' && current!.time ? { delivered_at: current!.time } : {}),
     ...(service ? { service_name: service } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

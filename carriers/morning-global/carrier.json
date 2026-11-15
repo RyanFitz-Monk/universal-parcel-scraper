@@ -65,15 +65,15 @@
       "offset_timestamps",
       "delivered_at",
       "service_name",
-      "destination_country"
+      "destination_country",
+      "signatory"
     ],
     "discarded": [
       "origin",
       "eta",
       "weight",
       "parcel_count",
-      "delivery_tracking_number",
-      "signatory"
+      "delivery_tracking_number"
     ],
     "unavailable": [
       "provider_code",

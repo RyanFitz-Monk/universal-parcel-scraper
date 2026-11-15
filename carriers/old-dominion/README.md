@@ -57,8 +57,9 @@ built from the installed version are scoped to this adapter.
   appointment, or when its start is no wall clock, the estimate (`updatedEta`, else
   `standardEta`) gives a calendar day. The pickup appointment is never read, since its window
   can end before it starts.
-- Shipper and consignee names and addresses, the signer, bill of lading and purchase order
-  numbers and piece count are discarded.
+- The consignee's town, state and ZIP code are the recipient's address, and `deliverySign` is the
+  signatory of a delivered shipment. The shipper, bill of lading and purchase order numbers and
+  piece count are discarded.
 - An empty `500` is a rejected page verification, and the `422` "couldn't confirm you're not a
   robot" envelope is a challenge. Only `shipment_not_found` for this PRO is not found. A `404`
   or `410` from the page or the service says nothing about the shipment.
