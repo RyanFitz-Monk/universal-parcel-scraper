@@ -75,11 +75,14 @@ const BERLIN = 'Europe/Berlin';
  * sorting scans at 14:18 and 14:19 Dutch time came at 15:18 and 15:19, an hour
  * after PostNL's own. Written back in UTC, the `dt` is the scan's wall clock
  * again. Stamps to the second are real UTC in that feed and keep Amsterdam's
- * clock.
+ * clock, and so do the label's creation and the processing record without a
+ * country, which PostNL stamps in UTC to the minute (`postnlRecordZone`): they
+ * name no place, and Postal Ninja relays their wording.
  */
 const AMSTERDAM_UTC_READINGS = 'Spring GDS';
 const AMSTERDAM = 'Europe/Amsterdam';
 const TO_THE_MINUTE = /T\d{2}:\d{2}(?::00(?:\.0+)?)?$/;
+const POSTNL_UTC_RECORDS = /^(?:the shipping label has been created|the item is being processed)[.!]?$/i;
 
 /** The zone of the European office a scan of DHL Germany's copies names. */
 function berlinCopyZone(service: string, location: string): string | null {
@@ -90,15 +93,16 @@ function berlinCopyZone(service: string, location: string): string | null {
 /**
  * A scan's `dt` as its service's wall clock: without the UTC suffix Postal
  * Ninja writes on some, DHL Germany's copies at a European office back on
- * that office's clock, and PostNL's scans through Spring GDS back in UTC; the
- * `dt` itself otherwise.
+ * that office's clock, and PostNL's local scans through Spring GDS back in
+ * UTC; the `dt` itself otherwise.
  */
-export function wallClock(service: string, dt: string, location = ''): string {
+export function wallClock(service: string, dt: string, location = '', description = ''): string {
   if (berlinCopyZone(service, location)) {
     const written = DateTime.fromISO(dt, { zone: 'UTC' });
     if (written.isValid) return written.setZone(BERLIN).toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
-  if (service === AMSTERDAM_UTC_READINGS && TO_THE_MINUTE.test(dt)) {
+  const utcRecord = !location.trim() && POSTNL_UTC_RECORDS.test(description.trim());
+  if (service === AMSTERDAM_UTC_READINGS && TO_THE_MINUTE.test(dt) && !utcRecord) {
     const shown = firstOccurrence(DateTime.fromISO(dt, { zone: AMSTERDAM }));
     if (shown.isValid) return shown.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
