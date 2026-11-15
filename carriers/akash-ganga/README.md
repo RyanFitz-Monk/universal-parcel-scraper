@@ -11,6 +11,13 @@ lookup archived from the carrier's older tracker and customer complaints show ei
 consignment numbers, and a later complaint shows a nine-digit one. Digit runs of these lengths
 are printed by many other carriers, so no rule claims them.
 
+## Retrieval lead
+
+`Tracking.aspx?AWB={number}` renders the answer on the server, without a challenge: the
+booking (from and to centre, date and time, consignee), the current status, then transit and
+delivery details. A number it does not show leaves those fields empty under the number. No
+found reply has been seen, so there is no adapter.
+
 ## Links
 
 The home page opens the tracker at `Tracking.aspx` with the number as `AWB`, which is the
