@@ -22,7 +22,10 @@ describe('Profit Fields guest history', () => {
     expect(result.events!.map(event => event.stage)).toEqual(['delivered', 'out_for_delivery', 'in_transit', 'in_transit', 'registered']);
     expect(result.events![2]!.time).toBe('2026-07-02T01:28:00+08:00');
     expect(result).not.toHaveProperty('delivery_carrier'); expect(result).not.toHaveProperty('service_name');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(result.receiver_name).toBe('PRIVATE_RECIPIENT');
+    for (const kept of ['PRIVATE_ORDER', 'PRIVATE_CUSTOMER_ORDER', 'PRIVATE_DIAGRAM', 'PRIVATE_COMMODITY', 'PRIVATE_PHONE']) {
+      expect(JSON.stringify(result)).not.toContain(kept);
+    }
     expect(deliveryHandoff('profit-fields', NUMBER, result)).toEqual({ carrier: 'speedx', number: PARTNER, basis: 'reference' });
   });
 
@@ -55,20 +58,29 @@ describe('Profit Fields guest history', () => {
     expect(() => parseProfitFields(empty, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
 
-  it('keeps unspecified clocks local, unfamiliar states unresolved and contact suffixes private', () => {
+  it('keeps unspecified clocks local, unfamiliar states unresolved and the whole wording and place', () => {
     const data = fixture(), row = data.data.items[0];
     row.nodeStatus = row.timeline[0].nodeStatus = 'NEW_PHASE';
     row.timeline[0].timeZone = 'Unspecified'; row.timeline[0].eventEn = 'Processing update. Recipient: PRIVATE';
     row.timeline[0].location = 'PRIVATE Street 77';
     const result = parseProfitFields(data, NUMBER);
     expect(result.status).toBe('unknown');
-    expect(result.events![0]).toMatchObject({ local_time: '2026-07-04T09:51:00', provider_code: 'NEW_PHASE', description: 'Processing update.' });
+    expect(result.events![0]).toMatchObject({ local_time: '2026-07-04T09:51:00', provider_code: 'NEW_PHASE',
+      description: 'Processing update. Recipient: PRIVATE', location: 'PRIVATE Street 77' });
     expect(result.events![0]).not.toHaveProperty('time'); expect(result.events![0]).not.toHaveProperty('stage');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
     for (const location of ['地址：PRIVATE', 'PRIVATE Road 77']) {
       row.timeline[0].location = location;
-      expect(parseProfitFields(data, NUMBER).events![0]).not.toHaveProperty('location');
+      expect(parseProfitFields(data, NUMBER).events![0]!.location).toBe(location);
     }
+  });
+
+  it('reads the stage from the wording before a recipient or a phone', () => {
+    const data = fixture(), row = data.data.items[0];
+    row.nodeStatus = row.timeline[0].nodeStatus = 'LAST_MILE_DELIVERY';
+    row.status = 'in_transit';
+    row.timeline[0].eventEn = 'Out for Delivery phone: +1 555 0100';
+    const result = parseProfitFields(data, NUMBER);
+    expect(result).toMatchObject({ current_stage: 'out_for_delivery', last_status_text: 'Out for Delivery phone: +1 555 0100' });
   });
 
   it('does not confuse local-carrier intake with out-for-delivery or final delivery', () => {

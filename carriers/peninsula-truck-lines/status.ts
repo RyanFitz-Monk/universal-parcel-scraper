@@ -14,12 +14,14 @@ const STAGES: ReadonlyMap<string, Stage> = new Map([
   ['del mfst', 'out_for_delivery'],
 ]);
 
-// The status line of a delivered shipment: "DELIVERED ON 2023-02-17". The parser drops a
-// receiver named in it.
+// The status line of a delivered shipment: "DELIVERED TO <receiver> ON 2023-02-17".
 const DELIVERED = /^delivered\b/;
-// A delivered line that notes freight delivered short, over or damaged, as the parser keeps it:
-// "DELIVERED – SHORT/DAMAGED". The shipment arrived with a problem the consignee has to settle.
-const DELIVERED_WITH_PROBLEM = /^delivered\s*[-–—:,]?\s*(?:short(?:age)?|over(?:age)?|damaged?|os&d)\b/;
+// A delivered line or row that notes freight delivered short, over or damaged, straight after
+// "DELIVERED" or after its day, never inside the receiver's name between them: "DELIVERED –
+// SHORT/DAMAGED TO <receiver>", "DELIVERED ON 2023-02-17 - DAMAGED". The shipment arrived with a
+// problem the consignee has to settle.
+const PROBLEMS = String.raw`(?:short(?:age)?|over(?:age)?|damaged?|os&d)(?:\s*[/&,]\s*(?:short(?:age)?|over(?:age)?|damaged?))*`;
+const DELIVERED_WITH_PROBLEM = new RegExp(String.raw`^delivered\s*[-–—:,]?\s*${PROBLEMS}\b|^delivered\b.*\bon\s+\d{4}-\d{2}-\d{2}\s*[-–—:,]?\s*${PROBLEMS}\s*$`);
 // The status line of a shipment handed to a partner carrier for delivery:
 // "TENDERED TO <carrier> ON <date> ON THEIR PRO <number>".
 const HANDOFF = /^tendered to\b/;

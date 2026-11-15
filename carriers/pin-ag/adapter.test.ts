@@ -40,10 +40,11 @@ describe('PIN AG HTTP adapter', () => {
     expect(String(fetcher.mock.calls[0]![0])).toBe(`${PIN_AG_ENDPOINT}?sendung=${LETTER}`);
   });
 
-  it('reads a delivered parcel newest first on Berlin wall clocks, without any address or customer number', () => {
+  it('reads a delivered parcel newest first on Berlin wall clocks, with the recipient but not the depot or customer number', () => {
     const result = parsePinAg(fixture('delivered'), PARCEL);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Die Sendung wurde zugestellt.',
-      last_update: null, last_update_local: '2026-07-31T10:55:46' });
+      last_update: null, last_update_local: '2026-07-31T10:55:46',
+      receiver_name: 'PRIVATE NAME', receiver_address: 'PRIVATE STREET 0\n00000 PRIVATE CITY' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage, event.description])).toEqual([
       ['2026-07-31T10:55:46', '990323', 'delivered', 'Die Sendung wurde zugestellt.'],
       ['2026-07-31T07:02:44', '990300', 'out_for_delivery', 'Die Sendung ist in Zustellung.'],
@@ -51,7 +52,17 @@ describe('PIN AG HTTP adapter', () => {
       ['2026-07-30T18:12:03', '990100', 'in_transit', 'Die Sendung wurde im Sortierzentrum bearbeitet.'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.location === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|00000|0000000/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE DEPOT|PRIVATE CUSTOMER|0000000/);
+  });
+
+  it('reads the recipient from the newest status, and as much of the address as it gives', () => {
+    const payload = fixture('delivered');
+    Object.assign(rows(payload).at(-1)!, { deliveryAddress: { name: '', street: null, postCode: '10115', city: 'Berlin' } });
+    const result = parsePinAg(payload, PARCEL);
+    expect(result).toMatchObject({ receiver_address: '10115 Berlin' });
+    expect(result).not.toHaveProperty('receiver_name');
+    Object.assign(rows(payload).at(-1)!, { deliveryAddress: 'PRIVATE' });
+    expect(() => parsePinAg(payload, PARCEL)).toThrow(expect.objectContaining({ kind: 'schema' }));
   });
 
   it('reads an item PIN cannot deliver as an exception, worded by its description when the label is empty', () => {
@@ -75,7 +86,7 @@ describe('PIN AG HTTP adapter', () => {
     const result = parsePinAg(payload, PARCEL);
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup' });
     expect(result.events![0]).toMatchObject({ provider_code: '990302', stage: 'ready_for_pickup' });
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE DEPOT/);
   });
 
   it('keeps a step the map does not know, and a clock it cannot read, visible without a stage', () => {

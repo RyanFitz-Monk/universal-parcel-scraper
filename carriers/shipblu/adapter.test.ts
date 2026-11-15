@@ -77,14 +77,31 @@ describe('ShipBlu HTTP adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && event.location === undefined
       && event.local_time === undefined)).toBe(true);
     expect(result.events!.map((event) => event.description)).toContain('En route');
-    // A missed visit keeps the courier's reason without the phone number; other comments are not read.
-    expect(result.events![3]!.description).toBe('Delivery attempted: Customer not answering, call');
+    // A missed visit keeps the courier's whole reason; the delivery's comment names who took the parcel.
+    expect(result.events![3]!.description).toBe('Delivery attempted: Customer not answering, call 0100 000 0000');
     expect(result.events![0]!.description).toBe('Delivered');
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic Shop|Sample|Recipient|Example|0100|EX-L1|100\.0/);
+    expect(result).toMatchObject({ receiver_name: 'Sample Recipient', signed_by: 'Sample Recipient',
+      receiver_address: '1 Example Street, Next to the example landmark\nExample Zone - منطقة مثال, Example City - مدينة مثال, Example Governorate - محافظة مثال' });
+    const rest = Object.entries(result).filter(([key]) => !key.startsWith('receiver_') && key !== 'signed_by');
+    expect(JSON.stringify(rest)).not.toMatch(/Synthetic Shop|Sample|Recipient|Example Street|EX-L1|01000000000|100\.0|30\.0/);
     expect(result).not.toHaveProperty('summary_only');
     // The delivery's own scan dates it when the reply leaves the field out.
     expect(parseShipblu(changed('delivered', (body) => { body.delivered_date = null; }), DELIVERED).delivered_at)
       .toBe('2026-05-12T16:32:19.270+03:00');
+  });
+
+  it('reads the recipient before the delivery, skipping an address line that is only punctuation, and names no signer', () => {
+    const result = parseShipblu(fixture('in-transit'), IN_TRANSIT);
+    expect(result).toMatchObject({ receiver_name: 'Sample Recipient',
+      receiver_address: '2 Example Street\nExample Zone - منطقة مثال, Example City - مدينة مثال, Example Governorate - محافظة مثال' });
+    expect(result).not.toHaveProperty('signed_by');
+    // Without a full name, the first and last names make it; a zip code comes before the zone.
+    const named = parseShipblu(changed('in-transit', (body) => {
+      const customer = body.customer as Row;
+      customer.full_name = null;
+      (customer.address as Row).zip_code = '11111';
+    }), IN_TRANSIT);
+    expect(named).toMatchObject({ receiver_name: 'Sample Recipient', receiver_address: expect.stringMatching(/\n11111 Example Zone/) });
   });
 
   it('keeps a delivery order filed under 31 in transit after a missed visit, with the day the customer chose, in winter time', () => {
@@ -183,7 +200,9 @@ describe('ShipBlu HTTP adapter', () => {
     expect(summary(() => {})).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       provider_code: 'delivered', last_update: '2026-05-12T13:32:19.270Z', expected_delivery: null,
-      delivered_at: '2026-05-12T13:32:19.270Z', summary_only: true, events: [],
+      delivered_at: '2026-05-12T13:32:19.270Z', receiver_name: 'Sample Recipient',
+      receiver_address: '1 Example Street, Next to the example landmark\nExample Zone - منطقة مثال, Example City - مدينة مثال, Example Governorate - محافظة مثال',
+      summary_only: true, events: [],
     });
     expect(summary((body) => { body.status = 'picked_up'; body.delivered_date = null; }))
       .toMatchObject({ status: 'in_transit', current_stage: 'accepted', last_update: null, expected_delivery: null, summary_only: true });

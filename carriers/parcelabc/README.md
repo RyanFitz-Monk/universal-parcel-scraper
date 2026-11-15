@@ -31,8 +31,8 @@ No account, key, CAPTCHA or browser is needed.
   row, and the description is the status, then the comment after a colon.
 - Clocks are wall clocks to the minute with no zone: the courier's local clock for its scans and
   ParcelABC's for its own rows, so they stay `local_time`.
-- Comments and places lose British postcodes, phone numbers, e-mail addresses and a clause
-  naming who received or signed for the parcel.
+- Comments and places stay as the page writes them. The person a delivery comment says received
+  or signed for the parcel is read as its signatory once every parcel of the order is delivered.
 - An order of several parcels lists each one apart, usually with the same rows, which are kept
   once. The order stands where its least advanced parcel is, so one parcel's delivery does not
   deliver the order.

@@ -27,8 +27,9 @@ const PLACES = [
   /^Trailer (?:arrived|unloaded) at (?:terminal in )?(.+?)(?: terminal)?\.?$/i,
   /^Shipment out for delivery from (.+?)\.?$/i,
 ];
-// A signer's name a delivery row could end with.
+// A signer's name a delivery row could end with. The row keeps it; its stage is read without it.
 const SIGNATURE = /\s*[-,:;]?\s*\b(?:signed(?: for)? by|signature)\b.*$/i;
+const SIGNER = /\bsigned(?: for)? by\s*:?\s*(.+?)\s*\.?$/i;
 // The portal's answer for a PRO it does not have.
 const NOT_FOUND = /^Invalid PRO number\b/;
 // A firewall or bot check's page, which can come back with HTTP 200.
@@ -98,27 +99,28 @@ function place(description: string): string {
   return '';
 }
 
-interface Row { key: string; event: CarrierEvent }
+interface Row { key: string; event: CarrierEvent; signer: string }
 
 /** One row of the travel history: its date, its time and the status. */
 function row(cells: Cheerio<AnyNode>): Row {
   if (cells.length !== 3) throw new SchemaError(PROVIDER, 'Roadrunner changed its travel history');
   const local_time = wallClock(clean(cells.eq(0).text(), 32), clean(cells.eq(1).text(), 32));
-  const description = clean(cells.eq(2).text(), 300).replace(SIGNATURE, '');
-  if (!local_time || !description) throw new SchemaError(PROVIDER, 'Roadrunner returned a row without its clock and status');
-  const location = place(description);
-  const staged = roadrunnerStage(description);
+  const description = clean(cells.eq(2).text(), 300);
+  const wording = description.replace(SIGNATURE, '');
+  if (!local_time || !wording) throw new SchemaError(PROVIDER, 'Roadrunner returned a row without its clock and status');
+  const location = place(wording);
+  const staged = roadrunnerStage(wording);
   const event: CarrierEvent = {
     local_time,
     ...(location ? { location } : {}),
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local_time, description]), event };
+  return { key: JSON.stringify([local_time, description]), event, signer: clean(SIGNER.exec(description)?.[1], 120) };
 }
 
-/** The rows of the travel history, newest first and once each. */
-function history($: CheerioAPI): CarrierEvent[] {
+/** The rows of the travel history, newest first and once each, with the signer a row names. */
+function history($: CheerioAPI): { events: CarrierEvent[]; signers: Map<CarrierEvent, string> } {
   const table = section($, 'Travel History');
   if (table.length !== 1) throw new SchemaError(PROVIDER, 'Roadrunner returned a shipment without its travel history');
   const headings = table.find('thead th').map((_, cell) => clean($(cell).text(), 40)).get();
@@ -127,14 +129,32 @@ function history($: CheerioAPI): CarrierEvent[] {
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Roadrunner returned an oversized history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signers = new Map<CarrierEvent, string>();
   rows.each((_, node) => {
     const parsed = row($(node).children('td'));
     if (seen.has(parsed.key)) return;
     seen.add(parsed.key);
     events.push(parsed.event);
+    if (parsed.signer) signers.set(parsed.event, parsed.signer);
   });
   // The page lists the oldest first; a list already the other way round is kept.
-  return events.length > 1 && events[0]!.local_time! <= events.at(-1)!.local_time! ? events.reverse() : events;
+  if (events.length > 1 && events[0]!.local_time! <= events.at(-1)!.local_time!) events.reverse();
+  return { events, signers };
+}
+
+/**
+ * The consignee in the "To:" column of the parties table: its name on the
+ * first line, then its street and its town, state and ZIP code.
+ */
+function consignee($: CheerioAPI): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const table = $('#package-details-table');
+  if (table.length !== 1) return {};
+  const column = table.find('thead th').toArray().findIndex(cell => clean($(cell).text(), 40) === 'To:');
+  if (column < 0) return {};
+  const cell = table.find('tbody tr').first().children('td').eq(column);
+  const lines = (cell.html() ?? '').split(/<br\s*\/?>/i).map(part => clean(load(part).text(), 160)).filter(Boolean);
+  const [name, ...address] = lines;
+  return { ...(name ? { receiver_name: name } : {}), ...(address.length ? { receiver_address: address.join('\n') } : {}) };
 }
 
 /** The status under the "Shipment Status" heading. */
@@ -169,7 +189,7 @@ export function parseRoadrunner(html: string, rawNumber: string): CarrierResult 
 
   const status = shipmentStatus($);
   const headline: ClassifiedWording | null = status ? roadrunnerStage(status) : null;
-  const events = history($);
+  const { events, signers } = history($);
   if (!events.length) throw new NoHistoryError(PROVIDER);
 
   // The shipment status settles a delivery, a return or a problem, and a
@@ -181,6 +201,8 @@ export function parseRoadrunner(html: string, rawNumber: string): CarrierResult 
   const done = decided !== null && SETTLED.has(decided.stage);
   const services = section($, 'Services');
   const service = services.length ? labelled($, services, 'Service') : '';
+  const delivery = decided?.stage === 'delivered' ? events.find(event => event.stage === 'delivered') : undefined;
+  const signer = delivery ? signers.get(delivery) : undefined;
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -189,6 +211,8 @@ export function parseRoadrunner(html: string, rawNumber: string): CarrierResult 
     last_update_local: newest.local_time!,
     expected_delivery: done ? null : calendarDay(labelled($, overview, 'Due Date:')),
     ...(service ? { service_name: service } : {}),
+    ...consignee($),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

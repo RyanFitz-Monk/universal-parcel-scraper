@@ -66,13 +66,13 @@
       "eta",
       "location",
       "service_name",
-      "import_charges"
+      "import_charges",
+      "recipient_name",
+      "recipient_address",
+      "signature"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "recipient_address",
-      "signature",
       "weight",
       "pickup_point"
     ],

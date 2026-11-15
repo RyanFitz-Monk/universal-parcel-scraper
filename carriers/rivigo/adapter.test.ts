@@ -57,12 +57,13 @@ describe('Rivigo HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery with its scans as instants in UTC, newest first, without the parties, staff or proof of delivery', () => {
+  it('reads a delivery as instants in UTC, newest first, with the consignee and who received it, without the consignor or staff', () => {
     const result = parseRivigo(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-09-16T09:15:00Z', expected_delivery: null,
       delivered_at: '2026-09-16T09:15:00Z',
+      receiver_name: 'Sample Retail', receiver_address: '2 Test Street, Testnagar', signed_by: 'Sample Receiver',
       events: [
         { time: '2026-09-16T09:15:00Z', location: 'Testnagar', description: 'Delivered', provider_code: 'DELIVERED', stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2026-09-16T04:00:00Z', location: 'Testnagar', description: 'Out For Delivery', provider_code: 'OUT_FOR_DELIVERY',
@@ -78,7 +79,7 @@ describe('Rivigo HTTP adapter', () => {
         { time: '2026-09-14T04:45:00Z', location: 'Exampur', description: 'Pickup', provider_code: 'CREATED', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic|Sample|Example Road|Test Street|0000000000|XX00XX|example\.invalid|SYNTH/);
+    expect(JSON.stringify(result)).not.toMatch(/Synthetic|Example Road|0000000000|XX00XX|example\.invalid|SYNTH/);
   });
 
   it('leaves out the arrival estimate of the leg a consignment is on, and keeps the delivery estimate as a day in India', () => {
@@ -93,7 +94,9 @@ describe('Rivigo HTTP adapter', () => {
       ['2026-11-02T05:35:00Z', 'Pickup', 'accepted'],
       ['2026-11-02T04:20:00Z', 'Booked', 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic|Example Supplies|Test Mart|0000000000/);
+    expect(result).toMatchObject({ receiver_name: 'Test Mart', receiver_address: '4 Test Street, Testnagar' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/Synthetic|Example Supplies|0000000000/);
     // A consignment without an estimate has none.
     expect(parseRivigo(changed('in-transit', (payload) => { delete payload.edd; }), MOVING)).toMatchObject({ expected_delivery: null });
     expect(parseRivigo(changed('in-transit', (payload) => { payload.edd = '05 Nov 26'; }), MOVING)).toMatchObject({ expected_delivery: null });

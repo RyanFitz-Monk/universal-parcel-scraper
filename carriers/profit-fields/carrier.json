@@ -54,7 +54,8 @@
       "history",
       "provider_code",
       "delivery_tracking_number",
-      "destination_country"
+      "destination_country",
+      "recipient_name"
     ],
     "discarded": [],
     "unavailable": [

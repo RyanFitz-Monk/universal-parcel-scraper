@@ -63,11 +63,11 @@ describe('Posta Kenya tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads an item posted in Kenya and delivered abroad, newest first, without anyone’s details', () => {
+  it('reads an item posted in Kenya and delivered abroad, newest first, with who took delivery', () => {
     const result = parsePostaKenyaResult(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-04-08T10:15:00', expected_delivery: null,
-      destination_country: 'SE' });
+      destination_country: 'SE', signed_by: 'SAMPLE SIGNER' });
     // A delivery abroad keeps its wall clock, so it gives no instant.
     expect(result).not.toHaveProperty('delivered_at');
     // The repeated scan is kept once, and an office written as a postcode is dropped.
@@ -85,8 +85,16 @@ describe('Posta Kenya tracking adapter', () => {
     ]);
     expect(result.events!.filter((event) => event.time).length).toBe(1);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map')).toBe(true);
-    // The sender, the addressee, who signed, their identity document and the summary's delivery line are not read.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SENDER|SAMPLE ADDRESSEE|SAMPLE SIGNER|SAMPLE ID|Signed by|ID No|00000|BOX/);
+    // The sender, the addressee's line, which runs the name into the address, and the signer's identity document are not read.
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SENDER|SAMPLE ADDRESSEE|SAMPLE ID|Signed by|ID No|00000|BOX/);
+    expect(result).not.toHaveProperty('receiver_name');
+  });
+
+  it('reads who signed from the delivery scan when the details name nobody, and nobody before a delivery', () => {
+    const scanned = parsePostaKenyaResult(edited('delivered', (text) => text.replace('<td width="85%" colspan="3">SAMPLE SIGNER</td>',
+      '<td width="85%" colspan="3"></td>')), DELIVERED);
+    expect(scanned).toMatchObject({ signed_by: 'SAMPLE SIGNER' });
+    expect(parsePostaKenyaResult(page('inbound'), INBOUND)).not.toHaveProperty('signed_by');
   });
 
   it('reads mail from abroad on its way in Kenya, with each place’s first line only', async () => {

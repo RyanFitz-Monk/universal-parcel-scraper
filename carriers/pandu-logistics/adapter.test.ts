@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, PANDU_LOGISTICS_ENDPOINT, PanduLogisticsTracker } from './adapter.js';
-import { normalizePanduLogisticsNumber, panduLogisticsWording, parsePanduLogistics } from './parser.js';
+import { normalizePanduLogisticsNumber, parsePanduLogistics } from './parser.js';
 import { panduLogisticsStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -47,7 +47,7 @@ describe('Pandu Logistics HTTP adapter', () => {
     const result = parsePanduLogistics(fixture('in-transit'), IN_TRANSIT);
     expect(result).toEqual({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'ARRIVED AT PSS JAKARTA', last_update: null, last_update_local: '2026-10-14T23:51:00', expected_delivery: null,
-      weight_kg: 1, events: [
+      receiver_name: 'SAMPLE CONSIGNEE', receiver_address: '00000 JAKARTA BARAT', weight_kg: 1, events: [
         { local_time: '2026-10-14T23:51:00', location: 'JAKARTA', description: 'ARRIVED AT PSS JAKARTA', stage: 'in_transit', stage_source: 'carrier_map' },
         { local_time: '2026-10-13T07:45:00', description: 'DEPARTED FROM ORIGIN', stage: 'in_transit', stage_source: 'carrier_map' },
         { local_time: '2026-10-12T16:09:00', location: 'MEDAN', description: 'ARRIVED AT PSS MEDAN', stage: 'in_transit', stage_source: 'carrier_map' },
@@ -55,12 +55,13 @@ describe('Pandu Logistics HTTP adapter', () => {
       ] });
   });
 
-  it('keeps the delivery without the receiver, the sender, the consignee, the postcode, the contents or the repeated scan', () => {
+  it('keeps the delivery with its receiver, the consignee and the address, without the repeated scan', () => {
     const result = parsePanduLogistics(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'RECEIVED', last_update: null, last_update_local: '2026-09-03T14:12:00', expected_delivery: null, weight_kg: 2 });
+      last_status_text: 'RECEIVED BY SAMPLE RECEIVER, DATE 03 SEP 2026 14:12', last_update: null, last_update_local: '2026-09-03T14:12:00',
+      expected_delivery: null, receiver_name: 'SAMPLE CONSIGNEE', receiver_address: '00000 DENPASAR', signed_by: 'sample receiver', weight_kg: 2 });
     expect(result.events!.map((event) => [event.local_time, event.description, event.stage, event.location ?? null])).toEqual([
-      ['2026-09-03T14:12:00', 'RECEIVED', 'delivered', null],
+      ['2026-09-03T14:12:00', 'RECEIVED BY SAMPLE RECEIVER, DATE 03 SEP 2026 14:12', 'delivered', null],
       ['2026-09-03T08:30:00', 'DELIVERY PROCESS BY COURIER', 'out_for_delivery', null],
       // The repeated arrival is kept once.
       ['2026-09-03T06:05:00', 'ARRIVED AT PSS DENPASAR', 'in_transit', 'DENPASAR'],
@@ -69,13 +70,14 @@ describe('Pandu Logistics HTTP adapter', () => {
       ['2026-09-02T10:15:00', 'RECEIVED AT ORIGIN STATION', 'accepted', null],
     ]);
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE (?:SENDER|CONSIGNEE|RECEIVER)|sample receiver|00000|DOKUMEN|SEP 2026/i);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SENDER|DOKUMEN/i);
   });
 
   it('takes the summary’s word for a delivery, and keeps one without scans as a summary', () => {
     const summarized = parsePanduLogistics(changed('delivered', (answer) => { answer.track = []; }), DELIVERED);
     expect(summarized).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED', last_update: null, expected_delivery: null, weight_kg: 2, summary_only: true, events: [] });
+      last_status_text: 'DELIVERED', last_update: null, expected_delivery: null, receiver_name: 'SAMPLE CONSIGNEE',
+      receiver_address: '00000 DENPASAR', signed_by: 'sample receiver', weight_kg: 2, summary_only: true, events: [] });
     // A delivered summary over a history whose newest scan stops short of it decides the stage.
     const ahead = parsePanduLogistics(changed('delivered', (answer) => { answer.track.pop(); }), DELIVERED);
     expect(ahead).toMatchObject({ current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'DELIVERY PROCESS BY COURIER' });
@@ -84,17 +86,15 @@ describe('Pandu Logistics HTTP adapter', () => {
       .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
   });
 
-  it('takes people and phone numbers out of the wording', () => {
-    expect(panduLogisticsWording('RECEIVED BY SAMPLE PERSON, DATE 03 SEP 2026 14:12')).toBe('RECEIVED');
-    expect(panduLogisticsWording('received by sample person')).toBe('received');
-    expect(panduLogisticsWording('RECEIVED AT ORIGIN STATION ')).toBe('RECEIVED AT ORIGIN STATION');
-    expect(panduLogisticsWording('CALL 0800-0000-0000 BEFORE DELIVERY')).toBe('CALL BEFORE DELIVERY');
+  it('keeps the carrier’s wording whole, and takes the receiver from the delivery scan when the summary is not yet delivered', () => {
     const result = parsePanduLogistics(changed('delivered', (answer) => {
-      answer.track[5]!.details = 'DELIVERY PROCESS BY COURIER TO SAMPLE CONSIGNEE';
-      answer.track[1]!.details = 'ARRIVED AT PSS SURABAYA FROM SAMPLE SENDER';
+      answer.detail[0]!.status_delivery = 'NOT AVAILABLE';
+      answer.track[5]!.details = 'DELIVERY PROCESS BY COURIER TO SAMPLE CONSIGNEE, CALL 0800-0000-0000';
     }), DELIVERED);
-    expect(result.events!.map((event) => event.description)).toContain('DELIVERY PROCESS BY COURIER TO');
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE/);
+    expect(result.events!.map((event) => event.description)).toContain('DELIVERY PROCESS BY COURIER TO SAMPLE CONSIGNEE, CALL 0800-0000-0000');
+    expect(result).toMatchObject({ current_stage: 'delivered', signed_by: 'SAMPLE RECEIVER' });
+    // A shipment on its way names no one who took it.
+    expect(parsePanduLogistics(fixture('in-transit'), IN_TRANSIT).signed_by).toBeUndefined();
   });
 
   it('reads an unknown number as not found, and the tracking service’s failure as inconclusive', () => {

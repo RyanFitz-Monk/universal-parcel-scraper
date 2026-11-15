@@ -68,12 +68,26 @@ function dimensionsText(positions: readonly JsonObject[]): string | null {
   return `${centimetres.map((millimetres) => Math.round(millimetres!) / 10).join(' × ')} cm`;
 }
 
-/** Only the delivery address's country is read, in German; the rest belongs to the recipient. */
+/** The delivery address's country, which Planzer names in German. */
 function destination(address: unknown): Pick<CarrierResult, 'destination_country' | 'destination_country_name'> {
   const name = text(record(address).country).trim().slice(0, 60);
   if (!name) return {};
   const code = countryCode(name);
   return code ? { destination_country: code } : { destination_country_name: name };
+}
+
+/**
+ * The recipient the delivery address names, else the consignee: the name, and
+ * the street and house number above the postcode and town.
+ */
+function recipient(payload: JsonObject): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const address = record(payload.deliveryAddress);
+  const consignee = record(payload.consignee);
+  const join = (separator: string, ...parts: unknown[]) => parts.map((part) => text(part).trim()).filter(Boolean).join(separator);
+  const name = (join(' ', address.name) || join(' ', consignee.name)).slice(0, 120);
+  const lines = join('\n', join(' ', address.street, address.houseNumber), join(' ', address.postcode, address.city))
+    || join('\n', consignee.street, consignee.city);
+  return { ...(name ? { receiver_name: name } : {}), ...(lines ? { receiver_address: lines.slice(0, 300) } : {}) };
 }
 
 function comparableIdentifier(value: unknown): string {
@@ -165,6 +179,7 @@ export function parsePlanzerTrackingResponse(value: unknown, shipmentNumber: str
   const deliveredAt = status === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
   const weight = weightKg(matchingPositions);
   const dimensions = dimensionsText(matchingPositions);
+  const signer = status === 'delivered' ? text(record(payload.signature).name).trim().slice(0, 120) : '';
   return {
     status,
     last_status_text: planzerDescription(statusText),
@@ -175,6 +190,8 @@ export function parsePlanzerTrackingResponse(value: unknown, shipmentNumber: str
     ...(weight !== null ? { weight_kg: weight } : {}),
     ...(dimensions ? { dimensions_text: dimensions } : {}),
     ...destination(payload.deliveryAddress),
+    ...recipient(payload),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

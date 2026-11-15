@@ -54,27 +54,33 @@ export function parseRex(html: string, raw: string): CarrierResult {
   const rows = table.children('tbody').children('tr');
   if (!rows.length) throw new NoHistoryError(PROVIDER);
   if (rows.length > 100) throw new SchemaError(PROVIDER, 'REX Indonesia returned excessive milestones');
-  const events: CarrierEvent[] = [], seen = new Set<string>();
+  const events: CarrierEvent[] = [], labels = new Map<CarrierEvent, string>(), seen = new Set<string>();
+  let signer = '';
   for (const row of rows.toArray()) {
     const cells = $(row).children('td');
     if (cells.length !== 3 || cells.toArray().some(cell => $(cell).text().length > 1000)) throw new SchemaError(PROVIDER, 'REX Indonesia returned an invalid milestone');
     const local = clock(cells.eq(1).text().trim(), cells.eq(2).text().trim());
     if (!local) continue;
     const rawDescription = clean(cells.eq(0).text());
-    let description: string, location = '';
-    // The delivery label appends a signatory. Project the label, never their name.
-    if (/^Diterima Oleh\s*:/i.test(rawDescription)) description = 'Diterima';
+    let label: string, description: string, location = '';
+    // The delivery label appends who received the parcel; the label stages it and the wording keeps the name.
+    const received = /^Diterima Oleh\s*:\s*(.*)$/i.exec(rawDescription);
+    if (received) { label = 'Diterima'; description = rawDescription; }
     else {
       const place = /^(Asal|Tujuan)\s+(.+)$/i.exec(rawDescription);
-      if (place) { description = /^asal$/i.test(place[1]!) ? 'Asal' : 'Tujuan'; location = clean(place[2], 160); }
-      else if (rawDescription === 'Dikirim ke Pelanggan') description = rawDescription;
+      if (place) { label = /^asal$/i.test(place[1]!) ? 'Asal' : 'Tujuan'; location = clean(place[2], 160); }
+      else if (rawDescription === 'Dikirim ke Pelanggan') label = rawDescription;
       else throw new SchemaError(PROVIDER, 'REX Indonesia returned an unrecognized milestone label');
+      description = label;
     }
     const key = JSON.stringify([local, description, location]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = rexStage(description);
-    events.push({ local_time: local, description, ...(location ? { location } : {}), ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) });
+    const staged = rexStage(label);
+    const event: CarrierEvent = { local_time: local, description, ...(location ? { location } : {}), ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) };
+    labels.set(event, label);
+    if (received && !signer) signer = clean(received[1], 120);
+    events.push(event);
   }
   if (!events.length) throw new NoHistoryError(PROVIDER);
   const railOrder: Readonly<Record<string, number>> = { Asal: 0, Tujuan: 1, 'Dikirim ke Pelanggan': 2, Diterima: 3 };
@@ -83,11 +89,12 @@ export function parseRex(html: string, raw: string): CarrierResult {
     if (day) return day;
     if (a.local_time!.length > 10 && b.local_time!.length > 10 && a.local_time !== b.local_time) return b.local_time!.localeCompare(a.local_time!);
     // A day-only reached delivery follows earlier rail stages without inventing an hour.
-    return railOrder[b.description!]! - railOrder[a.description!]!;
+    return railOrder[labels.get(b)!]! - railOrder[labels.get(a)!]!;
   });
-  const newest = events[0]!, staged = rexStage(newest.description!);
+  const newest = events[0]!, staged = rexStage(labels.get(newest)!);
   return { status: staged ? languageStageStatus(staged.stage) : 'unknown', ...(staged ? { current_stage: staged.stage, current_stage_source: staged.source } : {}),
     last_status_text: newest.description!, last_update: null, last_update_local: newest.local_time!, expected_delivery: null,
+    ...(signer && staged?.stage === 'delivered' ? { signed_by: signer } : {}),
     // The page exposes a milestone rail rather than the detailed operational scan log.
     history_truncated: true, events };
 }

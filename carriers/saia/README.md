@@ -10,8 +10,9 @@ PRO is not-found. Refused sessions, firewall blocks, rate limits and malformed r
 separate.
 
 Scan clocks have no offsets and remain local. The shipment's status can be newer than its
-history. The adapter keeps terminal locations, the estimate and weight, and excludes parties,
-signatures, document links and driver details.
+history. The adapter keeps terminal locations, the estimate and weight, the consignee's name and
+address, and the signature once the freight is delivered. It excludes the shipper, document links
+and driver details.
 
 ## Numbers
 

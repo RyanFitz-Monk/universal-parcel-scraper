@@ -35,8 +35,10 @@ their milliseconds.
 
 Each scan keeps its situation code and wording, in which a failed delivery or a hold names its
 reason in brackets, and its branch as the location. Its shipment-control notes, which are route
-and manifest references, are dropped, as are the recipient who signed, the destination's
-neighbourhood and postcode, the origin postcode and the shipper's references. The service name,
+and manifest references, are dropped, as are the origin postcode and the shipper's references.
+The destination's name, neighbourhood and postcode are read as the recipient's; the service
+sends the postcode as a number, so it is padded back to five digits. Who received a delivered
+guide is read as its signatory. The service name,
 the weight and dimensions of a one-parcel guide and the latest delivery day the service
 promises are kept; the promised day is dropped once delivered. Rows a second parcel repeats are
 dropped.

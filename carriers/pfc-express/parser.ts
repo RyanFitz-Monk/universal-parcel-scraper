@@ -28,6 +28,8 @@ const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 // Who took a delivered parcel, after the delivery's own words.
 const RECEIVER = /\s*[,;:.\-–，；：]?\s*(?:(?:signed(?: for)? by|signatory|received by)\b|签收人)[\s\S]*$/i;
+// The name itself: "signed by SAMPLE NAME", "Received by: SAMPLE NAME", "签收人：示例".
+const SIGNER = /(?:\b(?:signed(?: for)? by|signatory|received by)\b|签收人)\s*[:：]?\s*([^,;，；。]+?)\s*\.?\s*(?:[,;，；。]|$)/i;
 // A clause of a relayed Chinese post scan that gives a courier, a phone, a hotline or a complaint line.
 const CONTACT = /电话|手机|致电|联系|电联|热线|投诉|呼叫|快递员|投递员|揽投员|揽收员|派送员|派件员|收派员|配送员|司机|姓名|\d{5,}/;
 // A bracketed office, exchange, centre or airport; any other bracket can name a person or a signer.
@@ -44,9 +46,10 @@ export function normalizePfcExpressNumber(raw: string): string {
 }
 
 /**
- * A scan's text without who signed for it, phone numbers or e-mail addresses.
- * A relayed Chinese post scan also loses the brackets that name no office and
- * every clause from the first that gives a contact.
+ * A scan's text as the status map is keyed on it: without who signed for it,
+ * phone numbers or e-mail addresses, and for a relayed Chinese post scan
+ * without the brackets that name no office and every clause from the first
+ * that gives a contact. The scan's description keeps the whole text.
  */
 export function pfcExpressText(value: string): string {
   let text = value.replace(RECEIVER, '').replace(EMAIL, '').replace(PHONE, '');
@@ -76,8 +79,7 @@ function wallClock(text: string): string {
 
 /**
  * The scans an item lists, newest first, each a message and a clock. The
- * message is a wording, then `----` and the scan's place when it has one. A
- * scan whose text gave only contacts is left out.
+ * message is a wording, then `----` and the scan's place when it has one.
  */
 function scans($: CheerioAPI, $item: Cheerio<AnyNode>): CarrierEvent[] {
   const nodes = $item.find('ul > li').toArray();
@@ -91,16 +93,16 @@ function scans($: CheerioAPI, $item: Cheerio<AnyNode>): CarrierEvent[] {
     const time = wallClock(clean(clock.text(), 40));
     const [said = '', ...rest] = clean(message.text(), 2000).split('----');
     if (!said.trim()) throw new SchemaError(PROVIDER, 'PFC Express returned a scan without its wording');
-    const text = pfcExpressText(said);
-    if (!text) continue;
-    const scan = pfcExpressScan(text);
-    const location = clean(pfcExpressText(rest.join(' ')) || scan.facility, 120);
-    const key = JSON.stringify([time, scan.wording, location]);
+    const scan = pfcExpressScan(pfcExpressText(said));
+    // The older page's facility code before the wording is the scan's place, not its wording.
+    const description = scan.facility ? clean(said).slice(clean(said).indexOf(',') + 1).trim() : clean(said);
+    const location = clean(rest.join(' '), 120) || scan.facility;
+    const key = JSON.stringify([time, description, location]);
     if (seen.has(key)) continue;
     seen.add(key);
     events.push({
       local_time: time,
-      description: scan.wording,
+      description,
       ...(location ? { location } : {}),
       ...(scan.stage ? { stage: scan.stage.stage, stage_source: scan.stage.source } : {}),
     });
@@ -170,6 +172,8 @@ export function parsePfcExpress(payload: unknown, raw: string): CarrierResult {
   const partners = new Set(tracking.filter((value) => value !== number && !references.includes(value)
     && !orders.includes(value) && PARTNER_NUMBER.test(value)));
   const [partner] = partners;
+  const delivery = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  const signer = delivery ? clean(SIGNER.exec(delivery.description!)?.[1]) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -180,6 +184,7 @@ export function parsePfcExpress(payload: unknown, raw: string): CarrierResult {
     ...(channel ? { service_name: channel } : {}),
     ...(destination ? { destination_country: destination } : {}),
     ...(partners.size === 1 ? { delivery_tracking_number: partner! } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

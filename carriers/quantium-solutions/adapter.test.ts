@@ -75,8 +75,10 @@ describe('Quantium Solutions HTTP adapter', () => {
       ['2026-02-28T13:00:00', 'Shipment created', 'registered'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map' && !event.provider_code)).toBe(true);
-    // Neither party's name or address, nor the states, references or the partner's number, is kept.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|EXAMPLE|TESTVILLE|TESTTOWN|0000000000|ZZ000000000XX|Malaysia/);
+    // The recipient's name and address are read; the shipper's, the states, references and the partner's number are not.
+    expect(result).toMatchObject({ receiver_name: 'EXAMPLE RECIPIENT', receiver_address: '1 SAMPLE STREET\nTESTTOWN 00000' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SHIPPER|EXAMPLE ROAD|TESTVILLE|SAMPLE STATE|EXAMPLE STATE|0000000000|ZZ000000000XX|Malaysia/);
     expect(result).not.toHaveProperty('delivery_tracking_number');
     expect(result).not.toHaveProperty('delivery_carrier');
   });
@@ -84,8 +86,11 @@ describe('Quantium Solutions HTTP adapter', () => {
   it('reads a parcel at destination customs, and an oldest-first history turned round', () => {
     const result = parseQuantium(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: 'IN TRANSIT: Customs Clearance Begins',
-      last_update_local: '2026-05-20T14:02:00', destination_country: 'AU' });
+      last_update_local: '2026-05-20T14:02:00', destination_country: 'AU', receiver_name: 'EXAMPLE PERSON', receiver_address: '0 TEST LANE\nEXAMPLE TOWN' });
     expect(result).not.toHaveProperty('delivered_at');
+    const phoned = parseQuantium(changed('in-transit', (shipment) => { shipment.cnee_addr = 'EXAMPLE PERSON\r\nTEL: 0000000000'; }), IN_TRANSIT);
+    expect(phoned.receiver_name).toBe('EXAMPLE PERSON');
+    expect(phoned).not.toHaveProperty('receiver_address');
     const reversed = parseQuantium(changed('in-transit', (shipment) => {
       const rows = (shipment.history as string).match(/<history>.*?<\/history>/g)!;
       shipment.history = `<history_list>${rows.reverse().join('')}</history_list>`;
@@ -118,12 +123,19 @@ describe('Quantium Solutions HTTP adapter', () => {
     expect(entities.events![0]).toMatchObject({ description: 'Shipment arrived at destination port: Arrive Destination & Hub' });
   });
 
-  it('keeps the wording as the page shows it, without who took the parcel or phone numbers', () => {
-    expect(quantiumWording('Shipment delivered', 'Received by Sample Person')).toMatchObject({ description: 'Shipment delivered' });
-    expect(quantiumWording('Shipment delivered', 'Delivered to Sample Person, front door')).toMatchObject({ description: 'Shipment delivered' });
-    expect(quantiumWording('IN TRANSIT', 'Call +60 00-000 0000 to arrange')).toMatchObject({ description: 'IN TRANSIT: Call to arrange' });
+  it('keeps the wording as the page shows it, and stages it without who took the parcel or phone numbers', () => {
+    expect(quantiumWording('Shipment delivered', 'Received by Sample Person'))
+      .toEqual({ milestone: 'Shipment delivered', remark: '', description: 'Shipment delivered: Received by Sample Person' });
+    expect(quantiumWording('Shipment delivered', 'Delivered to Sample Person, front door'))
+      .toMatchObject({ remark: 'Delivered', description: 'Shipment delivered: Delivered to Sample Person, front door' });
+    expect(quantiumWording('IN TRANSIT', 'Call +60 00-000 0000 to arrange'))
+      .toMatchObject({ remark: 'Call to arrange', description: 'IN TRANSIT: Call +60 00-000 0000 to arrange' });
     expect(quantiumWording('Shipment out for delivery', 'Out for Delivery')).toMatchObject({ description: 'Shipment out for delivery' });
     expect(quantiumWording('', '')).toMatchObject({ description: '' });
+    const signed = parseQuantium(changed('delivered', (shipment) => {
+      shipment.history = (shipment.history as string).replace('<remark>Delivered</remark>', '<remark>Received by Sample Person</remark>');
+    }), DELIVERED);
+    expect(signed).toMatchObject({ current_stage: 'delivered', last_status_text: 'Shipment delivered: Received by Sample Person', signed_by: 'Sample Person' });
   });
 
   it('answers a shipment asked by the tracking number the page prints beside it, and nothing it cannot bind', () => {

@@ -79,19 +79,19 @@ describe('PFC Express HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toContain('70001');
   });
 
-  it('reads a delivery from the tracker\'s tab, without who signed, phone numbers or repeated scans', () => {
+  it('reads a delivery from the tracker\'s tab, with who signed and each scan\'s whole wording, once', () => {
     const result = parsePfcExpress(fragment('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered, Left with Individual', last_update: null, last_update_local: '2029-12-20T14:46:00',
-      service_name: 'USEX-P', destination_country: 'US', delivery_tracking_number: '9200190000000000000016',
+      last_status_text: 'Delivered, Left with Individual, signed by SAMPLE NAME', last_update: null, last_update_local: '2029-12-20T14:46:00',
+      service_name: 'USEX-P', destination_country: 'US', delivery_tracking_number: '9200190000000000000016', signed_by: 'SAMPLE NAME',
     });
     // A delivery on a clock of unknown zone has no instant to give.
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(summary(result)).toEqual([
-      ['2029-12-20T14:46:00', 'Delivered, Left with Individual', 'SAMPLETOWN, ME', 'delivered'],
-      ['2029-12-20T07:02:00', 'Out for Delivery, call for help', 'SAMPLETOWN, ME', 'out_for_delivery'],
+      ['2029-12-20T14:46:00', 'Delivered, Left with Individual, signed by SAMPLE NAME', 'SAMPLETOWN, ME', 'delivered'],
+      ['2029-12-20T07:02:00', 'Out for Delivery, call 138 0000 0000 for help', 'SAMPLETOWN, ME', 'out_for_delivery'],
       ['2029-12-17T03:10:00', 'Custom clearance completed', null, 'in_transit'],
       ['2029-12-16T19:12:00', 'Parcel arrives at Airport, Parcel Arrival', null, 'in_transit'],
       ['2029-12-16T02:34:00', 'Parcel is leaving Airport, Parcel Leaving Port', null, 'in_transit'],
@@ -102,10 +102,9 @@ describe('PFC Express HTTP adapter', () => {
       ['2029-12-13T23:33:00', 'Picked up shipment.', 'PFCSZ', 'accepted'],
       ['2029-12-13T14:29:00', 'Parcel Data Received', null, 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE NAME|signed|0000 0000|70002/);
   });
 
-  it('keeps a relayed Chinese post scan to the clauses before its contacts', () => {
+  it('stages a relayed Chinese post scan by the clauses before its contacts and keeps its whole wording', () => {
     const result = parsePfcExpress(fragment('returned'), RETURNED);
     expect(result).toMatchObject({
       status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map',
@@ -114,16 +113,19 @@ describe('PFC Express HTTP adapter', () => {
     });
     expect(summary(result).slice(0, 5)).toEqual([
       ['2029-12-23T22:37:00', 'Export cancelled by Customs', null, 'exception'],
-      ['2029-12-23T20:07:08', '您的邮件已代签收，成功退回至寄件人', null, 'returned'],
-      ['2029-12-23T20:06:13', '邮件正在派送中，请耐心等待', null, 'out_for_delivery'],
+      ['2029-12-23T20:07:08', '您的邮件已代签收【寄件人签收】，成功退回至寄件人，如有疑问请电联快递员【电话：13800000000】，投诉电话【电话：13900000000】。'
+        + '有事呼叫我，少一次投诉，多一份感恩。中国邮政将全心呵护您的所托，服务热线11183。', null, 'returned'],
+      ['2029-12-23T20:06:13', '邮件正在派送中，请耐心等待，保持电话畅通，准备签收，如有疑问请电联快递员【王小明，电话：13800000000】'
+        + '或揽投部【电话：0755-00000000】，服务热线11183。', null, 'out_for_delivery'],
       ['2029-12-23T20:06:12', '邮件到达【深圳市示例营业部】', null, 'in_transit'],
       ['2029-12-23T10:57:53', '邮件离开【广东省深圳市国际互换局】，正在发往下一站', null, 'in_transit'],
     ]);
     expect(summary(result).map(([, , , stage]) => stage)).not.toContain(null);
-    expect(JSON.stringify(result)).not.toMatch(/王小明|1[3-9]0{9}|0755|11183|寄件人签收|电话|投诉/);
+    // A return is signed for by the sender, not the recipient.
+    expect(result).not.toHaveProperty('signed_by');
   });
 
-  it('drops contacts, signers, phones and e-mail addresses from a scan\'s text', () => {
+  it('keys the status map on a scan\'s text without contacts, signers, phones or e-mail addresses', () => {
     expect(pfcExpressText('Delivered, signed by SAMPLE NAME')).toBe('Delivered');
     expect(pfcExpressText('Delivered. Received by: SAMPLE NAME')).toBe('Delivered');
     expect(pfcExpressText('Courier +1 (555) 000-0000 or sample@example.com')).toBe('Courier or');
@@ -133,13 +135,22 @@ describe('PFC Express HTTP adapter', () => {
     expect(pfcExpressText('2029-12-13 arrived')).toBe('2029-12-13 arrived');
   });
 
-  it('reads either order of the tracker\'s clocks, and a scan with only contacts as none', () => {
+  it('reads either order of the tracker\'s clocks, and a scan with only contacts without a stage', () => {
     const result = parsePfcExpress(withScans(scan('2029/12/5 7:02:09', 'Shipment sent to destination') + scan('2029-12-04 19:37', 'Shipment picked up')
       + scan('12/4/2029 08:00:00', '请联系快递员【电话：13800000000】')), TRANSIT);
     expect(summary(result)).toEqual([
       ['2029-12-05T07:02:09', 'Shipment sent to destination', null, 'in_transit'],
       ['2029-12-04T19:37:00', 'Shipment picked up', null, 'accepted'],
+      ['2029-12-04T08:00:00', '请联系快递员【电话：13800000000】', null, null],
     ]);
+  });
+
+  it('reads who signed for a delivery in English or Chinese, and nobody for a delivery that names none', () => {
+    const delivered = (wording: string) => parsePfcExpress(withScans(scan('12/05/2029 08:00:00', wording))
+      .replace('date="Transit"', 'date="Delivered"'), TRANSIT);
+    expect(delivered('Delivered. Received by: SAMPLE NAME')).toMatchObject({ signed_by: 'SAMPLE NAME' });
+    expect(delivered('已签收，签收人：示例')).toMatchObject({ signed_by: '示例' });
+    expect(delivered('Delivered')).not.toHaveProperty('signed_by');
   });
 
   it('settles a held parcel by its tab, and a scan without a stage by the tab', () => {

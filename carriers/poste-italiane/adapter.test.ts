@@ -524,21 +524,26 @@ describe('Poste Italiane response parsing', () => {
     }
   });
 
-  it('never retains customer, dimension, office, place or estimate-source data', () => {
+  it('reads the addressee, their address and who signed, and never retains sender, office, weight or estimate-source data', () => {
     const result = parsePosteItalianeTrackingResponse(parcel({
       nombre_cliente: 'Example Customer',
       nom_codired: 'OFICINA EXAMPLE',
       dataPrevistaConsegna: 'garbage',
     }), TRACKING_NUMBER);
+    expect(result).toMatchObject({
+      receiver_name: 'Example Recipient', receiver_address: 'Via Esempio 1, 00100 Roma', signed_by: 'Example Signature',
+    });
     const serialized = JSON.stringify(result);
     for (const secret of [
-      'Example Customer', 'OFICINA EXAMPLE', 'nombre_cliente', 'nom_codired', 'garbage',
-      'Example Recipient', 'Via Esempio 1', 'Example Signature', 'UFFICIO ESEMPIO CENTRALE',
+      'Example Customer', 'OFICINA EXAMPLE', 'nombre_cliente', 'nom_codired', 'garbage', 'UFFICIO ESEMPIO CENTRALE',
       'Example Sender S.p.A.', 'Test Depot', 'destinatario', 'firmaDestinatario', 'peso',
     ]) {
       expect(serialized).not.toContain(secret);
     }
     expect(result.expected_delivery).toBeNull();
+    // A parcel not yet delivered has nobody who signed for it.
+    expect(parsePosteItalianeTrackingResponse(parcel({ stato: '4', listaMovimenti: (DELIVERED.listaMovimenti as unknown[]).slice(0, 1) }), TRACKING_NUMBER))
+      .not.toHaveProperty('signed_by');
   });
 
   it('produces every capability carrier.json declares', () => {

@@ -25,7 +25,7 @@ const ZONE = 'Asia/Kolkata';
 // Where the wording names a facility.
 const FACILITY = /\bShadowfax's (.{2,80}?) facility\b/i;
 const BAG_ARRIVAL = /^Bag containing your shipment is received at (.{2,80})$/i;
-// Phone numbers and one-time codes, should a rider's ever reach the wording.
+// Phone numbers and one-time codes, should a rider's ever reach the wording; the stage is read without them.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 const OTP = /\b(OTP)\b[\s:-]*(?:is\s+)?\d{4,8}\b/gi;
 // The tracker's first milestone: a history that starts there is whole.
@@ -46,17 +46,26 @@ export function shadowfaxMessage(payload: unknown): string {
   return isRecord(payload) ? clean(payload.message, 200) : '';
 }
 
-/**
- * A milestone's heading, then a scan's own line, as the page lists the line
- * under its heading: `In Transit: Shipment is received at …`. Phone numbers
- * and one-time codes are dropped.
- */
-export function shadowfaxWording(heading: string, line: string): string {
-  const own = clean(line.replace(PHONE, '').replace(OTP, '$1').replace(/\s+([,;:.])/g, '$1'), 300)
-    .replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+/** A scan's line under its milestone's heading, unless the line starts with it. */
+function underHeading(heading: string, own: string): string {
   if (!own) return heading;
   if (own.toLowerCase().startsWith(heading.toLowerCase().replace(/\.+$/, ''))) return own;
   return `${heading}: ${own}`;
+}
+
+/**
+ * A milestone's heading, then a scan's own line, as the page lists the line
+ * under its heading: `In Transit: Shipment is received at …`. The scan keeps
+ * the whole line.
+ */
+function scanWording(heading: string, line: string): string {
+  return underHeading(heading, clean(line, 300).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, ''));
+}
+
+/** The wording a scan is staged by: its heading and line without phone numbers and one-time codes. */
+export function shadowfaxWording(heading: string, line: string): string {
+  return underHeading(heading, clean(line.replace(PHONE, '').replace(OTP, '$1').replace(/\s+([,;:.])/g, '$1'), 300)
+    .replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, ''));
 }
 
 /** The facility a scan's line names, if any. */
@@ -116,9 +125,9 @@ function readMilestone(row: unknown): Scan[] {
   return lines.map((line, index) => {
     if (typeof line !== 'string') throw new SchemaError(PROVIDER, 'Shadowfax returned an invalid scan');
     const time = scanTime(clocks[index]);
-    const description = shadowfaxWording(title, line);
+    const description = scanWording(title, line);
     const location = facility(line);
-    const staged = shadowfaxStage(code, title, description);
+    const staged = shadowfaxStage(code, title, shadowfaxWording(title, line));
     const event: CarrierEvent = {
       time,
       ...(location ? { location } : {}),

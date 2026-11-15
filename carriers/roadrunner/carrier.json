@@ -70,7 +70,10 @@
       "history",
       "location",
       "eta",
-      "service_name"
+      "service_name",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
@@ -80,8 +83,6 @@
       "parcel_count",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "postcodes",
       "origin",
       "destination",
@@ -95,8 +96,7 @@
     ],
     "unavailable": [
       "offset_timestamps",
-      "provider_code",
-      "signatory"
+      "provider_code"
     ]
   },
   "links": [

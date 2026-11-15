@@ -7,7 +7,7 @@
       "stage": "delivered",
       "confirmedBy": "prior-art",
       "firstSeen": "2026-09-20",
-      "note": "A delivered line may name who signed; the adapter replaces the description with this word."
+      "note": "A delivered line may name who signed; the description keeps it and the name becomes the signer."
     },
     {
       "wording": "Out for delivery",

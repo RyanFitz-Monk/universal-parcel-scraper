@@ -83,6 +83,15 @@ function readScan(row: unknown, order: number, domestic: boolean): Scan {
   return { event, at: when.at, order };
 }
 
+/** The guide's addressee: their name, and their street above their town when the record gives one. */
+function recipientOf(record: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const party = record.destinatario;
+  if (!isRecord(party)) return {};
+  const name = text(party, 'nombreDestinatario', 160);
+  const address = [text(party, 'direccion'), text(party, 'ciudad', 120)].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 function country(record: Record<string, unknown>, key: string): number | null {
   const value = record[key];
   if (value === null || value === undefined) return null;
@@ -108,8 +117,9 @@ function shownResults(payload: unknown): unknown[] {
  * The reply of the tracker's `ControlRastreovalidaciones` for one guide. The
  * guide's record names it, holds its overall state and its movements, oldest
  * first; a guide Servientrega does not know is the single result `null`.
- * Names, addresses, contacts, the proof-of-delivery picture, the signatory and
- * customer-service tasks in the record are not read.
+ * The addressee's name and address are read, and who signed for a delivered
+ * guide. The sender, contacts, the proof-of-delivery picture and
+ * customer-service tasks in the record are not.
  */
 export function parseServientrega(payload: unknown, raw: string): CarrierResult {
   const number = normalizeServientregaNumber(raw);
@@ -154,6 +164,7 @@ export function parseServientrega(payload: unknown, raw: string): CarrierResult 
       last_update: null,
       expected_delivery: null,
       ...(service ? { service_name: service } : {}),
+      ...recipientOf(record),
       summary_only: true,
       events: [],
     };
@@ -170,6 +181,7 @@ export function parseServientrega(payload: unknown, raw: string): CarrierResult 
   // follows. Before a delivery the field holds another date.
   const reported = stateStage === 'delivered' && domestic ? text(record, 'fechaRealEntrega', 32) : '';
   const delivered = reported ? clock(reported, true).time : final?.stage === 'delivered' ? final.time : undefined;
+  const signer = stage === 'delivered' ? text(record, 'Firmadopor', 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -178,6 +190,8 @@ export function parseServientrega(payload: unknown, raw: string): CarrierResult 
     expected_delivery: null,
     ...(delivered ? { delivered_at: delivered } : {}),
     ...(service ? { service_name: service } : {}),
+    ...recipientOf(record),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

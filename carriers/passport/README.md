@@ -39,8 +39,8 @@ the merchant tracking page Passport's tracker opens.
   destination's post is left to try. The destination country comes from the shipment.
 - The estimate is the day or window the page shows, until delivery.
 - A receipt after the parcel has moved on is in transit, not its acceptance.
-- The recipient's town, the order reference, the merchant and the partner's phone number are not
-  read. A row place that is a bare country or holds a digit is dropped.
+- The recipient's town and region are read as the address. The order reference, the merchant
+  and the partner's phone number are not read. A row place that is a bare country is dropped.
 
 ## Numbers
 
@@ -61,7 +61,7 @@ lookups used `track.passportshipping.com/{number}`, which forwards there. Mercha
 - Passport drops shipments after a few years; they read as not found.
 - Partners' clocks other than UniUni's and Parcel Right's have no offset. Parcel Right's, as
   Passport converts them, can be an hour off, as Queensland's are.
-- No weight, sender, recipient or proof of delivery.
+- No weight, sender, recipient name or proof of delivery.
 
 ## Testing
 

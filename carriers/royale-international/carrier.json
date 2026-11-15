@@ -39,13 +39,17 @@
       "status",
       "history",
       "location",
-      "service_name"
+      "service_name",
+      "recipient_name",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
-      "service_name"
+      "service_name",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": [

@@ -46,18 +46,18 @@
     "scraped": [
       "status",
       "history",
-      "provider_code"
+      "provider_code",
+      "recipient_address",
+      "recipient_name"
     ],
     "discarded": [
-      "office_addresses",
-      "recipient_address"
+      "office_addresses"
     ],
     "unavailable": [
       "eta",
       "weight",
       "service_name",
       "sender_name",
-      "recipient_name",
       "location",
       "offset_timestamps"
     ]

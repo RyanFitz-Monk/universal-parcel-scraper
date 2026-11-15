@@ -53,12 +53,12 @@
       "history",
       "location",
       "weight",
-      "pickup_point"
+      "pickup_point",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "signatory",
       "postage",
       "acceptance_office",
       "delivery_office"

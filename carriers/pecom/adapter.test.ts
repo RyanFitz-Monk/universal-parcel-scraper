@@ -49,7 +49,8 @@ describe('PEC HTTP adapter', () => {
     const result = parsePecom(fixture('delivered'), DELIVERED);
     expect(result).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Выдан получателю', last_update: null, last_update_local: '2026-05-07T18:45:10', expected_delivery: null,
-      pickup_point: 'Тестовск Садовая 5\nгород Тестовск, Садовая улица, 5', weight_kg: 11.5, events: expect.any(Array) });
+      receiver_name: 'Получателев Пётр Тестович', pickup_point: 'Тестовск Садовая 5\nгород Тестовск, Садовая улица, 5', weight_kg: 11.5,
+      events: expect.any(Array) });
     expect(result.events!.map((event) => [event.local_time, event.description, event.location ?? null, event.stage])).toEqual([
       ['2026-05-07T18:45:10', 'Выдан получателю', 'Тестовск', 'delivered'],
       ['2026-05-06T11:30:00', 'Прибыл', 'Тестовск', 'in_transit'],
@@ -60,15 +61,15 @@ describe('PEC HTTP adapter', () => {
     ]);
     expect(result.events![0]).toMatchObject({ point: { latitude: 53.2345, longitude: 50.1234 }, stage_source: 'carrier_map' });
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    // The sender and the recipient are never read.
-    expect(JSON.stringify(result)).not.toMatch(/Отправителев|Получателев|\+7000/);
+    // The sender and the recipient's phone are not read.
+    expect(JSON.stringify(result)).not.toMatch(/Отправителев|\+7000/);
   });
 
   it('reads the corrected arrival date as the forecast of a cargo on its way, with its transit rows', () => {
     const result = parsePecom(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'В пути',
       last_update_local: '2026-06-13T02:10:00', expected_delivery: '2026-06-17', weight_kg: 240,
-      pickup_point: 'Тестовск\nРоссия, Тестовск, Терминальная улица, 7' });
+      pickup_point: 'Тестовск\nРоссия, Тестовск, Терминальная улица, 7', receiver_name: 'Получателев Пётр Тестович' });
     expect(result.events!.map((event) => [event.local_time, event.description, event.location ?? null])).toEqual([
       ['2026-06-13T02:10:00', 'Прибыл в пункт выдачи Середино', 'Середино'],
       ['2026-06-11T08:30:00', 'Отправлен на терминал выдачи Тестовск', null],
@@ -93,7 +94,7 @@ describe('PEC HTTP adapter', () => {
     expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'Доставлен получателю', last_update_local: '2026-05-07' });
     expect(result.events![0]).toEqual({ local_time: '2026-05-07', description: 'Доставлен получателю', stage: 'delivered', stage_source: 'carrier_map' });
     expect(result).not.toHaveProperty('pickup_point');
-    expect(JSON.stringify(result)).not.toMatch(/Получателев|\+7000/);
+    expect(JSON.stringify(result)).not.toMatch(/\+7000/);
 
     const underWay = changed('in-transit', (cargo) => { cargo.currentStatus = { Id: 16, ClientStatus: 'Выполняется адресная доставка' }; });
     expect(parsePecom(underWay, IN_TRANSIT)).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', expected_delivery: null });

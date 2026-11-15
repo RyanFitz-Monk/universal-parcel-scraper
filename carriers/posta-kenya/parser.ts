@@ -32,6 +32,8 @@ const DAY_FORMAT = 'cccc, LLLL d, yyyy';
 const CLOCK = /^([01]\d|2[0-3]):([0-5]\d)$/;
 // The details of a scan that are kept: why an item was not delivered or was held, and what happens next.
 const DETAIL = /^(?:Reason|Measure|Retention reason)\s*:\s*(.+)$/i;
+// Who a delivery scan says signed for the item.
+const SIGNED = /^Signed by\s*:\s*(.+)$/i;
 // A place ending with its country in brackets: "NAIROBI CITY SQUARE (Kenya)".
 const PLACE = /^(.*?)\s*\(([^()]{2,60})\)$/;
 // A firewall's, CDN's or bot check's page in place of the tracker's, which can come back with HTTP 200.
@@ -148,12 +150,12 @@ function placeOf(text: string): { office: string; country: string; code: string 
 
 /**
  * One scan row: the event's name with its kept details, the place, and the
- * clock. The place's second line, the office the item came from or was bagged
- * to, is not read. An office written with a digit, a postcode or an office
- * number, is dropped, and the scan keeps its country. Who signed for the item
- * and their identity document are never read.
+ * clock, and who signed for a delivery. The place's second line, the office
+ * the item came from or was bagged to, is not read. An office written with a
+ * digit, a postcode or an office number, is dropped, and the scan keeps its
+ * country. The signer's identity document is never read.
  */
-function scanOf(day: string, cells: Cheerio<AnyNode>): CarrierEvent {
+function scanOf(day: string, cells: Cheerio<AnyNode>): { event: CarrierEvent; signer: string } {
   const [wording = '', ...rest] = linesOf(cells.eq(0));
   if (!wording) throw new SchemaError(PROVIDER, 'Posta Kenya returned a scan without wording');
   const details = rest.map((line) => DETAIL.exec(line)?.[1]).filter((detail): detail is string => Boolean(detail))
@@ -163,20 +165,22 @@ function scanOf(day: string, cells: Cheerio<AnyNode>): CarrierEvent {
   const location = [office, place.country].filter(Boolean).join(', ');
   const description = details.length ? `${wording}: ${details.join('; ')}` : wording;
   const staged = postaKenyaStage(wording);
-  return {
+  const signer = clean(rest.map((line) => SIGNED.exec(line)?.[1]).find(Boolean), 120);
+  return { event: {
     ...clockOf(day, clean(cells.eq(2).text(), 20), place.code === 'KE'),
     ...(location ? { location } : {}),
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
-  };
+  }, signer };
 }
 
 /**
  * The result page for one item, which opens in a popup: its details, then its
  * scans, oldest first, under a heading for each day. The details must name the
- * whole requested code; of the rest only the destination's country is read.
- * The sender, the addressee, who took delivery and the proof of delivery are
- * never read. A page whose session holds no lookup is inconclusive.
+ * whole requested code; of the rest the destination's country and who took
+ * delivery are read. The addressee runs their name into their address in one
+ * line, so it is not read, nor are the sender and the proof of delivery. A
+ * page whose session holds no lookup is inconclusive.
  */
 export function parsePostaKenyaResult(html: string, rawNumber: string): CarrierResult {
   const number = normalizePostaKenyaNumber(rawNumber);
@@ -195,7 +199,8 @@ export function parsePostaKenyaResult(html: string, rawNumber: string): CarrierR
   let day: string | null = null;
   const items: string[] = [];
   let destination = '';
-  const scans: CarrierEvent[] = [];
+  let receiver = '';
+  const scans: Array<{ event: CarrierEvent; signer: string }> = [];
   for (const row of rows.toArray()) {
     const cells = $(row).children('td');
     const text = (index: number) => clean(cells.eq(index).text(), 200);
@@ -204,6 +209,7 @@ export function parsePostaKenyaResult(html: string, rawNumber: string): CarrierR
     else if (section === 'details' && cells.length === 2) {
       if (text(0) === 'Shipment ID') items.push(text(1));
       if (text(0) === 'Destination') destination = text(1);
+      if (text(0) === 'Delivered to') receiver = clean(text(1), 120);
     } else if (section === 'events' && cells.length === 3) {
       if (text(1) === 'Event Location' && text(2) === 'Event Time') day = dayOf(text(0));
       else if (!day) throw new SchemaError(PROVIDER, 'Posta Kenya returned a scan without its day');
@@ -215,7 +221,7 @@ export function parsePostaKenyaResult(html: string, rawNumber: string): CarrierR
   if (normalizeTrackingNumber(items[0]!) !== number) throw new SchemaError(PROVIDER, 'Posta Kenya answered for a different item');
 
   const seen = new Set<string>();
-  const events = scans.filter((event) => {
+  const events = scans.map(({ event }) => event).filter((event) => {
     // A scan the page lists twice is kept once.
     const identity = JSON.stringify(event);
     if (seen.has(identity)) return false;
@@ -227,6 +233,9 @@ export function parsePostaKenyaResult(html: string, rawNumber: string): CarrierR
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const country = placeOf(destination).code;
+  // Who took delivery, as the details name them, else as the newest delivery scan does.
+  const signer = stage === 'delivered'
+    ? receiver || [...scans].reverse().find(({ event, signer }) => event.stage === 'delivered' && signer)?.signer : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -235,6 +244,7 @@ export function parsePostaKenyaResult(html: string, rawNumber: string): CarrierR
     ...(latest.time ? {} : { last_update_local: latest.local_time }),
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

@@ -63,11 +63,11 @@
       "offset_timestamps",
       "eta",
       "eta_window",
-      "delivered_at"
+      "delivered_at",
+      "driver_name",
+      "contact_details"
     ],
     "discarded": [
-      "driver_name",
-      "contact_details",
       "remarks",
       "order_contents",
       "payment_details",

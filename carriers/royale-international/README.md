@@ -15,8 +15,11 @@ capture update is administrative. The proof must have a same-day capture context
 in the history. POD capture alone does not prove delivery. The latest update clock can therefore
 be later than the physical delivery clock.
 
-Recipient, shipper, reference, signature and proof-detail cells are omitted. Only explicit
-facility scans provide locations; a facility the parcel is travelling toward does not.
+The consignee becomes the receiver, and the dated proof row's recipient the signer once the
+parcel is delivered. An update keeps its whole wording; its stage is read from the wording
+before a link, a recipient or a phone number. The shipper, reference, signature and proof-detail
+cells are not read. Only explicit facility scans provide locations; a facility the parcel is
+travelling toward does not.
 
 ## Testing
 

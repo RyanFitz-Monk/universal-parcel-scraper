@@ -110,6 +110,9 @@ function sentence(description: string, location: string): string {
   return ending === 'at' ? `${description} a Royal Mail office` : description.replace(PLACE_FOLLOWS, '');
 }
 
+// Who signed for a delivered item, as a delivered line names them: "Delivered. Signed for by NAME".
+const SIGNER = /\bsigned for by\s*:?\s*(.+?)\s*\.?$/i;
+
 // The fields of a delivery estimate: its day, and the window Royal Mail's Tracking API
 // gives as clocks with offsets on that day, such as "08:00:00+01:00".
 const ESTIMATE_FIELDS = ['date', 'startOfEstimatedWindow', 'endOfEstimatedWindow'] as const;
@@ -198,7 +201,7 @@ export function parseRoyalMailTrackingResponse(payload: unknown, trackingNumber:
   for (const raw of scans.slice(0, MAX_EVENTS_TO_INSPECT)) {
     if (!isRecord(raw)) throw new SchemaError('Royal Mail', 'Royal Mail returned invalid tracking events');
     // The website returns Markdown emphasis, including "**Delivered by**".
-    // Normalize it before classification so delivery prose is still redacted.
+    // Normalize it before classification.
     const description = cleanScalar(raw.eventName).replace(/\*\*/g, '').trim();
     if (!description) throw new SchemaError('Royal Mail', 'Royal Mail returned invalid tracking events');
     const code = cleanScalar(raw.eventCode, 64);
@@ -213,7 +216,7 @@ export function parseRoyalMailTrackingResponse(payload: unknown, trackingNumber:
       ...(clock ?? (time ? { time } : {})),
       ...(!time && !clock && timeText ? { provider_time_text: timeText } : {}),
       ...(location ? { location } : {}),
-      description: stage === 'delivered' ? 'Delivered' : sentence(description, location),
+      description: sentence(description, location),
       ...(stage ? { stage } : {}),
       ...(mapped ? { stage_source: 'carrier_map' } : {}),
       ...(/^[A-Za-z0-9_-]+$/.test(code) ? { provider_code: code } : {}),
@@ -261,15 +264,18 @@ export function parseRoyalMailTrackingResponse(payload: unknown, trackingNumber:
   const deliveredAt = !delivered ? null : trimmed.find(event => event.stage === 'delivered' && event.time)?.time
     ?? (royalMailEventStage(cleanScalar(summary.lastEventCode, 64)) === 'delivered' ? lastTime : null);
   const estimate = delivered ? null : expectedDelivery(mailpiece.estimatedDelivery);
+  const signer = !delivered ? '' : cleanScalar(SIGNER.exec(trimmed.find(event => event.stage === 'delivered')?.description ?? '')?.[1]
+    ?? SIGNER.exec(statusText)?.[1], 120);
   return {
     status: stage ? statusForStage(stage) : 'unknown',
     ...(stage ? { current_stage: stage } : {}),
-    last_status_text: delivered ? 'Delivered' : statusText,
+    last_status_text: delivered ? sentence(statusText, '') : statusText,
     last_update: lastClock ? lastTime : lastTime || trimmed[0]?.time || null,
     expected_delivery: estimate?.expected_delivery ?? null,
     ...(estimate?.expected_delivery_from ? { expected_delivery_from: estimate.expected_delivery_from } : {}),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(destinationCountry ? { destination_country: destinationCountry } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: trimmed,
     ...(trimmed.length ? {} : { summary_only: true }),
   };

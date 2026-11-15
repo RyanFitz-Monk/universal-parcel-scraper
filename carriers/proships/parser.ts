@@ -58,8 +58,10 @@ export function parseProshipsNonce(html: string): string {
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 // Who received or signed for the parcel, after a delivery's wording.
 const SIGNATORY = /\s*[,;:.\-–(]?\s*\b(?:recibido|recibida|firmado|firmada)\s+por\b[\s\S]*$/i;
+// The name in that clause, up to a bracket or the next clause.
+const SIGNER = /\b(?:recibido|recibida|firmado|firmada)\s+por\s*:?\s*([^,;()]+?)\s*\.?\s*(?:[,;()]|$)/i;
 
-/** A scan's wording without a signatory or phone numbers. */
+/** A scan's wording as the status map reads it: without a signatory or phone numbers. The scan keeps its whole wording. */
 export function proshipsWording(raw: string): string {
   return clean(raw.replace(SIGNATORY, '').replace(PHONE, ''), 200).replace(/^[\s,;:.\-–/]+|[\s,;:\-–/]+$/g, '');
 }
@@ -80,7 +82,7 @@ function wallClock(raw: string): string {
 
 /** The headline status's stage for a parcel whose journey ended or stopped. */
 function headlineStage(headline: string): Stage | undefined {
-  const stage = headline ? proshipsStage(headline)?.stage : undefined;
+  const stage = headline ? proshipsStage(proshipsWording(headline))?.stage : undefined;
   return stage === 'delivered' || stage === 'returned' || stage === 'exception' ? stage : undefined;
 }
 
@@ -110,7 +112,7 @@ export function parseProships(payload: unknown, raw: string): CarrierResult {
   if (!sameNumber(clean(shown.text(), 80), number)) throw new IndeterminateError(PROVIDER, 'ProShips answered for another shipment');
   const headlines = containers.find('.current-status h3');
   if (headlines.length > 1) throw new SchemaError(PROVIDER, 'ProShips tracking reply changed');
-  const headline = proshipsWording(headlines.text());
+  const headline = clean(headlines.text(), 300);
 
   const rows = containers.find('.tracking-events .tracking-event');
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'ProShips returned too many scans');
@@ -122,13 +124,13 @@ export function parseProships(payload: unknown, raw: string): CarrierResult {
     const title = row.find('.event-title');
     if (date.length !== 1 || title.length !== 1) throw new SchemaError(PROVIDER, 'ProShips scan layout changed');
     const local = wallClock(clean(date.text(), 40));
-    const description = proshipsWording(title.text());
-    if (!description) throw new SchemaError(PROVIDER, 'ProShips returned a scan without wording');
+    const description = clean(title.text(), 300);
+    if (!proshipsWording(description)) throw new SchemaError(PROVIDER, 'ProShips returned a scan without wording');
     // The same scan can be listed twice.
     const identity = JSON.stringify([local, description]);
     if (seen.has(identity)) return;
     seen.add(identity);
-    const stage = proshipsStage(description);
+    const stage = proshipsStage(proshipsWording(description));
     scans.push({ local, event: { local_time: local, description, ...(stage ? { stage: stage.stage, stage_source: stage.source } : {}) } });
   });
   // Newest first; equal clocks keep the page's order, turned round when it lists the oldest first.
@@ -145,12 +147,15 @@ export function parseProships(payload: unknown, raw: string): CarrierResult {
   const newest = events[0]!;
   const fromHeadline = Boolean(ended && ended !== newest.stage);
   const stage = (fromHeadline ? ended : newest.stage) as Stage | undefined;
+  const delivery = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  const signer = delivery ? SIGNER.exec(delivery.description!)?.[1] : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: fromHeadline ? 'carrier_map' : newest.stage_source } : {}),
     last_status_text: fromHeadline ? headline : newest.description!,
     last_update: null,
     last_update_local: scans[0]!.local,
+    ...(signer ? { signed_by: signer.slice(0, 120) } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

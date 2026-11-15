@@ -480,10 +480,10 @@ describe('PostLogistics declared capabilities and privacy', () => {
     expect(check!(delivered)).toBe(true);
   });
 
-  it('drops the recipient and the signature', () => {
-    const projected = JSON.stringify(delivered);
-    for (const value of ['Made Up Recipient', 'Example Street 1', 'proof-of-delivery']) {
-      expect(projected).not.toContain(value);
-    }
+  it('reads the recipient and who signed, and drops the signature image', () => {
+    expect(delivered).toMatchObject({
+      receiver_name: 'Made Up Recipient', receiver_address: 'Example Street 1\n8000 Example City', signed_by: 'Made Up Recipient',
+    });
+    expect(JSON.stringify(delivered)).not.toContain('proof-of-delivery');
   });
 });

@@ -63,10 +63,15 @@ const PHONE = /(?<![\dA-Z])(?:\+?62|0)[\s.-]?8(?:[\s.-]?\d){7,11}(?![\dA-Z])/gi;
 // An office's code after its name: its postcode, with a letter and digit for a
 // counter or agent, or four digits and a letter for a delivery centre.
 const OFFICE_CODE = /(?<=[A-Za-z.)])\s+(?:\d{5}(?:[A-Z]\d?)?|\d{4}[A-Z]\d?)(?=$|[\s,.;)])/g;
+// The person a delivery names after "diterima oleh", before how they relate to the addressee.
+const RECEIVER = /\bditerima\s+oleh\s+([^()]+?)\s*(?:\(|$)/i;
+// A waybill field the service leaves as "0" when it has nothing.
+const NOTHING = '0';
 
 /**
- * A scan's wording without the staff member who scanned it, the recipient a
- * delivery names, phone numbers and office codes, which carry postcodes.
+ * A scan's wording as the shared wording rules read it: without the staff
+ * member who scanned it, the recipient a delivery names, phone numbers and
+ * office codes. The scan's description keeps the whole wording.
  */
 export function posIndonesiaWording(content: string): string {
   return clean(content.replace(STAFF, '').replace(RECIPIENT, ' diterima').replace(NAMED, '')
@@ -112,9 +117,10 @@ function scanOf(row: unknown, number: string): Scan {
   const state = (text(row, 'connote_state', 40) || action).toUpperCase();
   if (!STATE.test(state)) throw new SchemaError(PROVIDER, 'Pos Indonesia returned a scan without a valid state');
   const local = scanClock(row);
-  const description = posIndonesiaWording(text(row, 'content', 600)) || action || state;
+  const content = text(row, 'content', 600);
+  const description = content || action || state;
   const location = placeOf(row.location_name);
-  const staged = posIndonesiaStage(state, description);
+  const staged = posIndonesiaStage(state, posIndonesiaWording(content) || action || state);
   const event: CarrierEvent = {
     local_time: local,
     ...(location ? { location } : {}),
@@ -148,11 +154,27 @@ function destinationOf(value: unknown): string | null {
   return /^[A-Z]{2}$/.test(zone) ? countryCode(zone) : null;
 }
 
+/** A waybill field, empty where the service writes "0" for nothing. */
+function given(row: Record<string, unknown>, key: string, maxLength = 200): string {
+  const value = text(row, key, maxLength);
+  return value === NOTHING ? '' : value;
+}
+
+/** The waybill's recipient: their name, and their street above the postcode. */
+function recipientOf(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = given(payload, 'connote_receiver_name', 120);
+  const street = [given(payload, 'connote_receiver_address'), given(payload, 'connote_receiver_address_detail')].filter(Boolean).join(', ');
+  const address = [street, given(payload, 'connote_receiver_zipcode', 20)].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 /**
  * The service's reply for one number: the waybill, then its history. The
  * waybill names the number it was made for, and is empty for an item the
  * service holds no waybill for; every scan names the item's number. Each must
  * be the whole requested number: the service also answers for a booking code.
+ * The waybill's recipient and the person a delivery names are read; its sender,
+ * service code and price are not.
  */
 export function parsePosIndonesia(payload: unknown, raw: string): CarrierResult {
   const number = normalizePosIndonesiaNumber(raw);
@@ -184,6 +206,7 @@ export function parsePosIndonesia(payload: unknown, raw: string): CarrierResult 
   const stage = newest.stage as Stage | undefined;
   const weight = weightOf(payload.actual_weight);
   const country = destinationOf(payload.zone_code_to);
+  const signer = stage === 'delivered' ? RECEIVER.exec(newest.description!)?.[1] : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: newest.stage_source } : {}),
@@ -193,6 +216,8 @@ export function parsePosIndonesia(payload: unknown, raw: string): CarrierResult 
     expected_delivery: null,
     ...(weight ? { weight_kg: weight } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...recipientOf(payload),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     // The service leaves out scans the tracking page shows, and those of the
     // foreign posts an international item passes through.

@@ -61,11 +61,12 @@
       "delivered_at",
       "service_name",
       "weight",
-      "dimensions"
-    ],
-    "discarded": [
+      "dimensions",
       "recipient_name",
       "recipient_address",
+      "signatory"
+    ],
+    "discarded": [
       "postcodes",
       "customer_reference",
       "facility_identifiers",

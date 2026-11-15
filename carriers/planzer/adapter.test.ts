@@ -125,7 +125,7 @@ describe('Planzer and Quickpac no-data responses', () => {
       ['2026-09-01T17:21:52.001', 'Transferred', 'in_transit'],
       ['2026-09-01T13:24:52.0503924', 'Recorded', 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toContain('Made Up Recipient');
+    expect(result).toMatchObject({ receiver_name: 'Made Up Recipient', receiver_address: 'Example Street 1' });
   });
 
   it('keeps a milestone per parcel when the parcels reach it at different times', () => {
@@ -340,21 +340,28 @@ describe('Planzer declared capabilities and privacy', () => {
     expect(check!(delivered) || check!(outForDelivery)).toBe(true);
   });
 
-  it('drops the recipient, the signature and another shipment\'s history', () => {
+  it('reads the recipient and who signed, and drops the pickup address, the proof of delivery and another shipment\'s history', () => {
+    expect(delivered).toMatchObject({
+      receiver_name: 'Made Up Recipient', receiver_address: 'Example Street 1\n9999 Example City', signed_by: 'Made Up Recipient',
+    });
+    expect(outForDelivery).toMatchObject({ receiver_name: 'Made Up Recipient' });
+    expect(outForDelivery).not.toHaveProperty('signed_by');
     const projected = JSON.stringify(delivered);
     for (const value of [
-      'Made Up Recipient',
-      'Example Street',
-      'Example City',
       'Example Town',
-      '9999',
       '9998',
-      'Made Up Floor',
       'Made Up Dock',
       'proof-of-delivery',
       'Private event from a different shipment',
     ]) {
       expect(projected).not.toContain(value);
     }
+  });
+
+  it('reads the consignee when the delivery address names nobody', () => {
+    const payload = fixture('delivered.json') as Record<string, unknown>;
+    delete payload.deliveryAddress;
+    expect(parsePlanzerTrackingResponse(payload, QUICKPAC_NUMBER))
+      .toMatchObject({ receiver_name: 'Made Up Recipient', receiver_address: 'Example Street 1\n8000 Example City' });
   });
 });

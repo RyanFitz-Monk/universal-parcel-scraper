@@ -22,6 +22,8 @@ const NOT_FOUND = /^No tracking data was found for \S+\s*\.$/;
 const NO_STATUS = /^(?:Status unavailable|Awaiting search)$/i;
 const NO_BRANCH = /^-?$/;
 const NO_CLOCK = /^No timestamp available yet\.?$/i;
+// The note under the proof of delivery's image, naming who signed for the parcel.
+const SIGNER = /^(?:signed|received)(?: for)? by\s*:?\s*(.+)$/i;
 // The newest movement's clock, as "Feb 27, 2026 10:34 AM".
 const CLOCK = /^([A-Z][a-z]{2}) (\d{1,2}), (\d{4}) (\d{1,2}):(\d{2}) ([AP]M)$/;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -86,7 +88,8 @@ function figuresOf($: CheerioAPI): Map<string, { value: string; note: string }> 
  * found parcel to. It shows the newest movement only: its status, the branch
  * it happened at and its clock, over a count of the scans it does not list.
  * A number it holds nothing under gets the notice "No tracking data was found
- * for" and the number. The proof of delivery is not read.
+ * for" and the number. Of the proof of delivery, only the note naming who
+ * signed is read.
  */
 export function parsePromptXpress(html: string, rawNumber: string): CarrierResult {
   const number = normalizePromptXpressNumber(rawNumber);
@@ -132,6 +135,8 @@ export function parsePromptXpress(html: string, rawNumber: string): CarrierResul
     description: status,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   }] : [];
+  const note = $('.pod-preview-note').toArray().map((element) => SIGNER.exec(textOf($(element), 160))?.[1]?.trim()).find(Boolean);
+  const signer = staged?.stage === 'delivered' ? note : undefined;
   return {
     status: staged ? languageStageStatus(staged.stage) : 'unknown',
     ...(staged ? { current_stage: staged.stage, current_stage_source: staged.source } : {}),
@@ -140,6 +145,7 @@ export function parsePromptXpress(html: string, rawNumber: string): CarrierResul
     ...(local ? { last_update_local: local } : {}),
     expected_delivery: null,
     summary_only: true,
+    ...(signer ? { signed_by: signer.slice(0, 120) } : {}),
     events,
   };
 }

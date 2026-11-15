@@ -36,8 +36,10 @@ guest.
   note that gives one; the notes, which name consolidations and the system that made the scan,
   are not kept.
 - The delivery details name the recipient, who took the parcel, the town, where the parcel was
-  left, delivery photos and coordinates. None of that is kept. Their delivery estimate is kept
+  left, delivery photos and coordinates. The recipient and the town are kept, as the receiver and
+  their address, and who took the parcel once it is delivered. Their delivery estimate is kept
   while the parcel is on its way.
+- A scan keeps its whole wording. Phone numbers in it are left out only where its stage is read.
 
 ## Limitations
 

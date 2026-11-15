@@ -116,15 +116,18 @@ describe('ProShips HTTP adapter', () => {
     expect(unknown).not.toHaveProperty('current_stage');
   });
 
-  it('takes signatories and phone numbers out of the wording', () => {
+  it('reads the stage without signatories and phone numbers, and keeps the whole wording', () => {
     expect(proshipsWording('Entregado, recibido por Persona Ejemplo')).toBe('Entregado');
     expect(proshipsWording('Entregado - Firmado por Persona Ejemplo')).toBe('Entregado');
     expect(proshipsWording('Llamar al 300 000 0000 para coordinar')).toBe('Llamar al para coordinar');
     expect(proshipsWording('  SALIDA  DE MANIFIESTO   En manos del cartero ')).toBe('SALIDA DE MANIFIESTO En manos del cartero');
     expect(proshipsWording('Envío entregado a distribuidor')).toBe('Envío entregado a distribuidor');
     const signed = parseProships(changed('delivered', (body) => body.replace('>Entregado</div>', '>Entregado recibido por Persona Ejemplo</div>')), DELIVERED);
-    expect(signed.events![0]).toMatchObject({ description: 'Entregado', stage: 'delivered' });
-    expect(JSON.stringify(signed)).not.toContain('Persona Ejemplo');
+    expect(signed.events![0]).toMatchObject({ description: 'Entregado recibido por Persona Ejemplo', stage: 'delivered' });
+    expect(signed).toMatchObject({ status: 'delivered', signed_by: 'Persona Ejemplo' });
+    const called = parseProships(changed('delivered', (body) => body.replace('>Entregado</div>', '>Entregado - Firmado por Persona Ejemplo (titular)</div>')), DELIVERED);
+    expect(called.signed_by).toBe('Persona Ejemplo');
+    expect(parseProships(fixture('delivered'), DELIVERED)).not.toHaveProperty('signed_by');
   });
 
   it('reads the tracker’s answer for an unknown number as not found, and other refusals as inconclusive', () => {

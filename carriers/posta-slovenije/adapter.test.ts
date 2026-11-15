@@ -61,11 +61,11 @@ describe('Pošta Slovenije tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered item newest first, on UTC clocks, with post offices and without people or postcodes', () => {
+  it('reads a delivered item newest first, on UTC clocks, with post offices and its signatory, without postcodes', () => {
     const result = parsePostaSlovenije(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'The item was delivered to the mailbox / P.O. box. The item was delivered to the doorstep',
-      last_update: '2026-03-04T08:15:20Z', delivered_at: '2026-03-04T08:15:20Z', expected_delivery: null });
+      last_update: '2026-03-04T08:15:20Z', delivered_at: '2026-03-04T08:15:20Z', expected_delivery: null, signed_by: 'V. Primerni' });
     expect(rows(result)).toEqual([
       ['2026-03-04T08:15:20Z', 'VL', 'The item was delivered to the mailbox / P.O. box. The item was delivered to the doorstep', 'Primerno',
         'delivered'],
@@ -80,10 +80,15 @@ describe('Pošta Slovenije tracking adapter', () => {
     expect(result.events!.every(event => event.local_time === undefined)).toBe(true);
     for (const [name, number] of [['delivered', DELIVERED], ['returned', RETURNED], ['waiting', WAITING]] as const) {
       const serialized = JSON.stringify(parsePostaSlovenije(fixture(name), number));
-      for (const hidden of ['Vzorec', 'Primerni"', 'V. Primerni', '1BOX2', 'cesta', 'ulica', 'Paketomat', 'PM900', '"900']) {
+      for (const hidden of ['Vzorec', '1BOX2', 'cesta', 'ulica', 'Paketomat', 'PM900', '"900']) {
         expect(serialized, `${name} ${hidden}`).not.toContain(hidden);
       }
     }
+    // A delivery without a signatory names who received it; a delivery back to the sender names nobody.
+    const unsigned = edited('delivered', payload => { Object.assign(payload.result.statuses.at(-1)!, { signatory: '' }); });
+    expect(parsePostaSlovenije(unsigned, DELIVERED)).toMatchObject({ signed_by: 'Vzorec Primerni' });
+    expect(parsePostaSlovenije(fixture('returned'), RETURNED)).not.toHaveProperty('signed_by');
+    expect(parsePostaSlovenije(fixture('waiting'), WAITING)).not.toHaveProperty('signed_by');
   });
 
   it('reads a foreign post’s relayed events on that post’s clock, and Pošta Slovenije’s own scans as UTC instants', () => {

@@ -57,12 +57,12 @@ describe('Pilot Freight Services HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history, with instants only where the place keeps the reply’s offset, and nobody’s name', () => {
+  it('reads a delivered history, with instants only where the place keeps the reply’s offset, and who signed', () => {
     const result = parsePilot(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       last_update: '2026-07-09T14:05:00-04:00', delivered_at: '2026-07-09T14:05:00-04:00', expected_delivery: null,
-      service_name: 'Second Day', weight_kg: 70.534,
+      service_name: 'Second Day', weight_kg: 70.534, receiver_address: 'EXAMPLEVILLE, OH', signed_by: 'J SAMPLESON',
     });
     expect(result).not.toHaveProperty('last_update_local');
     expect(result).not.toHaveProperty('expected_delivery_from');
@@ -79,7 +79,8 @@ describe('Pilot Freight Services HTTP adapter', () => {
       ['2026-07-05T21:02:13', 'Appointment Scheduled', null, null, 'APT'],
     ]);
     expect(result.events!.filter((event) => event.time).every((event) => !('local_time' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLESON|FRONT PORCH|43999|79999|SAMPLE CABINET|SAMPLE RETAILER|SAMPLEORDER|555-01|STATION\.EXAMPLE|imaging|1000001/i);
+    expect(JSON.stringify(result)).not.toMatch(/FRONT PORCH|43999|79999|SAMPLE CABINET|SAMPLE RETAILER|SAMPLEORDER|555-01|STATION\.EXAMPLE|imaging|1000001/i);
+    // The consignee's name is masked whole.
     expect(result).not.toHaveProperty('receiver_name');
     expect(result).not.toHaveProperty('delivery_carrier');
   });
@@ -90,9 +91,10 @@ describe('Pilot Freight Services HTTP adapter', () => {
       status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Appointment Scheduled',
       last_update: null, last_update_local: '2026-01-21T09:30:00',
       expected_delivery: '2026-01-23T16:00:00-05:00', expected_delivery_from: '2026-01-23T12:00:00-05:00',
-      service_name: 'Economy', weight_kg: 23.587,
+      service_name: 'Economy', weight_kg: 23.587, receiver_address: 'EXAMPLE FALLS, NY',
     });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
     // An event recorded by phone has no place; a Pacific place under an Eastern offset keeps its wall clock.
     expect(events(result)).toEqual([
       ['2026-01-21T09:30:00', 'Appointment Scheduled', null, null, 'APT'],
@@ -101,6 +103,13 @@ describe('Pilot Freight Services HTTP adapter', () => {
       ['2026-01-20T16:00:00', 'Picked Up', 'accepted', 'Sample Park, CA', 'PU'],
       ['2026-01-19T18:30:00', 'Shipment Information Sent To Maersk', 'registered', 'Sample Park, CA', 'NEW'],
     ]);
+  });
+
+  it('reads what the service leaves unmasked of the consignee', () => {
+    const result = parsePilot(transit((info) => {
+      Object.assign(info.PackageConsignee, { Name: 'S****** E******', Address: '1 SAMPLE ROAD', PostalCode: '00000' });
+    }), IN_TRANSIT);
+    expect(result).toMatchObject({ receiver_name: 'S****** E******', receiver_address: '1 SAMPLE ROAD\nEXAMPLE FALLS, NY 00000' });
   });
 
   it('reads the estimate as days where the consignee’s state does not settle the offset, and leaves other appointments out', () => {

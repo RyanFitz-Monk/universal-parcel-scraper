@@ -19,12 +19,13 @@ const direct = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECO
 describe('REX Indonesia milestones', () => {
   it('binds the whole consignment heading and keeps only dated, projected milestones', () => {
     const result = parseRex(history(), NUMBER);
-    expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'Diterima', last_update: null, last_update_local: '2026-06-03T15:42', history_truncated: true, expected_delivery: null });
+    expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'Diterima Oleh : Synthetic Signatory', last_update: null,
+      last_update_local: '2026-06-03T15:42', history_truncated: true, expected_delivery: null, signed_by: 'Synthetic Signatory' });
     expect(result.events).toEqual([
-      { local_time: '2026-06-03T15:42', description: 'Diterima', stage: 'delivered', stage_source: 'carrier_map' },
+      { local_time: '2026-06-03T15:42', description: 'Diterima Oleh : Synthetic Signatory', stage: 'delivered', stage_source: 'carrier_map' },
       { local_time: '2026-06-01T10:15', description: 'Asal', location: 'Synthetic depot' },
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Signatory|Recipient|Address|destination|Oleh/);
+    expect(JSON.stringify(result)).not.toMatch(/Recipient|Address|destination/);
     expect(rexStage('Asal')).toBeNull();
     expect(statusMap.stage(null, 'Diterima')).toBe('delivered');
     expect(statusMap.gaps).toHaveLength(3);
@@ -76,7 +77,7 @@ describe('REX Indonesia milestones', () => {
   it('orders a reached day-only delivery after earlier same-day milestones without inventing its hour', () => {
     const result = parseRex(history(row('Asal Synthetic depot', '03-06-2026', '10:15') + row('Diterima Oleh : Synthetic Signatory', '03-06-2026')), NUMBER);
     expect(result).toMatchObject({ current_stage: 'delivered', last_update_local: '2026-06-03' });
-    expect(result.events![0]).toMatchObject({ local_time: '2026-06-03', description: 'Diterima' });
+    expect(result.events![0]).toMatchObject({ local_time: '2026-06-03', description: 'Diterima Oleh : Synthetic Signatory', stage: 'delivered' });
     expect(result.events![0]!.time).toBeUndefined();
     for (const description of ['Asal', 'Tujuan', 'Dikirim ke Pelanggan']) expect(statusMapAnswer({ carrier: 'rex-indonesia', description }).kind).toBe('intentional_gap');
   });

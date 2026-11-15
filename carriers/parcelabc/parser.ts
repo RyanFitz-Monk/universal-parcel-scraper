@@ -26,13 +26,8 @@ const NOT_VALID = /^Your entered parcel tracking ID is not valid\.?$/i;
 // The page's columns: the parcel's number on its newest row, the clock, the place, the status, the comment and a toggle.
 const CELLS = 6;
 const EMPTY = '-';
-// Nine or more digits written as a phone number is; a reference with dots or a date stays.
-const PHONE = /(?<![\w.+-])\+?\d(?:[ ()-]{0,2}\d){8,}(?![\w.-])/g;
-const EMAIL = /[^\s@]+@[^\s@]+\.[a-z]{2,}/gi;
-// Who took or signed for the parcel, and the rest of the comment after it.
-const RECEIVER = /\s*(?:[,;:.\-–]|\band\b)?\s*\b(?:received by|signed(?: for)? by|signed for|signature|signatory|left with)\b[\s\S]*$/i;
-// A British postcode, which a courier's place or comment can carry.
-const POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}\b/g;
+// Who took or signed for the parcel, as a courier's delivery comment names them: "… and received by A NAME".
+const RECEIVER = /\b(?:received by|signed(?: for)? by)\s*:?\s+([^,;]+?)\s*\.?\s*(?:[,;]|$)/i;
 const MAX_PARCELS = 50;
 const MAX_ROWS = 200;
 
@@ -65,12 +60,10 @@ function wallClock(text: string): string {
   throw new SchemaError(PROVIDER, 'ParcelABC returned an invalid scan time');
 }
 
-/** A place or comment without postcodes, phone numbers, e-mail addresses or who took the parcel. */
-function scrubbed(text: string, maxLength: number): string {
+/** A place or comment as the page writes it; a dash is none. */
+function cell(text: string, maxLength: number): string {
   const value = clean(text, maxLength);
-  if (value === EMPTY) return '';
-  return clean(value.replace(RECEIVER, '').replace(EMAIL, '').replace(PHONE, '').replace(POSTCODE, ''))
-    .replace(/^[\s,;:.\-–/]+|[\s,;:\-–/]+$/g, '');
+  return value === EMPTY ? '' : value;
 }
 
 /** A parcel's rows, newest first as the page lists them. */
@@ -82,8 +75,8 @@ function parcelEvents($: CheerioAPI, parcel: Cheerio<Element>): CarrierEvent[] {
     if (cells.length !== CELLS) throw new SchemaError(PROVIDER, 'ParcelABC returned an invalid scan');
     const label = clean(cells[3], 80);
     if (!label || label === EMPTY) throw new SchemaError(PROVIDER, 'ParcelABC returned a scan without a status');
-    const location = scrubbed(cells[2]!, 120);
-    const comment = scrubbed(cells[4]!, 300);
+    const location = cell(cells[2]!, 120);
+    const comment = cell(cells[4]!, 300);
     const staged = parcelAbcStage(label);
     return {
       local_time: wallClock(clean(cells[1], 40)), description: comment ? `${label}: ${comment}` : label,
@@ -150,6 +143,10 @@ export function parseParcelAbc(html: string, raw: string): CarrierResult {
   const current = milestone(trailing) ?? trailing.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const newest = trailing[0]!;
+  const events = orderEvents(parcels);
+  // Who took the order, once every parcel is delivered.
+  const delivered = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  const signer = delivered ? RECEIVER.exec(delivered.description!)?.[1] : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -157,7 +154,8 @@ export function parseParcelAbc(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     expected_delivery: null,
-    events: orderEvents(parcels),
+    ...(signer ? { signed_by: signer } : {}),
+    events,
   };
 }
 

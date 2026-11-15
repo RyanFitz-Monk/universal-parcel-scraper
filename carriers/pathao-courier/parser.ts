@@ -22,14 +22,6 @@ const MAX_EVENTS = 100;
 // The estimate: "May 14-15, 2026", "May 31-Jun 1, 2026" or one day.
 const ESTIMATE = /^([A-Z][a-z]{2}) (\d{1,2})(?:\s*-\s*(?:([A-Z][a-z]{2}) )?(\d{1,2}))?, (\d{4})$/;
 
-// A run of nine or more digits, with spaces, brackets, dots or hyphens
-// between them, as phone numbers are written.
-const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Whoever a scan assigns the parcel to, up to what for: "Assigned to … for delivery".
-const ASSIGNEE = /\b(assigned)\s+to\b[\s\S]*?(?=\s+for\b|$)/gi;
-// The rider in brackets after the word for one: "Our Deliver man (…) has picked-up …".
-const RIDER = /\b(deliver(?:y)?\s*man|rider|agent)\s*\((?:[^()]|\([^()]*\))*\)/gi;
-
 /** A Pathao consignment ID, in capitals; anything else is not one Pathao issues. */
 export function normalizePathaoNumber(raw: string): string {
   const number = raw.length <= 64 ? normalizeTrackingNumber(raw).toUpperCase() : '';
@@ -47,16 +39,6 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
   return clean(value, maxLength);
 }
 
-/**
- * A scan's wording without the rider it names or any phone number:
- * "Assigned to … (…) for delivery." becomes "Assigned for delivery.".
- */
-export function pathaoWording(description: string): string {
-  return clean(description.replace(ASSIGNEE, '$1').replace(RIDER, '$1').replace(PHONE, '')
-    .replace(/\(\s*[-–]?\s*\)/g, '').replace(/\s+([,.;:])/g, '$1'))
-    .replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
-}
-
 /** The step the scan is filed under: the first entry of `grouped_status`, when the reply has one. */
 function groupOf(row: Record<string, unknown>): string {
   const group = row.grouped_status;
@@ -68,7 +50,7 @@ function groupOf(row: Record<string, unknown>): string {
 }
 
 function projectRow(row: Record<string, unknown>): { key: string; timestamp: number; event: CarrierEvent } | null {
-  const description = pathaoWording(text(row, 'desc', 500));
+  const description = text(row, 'desc', 500);
   const parsed = zonedTime(text(row, 'created_at', 40), CLOCK, ZONE, { locale: 'en-US' });
   if (!parsed) throw new SchemaError(PROVIDER, 'Pathao returned an invalid scan time');
   const code = groupOf(row);
@@ -140,7 +122,7 @@ function refusal(payload: Record<string, unknown>): never {
  * consignment ID. The order must name the ID asked. Staff notes, the rider,
  * the merchant, the contents, the amounts to collect and the delivery hub's
  * position are never read; the recipient's details come only with their phone
- * number, which is never sent.
+ * number, which the adapter does not have.
  */
 export function parsePathaoCourier(payload: unknown, raw: string): CarrierResult {
   const number = normalizePathaoNumber(raw);

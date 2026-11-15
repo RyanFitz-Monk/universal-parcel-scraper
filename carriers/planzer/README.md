@@ -59,11 +59,13 @@ decides the route; it is not a fallback tier.
   matched by substring and the stored description is our own neutral wording.
   This keeps history stable whatever language the page was fetched in.
 - Neither route publishes scan locations. Timestamps have no offset; the host
-  applies `Europe/Zurich`. Consignee and signature blocks are never read.
+  applies `Europe/Zurich`.
 - The API gives each parcel's weight in grams and its length, width and height
   in millimetres. The result carries the total weight when every parcel read
-  states one, and the measurements when a single parcel is read. Of the
-  delivery address only the country is read; Planzer names it in German.
+  states one, and the measurements when a single parcel is read. The API's
+  delivery address gives the recipient's name and address, else its consignee
+  block does, and its country, which Planzer names in German. Who signed is
+  read for a delivery; the signature image and the shared page's blocks are not.
 - Once delivered, the delivery day is history: the estimate is cleared and the
   delivery scan's time becomes the delivery time.
 

@@ -46,7 +46,10 @@
       "eta",
       "location",
       "provider_code",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": []

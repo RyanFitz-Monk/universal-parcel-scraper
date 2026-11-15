@@ -23,7 +23,6 @@ const DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 const TIME = /^(\d{1,2}):(\d{2}):(\d{2}) ([AP]M)$/;
 // A day as ASP.NET writes it: midnight on the East Coast, in milliseconds.
 const ASP_DATE = /^\/Date\((\d{1,15})\)\/$/;
-const PICKED_UP = /^Picked Up in .+$/i;
 const DEPARTED = /^Departed (.+?) in route to .+$/i;
 const ARRIVED = /^Arrived at (.+)$/i;
 const TERMINAL = /^(?:origin|destination) terminal$/i;
@@ -82,17 +81,17 @@ function placeOf(value: string): string | undefined {
 }
 
 /**
- * One history row. A pickup names the shipper's town, so it keeps neither the
- * town nor a location. A departure is located at the terminal it leaves and
- * an arrival at the one it reaches, unless the row names it only as the
- * origin or destination terminal.
+ * One history row, in its whole wording. A pickup names the shipper's town,
+ * which is not taken as its location. A departure is located at the terminal
+ * it leaves and an arrival at the one it reaches, unless the row names it only
+ * as the origin or destination terminal.
  */
 function scanOf(row: unknown): CarrierEvent {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'R+L Carriers returned an invalid history row');
   const status = text(row, 'Status');
   const clock = clockOf(text(row, 'Date', 16), text(row, 'Time', 16));
   if (!status || !clock) throw new SchemaError(PROVIDER, 'R+L Carriers returned a history row without its status or clock');
-  const description = PICKED_UP.test(status) ? 'Picked Up' : status;
+  const description = status;
   const departed = DEPARTED.exec(status)?.[1];
   const arrived = ARRIVED.exec(status)?.[1];
   const location = departed ? placeOf(departed) : arrived && !TERMINAL.test(arrived) ? placeOf(arrived) : undefined;
@@ -120,13 +119,25 @@ function currentStage(scan: CarrierEvent | undefined, summary: Stage | undefined
   return ahead ? { stage: summary, source: 'carrier_map' } : { stage, source: scan!.stage_source! };
 }
 
+/** The consignee among the billing parties: their name, and their street above the town, state and ZIP code. */
+function consignee(parties: unknown): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  if (parties === null || parties === undefined) return {};
+  if (!Array.isArray(parties) || parties.length > 10) throw new SchemaError(PROVIDER, 'R+L Carriers returned invalid billing parties');
+  const party = parties.find((candidate) => isRecord(candidate) && candidate.Type === 'CONSIGNEE') as Record<string, unknown> | undefined;
+  if (!party) return {};
+  const name = text(party, 'Name', 120);
+  const town = [text(party, 'City', 80), text(party, 'State', 8)].filter(Boolean).join(', ');
+  const address = [text(party, 'StreetAddress', 160), [town, text(party, 'Zip', 12)].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 /**
  * The result page of a PRO search. Its hidden `shipment_list` field holds one
  * entry per number searched: the summary (`Head`), the shipment's dates,
  * pieces and weight (`Detail`) and the history, oldest first, or an error
  * naming the number when R+L has no record of it. The entry also lists the
  * shipper, consignee and bill-to parties, the bill of lading number and the
- * shipment's documents; none of them is read.
+ * shipment's documents; of them, only the consignee is read.
  *
  * The tracer can answer a PRO search with another PRO's shipment; the result
  * then names that PRO as the canonical tracking number.
@@ -193,6 +204,7 @@ export function parseRlCarriers(html: string, raw: string): CarrierResult {
     ...(service ? { service_name: service } : {}),
     ...(weightKg !== null ? { weight_kg: weightKg } : {}),
     ...(pro !== number ? { canonical_tracking_number: pro } : {}),
+    ...consignee(entry.BillingParties),
     ...(events.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

@@ -61,15 +61,16 @@ describe('ParcelABC tracking adapter', () => {
     expect(carrier(fetcher).recognize).toBeUndefined();
   });
 
-  it('reads a delivered order of two parcels: their shared rows once, on wall clocks, without who took it or contact details', () => {
+  it('reads a delivered order of two parcels: their shared rows once, on wall clocks, with the courier’s wording and who took it', () => {
     const result = parseParcelAbc(text('delivered.html'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered: Delivered to the front door', last_update: null, last_update_local: '2026-05-14T11:42:00', expected_delivery: null,
+      last_status_text: 'Delivered: Delivered to the front door and received by A SYNTHETIC', last_update: null,
+      last_update_local: '2026-05-14T11:42:00', expected_delivery: null, signed_by: 'A SYNTHETIC',
     });
     expect(rows(result)).toEqual([
-      ['2026-05-14T11:42:00', 'Delivered: Delivered to the front door', 'Example Town', 'delivered'],
-      ['2026-05-14T07:15:00', 'In transit: Out for delivery, driver phone', undefined, 'in_transit'],
+      ['2026-05-14T11:42:00', 'Delivered: Delivered to the front door and received by A SYNTHETIC', 'Example Town EX1 2AB', 'delivered'],
+      ['2026-05-14T07:15:00', 'In transit: Out for delivery, driver phone 07700 900461', undefined, 'in_transit'],
       ['2026-05-13T22:03:00', 'Arrived at a transit hub: Arrived at Facility', 'Example Hub', 'in_transit'],
       // A row one parcel lists twice stays twice, as the page shows it.
       ['2026-05-13T05:10:00', 'In transit: Departed from Facility', undefined, 'in_transit'],
@@ -79,13 +80,15 @@ describe('ParcelABC tracking adapter', () => {
       ['2026-05-11T18:40:00', 'More information required', undefined, 'exception'],
       ['2026-05-11T18:31:00', 'Info received', undefined, 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SYNTHETIC|EX1|07700|Synthetic|#1/);
+    expect(JSON.stringify(result)).not.toMatch(/Synthetic|#1/);
   });
 
   it('keeps an order of several parcels where its least advanced parcel is', () => {
     const result = parseParcelAbc(splitOrder(), DELIVERED);
-    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'In transit: Delivered to the front door',
-      last_update_local: '2026-05-14T09:30:00' });
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit',
+      last_status_text: 'In transit: Delivered to the front door and received by A SYNTHETIC', last_update_local: '2026-05-14T09:30:00' });
+    // One parcel's receiver does not take the order.
+    expect(result.signed_by).toBeUndefined();
     expect(rows(result).slice(0, 3).map(([time, , , stage]) => [time, stage])).toEqual([
       ['2026-05-14T11:42:00', 'delivered'], ['2026-05-14T09:30:00', 'in_transit'], ['2026-05-14T07:15:00', 'in_transit'],
     ]);
@@ -95,9 +98,10 @@ describe('ParcelABC tracking adapter', () => {
   it('reads an order in transit, whose newest note moves nothing', () => {
     const result = parseParcelAbc(text('in-transit.html'), TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Information: Contact us at', last_update_local: '2026-07-03T10:12:00' });
+      last_status_text: 'Information: Contact us at help@example.com', last_update_local: '2026-07-03T10:12:00' });
+    expect(result.signed_by).toBeUndefined();
     expect(rows(result).map(([time, description, , stage]) => [time, description, stage])).toEqual([
-      ['2026-07-03T10:12:00', 'Information: Contact us at', 'pending'],
+      ['2026-07-03T10:12:00', 'Information: Contact us at help@example.com', 'pending'],
       ['2026-07-02T21:48:00', 'In transit: Departed from Facility', 'in_transit'],
       ['2026-07-02T14:06:00', 'Arrived at a transit hub: Pickup Scan', 'in_transit'],
       ['2026-07-01T16:30:00', 'Carrier notified', 'registered'],

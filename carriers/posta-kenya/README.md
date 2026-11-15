@@ -39,9 +39,11 @@ One lookup takes three requests, as a visitor's browser makes them:
   to, is not read.
 - An event name is followed by the reason an item was held or not delivered and the measure taken.
   The map names each event seen; another falls to the shared wording rules.
-- The details' destination gives the destination country. The sender, the addressee, who took
-  delivery and their identity document, and the proof of delivery the page offers, are not read.
-  The details' delivery date repeats the delivery scan's clock.
+- The details' destination gives the destination country, and their "Delivered to", else the
+  delivery scan's "Signed by", who took delivery. The addressee's line runs the name into the
+  address, so it is not read. The sender, the signer's identity document and the proof of
+  delivery the page offers are not read either. The details' delivery date repeats the delivery
+  scan's clock.
 - Recognition is not declared: the lookup tells a known item from an unknown one, but it takes
   several seconds for an item the tracker holds, longer than recognition's budget, so no
   detection rule offers Posta Kenya for a number.

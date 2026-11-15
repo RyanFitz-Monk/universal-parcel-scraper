@@ -61,14 +61,14 @@
       "eta",
       "service_name",
       "weight",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "recipient_details",
+      "sender_town"
     ],
     "discarded": [
       "parcel_count",
       "customer_reference",
-      "sender_town",
-      "sender_details",
-      "recipient_details"
+      "sender_details"
     ],
     "unavailable": [
       "offset_timestamps",

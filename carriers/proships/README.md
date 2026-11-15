@@ -30,8 +30,8 @@ tracking page makes.
   the scans after the order are MailAmericas' own under ProShips' wording, with the same wall
   clocks.
 - The current status decides a delivery, a return or a hold the scans have not reached yet.
-- Scans carry no code, place or person. A signatory clause and phone numbers would be dropped
-  from the wording.
+- Scans carry no code or place, and keep their whole wording. A delivery's "recibido por" or
+  "firmado por" clause gives who signed; the status map reads the wording without it or phone numbers.
 - No recognition: ProShips delivers parcels under their senders' numbers and has no number shape
   of its own.
 

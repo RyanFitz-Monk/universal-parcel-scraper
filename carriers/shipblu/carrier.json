@@ -57,12 +57,13 @@
       "offset_timestamps",
       "eta",
       "delivered_at",
-      "failed_delivery_reason"
+      "failed_delivery_reason",
+      "recipient_address",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "contact_details",
       "coordinates",
       "parcel_count",

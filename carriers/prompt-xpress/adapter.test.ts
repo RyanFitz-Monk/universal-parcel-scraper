@@ -15,8 +15,8 @@ const UNKNOWN = 'RP00000099';
 const page = (name: string) => readFileSync(new URL(`./fixtures/${name}.html`, import.meta.url), 'utf8');
 const reply = (body: string, status = 200) => new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
-// The receiver's note and the proof of delivery.
-const PRIVATE = /SAMPLE|SYNTHETICPROOF|base64|Proof of delivery/i;
+// The proof of delivery's image.
+const PROOF = /SYNTHETICPROOF|base64|Proof of delivery/i;
 const CLOCK = '<p>Oct 14, 2026 9:20 AM</p>';
 const withClock = (html: string, clock: string) => html.replace(CLOCK, `<p>${clock}</p>`);
 const STATUS = /(<div class="visibility-status">\s*<span class="dot"><\/span>)\s*In Transit\s*(<\/div>)/;
@@ -40,18 +40,21 @@ describe('Prompt Xpress tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a completed consignment as delivered, its newest movement as a wall clock, and drops the proof', () => {
+  it('reads a completed consignment as delivered, its newest movement as a wall clock, who signed, and drops the proof', () => {
     const result = parsePromptXpress(page('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Consignment Completed',
-      last_update: null, last_update_local: '2026-10-12T16:05:00', expected_delivery: null, summary_only: true,
+      last_update: null, last_update_local: '2026-10-12T16:05:00', expected_delivery: null, summary_only: true, signed_by: 'SAMPLE RECEIVER',
       events: [{ local_time: '2026-10-12T16:05:00', location: 'Matara', description: 'Consignment Completed', stage: 'delivered', stage_source: 'carrier_map' }],
     });
     // The branch that closed the consignment is no delivery time.
     expect(result).not.toHaveProperty('delivered_at');
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
-      expect(JSON.stringify(parsePromptXpress(page(name), number)), name).not.toMatch(PRIVATE);
+      expect(JSON.stringify(parsePromptXpress(page(name), number)), name).not.toMatch(PROOF);
     }
+    // A note on a parcel not yet delivered names no one who signed.
+    const pending = page('delivered').replace('Consignment Completed', 'In Transit');
+    expect(parsePromptXpress(pending, DELIVERED)).not.toHaveProperty('signed_by');
   });
 
   it('reads a parcel on its way, and its status alone when the portal has no clock or branch for it', () => {

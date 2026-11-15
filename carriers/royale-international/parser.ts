@@ -28,7 +28,11 @@ function clock(date: string, time: string): string {
   return `${date}T${time}`;
 }
 
-/** Read the visible SSR result, never embedded application data or recipient cells. */
+/**
+ * Read the visible SSR result, never embedded application data: the service, the consignee,
+ * the proof row's date and recipient, and the updates. An update keeps its whole wording;
+ * its stage and place are read from the wording before a link, a recipient or a phone number.
+ */
 export function parseRoyaleInternational(html: string, raw: string): CarrierResult {
   const number = normalizeRoyaleInternationalNumber(raw);
   if (new TextEncoder().encode(html).byteLength > ROYALE_MAX_BYTES) throw new SchemaError(PROVIDER, 'Royale International returned an oversized page');
@@ -56,45 +60,52 @@ export function parseRoyaleInternational(html: string, raw: string): CarrierResu
   const details = table('table.details', 'Date|Shipper|Consignee|Services|Origin|Destination|Pieces|Reference', 1);
   if (details.length !== 1 || details.children('td').length !== 8) throw new SchemaError(PROVIDER, 'Royale International returned no unique shipment details');
   const service = clean(details.children('td').eq(3).text());
+  const consignee = clean(details.children('td').eq(2).text(), 160);
   if (service.length > 100) throw new SchemaError(PROVIDER, 'Royale International returned an invalid service');
   const proofRows = table('table.pod', 'Date|Time|Recipient|Details', 1);
-  let proof: CarrierEvent | undefined;
+  let proof: CarrierEvent | undefined, recipient = '';
   if (proofRows.length) {
     const cells = proofRows.children('td');
     if (cells.length !== 4) throw new SchemaError(PROVIDER, 'Royale International changed its proof row');
     const date = clean(cells.eq(0).text()), time = clean(cells.eq(1).text());
-    if (date || time) proof = { local_time: clock(date, time), description: 'Proof of delivery', stage: 'delivered', stage_source: 'carrier_map' };
+    if (date || time) {
+      proof = { local_time: clock(date, time), description: 'Proof of delivery', stage: 'delivered', stage_source: 'carrier_map' };
+      recipient = clean(cells.eq(2).text(), 120);
+    }
   }
   const rows = table('table.events', 'Date|Time|Details', 500);
   if (!rows.length) throw new NoHistoryError(PROVIDER, 'Royale International returned no dated updates');
-  const events: CarrierEvent[] = [], seen = new Set<string>();
+  const events: CarrierEvent[] = [], seen = new Set<string>(), wordings = new Map<CarrierEvent, string>();
   for (const row of rows.toArray().reverse()) {
     const cells = $(row).children('td');
     if (cells.length !== 3 || cells.eq(2).text().length > 2000) throw new SchemaError(PROVIDER, 'Royale International returned an invalid update');
-    const description = clean(cells.eq(2).text()).split(/https?:\/\/|(?:recipient|phone)\s*:/i, 1)[0]!.trim();
-    if (!description) throw new SchemaError(PROVIDER, 'Royale International returned no activity');
-    const stage = royaleInternationalStage(description);
-    const location = /^Checked in at (.{1,150} facility)$/i.exec(description)?.[1];
+    const description = clean(cells.eq(2).text());
+    const wording = description.split(/https?:\/\/|(?:recipient|phone)\s*:/i, 1)[0]!.trim();
+    if (!wording) throw new SchemaError(PROVIDER, 'Royale International returned no activity');
+    const stage = royaleInternationalStage(wording);
+    const location = /^Checked in at (.{1,150} facility)$/i.exec(wording)?.[1];
     const event: CarrierEvent = { local_time: clock(clean(cells.eq(0).text()), clean(cells.eq(1).text())), description,
       ...(location ? { location } : {}), ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
     const key = JSON.stringify(event);
-    if (!seen.has(key)) { seen.add(key); events.push(event); }
+    if (!seen.has(key)) { seen.add(key); events.push(event); wordings.set(event, wording); }
   }
+  const captured = (event: CarrierEvent) => normalizeStatusWording(wordings.get(event) ?? event.description!) === 'pod details captured';
   if (proof) {
     // The portal lists proof separately. Its capture entry anchors it without sorting overseas wall clocks.
-    const capture = events.findIndex(event => normalizeStatusWording(event.description!) === 'pod details captured'
+    const capture = events.findIndex(event => captured(event)
       && event.local_time!.slice(0, 10) === proof.local_time!.slice(0, 10) && event.local_time! >= proof.local_time!);
     if (capture < 0) throw new SchemaError(PROVIDER, 'Royale International returned proof without its dated capture context');
     events.splice(capture + 1, 0, proof);
   }
   const newest = events[0]!;
-  let stage = royaleInternationalStage(newest.description!);
-  if (!stage && normalizeStatusWording(newest.description!) === 'pod details captured') {
+  let stage = royaleInternationalStage(wordings.get(newest) ?? newest.description!);
+  if (!stage && captured(newest)) {
     const previous = events.find(event => event.stage)?.stage;
     if (previous === 'in_transit' || previous === 'delivered') stage = previous;
   }
   return { status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
     last_status_text: newest.description, last_update: null, last_update_local: newest.local_time, expected_delivery: null,
-    ...(service ? { service_name: service } : {}), ...(events.length > 100 ? { history_truncated: true } : {}), events: events.slice(0, 100) };
+    ...(service ? { service_name: service } : {}), ...(consignee ? { receiver_name: consignee } : {}),
+    ...(recipient && stage === 'delivered' ? { signed_by: recipient } : {}), ...(events.length > 100 ? { history_truncated: true } : {}), events: events.slice(0, 100) };
 }

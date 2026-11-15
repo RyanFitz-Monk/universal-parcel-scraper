@@ -31,7 +31,8 @@ its tracking page links a parcel to.
 - `Consignment Completed` is a delivery: the tracking page names the same parcel Delivered.
   A completed consignment can stand at the head office rather than a delivery branch, so its
   clock is not taken as the delivery time.
-- The proof of delivery, an image or a link, is not read.
+- The note under the proof of delivery names who signed for a delivered parcel, and is read as
+  such. The proof itself, an image or a link, is not read.
 
 ## Limitations
 

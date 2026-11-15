@@ -72,11 +72,11 @@
       "eta",
       "eta_window",
       "delivered_at",
-      "pickup_point"
+      "pickup_point",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
-      "recipient_address",
       "delivery_instructions",
       "proof_of_delivery",
       "coordinates"

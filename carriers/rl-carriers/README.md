@@ -47,12 +47,13 @@ is not claimed either.
 - Rows are mapped by their wording in [status.ts](status.ts). A delay keeps the shipment in
   transit, as the page does. When the summary's status is further along than the rows, the
   summary decides.
-- A pickup row names the shipper's town, so it is kept as `Picked Up` without a location.
+- A pickup row names the shipper's town, so it keeps its wording without a location.
   Departures are located at the terminal they leave, and arrivals at the terminal they reach.
 - The estimated delivery day is midnight on the East Coast. It is kept until the shipment is
   delivered. The weight is in pounds and is converted to kilograms.
 - The entry also lists the shipper, consignee and bill-to party with their addresses, the bill of
-  lading number, the piece count and the shipment's documents. None of them is read.
+  lading number, the piece count and the shipment's documents. Only the consignee is read, as the
+  recipient: the name, then the street above the town, state and ZIP code.
 
 ## Limitations
 

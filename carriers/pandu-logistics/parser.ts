@@ -3,7 +3,7 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { calendarDay } from '../../core/time/index.js';
-import { clean, cleanScalar, escapeRegExp } from '../../core/transport/index.js';
+import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { panduLogisticsMappedStage, panduLogisticsStage } from './status.js';
 
@@ -18,11 +18,9 @@ const NOT_FOUND = /your tracking ID is not found/i;
 const CLOCK = /^(\d{1,2}) ([A-Za-z]{3}) (\d{4}) (\d{2}):(\d{2})$/;
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 // The delivery scan names the receiver and repeats its own clock: "RECEIVED BY …, DATE 26 MAR 2026 19:01".
-const RECEIVER = /^(RECEIVED)\s+BY\b[\s\S]*$/i;
+const RECEIVER = /^RECEIVED\s+BY\s+(.+?)(?:,\s*DATE\b.*)?$/i;
 // A branch arrival names the branch after Pandu Siwi Sentosa's initials: "ARRIVED AT PSS SURABAYA".
 const BRANCH = /\bAT PSS\s+(\S.*)$/i;
-// A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
-const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 const MAX_ROWS = 500;
 
 /** A number for Pandu Logistics' tracker, in upper case; anything else is not one it issues. */
@@ -53,28 +51,12 @@ function wallClock(value: string): string {
   return `${day}T${match[4]}:${match[5]}:00`;
 }
 
-/** Patterns that find the shipment's own names, which a scan could carry. */
-function namePatterns(names: readonly string[]): RegExp[] {
-  return names.filter((name) => name.length >= 3)
-    .map((name) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(name)}(?![\\p{L}\\p{N}])`, 'giu'));
-}
-
-/**
- * A scan's wording without people: the delivery scan keeps `RECEIVED`, and
- * every scan loses the shipment's names and phone numbers.
- */
-export function panduLogisticsWording(details: string, names: readonly RegExp[] = []): string {
-  const own = clean(details).replace(RECEIVER, '$1');
-  const scrubbed = names.reduce((line, name) => line.replace(name, ' '), own).replace(PHONE, ' ');
-  return clean(scrubbed).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
-}
-
 interface Row { key: string; event: CarrierEvent }
 
-function projectRow(row: unknown, names: readonly RegExp[]): Row {
+function projectRow(row: unknown): Row {
   if (!isRecord(row)) invalid('Pandu Logistics returned an invalid scan');
   const local = wallClock(text(row, 'date', 40));
-  const description = panduLogisticsWording(text(row, 'details'), names);
+  const description = clean(text(row, 'details'));
   if (!description) invalid('Pandu Logistics returned a scan without its details');
   const location = BRANCH.exec(description)?.[1] ?? '';
   const staged = panduLogisticsStage(description);
@@ -88,14 +70,14 @@ function projectRow(row: unknown, names: readonly RegExp[]): Row {
 }
 
 /** The scans newest first and once each; the tracker lists them oldest first. */
-function history(rows: unknown, names: readonly RegExp[]): CarrierEvent[] {
+function history(rows: unknown): CarrierEvent[] {
   if (rows === null || rows === undefined) return [];
   if (!Array.isArray(rows)) invalid('Pandu Logistics returned a shipment with invalid scans');
   if (rows.length > MAX_ROWS) invalid('Pandu Logistics returned an oversized history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
   for (const row of rows) {
-    const scan = projectRow(row, names);
+    const scan = projectRow(row);
     if (seen.has(scan.key)) continue;
     seen.add(scan.key);
     events.push(scan.event);
@@ -127,8 +109,8 @@ function upstreamFailure(request: Record<string, unknown>): void {
  * as `json`, its raw answer under `request`, and the page's rendering as
  * `html`. The service answers an unknown number with an empty body, which
  * leaves `json` null and the page says it is not found. A shipment is one
- * `detail` record, with the sender, the consignee, their cities, the postcode,
- * the contents and the receiver, none of which is kept, and its scans in
+ * `detail` record, with the sender, the consignee, their cities, the
+ * consignee's postcode, the contents and the receiver, and its scans in
  * `track`, oldest first.
  */
 export function parsePanduLogistics(payload: unknown, raw: string): CarrierResult {
@@ -157,9 +139,7 @@ export function parsePanduLogistics(payload: unknown, raw: string): CarrierResul
 
   // The summary's own status decides a delivery; its description is then the receiver's name.
   const summary = panduLogisticsMappedStage(text(shipment, 'status_delivery', 60));
-  const names = [text(shipment, 'sender_name', 120), text(shipment, 'consignee_name', 120),
-    ...(summary === 'delivered' ? [text(shipment, 'status_description', 120)] : [])];
-  const events = history(data.track, namePatterns(names));
+  const events = history(data.track);
   if (!events.length && !summary) throw new NoHistoryError(PROVIDER);
 
   const newest = events[0];
@@ -167,6 +147,10 @@ export function parsePanduLogistics(payload: unknown, raw: string): CarrierResul
   const stage = (summary ?? scanned?.stage) as Stage | undefined;
   const source = summary && summary !== scanned?.stage ? 'carrier_map' : scanned?.stage_source ?? 'carrier_map';
   const kilograms = weight(shipment);
+  const receiver = text(shipment, 'consignee_name', 120);
+  const address = [text(shipment, 'consignee_postalcode', 20), text(shipment, 'to_city', 120)].filter(Boolean).join(' ');
+  const received = events.map((event) => RECEIVER.exec(event.description ?? '')?.[1]).find(Boolean);
+  const signer = (summary === 'delivered' ? text(shipment, 'status_description', 120) : '') || received;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -174,6 +158,9 @@ export function parsePanduLogistics(payload: unknown, raw: string): CarrierResul
     last_update: null,
     ...(newest ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(kilograms ? { weight_kg: kilograms } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events,

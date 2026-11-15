@@ -53,6 +53,8 @@ interface Scan {
   readonly code: string;
   readonly postOffice: boolean;
   readonly index: number;
+  /** Who signed for a delivery, else who the scan says received it. */
+  readonly signer: string;
 }
 
 /** The scan's English heading, its detail line and the next step after a failed delivery, as the tracker lists them. */
@@ -114,8 +116,9 @@ function clockOf(labeled: ParsedTime, country: string | null): Pick<CarrierEvent
 /**
  * The guest lookup's reply for one number: the parcel and its scans, oldest
  * first, each with a code, wording in Slovenian and English, a clock labelled
- * UTC and the post office it happened at. Sender, recipient, signatory,
- * pickup codes and addresses are left out.
+ * UTC and the post office it happened at, and on a delivery its signatory
+ * and recipient. The scan's note, the sender, pickup codes and addresses are
+ * left out.
  */
 export function parsePostaSlovenije(payload: unknown, rawNumber: string): CarrierResult {
   const number = normalizePostaSlovenijeNumber(rawNumber);
@@ -143,7 +146,8 @@ export function parsePostaSlovenije(payload: unknown, rawNumber: string): Carrie
     const identity = JSON.stringify(event);
     if (seen.has(identity)) return;
     seen.add(identity);
-    scans.push({ event, at: at.timestamp, code, postOffice: row.unitType === POST_OFFICE, index });
+    const signer = clean(row.signatory, 120) || clean(row.recipient, 120);
+    scans.push({ event, at: at.timestamp, code, postOffice: row.unitType === POST_OFFICE, index, signer });
   });
   // Newest first, by the clock the service labels each scan with, as its
   // tracker orders them; scans at the same clock follow the reply's order, reversed.
@@ -172,6 +176,8 @@ export function parsePostaSlovenije(payload: unknown, rawNumber: string): Carrie
     : stage === 'delivered' && lastMovement(earlier.map(scan => scan.event)) === 'ready_for_pickup'
       ? earlier.find(scan => scan.event.stage === 'ready_for_pickup') : undefined;
   const point = waiting?.postOffice ? waiting.event.location ?? '' : '';
+  // Who signed for a delivery to the addressee; a delivery back to the sender is not theirs.
+  const signer = stage === 'delivered' ? decider.signer : '';
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -182,6 +188,7 @@ export function parsePostaSlovenije(payload: unknown, rawNumber: string): Carrie
     expected_delivery: null,
     ...(stage === 'delivered' && decider.event.time ? { delivered_at: decider.event.time } : {}),
     ...(point ? { pickup_point: point } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

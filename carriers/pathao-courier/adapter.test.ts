@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, PATHAO_API, PathaoCourierTracker } from './adapter.js';
-import { normalizePathaoNumber, parsePathaoCourier, pathaoWording } from './parser.js';
+import { normalizePathaoNumber, parsePathaoCourier } from './parser.js';
 import { pathaoStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -45,7 +45,7 @@ describe('Pathao Courier HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history at Bangladesh’s offset, newest first, without the riders, the notes or the order’s details', () => {
+  it('reads a delivered history at Bangladesh’s offset, newest first, with the wording whole and without the notes or the order’s details', () => {
     const result = parsePathaoCourier(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered.', last_update: '2026-05-12T14:15:00+06:00', delivered_at: '2026-05-12T14:15:00+06:00',
@@ -53,20 +53,20 @@ describe('Pathao Courier HTTP adapter', () => {
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.description])).toEqual([
       // The delivery the reply lists twice is kept once.
       ['2026-05-12T14:15:00+06:00', 'Delivered', 'delivered', 'Delivered.'],
-      ['2026-05-12T11:51:00+06:00', 'Ready For Delivery', 'out_for_delivery', 'Assigned for delivery.'],
+      ['2026-05-12T11:51:00+06:00', 'Ready For Delivery', 'out_for_delivery', 'Assigned to Sample Rider (01000000000) for delivery.'],
       ['2026-05-12T11:10:00+06:00', 'Ready For Delivery', 'in_transit', 'Order has been reached at delivery hub'],
       ['2026-05-12T05:32:00+06:00', 'In-Transit', 'in_transit', 'Dispatched from Central Processing OSD.'],
       ['2026-05-11T15:49:00+06:00', 'In-Transit', 'in_transit', 'Dispatched from Sample Central Hub.'],
       // Scans in the same minute keep the order the reply lists them in.
       ['2026-05-11T15:05:00+06:00', 'Picked', 'accepted', 'Received at pickup hub: Sample Central Hub.'],
       ['2026-05-11T15:05:00+06:00', 'Accepted', 'registered', 'Order weight has been updated from 0.5kg to 1kg'],
-      ['2026-05-11T10:05:00+06:00', 'Accepted', 'registered', 'Order has been assigned for pickup'],
+      ['2026-05-11T10:05:00+06:00', 'Accepted', 'registered', 'Order has been assigned to Sample Pickup Rider for pickup'],
       ['2026-05-10T21:40:00+06:00', 'Accepted', 'registered', 'Order confirmed.'],
       ['2026-05-10T21:15:00+06:00', 'Accepted', 'registered', 'Pickup requested.'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && event.local_time === undefined && event.location === undefined))
       .toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Rider|Pickup Rider|item)|01000000000|Amount Collected|1250|23\.000000|hermes|Cash/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample item|Amount Collected|1250|23\.000000|hermes|Cash/);
   });
 
   it('reads a parcel on its way with the delivery window the reply gives', () => {
@@ -101,7 +101,7 @@ describe('Pathao Courier HTTP adapter', () => {
         scan('Order has been assigned to (Sample Rider-01000000001) for delivery', 'May 13, 2026 11:51 AM', 'Ready For Delivery'));
     }), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', current_stage_source: 'carrier_map',
-      last_status_text: 'Order has been assigned for delivery', last_update: '2026-05-13T11:51:00+06:00' });
+      last_status_text: 'Order has been assigned to (Sample Rider-01000000001) for delivery', last_update: '2026-05-13T11:51:00+06:00' });
   });
 
   it('reads a return, with the hold before it, from the older wording', () => {
@@ -110,12 +110,12 @@ describe('Pathao Courier HTTP adapter', () => {
       last_status_text: 'Your order has been Return.', last_update: '2026-05-12T18:13:00+06:00', expected_delivery: null });
     expect(result.events!.slice(0, 4).map((event) => [event.provider_code, event.stage, event.description])).toEqual([
       ['Return', 'returned', 'Your order has been Return.'],
-      ['Ready For Delivery', 'out_for_delivery', 'Our Deliver man has picked-up you order for Delivery'],
+      ['Ready For Delivery', 'out_for_delivery', 'Our Deliver man (Sample Rider(S 0000)-01000000002) has picked-up you order for Delivery'],
       ['On Hold', 'exception', 'Your order is being held at Delivery hub'],
-      ['Ready For Delivery', 'out_for_delivery', 'Our Deliver man has picked-up you order for Delivery'],
+      ['Ready For Delivery', 'out_for_delivery', 'Our Deliver man (Sample Rider(S 0000)-01000000002) has picked-up you order for Delivery'],
     ]);
     expect(result.events!.at(-1)).toMatchObject({ time: '2026-05-09T18:49:00+06:00', description: 'New Delivery Requested' });
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Rider|Seller)|S 0000|0100000000|Customer|Merchant/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Seller|Customer|Merchant/);
   });
 
   it('takes the rail’s word for a delivery or a return, and leaves the rest to the newest staged scan', () => {
@@ -129,19 +129,6 @@ describe('Pathao Courier HTTP adapter', () => {
     }
     expect(parsePathaoCourier(changed('in-transit', (data) => { delete (data as Row).state; }), IN_TRANSIT))
       .toMatchObject({ current_stage: 'in_transit' });
-  });
-
-  it('takes riders, staff codes and phone numbers out of the wording', () => {
-    expect(pathaoWording('Assigned to Sample Rider (01000000000) for delivery.')).toBe('Assigned for delivery.');
-    expect(pathaoWording('Order has been assigned to (Sample Rider-01000000000) for delivery')).toBe('Order has been assigned for delivery');
-    expect(pathaoWording('Order has been assigned to Sample Pickup Rider for pickup')).toBe('Order has been assigned for pickup');
-    expect(pathaoWording('Order has been assigned to Sample Rider')).toBe('Order has been assigned');
-    expect(pathaoWording('Our Deliver man (Sample Rider(S 0000)-01000000000) has picked-up you order for Delivery'))
-      .toBe('Our Deliver man has picked-up you order for Delivery');
-    expect(pathaoWording('Call the hub on +880 1000-000000 or (01000000000).')).toBe('Call the hub on or.');
-    // Hubs, weights and brackets that name places stay.
-    expect(pathaoWording('OSD On The Way To Sample Town (Last Mile) Hub')).toBe('OSD On The Way To Sample Town (Last Mile) Hub');
-    expect(pathaoWording('Order weight has been updated from 0.5kg to 1kg')).toBe('Order weight has been updated from 0.5kg to 1kg');
   });
 
   it('reads an unknown ID as not found and an order without scans as no history', () => {

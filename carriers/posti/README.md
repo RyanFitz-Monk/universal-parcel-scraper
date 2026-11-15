@@ -33,9 +33,12 @@ Bootstrap, lookup and refresh share one cancellable 15-second budget.
 
 ## Notes
 
-- The query in [adapter.ts](adapter.ts) selects only tracking fields, measurements and the
-  pickup point's type, name and address. Recipient address, pickup code and payment fields
-  are never requested.
+- The query in [adapter.ts](adapter.ts) selects the tracking fields, measurements, the pickup
+  point's type, name, address and pickup code, and the recipient's `delivery.destination`.
+  Account and payment fields are not requested. An error confined to the recipient's fields
+  leaves the rest of the answer standing.
+- The recipient's name, when given, and address are read from `delivery.destination`, street
+  lines first, then postcode and town. The pickup code is kept until the parcel is delivered or sent back.
 - `pickupPoint` is a service point: Posti's tracker shows it with opening hours and a map
   link built from its own `streetAddress`, `postcode` and `city`; the recipient's address is
   the separate `delivery.destination`. The tracker shows the point at any status, a planned
@@ -81,7 +84,7 @@ Bootstrap, lookup and refresh share one cancellable 15-second budget.
 
 ## Limitations
 
-- No sender or recipient name: the public search does not expose them.
+- No sender name: the public search does not expose it.
 - Old parcels past Posti's retention return not-found, as on Posti's own tracker.
 
 ## Testing

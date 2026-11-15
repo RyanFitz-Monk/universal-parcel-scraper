@@ -49,7 +49,8 @@
       "recipient_name",
       "signatory",
       "driver_name",
-      "delivered_at"
+      "delivered_at",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -57,14 +58,15 @@
       "location",
       "provider_code",
       "service_name",
-      "failed_delivery_reason"
+      "failed_delivery_reason",
+      "recipient_name",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "origin",
       "destination",
       "sender_name",
-      "recipient_name",
-      "signatory",
       "driver_name",
       "delivered_at"
     ],

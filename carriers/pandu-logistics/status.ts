@@ -3,16 +3,16 @@ import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status
 
 /**
  * The wording of Pandu Logistics' tracker, which carries no code. A branch
- * arrival names the branch after `PSS`. `received` is a delivery scan once the
- * parser has taken the receiver's name and the repeated clock out of it; the
- * summary's `delivered` stands over a delivered shipment.
+ * arrival names the branch after `PSS`. `received by` is the delivery scan,
+ * followed by the receiver's name and the delivery's clock; the summary's
+ * `delivered` stands over a delivered shipment.
  */
 const STAGES: readonly (readonly [RegExp, Stage])[] = [
   [/^received at origin station$/, 'accepted'],
   [/^arrived at pss \S.*$/, 'in_transit'],
   [/^departed from origin$/, 'in_transit'],
   [/^delivery process by courier$/, 'out_for_delivery'],
-  [/^received$/, 'delivered'],
+  [/^received(?: by\b.*)?$/, 'delivered'],
   [/^delivered$/, 'delivered'],
 ];
 

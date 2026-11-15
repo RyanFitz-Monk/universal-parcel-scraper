@@ -50,7 +50,8 @@
       "delivery_detail",
       "proof_of_delivery",
       "coordinates",
-      "remarks"
+      "remarks",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -58,12 +59,13 @@
       "provider_code",
       "location",
       "eta",
-      "weight"
+      "weight",
+      "recipient_name",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "destination",
-      "recipient_name",
-      "signatory",
       "delivery_detail",
       "proof_of_delivery",
       "coordinates",
@@ -73,8 +75,7 @@
       "delivered_at",
       "offset_timestamps",
       "service_name",
-      "sender_name",
-      "recipient_address"
+      "sender_name"
     ]
   },
   "links": [

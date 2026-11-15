@@ -122,12 +122,27 @@ function weightKg(shipment: Record<string, unknown>): number | null {
 }
 
 /**
+ * The consignee: its name, then its street on the first line and its city,
+ * state and ZIP code on the next, as far as the reply gives them.
+ */
+function consigneeOf(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const party = payload.consignee;
+  if (!isRecord(party)) return {};
+  const name = text(party, 'name', 160);
+  const street = [text(party, 'addressLine1'), text(party, 'addressLine2')].filter(Boolean).join(', ');
+  const region = [text(party, 'state', 8), text(party, 'zip', 16)].filter(Boolean).join(' ');
+  const town = [text(party, 'city', 80), region].filter(Boolean).join(', ');
+  const address = [street, town].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/**
  * The reply of `find-full-details` on Saia's tracking service: the shipment
  * named by its PRO, its status and estimate, and its history newest first,
  * kept in the service's order since the clocks are each terminal's own. The
- * shipper and consignee, the line items, references, the delivery signature,
- * the driver and trailer, the terminals' addresses and contacts and the
- * partner carriers' details are never read.
+ * consignee and, once the freight is delivered, the signature are read. The
+ * shipper, the line items, references, the driver and trailer, the terminals'
+ * addresses and contacts and the partner carriers' details are not.
  */
 export function parseSaia(payload: unknown, raw: string): CarrierResult {
   const number = normalizeSaiaNumber(raw);
@@ -160,6 +175,7 @@ export function parseSaia(payload: unknown, raw: string): CarrierResult {
   const source = summaryStage ? 'carrier_map' : scanned?.stage_source;
   const newestDay = typeof newest?.local_time === 'string' ? newest.local_time.slice(0, 10) : null;
   const weight = weightKg(shipment);
+  const signer = stage === 'delivered' ? text(delivery, 'signature', 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -170,6 +186,8 @@ export function parseSaia(payload: unknown, raw: string): CarrierResult {
     expected_delivery: stage && FINAL.has(stage) ? null : estimate(delivery, newestDay),
     ...(weight !== null ? { weight_kg: weight } : {}),
     ...(number !== pro ? { canonical_tracking_number: pro } : {}),
+    ...consigneeOf(payload),
+    ...(signer ? { signed_by: signer } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

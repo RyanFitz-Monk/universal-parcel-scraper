@@ -32,8 +32,8 @@ across Bangladesh. Tracked through the lookup its public tracking page makes.
   arrival at the hub and the rider's assignment, which the wording tells apart and which is out
   for delivery. A hold at the delivery hub is an exception. The rail's state decides a delivery
   or a return; otherwise the newest staged scan does.
-- Riders' names, staff codes and phone numbers are taken out of the wording. Staff notes under a
-  scan are free text that can name people, so they are not kept, nor are the rider, the
+- The wording stays as Pathao writes it, with the rider it names. Staff notes under a scan are
+  free text that can name people, so they are not kept, nor are the rider's record, the
   contents, the amounts to collect or the delivery hub's position.
 - The reply's delivery estimate, a window of days, is kept while the parcel is on its way,
   unless it ended before the newest scan's day. The page itself does not show it.

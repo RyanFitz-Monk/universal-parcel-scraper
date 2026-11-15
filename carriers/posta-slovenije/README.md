@@ -45,8 +45,10 @@ an event take over the row stored under the Ljubljana reading, by wall clock, pr
 location.
 
 A scan's place is the post office's name; its number, a postcode, is dropped. The pickup point is
-the post office an item waits at, or was collected from. The recipient, the signatory, the scan's
-note, sender and recipient details, locker and post office addresses and pickup codes are not read.
+the post office an item waits at, or was collected from. A delivery's signatory, else the
+recipient it names, is who signed for it. The scan's note, the parcel's sender and recipient
+details, which the guest lookup leaves empty, locker and post office addresses and pickup codes
+are not read.
 A reply without scans is read from the item's own heading as a summary.
 
 ## Limitations

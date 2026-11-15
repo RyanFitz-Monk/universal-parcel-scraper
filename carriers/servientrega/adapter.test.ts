@@ -49,7 +49,8 @@ describe('Servientrega HTTP adapter', () => {
     const result = parseServientrega(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Entrega verificada', last_update: '2026-03-05T17:30:00-05:00', expected_delivery: null,
-      delivered_at: '2026-03-05T14:42:00-05:00', service_name: 'Mercancia premier' });
+      delivered_at: '2026-03-05T14:42:00-05:00', service_name: 'Mercancia premier',
+      receiver_name: 'DESTINATARIA DE MUESTRA', receiver_address: 'CARRERA FALSA 4 56', signed_by: 'FIRMANTE DE MUESTRA' });
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.provider_code, event.description, event.location, event.stage ?? null]))
       .toEqual([
         // A movement logged after the delivery does not undo it.
@@ -63,15 +64,20 @@ describe('Servientrega HTTP adapter', () => {
         ['2026-03-02T11:40:00-05:00', '2', 'Admision del envio en cds', 'Villa Ejemplo (Antioquia)', 'accepted'],
         ['2026-03-02T09:15:00-05:00', '1', 'Guia generada', 'Villa Ejemplo (Antioquia)', 'registered'],
       ]);
-    // Names, addresses, contacts, the picture, the signatory, the courier and internal concepts stay out.
-    expect(JSON.stringify(result)).not.toMatch(/MUESTRA SAS|DESTINATARIA|FALSA|example\.com|300000000|iVBOR|FIRMANTE|MENSAJERO|SALIDA A ZONA|ARTICULO/);
+    // The sender, contacts, the addressee's identity number, the picture, the courier and internal concepts stay out.
+    expect(JSON.stringify(result)).not.toMatch(/MUESTRA SAS|CALLE FALSA|example\.com|300000000|1000000000|iVBOR|MENSAJERO|SALIDA A ZONA|ARTICULO/);
+    // The record's town follows the street when it gives one.
+    const town = changed('delivered', (guide) => { (guide.destinatario as Row).ciudad = 'SAN MUESTRA'; });
+    expect(parseServientrega(town, DELIVERED).receiver_address).toBe('CARRERA FALSA 4 56\nSAN MUESTRA');
   });
 
   it('reads a guide on its way back as in transit, with the incidents in its wording', () => {
     const result = parseServientrega(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Ingreso al centro logistico', last_update: '2026-04-15T05:41:00-05:00', expected_delivery: null });
+      last_status_text: 'Ingreso al centro logistico', last_update: '2026-04-15T05:41:00-05:00', expected_delivery: null,
+      receiver_name: 'DESTINATARIA DE MUESTRA' });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.provider_code, event.description, event.stage ?? null])).toEqual([
       ['14', 'Ingreso al centro logistico', 'in_transit'],
       ['12', 'Salio a ciudad destino', 'in_transit'],
@@ -123,7 +129,8 @@ describe('Servientrega HTTP adapter', () => {
   it('reads a guide without movements as a summary of its state', () => {
     expect(parseServientrega(changed('in-transit', (guide) => { guide.movimientos = null as never; }), IN_TRANSIT)).toEqual({
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map', last_status_text: 'EN PROCESAMIENTO',
-      last_update: null, expected_delivery: null, service_name: 'Mercancia premier', summary_only: true, events: [] });
+      last_update: null, expected_delivery: null, service_name: 'Mercancia premier',
+      receiver_name: 'DESTINATARIA DE MUESTRA', receiver_address: 'CARRERA FALSA 4 56', summary_only: true, events: [] });
     expect(parseServientrega(changed('in-transit', (guide) => { guide.movimientos = []; guide.estadoActual = 'EN BODEGA'; }), IN_TRANSIT))
       .toMatchObject({ status: 'unknown', last_status_text: 'EN BODEGA', summary_only: true });
   });

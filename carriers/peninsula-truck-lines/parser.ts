@@ -22,15 +22,13 @@ const UNKNOWN_MESSAGE = /\bcould not be located\b/i;
 const DATE = /^(\d{4})-(\d{2})-(\d{2})(?:[T ]00:00:00(?:\.0+)?Z?)?$/;
 // "10:14am": a 12-hour time with its half of the day straight after it.
 const TIME = /^(\d{1,2}):(\d{2})\s*([ap])\.?m\.?$/i;
-// The delivery day a delivered line ends with: "DELIVERED ON 2023-02-17".
+// The delivery day a delivered line ends with: "DELIVERED TO <receiver> ON 2023-02-17".
 const DELIVERED = /^DELIVERED\b/i;
 const DELIVERY_DAY = /\bON\s+(\d{4})-(\d{2})-(\d{2})\b/i;
-// A problem a delivered line notes, straight after "DELIVERED" or after its day, never inside the
-// receiver's name between them: "DELIVERED – SHORT/DAMAGED", freight delivered short, over or damaged.
-const PROBLEMS = String.raw`(?:SHORT(?:AGE)?|OVER(?:AGE)?|DAMAGED?|OS&D)(?:\s*[/&,]\s*(?:SHORT(?:AGE)?|OVER(?:AGE)?|DAMAGED?))*`;
-const DELIVERY_PROBLEM = new RegExp(String.raw`^DELIVERED\s*[-–—:,]?\s*(${PROBLEMS})\b|\bON\s+\d{4}-\d{2}-\d{2}\s*[-–—:,]?\s*(${PROBLEMS})\s*$`, 'i');
-// A signer or receiver named after a scan's wording.
-const SIGNER = /\s*[-:,]?\s*\b(?:SIGNED(?:\s+FOR)?(?:\s+BY)?|SIGNATURE|SIGNER|RECEIVED\s+BY|ACCEPTED\s+BY|REC'?D\s+BY)\b.*$/i;
+// A signer or receiver named after a scan's wording: "DELIVERED SIGNED BY <name>", "POD RECEIVED BY <name>".
+const SIGNER = /\b(?:SIGNED(?:\s+FOR)?(?:\s+BY)?|SIGNER|RECEIVED\s+BY|ACCEPTED\s+BY|REC'?D\s+BY)\s*:?\s+(.+?)\s*$/i;
+// The receiver a delivered line names: "DELIVERED TO <name> ON 2023-02-17", "DELIVERED – SHORT/DAMAGED TO <name>".
+const RECEIVER = /^DELIVERED\b.*?\bTO\s+(.+?)(?:\s+ON\s+\d{4}-\d{2}-\d{2}\b.*)?$/i;
 // A stage the shipment's status settles over the newest row.
 const SETTLED = new Set<Stage>(['delivered', 'returned', 'exception']);
 const MAX_ROWS = 500;
@@ -80,27 +78,9 @@ function wallClock(row: Record<string, unknown>): string {
   return `${day}T${String(hours).padStart(2, '0')}:${match[2]}:00`;
 }
 
-/**
- * Wording without the person who received the freight: a delivered line keeps
- * its delivery day and the problem it notes, and nothing else ("DELIVERED TO
- * <name> ON 2023-02-17" reads "DELIVERED ON 2023-02-17", "DELIVERED – SHORT/DAMAGED
- * TO <name>" reads "DELIVERED – SHORT/DAMAGED"), and a signer named after other
- * wording is cut off.
- */
-export function withoutSigner(wording: string): string {
-  if (DELIVERED.test(wording)) {
-    const day = DELIVERY_DAY.exec(wording);
-    const date = day ? calendarDay(Number(day[1]), Number(day[2]), Number(day[3])) : null;
-    const problem = DELIVERY_PROBLEM.exec(wording);
-    const noted = problem ? ` – ${(problem[1] ?? problem[2]!).toUpperCase().replace(/\s+/g, '')}` : '';
-    return `DELIVERED${noted}${date ? ` ON ${date}` : ''}`;
-  }
-  return wording.replace(SIGNER, '').trim();
-}
-
-/** A row's place, a town and state as "PORTLAND, OR"; a part holding a digit could be a street or a postcode and is left out. */
-function placeOf(value: string): string {
-  return value.split(' ').filter((part) => part && !/\d/.test(part)).join(' ').replace(/^[,\s]+|[,\s]+$/g, '');
+/** Who signed for or received the freight, as a delivered line or a scan names them. */
+export function signerOf(wording: string): string {
+  return SIGNER.exec(wording)?.[1] ?? (DELIVERED.test(wording) ? RECEIVER.exec(wording)?.[1] : undefined) ?? '';
 }
 
 function staged(event: CarrierEvent, wording: string): CarrierEvent {
@@ -112,9 +92,9 @@ function staged(event: CarrierEvent, wording: string): CarrierEvent {
 function projectRow(row: unknown): CarrierEvent {
   if (!isRecord(row)) invalid('Peninsula returned an invalid log row');
   const local_time = wallClock(row);
-  const description = withoutSigner(text(row, 'activity', 200));
+  const description = text(row, 'activity', 200);
   if (!description) invalid('Peninsula returned a log row without its activity');
-  const location = placeOf(text(row, 'location', 120));
+  const location = text(row, 'location', 120).replace(/^[,\s]+|[,\s]+$/g, '');
   return staged({ local_time, ...(location ? { location } : {}), description }, description);
 }
 
@@ -145,9 +125,9 @@ function order(left: CarrierEvent | undefined, right: CarrierEvent | undefined):
 /** The delivery the status line dates, placed among the rows by its day, when no row records it. */
 function withDelivery(events: CarrierEvent[], status: string): CarrierEvent[] {
   const day = DELIVERY_DAY.exec(status);
+  const local_time = day ? calendarDay(Number(day[1]), Number(day[2]), Number(day[3])) : null;
   const stage = peninsulaStage(status)?.stage;
-  if (!day || events.some((event) => event.stage === stage)) return events;
-  const local_time = `${day[1]}-${day[2]}-${day[3]}`;
+  if (!local_time || events.some((event) => event.stage === stage)) return events;
   const delivery = staged({ local_time, description: status }, status);
   const at = events.findIndex((event) => event.local_time!.slice(0, 10) <= local_time);
   return at < 0 ? [...events, delivery] : [...events.slice(0, at), delivery, ...events.slice(at)];
@@ -161,8 +141,8 @@ function withDelivery(events: CarrierEvent[], status: string): CarrierEvent[] {
  * value could not be located". A reference that matches several shipments
  * lists them in `shipments` and leaves the PRO empty. The reply can also name
  * the shipper and the consignee with their addresses, the bill of lading, the
- * purchase order, an interline partner's PRO and the terminals; none of them
- * is read.
+ * purchase order, an interline partner's PRO and the terminals. Only the
+ * consignee's name and town are read.
  */
 export function parsePeninsula(payload: unknown, raw: string): CarrierResult {
   const number = normalizePeninsulaNumber(raw);
@@ -182,7 +162,7 @@ export function parsePeninsula(payload: unknown, raw: string): CarrierResult {
   if (!Array.isArray(payload.shipmentLog)) invalid('Peninsula returned a shipment without its log');
   const rows: unknown[] = payload.shipmentLog;
 
-  const status = withoutSigner(text(payload, 'proStatus', 300));
+  const status = text(payload, 'proStatus', 300);
   const headline: ClassifiedWording | null = status ? peninsulaStage(status) : null;
   const events = DELIVERED.test(status) ? withDelivery(history(rows), status) : history(rows);
   if (!events.length && !status) throw new NoHistoryError(PROVIDER);
@@ -194,12 +174,20 @@ export function parsePeninsula(payload: unknown, raw: string): CarrierResult {
   const decided: ClassifiedWording | null = settled ? headline
     : scanned ? { stage: scanned.stage as Stage, source: scanned.stage_source! } : null;
   const newest = events[0];
+  const receiver = text(payload, 'consigneeName', 120);
+  const address = text(payload, 'consigneeCSZ', 120);
+  // Who took the freight, as the status line or a delivered or signed row names them.
+  const delivered = [status, ...events.map((event) => event.description!)];
+  const signer = delivered.some((wording) => DELIVERED.test(wording)) ? delivered.map(signerOf).find(Boolean) : undefined;
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
     last_status_text: (settled ? status : newest?.description) || status || null,
     last_update: null,
     ...(newest?.local_time ? { last_update_local: newest.local_time } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(rows.length ? {} : { summary_only: true }),
     events,
   };

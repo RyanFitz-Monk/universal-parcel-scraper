@@ -161,12 +161,20 @@ function transit(cargo: Record<string, unknown>, arrived: boolean): Row[] {
   return dated;
 }
 
+/** The recipient as PEC files a person: surname, first name and patronymic. */
+function recipientName(cargo: Record<string, unknown>): string {
+  const counterparts = isRecord(cargo.counterparts) ? cargo.counterparts : {};
+  const person = isRecord(counterparts.recipient) && isRecord(counterparts.recipient.person) ? counterparts.recipient.person : {};
+  return ['lastName', 'firstName', 'middleName']
+    .map((key) => (typeof person[key] === 'string' ? clean(person[key], 60) : '')).filter(Boolean).join(' ');
+}
+
 /**
  * The reply of `LK.OCR.Get` for one cargo code, the call PEC's tracking page
  * makes for a cargo's details. PEC answers a code it does not know with a
  * JSON-RPC error. The cargo must carry the whole code asked. Its current
  * status decides the stage; its dated statuses and transit rows are the
- * history. Sender and recipient details in the reply are never read.
+ * history. The recipient's name is read; the sender and the contacts are not.
  */
 export function parsePecom(payload: unknown, raw: string): CarrierResult {
   const number = normalizePecomNumber(raw);
@@ -209,6 +217,7 @@ export function parsePecom(payload: unknown, raw: string): CarrierResult {
     || [current, ...events.map((event) => event.description)].some((wording) => /^доставлен получателю$/iu.test(wording ?? ''));
   const pickup = !door && target ? [target.name, target.address].filter(Boolean).join('\n') : '';
   const expected = !arrival.reached && (!stage || BEFORE_ARRIVAL.has(stage)) ? arrival.forecast ?? null : null;
+  const receiver = recipientName(cargo);
   const weight = typeof cargo.totalWeight === 'number' && Number.isFinite(cargo.totalWeight) && cargo.totalWeight > 0 ? cargo.totalWeight : null;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -218,6 +227,7 @@ export function parsePecom(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     ...(newest ? { last_update_local: newest.local_time } : {}),
     expected_delivery: expected,
+    ...(receiver ? { receiver_name: receiver } : {}),
     ...(pickup ? { pickup_point: pickup } : {}),
     ...(weight !== null ? { weight_kg: weight } : {}),
     events,

@@ -61,12 +61,16 @@ function instant(at: number): string {
   return DateTime.fromMillis(at, { zone: 'utc' }).startOf('second').toISO({ suppressMilliseconds: true })!;
 }
 
-interface Scan { at: number; index: number; key: string; event: CarrierEvent }
+interface Scan { at: number; index: number; key: string; event: CarrierEvent; signer: string }
+
+// A delivery's remark naming who received the consignment.
+const RECEIVED = /^(?:received|signed)(?: for)? by\s*:?\s*(.+?)\s*\.?$/i;
 
 /**
  * A scan, or null without a time or wording. Its `activity` is the wording,
  * else its `status` code with spaces; its place is the `city` the public page
- * shows. The staff who scanned, their phones, vehicles and remarks are not read.
+ * shows. A remark naming who received it is kept as its signer; the staff who
+ * scanned, their phones, vehicles and other remarks are not read.
  */
 function projectRow(row: unknown, index: number): Scan | null {
   if (!isRecord(row)) invalid('Rivigo returned an invalid scan');
@@ -83,7 +87,17 @@ function projectRow(row: unknown, index: number): Scan | null {
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { at, index, key: JSON.stringify([at, code, description.toLowerCase(), location]), event };
+  const signer = clean(RECEIVED.exec(text(row, 'remarks', 300))?.[1], 120);
+  return { at, index, key: JSON.stringify([at, code, description.toLowerCase(), location]), event, signer };
+}
+
+/** The consignee: their name, and their address as one line, as the reply gives it. */
+function consignee(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const party = record(payload, 'consigneeDto');
+  if (!party) return {};
+  const name = text(party, 'name', 120);
+  const address = text(party, 'address', 300);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
 }
 
 /** The estimate, a day in India, where the whole network is. */
@@ -102,9 +116,9 @@ function estimate(payload: Record<string, unknown>): string | null {
  * payload must name the number asked. Its `transitHistory` lists scans oldest
  * first, each with an epoch time; when the newest is a vehicle's leg
  * (`INTRANSIT`), its time is the leg's arrival estimate, as the page labels
- * it, and it is left out. The consignor, consignee, their addresses and
- * phones, the invoice, the proof of delivery and the failed attempts' contacts
- * are never read.
+ * it, and it is left out. The consignee's name and address are read, and who
+ * received a delivered consignment. The consignor, the phones, the invoice,
+ * the proof of delivery and the failed attempts' contacts are not.
  */
 export function parseRivigo(reply: unknown, raw: string): CarrierResult {
   const number = normalizeRivigoNumber(raw);
@@ -146,7 +160,8 @@ export function parseRivigo(reply: unknown, raw: string): CarrierResult {
   });
   if (!scans.length) throw new NoHistoryError(PROVIDER);
   // Newest first; the reply lists the oldest first, so of two scans at one instant the later row is newer.
-  const events = scans.sort((a, b) => b.at - a.at || b.index - a.index).map((scan) => scan.event);
+  scans.sort((a, b) => b.at - a.at || b.index - a.index);
+  const events = scans.map((scan) => scan.event);
 
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
@@ -161,6 +176,7 @@ export function parseRivigo(reply: unknown, raw: string): CarrierResult {
   if (reverse && text(reverse, 'consignmentMovementType', 20) === 'RETURN' && stage !== 'delivered') stage = 'returned';
   const source = stage && stage !== current?.stage ? 'carrier_map' : current?.stage_source;
   const handedOn = typeof payload.lfTrackingUrl === 'string' && payload.lfTrackingUrl.trim() !== '';
+  const signer = stage === 'delivered' ? scans.find((scan) => scan.event === current)?.signer : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -170,6 +186,8 @@ export function parseRivigo(reply: unknown, raw: string): CarrierResult {
     ...(stage === 'delivered' ? { delivered_at: current!.time! } : {}),
     // With this link the page shows only the newer part of the history and links the earlier part.
     ...(handedOn ? { history_truncated: true } : {}),
+    ...consignee(payload),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

@@ -49,14 +49,14 @@ describe('PTT tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel newest first, as wall clocks, without the names the reply masks', () => {
+  it('reads a delivered parcel newest first, as wall clocks, with the names the reply masks', () => {
     const result = parsePtt(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'TESLİM EDİLDİ', last_update: null, last_update_local: '2026-03-06T16:40:05', expected_delivery: null,
-      weight_kg: 1.25 });
+      last_status_text: 'TESLİM EDİLDİ / Z**** Y****', last_update: null, last_update_local: '2026-03-06T16:40:05', expected_delivery: null,
+      weight_kg: 1.25, receiver_name: 'Z**** Y****', signed_by: 'Z**** Y****' });
     // The repeated transfer scan appears once, and empty place separators are dropped.
     expect(rows(result)).toEqual([
-      ['2026-03-06T16:40:05', 'TESLİM EDİLDİ', 'ÖRNEKKÖY ŞUBE ÖRNEKİL-MERKEZ', 'delivered'],
+      ['2026-03-06T16:40:05', 'TESLİM EDİLDİ / Z**** Y****', 'ÖRNEKKÖY ŞUBE ÖRNEKİL-MERKEZ', 'delivered'],
       ['2026-03-06T09:12:41', 'DAĞITIMDA', 'ÖRNEKKÖY ŞUBE ÖRNEKİL-MERKEZ', 'out_for_delivery'],
       ['2026-03-05T22:03:10', 'PTT İşyerine Girdi:PTT İşyerinden Çıktı İL İÇİ AKTARMADA', 'ÖRNEKİL PDM - ÖRNEKİL-MERKEZ', 'in_transit'],
       ['2026-03-05T04:18:34', 'TRANSFER SÜRECİNDE', 'DEMO PKİM', 'in_transit'],
@@ -67,7 +67,7 @@ describe('PTT tracking adapter', () => {
     for (const name of ['delivered', 'collected', 'returned', 'abroad']) {
       const number = { delivered: DELIVERED, collected: COLLECTED, returned: RETURNED, abroad: ABROAD }[name]!;
       const serialized = JSON.stringify(parsePtt(fixture(name), number));
-      expect(serialized, name).not.toContain('*');
+      expect(serialized, name).not.toContain('Ö****');
       expect(serialized, name).not.toContain('DEMO KABUL"');
     }
   });
@@ -93,6 +93,9 @@ describe('PTT tracking adapter', () => {
     expect(result).toMatchObject({ status: 'exception', current_stage: 'exception',
       last_status_text: 'PTT İŞYERİNDE (MEVKUF) Elde Kalmış Gönderi', weight_kg: 1.016 });
     expect(result.pickup_point).toBeUndefined();
+    // The reply names who took an item that was not delivered; that is no signatory.
+    expect(result).toMatchObject({ receiver_name: 'Z**** Y****' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result).slice(0, 3).map(row => row[3])).toEqual(['exception', 'returned', 'ready_for_pickup']);
     expect(parsePtt(edited('returned', payload => { payload.dongu!.splice(0, 1); }), RETURNED))
       .toMatchObject({ current_stage: 'returned', last_status_text: 'İADE Tanınmıyor' });

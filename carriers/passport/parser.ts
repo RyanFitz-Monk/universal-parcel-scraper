@@ -45,9 +45,13 @@ export function normalizePassportNumber(raw: string): string {
 interface Shipment {
   readonly orderedAt: number | null;
   readonly country: string;
+  /** The recipient's town and region, the only part of the address the shipment holds. */
+  readonly address: string;
 }
 
-/** The shipment the page's script receives, bound to the number asked for. Recipient fields are never read. */
+const field = (value: unknown) => (typeof value === 'string' ? clean(value, 120) : '');
+
+/** The shipment the page's script receives, bound to the number asked for. */
 function shipmentOf(html: string, number: string): Shipment {
   const calls = [...html.matchAll(INITIALIZE)];
   if (calls.length !== 1) throw new SchemaError(PROVIDER, 'Passport returned a page without one shipment');
@@ -68,6 +72,7 @@ function shipmentOf(html: string, number: string): Shipment {
   return {
     orderedAt: typeof bought === 'number' && Number.isSafeInteger(bought) && bought > 0 ? bought * 1_000 : null,
     country: /^[A-Z]{2}$/.test(country) ? country : '',
+    address: [field(shipment.city), field(shipment.state)].filter(Boolean).join(', '),
   };
 }
 
@@ -112,8 +117,8 @@ function rowsOf($: CheerioAPI): Row[] {
     const clock = clean(date.children('.time').text(), 10);
     if (date.length !== 1 || !description || !CLOCK.test(clock)) throw new SchemaError(PROVIDER, 'Passport returned an invalid scan');
     const place = clean(row.children('.address').text(), 200);
-    // A bare country is the order's, not where a scan happened; a digit may be a street or a postcode.
-    rows.push({ description, day, clock, place: /^[A-Z]{2}$/.test(place) || /\d/.test(place) ? '' : place });
+    // A bare country is the order's, not where a scan happened.
+    rows.push({ description, day, clock, place: /^[A-Z]{2}$/.test(place) ? '' : place });
   });
   return rows;
 }
@@ -178,7 +183,7 @@ function partnerOf($: CheerioAPI, number: string): Partner {
  * The page `track.passportglobal.com/{number}` leads to: Passport's page for
  * the merchant, with the shipment its script receives and the history it shows.
  * The page counts only when its shipment is the number asked for. The
- * recipient's town and the order reference are never read.
+ * order reference is never read.
  */
 export function parsePassport(html: string, raw: string, readAt = Date.now()): CarrierResult {
   const number = normalizePassportNumber(raw);
@@ -222,6 +227,7 @@ export function parsePassport(html: string, raw: string, readAt = Date.now()): C
     ...(partner.carrier ? { delivery_carrier: partner.carrier } : {}),
     ...(partner.number ? { delivery_tracking_number: partner.number } : {}),
     ...(shipment.country ? { destination_country: shipment.country } : {}),
+    ...(shipment.address ? { receiver_address: shipment.address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

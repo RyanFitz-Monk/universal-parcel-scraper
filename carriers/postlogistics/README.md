@@ -60,7 +60,9 @@ Recognition uses the same lookup and requires a scan before claiming a match.
   same in every language. A scan stored in French takes the English wording in place:
   at its instant, its code identifies it.
 - Timestamps are kept as sent; the host applies `Europe/Zurich` when there is no offset.
-- Recipient and signature blocks are never read; the fixture exercises this.
+- The recipient block gives the recipient's name and address, the street above the
+  postcode and town. On a delivered shipment the signature block's name is who signed;
+  its image is not read.
 
 ## Limitations
 

@@ -131,9 +131,12 @@ describe('Shadowfax HTTP adapter', () => {
     }
   });
 
-  it('takes phone numbers and one-time codes out of the wording', () => {
-    expect(shadowfaxWording('Out For Delivery', 'Rider is on the way, call +91 98765 43210 for help. Share OTP 1234 with the rider'))
-      .toBe('Out For Delivery: Rider is on the way, call for help. Share OTP with the rider');
+  it('stages wording without phone numbers and one-time codes, and keeps them in the scan', () => {
+    const line = 'Rider is on the way, call +91 98765 43210 for help. Share OTP 1234 with the rider';
+    expect(shadowfaxWording('Out For Delivery', line)).toBe('Out For Delivery: Rider is on the way, call for help. Share OTP with the rider');
+    const called = fixture('delivered');
+    called.data[0]!.sub_status = [`Shipment has been delivered. ${line}`];
+    expect(parseShadowfax(called, DELIVERED).events![0]).toMatchObject({ description: `Delivered: Shipment has been delivered. ${line}`, stage: 'delivered' });
     // A line that repeats its heading is not doubled, and an empty one leaves the heading.
     expect(shadowfaxWording('Delivered', 'Delivered')).toBe('Delivered');
     expect(shadowfaxWording('Order Received.', 'Order received. Waiting for pickup')).toBe('Order received. Waiting for pickup');

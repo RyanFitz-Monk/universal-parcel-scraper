@@ -48,7 +48,7 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
   return clean(value, maxLength);
 }
 
-/** A scan's wording without phone numbers. */
+/** A scan's wording without phone numbers, as its stage is read. */
 export function rpxWording(description: string): string {
   return clean(description.replace(PHONE, '').replace(/\s+([,.;:])/g, '$1')).replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
 }
@@ -86,11 +86,12 @@ function weightOf(row: Record<string, unknown>): number | null {
 
 function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent; weight: number | null } {
   const code = cleanScalar(row.TRACKING_ID, 16).toUpperCase();
-  const description = rpxWording(text(row, 'TRACKING_DESC'));
-  if (!description) throw new SchemaError(PROVIDER, 'RPX returned a scan without wording');
+  const description = text(row, 'TRACKING_DESC');
+  const wording = rpxWording(description);
+  if (!wording) throw new SchemaError(PROVIDER, 'RPX returned a scan without wording');
   const local = scanClock(row);
   const location = station(row);
-  const staged = rpxStage(code, description);
+  const staged = rpxStage(code, wording);
   const event: CarrierEvent = {
     local_time: local,
     ...(location ? { location } : {}),
@@ -130,8 +131,9 @@ export function rpxRefusal(payload: unknown): CarrierError {
 /**
  * The reply of the app's `rpx/tracking/{awb}` lookup: the scans newest first
  * and the delivery details. It does not name the AWB; the request names one.
- * The recipient, who signed, where the parcel was left, the delivery photos and
- * the delivery coordinates are not kept.
+ * The details' recipient and town are kept, and who took a delivered parcel;
+ * where the parcel was left, the delivery photos and the delivery coordinates
+ * are not.
  */
 export function parseRpx(payload: unknown, raw: string): CarrierResult {
   normalizeRpxNumber(raw);
@@ -167,6 +169,9 @@ export function parseRpx(payload: unknown, raw: string): CarrierResult {
   const stage = staged?.stage as Stage | undefined;
   const weight = newestFirst.find((scan) => scan.weight !== null)?.weight;
   const expected = stage === 'delivered' || stage === 'returned' ? null : estimate(detail);
+  const recipient = text(detail, 'DELIVERY_TO', 120);
+  const town = text(detail, 'DELIVERY_LOC', 120);
+  const signer = stage === 'delivered' ? text(detail, 'RECEIVED_BY', 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source ?? 'carrier_map' } : {}),
@@ -175,6 +180,9 @@ export function parseRpx(payload: unknown, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: expected,
     ...(weight ? { weight_kg: weight } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -93,9 +93,9 @@ describe('Royal Mail structured response', () => {
       estimatedDelivery: {date: '2026-03-20'},
       events: [{eventName: 'Collected', eventDateTime: '2026-03-12T09:30:00Z'}],
     }}, DELIVERED_NUMBER);
-    expect(result).toMatchObject({status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered', expected_delivery: null});
+    expect(result).toMatchObject({status: 'delivered', current_stage: 'delivered', last_status_text: 'Collected by PRIVATE RECIPIENT', expected_delivery: null});
     expect(result.events?.[0]?.stage).toBe('accepted');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE RECIPIENT');
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('projects the delivered summary with per-scan codes', () => {
@@ -106,9 +106,10 @@ describe('Royal Mail structured response', () => {
       last_status_text: 'Delivered',
       last_update: '2026-03-14T08:00:00Z',
       expected_delivery: null,
+      signed_by: 'PRIVATE RECIPIENT',
     });
     expect(result.events).toEqual([
-      { time: '2026-03-14T08:00:00Z', location: 'LONDON', description: 'Delivered', stage: 'delivered', provider_code: 'DL' },
+      { time: '2026-03-14T08:00:00Z', location: 'LONDON', description: 'Delivered. Signed for by PRIVATE RECIPIENT', stage: 'delivered', provider_code: 'DL' },
       { time: '2026-03-14T07:00:00Z', location: 'LONDON', description: 'Out for delivery', stage: 'out_for_delivery', provider_code: 'OD' },
       { time: '2026-03-13T18:15:00Z', location: 'LONDON', description: 'Arrived at delivery office', stage: 'in_transit', provider_code: 'AR' },
       { time: '2026-03-12T09:30:00Z', location: 'SWINDON', description: 'Item received', stage: 'accepted', provider_code: 'AC' },
@@ -151,12 +152,23 @@ describe('Royal Mail structured response', () => {
       .toEqual({ expected_delivery: null, expected_delivery_from: undefined });
   });
 
-  it('keeps the signatory out of the result', () => {
-    const serialized = JSON.stringify(parseRoyalMailTrackingResponse(structuredClone(DELIVERED), DELIVERED_NUMBER));
-    expect(serialized).not.toContain('PRIVATE RECIPIENT');
+  it('reads who signed for a delivered item from the delivered line, or else from the summary', () => {
+    expect(parseRoyalMailTrackingResponse(structuredClone(DELIVERED), DELIVERED_NUMBER).signed_by).toBe('PRIVATE RECIPIENT');
+    const summary = parseRoyalMailTrackingResponse({ mailPieces: {
+      mailPieceId: DELIVERED_NUMBER,
+      summary: { statusCategory: 'Delivered', statusDescription: 'Delivered. Signed for by SAMPLE SIGNER' },
+      events: [{ eventCode: 'DL', eventName: 'Delivered', eventDateTime: '2026-03-14T08:00:00+00:00' }],
+    } }, DELIVERED_NUMBER);
+    expect(summary).toMatchObject({ last_status_text: 'Delivered. Signed for by SAMPLE SIGNER', signed_by: 'SAMPLE SIGNER' });
+    // A line that names who signed before the item is delivered names no signer.
+    const pending = structuredClone(DELIVERED) as { mailPieces: { summary: unknown; events: Array<Record<string, unknown>> } };
+    pending.mailPieces.summary = { statusCategory: 'In transit', statusDescription: 'In transit' };
+    pending.mailPieces.events = pending.mailPieces.events.slice(1);
+    pending.mailPieces.events[0]!.eventName = 'Out for delivery. Signed for by SAMPLE SIGNER';
+    expect(parseRoyalMailTrackingResponse(pending, DELIVERED_NUMBER)).not.toHaveProperty('signed_by');
   });
 
-  it('uses full-history codes before repeated wording and removes Markdown delivery prose', () => {
+  it('uses full-history codes before repeated wording and removes Markdown from delivery prose', () => {
     const result = parseRoyalMailTrackingResponse({ mailPieces: {
       mailPieceId: DELIVERED_NUMBER,
       summary: { statusCategory: 'Delivered', statusDescription: 'Delivered' },
@@ -176,8 +188,11 @@ describe('Royal Mail structured response', () => {
     ]);
     expect(result.delivered_at).toBe('2026-01-03T09:56:31Z');
     expect(result.events?.every(event => event.stage_source === 'carrier_map')).toBe(true);
-    expect(result.events?.[0]?.description).toBe('Delivered');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(result.events?.[0]?.description).toBe('Delivered by PRIVATE SIGNATORY');
+    // "Delivered by" can name the office that delivered, so it names no signer; the reply's delivery info is not read.
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE RECIPIENT');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE PROOF');
     expect(JSON.stringify(result)).not.toContain('**');
   });
 
@@ -602,7 +617,8 @@ describe('Royal Mail lookup steps', () => {
     expect(result.events).toHaveLength(1);
     expect(result.events?.[0]).toMatchObject({ stage: 'delivered', stage_source: 'carrier_map' });
     expect(result).not.toHaveProperty('summary_only');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(result.last_status_text).toBe('Delivered by PRIVATE SIGNATORY');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE RECIPIENT');
     expect(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))).toMatchObject({
       captureResponses: [royalMailSummaryApiUrl(DELIVERED_NUMBER), royalMailEventsApiUrl(DELIVERED_NUMBER)],
     });

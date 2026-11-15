@@ -32,9 +32,10 @@ tracking page calls.
 
 - The page shows each stamp in UTC, so the clock it shows is the one stored: Berlin's wall clock,
   labelled UTC. The adapter keeps it as a local time without an offset.
-- Each status also carries the recipient's address, the depot's address and the sender's customer
-  number. The adapter does not read them. The page reveals where an item was left once the
-  recipient types their postcode; the adapter does not ask for it.
+- Each status also carries the recipient's name and address, which the adapter reads from the
+  newest, and the depot's address and the sender's customer number, which it does not. The page
+  reveals where an item was left once the recipient types their postcode; the adapter does not
+  ask for it.
 
 ## Numbers
 
@@ -51,7 +52,7 @@ first.
 Only items PIN tracks have history: registered letters, parcels and Amazon parcels in Berlin.
 Standard letters do not, and an item PIN stops tracking at the sorting center never shows a
 delivery. Statuses are deleted six months on. No delivery estimate, location,
-weight, service, sender or recipient.
+weight, service or sender.
 
 ## Testing
 

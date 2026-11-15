@@ -10,7 +10,7 @@ import { lastMovement } from '../../core/result/pickup.js';
 import { runSteps, type StepContext } from '../../core/runner/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
 import { explicitOffsetTime, firstOccurrence } from '../../core/time/index.js';
-import { clean, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
+import { clean, cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { isPostiPlacelessLabel } from './identity.js';
 import { postiEventStage, postiStatus } from './status.js';
@@ -20,8 +20,8 @@ const GRAPHQL_URL = 'https://graphql.posti.fi/graphql';
 const DEFAULT_TIMEOUT_MS = 15_000;
 
 // The public tracking page uses this operation with PUBLIC_SHIPMENTS. Select
-// only tracking fields and the pickup point's own address; no account,
-// recipient address, payment or pickup code.
+// the tracking fields, the pickup point's own address and pickup code, and the
+// recipient's address; no account or payment.
 const QUERY = `query SearchShipments($searchTerms: [String!]!, $locale: String) {
   consumerSearchShipments(page: 1, pageSize: 20, type: PUBLIC_SHIPMENTS, searchTerms: $searchTerms, locale: $locale) {
     totalHits
@@ -29,12 +29,15 @@ const QUERY = `query SearchShipments($searchTerms: [String!]!, $locale: String) 
       displayId
       status { main subStatus }
       measurements { weight { unit value } height { unit value } width { unit value } length { unit value } }
-      pickupPoint { type address { publicName streetAddress postcode city } }
+      pickupPoint { type address { publicName streetAddress postcode city } pickupDetails { pinCode } }
+      delivery { destination { name street postcode city } }
       events { city eventDescription reasonDescription timestamp }
       packages { trackingNumber }
     }
   }
 }`;
+// The recipient's fields, which the answer can do without: an error confined to them leaves the rest standing.
+const RECIPIENT_FIELDS = new Set(['delivery', 'pickupDetails']);
 
 export function normalizePostiTrackingNumber(raw: string): string {
   const number = raw.toUpperCase().replace(/[\s.-]/g, '');
@@ -49,10 +52,16 @@ class PostiSessionExpiredError extends CarrierError {
   }
 }
 
+/** Whether a GraphQL error concerns only the recipient's fields. */
+function recipientFieldError(error: unknown): boolean {
+  return isRecord(error) && Array.isArray(error.path) && error.path.some((part) => typeof part === 'string' && RECIPIENT_FIELDS.has(part));
+}
+
 function assertGraphql(payload: unknown): asserts payload is Record<string, unknown> {
   if (!isRecord(payload)) throw new SchemaError('Posti');
-  if (Array.isArray(payload.errors) && payload.errors.length > 0) {
-    if (payload.errors.some((error) => isRecord(error) && error.errorType === 'Unauthorized')) {
+  const errors = Array.isArray(payload.errors) ? payload.errors.filter((error) => !recipientFieldError(error)) : [];
+  if (errors.length > 0) {
+    if (errors.some((error) => isRecord(error) && error.errorType === 'Unauthorized')) {
       throw new PostiSessionExpiredError();
     }
     throw new IndeterminateError('Posti', 'Posti could not complete the tracking query');
@@ -124,6 +133,16 @@ function originPostTime(time: string, label: string, location: string, number: s
   return (read.isValid && read.toISO({ suppressMilliseconds: true })) || time;
 }
 
+/** The recipient's address: their street lines, then postcode and town. */
+function destinationAddress(raw: unknown): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const destination = isRecord(raw) && isRecord(raw.destination) ? raw.destination : {};
+  const name = clean(destination.name, 120);
+  const streets = Array.isArray(destination.street) ? destination.street : [destination.street];
+  const lines = [...streets.map((line) => clean(line, 120)), [cleanScalar(destination.postcode, 16), clean(destination.city, 80)].filter(Boolean).join(' ')]
+    .filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(lines ? { receiver_address: lines } : {}) };
+}
+
 /** Identity-bound projection; empty search, malformed replies and wrong identities remain distinct. */
 export function parse(payload: unknown, trackingNumber: string): CarrierResult {
   const requested = normalizePostiTrackingNumber(trackingNumber);
@@ -165,6 +184,10 @@ export function parse(payload: unknown, trackingNumber: string): CarrierResult {
   const current = currentStatus(postiStatus(hit.status.main, hit.status.subStatus), hit.status.main, events);
   const measurements = isRecord(hit.measurements) ? hit.measurements : {};
   const dimensions = ['length', 'width', 'height'].map((field) => measurement(measurements[field], { cm: 1, mm: 0.1, m: 100 }));
+  const point = isRecord(hit.pickupPoint) ? hit.pickupPoint : {};
+  // The code that releases the parcel, while it is not yet delivered or sent back.
+  const code = current?.stage === 'delivered' || current?.stage === 'returned' ? ''
+    : cleanScalar(isRecord(point.pickupDetails) ? point.pickupDetails.pinCode : '', 40);
   return {
     status: current?.status ?? 'unknown',
     ...(current ? { current_stage: current.stage } : {}),
@@ -175,6 +198,8 @@ export function parse(payload: unknown, trackingNumber: string): CarrierResult {
     dimensions_text: dimensions.every((value) => value !== null) ? `${dimensions.join(' × ')} cm` : null,
     // Posti's tracker shows the point at any status, a planned one in transit included.
     pickup_point: atPickupPoint(current?.stage, events) ? pickupPoint(hit.pickupPoint) : null,
+    ...(code ? { pickup_code: code } : {}),
+    ...destinationAddress(hit.delivery),
     timezone: 'Europe/Helsinki',
     events,
   };

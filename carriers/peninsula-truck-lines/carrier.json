@@ -42,12 +42,18 @@
       "origin",
       "destination",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "customer_reference",
@@ -62,8 +68,7 @@
       "weight",
       "service_name",
       "provider_code",
-      "sender_name",
-      "recipient_name"
+      "sender_name"
     ]
   },
   "links": [

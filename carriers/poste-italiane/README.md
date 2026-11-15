@@ -175,8 +175,9 @@ Italiane for a number issued abroad.
   `epochMillisTime` would drop them.
 - At most 20 events are returned, newest first. Movements come oldest first, so of two
   sharing an instant the later one is newer.
-- Sender, recipient, address, signature, weight, dimensions and pickup office are never read;
-  a test asserts it.
+- The envelope's addressee (`destinatario`) and their address (`indirizzoDestinatario`) are
+  read as Poste writes them, and on a delivery who signed (`firmaDestinatario`). Sender,
+  weight, dimensions and pickup office are not read.
 - Browser recovery captures the tracking API, without rendered recipient details or verification
   tokens. It needs the Poste Italiane helper in the optional TRAWL image.
 

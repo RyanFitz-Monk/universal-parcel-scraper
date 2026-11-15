@@ -63,13 +63,15 @@
       "provider_code",
       "eta",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "parcel_count",
       "sender_name",
-      "recipient_name",
       "origin",
       "destination",
       "related_tracking_numbers",

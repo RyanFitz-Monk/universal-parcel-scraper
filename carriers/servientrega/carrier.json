@@ -63,7 +63,10 @@
       "provider_code",
       "service_name",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "origin",
@@ -74,8 +77,6 @@
       "payment_details",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "proof_of_delivery",
       "invoice"
     ],

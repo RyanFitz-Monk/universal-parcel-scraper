@@ -32,9 +32,10 @@ and last-mile services in Asia Pacific. Tracked through the lookup its tracking 
   time, so the clocks stay `local_time` and the history keeps the reply's order rather than
   being sorted by them.
 - The reply also holds the shipper's and the recipient's names and addresses, which the page
-  does not show. The adapter reads none of them, nor the states, the client reference or the
-  origin. A delivery remark loses a clause naming who took the parcel, and every wording loses
-  phone numbers.
+  does not show. The recipient's block is read: the name on its first line, then the address,
+  without a phone line. The shipper's block, the states, the client reference and the origin are
+  not. A delivery remark that says who received or signed for the parcel gives the signatory.
+  Each scan keeps its whole wording; the status map reads it without that clause or phone numbers.
 - The page prints the tracking number of the partner that carries the parcel on, but never names
   the partner, so there is no hand-off.
 

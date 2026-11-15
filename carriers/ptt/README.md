@@ -40,8 +40,10 @@ with several carriers, so no rule claims them.
 Each scan carries PTT's Turkish wording and no code, the status in capitals with a reason or a
 relayed foreign event around it. The adapter maps the wording with Turkish letters folded to
 Latin ones; wording the map does not know goes to the shared wording rules. A delivery names
-after a slash who signed for the item, masked; the adapter drops it and never reads the reply's
-masked sender and recipient names, postage or offices of acceptance and delivery.
+after a slash who signed for the item, masked. The scan keeps that name and the map reads the
+wording before it. The reply's masked recipient name is read, and so is the masked name of who
+took a delivered item. Its masked sender name, postage and offices of acceptance and delivery
+are not.
 
 Scan clocks carry no offset and are kept as local times. Domestic scans are on Turkish time;
 the events a foreign post relays for an item sent abroad are on that post's clock and name the

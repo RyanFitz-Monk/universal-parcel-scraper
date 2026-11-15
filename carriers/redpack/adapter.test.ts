@@ -53,11 +53,13 @@ describe('Redpack HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(2);
   });
 
-  it('reads a delivered guide newest first in central Mexico time, without the receiver, address, references or route notes', () => {
+  it('reads a delivered guide newest first in central Mexico time, with who received it and the address, without references or route notes', () => {
     const result = parseRedpack(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'ENTREGADO', last_update: '2026-03-05T13:47:02-06:00', delivered_at: '2026-03-05T13:47:02-06:00',
-      expected_delivery: null, service_name: 'ECOEXPRESS', weight_kg: 2.5, dimensions_text: '30 × 20 × 12 cm', timezone: 'America/Mexico_City' });
+      expected_delivery: null, service_name: 'ECOEXPRESS', weight_kg: 2.5, dimensions_text: '30 × 20 × 12 cm', timezone: 'America/Mexico_City',
+      signed_by: 'SYNTHETIC RECEIVER', receiver_address: 'COLONIA EJEMPLO\n99999' });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(result.events!.map(event => [event.time, event.provider_code, event.stage ?? null, event.description, event.location ?? null])).toEqual([
       ['2026-03-05T13:47:02-06:00', '1', 'delivered', 'ENTREGADO', 'CENTRO DESTINO, PUEBLA'],
       ['2026-03-05T09:05:11-06:00', '3', 'out_for_delivery', 'EMBARCADO EN RUTA DE ENTREGA', 'CENTRO DESTINO, PUEBLA'],
@@ -71,9 +73,18 @@ describe('Redpack HTTP adapter', () => {
       ['2026-03-02T08:12:40-06:00', '9', 'registered', 'REGISTRADO EN SISTEMA', 'VILLA ORIGEN, JALISCO'],
     ]);
     const kept = JSON.stringify(result);
-    for (const dropped of ['SYNTHETIC RECEIVER', 'COLONIA EJEMPLO', '99999', '00000', 'EXAMPLE-REF', 'CTO:', 'CIRCUITO', 'PAQUETE']) {
+    for (const dropped of ['00000', 'EXAMPLE-REF', 'CTO:', 'CIRCUITO', 'PAQUETE']) {
       expect(kept).not.toContain(dropped);
     }
+  });
+
+  it('reads the destination name and a postcode sent as a number, and no signatory before delivery', () => {
+    const named = fixture('delivered') as Array<Record<string, unknown>>;
+    named[0]!.destination = { name: 'PERSONA EJEMPLO', suburb: null, zipCodeDestination: 1000 };
+    expect(parseRedpack(named, DELIVERED)).toMatchObject({ receiver_name: 'PERSONA EJEMPLO', receiver_address: '01000' });
+    const moving = fixture('delivered') as Array<{ parcel: Array<{ situationDetail: unknown[] }> }>;
+    moving[0]!.parcel[0]!.situationDetail.shift();
+    expect(parseRedpack(moving, DELIVERED)).not.toHaveProperty('signed_by');
   });
 
   it('keeps the promised day before delivery, and reads a guide reduced to its pickup', () => {

@@ -44,7 +44,8 @@
       "status",
       "history",
       "location",
-      "postcodes"
+      "postcodes",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -52,12 +53,12 @@
       "location",
       "provider_code",
       "delivered_at",
-      "pickup_point"
+      "pickup_point",
+      "signatory"
     ],
     "discarded": [
       "postcodes",
       "pickup_point_address",
-      "signatory",
       "pickup_code"
     ],
     "unavailable": [

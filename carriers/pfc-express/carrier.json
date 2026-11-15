@@ -77,13 +77,13 @@
       "location",
       "service_name",
       "destination_country",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory",
+      "contact_details"
     ],
     "discarded": [
       "origin_country",
-      "customer_reference",
-      "contact_details",
-      "signatory"
+      "customer_reference"
     ],
     "unavailable": [
       "eta",

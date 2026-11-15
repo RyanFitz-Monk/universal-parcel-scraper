@@ -52,7 +52,8 @@
       "delivery_tracking_number",
       "destination",
       "contact_details",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -63,7 +64,8 @@
       "offset_timestamps",
       "delivery_partner",
       "delivery_tracking_number",
-      "destination_country"
+      "destination_country",
+      "recipient_address"
     ],
     "discarded": [
       "milestones",

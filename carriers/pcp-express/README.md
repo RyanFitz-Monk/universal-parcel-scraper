@@ -36,8 +36,9 @@ tracking results page makes.
 - A delivery settles the parcel's status whatever its clock, as the results page lists it
   first.
 - A scan's location is its town, else its branch.
-- The sender's and recipient's names and towns, the receiver who signed, couriers' names and
-  the run sheet, manifest and bag numbers in the reply are not kept.
+- The recipient's name and address are read from the shipment, and the receiver who took a
+  delivered parcel from the delivery's note, else its receiver field. The sender, couriers'
+  names and the run sheet, manifest and bag numbers in the reply are not kept.
 - The tracker also searches references. The adapter only accepts a shipment whose AWB is the
   number asked, so a reference does not track.
 

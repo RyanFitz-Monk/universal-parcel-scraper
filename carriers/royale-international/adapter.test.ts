@@ -9,21 +9,33 @@ const fixture = () => readFileSync(new URL('./fixtures/tracking.html', import.me
 const empty = `<section class="tracking-page"><form class="tracking-form" method="get" action="/tracking"><input id="waybillno" name="waybillno" value=""></form></section>`;
 
 describe('Royale International history', () => {
-  it('binds the visible waybill and places dated proof beside its capture without disclosing recipient cells', () => {
+  it('binds the visible waybill, places dated proof beside its capture and reads the consignee and who took the delivery', () => {
     const result = parseRoyaleInternational(fixture(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', service_name: 'Express',
-      last_status_text: 'POD Details Captured', last_update: null, last_update_local: '2026-07-04T16:30:00' });
+      last_status_text: 'POD Details Captured', last_update: null, last_update_local: '2026-07-04T16:30:00',
+      receiver_name: 'PRIVATE CONSIGNEE', signed_by: 'PRIVATE RECIPIENT' });
     expect(result.events).toHaveLength(4);
     expect(result.events![1]).toMatchObject({ local_time: '2026-07-04T15:00:00', description: 'Proof of delivery', stage: 'delivered' });
     expect(result.events![2]).toMatchObject({ location: 'Example facility' });
     expect(result.events![3]).not.toHaveProperty('location');
     expect(result.events!.every(event => !event.time)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|private-signature/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE (?:SHIPPER|REFERENCE|SIGNATURE)|private-signature/);
+  });
+
+  it('keeps an update’s whole wording and stages it from the wording before a link, a recipient or a phone number', () => {
+    const result = parseRoyaleInternational(fixture()
+      .replace('Checked in at Example facility', 'Checked in at Example facility https://example.invalid/scan')
+      .replace('POD Details Captured', 'POD Details Captured recipient: SAMPLE NAME'), NUMBER);
+    expect(result).toMatchObject({ status: 'delivered', last_status_text: 'POD Details Captured recipient: SAMPLE NAME', signed_by: 'PRIVATE RECIPIENT' });
+    expect(result.events![1]).toMatchObject({ description: 'Proof of delivery', stage: 'delivered' });
+    expect(result.events![2]).toMatchObject({ description: 'Checked in at Example facility https://example.invalid/scan', location: 'Example facility' });
   });
 
   it('does not treat POD capture as delivery without dated proof or place proof without capture context', () => {
     const $ = load(fixture()); $('table.pod tbody').empty();
-    expect(parseRoyaleInternational($.html(), NUMBER).current_stage).toBe('in_transit');
+    const undated = parseRoyaleInternational($.html(), NUMBER);
+    expect(undated.current_stage).toBe('in_transit');
+    expect(undated).not.toHaveProperty('signed_by');
     expect(royaleInternationalStage('POD Details Captured')).toBeUndefined();
     expect(statusMap.gaps).toHaveLength(1);
     expect(() => parseRoyaleInternational(fixture().replace('POD Details Captured', 'New activity'), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));

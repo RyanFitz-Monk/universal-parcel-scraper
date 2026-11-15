@@ -38,11 +38,13 @@
     "canaryUrl": "https://www.parcelabc.com/content/tracking",
     "shows": [
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "scraped": [
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": [

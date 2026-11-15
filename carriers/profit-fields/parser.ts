@@ -49,12 +49,18 @@ function clock(raw: unknown, rawZone: unknown): Pick<CarrierEvent, 'time' | 'loc
   return { local_time: wall };
 }
 
+/** A scan's whole wording, in English when it has one. */
 function description(row: JsonObject): string {
   const english = row.eventEn === null || row.eventEn === undefined ? '' : text(row.eventEn);
   const chinese = row.eventCn === null || row.eventCn === undefined ? '' : text(row.eventCn);
-  const wording = (english || chinese).split(/https?:\/\/|(?:recipient|consignee|signed\s+by|received\s+by|phone|签收人|收件人|电话)\s*[:：]?/i, 1)[0]!.trim();
-  if (!wording || /[<>@]|\+\d[\d ()-]{6,}|\d{8,}/.test(wording)) throw new SchemaError(PROVIDER, 'Profit Fields returned no logistics description');
+  const wording = english || chinese;
+  if (!wording || /[<>]/.test(wording)) throw new SchemaError(PROVIDER, 'Profit Fields returned no logistics description');
   return wording;
+}
+
+/** The wording the status map reads: without a link, a recipient, a signer or a phone that follows it. */
+function statusWording(wording: string): string {
+  return wording.split(/https?:\/\/|(?:recipient|consignee|signed\s+by|received\s+by|phone|签收人|收件人|电话)\s*[:：]?/i, 1)[0]!.trim();
 }
 
 export function parseProfitFields(payload: unknown, raw: string): CarrierResult {
@@ -80,18 +86,17 @@ export function parseProfitFields(payload: unknown, raw: string): CarrierResult 
   const summary = state(record.nodeStatus), events: CarrierEvent[] = [], seen = new Set<string>();
   for (const row of record.timeline as unknown[]) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Profit Fields returned an invalid scan');
-    const code = state(row.nodeStatus), wording = description(row), stage = profitFieldsStage(code, wording);
+    const code = state(row.nodeStatus), wording = description(row), stage = profitFieldsStage(code, statusWording(wording));
     const location = row.location === null || row.location === undefined ? '' : text(row.location, 250);
-    const safeLocation = !/[<>@]|https?:|\d{7,}|\b(?:recipient|phone|street|road|avenue|apartment|address)\b|收件人|电话|地址/i.test(location) ? location : '';
     const event: CarrierEvent = { ...clock(row.time, row.timeZone), description: wording,
-      ...(code ? { provider_code: code } : {}), ...(safeLocation ? { location: safeLocation } : {}),
+      ...(code ? { provider_code: code } : {}), ...(location ? { location } : {}),
       ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
     const key = JSON.stringify(event);
     if (!seen.has(key)) { seen.add(key); events.push(event); }
   }
   const newest = events[0]!;
   if (summary !== (newest.provider_code ?? null)) throw new SchemaError(PROVIDER, 'Profit Fields returned a contradictory current state');
-  const stage = profitFieldsStage(summary, newest.description!);
+  const stage = profitFieldsStage(summary, statusWording(newest.description!));
   if (record.status === 'delivered' && stage && stage !== 'delivered') throw new SchemaError(PROVIDER, 'Profit Fields returned contradictory delivery states');
   let partner: string | undefined;
   if (record.transferNumber !== null && record.transferNumber !== undefined && record.transferNumber !== '') {
@@ -100,11 +105,13 @@ export function parseProfitFields(payload: unknown, raw: string): CarrierResult 
   }
   const destination = record.destination === null || record.destination === undefined ? '' : text(record.destination, 100);
   const country = countryCode(destination);
+  const receiver = record.receiver === null || record.receiver === undefined ? '' : text(record.receiver, 120);
   // `carrier` is a commodity label, not the delivery company. Keep the declared transfer number whole.
   return { status: stage ? languageStageStatus(stage) : 'unknown', ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
     ...(summary ? { provider_code: summary } : {}), last_status_text: newest.description, last_update: newest.time ?? null,
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}), expected_delivery: null,
     ...(country ? { destination_country: country } : destination ? { destination_country_name: destination } : {}),
     ...(partner && partner !== number ? { delivery_tracking_number: partner } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
     ...(events.length > 100 ? { history_truncated: true } : {}), events: events.slice(0, 100) };
 }

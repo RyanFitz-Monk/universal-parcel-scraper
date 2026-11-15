@@ -36,16 +36,19 @@ through the lookup its tracking page at `pfctrack.com` makes.
 - The tab settles a delivery or a held parcel (`Alert`). Otherwise the newest scan with a stage
   decides, and `Transit` only when no scan has one.
 - The tracker relays the delivering carrier's scans, including China Post's in Chinese. Those
-  name couriers and give their phones and hotlines in later clauses and brackets: the adapter
-  keeps a Chinese scan's clauses up to the first contact, and only brackets that name an office.
-  Every scan loses phone numbers, e-mail addresses and who signed.
+  name couriers and give their phones and hotlines in later clauses and brackets. Each scan
+  keeps its whole wording; the status map reads it without contacts, phone numbers, e-mail
+  addresses or who signed, and a Chinese scan only up to its first contact.
+- Who signed for a delivery is read from the delivered scan's "signed by", "received by" or
+  `签收人`.
 - The place after a scan's `----` is its location. The older inquiry page put a facility code
   and a comma before some wordings instead, which the adapter reads the same way.
 - The merchant's reference and the origin are not kept.
 
 ## Limitations
 
-- No delivery estimate, weight, sender or recipient, and no delivery time as an instant.
+- No delivery estimate, weight, sender or recipient's name or address, and no delivery time as
+  an instant.
 
 ## Numbers
 

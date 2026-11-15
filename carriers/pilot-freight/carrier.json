@@ -71,11 +71,12 @@
       "eta_window",
       "service_name",
       "weight",
-      "offset_timestamps"
+      "offset_timestamps",
+      "signature",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
-      "signature",
       "parcel_count",
       "dimensions",
       "order_contents",
@@ -85,7 +86,6 @@
     "unavailable": [
       "sender_name",
       "recipient_name",
-      "recipient_address",
       "delivery_partner",
       "delivery_tracking_number"
     ]

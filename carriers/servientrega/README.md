@@ -37,9 +37,10 @@ lookup its app makes.
   delivery time is the guide's own, which is the courier's report; a verified delivery follows
   it. On a guide `ENTREGADO A REMITENTE`, delivered back to its sender, the deliveries are the
   return's and the guide is returned.
-- The service names the product, kept as the service name. The record's names, addresses,
-  emails, phones, identity number, proof-of-delivery picture, signatory, weight, amounts,
-  invoice, customer-service tasks and the courier of each movement are not kept.
+- The service names the product, kept as the service name. The addressee's name and address
+  are kept, and the signatory of a delivered guide. The sender, emails, phones, identity number,
+  proof-of-delivery picture, weight, amounts, invoice, customer-service tasks and the courier of
+  each movement are not.
 
 ## Limitations
 

@@ -52,7 +52,10 @@
       "status",
       "history",
       "remarks",
-      "destination_country"
+      "destination_country",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "customer_reference",
@@ -70,8 +73,6 @@
       "delivery_partner",
       "service_name",
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "proof_of_delivery"
     ]
   },

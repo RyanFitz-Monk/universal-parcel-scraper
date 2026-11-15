@@ -58,11 +58,23 @@ export function parsePinAgMissing(status: number, text: string): never {
   throw new IndeterminateError(PROVIDER, `PIN AG answered HTTP ${status}`);
 }
 
+/** The recipient a status names: their name, and their street and house number above the postcode and town. */
+function recipientOf(row: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const address = row.deliveryAddress;
+  if (address === null || address === undefined) return {};
+  if (!isRecord(address)) throw new SchemaError(PROVIDER, 'PIN AG returned an invalid deliveryAddress');
+  const name = field(address, 'name', 120);
+  const street = [field(address, 'street', 120), field(address, 'houseNumber', 20)].filter(Boolean).join(' ');
+  const town = [field(address, 'postCode', 20), field(address, 'city', 120)].filter(Boolean).join(' ');
+  const lines = [street, town].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(lines ? { receiver_address: lines } : {}) };
+}
+
 /**
  * The statuses of the number asked for. The reply does not repeat the number:
- * they are those of the number in the request. Only each status's code, stage,
- * label and clock are read; the recipient's address, the depot's and the sender's
- * customer number are not.
+ * they are those of the number in the request. Each status's code, stage,
+ * label and clock are read, and the recipient's name and address from the
+ * newest; the depot's address and the sender's customer number are not.
  */
 export function parsePinAg(reply: unknown, raw: string): CarrierResult {
   normalizePinAgNumber(raw);
@@ -93,5 +105,5 @@ export function parsePinAg(reply: unknown, raw: string): CarrierResult {
   const mapped = pinAgStatus(field(last, 'stage', 64), field(last, 'statusCode', 32));
   return { status: mapped?.status ?? 'unknown', ...(mapped ? { current_stage: mapped.stage } : {}),
     last_status_text: latest.description, last_update: null, last_update_local: latest.local_time ?? null,
-    events: events.slice(0, MAX_EVENTS) };
+    ...recipientOf(last), events: events.slice(0, MAX_EVENTS) };
 }

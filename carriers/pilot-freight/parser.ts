@@ -21,6 +21,8 @@ const UNSET = '0001';
 const NOT_FOUND = 'ERROR_102';
 // The place of an event recorded by phone or online, which names no town.
 const NO_PLACE = /^ON-?LINE\s*\/\s*ON PHONE$/i;
+// A party's field the service masks whole.
+const MASKED = /^\*+$/;
 // States split between zones, whose name does not settle a clock.
 const SPLIT_STATES = new Set(['AK', 'AZ', 'FL', 'ID', 'IN', 'KS', 'KY', 'MI', 'ND', 'NE', 'NV', 'OR', 'SD', 'TN', 'TX']);
 const POUNDS_TO_KG = 0.453_592_37;
@@ -121,9 +123,8 @@ function placeOf(location: Record<string, unknown>): { place: string; zone: stri
 
 /**
  * One event of `TrackingEventHistory`: its `EventCode`, `EventCodeDesc`,
- * `EventType1`, clock and place. Who signed for the shipment
- * (`SignedForByName`) and where it was left (`AdditionalLocationInfo`) are not
- * read.
+ * `EventType1`, clock and place. Where the freight was left
+ * (`AdditionalLocationInfo`) is not read.
  */
 function projectRow(row: unknown): CarrierEvent {
   if (!isRecord(row)) invalid('Pilot returned an invalid event');
@@ -141,6 +142,25 @@ function projectRow(row: unknown): CarrierEvent {
     description, provider_code: code,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
+}
+
+/** A party's field, empty where the service masks it. */
+function unmasked(party: Record<string, unknown>, key: string, maxLength = 120): string {
+  const value = text(party, key, maxLength);
+  return MASKED.test(value) ? '' : value;
+}
+
+/**
+ * The consignee's address as far as the reply leaves it: the street when it is
+ * not masked, then the town, state and ZIP code, and the country outside the US.
+ */
+function addressOf(consignee: Record<string, unknown>): string {
+  const street = [unmasked(consignee, 'Address'), unmasked(consignee, 'Address2')].filter(Boolean).join(', ');
+  const country = unmasked(consignee, 'CountryCode', 8).toUpperCase();
+  const town = [unmasked(consignee, 'City', 80), unmasked(consignee, 'StateProvince', 8)].filter(Boolean).join(', ');
+  const area = [[town, unmasked(consignee, 'PostalCode', 20)].filter(Boolean).join(' '), country && country !== 'US' ? country : '']
+    .filter(Boolean).join(', ');
+  return [street, area].filter(Boolean).join('\n');
 }
 
 /** The shipment's weight, the sum of its line items' pounds, in kilograms. */
@@ -211,15 +231,17 @@ function shipmentOf(payload: unknown, number: string): Record<string, unknown> {
  * addresses and phones are masked but whose towns are not, the references,
  * the goods' description, the dimensions and piece counts, the stations'
  * contacts, the proof of delivery's signer and document link and the billing
- * account; none of them is kept.
+ * account. The consignee's name and address, as far as they are not masked,
+ * and who signed for a delivery are read.
  */
 export function parsePilot(payload: unknown, raw: string): CarrierResult {
   const number = normalizePilotNumber(raw);
   const info = shipmentOf(payload, number);
   const rows = list(info, 'TrackingEventHistory', MAX_ROWS);
+  const projected = rows.map((row) => ({ event: projectRow(row), signer: text(row as Record<string, unknown>, 'SignedForByName', 120) }));
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
-  for (const event of rows.map(projectRow)) {
+  for (const { event } of projected) {
     const key = JSON.stringify([event.time ?? event.local_time, event.provider_code, event.description, event.location ?? '']);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -236,6 +258,10 @@ export function parsePilot(payload: unknown, raw: string): CarrierResult {
   const settled = stage === 'delivered' || stage === 'returned';
   const service = titleCase(text(info, 'Service', 80));
   const weight = weightOf(info);
+  const consignee = record(info, 'PackageConsignee');
+  const receiver = unmasked(consignee, 'Name');
+  const address = addressOf(consignee);
+  const signer = delivery ? projected.find(({ event, signer }) => event.stage === 'delivered' && signer)?.signer : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(staged && stage ? { current_stage: stage, current_stage_source: staged.stage_source! } : {}),
@@ -246,6 +272,9 @@ export function parsePilot(payload: unknown, raw: string): CarrierResult {
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
     ...(service ? { service_name: service } : {}),
     ...(weight !== null ? { weight_kg: weight } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

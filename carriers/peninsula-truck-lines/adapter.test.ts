@@ -8,7 +8,7 @@ import { delayedFetcher } from '../../core/testing/hang.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, PENINSULA_API, peninsulaLookupUrl, PeninsulaTracker } from './adapter.js';
-import { normalizePeninsulaNumber, parsePeninsula, withoutSigner } from './parser.js';
+import { normalizePeninsulaNumber, parsePeninsula, signerOf } from './parser.js';
 import { peninsulaStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -53,17 +53,18 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'peninsula-truck-lines', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads a delivered log newest first as wall clocks at towns, dated by its status line, without the parties or the receiver', () => {
+  it('reads a delivered log newest first as wall clocks at towns, dated by its status line, with the consignee and the receiver', () => {
     const result = parsePeninsula(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED ON 2026-03-03', last_update: null, last_update_local: '2026-03-03',
+      last_status_text: 'DELIVERED TO JANE EXAMPLE ON 2026-03-03', last_update: null, last_update_local: '2026-03-03',
+      receiver_name: 'SAMPLE SUPPLY CO', receiver_address: 'EXAMPLE FALLS, OR 00000', signed_by: 'JANE EXAMPLE',
     });
     expect(result).not.toHaveProperty('summary_only');
     expect(result).not.toHaveProperty('expected_delivery');
     expect(events(result)).toEqual([
       // The log has no delivery row: the status line dates it, by its day.
-      ['2026-03-03', 'DELIVERED ON 2026-03-03', 'delivered', null],
+      ['2026-03-03', 'DELIVERED TO JANE EXAMPLE ON 2026-03-03', 'delivered', null],
       ['2026-03-03T07:58:00', 'DEL MFST', 'out_for_delivery', 'EXAMPLE FALLS, OR'],
       // The repeated row is kept once.
       ['2026-03-03T05:12:00', 'DOCK', 'in_transit', 'EXAMPLE FALLS, OR'],
@@ -71,7 +72,7 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
       ['2026-03-02T15:05:00', 'PICKUP', 'accepted', 'SAMPLE CITY, WA'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.time_zone === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/JANE|EXAMPLE PARTS|SAMPLE SUPPLY|00000|BOL-SAMPLE|PO-SAMPLE|Example Falls|Sample City/);
+    expect(JSON.stringify(result)).not.toMatch(/EXAMPLE PARTS|BOL-SAMPLE|PO-SAMPLE|Example Falls|Sample City/);
   });
 
   it('reads an in-transit log by its newest staged row, in either order', () => {
@@ -83,7 +84,9 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
       ['2026-05-06T00:05:00', 'DOCK', 'in_transit', 'SAMPLE HARBOR, WA'],
       ['2026-05-05T12:20:00', 'PICKUP', 'accepted', 'SAMPLE HARBOR, WA'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/OUTFITTERS|SAMPLE MILLS/);
+    expect(result).toMatchObject({ receiver_name: 'EXAMPLE OUTFITTERS' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE MILLS/);
     const reversed = parsePeninsula(shipment('in-transit', (body) => body.shipmentLog.reverse()), IN_TRANSIT);
     expect(events(reversed)).toEqual(events(result));
     // A same-day log, oldest first, whose newest row gives its day alone: the timed rows decide the order.
@@ -118,9 +121,9 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
     // A delivery the log records is not added again, and a delivery placed by its day falls among older rows.
     const logged = headed('DELIVERED ON 2026-05-06', (body) => body.shipmentLog.push(
       { date: '2026-05-06', time: '2:15pm', activity: 'DELIVERED SIGNED BY PAT EXAMPLE', location: 'SAMPLEVILLE, WA' }));
-    expect(events(logged)[0]).toEqual(['2026-05-06T14:15:00', 'DELIVERED', 'delivered', 'SAMPLEVILLE, WA']);
+    expect(events(logged)[0]).toEqual(['2026-05-06T14:15:00', 'DELIVERED SIGNED BY PAT EXAMPLE', 'delivered', 'SAMPLEVILLE, WA']);
     expect(logged.events).toHaveLength(4);
-    expect(JSON.stringify(logged)).not.toMatch(/PAT/);
+    expect(logged.signed_by).toBe('PAT EXAMPLE');
     expect(events(headed('DELIVERED ON 2026-05-05')).map(([time]) => time))
       .toEqual(['2026-05-06T11:47:00', '2026-05-06T00:05:00', '2026-05-05', '2026-05-05T12:20:00']);
   });
@@ -132,17 +135,17 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
     }), IN_TRANSIT);
     const damaged = headed('DELIVERED – SHORT/DAMAGED TO PAT EXAMPLE ON 2026-05-07');
     expect(damaged).toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED – SHORT/DAMAGED ON 2026-05-07', last_update_local: '2026-05-07' });
-    expect(events(damaged)[0]).toEqual(['2026-05-07', 'DELIVERED – SHORT/DAMAGED ON 2026-05-07', 'exception', null]);
-    expect(JSON.stringify(damaged)).not.toMatch(/PAT/);
-    expect(headed('DELIVERED ON 2026-05-07 - DAMAGED')).toMatchObject({ status: 'exception', last_status_text: 'DELIVERED – DAMAGED ON 2026-05-07' });
-    expect(headed('DELIVERED - SHORT')).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'DELIVERED – SHORT' });
+      last_status_text: 'DELIVERED – SHORT/DAMAGED TO PAT EXAMPLE ON 2026-05-07', last_update_local: '2026-05-07', signed_by: 'PAT EXAMPLE' });
+    expect(events(damaged)[0]).toEqual(['2026-05-07', 'DELIVERED – SHORT/DAMAGED TO PAT EXAMPLE ON 2026-05-07', 'exception', null]);
+    expect(headed('DELIVERED ON 2026-05-07 - DAMAGED')).toMatchObject({ status: 'exception', last_status_text: 'DELIVERED ON 2026-05-07 - DAMAGED' });
+    expect(headed('DELIVERED - SHORT')).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'DELIVERED - SHORT' });
     const row = headed('IN TRANSIT', (body) => body.shipmentLog.push(
       { date: '2026-05-07', time: '9:05am', activity: 'DELIVERED SHORT SIGNED BY PAT EXAMPLE', location: 'SAMPLEVILLE, WA' }));
-    expect(events(row)[0]).toEqual(['2026-05-07T09:05:00', 'DELIVERED – SHORT', 'exception', 'SAMPLEVILLE, WA']);
-    expect(row).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'DELIVERED – SHORT' });
+    expect(events(row)[0]).toEqual(['2026-05-07T09:05:00', 'DELIVERED SHORT SIGNED BY PAT EXAMPLE', 'exception', 'SAMPLEVILLE, WA']);
+    expect(row).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: 'DELIVERED SHORT SIGNED BY PAT EXAMPLE' });
     // A receiver whose name holds one of those words is no problem.
-    expect(headed('DELIVERED TO PAT SHORT ON 2026-05-07')).toMatchObject({ status: 'delivered', last_status_text: 'DELIVERED ON 2026-05-07' });
+    expect(headed('DELIVERED TO PAT SHORT ON 2026-05-07')).toMatchObject({ status: 'delivered', last_status_text: 'DELIVERED TO PAT SHORT ON 2026-05-07',
+      signed_by: 'PAT SHORT' });
   });
 
   it('reads a status line without a log as a summary, and nothing at all as no history', () => {
@@ -151,8 +154,11 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
       body.shipmentLog = [];
     });
     expect(parsePeninsula(empty('DELIVERED TO SAMPLE RECEIVING ON 2026-03-03'), DELIVERED)).toMatchObject({ status: 'delivered',
-      last_status_text: 'DELIVERED ON 2026-03-03', last_update_local: '2026-03-03', summary_only: true,
-      events: [{ local_time: '2026-03-03', description: 'DELIVERED ON 2026-03-03', stage: 'delivered' }] });
+      last_status_text: 'DELIVERED TO SAMPLE RECEIVING ON 2026-03-03', last_update_local: '2026-03-03', summary_only: true,
+      signed_by: 'SAMPLE RECEIVING',
+      events: [{ local_time: '2026-03-03', description: 'DELIVERED TO SAMPLE RECEIVING ON 2026-03-03', stage: 'delivered' }] });
+    // A delivered line on a day the calendar does not have adds no delivery of its own.
+    expect(parsePeninsula(empty('DELIVERED ON 2026-02-30'), DELIVERED)).toMatchObject({ status: 'delivered', summary_only: true, events: [] });
     const other = parsePeninsula(empty('SAMPLE NOTE'), DELIVERED);
     expect(other).toMatchObject({ status: 'unknown', last_status_text: 'SAMPLE NOTE', summary_only: true, events: [] });
     expect(other).not.toHaveProperty('current_stage');
@@ -160,25 +166,26 @@ describe('Peninsula Truck Lines HTTP adapter', () => {
     expect(() => parsePeninsula(empty(''), DELIVERED)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
   });
 
-  it('drops the person a delivery or a scan names', () => {
-    expect(withoutSigner('DELIVERED TO JANE EXAMPLE ON 2026-03-03')).toBe('DELIVERED ON 2026-03-03');
-    expect(withoutSigner('DELIVERED ON 2026-03-03 SIGNED BY J EXAMPLE')).toBe('DELIVERED ON 2026-03-03');
-    expect(withoutSigner('Delivered to J. Example')).toBe('DELIVERED');
-    expect(withoutSigner('DELIVERED ON 2026-02-30')).toBe('DELIVERED');
-    expect(withoutSigner('DELIVERED – SHORT/DAMAGED')).toBe('DELIVERED – SHORT/DAMAGED');
-    expect(withoutSigner('Delivered - short / damaged to J. Example on 2026-03-03')).toBe('DELIVERED – SHORT/DAMAGED ON 2026-03-03');
-    expect(withoutSigner('POD RECEIVED BY J EXAMPLE')).toBe('POD');
-    expect(withoutSigner('DOCK')).toBe('DOCK');
+  it('reads the person a delivery or a scan names', () => {
+    expect(signerOf('DELIVERED TO JANE EXAMPLE ON 2026-03-03')).toBe('JANE EXAMPLE');
+    expect(signerOf('DELIVERED ON 2026-03-03 SIGNED BY J EXAMPLE')).toBe('J EXAMPLE');
+    expect(signerOf('Delivered to J. Example')).toBe('J. Example');
+    expect(signerOf('DELIVERED ON 2026-02-30')).toBe('');
+    expect(signerOf('DELIVERED – SHORT/DAMAGED')).toBe('');
+    expect(signerOf('Delivered - short / damaged to J. Example on 2026-03-03')).toBe('J. Example');
+    expect(signerOf('POD RECEIVED BY J EXAMPLE')).toBe('J EXAMPLE');
+    expect(signerOf('TENDERED TO SAMPLE FREIGHT ON 2026-05-07 ON THEIR PRO 000111222')).toBe('');
+    expect(signerOf('DOCK')).toBe('');
   });
 
-  it('places a row at its town and state, without the parts that hold digits', () => {
+  it('places a row at its place as the log gives it', () => {
     const at = (location: unknown) => parsePeninsula(shipment('in-transit', (body) => {
       body.shipmentLog[0]!.location = location;
     }), IN_TRANSIT).events!.at(-1)!.location ?? null;
-    expect(at('SAMPLE HARBOR, WA 00000')).toBe('SAMPLE HARBOR, WA');
+    expect(at('SAMPLE HARBOR, WA 00000')).toBe('SAMPLE HARBOR, WA 00000');
     expect(at('AUBURN')).toBe('AUBURN');
-    expect(at('12 SAMPLE ST')).toBe('SAMPLE ST');
-    expect(at('00000')).toBeNull();
+    expect(at('12 SAMPLE ST')).toBe('12 SAMPLE ST');
+    expect(at(', ')).toBeNull();
     expect(at('')).toBeNull();
     expect(at(null)).toBeNull();
   });

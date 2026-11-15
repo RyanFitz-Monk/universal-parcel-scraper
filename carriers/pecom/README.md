@@ -40,8 +40,8 @@ cargo's details.
   a collection and "Доставлен получателю" a door delivery.
 - A cargo without a door delivery is collected at the receiving department, whose name and
   address are the pickup point.
-- Sender and recipient, their contacts, the payment, the cargo's contents, volume and pieces,
-  and the departments' hours and phones are not kept.
+- The recipient's name is read, surname first. The sender, contacts, the payment, the cargo's
+  contents, volume and pieces, and the departments' hours and phones are not kept.
 
 ## Limitations
 

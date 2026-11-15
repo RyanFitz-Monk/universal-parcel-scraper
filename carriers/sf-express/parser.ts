@@ -45,7 +45,7 @@ function scanTime(raw: unknown): { local: string; time: string } {
 function remarkText(raw: unknown): string {
   if (typeof raw !== 'string' || !raw || raw.length > 10_000) throw new SchemaError(PROVIDER, 'SF Express returned an invalid scan remark');
   const $ = load(raw, null, false);
-  $('script, style, iframe, img, input, button, [id="opr_phone"], .route-phone, a[href^="tel:"]').remove();
+  $('script, style, iframe, img, input, button').remove();
   return clean($.root().text(), 1_000);
 }
 
@@ -67,7 +67,7 @@ function withoutAddresses(text: string): string {
 }
 
 // A courier's remark names them and gives their number: "… is being delivered by <name> (contact
-// number: <number>. Please answer the call …)". The remark keeps neither.
+// number: <number>. Please answer the call …)". The remark keeps both; its place is read without them.
 const CONTACT = /\s*[（(]\s*(?:contact (?:number|phone)|联系电话|聯繫電話)\s*[:：].*$/isu;
 const COURIER = /\s+by\s+[^()（）]{1,40}?(?=\s*[（(]\s*(?:contact (?:number|phone)|联系电话|聯繫電話)\s*[:：])/iu;
 const withoutContact = (text: string): string => CONTACT.test(text) ? text.replace(COURIER, ' by the courier').replace(CONTACT, '') : text;
@@ -128,8 +128,9 @@ export function parse(payload: unknown, trackingNumber: string): CarrierResult {
     const reason = clean(raw.stayWhyCode, 64);
     if (!/^[A-Z0-9_-]{1,64}$/.test(code)) throw new SchemaError(PROVIDER, 'SF Express returned an invalid operation code');
     const status = sfExpressEventStatus(code, reason, text);
-    const description = status?.status === 'delivered' ? 'Delivered' : withoutContact(englishSites(withoutAddresses(text)));
-    const site = status?.status === 'delivered' ? undefined : scanSite(description, code);
+    // The remark keeps SF's wording, with the English name of a site it also names in Chinese.
+    const description = englishSites(text);
+    const site = status?.status === 'delivered' ? undefined : scanSite(withoutContact(englishSites(withoutAddresses(text))), code);
     const event: CarrierEvent = { time, provider_code: code, description,
       ...(site ? { location: site } : {}),
       ...(status ? { stage: status.stage } : {}),
@@ -150,7 +151,7 @@ export function parse(payload: unknown, trackingNumber: string): CarrierResult {
   // A delivered parcel's newest delivery scan dates its delivery.
   const delivery = status?.status === 'delivered' ? scans.find((scan) => scan.status?.status === 'delivered') : undefined;
   return { status: status?.status ?? 'unknown', ...(status ? { current_stage: status.stage } : {}),
-    last_status_text: status?.status === 'delivered' ? 'Delivered' : summaryText ?? latest.event.description,
+    last_status_text: status?.status === 'delivered' ? delivery?.event.description ?? 'Delivered' : summaryText ?? latest.event.description,
     last_update: latest.time, ...(delivery ? { delivered_at: delivery.time } : {}), expected_delivery: null,
     events: scans.slice(0, MAX_EVENTS).map((scan) => scan.event),
     ...(scans.length > MAX_EVENTS ? { history_truncated: true } : {}),

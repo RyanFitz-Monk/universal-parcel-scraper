@@ -67,8 +67,10 @@ describe('Relay HTTP adapter', () => {
     // The drop-off shop of a parcel brought to the door is no pickup point.
     expect(result).not.toHaveProperty('pickup_point');
     expect(result).not.toHaveProperty('expected_delivery_from');
+    expect(result.receiver_address).toBe('1 Example Street, Flat 2\nSampletown ZZ1 1ZZ');
+    expect(result).not.toHaveProperty('signed_by');
     const kept = JSON.stringify(result);
-    for (const value of ['Example Street', 'Sampletown', 'ZZ1 1ZZ', 'card left', 'neighbour', 'example.invalid', 'Example Shop', 'Drop-off', '51.5']) {
+    for (const value of ['Exampleshire', 'card left', 'neighbour', 'example.invalid', 'Example Shop', 'Drop-off', '51.5']) {
       expect(kept, value).not.toContain(value);
     }
   });

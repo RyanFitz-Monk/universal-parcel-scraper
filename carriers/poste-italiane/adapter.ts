@@ -190,6 +190,19 @@ export function posteItalianeTrackingUrl(rawTrackingNumber: string): string {
   return `https://www.poste.it/cerca/index.html#/risultati-spedizioni/${encodeURIComponent(normalizePosteItalianeTrackingNumber(rawTrackingNumber))}`;
 }
 
+/** The envelope's addressee and their address, as Poste writes them. */
+function recipientOf(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = clean(payload.destinatario, 120);
+  const address = clean(payload.indirizzoDestinatario, 300);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/** Who signed for a delivery, as the envelope names them. */
+function signerOf(payload: Record<string, unknown>): Pick<CarrierResult, 'signed_by'> {
+  const signer = clean(payload.firmaDestinatario, 120);
+  return signer ? { signed_by: signer } : {};
+}
+
 export function parsePosteItalianeTrackingResponse(payload: unknown, trackingNumber: string): CarrierResult {
   const requested = normalizePosteItalianeTrackingNumber(trackingNumber);
   if (!isRecord(payload)) throw new SchemaError('Poste Italiane', 'Poste Italiane returned an invalid tracking response');
@@ -230,8 +243,8 @@ export function parsePosteItalianeTrackingResponse(payload: unknown, trackingNum
     parsed.push({
       // A post-office scan names its office, which becomes the location; the
       // office's address, postcode and hours are not kept. Other scans keep
-      // luogo only when it is a town and province. Sender, dimensions and
-      // pickup-office blocks on the envelope are never retained either.
+      // luogo only when it is a town and province. Sender, weight, dimensions
+      // and pickup-office blocks on the envelope are never retained either.
       // Unmapped wording keeps no stage: the sync classifies it and records
       // where the stage came from instead of assuming movement here.
       event: {
@@ -250,7 +263,7 @@ export function parsePosteItalianeTrackingResponse(payload: unknown, trackingNum
   parsed.sort((left, right) => right.timestamp - left.timestamp || right.index - left.index);
   const events = parsed.slice(0, MAX_EVENTS_TO_RETURN).map(({ event }) => event);
   const service = serviceName(payload.tipoProdotto, requested);
-  const facts = { ...(service ? { service_name: service } : {}), ...importCharges(payload.oneri) };
+  const facts = { ...(service ? { service_name: service } : {}), ...importCharges(payload.oneri), ...recipientOf(payload) };
   if (rawMovements.length > 0 && events.length === 0) {
     throw new SchemaError('Poste Italiane', 'Poste Italiane returned unusable tracking history');
   }
@@ -285,6 +298,7 @@ export function parsePosteItalianeTrackingResponse(payload: unknown, trackingNum
       last_update: events[0]?.time ?? null,
       expected_delivery: null,
       ...facts,
+      ...signerOf(payload),
       events,
     };
   }
@@ -331,6 +345,7 @@ export function parsePosteItalianeTrackingResponse(payload: unknown, trackingNum
     last_update: latest.event.time ?? null,
     expected_delivery: final ? null : expectedDeliveryDay(payload.dataPrevistaConsegna),
     ...facts,
+    ...(latest.classified!.stage === 'delivered' ? signerOf(payload) : {}),
     events,
   };
 }

@@ -61,11 +61,12 @@
       "weight",
       "dimensions",
       "delivered_at",
-      "destination_country"
+      "destination_country",
+      "recipient_address",
+      "recipient_name",
+      "signatory"
     ],
-    "discarded": [
-      "recipient_address"
-    ],
+    "discarded": [],
     "unavailable": []
   },
   "links": [

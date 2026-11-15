@@ -81,6 +81,7 @@ describe('Saia tracking adapter', () => {
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Arrived at Destination Terminal', last_update: null, last_update_local: '2031-04-16T23:07:00',
       expected_delivery: '2031-04-17 09:30–13:45', weight_kg: 544.311,
+      receiver_name: 'Example Consignee Inc', receiver_address: '2 Sample Avenue\nConsignee Town, OH 00002',
       events: [
         { local_time: '2031-04-16T23:07:00', description: 'Arrived at Destination Terminal', provider_code: 'Arrived at Destination Terminal',
           location: 'Example City, OH', stage: 'in_transit', stage_source: 'carrier_map' },
@@ -101,15 +102,22 @@ describe('Saia tracking adapter', () => {
     });
   });
 
-  it('takes the delivery from the shipment’s status and reads nothing about the parties, references or signature', () => {
+  it('takes the delivery from the shipment’s status, reads the consignee and the signature, and nothing about the shipper or references', () => {
     const result = parseSaia(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       // The history ends with the delivery run; the status the page shows is newer.
-      last_status_text: 'Delivered', last_update_local: '2031-11-04T07:48:00', expected_delivery: null, weight_kg: 206.611 });
+      last_status_text: 'Delivered', last_update_local: '2031-11-04T07:48:00', expected_delivery: null, weight_kg: 206.611,
+      receiver_name: 'Example Consignee Inc', receiver_address: '2 Sample Avenue, Suite 9\nConsignee Town, TX 00012', signed_by: 'SYNTHETIC SIGNER' });
     expect(result).not.toHaveProperty('delivered_at');
+    // A signature before the delivery is no signer.
+    const early = fixture('delivered');
+    early.shipmentInformation.status = 'In Transit';
+    expect(parseSaia(early, DELIVERED)).not.toHaveProperty('signed_by');
     expect(result.events![0]).toMatchObject({ provider_code: 'Dispatched for Delivery', location: 'Example City, TX', stage: 'out_for_delivery' });
     for (const name of ['in-transit', 'delivered', 'interline']) {
-      const text = JSON.stringify(parseSaia(fixture(name), fixture(name).proNumber));
+      const rest = Object.entries(parseSaia(fixture(name), fixture(name).proNumber))
+        .filter(([key]) => !key.startsWith('receiver_') && key !== 'signed_by');
+      const text = JSON.stringify(rest);
       for (const value of ['Example Shipper', 'Example Consignee', 'Sample Road', 'Sample Avenue', 'Sample Street', 'Shipper Town',
         'Consignee Town', 'Dock', 'Suite', 'SYNTH', 'Synthetic goods', 'SIGNER', 'Manager', 'City Terminal', 'Town Terminal', 'Way', '555', '800000', '0000',
         'Example Partner', 'PPD', '990', 'EXA', 'SMP', '13:22']) {

@@ -45,7 +45,8 @@
       "history",
       "eta",
       "location",
-      "destination"
+      "destination",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -54,10 +55,10 @@
       "location",
       "destination",
       "delivered_at",
-      "provider_code"
+      "provider_code",
+      "signatory"
     ],
     "discarded": [
-      "signatory",
       "proof of delivery extras",
       "recipient details",
       "postcodes"

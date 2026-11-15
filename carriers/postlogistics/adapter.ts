@@ -67,6 +67,14 @@ function scans(history: JsonObject[]): JsonObject[] {
 }
 
 /** Projects one track-and-trace payload. Pure: the offline tests target this. */
+/** The recipient block of the first shipment that has one: the name, and the street above the postcode and town. */
+function recipientOf(shipments: readonly JsonObject[]): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const block = shipments.map((shipment) => record(shipment.Recipient)).find((recipient) => Object.keys(recipient).length) ?? {};
+  const name = text(block.Name).trim().slice(0, 120);
+  const address = [text(block.Street), text(block.City)].map((line) => line.trim()).filter(Boolean).join('\n').slice(0, 300);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 export function parsePostlogisticsTrackingResponse(value: unknown, trackingNumber: string, now = Date.now()): CarrierResult {
   const payload = record(value);
   if (payload.Data === null) throw new NotFoundError(PROVIDER);
@@ -132,6 +140,8 @@ export function parsePostlogisticsTrackingResponse(value: unknown, trackingNumbe
     .map((drive) => text(drive.PlannedDeliveryDate) || text(drive.EstimatedArrival))
     .find(Boolean) ?? '';
   const status = postlogisticsStatus(latestStatus);
+  const signer = status === 'delivered'
+    ? shipments.map((shipment) => text(record(shipment.Signature).Name).trim()).find(Boolean)?.slice(0, 120) : undefined;
   return {
     status,
     current_stage: postlogisticsStage(latestStatus),
@@ -139,6 +149,8 @@ export function parsePostlogisticsTrackingResponse(value: unknown, trackingNumbe
     last_update: text(latest.TimeStamp) || null,
     expected_delivery: eta ? eta.slice(0, 10) : null,
     ...(status === 'delivered' && text(latest.TimeStamp) ? { delivered_at: text(latest.TimeStamp) } : {}),
+    ...recipientOf(shipments),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

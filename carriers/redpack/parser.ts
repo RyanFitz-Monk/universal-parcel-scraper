@@ -71,10 +71,24 @@ function projectScan(row: unknown, index: number): Scan {
   };
 }
 
+/** A postcode the service sends as text or as a number, which loses its leading zero. */
+function postcode(value: unknown): string {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 && value <= 99_999 ? String(value).padStart(5, '0') : '';
+  return clean(value, 10);
+}
+
+/** The destination's name, then its neighbourhood above its postcode. */
+function recipientOf(destination: unknown): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  if (!isRecord(destination)) return {};
+  const name = clean(destination.name, 120);
+  const address = [clean(destination.suburb, 120), postcode(destination.zipCodeDestination)].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 /**
- * The reply of `trackingByNumber` for one guide, without the recipient who
- * signed, the destination's neighbourhood and postcode, the origin postcode or
- * the shipper's references it also carries.
+ * The reply of `trackingByNumber` for one guide: its scans, the destination's
+ * name, neighbourhood and postcode, and who received a delivered guide. The
+ * origin postcode and the shipper's references it also carries are not read.
  */
 export function parseRedpack(payload: unknown, rawNumber: string): CarrierResult {
   const number = normalizeRedpackNumber(rawNumber);
@@ -128,6 +142,7 @@ export function parseRedpack(payload: unknown, rawNumber: string): CarrierResult
   const parcel = parcels.length === 1 ? parcels[0]! : undefined;
   const weight = measure(parcel?.weigth);
   const sides = [parcel?.length, parcel?.width, parcel?.high].map(measure);
+  const signer = stage === 'delivered' ? clean(record.personReceived, 120) : '';
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -140,6 +155,8 @@ export function parseRedpack(payload: unknown, rawNumber: string): CarrierResult
     ...(service ? { service_name: service } : {}),
     ...(weight ? { weight_kg: weight } : {}),
     ...(sides.every(Boolean) ? { dimensions_text: `${sides.join(' × ')} cm` } : {}),
+    ...recipientOf(record.destination),
+    ...(signer ? { signed_by: signer } : {}),
     timezone: ZONE,
     events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),

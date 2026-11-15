@@ -10,8 +10,8 @@ The page supplies a milestone view, so native history remains partial and enable
 universal providers can supply a fuller scan log. Only dated milestones are retained;
 blank template dates do not establish movement. Local clocks keep the printed minute
 or day precision, with no asserted offset. Origin and destination labels alone do not
-establish acceptance or arrival. Delivery labels omit the signatory, and the separate
-sender, recipient and package details are discarded. HTTP failure diagnostics omit
+establish acceptance or arrival. A delivery label keeps who received the parcel, which is
+read as the signatory. The separate sender, recipient and package details are discarded. HTTP failure diagnostics omit
 the unprojected response body and private transport state.
 
 An unknown waybill counts as not found only when the carrier's specific notice names

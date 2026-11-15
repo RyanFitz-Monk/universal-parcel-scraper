@@ -18,7 +18,7 @@ const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_REC
 const rows = (result: ReturnType<typeof parseRoadrunner>) =>
   result.events!.map(event => [event.local_time, event.location ?? null, event.description, event.stage ?? null]);
 // The parties, their addresses and towns, the map's coordinates, the pickup and bill of lading
-// numbers, the weight, the contact details and the forms' token.
+// numbers, the weight, the contact details and the forms' token. The consignee is only in the receiver fields.
 const PRIVATE = /SAMPLE SUPPLY|JANE EXAMPLE|EXAMPLE PARTS|TEST HARDWARE|EXAMPLE AVE|TEST ST|SAMPLE RD|FICTION BLVD|SAMPLETON, CA|TESTVILLE, TN|EXAMPLEBURG, CA|0000[1-4]|\d+\.00000\d|5000(?:1111|2222)|SAMPLE-BOL|250|480|example\.com|555-010|SYNTHETIC-TOKEN|Residential|Prepaid/;
 const historyRow = (date: string, time: string, status: string) => `<tr>
                                     <td>${date}</td>
@@ -46,7 +46,8 @@ describe('Roadrunner tracking adapter', () => {
     const result = parseRoadrunner(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-17T12:07:00', expected_delivery: null,
-      service_name: 'Standard Service' });
+      service_name: 'Standard Service', receiver_name: 'JANE EXAMPLE', receiver_address: '200 TEST ST\nTESTVILLE, TN 00002' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-03-17T12:07:00', null, 'Delivered', 'delivered'],
       // A trailer closed after the delivery run left.
@@ -74,7 +75,8 @@ describe('Roadrunner tracking adapter', () => {
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('weight_kg');
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
-      expect(JSON.stringify(parseRoadrunner(page(name), number)), name).not.toMatch(PRIVATE);
+      const rest = Object.entries(parseRoadrunner(page(name), number)).filter(([key]) => !key.startsWith('receiver_'));
+      expect(JSON.stringify(rest), name).not.toMatch(PRIVATE);
     }
     // A list already newest first is kept, and a row the page repeats appears once.
     const body = page('delivered');
@@ -91,7 +93,7 @@ describe('Roadrunner tracking adapter', () => {
     const result = parseRoadrunner(page('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Phone Number Not Available', last_update: null, last_update_local: '2026-10-30T15:15:00',
-      expected_delivery: '2026-11-02' });
+      expected_delivery: '2026-11-02', receiver_name: 'TEST HARDWARE', receiver_address: '400 FICTION BLVD\nFICTIONVILLE, TX 00004' });
     expect(result).not.toHaveProperty('service_name');
     expect(rows(result)).toEqual([
       // The terminal could not reach the consignee: no movement, so no stage.
@@ -143,15 +145,19 @@ describe('Roadrunner tracking adapter', () => {
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Shipment delivered to consignee', expected_delivery: null });
   });
 
-  it('stages new wording through the shared rules, keeps the rest visible without a stage and drops a signer', () => {
+  it('stages new wording through the shared rules, keeps the rest visible without a stage and keeps a signer’s wording', () => {
     const shared = parseRoadrunner(page('delivered').replace('<td>Delivered </td>', '<td>Delivery attempted - consignee closed</td>'), DELIVERED);
     expect(shared.events![0]).toMatchObject({ description: 'Delivery attempted - consignee closed', stage: 'failed_attempt' });
     expect(shared.events![0]!.stage_source).toMatch(/^wording:/);
     const unknown = parseRoadrunner(page('in-transit').replace('Phone Number Not Available', 'Freight inspected'), IN_TRANSIT);
     expect(unknown.events![0]).toEqual({ local_time: '2026-10-30T15:15:00', description: 'Freight inspected' });
     const signed = parseRoadrunner(page('delivered').replace('<td>Delivered </td>', '<td>Delivered - Signed by J EXAMPLE</td>'), DELIVERED);
-    expect(signed.events![0]).toMatchObject({ description: 'Delivered', stage: 'delivered' });
-    expect(JSON.stringify(signed)).not.toContain('J EXAMPLE');
+    expect(signed.events![0]).toMatchObject({ description: 'Delivered - Signed by J EXAMPLE', stage: 'delivered' });
+    expect(signed).toMatchObject({ status: 'delivered', last_status_text: 'Delivered', signed_by: 'J EXAMPLE' });
+    // Without the parties table, no receiver is read.
+    const bare = parseRoadrunner(page('delivered').replace('id="package-details-table"', 'id="other-table"'), DELIVERED);
+    expect(bare).not.toHaveProperty('receiver_name');
+    expect(bare).not.toHaveProperty('receiver_address');
   });
 
   it('binds the fragment to the requested PRO and rejects fragments it cannot read', () => {

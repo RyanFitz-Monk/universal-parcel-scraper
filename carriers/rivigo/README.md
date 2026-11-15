@@ -38,9 +38,10 @@ public tracking page makes.
 - A delivery is partial while boxes are split off under child consignments, and a consignment
   with a return consignment raised for it is on its way back. Neither counts as delivered.
 - The estimate is `edd`, read as a day in India.
-- The reply carries the consignor and consignee, and the scans the staff who made them. None of
-  them is read, nor are the invoice, the proof of delivery, the child and return consignment
-  numbers or the failed attempts' reasons and contacts.
+- The consignee's name and address are read, the address as the one line the reply gives. A
+  delivery's remark naming who received the consignment gives the signatory. The consignor, the
+  staff who made the scans, the invoice, the proof of delivery, the child and return consignment
+  numbers and the failed attempts' reasons and contacts are not read.
 
 ## Limitations
 

@@ -59,7 +59,10 @@
       "status",
       "history",
       "location",
-      "weight"
+      "weight",
+      "recipient_name",
+      "signatory",
+      "postcodes"
     ],
     "discarded": [
       "parcel_count",
@@ -67,11 +70,8 @@
       "origin",
       "destination",
       "sender_name",
-      "recipient_name",
-      "postcodes",
       "order_contents",
       "remarks",
-      "signatory",
       "signature",
       "proof_of_delivery"
     ],

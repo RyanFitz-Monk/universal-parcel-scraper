@@ -19,7 +19,7 @@
     {"wording": "ARRIVED AT PSS JAKARTA", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A branch arrival; the branch's city follows PSS, Pandu Siwi Sentosa's initials."},
     {"wording": "DEPARTED FROM ORIGIN", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "The current tracker prints it for each departure, including one from a transit branch."},
     {"wording": "DELIVERY PROCESS BY COURIER", "stage": "out_for_delivery", "language": "en", "confirmedBy": "live"},
-    {"wording": "RECEIVED", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "The current tracker's delivery scan reads RECEIVED BY, the receiver's name and the delivery's date and time; the adapter keeps RECEIVED."},
+    {"wording": "RECEIVED BY", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "The current tracker's delivery scan; the receiver's name and the delivery's date and time follow."},
     {"wording": "DELIVERED", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "The current tracker's summary status over a delivered shipment."}
   ]
 }

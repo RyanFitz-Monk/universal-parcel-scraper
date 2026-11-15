@@ -39,14 +39,17 @@ tracking portal makes.
   delivery appointment keep the shipment in transit; "Phone Number Not Available" moves nothing.
 - The estimate is the overview's due date, dropped once the freight is delivered. The service is
   the one the services table names.
-- The fragment names the shipper and consignee with their addresses, places them on a map, and
-  holds the pickup number, the bill of lading, the ship date, the pieces, the weight without a
-  unit, the payment terms, the special handling and the delivery receipt. None of them is read,
-  nor are the forms to subscribe to updates.
+- The consignee's name and address are read from the "To:" column of the parties table. A
+  delivery row that names who signed for the freight keeps that wording, and the name becomes the
+  signer.
+- The fragment also names the shipper with its address, places both parties on a map, and holds
+  the pickup number, the bill of lading, the ship date, the pieces, the weight without a unit, the
+  payment terms, the special handling and the delivery receipt. None of them is read, nor are the
+  forms to subscribe to updates.
 
 ## Limitations
 
-- No sender, recipient, signature, weight or delivery receipt, and scans have no offset.
+- No sender, weight or delivery receipt, and scans have no offset.
 - A PRO reaches the adapter when it is filed under Roadrunner or opened from a Roadrunner link:
   nine digits are shared by many carriers, so no rule claims them and preflight does not ask it.
 - Rows of older shipments can be gone: some show only their pickup.

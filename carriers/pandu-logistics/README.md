@@ -28,13 +28,12 @@ tracking page makes.
   sends only the action and the number.
 - Scan clocks are wall clocks to the minute with no zone. Pandu's branches span WIB, WITA and
   WIT and the tracker names none of them, so the clocks stay `local_time`.
-- The delivery scan names the receiver and repeats its own clock; the adapter keeps
-  `RECEIVED`. The summary's `DELIVERED` decides a delivery even when its scan has not come in.
+- The delivery scan reads `RECEIVED BY`, the receiver's name and its own clock again. The
+  summary's `DELIVERED` decides a delivery even when its scan has not come in.
 - A branch arrival names the branch's city after `PSS`, Pandu Siwi Sentosa's initials, which
   becomes the scan's location. Other scans name no place.
-- The reply carries the sender's and the consignee's names, their cities, the consignee's
-  postcode, the contents and the receiver. None of them is kept; their names are also taken out
-  of the scans' wording, and so are phone numbers. The weight is kept.
+- The adapter reads the weight, the consignee's name, their postcode and city as the address,
+  and the receiver that the delivered summary or the delivery scan names.
 
 ## Limitations
 

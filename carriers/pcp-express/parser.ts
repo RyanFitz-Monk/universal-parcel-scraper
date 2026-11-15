@@ -23,9 +23,11 @@ const NOT_AN_AWB = /^AWB tidak valid\b/i;
 // Its answer for a request without a number.
 const NO_NUMBER = /^Awb wajib diisi\b/i;
 // The undelivered status, whose note opens with the reason the courier recorded:
-// "-{reason}-{receiver}-{date}-{time}". The receiver is not read.
+// "-{reason}-{receiver}-{date}-{time}".
 const UNDELIVERED = '1';
 const REASON = /^-([A-Z][A-Z .,/()&']{2,80}?)\s*-[^-]*-\d{4}-\d{2}-\d{2}-\d{2}:\d{2}$/i;
+// The delivery's note in the same shape, which names who took the parcel: "-DITERIMA OLEH-{receiver}-{date}-{time}".
+const RECEIVED = /^-[^-]*-(.+?)-\d{4}-\d{2}-\d{2}-\d{2}:\d{2}$/;
 // The brand before a branch's name, as "PCP EXPRESS PULOGADUNG".
 const BRAND = /^PCP\s+EXPRESS\b\s*/i;
 const MAX_SHIPMENTS = 10;
@@ -85,7 +87,7 @@ function place(row: Record<string, unknown>): string {
   return text(row, 'Location', 80) || text(row, 'OfficeName', 80).replace(BRAND, '');
 }
 
-interface Scan { event: CarrierEvent; order: number }
+interface Scan { event: CarrierEvent; order: number; signer?: string }
 
 function scanOf(row: Record<string, unknown>, number: string, order: number): Scan {
   const awb = text(row, 'AwbNo', 64);
@@ -95,6 +97,10 @@ function scanOf(row: Record<string, unknown>, number: string, order: number): Sc
   const description = wording(row, code);
   const location = place(row);
   const staged = pcpExpressStage(code, description);
+  // Who took a delivered parcel: the note's receiver, else the scan's receiver field.
+  const signer = staged?.stage === 'delivered'
+    ? clean(RECEIVED.exec(text(row, 'RelatioanName', 300))?.[1]) || text(row, 'ReceiverName', 120)
+    : '';
   return {
     event: {
       local_time: scanClock(row),
@@ -104,6 +110,7 @@ function scanOf(row: Record<string, unknown>, number: string, order: number): Sc
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
     },
     order,
+    ...(signer ? { signer } : {}),
   };
 }
 
@@ -125,8 +132,9 @@ function shipmentFor(list: unknown, number: string): Record<string, unknown> {
  * page makes, for one AWB: `{"status":true,"list":[{"header":…,"detail":[…]}]}`.
  * A number it has no shipment for is `{"status":false}` with a message, which
  * the page reports as not found. The shipment and each scan must name the AWB
- * asked. The sender's and recipient's names and addresses, the receiver who
- * signed, the courier and the run sheet, manifest and bag numbers are never read.
+ * asked. The recipient's name and address and the receiver who took a
+ * delivered parcel are read; the sender, the courier and the run sheet, manifest
+ * and bag numbers are not.
  */
 export function parsePcpExpress(payload: unknown, raw: string): CarrierResult {
   const number = normalizePcpExpressNumber(raw);
@@ -158,13 +166,18 @@ export function parsePcpExpress(payload: unknown, raw: string): CarrierResult {
   if (!scans.length) throw new NoHistoryError(PROVIDER);
   // Newest first by wall clock; the reply lists scans newest first, so scans of one second keep its order.
   const clock = (scan: Scan) => scan.event.local_time as string;
-  const events = scans.sort((a, b) => (clock(a) < clock(b) ? 1 : clock(a) > clock(b) ? -1 : a.order - b.order)).map(({ event }) => event);
+  scans.sort((a, b) => (clock(a) < clock(b) ? 1 : clock(a) > clock(b) ? -1 : a.order - b.order));
+  const events = scans.map(({ event }) => event);
 
   const newest = events[0]!;
   // A delivery settles the parcel whatever its clock, as the results page lists it first.
   const current = events.find((event) => event.stage === 'delivered') ?? events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
-  const service = text(shipment.header as Record<string, unknown>, 'ServiceName', 80);
+  const header = shipment.header as Record<string, unknown>;
+  const service = text(header, 'ServiceName', 80);
+  const receiver = text(header, 'ReceiverName', 120);
+  const address = text(header, 'ReceiverAddress', 300);
+  const signer = stage === 'delivered' ? scans.find(({ event }) => event === current)?.signer : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -173,6 +186,9 @@ export function parsePcpExpress(payload: unknown, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(/[A-Z]/i.test(service) ? { service_name: service } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

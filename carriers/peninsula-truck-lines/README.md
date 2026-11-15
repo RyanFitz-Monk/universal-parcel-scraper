@@ -27,26 +27,27 @@ Columbia, based in Federal Way. Tracked by PRO through the lookup its tracking p
   from anywhere.
 - The reply's shape follows the page's code and Peninsula's tracking API guide, which share it.
   Each log row has a day, a 12-hour time, a short activity ("PICKUP", "DOCK", "DEL MFST") and a
-  town with its state. No clock names its zone, so clocks stay wall clocks in `local_time`.
+  town with its state, kept as the log gives it. No clock names its zone, so clocks stay wall
+  clocks in `local_time`.
 - The log lists the oldest row first; the result turns it round. A row with its day and no time
   orders only against another day's, so the rows whose clocks compare decide which way round the
   log is. Repeated rows appear once.
 - The status line settles a delivery, a return, a problem and the hand-off to a partner carrier
   ("TENDERED TO … ON THEIR PRO …"), and a shipment without a staged row. Otherwise the newest
   staged row is ahead of it.
-- A delivered status line ("DELIVERED ON {day}") keeps its day and nothing else, so a receiver it
-  names is dropped. A log without a delivery row gets one on that day. A signer named after a
-  row's activity is dropped too.
+- A delivered status line ("DELIVERED TO {receiver} ON {day}") dates the delivery, and a log
+  without a delivery row gets one on that day. The receiver it names, or a signer named after a
+  row's activity, is read as the signatory.
 - A delivered line or row that notes freight delivered short, over or damaged ("DELIVERED –
   SHORT/DAMAGED") keeps that note and reads as a problem: the consignee has a claim to settle.
 - The reply can name the shipper and the consignee with their addresses, and holds the bill of
-  lading, the purchase order, a partner's PRO, the terminals and a delivery receipt flag. None of
-  them is read; a partner and its PRO stay in the status line's wording.
+  lading, the purchase order, a partner's PRO, the terminals and a delivery receipt flag. The
+  consignee's name and its town, state and ZIP code are read; a partner and its PRO stay in the
+  status line's wording.
 
 ## Limitations
 
-- No estimate, service, sender, recipient, signature, weight or delivery receipt, and scans have
-  no offset.
+- No estimate, service, sender, weight or delivery receipt, and scans have no offset.
 - A PRO reaches the adapter when it is filed under Peninsula Truck Lines or opened from a
   Peninsula link: PROs are bare runs of digits many carriers issue, so no rule claims them, and
   preflight does not ask it.

@@ -56,7 +56,8 @@
       "office_contact_details",
       "office_opening_hours",
       "origin",
-      "payment_details"
+      "payment_details",
+      "recipient_name"
     ],
     "scraped": [
       "status",
@@ -64,7 +65,8 @@
       "location",
       "eta",
       "weight",
-      "pickup_point"
+      "pickup_point",
+      "recipient_name"
     ],
     "discarded": [
       "volume",
@@ -78,7 +80,6 @@
     ],
     "unavailable": [
       "sender_name",
-      "recipient_name",
       "offset_timestamps"
     ]
   },

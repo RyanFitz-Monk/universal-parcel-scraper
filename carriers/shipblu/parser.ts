@@ -28,9 +28,8 @@ const BEFORE_PICKUP = new Set(['created', 'pickup_requested', 'pickup_reschedule
 const OWN_STEP = new Set(['created', 'pickup_requested', 'pickup_rescheduled', 'out_for_pickup', 'return_requested',
   'picked_up', 'cancelled', 'out_for_delivery', 'out_for_return', 'delivered', 'returned']);
 const FINAL: ReadonlySet<Stage> = new Set(['delivered', 'returned', 'exception']);
-// A run of eight or more digits, with spaces, brackets, dots or hyphens
-// between them, as phone numbers are written; a date stays.
-const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){7,}(?![A-Z\d])/gi;
+// A delivery's comment naming who took the parcel: "Handed to <name>".
+const HANDED = /^handed (?:over )?to\s+(.+?)\.?$/i;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
 
@@ -74,25 +73,28 @@ function statusCode(row: Record<string, unknown>): string {
   return code;
 }
 
-/** A missed visit's reason, without phone numbers. */
-function reason(row: Record<string, unknown>): string {
+/** A scan's comment, as the courier wrote it. */
+function comment(row: Record<string, unknown>): string {
   const value = row.comment;
   if (value === null || value === undefined) return '';
   if (typeof value !== 'string') throw new SchemaError(PROVIDER, 'ShipBlu returned an invalid comment');
-  return clean(value.replace(PHONE, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+  return clean(value, 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
 }
 
 interface Scan {
   readonly event: CarrierEvent;
   readonly timestamp: number;
+  readonly signer: string;
 }
 
 function projectRow(row: Record<string, unknown>): { key: string; scan: Scan } {
   const code = statusCode(row);
   const time = instant(row.created);
   if (!time) throw new SchemaError(PROVIDER, 'ShipBlu returned an invalid scan time');
-  const why = ATTEMPTS.has(code) ? reason(row) : '';
+  const note = comment(row);
+  const why = ATTEMPTS.has(code) ? note : '';
   const description = why ? `${shipbluWording(code)}: ${why}` : shipbluWording(code);
+  const signer = code === 'delivered' ? clean(HANDED.exec(note)?.[1], 120) : '';
   const staged = shipbluStage(code);
   const event: CarrierEvent = {
     time: time.iso,
@@ -100,7 +102,32 @@ function projectRow(row: Record<string, unknown>): { key: string; scan: Scan } {
     provider_code: code,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([time.timestamp, code, why]), scan: { event, timestamp: time.timestamp } };
+  return { key: JSON.stringify([time.timestamp, code, why]), scan: { event, timestamp: time.timestamp, signer } };
+}
+
+/** A part of the address that holds more than punctuation. */
+function part(value: unknown, maxLength = 200): string {
+  const text = clean(value, maxLength);
+  return /[\p{L}\p{N}]/u.test(text) ? text : '';
+}
+
+/**
+ * The recipient: their name, then their address lines on the first line and
+ * the postcode, zone, city and governorate on the next, as the reply names them.
+ */
+function recipientOf(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const customer = payload.customer;
+  if (!isRecord(customer)) return {};
+  const name = part(customer.full_name, 160) || [part(customer.first_name, 80), part(customer.last_name, 80)].filter(Boolean).join(' ');
+  const address = isRecord(customer.address) ? customer.address : {};
+  const zone = isRecord(address.zone) ? address.zone : {};
+  const city = isRecord(zone.city) ? zone.city : {};
+  const governorate = isRecord(city.governorate) ? city.governorate : {};
+  const street = [address.line_1, address.line_2, address.line_3].map((line) => part(line)).filter(Boolean).join(', ');
+  const area = [part(zone.name, 120), part(city.name, 120), part(governorate.name, 120)].filter(Boolean).join(', ');
+  const town = [part(address.zip_code, 16), area].filter(Boolean).join(' ');
+  const lines = [street, town].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(lines ? { receiver_address: lines } : {}) };
 }
 
 /**
@@ -117,9 +144,9 @@ function estimate(payload: Record<string, unknown>, type: ShipbluOrderType, curr
 /**
  * The reply of the tracking page's `GET /api/v1/{delivery-order|return}/{number}/`
  * for one number. An unknown number is HTTP 404, which the adapter reads before
- * this. The reply must name the number asked. It also carries the merchant, the
- * recipient's name, phones and address and the cash to collect, which are never
- * read.
+ * this. The reply must name the number asked. The recipient's name and address
+ * are read, and who took a delivered parcel when the delivery's comment names
+ * them. The merchant, the phones and the cash to collect are not.
  */
 export function parseShipblu(payload: unknown, raw: string): CarrierResult {
   const number = normalizeShipbluNumber(raw);
@@ -154,11 +181,14 @@ export function parseShipblu(payload: unknown, raw: string): CarrierResult {
   const source = summary ? 'carrier_map' : scanned?.stage_source;
   const delivered = stage === 'delivered'
     ? instant(payload.delivered_date)?.iso ?? events.find((event) => event.provider_code === 'delivered')?.time : undefined;
+  const signer = stage === 'delivered' ? scans.find((scan) => scan.signer)?.signer : undefined;
   const facts = {
     expected_delivery: estimate(payload, type, current, stage),
     // The window the customer chose with the day is not read yet; a filled one is named as unread.
     ...unreadEstimates({ preferred_window: payload.preferred_window }),
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...recipientOf(payload),
+    ...(signer ? { signed_by: signer } : {}),
   };
 
   if (!events.length) {

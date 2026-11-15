@@ -50,22 +50,29 @@ function numbers(row: Record<string, unknown>, key: string): string[] {
 const PHONE = /(?<![\p{L}\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![\p{L}\d])/gu;
 // Who took the parcel, after a delivery remark ("Delivered to …", "Received by …").
 const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:by|to|signed|received)\b[\s\S]*$/i;
+// The name a delivery remark gives after "Received by" or "Signed by".
+const SIGNER = /\b(?:received|signed)(?: for)? by\s*:?\s*([^,;()]+?)\s*\.?\s*(?:[,;()]|$)/i;
+// A line of the recipient's block that gives a phone number rather than an address.
+const CONTACT_LINE = /^(?:tel|phone|mobile|hp)\b/i;
 const squash = (value: string) => value.toLowerCase().replace(/[^\p{L}\d]+/gu, '');
+const trimmed = (value: string) => value.replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
 
 /**
  * A scan's wording as the page shows it: the milestone, then the remark
  * after a colon when it says more, as "IN TRANSIT: Customs Clearance
- * Begins". A delivery remark loses a clause naming who took the parcel, and
- * both lose phone numbers.
+ * Begins". The milestone and remark it returns are what the status map
+ * reads: a delivery remark without a clause naming who took the parcel, and
+ * both without phone numbers.
  */
 export function quantiumWording(milestone: string, remark: string): { milestone: string; remark: string; description: string } {
   const own = clean(milestone.replace(PHONE, ''), 200);
   let note = clean(remark.replace(PHONE, ''), 300);
   if (quantiumStage(own, note)?.stage === 'delivered') note = note.replace(RECEIVER, '');
-  note = note.replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
-  if (!note) return { milestone: own, remark: '', description: own };
-  if (!own) return { milestone: '', remark: note, description: note };
-  return { milestone: own, remark: note, description: squash(own).includes(squash(note)) ? own : `${own}: ${note}` };
+  note = trimmed(note);
+  const said = clean(milestone, 200);
+  const added = trimmed(clean(remark, 300));
+  const description = !added ? said : !said ? added : squash(said).includes(squash(added)) ? said : `${said}: ${added}`;
+  return { milestone: own, remark: note, description };
 }
 
 /**
@@ -121,7 +128,7 @@ function historyRows(shipment: Record<string, unknown>): Row[] {
   return root.children.map(xmlRow);
 }
 
-function scan(row: Row): { key: string; event: CarrierEvent } {
+function scan(row: Row): { key: string; event: CarrierEvent; signer: string } {
   const local = wallClock(clean(row.clock, 40));
   const { milestone, remark, description } = quantiumWording(row.milestone, row.remark);
   if (!description) throw new SchemaError(PROVIDER, 'Quantium returned a scan without wording');
@@ -131,7 +138,17 @@ function scan(row: Row): { key: string; event: CarrierEvent } {
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local, description.toLowerCase()]), event };
+  const signer = staged?.stage === 'delivered' ? clean(SIGNER.exec(clean(row.remark, 300))?.[1], 120) : '';
+  return { key: JSON.stringify([local, description.toLowerCase()]), event, signer };
+}
+
+/** The recipient's block: their name on the first line, then the address, without a phone line. */
+function recipient(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const value = shipment.cnee_addr;
+  if (value === null || value === undefined) return {};
+  if (typeof value !== 'string' || value.length > 1_000) throw new SchemaError(PROVIDER, 'Quantium returned an invalid cnee_addr');
+  const [name, ...address] = value.split(/\r?\n/).map((line) => clean(line, 200)).filter((line) => line && !CONTACT_LINE.test(line));
+  return { ...(name ? { receiver_name: name.slice(0, 120) } : {}), ...(address.length ? { receiver_address: address.join('\n').slice(0, 300) } : {}) };
 }
 
 /** The recipient's country as an ISO code, else as the page names it. */
@@ -162,7 +179,7 @@ function shipmentFor(rows: unknown[], number: string): Record<string, unknown> {
  * The reply of the tracking page's `order_track_maint` lookup for one number: a
  * list of the shipments it found, empty for a number it does not know, which
  * the page shows as "No record!". The reply also holds the shipper's and the
- * recipient's addresses, which the page does not show; they are never read.
+ * recipient's addresses, which the page does not show; the recipient's is read.
  */
 export function parseQuantium(payload: unknown, raw: string): CarrierResult {
   const number = normalizeQuantiumNumber(raw);
@@ -177,13 +194,15 @@ export function parseQuantium(payload: unknown, raw: string): CarrierResult {
 
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signers = new Map<CarrierEvent, string>();
   for (const row of historyRows(shipment)) {
-    const { key, event } = scan(row);
+    const { key, event, signer } = scan(row);
     if (seen.has(key)) continue;
     seen.add(key);
     events.push(event);
+    if (signer) signers.set(event, signer);
   }
-  const facts = destination(shipment);
+  const facts = { ...destination(shipment), ...recipient(shipment) };
   if (!events.length) {
     // A shipment without scans still has the page's current status.
     const { milestone, description } = quantiumWording(text(shipment, 'status_desc', 400), '');
@@ -209,6 +228,7 @@ export function parseQuantium(payload: unknown, raw: string): CarrierResult {
   const newest = newestFirst[0]!;
   const scanned = newestFirst.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  const signer = stage === 'delivered' ? signers.get(scanned!) : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
@@ -217,6 +237,7 @@ export function parseQuantium(payload: unknown, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...facts,
+    ...(signer ? { signed_by: signer } : {}),
     events: newestFirst,
   };
 }

@@ -45,12 +45,14 @@ function wallClock(date: string, clock: string): string | null {
   return parsed.isValid ? parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss") : null;
 }
 
-/**
- * The scan's wording. A delivery names, after a slash, who signed for the
- * item, masked with asterisks; that is never read.
- */
+/** The scan's whole wording. A delivery names, after a slash, who signed for the item, masked with asterisks. */
 function wording(raw: string): string {
-  let text = raw.replace(/\s+\/\s[\s\S]*$/, '');
+  return clean(raw, 300).replace(/[\s/:-]+$/, '');
+}
+
+/** The wording the status map reads: without the masked name after a slash. */
+function stageWording(description: string): string {
+  let text = description.replace(/\s+\/\s[\s\S]*$/, '');
   const masked = text.search(/\S*\*/);
   if (masked >= 0) text = text.slice(0, masked);
   return clean(text.replace(/[\s/:-]+$/, ''), 300);
@@ -69,11 +71,17 @@ function weightKg(raw: unknown): number | undefined {
   return grams > 0 ? grams / 1000 : undefined;
 }
 
+/** A masked name the reply gives, as given. */
+function name(raw: unknown): string {
+  return typeof raw === 'string' ? clean(raw, 120) : '';
+}
+
 /**
  * The tracking service's reply for one barcode: its movements, newest first,
- * each with PTT's wording, office and wall clock. The masked names of the
- * sender, the recipient and whoever signed for the item, the postage and the
- * offices of acceptance and delivery are never read.
+ * each with PTT's wording, office and wall clock, the recipient's masked name
+ * and, for a delivered item, the masked name of who took it. The sender's
+ * masked name, the postage and the offices of acceptance and delivery are
+ * not read.
  */
 export function parsePtt(payload: unknown, rawNumber: string): CarrierResult {
   const number = normalizePttNumber(rawNumber);
@@ -100,13 +108,14 @@ export function parsePtt(payload: unknown, rawNumber: string): CarrierResult {
   if (!Array.isArray(rows) || rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'PTT returned an invalid item history');
   if (!rows.length) throw new IndeterminateError(PROVIDER, 'PTT returned no movements for the barcode');
 
-  const scans: { event: CarrierEvent; order: number }[] = [];
+  const scans: { event: CarrierEvent; order: number; wording: string }[] = [];
   const seen = new Set<string>();
   rows.forEach((row, index) => {
     if (!isRecord(row) || typeof row.ISLEM !== 'string') throw new SchemaError(PROVIDER, 'PTT returned an invalid movement');
     const time = wallClock(clean(row.ITARIH, 16), clean(row.ISAAT, 16));
     const description = wording(row.ISLEM);
-    if (!time || !description) throw new SchemaError(PROVIDER, 'PTT returned a movement without a clock or wording');
+    const staged = stageWording(description);
+    if (!time || !staged) throw new SchemaError(PROVIDER, 'PTT returned a movement without a clock or wording');
     const location = place(row.IMERK);
     const event: CarrierEvent = { local_time: time, description, ...(location ? { location } : {}) };
     // A parcel can repeat a movement with the same clock, office and wording.
@@ -115,15 +124,15 @@ export function parsePtt(payload: unknown, rawNumber: string): CarrierResult {
     seen.add(identity);
     // The service numbers its movements in the order it recorded them.
     const sequence = typeof row.siraNo === 'number' && Number.isFinite(row.siraNo) ? row.siraNo : rows.length - index;
-    scans.push({ event, order: sequence });
+    scans.push({ event, order: sequence, wording: staged });
   });
   // Newest first; equal clocks keep the order PTT recorded them in.
   scans.sort((left, right) => right.event.local_time! > left.event.local_time! ? 1
     : right.event.local_time! < left.event.local_time! ? -1 : right.order - left.order);
   const events = scans.map(({ event }) => event);
-  for (const event of events) {
-    const classified = pttStage(event.description!);
-    if (classified) Object.assign(event, { stage: classified.stage, stage_source: classified.source });
+  for (const scan of scans) {
+    const classified = pttStage(scan.wording);
+    if (classified) Object.assign(scan.event, { stage: classified.stage, stage_source: classified.source });
   }
 
   const latest = events[0]!;
@@ -137,6 +146,8 @@ export function parsePtt(payload: unknown, rawNumber: string): CarrierResult {
       : undefined;
   const point = waiting?.location ?? '';
   const weight = weightKg(payload.GR);
+  const recipient = name(payload.ALICI);
+  const signer = stage === 'delivered' ? name(payload.TESALAN) : '';
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -147,6 +158,8 @@ export function parsePtt(payload: unknown, rawNumber: string): CarrierResult {
     expected_delivery: null,
     ...(point ? { pickup_point: point } : {}),
     ...(weight ? { weight_kg: weight } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events,
   };
 }

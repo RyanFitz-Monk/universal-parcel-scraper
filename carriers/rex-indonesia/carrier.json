@@ -44,12 +44,14 @@
       "recipient_details",
       "weight",
       "parcel_count",
-      "service_name"
+      "service_name",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "discarded": [
       "sender_details",

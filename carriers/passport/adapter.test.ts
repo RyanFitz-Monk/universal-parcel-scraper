@@ -45,7 +45,7 @@ describe('Passport tracking page', () => {
     const result = normalizeCarrierResult(parsePassport(delivered, DELIVERED, READ_AT));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered', last_update: null,
       last_update_local: '2026-03-06T12:22:00', expected_delivery: null, delivery_carrier: 'royal-mail', delivery_tracking_number: S10,
-      destination_country: 'GB' });
+      destination_country: 'GB', receiver_address: 'Exampletown, Exampleshire' });
     expect(result.delivered_at).toBeUndefined();
     expect(result.events?.map((event) => [event.time ?? event.local_time, event.description, event.location, event.stage])).toEqual([
       ['2026-03-06T12:22:00', 'Delivered', 'EXAMPLETOWN DO, GB', 'delivered'],
@@ -59,8 +59,8 @@ describe('Passport tracking page', () => {
       ['2026-03-01T15:10:00Z', 'Thank you, order information received!', undefined, 'registered'],
     ]);
     expect(result.events?.slice(0, 3).every((event) => event.time === undefined)).toBe(true);
-    // The recipient's town, the order reference, the merchant and the partner's phone stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Exampletown,|Exampleshire|ORDER-0001|example-shop|\+44|Delivery with in-country/);
+    // The order reference, the merchant and the partner's phone stay out.
+    expect(JSON.stringify(result)).not.toMatch(/ORDER-0001|example-shop|\+44|Delivery with in-country/);
     expect(deliveryHandoff('passport', DELIVERED, result)).toEqual({ carrier: 'royal-mail', number: S10, basis: 'partner' });
   });
 
@@ -68,7 +68,7 @@ describe('Passport tracking page', () => {
     const result = parsePassport(transit, TRANSIT, Date.parse('2026-01-06T12:00:00Z'));
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', current_stage_source: 'carrier_map',
       last_update: '2026-01-06T05:55:00Z', expected_delivery_from: '2026-01-07', expected_delivery: '2026-01-09',
-      delivery_tracking_number: '00300000000000000017', destination_country: 'AU' });
+      delivery_tracking_number: '00300000000000000017', destination_country: 'AU', receiver_address: 'Example City, QLD' });
     // Parcel Right is DAI Post's Australian brand; Passport converts its clocks to UTC.
     expect(result.delivery_carrier).toBe('dai-post');
     expect(result.events?.map((event) => event.time)).toEqual(['2026-01-06T05:55:00Z', '2026-01-05T22:02:00Z', '2026-01-05T06:58:00Z',
@@ -125,11 +125,12 @@ describe('Passport tracking page', () => {
       ['2026-03-02T11:53:00Z', 'accepted'],
     ]);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_update: null, last_update_local: '2026-03-05T10:45:00' });
-    // A bare country and a place with a digit are no scan places; an unknown wording stays unstaged.
+    // A bare country is no scan place, a place with a digit is one; an unknown wording stays unstaged.
     const quiet = parsePassport(history(scan('Teleported', 'Mar 05', '10:45', 'GB'), scan('Shipped from origin processing center', 'Mar 03', '20:06', 'DOCK 4, US')),
       DELIVERED, READ_AT);
     expect(quiet.events).toEqual([{ local_time: '2026-03-05T10:45:00', description: 'Teleported' },
-      { time: '2026-03-03T20:06:00Z', description: 'Shipped from origin processing center', stage: 'in_transit', stage_source: 'carrier_map' }]);
+      { time: '2026-03-03T20:06:00Z', description: 'Shipped from origin processing center', location: 'DOCK 4, US', stage: 'in_transit',
+        stage_source: 'carrier_map' }]);
     expect(quiet).toMatchObject({ status: 'in_transit', last_status_text: 'Teleported' });
     const rows = Array.from({ length: 120 }, (_, index) => scan(`Item processed ${index}`, 'Mar 05', '10:45'));
     const long = parsePassport(history(...rows), DELIVERED, READ_AT);

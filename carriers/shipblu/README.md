@@ -38,9 +38,11 @@ makes.
   delivery order's estimate; that endpoint answers a delivered order with the current time, so
   it is not read. A filled `preferred_window`, the window the customer chose with the day, which
   the adapter does not read yet, is named in `unread_estimates`.
-- A missed visit keeps the reason the courier gave, without phone numbers. Other comments, the
-  merchant, the recipient's name, phones, address and coordinates, the visit days, the packages
-  and the cash to collect come in the same reply and are not read.
+- A missed visit keeps the whole reason the courier gave. The recipient's name and address are
+  read: the address lines, then the zone, city and governorate as ShipBlu names them. A delivery
+  whose comment reads "Handed to" a person names who took the parcel. Other comments, the
+  merchant, the phones and coordinates, the visit days, the packages and the cash to collect
+  come in the same reply and are not read.
 
 ## Limitations
 

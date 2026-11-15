@@ -60,12 +60,11 @@
       "location",
       "weight",
       "dimensions",
-      "pickup_point"
-    ],
-    "discarded": [
+      "pickup_point",
       "pickup_code",
       "recipient_address"
     ],
+    "discarded": [],
     "unavailable": [
       "sender_name",
       "receiver_name"

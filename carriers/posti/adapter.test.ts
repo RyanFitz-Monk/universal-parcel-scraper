@@ -12,19 +12,36 @@ const tokens = () => Response.json({ id_token: jwt(), role_tokens: [{ type: 'ano
 afterEach(() => vi.restoreAllMocks());
 
 describe('Posti projection', () => {
-  it('binds identity, sorts offset timestamps, and selects only declared fields', () => {
+  it('binds identity, sorts offset timestamps, and reads the recipient\'s address', () => {
     const data = fixture();
     hit(data).events.reverse();
     const result = parse(data, NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', weight_kg: 0.5,
       dimensions_text: '25 × 15 × 10 cm', pickup_point: 'Example pickup point\nExample street 1\n00000 Example city',
-      timezone: 'Europe/Helsinki' });
+      timezone: 'Europe/Helsinki', receiver_name: 'PRIVATE_NAME', receiver_address: 'PRIVATE_ADDRESS\nPRIVATE_POSTCODE PRIVATE_CITY' });
     expect(result.events?.map((event) => event.stage)).toEqual(['delivered', 'pending', 'ready_for_pickup', 'in_transit', 'in_transit']);
     expect(result.last_update).toBe('2026-01-12T13:00:00Z');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    // A collected parcel's pickup code no longer releases anything.
+    expect(result).not.toHaveProperty('pickup_code');
     const capabilities = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8')).capabilities;
     expect(capabilities).toEqual(['history', 'location', 'weight', 'dimensions', 'pickup_point']);
     expect(result.events?.every((event) => event.description && event.time)).toBe(true);
+  });
+
+  it('keeps the answer when Posti refuses only the recipient\'s fields, and fails on any other error', () => {
+    const data = fixture('ready-for-pickup');
+    hit(data).delivery = null;
+    hit(data).pickupPoint.pickupDetails = null;
+    const refused = { ...data, errors: [
+      { errorType: 'Unauthorized', path: ['consumerSearchShipments', 'hits', 0, 'delivery'] },
+      { errorType: 'Unauthorized', path: ['consumerSearchShipments', 'hits', 0, 'pickupPoint', 'pickupDetails'] },
+    ] };
+    const result = parse(refused, NUMBER);
+    expect(result).toMatchObject({ current_stage: 'ready_for_pickup', pickup_point: 'Example parcel locker\nExample street 1\n00000 EXAMPLE CITY' });
+    expect(result).not.toHaveProperty('pickup_code');
+    expect(result).not.toHaveProperty('receiver_address');
+    expect(() => parse({ ...data, errors: [{ message: 'Unavailable', path: ['consumerSearchShipments'] }] }, NUMBER))
+      .toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
 
   it('keeps scans of one instant in the carrier\'s order when it lists them oldest first', () => {
@@ -48,8 +65,7 @@ describe('Posti projection', () => {
     const data = fixture('ready-for-pickup');
     const result = parse(data, NUMBER);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'ready_for_pickup',
-      pickup_point: 'Example parcel locker\nExample street 1\n00000 EXAMPLE CITY' });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+      pickup_point: 'Example parcel locker\nExample street 1\n00000 EXAMPLE CITY', pickup_code: 'PRIVATE_CODE' });
     hit(data).pickupPoint.type = 'POSTI_SERVICE_POINT';
     delete hit(data).pickupPoint.address.postcode;
     expect(parse(data, NUMBER).pickup_point).toBe('Example parcel locker\nExample street 1\nEXAMPLE CITY');
@@ -225,8 +241,9 @@ describe('Posti anonymous transport', () => {
     const body = JSON.parse(String(request.body));
     expect(body.variables).toEqual({ searchTerms: [NUMBER], locale: 'en' });
     expect(body.query).toContain('type: PUBLIC_SHIPMENTS');
-    expect(body.query).toContain('pickupPoint { type address { publicName streetAddress postcode city } }');
-    expect(body.query).not.toMatch(/destination|pinCode|payments|userRole/);
+    expect(body.query).toContain('pickupPoint { type address { publicName streetAddress postcode city } pickupDetails { pinCode } }');
+    expect(body.query).toContain('delivery { destination { name street postcode city } }');
+    expect(body.query).not.toMatch(/payments|userRole/);
     expect(request.cache).toBe('no-store');
     expect(request.redirect).toBe('error');
     expect(new Headers(request.headers).get('X-Posti-Token')).toMatch(/^Bearer fixture\./);

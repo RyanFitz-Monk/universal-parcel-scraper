@@ -47,7 +47,8 @@ describe('PCP Express HTTP adapter', () => {
     const result = parsePcpExpress(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'SHIPMENT STATUS DELIVERED', last_update: null, last_update_local: '2026-01-09T14:22:10',
-      expected_delivery: null, service_name: 'TITIPAN REGULER EXPRESS - (TREX)' });
+      expected_delivery: null, service_name: 'TITIPAN REGULER EXPRESS - (TREX)', receiver_name: 'Sample Recipient',
+      receiver_address: 'SAMPLE CITY, SAMPLE REGENCY', signed_by: 'Sample Receiver' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage, event.location, event.description])).toEqual([
       ['2026-01-09T14:22:10', '2', 'delivered', 'SAMPLE CITY', 'SHIPMENT STATUS DELIVERED'],
       ['2026-01-09T08:31:02', '77', 'out_for_delivery', 'SAMPLE CITY', 'ASSIGNMENT DELIVERY PROCESS'],
@@ -62,16 +63,23 @@ describe('PCP Express HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Recipient|Receiver|Courier|Sender)|SAMPLE (?:RECEIVER|COURIER|SENDER|REGENCY)|DITERIMA|DRSMP|DMO|BAGAAA|AOAAA|ONLINE SHOP/i);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Courier|Sender)|SAMPLE (?:COURIER|SENDER)|DITERIMA|DRSMP|DMO|BAGAAA|AOAAA|ONLINE SHOP/i);
   });
 
   it('reads a parcel on its way, naming the branch when the scan has no town', () => {
     const result = parsePcpExpress(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'ARRIVAL AT DESTINATION',
-      last_update_local: '2026-02-11T06:02:33', service_name: 'JAMINAN ESOK TIBA - (JET)' });
+      last_update_local: '2026-02-11T06:02:33', service_name: 'JAMINAN ESOK TIBA - (JET)', receiver_name: 'Sample Recipient',
+      receiver_address: 'SAMPLE TOWN, SAMPLE REGENCY' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.provider_code, event.location])).toEqual([
       ['41', 'Sample Town'], ['39', 'SAMPLE ORIGIN'], ['201', 'SAMPLE ORIGIN'],
     ]);
+  });
+
+  it('takes who received the parcel from the scan’s receiver field when the delivery’s note does not name them', () => {
+    const result = parsePcpExpress(changed('delivered', (shipment) => { shipment.detail[0]!.RelatioanName = null; }), DELIVERED);
+    expect(result).toMatchObject({ current_stage: 'delivered', signed_by: 'SAMPLE RECEIVER-OTHERS' });
   });
 
   it('takes a delivery as the parcel’s status whatever its clock, and orders scans of one second as the reply does', () => {

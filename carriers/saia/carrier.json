@@ -67,16 +67,17 @@
       "eta",
       "eta_window",
       "weight",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "recipient_address",
+      "signature",
+      "recipient_name"
     ],
     "discarded": [
       "delivered_at",
       "parcel_count",
       "volume",
       "sender_details",
-      "recipient_address",
       "customer_reference",
-      "signature",
       "delivery_partner",
       "office_contact_details"
     ],

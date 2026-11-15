@@ -17,7 +17,9 @@ Only explicit out-for-delivery wording refines the broad last-mile code.
 
 The field called `carrier` contains a commodity label and does not identify a delivery company.
 The recorded transfer reference stays whole; its issuer can propose a separate confirmation.
-Customer order references, diagram details, recipient fields and contact suffixes are omitted.
+The record's `receiver` is read as the recipient's name. Scans keep their whole wording and place;
+a recipient, a signer, a phone or a link after the wording is left out only where the status map reads it.
+Customer order references and diagram details are omitted.
 The delivery signature date and elapsed-day counter are not an estimate.
 
 ## Testing

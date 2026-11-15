@@ -73,6 +73,7 @@ describe('R+L Carriers tracking adapter', () => {
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-02-12T12:10:00', expected_delivery: null,
       service_name: 'Standard Service', weight_kg: 566.99,
+      receiver_name: 'SYNTHETIC RECEIVER LLC', receiver_address: '100 EXAMPLE AVE\nOAK HOLLOW, TN 00001',
       events: [
         { local_time: '2026-02-12T12:10:00', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
         { local_time: '2026-02-12T03:44:18', description: 'Arrived at destination terminal', stage: 'in_transit', stage_source: 'carrier_map' },
@@ -83,12 +84,12 @@ describe('R+L Carriers tracking adapter', () => {
         { local_time: '2026-02-10T01:48:13', description: 'Departed LAKEVIEW, KY in route to OAK HOLLOW , TN', location: 'LAKEVIEW, KY',
           stage: 'in_transit', stage_source: 'carrier_map' },
         { local_time: '2026-02-09T18:02:40', description: 'Arrived at origin terminal', stage: 'in_transit', stage_source: 'carrier_map' },
-        { local_time: '2026-02-09T16:15:22', description: 'Picked Up', stage: 'accepted', stage_source: 'carrier_map' },
+        { local_time: '2026-02-09T16:15:22', description: 'Picked Up in RIVERTON, KY', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    // The parties, the bill of lading and the pickup's town stay behind.
+    // The shipper and the bill of lading stay behind.
     const text = JSON.stringify(result);
-    for (const value of ['SYNTHETIC', 'EXAMPLE AVE', '00001', 'BOL-SYNTH', 'RIVERTON']) expect(text, value).not.toContain(value);
+    for (const value of ['SYNTHETIC SENDER', '200 SAMPLE RD', '00002', 'BOL-SYNTH']) expect(text, value).not.toContain(value);
   });
 
   it('reads a delayed shipment as in transit, with its estimated day and towns written without spaces', () => {
@@ -96,13 +97,14 @@ describe('R+L Carriers tracking adapter', () => {
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Arrived at GAINESVILLE,GA', last_update: null, last_update_local: '2026-07-16T11:30:09',
       expected_delivery: '2026-07-17', service_name: 'Standard Service', weight_kg: 190.509,
+      receiver_name: 'SYNTHETIC DEPOT CORP', receiver_address: '300 PLACEHOLDER BLVD\nGAINESVILLE, GA 00004',
       events: [
         { local_time: '2026-07-16T11:30:09', description: 'Arrived at GAINESVILLE,GA', location: 'GAINESVILLE, GA',
           stage: 'in_transit', stage_source: 'carrier_map' },
         { local_time: '2026-07-15T02:05:44', description: 'Departed MESA VERDE,AZ in route to GAINESVILLE,GA', location: 'MESA VERDE, AZ',
           stage: 'in_transit', stage_source: 'carrier_map' },
         { local_time: '2026-07-14T15:40:12', description: 'Arrived at origin terminal', stage: 'in_transit', stage_source: 'carrier_map' },
-        { local_time: '2026-07-14T13:12:05', description: 'Picked Up', stage: 'accepted', stage_source: 'carrier_map' },
+        { local_time: '2026-07-14T13:12:05', description: 'Picked Up in MESA VERDE, AZ', stage: 'accepted', stage_source: 'carrier_map' },
         { local_time: '2026-07-14T13:12:05', description: 'Shipment Delayed', stage: 'in_transit', stage_source: 'carrier_map' },
       ],
     });
@@ -124,7 +126,10 @@ describe('R+L Carriers tracking adapter', () => {
     const bare = deliveredWith((entry) => { entry.History = []; entry.Head.Status = 'In Transit'; });
     expect(parseRlCarriers(bare, DELIVERED)).toEqual({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'In Transit', last_update: null, expected_delivery: '2026-02-12', service_name: 'Standard Service', weight_kg: 566.99,
-      summary_only: true, events: [] });
+      receiver_name: 'SYNTHETIC RECEIVER LLC', receiver_address: '100 EXAMPLE AVE\nOAK HOLLOW, TN 00001', summary_only: true, events: [] });
+    // Without a consignee among the parties, nothing is said of the recipient.
+    const shipperOnly = deliveredWith((entry) => { entry.BillingParties = entry.BillingParties.filter((party: { Type: string }) => party.Type !== 'CONSIGNEE'); });
+    expect(parseRlCarriers(shipperOnly, DELIVERED)).not.toHaveProperty('receiver_name');
     const unknown = deliveredWith((entry) => { entry.History = null; entry.Head.Status = 'Pending Review'; });
     expect(() => parseRlCarriers(unknown, DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate' }));
     // A row off the usual path stands unless the summary says delivered.

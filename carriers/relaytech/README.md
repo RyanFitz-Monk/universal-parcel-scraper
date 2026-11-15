@@ -39,8 +39,9 @@ collected. Tracked through the lookup its tracking app makes, with the delivery 
   stands in. Estimates without an offset are not read.
 - A parcel sent for collection gets its shop as the pickup point. The shop a seller dropped a
   parcel off at is not one.
-- The recipient's address and coordinates, the safe place with its door codes, the courier's
-  notes, proof-of-delivery photos and the shipper's name are not kept.
+- The recipient's address is read: its street lines, then the town and postcode. Its
+  coordinates, the safe place with its door codes, the courier's notes, proof-of-delivery photos
+  and the shipper's name are not kept.
 - The sender's postcode opens a parcel too; the reply's `viewer` says which side asked.
 
 ## Limitations

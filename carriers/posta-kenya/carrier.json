@@ -54,7 +54,8 @@
       "history",
       "location",
       "event_details",
-      "destination_country"
+      "destination_country",
+      "signatory"
     ],
     "discarded": [
       "origin",
@@ -64,7 +65,6 @@
       "recipient_name",
       "recipient_address",
       "delivered_at",
-      "signatory",
       "recipient_id",
       "proof_of_delivery"
     ],

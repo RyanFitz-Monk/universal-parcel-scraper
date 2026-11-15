@@ -36,8 +36,8 @@ marketplaces and online shops. Tracked through the delivery service its tracker 
 - `Delivery failed`, milestone 8, means Shadowfax sends the parcel back to the seller, so it is
   an exception rather than a failed attempt.
 - The location is the facility a scan's line names.
-- The reply's masked phone number, delivery remark and proof of delivery are not kept. Lines
-  lose phone numbers and one-time codes.
+- The reply's masked phone number, delivery remark and proof of delivery are not kept. A line
+  keeps phone numbers and one-time codes; its stage is read without them.
 
 ## Limitations
 

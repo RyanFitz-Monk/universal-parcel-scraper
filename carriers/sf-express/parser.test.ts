@@ -9,10 +9,10 @@ const copy = () => structuredClone(fixture);
 describe('SF Express public route parsing', () => {
   it('dates every scan on UTC+08:00, the newest as the last update and the delivery as delivered', () => {
     const result = parse(copy(), NUMBER);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered',
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Your express has been delivered',
       last_update: '2026-01-08T11:20:00+08:00', delivered_at: '2026-01-08T11:20:00+08:00', expected_delivery: null });
     expect(result.events).toHaveLength(6);
-    expect(result.events?.[0]).toEqual({ time: '2026-01-08T11:20:00+08:00', description: 'Delivered', provider_code: '80', stage: 'delivered' });
+    expect(result.events?.[0]).toEqual({ time: '2026-01-08T11:20:00+08:00', description: 'Your express has been delivered', provider_code: '80', stage: 'delivered' });
     expect(result.events?.[1]?.stage).toBe('out_for_delivery');
     expect(result.events?.at(-1)?.time).toBe('2026-01-04T12:00:00+08:00');
     expect(result.events?.every((event) => event.local_time === undefined && event.time?.endsWith('+08:00'))).toBe(true);
@@ -166,14 +166,17 @@ describe('SF Express public route parsing', () => {
     expect(parse(value, NUMBER).status).toBe('out_for_delivery');
   });
 
-  it('drops proof-access rows and personal detail fields', () => {
+  it('drops proof-access rows and the reply’s personal detail fields, and keeps the names a remark gives', () => {
     const value = copy();
     value.result[0]!.routes[0]!.remark = 'Collected <a id="opr_phone" href="tel:000000000">Synthetic Person</a><script>private()</script>';
     value.result[0]!.routes[5]!.remark = 'Delivered to Synthetic Person';
     value.result[0]!.routes.push({ ...value.result[0]!.routes[5]!, remark: '<a href="https://example.invalid/private">AWB Info &amp; POD</a>', scanDateTime: '' });
     const result = parse({ ...value, recipient: 'Synthetic Person', proof: 'https://example.invalid/private' }, NUMBER);
     expect(result.events).toHaveLength(6);
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic Person|private|opr_phone|zoneCode|promiseTime|waybillNo/);
+    expect(result).toMatchObject({ last_status_text: 'Delivered to Synthetic Person' });
+    expect(result.events!.map((event) => event.description)).toEqual(expect.arrayContaining(['Collected Synthetic Person', 'Delivered to Synthetic Person']));
+    expect(result).not.toHaveProperty('receiver_name');
+    expect(JSON.stringify(result)).not.toMatch(/private|opr_phone|zoneCode|promiseTime|waybillNo/);
   });
 
   it('keeps the English name of a site the English remark also names in Chinese', () => {
@@ -192,17 +195,18 @@ describe('SF Express public route parsing', () => {
     expect(events[2]?.location).toBe('Sample Point');
   });
 
-  it("keeps neither a courier's name and number nor a service point's address", () => {
+  it("keeps a courier's name and number and a service point's address in the remark, and places it without them", () => {
     const value = copy(); const routes = value.result[0]!.routes;
     routes[2]!.remark = 'The shipment has arrived at【Sample Service Point，Address：样本区样本路1号A1-A9）】';
     routes[3]!.remark = 'Arrived at 【样本营业点（Sample Point，Address：样本路2号）】';
     routes[1]!.remark = 'The shipment has been handed over to and is being delivered by 样本人 (contact number: 00000000000. '
       + 'Please answer the call at ease as your privacy is properly protected by "safety call"!)';
     const events = parse(value, NUMBER).events!;
-    expect(events[3]).toMatchObject({ description: 'The shipment has arrived at【Sample Service Point】', location: 'Sample Service Point' });
-    expect(events[2]).toMatchObject({ description: 'Arrived at 【Sample Point】', location: 'Sample Point' });
-    expect(events[4]?.description).toBe('The shipment has been handed over to and is being delivered by the courier');
-    expect(JSON.stringify(events)).not.toMatch(/样本人|样本路|样本区|contact|00000/);
+    expect(events[3]).toMatchObject({ description: 'The shipment has arrived at【Sample Service Point，Address：样本区样本路1号A1-A9）】', location: 'Sample Service Point' });
+    expect(events[2]).toMatchObject({ description: 'Arrived at 【样本营业点（Sample Point，Address：样本路2号）】', location: 'Sample Point' });
+    expect(events[4]?.description).toBe('The shipment has been handed over to and is being delivered by 样本人 (contact number: 00000000000. '
+      + 'Please answer the call at ease as your privacy is properly protected by "safety call"!)');
+    expect(events[4]).not.toHaveProperty('location');
   });
 
   it('names no place for a remark about a person, a number in brackets or a delivery', () => {

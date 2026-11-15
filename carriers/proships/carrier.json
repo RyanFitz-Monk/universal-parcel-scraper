@@ -37,7 +37,8 @@
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": [

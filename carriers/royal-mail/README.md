@@ -79,12 +79,14 @@ answers are not retried. An unavailable browser fails fast.
   clock now carries another offset take over the row stored under the UK's
   label, and the reverse, by provider code and location, for Royal Mail's
   parcels and Parcelforce's alike.
-- Markdown emphasis is removed from summary and scan wording. Delivered wording
-  is reduced to `Delivered`. A scan that ends where the page shows its place ("Arrived
-  at", "Due to be delivered today by") takes the place; without one, "at" names a Royal
-  Mail office and "by" is dropped. The identity policy lets the reworded scan take over
-  its stored row by instant and provider code. Recipient, signature, photo, address, GPS and
-  issued credentials are discarded.
+- Markdown emphasis is removed from summary and scan wording. A scan that ends where the
+  page shows its place ("Arrived at", "Due to be delivered today by") takes the place;
+  without one, "at" names a Royal Mail office and "by" is dropped. The identity policy lets
+  the reworded scan take over its stored row by instant and provider code.
+- Delivered wording is kept as Royal Mail writes it. The name after "Signed for by", on the
+  delivered scan or else the summary, becomes the signer. "Delivered by" can name the office
+  that delivered, so it gives no signer. The photo, address, GPS and issued credentials are
+  not read.
 - Royal Mail's unable-to-confirm answer (E1142), its reply for a reference it cannot locate,
   remains inconclusive and carries `portal_not_found`: an item can be unknown until its first
   scan. Its answer that the reference's service is not tracked (E1283) is inconclusive too.

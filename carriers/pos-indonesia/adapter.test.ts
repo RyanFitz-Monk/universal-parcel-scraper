@@ -43,11 +43,13 @@ describe('Pos Indonesia tracking adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'pos-indonesia', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads a delivered waybill newest first, on its offices’ wall clocks, without staff, recipient or postcodes', () => {
+  it('reads a delivered waybill newest first, on its offices’ wall clocks, with its recipient and who took it', () => {
     const result = parsePosIndonesia(answer('delivered'), DOMESTIC);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Barang anda selesai dikirim dan diterima', last_update: null, last_update_local: '2026-07-03T13:50:54',
-      expected_delivery: null, weight_kg: 1.25, destination_country: 'ID', history_truncated: true });
+      last_status_text: 'Barang anda selesai dikirim oleh (JOKO CONTOH) dan diterima oleh budi contoh (DITERIMA YANG BERSANGKUTAN) (Diterima Sialamat)',
+      last_update: null, last_update_local: '2026-07-03T13:50:54',
+      expected_delivery: null, weight_kg: 1.25, destination_country: 'ID', history_truncated: true,
+      receiver_name: 'BUDI CONTOH', receiver_address: 'JL TELADAN NO 2\n80999', signed_by: 'budi contoh' });
     expect(result.delivered_at).toBeUndefined();
     expect(rows(result)).toEqual([
       ['2026-07-03T13:50:54', 'DELIVERED', 'delivered', 'DC CONTOHJAYA'],
@@ -58,19 +60,20 @@ describe('Pos Indonesia tracking adapter', () => {
       ['2026-07-01T15:40:02', 'INBAG', 'in_transit', 'Contohsari'],
       ['2026-07-01T09:12:40', 'PENDING', 'accepted', 'Contohsari'],
     ]);
+    // Each scan keeps its whole wording, with the staff member and the office's code.
     expect(result.events!.map(event => event.description)).toEqual([
-      'Barang anda selesai dikirim dan diterima',
-      'Barang anda telah melewati proses DeliveryRunsheet di Kantor Pos DC CONTOHJAYA',
-      `Barang anda ${DOMESTIC} telah melewati proses unbagging dengan nomor bag PID9990001 di DC CONTOHJAYA`,
-      `Barang anda ${DOMESTIC} telah melewati proses ManifestR7 dengan nomor bag PID9990001 di SPP Contoh dan nomor R7 9990000000001`,
-      'Barang anda telah melewati proses receiving di Kantor Pos SPP Contoh',
-      'Barang anda telah melewati proses bagging di Kantor Pos Contohsari',
-      'Connote telah dibuat di lokasi KOTACONTOH',
+      'Barang anda selesai dikirim oleh (JOKO CONTOH) dan diterima oleh budi contoh (DITERIMA YANG BERSANGKUTAN) (Diterima Sialamat)',
+      'Barang anda telah melewati proses DeliveryRunsheet oleh (JOKO CONTOH) di Kantor Pos DC CONTOHJAYA 8099J',
+      `Barang anda ${DOMESTIC} telah melewati proses unbagging dengan nomor bag PID9990001 oleh (RINA CONTOH) di DC CONTOHJAYA 8099J`,
+      `Barang anda ${DOMESTIC} telah melewati proses ManifestR7 dengan nomor bag PID9990001 oleh (ANDI CONTOH) di SPP Contoh 40990 dan nomor R7 9990000000001`,
+      'Barang anda telah melewati proses receiving oleh (ANDI CONTOH) di Kantor Pos SPP Contoh 40990',
+      'Barang anda telah melewati proses bagging oleh (PETUGAS POS) di Kantor Pos Contohsari 40999C1',
+      'Connote telah dibuat oleh (SITI CONTOH) di lokasi KOTACONTOH 80999',
     ]);
     expect(result.events!.every(event => !('time' in event))).toBe(true);
     const kept = JSON.stringify(result);
-    for (const dropped of ['SITI', 'PETUGAS', 'ANDI', 'RINA', 'JOKO', 'budi', 'BUDI', 'TOKO', '0812', 'JL ', 'BERSANGKUTAN', 'Sialamat',
-      '40999', '80999', '40990', '8099J', 'C1', 'SHPE', '21000', 'PKH']) {
+    // The sender, the phones, the booking code, the price and the service code are not read.
+    for (const dropped of ['TOKO', '0812', 'JL CONTOH', 'SHPE', '21000', 'PKH']) {
       expect(kept, dropped).not.toContain(dropped);
     }
   });
@@ -78,7 +81,9 @@ describe('Pos Indonesia tracking adapter', () => {
   it('reads an item sent abroad, with a scan that has neither wording nor place', () => {
     const result = parsePosIndonesia(answer('in-transit'), ABROAD);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_update_local: '2026-06-21T02:44:12',
-      weight_kg: 0.4, destination_country: 'US', history_truncated: true });
+      weight_kg: 0.4, destination_country: 'US', history_truncated: true,
+      receiver_name: 'JANE EXAMPLE', receiver_address: '1 EXAMPLE STREET\n99999' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-06-21T02:44:12', 'INVEHICLE', 'in_transit', 'JAKARTACONTOH'],
       ['2026-06-20T18:01:13', 'INBAG', 'in_transit', null],
@@ -86,8 +91,9 @@ describe('Pos Indonesia tracking adapter', () => {
     ]);
     expect(result.events![1]).toEqual({ local_time: '2026-06-20T18:01:13', description: 'Bagging', provider_code: 'INBAG',
       stage: 'in_transit', stage_source: 'carrier_map' });
-    expect(result.events![2]!.description).toBe('Connote telah dibuat di lokasi United States US');
-    expect(JSON.stringify(result)).not.toMatch(/JANE|EXAMPLE STREET|DEWI|PETUGAS|16999|19999|S1"|CDS/);
+    expect(result.events![2]!.description).toBe('Connote telah dibuat oleh (PETUGAS POS) di lokasi United States US');
+    // The sender is not read, and a field the service writes as "0" is nothing.
+    expect(JSON.stringify(result)).not.toMatch(/CV CONTOH|16999|S1"|CDS|\\n0/);
     // A destination the reply gives as neither a postcode nor a country is left out.
     for (const zone of ['', 'XX', '1234', null]) {
       expect(parsePosIndonesia(answer('in-transit', (_, value) => { value.zone_code_to = zone; }), ABROAD).destination_country, String(zone))
@@ -111,14 +117,17 @@ describe('Pos Indonesia tracking adapter', () => {
       ['2026-08-04T13:50:54', 'DELIVERED', 'delivered', 'Pool antar mpc Contoh'],
       ['2026-08-04T10:21:43', 'DELIVERYRUNSHEET', 'out_for_delivery', 'Pool antar mpc Contoh'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/TONO|PETUGAS|ani|80999|L9/);
+    // The empty template names no recipient; the delivery names who took the item.
+    expect(result).toMatchObject({ signed_by: 'ani' });
+    expect(result).not.toHaveProperty('receiver_name');
+    expect(result).not.toHaveProperty('receiver_address');
     // Only the scans name the item; another item's scans are not it.
     expect(() => parsePosIndonesia(posIndonesiaPayload(text), 'LP900000040JP')).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
     expect(() => posIndonesiaPayload('{"connote_code":"P2607019990001",')).toThrow(expect.objectContaining({ kind: 'schema' }));
     expect(posIndonesiaPayload('\uFEFF{"message": "Data not found"}')).toEqual({ message: 'Data not found' });
   });
 
-  it('drops staff, recipients and phone numbers from scan wording, and keeps the rest', () => {
+  it('reads scan wording for the wording rules without staff, recipients and phone numbers', () => {
     for (const [wording, kept] of [
       ['Barang anda selesai dikirim oleh (PETUGAS POS) dan diterima oleh Ani Contoh (DITERIMA KELUARGA) (Diterima Sialamat)',
         'Barang anda selesai dikirim dan diterima'],
@@ -138,7 +147,8 @@ describe('Pos Indonesia tracking adapter', () => {
     const single = parsePosIndonesia(answer('delivered', (events, value) => {
       (value as Record<string, unknown>).connote_history = events[0];
     }), DOMESTIC);
-    expect(single).toMatchObject({ status: 'in_transit', current_stage: 'accepted', last_status_text: 'Connote telah dibuat di lokasi KOTACONTOH' });
+    expect(single).toMatchObject({ status: 'in_transit', current_stage: 'accepted',
+      last_status_text: 'Connote telah dibuat oleh (SITI CONTOH) di lokasi KOTACONTOH 80999' });
     expect(single.events).toHaveLength(1);
     const twice = parsePosIndonesia(answer('delivered', events => { events.push({ ...events.at(-1)!, id: 1 }); }), DOMESTIC);
     expect(twice.events).toHaveLength(7);

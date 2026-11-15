@@ -59,10 +59,15 @@ describe('RPX HTTP adapter', () => {
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
   });
 
-  it('drops the recipient, the receiver, the delivery place, photos and coordinates, and the scans’ notes', () => {
+  it('reads the recipient, their town and who took the parcel, and drops where it was left, photos and coordinates, and the scans’ notes', () => {
     const result = parseRpx(fixture('delivered'), DELIVERED);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Recipient|Porch)|SAMPLE RECEIVER|Sampletown|example\.invalid|100\.000000|By_CONS|900000000001|AUTOWEB|Print Label|Api/);
+    expect(result).toMatchObject({ receiver_name: 'Sample Recipient', receiver_address: 'Sampletown', signed_by: 'SAMPLE RECEIVER' });
+    expect(JSON.stringify(result)).not.toMatch(/Sample Porch|example\.invalid|100\.000000|By_CONS|900000000001|AUTOWEB|Print Label|Api/);
     expect(result).not.toHaveProperty('delivered_at');
+    // Before the delivery, the recipient and town are known and nobody has taken the parcel.
+    const pending = parseRpx(changed('in-transit', (body) => { body.detail_received.RECEIVED_BY = 'SAMPLE RECEIVER'; }), IN_TRANSIT);
+    expect(pending).toMatchObject({ receiver_name: 'Sample Recipient', receiver_address: 'Sampletown' });
+    expect(pending).not.toHaveProperty('signed_by');
   });
 
   it('keeps the estimate and the newest weight given while the parcel is on its way', () => {
@@ -89,9 +94,13 @@ describe('RPX HTTP adapter', () => {
     expect(result.events!.at(-1)).toMatchObject({ provider_code: 'WPU' });
   });
 
-  it('takes phone numbers out of the wording and keeps a station named without the brand', () => {
+  it('stages wording without its phone numbers, keeps the whole wording and keeps a station named without the brand', () => {
     expect(rpxWording('Call 0800 0000 0000 to reschedule.')).toBe('Call to reschedule.');
     expect(rpxWording('Departed from RPX Origin station')).toBe('Departed from RPX Origin station');
+    const called = parseRpx(changed('in-transit', (body) => {
+      body.data_tracking[0]!.TRACKING_DESC = 'Arrived at RPX Destination station, call 0800 0000 0000';
+    }), IN_TRANSIT);
+    expect(called.events![0]).toMatchObject({ description: 'Arrived at RPX Destination station, call 0800 0000 0000', stage: 'in_transit' });
     const result = parseRpx(changed('delivered', (body) => { body.data_tracking[0]!.LOCATION = 'Sample Hub'; }), DELIVERED);
     expect(result.events![0]!.location).toBe('Sample Hub');
   });

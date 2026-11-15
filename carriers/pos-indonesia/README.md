@@ -38,11 +38,12 @@ rules. The service sorts scans by clock, and the adapter lists them newest first
 
 Indonesia keeps three time zones and the service names none, so scan clocks stay local times.
 
-The wording names the staff member who scanned the item, and a delivery names the recipient and
-how they relate to the addressee. The adapter drops them, phone numbers, and the office codes
-after office names, which carry postcodes. A scan without wording reads as its action. The
-waybill's sender, recipient, addresses, service code and price are not read; its weight, in
-grams, is kept in kilograms, and its destination gives the country.
+The wording names the staff member who scanned the item, and a delivery names who took it and
+how they relate to the addressee. The wording is kept as the service writes it, and who took a
+delivered item is read from it. Locations drop the office code after the office's name. A scan
+without wording reads as its action. The waybill gives the recipient's name, street and
+postcode, which are read, and its weight in grams, kept in kilograms, and its destination,
+which gives the country. Its sender, service code and price are not read.
 
 For an item it holds no waybill for, inbound items among them, the service fills its waybill
 template with nothing for numeric fields, which is not JSON. The adapter reads those fields as

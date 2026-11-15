@@ -126,6 +126,17 @@ function pickupPoint(data: Record<string, unknown>): string | null {
   return lines.filter(Boolean).join('\n');
 }
 
+/** The recipient's address: its street lines, then the town and postcode. */
+function destinationAddress(data: Record<string, unknown>): string {
+  const destination = data.destination;
+  if (destination === null || destination === undefined) return '';
+  if (!isRecord(destination)) throw new SchemaError(PROVIDER, 'Relay returned an invalid destination');
+  const street = ['address_line_1', 'address_line_2', 'address_line_3', 'address_line_4']
+    .map((key) => text(destination, key, 120)).filter(Boolean).join(', ');
+  const town = [text(destination, 'town', 80), text(destination, 'postal_code', 12)].filter(Boolean).join(' ');
+  return [street, town].filter(Boolean).join('\n');
+}
+
 /**
  * The delivery window the page shows on the day: from its start to its end,
  * while the parcel is still on its way and the window has not passed its
@@ -147,8 +158,8 @@ function estimate(data: Record<string, unknown>, stage: Stage | undefined, newes
  * The tracker's reply for one tracking ID and postcode: the shipment, with its
  * scans in `events`. Relay answers an unknown ID and a wrong postcode alike
  * with a 404 the adapter reads, so a reply here is a shipment. It must answer
- * to the number asked. Its recipient's address, safe-place and door codes,
- * courier notes and proof-of-delivery photos are not read.
+ * to the number asked. Its recipient's address is read; its coordinates,
+ * safe place and door codes, courier notes and proof-of-delivery photos are not.
  */
 export function parseRelaytech(payload: unknown, raw: string): CarrierResult {
   const number = normalizeRelaytechNumber(raw);
@@ -184,6 +195,7 @@ export function parseRelaytech(payload: unknown, raw: string): CarrierResult {
   const deliveredAt = stage === 'delivered'
     ? instant(payload, 'parcel_delivered_at')?.iso ?? (deliveredScan?.time || null) : null;
   const pickup = pickupPoint(payload);
+  const address = destinationAddress(payload);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -193,6 +205,7 @@ export function parseRelaytech(payload: unknown, raw: string): CarrierResult {
     ...(newest?.local_time ? { last_update_local: newest.local_time } : {}),
     ...estimate(payload, stage, newestInstant),
     ...(pickup ? { pickup_point: pickup } : {}),
+    ...(address ? { receiver_address: address } : {}),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),

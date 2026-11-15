@@ -37,11 +37,13 @@
     "shows": [
       "status",
       "location",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "signatory"
     ],
     "scraped": [
       "status",
-      "location"
+      "location",
+      "signatory"
     ],
     "discarded": [
       "proof_of_delivery"

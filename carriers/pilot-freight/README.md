@@ -41,14 +41,16 @@ tracking service. Tracked through the lookup that tracker makes.
   clocks are read through the consignee's state like the events', and give days where the
   offset is not kept.
 - The weight is the sum of the line items' pounds; the tracker shows the first line's.
-- The reply masks the parties' names, addresses and phones but not their towns. It also holds
-  references, the goods' description, dimensions and piece counts, who signed, where the freight
-  was left, the proof of delivery's name and document link, the stations' contacts and the
+- The reply masks the parties' names, addresses and phones but not their towns. The adapter
+  reads the consignee's name and address as far as they are not masked, usually the town and
+  state only, and who signed for the delivery.
+- The reply also holds references, the goods' description, dimensions and piece counts, where
+  the freight was left, the proof of delivery's document link, the stations' contacts and the
   billing account. None of them is kept, and neither are the events' ZIP codes.
 
 ## Limitations
 
-- No sender, recipient, signature or proof of delivery.
+- No sender or proof of delivery.
 - Old shipments keep only part of their history.
 - A pro number reaches the adapter when it is filed under Pilot or opened from a Pilot link:
   nine digits are shared by many carriers, so no rule claims them and preflight does not ask it.

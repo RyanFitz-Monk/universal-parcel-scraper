@@ -63,10 +63,10 @@ Budget: 45 s by default (max 60 s), including a 15 s TRAWL transport allowance.
 - A scan's `zoneCode` names its site, a three-digit mainland area code (`755` is Shenzhen) with
   letters for the site, `852` or `853` for Hong Kong or Macau, or abroad an airport's code with a
   number and a letter. Its clock does not follow the site, so the adapter does not read it.
-- "AWB Info & POD" rows are proof-access links, not scans, and are dropped. Phone controls are
-  stripped from remarks, and delivered scans read `Delivered`. A courier's remark names them and
-  gives their number in plain text; it reads "by the courier" instead. A service point's brackets
-  can hold its street address after its name, which is dropped.
+- "AWB Info & POD" rows are proof-access links, not scans, and are dropped. A remark keeps SF's
+  wording, delivered scans included. A courier's remark names them and gives their number, and a
+  service point's brackets can hold its street address after its name; both stay in the remark,
+  and the scan's place is read without them.
 - The English remarks name some sites in Chinese with their English name in brackets,
   `【<Chinese>（<English>）】`; the remark keeps the English name. The stage still reads the whole
   remark. A remark SF words in Chinese only, such as the distance left on a `310` scan, keeps it:
