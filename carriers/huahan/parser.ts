@@ -87,15 +87,14 @@ function withoutGenericCopies(scans: Scan[]): Scan[] {
 
 /**
  * CTT Express's notice of the parcel coming, relayed before the hand-off, keeps CTT Express's own
- * clock, Madrid's, on a parcel bound for Spain: read so, each notice fell minutes after HuaHan's
- * arrival scan in China. CTT Express also delivers in Portugal, an hour behind, so a notice on
- * a parcel bound elsewhere keeps its wall clock.
+ * clock, Madrid's, on parcels bound for Portugal too: read so, each notice fell minutes after HuaHan's
+ * arrival scan in China.
  */
 const CTT_NOTICE = 'pendiente de recepción en ctt express';
 const CTT_ZONE = 'Europe/Madrid';
 
-function partnerClock(event: CarrierEvent, country: string | undefined): CarrierEvent {
-  if (country !== 'ES' || !event.local_time || event.time || event.description?.toLowerCase() !== CTT_NOTICE) return event;
+function partnerClock(event: CarrierEvent): CarrierEvent {
+  if (!event.local_time || event.time || event.description?.toLowerCase() !== CTT_NOTICE) return event;
   const time = isoTime(event.local_time, CTT_ZONE)?.iso;
   return time ? { ...event, time, time_zone: CTT_ZONE, time_zone_basis: 'carrier' } : event;
 }
@@ -142,7 +141,7 @@ export function parseHuahan(payload: unknown, raw: string): CarrierResult {
   const placed = (zone ? events.map(({ local_time, ...event }, index): CarrierEvent => {
     const time = index < handedOver ? isoTime(local_time, zone)?.iso : undefined;
     return time ? { time, ...event } : { local_time, ...event };
-  }) : events).map((event) => partnerClock(event, country));
+  }) : events).map(partnerClock);
   const latest = placed[0]!;
   return { status: current ? languageStageStatus(current.stage) : 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: current.source } : {}),

@@ -139,12 +139,10 @@ describe('HuaHan guest tracking', () => {
     expect(events.filter(event => event.time)).toHaveLength(1);
     notice.data[0]!.Detail = notice.data[0]!.Detail.slice(2);
     expect(parseHuahan(notice, NUMBER)).toMatchObject({ last_update: '2026-01-01T21:51:00+01:00', current_stage: 'registered' });
-    // On a parcel bound for Portugal, an hour behind Madrid, or for no country the reply names, it keeps its wall clock.
-    for (const country of ['PT', '']) {
-      notice.data[0]!.Country_code = country;
-      expect(parseHuahan(notice, NUMBER).events![0], country).toEqual(expect.objectContaining({ local_time: '2026-01-01T21:51:00' }));
-      expect(parseHuahan(notice, NUMBER).events![0], country).not.toHaveProperty('time');
-    }
+    // CTT Express's Spanish notice keeps Madrid's clock on a parcel bound for Portugal too: read so, it fell minutes after
+    // HuaHan's arrival scan, as on parcels bound for Spain, and an hour later on Lisbon's.
+    notice.data[0]!.Country_code = 'PT';
+    expect(parseHuahan(notice, NUMBER)).toMatchObject({ last_update: '2026-01-01T21:51:00+01:00' });
   });
 
   it('reads the flight, clearance and destination milestones by their codes', () => {
