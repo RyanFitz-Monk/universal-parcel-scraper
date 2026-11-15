@@ -2,7 +2,7 @@ import { load } from 'cheerio';
 import makeFetchCookie from 'fetch-cookie';
 import { CookieJar } from 'tough-cookie';
 import { lookupBudget, readerLanguage, type AdapterFactory, type LookupBudget, type TrackingContext } from '../../core/adapter/index.js';
-import { IndeterminateError, NotFoundError, SchemaError } from '../../core/errors/index.js';
+import { IndeterminateError, MaintenanceError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult, CarrierStatus } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import type { Stage } from '../../generated/catalog.js';
@@ -43,6 +43,25 @@ const HEADERS = {
 
 /** The refresh on Swiss Post's outage page: to `sorry.post.ch`, its own page for an unplanned outage. */
 const OUTAGE_REFRESH = /^\s*\d+(?:\.\d*)?\s*[;,]\s*(?:url\s*=\s*)?(["']?)https?:\/\/sorry\.post\.ch\/?\1\s*$/i;
+
+const REDIRECTS = [301, 302, 303, 307, 308];
+/** Swiss Post's page for planned maintenance, in any of its languages, where the API redirects while it is closed. */
+const MAINTENANCE_PAGE = /^https:\/\/www\.post\.ch\/[a-z]{2}\/pages\/maintenance\/?(?:[?#].*)?$/i;
+
+/**
+ * One call under `ekp-web`. The API redirects only when Swiss Post sends its visitors elsewhere: to its
+ * maintenance page, which says the service is closed, or anywhere else, which is no tracking answer.
+ */
+async function swissPostReply(url: string, init: RequestInit, signal: AbortSignal | null | undefined, timeoutMs: number, fetcher: typeof fetch) {
+  const reply = await fetchBounded(url, { ...init, signal }, {
+    provider: 'Swiss Post tracking', timeoutMs, fetcher, redirect: 'manual', allowHttpStatuses: REDIRECTS,
+  });
+  if (!REDIRECTS.includes(reply.response.status)) return reply;
+  let target = '';
+  try { target = new URL(reply.response.headers.get('location') ?? '', url).href; } catch { /* no address */ }
+  if (MAINTENANCE_PAGE.test(target)) throw new MaintenanceError(PROVIDER, 'Swiss Post tracking is closed for maintenance');
+  throw new TransportError(PROVIDER, 'Swiss Post redirected its tracking service');
+}
 
 /**
  * A reply's JSON. While the service is down, any `ekp-web` URL can answer, even with HTTP 200,
@@ -406,11 +425,8 @@ export class SwissPostTracker {
     budget?: LookupBudget,
     timeoutMs = REQUEST_TIMEOUT_MS,
   ): Promise<unknown> {
-    const { bytes } = await fetchBounded(url, budget ? { ...init, signal: budget.signal } : init, {
-      provider: 'Swiss Post tracking',
-      timeoutMs: Math.min(REQUEST_TIMEOUT_MS, timeoutMs, budget?.remainingMs() ?? REQUEST_TIMEOUT_MS),
-      fetcher,
-    });
+    const { bytes } = await swissPostReply(url, init, budget ? budget.signal : init.signal,
+      Math.min(REQUEST_TIMEOUT_MS, timeoutMs, budget?.remainingMs() ?? REQUEST_TIMEOUT_MS), fetcher);
     return swissPostJson(bytes);
   }
 
@@ -463,11 +479,8 @@ export class SwissPostTracker {
   async fetch(trackingNumber: string, context: TrackingContext = {}, language: SwissPostLanguage = 'en'): Promise<CarrierResult> {
     const budget = lookupBudget(context, DEFAULT_BUDGET_MS);
     const fetcher = makeFetchCookie(this.#fetcher ?? fetch, new CookieJar());
-    const userResult = await withNetworkRetry(budget, (timeoutMs) => fetchBounded(`${API_BASE}/user`, { headers: HEADERS, signal: budget.signal }, {
-      provider: 'Swiss Post tracking',
-      timeoutMs: Math.min(REQUEST_TIMEOUT_MS, timeoutMs),
-      fetcher,
-    }));
+    const userResult = await withNetworkRetry(budget, (timeoutMs) => swissPostReply(`${API_BASE}/user`, { headers: HEADERS }, budget.signal,
+      Math.min(REQUEST_TIMEOUT_MS, timeoutMs), fetcher));
     const userPayload = swissPostJson(userResult.bytes);
     if (!isRecord(userPayload)) throw new SchemaError(PROVIDER, 'Swiss Post returned an invalid anonymous user response');
     const userId = text(userPayload.userIdentifier);

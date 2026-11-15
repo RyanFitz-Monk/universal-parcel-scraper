@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AdapterEnvironment, LookupBudget } from '../../core/adapter/index.js';
-import { carrierErrorKind, IndeterminateError, NotFoundError, UpstreamHttpError } from '../../core/errors/index.js';
+import { carrierErrorKind, IndeterminateError, MaintenanceError, NotFoundError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import { delayedFetcher } from '../../core/testing/hang.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import type { JsonObject } from '../../core/types.js';
@@ -836,6 +836,30 @@ describe('Swiss Post outage page', () => {
     const error = await failure(lookup(/\/user$/, () => html(OUTAGE_PAGE, 502)).tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(UpstreamHttpError);
     expect(error).toMatchObject({ kind: 'indeterminate', status: 502 });
+  });
+
+  const redirect = (location: string, status = 302) => () => new Response(null, { status, headers: { location } });
+
+  it.each([
+    ['the anonymous user', /\/user$/, 'https://www.post.ch/en/pages/maintenance'],
+    ['the anonymous user, in German', /\/user$/, 'https://www.post.ch/de/pages/maintenance/'],
+    ['the search', /\/history\?/, 'https://www.post.ch/fr/pages/maintenance'],
+  ])('reads a redirect of %s to the maintenance page as maintenance, asked once', async (_, step, location) => {
+    const app = lookup(step, redirect(location));
+    const error = await failure(app.tracker.fetch(SHIPMENT));
+    expect(error).toBeInstanceOf(MaintenanceError);
+    expect(error).toMatchObject({ kind: 'maintenance', provider: 'Swiss Post' });
+    expect(app.urls.filter((url) => step.test(url))).toHaveLength(1);
+  });
+
+  it.each([
+    ['another page of the site', 'https://www.post.ch/en/pages/other'],
+    ['the maintenance path on another host', 'https://example.test/en/pages/maintenance'],
+    ['no address', ''],
+  ])('reads a redirect to %s as no tracking answer', async (_, location) => {
+    const error = await failure(lookup(/\/user$/, redirect(location, 301)).tracker.fetch(SHIPMENT));
+    expect(error).toBeInstanceOf(TransportError);
+    expect(error).toMatchObject({ kind: 'transport', message: 'Swiss Post redirected its tracking service' });
   });
 
   it('keeps the shipment summary when only the event call returns it', async () => {

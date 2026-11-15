@@ -58,6 +58,9 @@ row by provider code, instant and location, unless one of the two is revoked.
   outage page, which only refreshes to `sorry.post.ch`. That answer is
   inconclusive, not a malformed reply or a missing parcel, and the call is not
   repeated.
+- During planned maintenance the API redirects to `www.post.ch`'s maintenance
+  page, which is read as maintenance. Any other redirect is a transport failure.
+  Neither is repeated.
 - Exactly one result must match the number, on `shipmentNumber` or the echoed
   `internationalBarcode` — the endpoint is a search and can return neighbouring
   shipments. None or two matches are refused. Numbers are compared without
