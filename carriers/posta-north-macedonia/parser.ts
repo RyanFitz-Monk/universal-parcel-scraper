@@ -133,7 +133,7 @@ export function parsePostaNorthMacedonia(payload: unknown, rawNumber: string): C
     seen.add(identity);
     scans.push(scan);
   }
-  if (!scans.length) throw new NoHistoryError(PROVIDER, 'Pošta na Severna Makedonija knows the item but lists no scan');
+  if (!scans.length) throw new NoHistoryError(PROVIDER, 'Pošta na Severna Makedonija knows the item but lists no scan', { reason: 'listed' });
   // Newest first by clock; rows with the same clock keep the reply's order.
   const ordered = scans.map((scan, index) => ({ scan, index })).sort((left, right) =>
     String(right.scan.event.local_time).localeCompare(String(left.scan.event.local_time)) || left.index - right.index)

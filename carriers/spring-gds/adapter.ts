@@ -188,7 +188,7 @@ export function parsePostNLTrackingResponse(value: unknown, trackingNumber: stri
     throw new NotFoundError(PROVIDER);
   }
   // PostNL lists mail from abroad it does not hold yet the same way: an answer about the item, without scans.
-  if (rawEvents.length === 0) throw new NoHistoryError(PROVIDER, 'PostNL lists the item without scans');
+  if (rawEvents.length === 0) throw new NoHistoryError(PROVIDER, 'PostNL lists the item without scans', { reason: 'listed' });
   const clocks = rawEvents.slice(0, 100).map(scanClock);
   const times = settleGuessedClocks(clocks, readAt.getTime());
   const events = rawEvents.slice(0, 100).map((event, index): CarrierEvent => {
@@ -269,7 +269,7 @@ export function parsePostNLDomesticResponse(value: unknown, trackingNumber: stri
     !newest || (scan.time && (!newest.time || scan.time.timestamp > newest.time.timestamp)) ? scan : newest), undefined);
   if (!latest) {
     // An announced parcel PostNL has not received yet has no observations.
-    if (phase.index !== 0 || !phaseMessage) throw new NoHistoryError(PROVIDER, 'PostNL lists the parcel without scans');
+    if (phase.index !== 0 || !phaseMessage) throw new NoHistoryError(PROVIDER, 'PostNL lists the parcel without scans', { reason: 'listed' });
     return {
       status: 'pending', current_stage: 'registered', current_stage_source: 'carrier_map',
       last_status_text: phaseMessage, last_update: null, expected_delivery: null, summary_only: true, events: [],

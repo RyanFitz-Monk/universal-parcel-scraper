@@ -124,7 +124,7 @@ describe('Bussgods tracking adapter', () => {
     expect(() => parseBussgods(edited('not-found', (body) => { body.Information.ShipmentNumber = '9000000000'; }), '9000000000'))
       .toThrow(expect.objectContaining({ kind: 'not_found' }));
     expect(() => parseBussgods(edited('delivered', (body) => { body.Statuses = []; }), DELIVERED))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     await expect(carrier(vi.fn<typeof fetch>().mockResolvedValue(reply(text('not-found')))).track({ number: UNKNOWN }))
       .rejects.toMatchObject({ kind: 'not_found' });
   });

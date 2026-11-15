@@ -257,7 +257,7 @@ export function parseRaben(payload: unknown, raw: string): CarrierResult {
   if (!events.length) {
     // A shipment without rows still has the page's status.
     const key = enumKey(shipment, 'DisplayShipmentStatus');
-    if (!key) throw new NoHistoryError(PROVIDER, 'Raben has no status for the shipment yet');
+    if (!key) throw new NoHistoryError(PROVIDER, 'Raben has no status for the shipment yet', { reason: 'listed' });
     const { code, description, staged } = statusOf(key, vocabulary);
     return {
       status: staged ? languageStageStatus(staged.stage) : 'unknown',

@@ -79,7 +79,7 @@ export function parseBestfulfill(payload: unknown, raw: string): CarrierResult {
   const events = payload.events.map(scanOf).map((event, index) => ({ event, index }))
     .sort((a, b) => Date.parse(b.event.time!) - Date.parse(a.event.time!) || a.index - b.index).map(({ event }) => event);
   const newest = events[0];
-  if (!newest) throw new NoHistoryError(PROVIDER, 'BestFulfill Packet has no scans for the shipment yet');
+  if (!newest) throw new NoHistoryError(PROVIDER, 'BestFulfill Packet has no scans for the shipment yet', { reason: 'listed' });
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const destination = text(payload.destCountry, 2).toUpperCase();

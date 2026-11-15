@@ -140,7 +140,7 @@ export function parseFirstLine(body: string, raw: string, readAt = Date.now()): 
     seen.add(scan.key);
     events.push(scan.event);
   }
-  if (!events.length) throw new NoHistoryError(PROVIDER, 'FIRST LINE has no scans for the waybill yet');
+  if (!events.length) throw new NoHistoryError(PROVIDER, 'FIRST LINE has no scans for the waybill yet', { reason: 'listed' });
 
   const newest = events[0]!;
   const current = events.find((event) => event.stage);

@@ -116,7 +116,7 @@ export function parseHrParcel(payload: unknown, raw: string): CarrierResult {
     events.push(scan.event);
   }
   // A shipment the sender booked shows no scans until HR Parcel has its data.
-  if (!events.length) throw new NoHistoryError(PROVIDER);
+  if (!events.length) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   // Newest first, as the page lists them; scans on one clock keep their order.
   const newestFirst = events
     .map((event, index) => ({ event, index }))

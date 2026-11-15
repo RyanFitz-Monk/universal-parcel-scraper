@@ -151,7 +151,7 @@ describe('Sendex tracking adapter', () => {
       .toThrow(expect.objectContaining({ kind: 'indeterminate' }));
     const bare = movements('delivered', () => []);
     expect(bare).not.toContain('sdx-movements__row');
-    expect(() => parseSendex(bare, DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate' }));
+    expect(() => parseSendex(bare, DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate', reason: 'listed' }));
     for (const html of [CHALLENGE, '<html><head><title>Attention Required! | Cloudflare</title></head><body></body></html>',
       '<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>']) {
       expect(() => parseSendex(html, UNKNOWN)).toThrow(expect.objectContaining({ kind: 'challenge' }));

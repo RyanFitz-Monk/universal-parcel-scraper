@@ -164,7 +164,7 @@ export function parseDealerSend(payload: unknown, raw: string, readAt = Date.now
     .sort((a, b) => (a.local < b.local ? 1 : a.local > b.local ? -1 : a.index - b.index)).map(({ event }) => event);
   if (!events.length) {
     throw new NoHistoryError(PROVIDER, 'DealerSend has no scans for the parcel yet', ahead.length
-      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ local }) => local))] } : undefined);
+      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ local }) => local))] } : { reason: 'listed' });
   }
 
   const newest = events[0]!;

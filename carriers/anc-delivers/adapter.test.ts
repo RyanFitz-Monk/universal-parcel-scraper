@@ -70,6 +70,7 @@ describe('ANC tracking', () => {
     delayed.statuses.push({ title: 'Delayed', timeDateStamp: '2026-01-06 09:00:00' });
     expect(parseAnc(delayed, NUMBER).events?.[0]).toMatchObject({ description: 'Delayed', stage: 'in_transit', stage_source: 'wording:language' });
     expect(() => parseAnc(upTo(0), NUMBER)).toThrow(NoHistoryError);
+    expect(() => parseAnc(upTo(0), NUMBER)).toThrow(expect.objectContaining({ reason: 'listed' }));
   });
 
   it('reads the service\'s own 404s as not found, the booking it no longer keeps included', async () => {

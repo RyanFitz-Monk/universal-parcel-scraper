@@ -81,7 +81,7 @@ export function parseVeho(payload: unknown, rawNumber: string): CarrierResult {
   }
   const log = pkg.row.eventLog;
   if (!Array.isArray(log) || log.length > 500) throw new SchemaError(PROVIDER, 'Veho returned an invalid history');
-  if (!log.length) throw new NoHistoryError(PROVIDER, 'Veho returned a package without events');
+  if (!log.length) throw new NoHistoryError(PROVIDER, 'Veho returned a package without events', { reason: 'listed' });
   const sender = clean(order.clientDisplayName, 100);
   const scans: { event: CarrierEvent; at: number; index: number }[] = [];
   const seen = new Set<string>();

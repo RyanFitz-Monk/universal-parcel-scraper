@@ -129,7 +129,7 @@ describe('Laar Courier HTTP adapter', () => {
     expect(parse(created, IN_TRANSIT)).toMatchObject({ status: 'pending', current_stage: 'registered', current_stage_source: 'carrier_map',
       last_status_text: 'Por Recolectar', summary_only: true, events: [] });
     list(created.search)[0]!.estado = '';
-    expect(() => parse(created, IN_TRANSIT)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+    expect(() => parse(created, IN_TRANSIT)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads an unknown guía as not found after one request, and a record without a label as no history', async () => {
@@ -137,7 +137,7 @@ describe('Laar Courier HTTP adapter', () => {
     await expect(carrier(fetcher).track({ number: UNKNOWN })).rejects.toMatchObject({ kind: 'not_found' });
     expect(fetcher).toHaveBeenCalledTimes(1);
     const unlabelled = changed('delivered', (replies) => { replies.label.objetoADeserializar = []; });
-    expect(() => parse(unlabelled, DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+    expect(() => parse(unlabelled, DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     const labelless = serve(unlabelled);
     await expect(carrier(labelless).track({ number: DELIVERED })).rejects.toMatchObject({ kind: 'indeterminate' });
     expect(labelless).toHaveBeenCalledTimes(2);

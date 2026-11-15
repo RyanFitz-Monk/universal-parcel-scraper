@@ -6,7 +6,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, AustrianPostTracker, normalizeAustrianPostNumber, parseAustrianPostResponse } from './adapter.js';
 import { austrianPostPlace } from './identity.js';
 import { austrianPostEventStatus, austrianPostSummaryStatus, statusMap } from './status.js';
-import { InvalidInputError, NoHistoryError } from '../../core/errors/index.js';
+import { InvalidInputError } from '../../core/errors/index.js';
 import { resultStage } from '../../core/result/resolve.js';
 
 const NUMBER = '1000000000000000000001';
@@ -203,7 +203,7 @@ describe('Austrian Post public tracking', () => {
     expect(() => parseAustrianPostResponse({ data: { einzelsendung: null }, errors: [{ message: 'Unavailable' }] }, NUMBER)).toThrow('could not complete');
     const payload = fixture();
     payload.data.einzelsendung.sendungsEvents = [];
-    expect(() => parseAustrianPostResponse(payload, NUMBER)).toThrow(NoHistoryError);
+    expect(() => parseAustrianPostResponse(payload, NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('requires explicit timestamp offsets', () => {

@@ -181,7 +181,7 @@ export function parseChronodiali(payload: unknown, raw: string): CarrierResult {
   };
   if (!events.length) {
     // A shipment created without a scan yet, which the page reports as being processed.
-    if (!own) throw new NoHistoryError(PROVIDER);
+    if (!own) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     return { ...facts, last_status_text: wording(summary), provider_code: summary, last_update: null, summary_only: true, events: [] };
   }
   const delivered = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;

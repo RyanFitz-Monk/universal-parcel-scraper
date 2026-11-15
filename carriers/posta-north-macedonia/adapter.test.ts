@@ -118,7 +118,7 @@ describe('Pošta na Severna Makedonija tracking adapter', () => {
   it('reads the empty list as not found and a delivery record without scans as no history, without its recipient', async () => {
     await expect(carrier(service(text('not-found.json'))).track({ number: UNKNOWN })).rejects.toMatchObject({ kind: 'not_found' });
     const error = await carrier(service(text('no-history.json'))).track({ number: WITHOUT_HISTORY }).catch((caught: unknown) => caught);
-    expect(error).toMatchObject({ kind: 'indeterminate', name: 'NoHistoryError' });
+    expect(error).toMatchObject({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' });
     expect(JSON.stringify(error)).not.toMatch(PRIVATE);
     expect(String((error as Error).message)).not.toMatch(PRIVATE);
     // A delivery record beside scans adds nothing.

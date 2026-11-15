@@ -114,6 +114,7 @@ describe.each(cases)('GOFO $region identity and history', ({ region, number, par
 
   it('answers an empty list or scan list as no history, and keeps unsuccessful replies inconclusive and malformed envelopes distinct', () => {
     expect(() => parse({ code: 200, data: [] }, number)).toThrow(NoHistoryError);
+    expect(() => parse({ code: 200, data: [] }, number)).toThrow(expect.not.objectContaining({ reason: 'listed' }));
     for (const payload of [{ code: 500, data: [] }, { code: '200', data: [] }]) {
       expect(() => parse(payload, number)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
       expect(() => parse(payload, number)).not.toThrow(NoHistoryError);
@@ -122,7 +123,7 @@ describe.each(cases)('GOFO $region identity and history', ({ region, number, par
       expect(() => parse(payload, number)).toThrow();
     }
     const empty = fixture(region); item(empty).trackEventList = [];
-    expect(() => parse(empty, number)).toThrow(NoHistoryError);
+    expect(() => parse(empty, number)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('checks the current summary and declares a counter-limited history partial', () => {

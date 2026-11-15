@@ -82,7 +82,7 @@ export function parseCdl(payload: unknown, raw: string): CarrierResult {
   }
   const rows = payload.trackingEvents as unknown[];
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'CDL returned too many scans');
-  if (!rows.length) throw new NoHistoryError(PROVIDER, 'CDL lists the parcel without scans');
+  if (!rows.length) throw new NoHistoryError(PROVIDER, 'CDL lists the parcel without scans', { reason: 'listed' });
 
   const seen = new Set<string>();
   const scans = rows.map(scanOf).filter(({ event }) => {

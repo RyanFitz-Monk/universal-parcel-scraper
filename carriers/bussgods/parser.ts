@@ -118,7 +118,7 @@ export function parseBussgods(payload: unknown, raw: string): CarrierResult {
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Bussgods returned an oversized history');
   if (!rows.length) {
     // A fraktsedel the reply describes exists, but has no scan yet.
-    if (product || parcels.length || text(information, 'ToCityName', 120)) throw new NoHistoryError(PROVIDER);
+    if (product || parcels.length || text(information, 'ToCityName', 120)) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     throw new NotFoundError(PROVIDER);
   }
   if (!named && !rows.some((row) => isRecord(row) && typeof row.ShipmentNumber === 'string' && row.ShipmentNumber.trim())) {

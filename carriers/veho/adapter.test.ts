@@ -74,7 +74,7 @@ describe('Veho parser', () => {
       expect(() => parseVeho(reply, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     }
     expect(() => parseVeho(changed(order => { order.packages[0].eventLog = []; }), NUMBER))
-      .toThrowError(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrowError(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('binds a tracking id to its own package and a barcode to the only package of its order', () => {

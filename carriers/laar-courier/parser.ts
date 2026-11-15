@@ -85,7 +85,7 @@ export function laarSearchRow(payload: unknown): Record<string, unknown> {
  */
 export function laarLabelRow(payload: unknown, number: string): Record<string, unknown> {
   const [row] = required(payload, 'label');
-  if (!row) throw new NoHistoryError(PROVIDER);
+  if (!row) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   if (typeof row.g01Id !== 'string') throw new SchemaError(PROVIDER, 'Laar returned a label without its guía');
   if (clean(row.g01Id, 64).toUpperCase() !== number) throw new IndeterminateError(PROVIDER, 'Laar answered for another guía');
   return row;
@@ -232,7 +232,7 @@ export function parseLaar(replies: LaarReplies, raw: string): CarrierResult {
   if (!newest) {
     // A guía created and not collected yet has its state and no dated step.
     const staged = state ? laarStage('', state) : null;
-    if (!staged) throw new NoHistoryError(PROVIDER);
+    if (!staged) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     return { status: languageStageStatus(staged.stage), current_stage: staged.stage, current_stage_source: staged.source,
       last_status_text: state, last_update: null, expected_delivery: null, ...(weight ? { weight_kg: weight } : {}),
       summary_only: true, events: [] };

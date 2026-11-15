@@ -71,7 +71,7 @@ export function parseTntFranceResponse(html: string, rawNumber: string): Carrier
   const sections = $('.result__item').filter((_, element) => clean($(element).children('.result__row').text(), 100) === 'Etapes de votre expédition');
   if (sections.length !== 1) throw new SchemaError(PROVIDER, 'TNT France returned no unique tracking history');
   const rows = sections.children('.result__content').children('.roster');
-  if (!rows.length) throw new NoHistoryError(PROVIDER, 'TNT France lists the shipment without scans');
+  if (!rows.length) throw new NoHistoryError(PROVIDER, 'TNT France lists the shipment without scans', { reason: 'listed' });
   if (rows.length > 500) throw new SchemaError(PROVIDER, 'TNT France returned excessive tracking history');
   const parsed: Array<{ event: CarrierEvent; timestamp: number; index: number }> = [];
   const seen = new Set<string>();
@@ -157,7 +157,7 @@ export function parseTntExpressResponse(payload: unknown, rawNumber: string): Ca
   if (!shipments.length) throw new SchemaError(EXPRESS_PROVIDER, 'TNT returned a different shipment');
   const newest = ({ history }: { history: Array<{ timestamp: number }> }) => history[0]?.timestamp ?? -Infinity;
   const { consignment, history } = shipments.reduce((best, shipment) => newest(shipment) > newest(best) ? shipment : best);
-  if (!history.length) throw new NoHistoryError(EXPRESS_PROVIDER, 'TNT lists the shipment without scans');
+  if (!history.length) throw new NoHistoryError(EXPRESS_PROVIDER, 'TNT lists the shipment without scans', { reason: 'listed' });
   const events = history.slice(0, 100).map(({ event }) => event);
   const mapped = tntExpressStatus(String(events[0]!.provider_code ?? ''));
   // `destinationDate` is the estimate until delivery; its day matches the page.

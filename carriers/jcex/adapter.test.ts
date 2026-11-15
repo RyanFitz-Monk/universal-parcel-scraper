@@ -381,7 +381,7 @@ describe('JCEX HTTP adapter', () => {
   it('keeps an unknown number, a waybill without scans, a refused lookup and a browser check apart', async () => {
     const lookup = (body: unknown, number = UNKNOWN, init?: ResponseInit) => carrier(vi.fn<typeof fetch>().mockResolvedValue(reply(body, init))).track({ number });
     await expect(lookup(fixture('not-found'))).rejects.toMatchObject({ kind: 'not_found' });
-    await expect(lookup(fixture('no-scans'), NUMBER)).rejects.toMatchObject({ kind: 'indeterminate', name: 'NoHistoryError' });
+    await expect(lookup(fixture('no-scans'), NUMBER)).rejects.toMatchObject({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' });
     await expect(lookup({ ...fixture('not-found'), code: 500, msg: '系统繁忙' })).rejects.toMatchObject({ kind: 'indeterminate' });
     await expect(lookup('<html><script>document.cookie="acw_sc__v2=0"</script></html>')).rejects.toMatchObject({ kind: 'challenge' });
     await expect(lookup('<html><title>JCEX</title></html>')).rejects.toMatchObject({ kind: 'schema' });

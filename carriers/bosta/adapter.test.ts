@@ -150,9 +150,9 @@ describe('Bosta HTTP adapter', () => {
     expect(summary({ state: 'Received at warehouse', code: 24, timestamp: '2026-02-07T17:12:00.300Z' }, 'returned'))
       .toMatchObject({ current_stage: 'returned', expected_delivery: null });
     expect(() => summary({ state: '', code: 45, timestamp: '2026-05-12T12:05:47.733Z' }))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     expect(() => summary({ state: 'Synthetic state', timestamp: '2026-05-12T12:05:47.733Z' }))
-      .toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads a draft order as no history, not a shipment', () => {

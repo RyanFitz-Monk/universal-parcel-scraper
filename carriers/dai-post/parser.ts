@@ -240,7 +240,7 @@ export function parseDaiPost(bytes: Uint8Array, contentType: string | null, raw:
     ? [] : entry.trackingevent;
   if (!Array.isArray(rawEvents) || rawEvents.length > MAX_SCANS) throw new SchemaError(PROVIDER, 'DAI Post returned an invalid history');
   // The page says there are no scans yet or the history was archived, after 180 days.
-  if (!rawEvents.length) throw new NoHistoryError(PROVIDER, 'DAI Post lists the parcel without scans');
+  if (!rawEvents.length) throw new NoHistoryError(PROVIDER, 'DAI Post lists the parcel without scans', { reason: 'listed' });
 
   const seen = new Set<string>();
   const scans = rawEvents.map(projectScan).filter(scan => {

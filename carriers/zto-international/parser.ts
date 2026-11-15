@@ -155,7 +155,7 @@ export function parseZtoInternational(payload: unknown, raw: string): CarrierRes
     seen.add(key!);
     events.push(event);
   }
-  if (!events.length) throw new NoHistoryError(PROVIDER, 'ZTO International has no scans for the waybill yet');
+  if (!events.length) throw new NoHistoryError(PROVIDER, 'ZTO International has no scans for the waybill yet', { reason: 'listed' });
 
   const newest = events[0]!;
   const current = events.find((event) => event.stage);

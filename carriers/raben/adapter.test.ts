@@ -189,7 +189,7 @@ describe('Raben tracking adapter', () => {
     expect(() => parseRaben(edited('in-transit', payload => {
       payload.objects = payload.objects.filter(object => object.objectType !== 'Anonymous.StatusHistory');
       shipment(payload).DisplayShipmentStatus = { value: null };
-    }), IN_TRANSIT)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+    }), IN_TRANSIT)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     // Rows of another shipment in the session are not this one's.
     const other = parseRaben(edited('in-transit', payload => {
       for (const row of rows(payload)) row['Anonymous.StatusHistory_ShipmentNP'] = { value: '900000000000000998' };

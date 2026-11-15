@@ -282,7 +282,7 @@ export function readBrt(html: string, raw: string, parcelList?: string): { resul
     if (!label || !/^[\p{L}][\p{L}\p{N}\s().,:'/-]{1,159}$/u.test(label)) throw new SchemaError('BRT', 'BRT returned an invalid scan label');
     return { date: clean(cells.eq(0).text(), 40), clock: clean(cells.eq(1).text(), 24), location: clean(cells.eq(2).text(), 120), label };
   });
-  if (!scans.length) throw new NoHistoryError('BRT', 'BRT lists the shipment without scans');
+  if (!scans.length) throw new NoHistoryError('BRT', 'BRT lists the shipment without scans', { reason: 'listed' });
   // BRT names the depot that delivers a shipment in Italy. A shipment it hands
   // to a partner abroad names none, and of its depots naming no country only
   // the first, where the shipment started, is surely in Italy.

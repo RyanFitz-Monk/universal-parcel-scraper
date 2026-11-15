@@ -146,7 +146,7 @@ export function parseTopyou(payload: unknown, raw: string): CarrierResult {
   if (track.success === 'false') throw new NoHistoryError(PROVIDER);
   if (!rows.length) {
     // The page's "预上网" (announced) when the order has a destination, else "查询不到" (not found).
-    if (destination) throw new NoHistoryError(PROVIDER);
+    if (destination) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     throw new NotFoundError(PROVIDER);
   }
 

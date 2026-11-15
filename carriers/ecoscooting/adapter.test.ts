@@ -10,7 +10,7 @@ import { normalizeEcoscootingNumber, parseEcoscooting } from './parser.js';
 import { ecoscootingStatus } from './status.js';
 import metadata from './carrier.json' with { type: 'json' };
 import statuses from './statuses.json' with { type: 'json' };
-import { InvalidInputError, NoHistoryError } from '../../core/errors/index.js';
+import { InvalidInputError } from '../../core/errors/index.js';
 
 const NUMBER = '000000000000000001';
 const OTHER = '000000000000000002';
@@ -234,7 +234,7 @@ describe('Ecoscooting parcel history', () => {
   });
   it('reads a parcel listed without scans as having no history yet', async () => {
     const announced = fixture(); announced.statuses = []; announced.packageParam.dimWeight = {};
-    expect(() => parseEcoscooting(announced, NUMBER)).toThrow(NoHistoryError);
+    expect(() => parseEcoscooting(announced, NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     const other = fixture(); other.statuses = []; other.packageParam.trackingNumber = OTHER;
     expect(() => parseEcoscooting(other, NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     // The listing names the parcel, so recognition knows it before its first scan.
@@ -338,7 +338,7 @@ describe('Ecoscooting direct retrieval', () => {
     expect(fromPortugal).toMatchObject({ status: 'delivered' });
     expect(JSON.stringify(fromPortugal)).not.toContain(PORTUGAL_NUMBER);
     const announced = portugal(); announced.statuses = [];
-    expect(() => parseEcoscooting(announced, shein)).toThrow(NoHistoryError);
+    expect(() => parseEcoscooting(announced, shein)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     // The listing must name the SHEIN number beside one of Ecoscooting's labels, and scans that label.
     const otherOrder = listed(); otherOrder.packageParam.outOrderId = 'C26010100000002';
     const shortLabel = listed(); shortLabel.packageParam.trackingNumber = NUMBER.slice(1);

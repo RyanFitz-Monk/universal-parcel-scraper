@@ -169,7 +169,7 @@ describe('Transcorp HTTP adapter', () => {
 
   it('reads a shipment without events as no history yet', () => {
     const body = editShipment(fixture('delivered'), (shipment) => { shipment.shipmentTrackingEvents = []; });
-    expect(() => parse(body, DELIVERED)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+    expect(() => parse(body, DELIVERED)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads a failed render as inconclusive and Next’s redirect as a changed route', () => {

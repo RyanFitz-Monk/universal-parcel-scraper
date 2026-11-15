@@ -314,7 +314,7 @@ export function parseJcex(payload: unknown, raw: string, readAt = Date.now()): C
   // The rows written ahead are named, so that a provider's copies of them are not taken for scans.
   if (!events.length) {
     throw new NoHistoryError(PROVIDER, 'JCEX has no scans for the waybill yet', ahead.length
-      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ event }) => event.time ?? event.local_time!))] } : undefined);
+      ? { reason: 'written_ahead', writtenAhead: [...new Set(ahead.map(({ event }) => event.time ?? event.local_time!))] } : { reason: 'listed' });
   }
 
   const newest = events[0]!;

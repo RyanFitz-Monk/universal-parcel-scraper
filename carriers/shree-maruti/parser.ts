@@ -153,7 +153,7 @@ export function parseShreeMaruti(payload: unknown, raw: string): CarrierResult {
   }
   const rows: unknown[] = payload.statuses;
   if (!rows.length) {
-    if (order) throw new NoHistoryError(PROVIDER);
+    if (order) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     throw new NotFoundError(PROVIDER);
   }
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Shree Maruti returned an oversized history');
@@ -173,7 +173,7 @@ export function parseShreeMaruti(payload: unknown, raw: string): CarrierResult {
     scans.push(scan);
   }
   if (!own) throw new IndeterminateError(PROVIDER, 'Shree Maruti answered for another shipment');
-  if (!scans.length) throw new NoHistoryError(PROVIDER);
+  if (!scans.length) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   // Newest first; rows at the same moment in the order the service stored them.
   const events = scans.sort((a, b) => b.at - a.at || b.stored - a.stored).map((scan) => scan.event);
 

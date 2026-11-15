@@ -386,7 +386,7 @@ function result(rows: readonly HualeiRow[], facts: Facts, tenant: HualeiTenant, 
   // goes with it: a tenant can set its own rows aside for the delivery carrier's, before that carrier scans.
   if (!events.length) {
     throw new NoHistoryError(tenant.provider, `${tenant.provider} has no scans for the shipment yet`, {
-      ...(ahead.length ? { reason: 'written_ahead', writtenAhead: ahead } : {}),
+      ...(ahead.length ? { reason: 'written_ahead', writtenAhead: ahead } : { reason: 'listed' }),
       ...(partner ? { deliveryCarrier: partner.carrier } : {}), ...(deliveryTrackingNumber ? { deliveryTrackingNumber } : {}),
     });
   }

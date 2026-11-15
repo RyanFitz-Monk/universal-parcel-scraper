@@ -85,6 +85,13 @@ describe('Tonami tracking', () => {
     expect(result).not.toHaveProperty('delivered_at');
   });
 
+  it('reads a shipment with no milestone reached and a state the map does not know as listed without history', () => {
+    const unscanned = delivered().replace(/<td>\d{2}月\d{2}日(?: \d{2}:\d{2})?<\/td>/g, '<td></td>')
+      .replace("<td colspan='3'>配達済み</td>", "<td colspan='3'>合成の状態です</td>");
+    expect(() => parseTonami(unscanned, NUMBER, NOW))
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
+  });
+
   it('reads the tracker’s list row for a number it does not hold as not found', async () => {
     const fetcher = replying(() => html(text('not-found.html')));
     await expect(carrier(fetcher).track({ number: UNKNOWN })).rejects.toMatchObject({ kind: 'not_found' });

@@ -138,10 +138,10 @@ describe('JRT tracking adapter', () => {
       }
       throw new Error('the record has no rows');
     };
-    expect(failure('CJ000000005DE')).toMatchObject({ name: 'NoHistoryError', deliveryCarrier: 'dhl', deliveryTrackingNumber: 'CJ000000005DE' });
-    expect(failure('000000000012')).toMatchObject({ name: 'NoHistoryError', deliveryCarrier: undefined, deliveryTrackingNumber: '000000000012' });
+    expect(failure('CJ000000005DE')).toMatchObject({ name: 'NoHistoryError', reason: 'listed', deliveryCarrier: 'dhl', deliveryTrackingNumber: 'CJ000000005DE' });
+    expect(failure('000000000012')).toMatchObject({ name: 'NoHistoryError', reason: 'listed', deliveryCarrier: undefined, deliveryTrackingNumber: '000000000012' });
     // An order still under its own number hands nothing over.
-    expect(failure('JRT0000000002ZZ')).toMatchObject({ name: 'NoHistoryError', deliveryCarrier: undefined, deliveryTrackingNumber: undefined });
+    expect(failure('JRT0000000002ZZ')).toMatchObject({ name: 'NoHistoryError', reason: 'listed', deliveryCarrier: undefined, deliveryTrackingNumber: undefined });
   });
 
   it('reads the landing, the clearance and the hand-over in Germany after DHL’s label data as transit', () => {

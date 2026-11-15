@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { NoHistoryError } from '../errors/index.js';
 import { dueScans, withoutEvents } from './due.js';
 import type { CarrierResult } from './index.js';
 
@@ -23,8 +22,8 @@ describe('scans entered at their planned time', () => {
   });
 
   it('leave an answer of nothing but them without history', () => {
-    expect(() => dueScans({ ...answer, events: [departed] }, 'example', READ_AT)).toThrow(NoHistoryError);
-    expect(() => dueScans({ status: 'in_transit', last_update: departed.time, summary_only: true, events: [] }, 'example', READ_AT)).toThrow(NoHistoryError);
+    expect(() => dueScans({ ...answer, events: [departed] }, 'example', READ_AT)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
+    expect(() => dueScans({ status: 'in_transit', last_update: departed.time, summary_only: true, events: [] }, 'example', READ_AT)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('keep the summary when an older row goes', () => {

@@ -109,7 +109,7 @@ describe('HR Parcel HTTP adapter', () => {
   it('reads an unknown number as not found, a booked shipment without scans as no history and a service error as inconclusive', () => {
     expect(() => parseHrParcel(fixture('not-found'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));
     expect(() => parseHrParcel(changed('in-transit', (body) => { body.steps = []; }), IN_TRANSIT))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     expect(() => parseHrParcel(changed('not-found', (body) => {
       body.response.InternalError = { ErrorCode: 0, ErrorDescription: 'Synthetic failure' };
     }), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));

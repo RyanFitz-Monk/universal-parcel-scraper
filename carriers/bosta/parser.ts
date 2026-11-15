@@ -155,7 +155,7 @@ export function parseBosta(payload: unknown, raw: string): CarrierResult {
     // Older shipments keep only their current state, which the page shows alone.
     const staged = label ? bostaStage(state, label) : null;
     const stage = summary ?? (returning ? 'returned' : staged?.stage);
-    if (!label || !stage) throw new NoHistoryError(PROVIDER);
+    if (!label || !stage) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     const { iso } = instant(current);
     return {
       status: languageStageStatus(stage), current_stage: stage, current_stage_source: 'carrier_map',

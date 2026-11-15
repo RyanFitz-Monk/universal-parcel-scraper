@@ -131,7 +131,7 @@ describe('Loomis Express tracking adapter', () => {
       .toThrow(expect.objectContaining({ kind: 'schema' }));
     // A waybill listed with its estimate alone has no history yet.
     expect(() => parseLoomis(withRows(page('in-transit'), (row, index) => (index === 0 ? row : '')), TRANSIT))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     for (const html of ['<html><head><title>Access Denied</title></head><body></body></html>',
       '<!DOCTYPE html><html><head><title>Just a moment...</title></head><body></body></html>']) {
       expect(() => parseLoomis(html, TRANSIT)).toThrow(expect.objectContaining({ kind: 'challenge' }));

@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
-import { NoHistoryError } from '../../core/errors/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
@@ -157,7 +156,7 @@ describe('DAI Post HTTP adapter', () => {
   it('reads a listed parcel without scans as having no history yet', () => {
     for (const events of [[], '$undefined']) {
       const listed = rewrite('in-transit', ([entry]) => { entry!.trackingevent = events; });
-      expect(() => parseDaiPost(listed, RSC, TRANSIT)).toThrow(NoHistoryError);
+      expect(() => parseDaiPost(listed, RSC, TRANSIT)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     }
   });
 

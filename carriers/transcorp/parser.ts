@@ -224,7 +224,7 @@ function project(shipment: Record<string, unknown>): CarrierResult {
   const zone = operating ? countryTimeZone(operating) : null;
   const rows = plain(shipment.shipmentTrackingEvents);
   if (!Array.isArray(rows)) throw new SchemaError(PROVIDER, 'Elite returned a shipment without its events');
-  if (!rows.length) throw new NoHistoryError(PROVIDER, 'Elite has no events for the shipment yet');
+  if (!rows.length) throw new NoHistoryError(PROVIDER, 'Elite has no events for the shipment yet', { reason: 'listed' });
   const events = history(rows, zone);
   const newest = events[0]!;
   const current = events.find((event) => event.stage);

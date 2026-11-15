@@ -101,7 +101,7 @@ export function parseTntItaly(xml: string, raw: string): CarrierResult {
   if (!shipments.length) throw new SchemaError(PROVIDER, 'TNT Italy answered for another shipment');
   const newest = ({ scans }: { scans: Scan[] }) => scans[0]?.timestamp ?? -Infinity;
   const { consignment, scans } = shipments.reduce((best, shipment) => newest(shipment) > newest(best) ? shipment : best);
-  if (!scans.length) throw new NoHistoryError(PROVIDER, 'TNT Italy lists the shipment without scans');
+  if (!scans.length) throw new NoHistoryError(PROVIDER, 'TNT Italy lists the shipment without scans', { reason: 'listed' });
 
   const events = scans.map(({ event }) => event);
   const latest = events[0]!;

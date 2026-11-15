@@ -139,7 +139,7 @@ export function parseLoomis(html: string, raw: string): CarrierResult {
     if (stage) Object.assign(event, { stage: stage.stage, stage_source: stage.source });
     events.push(event);
   }
-  if (!events.length) throw new NoHistoryError(PROVIDER, 'Loomis Express lists the waybill without scans');
+  if (!events.length) throw new NoHistoryError(PROVIDER, 'Loomis Express lists the waybill without scans', { reason: 'listed' });
 
   // The page's order: newest first, across facilities in different zones,
   // with the shipment record's day at the end.

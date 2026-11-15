@@ -83,7 +83,7 @@ export function parseWoolii(payload: unknown, raw: string): CarrierResult {
   if (named !== normalizeTrackingNumber(number) && !canonical) throw new IndeterminateError(PROVIDER, 'WooliiPorter answered for another shipment');
   const rows: unknown[] = payload.events;
   if (rows.length > MAX_ROWS) invalid('WooliiPorter returned an oversized history');
-  if (!rows.length) throw new NoHistoryError(PROVIDER, 'WooliiPorter has created the shipment but has no scan yet');
+  if (!rows.length) throw new NoHistoryError(PROVIDER, 'WooliiPorter has created the shipment but has no scan yet', { reason: 'listed' });
 
   const seen = new Set<string>();
   const events = rows.map(scan).filter((event) => {

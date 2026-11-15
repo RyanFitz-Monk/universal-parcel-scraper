@@ -155,5 +155,5 @@ export function readCjWaybill(payload: unknown, raw: string): never {
   if (data === null) throw new NotFoundError(PROVIDER);
   if (!isRecord(data) || typeof data.wblNo !== 'string') throw new SchemaError(PROVIDER, 'CJ Logistics returned a waybill without its number');
   if (normalizeTrackingNumber(data.wblNo) !== number) throw new IndeterminateError(PROVIDER, 'CJ Logistics answered for another shipment');
-  throw new NoHistoryError(PROVIDER);
+  throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
 }

@@ -124,7 +124,7 @@ describe('Exelot HTTP adapter', () => {
 
   it('reads a parcel without scans as no history yet, not as found or missing', () => {
     expect(() => parseExelot(changed('delivered', (parcel) => { parcel.statusHistory = []; }), DELIVERED))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('rejects a changed reply', () => {

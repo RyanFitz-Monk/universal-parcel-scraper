@@ -146,7 +146,7 @@ export function parseCastores(html: string, rawNumber: string): CarrierResult {
     seen.add(parsed.key);
     listed.push(parsed.event);
   });
-  if (!listed.length) throw new NoHistoryError(PROVIDER);
+  if (!listed.length) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   // The page lists the newest first; a list the other way round is turned round.
   const events = listed.length > 1 && listed[0]!.local_time! < listed.at(-1)!.local_time! ? listed.reverse() : listed;
 

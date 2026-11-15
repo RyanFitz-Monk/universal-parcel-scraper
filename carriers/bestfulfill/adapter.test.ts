@@ -99,6 +99,7 @@ describe('BestFulfill Packet tracking', () => {
   it('reads the service\'s own 404 as not found, and no scans as no history', async () => {
     await expect(carrier(replying(() => json(MISSING, { status: 404 }))).track({ number: NUMBER })).rejects.toMatchObject({ kind: 'not_found' });
     await expect(carrier(replying(() => json({ ...fixture(), events: [] }))).track({ number: NUMBER })).rejects.toThrow(NoHistoryError);
+    await expect(carrier(replying(() => json({ ...fixture(), events: [] }))).track({ number: NUMBER })).rejects.toMatchObject({ reason: 'listed' });
   });
 
   it('keeps another number, a changed reply, a bot check, a moved service, a rate limit and an outage apart from a missing parcel', async () => {

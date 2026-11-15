@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { recognitionCandidates } from '../../core/catalog/recognition.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch, parseTrackingInput } from '../../core/detection/index.js';
-import { NoHistoryError } from '../../core/errors/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, optimaTrackingUrl } from './adapter.js';
@@ -123,7 +122,7 @@ describe('Optima Overnight tracking', () => {
       data.trackingHistory = [];
       data.packages[0]!.status = 'Synthetic';
       data.status = 'Synthetic';
-    }), NUMBER)).toThrow(NoHistoryError);
+    }), NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     for (const time of ['2026-03-05', '03/05/2026 14:12', '2026-02-30 10:00:00', '2026-03-05 24:00:00', null]) {
       expect(() => parseOptima(edited((data) => { data.trackingHistory[0]!.time = time; }), NUMBER), String(time)).toThrow('invalid status time');
     }

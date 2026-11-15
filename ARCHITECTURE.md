@@ -309,7 +309,9 @@ reply's body excerpt is read by name only. `CarrierError.reason` separates expec
 such as Amazon Shipping's expired history, from transport failures. An inconclusive error
 for the carrier's own answer that it holds no history under the number, an empty result or
 not-found notice, carries `portal_not_found`, so a consumer can tell that answer from an
-outage; it does not make the parcel absent. A rate limit an adapter's own pacing imposes,
+outage; it does not make the parcel absent. An answer without history from a carrier that lists
+the shipment but holds no scan for it, as for one booked, announced or labelled, carries
+`listed`: the carrier knows the number. A rate limit an adapter's own pacing imposes,
 refused before any request, carries `self_paced`: the lookup sent nothing, so a consumer can
 treat it as a deferral rather than the carrier's throttling. Invalid input carries `other_carrier` when the carrier's answer
 names another carrier as the shipment's, so a consumer does not read it as a mistyped number.

@@ -109,7 +109,7 @@ export function parseExelot(payload: unknown, raw: string): CarrierResult {
   }
   if (!Array.isArray(history)) throw new SchemaError(PROVIDER, 'Exelot returned a parcel without its history');
   if (history.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Exelot returned an oversized history');
-  if (!history.length) throw new NoHistoryError(PROVIDER, 'Exelot has no scans for the parcel yet');
+  if (!history.length) throw new NoHistoryError(PROVIDER, 'Exelot has no scans for the parcel yet', { reason: 'listed' });
   // Newest first; scans at the same instant keep the reply's order.
   const events = history.map((row, index) => ({ ...scan(row), index }))
     .sort((a, b) => b.timestamp - a.timestamp || a.index - b.index)

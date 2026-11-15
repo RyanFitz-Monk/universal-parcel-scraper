@@ -51,7 +51,7 @@ export function parseHrx(payload: unknown, rawNumber: string): CarrierResult {
   if (payload.error != null) throw new IndeterminateError(PROVIDER, 'HRX did not confirm the order');
   if (folded(clean(payload.tracking_number, 64)) !== folded(number)) throw new SchemaError(PROVIDER, 'HRX did not identify the requested number');
   if (!Array.isArray(payload.tracking_events) || payload.tracking_events.length > 500) throw new SchemaError(PROVIDER, 'HRX returned an invalid history');
-  if (!payload.tracking_events.length) throw new NoHistoryError(PROVIDER, 'HRX returned an order without events');
+  if (!payload.tracking_events.length) throw new NoHistoryError(PROVIDER, 'HRX returned an order without events', { reason: 'listed' });
 
   const scans: { event: CarrierEvent; at: number; index: number }[] = [];
   const seen = new Set<string>();

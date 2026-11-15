@@ -116,7 +116,7 @@ describe('HRX guest adapter', () => {
     expect(() => parseHrxReply(404, '{}', NUMBER)).toThrowError(expect.objectContaining({ kind: 'transport' }));
     expect(() => parseHrxReply(200, '{"error":"not_found"}', NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
     expect(() => parseHrx(changed(d => { d.error = 'synthetic failure'; }), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
-    expect(() => parseHrx(changed(d => { d.tracking_events = []; }), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+    expect(() => parseHrx(changed(d => { d.tracking_events = []; }), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     for (const status of [200, 404]) {
       expect(() => parseHrxReply(status, '<!doctype html><html><head><title>HRX WOP</title></head><body><div id="root"></div></body></html>', NUMBER))
         .toThrowError(expect.objectContaining({ kind: 'schema' }));

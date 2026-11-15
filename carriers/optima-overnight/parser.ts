@@ -77,7 +77,7 @@ export function parseOptima(payload: unknown, raw: string): CarrierResult {
     // A shipment Optima has not received yet has a status and no history.
     const status = text(parcel.status) || text(data.status);
     const stage = status ? optimaMappedStage(status) : undefined;
-    if (!stage) throw new NoHistoryError(PROVIDER);
+    if (!stage) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     return {
       status: languageStageStatus(stage), current_stage: stage, current_stage_source: 'carrier_map',
       last_status_text: status, last_update: null, last_update_local: wallClock(data.statusTime ?? data.dateCreated),

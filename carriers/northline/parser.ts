@@ -131,7 +131,7 @@ export function parseNorthline(payload: unknown, raw: string): CarrierResult {
   }
   if (!scans.length) {
     // A booked consignment has its status and no milestone yet.
-    if (!summary) throw new NoHistoryError(PROVIDER);
+    if (!summary) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
     const expected = FINAL.has(summary.stage) ? null : estimate(data);
     return { status: languageStageStatus(summary.stage), current_stage: summary.stage, current_stage_source: summary.source,
       last_status_text: wording, provider_code: code, last_update: null, expected_delivery: expected, summary_only: true, events: [] };

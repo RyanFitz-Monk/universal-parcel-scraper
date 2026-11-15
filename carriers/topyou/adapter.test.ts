@@ -206,9 +206,9 @@ describe('TopYou HTTP adapter', () => {
     expect(() => parseTopyou(fixture('not-found'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));
     expect(() => parseTopyou(changed('not-found', (track) => { track.trackInfo = []; }), UNKNOWN))
       .toThrow(expect.objectContaining({ kind: 'not_found' }));
-    expect(() => parseTopyou(fixture('announced'), IN_TRANSIT)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+    expect(() => parseTopyou(fixture('announced'), IN_TRANSIT)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     expect(() => parseTopyou(changed('in-transit', (track) => { track.success = 'false'; }), IN_TRANSIT))
-      .toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: undefined }));
   });
 
   it('does not take a reply for another number, a failed lookup or a changed reply for a parcel', () => {

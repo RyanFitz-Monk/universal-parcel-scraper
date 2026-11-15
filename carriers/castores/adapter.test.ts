@@ -114,7 +114,7 @@ describe('Castores tracking adapter', () => {
     expect(() => parseCastores(many, DELIVERED)).toThrow(expect.objectContaining({ kind: 'schema' }));
     // A shipment without rows has no history.
     expect(() => parseCastores(page('delivered').replace(/(<div class="c-track__ship-details[^>]*>\s*<ul>)[\s\S]*?(<\/ul>)/, '$1$2'), DELIVERED))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads only the notice naming the talón as a missing shipment, and a block page as a challenge', () => {

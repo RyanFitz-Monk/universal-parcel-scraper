@@ -44,7 +44,7 @@ export function parseEcoscooting(payload: unknown, rawNumber: string): CarrierRe
   if (listed.trackingNumber !== label) throw new SchemaError('Ecoscooting', 'Ecoscooting returned a different parcel');
   if (!Array.isArray(payload.statuses) || payload.statuses.length > 500 || !payload.statuses.every(isRecord)) throw new SchemaError('Ecoscooting');
   // A parcel announced to Ecoscooting but not yet handed over is listed without scans.
-  if (!payload.statuses.length) throw new NoHistoryError('Ecoscooting', 'Ecoscooting lists the parcel without scans');
+  if (!payload.statuses.length) throw new NoHistoryError('Ecoscooting', 'Ecoscooting lists the parcel without scans', { reason: 'listed' });
   const events: CarrierEvent[] = [];
   const seen = new Set<string>();
   for (const row of payload.statuses) {

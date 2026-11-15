@@ -138,7 +138,7 @@ describe('ZTO International HTTP adapter', () => {
       .rejects.toMatchObject({ kind: 'indeterminate', reason: 'portal_not_found' });
     // A waybill without scans is known, with no history yet.
     expect(() => parseZtoInternational(changed('in-transit', (waybill) => { waybill.tracks = []; }), IN_TRANSIT))
-      .toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate' }));
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate', reason: 'listed' }));
   });
 
   it('reads the image code the tracker asks for as a challenge, and other refusals as inconclusive', async () => {

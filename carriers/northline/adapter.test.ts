@@ -116,7 +116,7 @@ describe('Northline HTTP adapter', () => {
     expect(parseNorthline(booked, IN_TRANSIT)).toEqual({ status: 'pending', current_stage: 'registered', current_stage_source: 'carrier_map',
       last_status_text: 'Not Available', provider_code: '200', last_update: null, expected_delivery: '2026-04-03', summary_only: true, events: [] });
     const unknown = changed('in-transit', (data) => { Object.assign(data, { statusValue: null, statusName: null, milestoneHistory: null }); });
-    expect(() => parseNorthline(unknown, IN_TRANSIT)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+    expect(() => parseNorthline(unknown, IN_TRANSIT)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('takes the consignment’s own word for a delivery its milestones do not reach yet', () => {

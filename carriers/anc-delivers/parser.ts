@@ -82,7 +82,7 @@ export function parseAnc(payload: unknown, raw: string): CarrierResult {
   // schedule's stamp drops the seconds of the booking it shares a minute with.
   const events = payload.statuses.map(stepOf).filter((step): step is Step => step !== null).reverse().map(({ event }) => event);
   const newest = events[0];
-  if (!newest) throw new NoHistoryError(PROVIDER, 'ANC has no step for the delivery yet');
+  if (!newest) throw new NoHistoryError(PROVIDER, 'ANC has no step for the delivery yet', { reason: 'listed' });
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const job = typeof payload.jobStatus === 'string' ? payload.jobStatus.trim().toLowerCase() : '';

@@ -34,6 +34,6 @@ export function withoutEvents<T extends CarrierResult>(answer: T, drop: (event: 
  */
 export function dueScans<T extends CarrierResult>(answer: T, provider: string, readAt = Date.now()): T {
   const due = withoutEvents(answer, event => (explicitOffsetTime(event.time)?.timestamp ?? -Infinity) > readAt + CLOCK_SKEW_MS);
-  if (!due) throw new NoHistoryError(provider, `${provider} lists only scans still to come`);
+  if (!due) throw new NoHistoryError(provider, `${provider} lists only scans still to come`, { reason: 'listed' });
   return due;
 }

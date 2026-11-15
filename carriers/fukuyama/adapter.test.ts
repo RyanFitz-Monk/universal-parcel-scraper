@@ -111,7 +111,7 @@ describe('Fukuyama Transporting tracking page', () => {
     const empty = ($: CheerioAPI) => { history($).find('td:nth-child(2)').text(''); };
     expect(parseFukuyama(edited('in-transit', empty), IN_TRANSIT)).toMatchObject({ current_stage: 'in_transit', summary_only: true, events: [] });
     expect(() => parseFukuyama(edited('in-transit', ($) => { empty($); state('合成の状態です')($); }), IN_TRANSIT))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads the tracker’s answer for a number it does not know as not found, and the search form’s refusal as invalid', async () => {

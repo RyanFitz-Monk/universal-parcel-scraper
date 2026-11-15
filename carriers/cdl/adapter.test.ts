@@ -167,7 +167,7 @@ describe('CDL tracking adapter', () => {
     for (const [name, change] of broken) {
       expect(() => parseCdl(change(fixture('in-transit')), ORDER), name).toThrow(expect.objectContaining({ kind: 'schema' }));
     }
-    expect(() => parseCdl({ ...fixture('in-transit'), trackingEvents: [] }, ORDER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+    expect(() => parseCdl({ ...fixture('in-transit'), trackingEvents: [] }, ORDER)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('takes CDL label and order numbers only, without a request', async () => {

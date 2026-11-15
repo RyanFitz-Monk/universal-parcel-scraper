@@ -434,7 +434,7 @@ describe('PostNL ambiguity and clock safety', () => {
     const value = payload([{ category: 'Processing' }]);
     value.data.items.push(value.data.items[0]!);
     expect(() => parsePostNLTrackingResponse(value, number)).toThrow('ambiguous shipment');
-    expect(() => parsePostNLTrackingResponse(payload([]), number)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+    expect(() => parsePostNLTrackingResponse(payload([]), number)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     const unrelated = payload([{ category: 'Processing' }]);
     unrelated.data.items.unshift({ item: 'LX000000005NL', events: [{ category: 'Delivered' }] });
     expect(parsePostNLTrackingResponse(unrelated, number).status).toBe('in_transit');
@@ -673,7 +673,7 @@ describe('PostNL domestic tracker', () => {
     expect(parsePostNLDomesticResponse(reply(collo({ observations: [], statusPhase: announced })), barcode))
       .toMatchObject({ status: 'pending', current_stage: 'registered', summary_only: true, events: [] });
     expect(() => parsePostNLDomesticResponse(reply(collo({ observations: [], statusPhase: { index: 2, message: 'Synthetic phase' } })), barcode))
-      .toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads an empty reply as unknown rather than absent, and refuses another barcode or a changed shape', () => {

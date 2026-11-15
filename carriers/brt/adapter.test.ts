@@ -10,7 +10,7 @@ import { groupShipment, normalizeBrtNumber, parseBrt, partnerShipment, readBrt, 
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { classifyBrtStatus, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
-import { IndeterminateError, InvalidInputError, MaintenanceError, NoHistoryError } from '../../core/errors/index.js';
+import { IndeterminateError, InvalidInputError, MaintenanceError } from '../../core/errors/index.js';
 
 const NUMBER = '99000000000002';
 const OTHER = '99000000000003';
@@ -365,7 +365,7 @@ describe('BRT direct tracking', () => {
       edit($ => $('.table_stato_dati').append('<tr><td>x</td></tr>'.repeat(502)))]) {
       expect(() => parseBrt(body, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     }
-    expect(() => parseBrt(edit($ => $('.table_stato_dati tr').slice(1).remove()), NUMBER)).toThrow(NoHistoryError);
+    expect(() => parseBrt(edit($ => $('.table_stato_dati tr').slice(1).remove()), NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     const many = edit($ => $('.table_stato_dati').append($('.table_stato_dati tr').eq(1).prop('outerHTML')!.repeat(120)));
     expect(parseBrt(many, NUMBER).events).toHaveLength(100);
   });

@@ -176,7 +176,7 @@ describe('Australia Post parser', () => {
     article.status = { statusAttributeName: 'status', statusAttributeValue: 'Updating Status' };
     article.details[0].events = [];
     expect(() => parse(payload, NUMBER)).toThrow(NoHistoryError);
-    expect(() => parse(payload, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+    expect(() => parse(payload, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate', reason: 'listed' }));
   });
 });
 

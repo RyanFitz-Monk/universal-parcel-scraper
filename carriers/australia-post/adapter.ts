@@ -206,7 +206,7 @@ function articleResult(selected: Record<string, unknown>, consignmentId: string)
   }
   // A known article without scans, shown as "Updating Status": its history is gone or never began,
   // as for a label not yet scanned. Australia Post has answered for it, so it is no outage.
-  if (Array.isArray(details.events) && !details.events.length) throw new NoHistoryError(PROVIDER, 'Australia Post shows no history for this article');
+  if (Array.isArray(details.events) && !details.events.length) throw new NoHistoryError(PROVIDER, 'Australia Post shows no history for this article', { reason: 'listed' });
   if (!Array.isArray(details.events) || details.events.length > 500) {
     throw new SchemaError(PROVIDER, 'Australia Post returned incomplete tracking history');
   }

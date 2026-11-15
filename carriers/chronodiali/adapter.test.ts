@@ -99,7 +99,7 @@ describe('Chronodiali HTTP adapter', () => {
     expect(created).toMatchObject({ status: 'pending', current_stage: 'registered', summary_only: true, provider_code: 'softdata_upload',
       last_status_text: 'Les données du colis ont été intégrées dans nos systèmes.', last_update: null, events: [] });
     expect(() => parseChronodiali(changed('in-transit', (shipment) => { shipment.events = []; shipment.status = 'synthetic_status'; }), IN_TRANSIT))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads the tracker’s unknown-number answer as not found and its other errors as inconclusive', () => {

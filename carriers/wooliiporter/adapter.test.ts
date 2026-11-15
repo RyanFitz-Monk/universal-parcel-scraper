@@ -51,7 +51,7 @@ describe('WooliiPorter', () => {
     expect(() => parseWoolii({ ...delivered(), trackingNumber: 'WP1000000000017' }, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
     expect(parseWoolii(delivered(), 'WPTRK-AB12')).toMatchObject({ canonical_tracking_number: NUMBER });
     expect(() => parseWoolii({ ...delivered(), trackingNumber: 'WPTRK-ZZ99' }, 'WPTRK-AB12')).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
-    expect(() => parseWoolii({ ...delivered(), status: 'INFO_RECEIVED', events: [] }, NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+    expect(() => parseWoolii({ ...delivered(), status: 'INFO_RECEIVED', events: [] }, NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     for (const payload of [null, [], {}, { trackingNumber: NUMBER }, { ...delivered(), events: [null] },
       { ...delivered(), events: [{ eventAt: '2031-05-02T03:20:00', descriptionEn: 'Delivered', status: 'DELIVERED' }] },
       { ...delivered(), events: [{ eventAt: '2031-05-02T24:20:00Z', descriptionEn: 'Delivered', status: 'DELIVERED' }] },

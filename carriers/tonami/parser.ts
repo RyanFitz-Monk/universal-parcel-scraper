@@ -163,7 +163,7 @@ export function parseTonami(html: string, raw: string, now = Date.now()): Carrie
   const scanned = events.find((event) => event.stage);
   const stage = (listed ?? scanned?.stage) as Stage | undefined;
   const source = listed ? 'carrier_map' : scanned?.stage_source;
-  if (!newest && !listed) throw new NoHistoryError(PROVIDER);
+  if (!newest && !listed) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   const weight = weightOf(fields.get('重量(kg)'));
   const delivered = stage === 'delivered' && newest?.stage === 'delivered' && typeof newest.time === 'string' ? newest.time : null;
   return {

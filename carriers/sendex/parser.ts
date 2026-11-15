@@ -140,7 +140,7 @@ export function parseSendex(html: string, raw: string): CarrierResult {
     if (staged) Object.assign(event, { stage: staged.stage, stage_source: staged.source });
     listed.push(event);
   });
-  if (!listed.length) throw new NoHistoryError(PROVIDER);
+  if (!listed.length) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   // The page lists the movements oldest first; the result has them newest first.
   const events = (listed[0]!.local_time as string) <= (listed.at(-1)!.local_time as string) ? listed.reverse() : listed;
 

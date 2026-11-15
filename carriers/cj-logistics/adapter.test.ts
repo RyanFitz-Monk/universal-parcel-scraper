@@ -141,7 +141,7 @@ describe('CJ Logistics HTTP adapter', () => {
     // A waybill registered before its first scan has no history yet.
     const registered = service(() => reply(fixture('no-scans')), () => reply(fixture('waybill-registered')));
     await expect(carrier(registered).track({ number: REGISTERED }))
-      .rejects.toMatchObject({ kind: 'indeterminate', name: 'NoHistoryError' });
+      .rejects.toMatchObject({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' });
     await expect(carrier(registered).track({ number: UNKNOWN }))
       .rejects.toMatchObject({ kind: 'indeterminate', message: 'CJ Logistics answered for another shipment' });
     expect(() => readCjWaybill(fixture('waybill-unknown'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));

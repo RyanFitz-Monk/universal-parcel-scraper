@@ -133,7 +133,7 @@ export function parseApcPostalLogistics(payload: unknown, raw: string): CarrierR
   }
   const rows = payload.events;
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'APC returned an oversized history');
-  if (!rows.length) throw new NoHistoryError(PROVIDER, 'APC has no scans for the parcel yet');
+  if (!rows.length) throw new NoHistoryError(PROVIDER, 'APC has no scans for the parcel yet', { reason: 'listed' });
   const delivery = handedOver ? partnerNumber(handedOver, [number, own]) : undefined;
 
   // Partner clocks are not instants, so the reply's order, newest first, stands.

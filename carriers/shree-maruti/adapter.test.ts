@@ -164,10 +164,10 @@ describe('Shree Maruti HTTP adapter', () => {
     expect(() => parseShreeMaruti([], UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));
     expect(() => parseShreeMaruti({ orderInformation: null, statuses: [] }, UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));
     expect(() => parseShreeMaruti(changed('delivered', (reply) => { reply.statuses = []; }), DELIVERED))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
     expect(() => parseShreeMaruti(changed('delivered', (reply) => {
       reply.statuses = reply.statuses.filter((row) => row.status === 'softdata_update');
-    }), DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+    }), DELIVERED)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('keeps only rows that name the number asked', () => {

@@ -114,7 +114,7 @@ export function parseAustrianPostResponse(payload: unknown, rawNumber: string): 
   const events = parsed.slice(0, 100).map(({ event }) => event);
   const summary = clean(parcel.status, 32);
   const mapped = austrianPostSummaryStatus(summary);
-  if (!events.length) throw new NoHistoryError(PROVIDER, 'Austrian Post lists the shipment without scans');
+  if (!events.length) throw new NoHistoryError(PROVIDER, 'Austrian Post lists the shipment without scans', { reason: 'listed' });
   const estimate = austrianPostShowsEstimate(summary, newestReason) ? estimateOf(parcel.estimatedDelivery) : null;
   // A later scan than the estimate's end leaves it stale.
   const expected = estimate && estimate.end >= parsed[0]!.timestamp ? estimate : null;

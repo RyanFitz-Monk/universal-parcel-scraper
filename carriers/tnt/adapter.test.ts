@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { NoHistoryError } from '../../core/errors/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, normalizeTntExpressNumber, normalizeTntFranceNumber, parseTntExpressResponse, parseTntFranceResponse, TntExpressTracker, TntFranceTracker } from './adapter.js';
 import { tntExpressStatus } from './status.js';
@@ -35,7 +34,7 @@ describe('TNT France public tracking', () => {
     expect(parseTntFranceResponse(fixture().replaceAll("Colis chez l'expéditeur", 'New milestone'), NUMBER).status).toBe('unknown');
     expect(() => parseTntFranceResponse(fixture().replace('27/03/2026', '32/03/2026'), NUMBER)).toThrow('incomplete tracking row');
     expect(() => parseTntFranceResponse(fixture().replace('Etapes de votre expédition', 'Changed header'), NUMBER)).toThrow('unique tracking history');
-    expect(() => parseTntFranceResponse(fixture().replace(/<div class="roster tnt-even">.*<\/div><\/div>/, ''), NUMBER)).toThrow(NoHistoryError);
+    expect(() => parseTntFranceResponse(fixture().replace(/<div class="roster tnt-even">.*<\/div><\/div>/, ''), NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('classifies a synthetic delivered history independently of older scans', () => {
@@ -164,7 +163,7 @@ describe('TNT international public tracking', () => {
     const empty = express();
     empty['tracker.output'].consignment = empty['tracker.output'].consignment.slice(0, 1);
     empty['tracker.output'].consignment[0].events = [];
-    expect(() => parseTntExpressResponse(empty, EXPRESS_NUMBER)).toThrow(NoHistoryError);
+    expect(() => parseTntExpressResponse(empty, EXPRESS_NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('makes one bounded anonymous read, honours cancellation and keeps outages apart', async () => {

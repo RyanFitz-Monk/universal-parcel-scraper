@@ -98,7 +98,7 @@ describe('TNT Italy HTTP adapter', () => {
       .toThrow(expect.objectContaining({ kind: 'indeterminate', message: 'TNT Italy sends this shipment to FedEx\'s tracker' }));
     expect(() => parseTntItaly(refusal('99999'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
     expect(() => parseTntItaly(fixture('in-transit').replace(/<StatusDetails>[\s\S]*<\/StatusDetails>/, ''), IN_TRANSIT))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('rejects a changed reply', () => {

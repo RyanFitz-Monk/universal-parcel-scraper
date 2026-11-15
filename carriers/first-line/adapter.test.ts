@@ -120,7 +120,7 @@ describe('FIRST LINE HTTP adapter', () => {
     const rows = parseFirstLine(text('export.txt'), EXPORT, Date.parse('2026-10-20T08:41:30Z')).events!;
     expect(rows[0]).toMatchObject({ description: 'Leaving Scan' });
     expect(parseFirstLine(text('export.txt'), EXPORT, Date.parse('2026-10-20T08:41:31Z')).events![0]).toMatchObject({ description: 'Export customs declaration completed' });
-    expect(() => parseFirstLine(text('export.txt'), EXPORT, Date.parse('2026-10-15T00:00:00Z'))).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+    expect(() => parseFirstLine(text('export.txt'), EXPORT, Date.parse('2026-10-15T00:00:00Z'))).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('reads the tracker’s notice as no answer about the waybill, which another forwarder may hold, and a refused session as nothing', async () => {

@@ -157,7 +157,7 @@ describe('APC Postal Logistics HTTP adapter', () => {
 
   it('reads a parcel without scans as no history yet, not as found or missing', () => {
     expect(() => parseApcPostalLogistics(changed('in-transit', (reply) => { reply.events = []; }), TRANSIT))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' }));
   });
 
   it('rejects a changed reply', () => {

@@ -235,9 +235,9 @@ describe('DealerSend HTTP adapter', () => {
     expect(() => parseDealerSend(edited('delivered-usps.json', USPS_PARCEL, (shipment) => { shipment.trackingNumber = GOFO_PARCEL; }), USPS_PARCEL, READ_AT))
       .toThrow('another parcel');
     expect(() => parseDealerSend(edited('delivered-usps.json', USPS_PARCEL, (shipment) => { shipment.trackingEvents = null; }), USPS_PARCEL, READ_AT))
-      .toThrow(NoHistoryError);
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     expect(() => parseDealerSend(edited('delivered-usps.json', USPS_PARCEL, (shipment) => { shipment.trackingEvents = []; }), USPS_PARCEL, READ_AT))
-      .toThrow(NoHistoryError);
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
     expect(() => parseDealerSend(edited('delivered-usps.json', USPS_PARCEL, (shipment) => { shipment.trackingEvents![0]!.localTime = '2026-04-14 18:11'; }),
       USPS_PARCEL, READ_AT)).toThrow('invalid scan time');
     expect(() => parseDealerSend(edited('delivered-usps.json', USPS_PARCEL, (shipment) => { shipment.trackingEvents![0]!.localTime = '2026-04-14T24:00:00'; }),

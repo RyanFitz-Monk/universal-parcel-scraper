@@ -87,6 +87,8 @@ export class IndeterminateError extends CarrierError {
  * announced, not handed over). An answer about the parcel, not an outage. With the
  * reason `short_number`, the number was too short to send without its carrier; with
  * `unattributed_history`, the provider's answer for a number that short named another carrier or none.
+ * With `listed`, the carrier lists the shipment but holds no scan for it, as for one booked,
+ * announced or labelled: the carrier knows the number.
  */
 export class NoHistoryError extends IndeterminateError {
   /**

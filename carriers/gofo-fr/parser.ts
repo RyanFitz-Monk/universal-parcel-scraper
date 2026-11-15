@@ -104,7 +104,7 @@ export function parseRegionalGofo(payload: unknown, rawNumber: string, region: G
   if (countryCode(item.toCountry) !== region) throw new SchemaError(provider, 'GOFO returned a parcel outside the national service');
   if (!Array.isArray(item.trackEventList) || !item.trackEventList.every(isRecord) || item.trackEventList.length > 500) throw new SchemaError(provider);
   const rows = item.trackEventList;
-  if (!rows.length) throw new NoHistoryError(provider, 'GOFO lists the parcel without scans');
+  if (!rows.length) throw new NoHistoryError(provider, 'GOFO lists the parcel without scans', { reason: 'listed' });
   if (!Number.isInteger(item.trackEventCount) || Number(item.trackEventCount) < rows.length || Number(item.trackEventCount) > 500) {
     throw new IndeterminateError(provider, 'GOFO returned an inconsistent scan count');
   }
