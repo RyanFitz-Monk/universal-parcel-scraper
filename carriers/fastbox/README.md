@@ -13,7 +13,7 @@ Korea Post's EMS. Tracked through its own tracking page.
 
 - A known invoice gets a shipment table and a history table. The shipment table gives the
   destination, the partner's domestic invoice and its name, and the origin, then the recipient's
-  name and address, which the adapter never reads. The page's search form must echo the whole
+  masked name and address, which the adapter reads. The page's search form must echo the whole
   invoice.
 - An invoice the tracker does not know, or no longer keeps, gets the form alone and an alert that
   the invoice is not valid. Only that answer is not found.

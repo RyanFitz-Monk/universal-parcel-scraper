@@ -51,7 +51,8 @@
       "eta",
       "recipient_name",
       "remarks",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -60,13 +61,14 @@
       "provider_code",
       "delivered_at",
       "eta",
-      "weight"
+      "weight",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "origin",
       "departure_date",
       "destination",
-      "recipient_name",
       "remarks",
       "proof_of_delivery"
     ],

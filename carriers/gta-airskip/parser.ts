@@ -22,6 +22,8 @@ const HIDDEN = new Set(['discard', 'discarded', 'manual', 'reject', 'rejected'])
 const PLACE_FIRST = /^([^,\d]{2,60},\s*[A-Z]{2})\.\s*(.*)$/;
 // Scan types that report a problem, whose reason the page shows in their description.
 const PROBLEM = new Set(['warning', 'error']);
+// Seven or more digits, with the separators phone numbers are written with.
+const PHONE = /\d(?:[\s().-]{0,2}\d){6,}/;
 const POUNDS_TO_KG = 0.453_592_37;
 const MAX_SHIPMENTS = 30;
 const MAX_ROWS = 500;
@@ -76,8 +78,7 @@ function scanClock(row: Record<string, unknown>): { wall: string; clock: string;
 /**
  * A scan's place and the reason its description gives. Terminal scans name
  * the town and province in `Location`, or in older scans before the reason in
- * `Description`. A place with a digit, which could be an address or
- * a postcode, is not kept.
+ * `Description`. A place with a phone number is not kept.
  */
 function placeAndReason(row: Record<string, unknown>): { location: string; reason: string } {
   let location = text(row, 'Location', 120).replace(/[\s.]+$/, '');
@@ -87,20 +88,20 @@ function placeAndReason(row: Record<string, unknown>): { location: string; reaso
     location = placed[1]!;
     reason = placed[2]!;
   }
-  return { location: /\d/.test(location) ? '' : location, reason };
+  return { location: PHONE.test(location) ? '' : location, reason };
 }
 
 /**
  * A scan's wording: its name, and for a problem the reason its description
  * gives when the name does not hold it, as "Undelivered: Customer not
- * available". A reason with a digit is left out, as it could hold an address
- * or a phone number; the description of any other scan is not read.
+ * available". A reason with a phone number is left out; the description of
+ * any other scan is not read.
  */
 function wording(row: Record<string, unknown>, reason: string): string {
   const name = text(row, 'Name', 160) || text(row, 'Category', 80);
   if (!name) throw new SchemaError(PROVIDER, 'GTA AirSkip returned a scan without its name');
   const problem = PROBLEM.has(text(row, 'Type', 40).toLowerCase());
-  if (!problem || !reason || /\d/.test(reason) || /^normal status$/i.test(reason) || name.toLowerCase().includes(reason.toLowerCase())) return name;
+  if (!problem || !reason || PHONE.test(reason) || /^normal status$/i.test(reason) || name.toLowerCase().includes(reason.toLowerCase())) return name;
   return `${name}: ${reason}`;
 }
 
@@ -155,12 +156,20 @@ function estimate(shipment: Record<string, unknown>): string | null {
   return day && DateTime.fromISO(day, { zone: 'UTC' }).isValid ? day : null;
 }
 
+/** The consignee's street lines, then "Town, PR A0A 0A0". */
+function consigneeAddress(shipment: Record<string, unknown>): string {
+  const street = ['ConsigneeAddress1', 'ConsigneeAddress2', 'ConsigneeAddress3'].map((key) => text(shipment, key, 120)).filter(Boolean);
+  const city = text(shipment, 'ConsigneeCity', 80);
+  const region = [text(shipment, 'ConsigneeProvince', 8), text(shipment, 'ConsigneePostalCode', 16)].filter(Boolean).join(' ');
+  return [...street, city && region ? `${city}, ${region}` : city || region].filter(Boolean).join('\n');
+}
+
 /**
  * The reply of `trackings/track-my-package`, the lookup the tracking page
  * makes, for one number: `{"Data":[…],"IsSuccess":true}`. An empty `Data` is
  * the page's "Shipment Not Found". The shipment must name the number asked.
- * The shipper's and consignee's names, addresses and towns, references, scan
- * coordinates and proof-of-delivery links are never read.
+ * The consignee's name and address are read; the shipper's, the references,
+ * scan coordinates and proof-of-delivery links are not.
  */
 export function parseGtaAirskip(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGtaAirskipNumber(raw);
@@ -202,6 +211,8 @@ export function parseGtaAirskip(payload: unknown, raw: string): CarrierResult {
   const source = summary && summary !== scanned?.stage ? 'carrier_map' : scanned?.stage_source;
   const service = text(shipment, 'Service', 60);
   const weight = weightKg(shipment);
+  const consignee = text(shipment, 'Consignee', 160);
+  const address = consigneeAddress(shipment);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -211,6 +222,8 @@ export function parseGtaAirskip(payload: unknown, raw: string): CarrierResult {
     expected_delivery: stage === 'delivered' || stage === 'returned' ? null : estimate(shipment),
     ...(/[A-Z]/i.test(service) && !/^n\/a$/i.test(service) ? { service_name: service } : {}),
     ...(weight ? { weight_kg: weight } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

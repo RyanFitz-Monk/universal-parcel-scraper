@@ -41,11 +41,12 @@ function scanTime(row: Record<string, unknown>): ParsedTime {
 
 /**
  * The place of a scan. A delivery, a refusal or an attempt happens at the
- * recipient's address, so its place is not kept; elsewhere only a town with its
- * country code, or a country code, is.
+ * recipient's address, and its place is kept as Exelot names it, part of that
+ * address included; elsewhere only a town with its country code, or a country
+ * code, is.
  */
 function place(value: unknown, code: string, stage: Stage | undefined): string {
-  if (stage === 'delivered' || stage === 'failed_attempt' || exelotCodeKey(code) === '67') return '';
+  if (stage === 'delivered' || stage === 'failed_attempt' || exelotCodeKey(code) === '67') return clean(value, 160);
   const text = clean(value, 64);
   return PLACE.test(text) ? text : '';
 }

@@ -1,7 +1,7 @@
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
-import { languageStageStatus } from '../../core/status/index.js';
+import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
@@ -19,6 +19,8 @@ const CLOCK = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/;
 const CODE = /^[A-Z0-9]{1,12}$/;
 // Delivery rows append the recipient and their identity document to this label.
 const RECIPIENT = /\b(?:delivered\s+to|signed\s+(?:for\s+)?by|received\s+by)\b.*$/i;
+// "Delivered To :NAME ID:12345678901234", the person who took the parcel.
+const DELIVERED_TO = /^delivered\s+to\s*:\s*(.+?)(?:\s+ID\s*:\s*\S*)?$/i;
 
 export function normalizeEgxpressNumber(raw: string): string {
   const number = raw.length <= 64 ? normalizeTrackingNumber(raw) : '';
@@ -48,8 +50,8 @@ function localClock(day: unknown, time: unknown): string {
   return `${calendar}T${clock[1]!.padStart(2, '0')}:${clock[2]}:${clock[3] ?? '00'}`;
 }
 
-/** Keep the delivery milestone, never its recipient's name or identity document. */
-function descriptionOf(code: string, remarks: string): string {
+/** The wording the stage is read from, without the name and identity document a delivery row adds. */
+function stageWording(code: string, remarks: string): string {
   if (code === 'POD') return 'Delivered';
   return clean(remarks.replace(RECIPIENT, (label) => /^delivered/i.test(label) ? 'Delivered' : 'Received'), 500);
 }
@@ -60,10 +62,10 @@ function scan(value: unknown): CarrierEvent {
     ? String(value.status) : text(value.status, 'scan code', 40).toUpperCase();
   if (!CODE.test(rawCode)) invalid('EGXPRESS returned a scan without its status code');
   const remarks = text(value.remarks, 'scan description');
-  const description = descriptionOf(rawCode, remarks);
+  const description = remarks || (rawCode === 'POD' ? 'Delivered' : '');
   if (!description) invalid('EGXPRESS returned a scan without its description');
   const location = text(value.location, 'scan location', 160);
-  const staged = egxpressStage(rawCode, description);
+  const staged = egxpressStage(rawCode, stageWording(rawCode, remarks));
   return {
     local_time: localClock(value.transdate, value.transTime),
     description,
@@ -73,10 +75,27 @@ function scan(value: unknown): CarrierEvent {
   };
 }
 
+/** Who took the parcel, from the newest delivery row that names them. */
+function signatory(rows: readonly unknown[]): string {
+  for (const row of rows) {
+    if (!isRecord(row) || row.status !== 'POD') continue;
+    const name = DELIVERED_TO.exec(text(row.deliveredTo, 'delivery recipient') || text(row.remarks, 'scan description'))?.[1];
+    if (name) return clean(name, 160);
+  }
+  return '';
+}
+
+/** The consignee's address, which the reply writes after their name and a comma. */
+function addressOf(details: string, receiver: string): string {
+  if (!receiver || !details.toUpperCase().startsWith(receiver.toUpperCase())) return '';
+  return clean(details.slice(receiver.length).replace(/^\s*,/, ''), 300);
+}
+
 /**
  * One guest domestic result, bound to the whole AWB the service returns. The
  * shipment's summary fields are often empty; dated history supplies the state.
- * Recipient, sender, account, cash and package-content fields are never projected.
+ * The recipient's name and address and who took the parcel are kept; sender,
+ * account, cash and package-content fields are never projected.
  */
 export function parseEgxpress(payload: unknown, raw: string): CarrierResult {
   const number = normalizeEgxpressNumber(raw);
@@ -100,7 +119,10 @@ export function parseEgxpress(payload: unknown, raw: string): CarrierResult {
   // for tied clocks and for any row whose clock contains only its day.
   const events = track.trackList.map(scan);
   const newest = events[0]!;
-  const staged = egxpressStage(String(newest.provider_code), newest.description!);
+  const staged = newest.stage ? { stage: newest.stage as Stage, source: newest.stage_source! } : null;
+  const receiver = text(shipment.receiver, 'recipient', 160);
+  const address = addressOf(text(shipment.consigneeDetails, 'recipient address'), receiver);
+  const signedBy = signatory(track.trackList);
   return {
     status: staged ? languageStageStatus(staged.stage) : 'unknown',
     ...(staged ? { current_stage: staged.stage, current_stage_source: staged.source } : {}),
@@ -108,6 +130,9 @@ export function parseEgxpress(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

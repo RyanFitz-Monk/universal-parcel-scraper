@@ -66,8 +66,9 @@ to some scans.
 `service_name` is the `serviceName` GOFO gives, as written.
 `expected_delivery` is GOFO's `estimatedArrivalTime`, kept as a date until the
 parcel is delivered or returned.
-Detailed delivery prose and proof images are excluded. The weight has no
-verified unit and is omitted. Proof lookup requires a postcode and is not queried.
+A delivery keeps GOFO's wording, such as where the parcel was left. Proof images are
+excluded. The weight has no verified unit and is omitted. Proof lookup requires a postcode
+and is not queried.
 
 `clock.ts` lists the zone GOFO gave each station it named (`processLocation`) on the
 corpus's and benchmark's parcels, for relays that keep only the station's name and its

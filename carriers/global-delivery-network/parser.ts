@@ -42,7 +42,8 @@ function wallClock(value: string): string {
  * The tracker's page for one parcel: its number, the recipient's address, a
  * partner's reference and the scans newest first, in a table. A number it
  * does not know gets a page that says it cannot locate the package. The
- * recipient, the address, the weight and the partner's reference are not kept.
+ * recipient and the address are read; the weight and the partner's reference
+ * are not.
  */
 export function parseGdn(html: string, raw: string): CarrierResult {
   const number = normalizeGdnNumber(raw);
@@ -84,6 +85,10 @@ export function parseGdn(html: string, raw: string): CarrierResult {
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const destination = countryCode(field('Country:'));
+  const receiver = field('Recipient:') ?? '';
+  const street = [field('Address Line 1:'), field('Address Line 2:')].filter(Boolean).join('\n');
+  const town = [field('Postal Code:'), field('City:')].filter(Boolean).join(' ');
+  const address = [street, town].filter(Boolean).join('\n');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -91,6 +96,8 @@ export function parseGdn(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     ...(destination ? { destination_country: destination } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events,
   };
 }

@@ -144,9 +144,12 @@ describe('FedEx structured response', () => {
       last_update: '2026-09-02T11:58:00+02:00',
       delivered_at: '2026-09-02T11:58:00+02:00',
       expected_delivery: null,
+      receiver_address: 'ZUERICH',
+      signed_by: 'PRIVATE RECIPIENT',
     });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(result.events).toEqual([
-      { time: '2026-09-02T11:58:00+02:00', location: 'ZUERICH, CH', description: 'Delivered', provider_code: 'DL', stage: 'delivered' },
+      { time: '2026-09-02T11:58:00+02:00', location: 'ZUERICH, CH', description: 'Delivered — Signed for by: PRIVATE RECIPIENT', provider_code: 'DL', stage: 'delivered' },
       { time: '2026-09-01T08:12:00+02:00', location: 'KOELN, DE', description: 'Departed FedEx location', provider_code: 'DP', stage: 'in_transit' },
       { local_time: '2026-08-31', location: 'SEOUL, KR', description: 'Picked up', provider_code: 'PU', stage: 'accepted' },
       { time: '2026-08-30T09:05:00+09:00', location: 'SEOUL, KR', description: 'Shipment information sent to FedEx', provider_code: 'OC', stage: 'registered' },
@@ -398,10 +401,10 @@ describe('FedEx structured response', () => {
     }
   });
 
-  it('keeps the recipient, shipper and service blocks out of the result', () => {
+  it('keeps the shipper, phone and service blocks out of the result', () => {
     const serialized = JSON.stringify(parseFedExTrackingResponse(deliveredFixture(), DELIVERED_NUMBER));
     for (const value of [
-      'PRIVATE RECIPIENT', 'PRIVATE SHIPPER', 'PRIVATE PHONE',
+      'PRIVATE SHIPPER', 'PRIVATE PHONE',
       'receivedByNm', 'shipperCmpnyName', 'recipientPhoneNbr',
       'serviceDesc', 'INTERNATIONAL_PRIORITY', 'totalKgsWgt', 'dimensions',
     ]) {
@@ -545,8 +548,14 @@ describe('FedEx structured response', () => {
     expect(accepted).not.toHaveProperty('pickup_point');
   });
 
-  it('keeps the recipient, shipper and destination of a held parcel out of the result', () => {
-    const serialized = JSON.stringify(parseFedExTrackingResponse(heldFixture(), HELD_NUMBER));
+  it('reads the recipient of a held parcel and keeps its shipper and destination out', () => {
+    const result = parseFedExTrackingResponse(heldFixture(), HELD_NUMBER);
+    expect(result).toMatchObject({
+      receiver_name: 'PRIVATE RECIPIENT',
+      receiver_address: 'PRIVATE RECIPIENT STREET\nPRIVATE RECIPIENT CITY, TN PRIVATE POSTCODE',
+    });
+    expect(result).not.toHaveProperty('signed_by');
+    const serialized = JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined });
     expect(serialized).not.toContain('PRIVATE');
     expect(serialized).not.toContain('XMEMA');
   });

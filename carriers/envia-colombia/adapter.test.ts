@@ -49,11 +49,12 @@ describe('Envía HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered guía in Bogotá time, newest first, without the people, phones, addresses or proof image', () => {
+  it('reads a delivered guía in Bogotá time, newest first, with the recipient and without the sender, phones or proof image', () => {
     const result = parse('delivered', DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Entregado', last_update: '2026-05-14T15:42:00-05:00', delivered_at: '2026-05-14T15:42:00-05:00',
-      expected_delivery: null, service_name: 'PAQUETE EXPRESS' });
+      expected_delivery: null, service_name: 'PAQUETE EXPRESS', receiver_name: 'SAMPLE RECIPIENT',
+      receiver_address: 'KR 4 5 6 SAMPLE\nPUEBLO MUESTRA-ANTIOQUIA' });
     // The record's current state shares the delivery's clock, so the milestone tells it.
     expect(result.events).toEqual([
       { time: '2026-05-14T15:42:00-05:00', description: 'Entregado', location: 'PUEBLO MUESTRA-ANTIOQUIA', stage: 'delivered', stage_source: 'carrier_map' },
@@ -63,13 +64,14 @@ describe('Envía HTTP adapter', () => {
       // Midnight is a date without its time of day.
       { local_time: '2026-05-12', description: 'Tu guía fue generada', location: 'MEDELLIN', stage: 'registered', stage_source: 'carrier_map' },
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE (?:SENDER|RECIPIENT)|300000000|CL 1 2 3|KR 4|\.jpg|0\.0000|recorriendo/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SENDER|300000000|CL 1 2 3|\.jpg|0\.0000|recorriendo/);
   });
 
   it('adds a later current state to the milestones, with its code, and keeps the estimate of a guía on its way', () => {
     const result = parse('in-transit', IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'EN TRANSITO A VILLA MUESTRA',
-      last_update: '2026-10-07T22:15:00-05:00', expected_delivery: '2026-10-09', service_name: 'PAQUETE EXPRESS' });
+      last_update: '2026-10-07T22:15:00-05:00', expected_delivery: '2026-10-09', service_name: 'PAQUETE EXPRESS',
+      receiver_name: 'SAMPLE PERSON', receiver_address: 'CL 10 11 12\nVILLA MUESTRA-VALLE' });
     expect(result).not.toHaveProperty('delivered_at');
     expect(result.events).toEqual([
       { time: '2026-10-07T22:15:00-05:00', description: 'EN TRANSITO A VILLA MUESTRA', location: 'BOGOTA', provider_code: '5',
@@ -101,7 +103,8 @@ describe('Envía HTTP adapter', () => {
     const undated = changed('in-transit-record', (body) => { body.data.date = ''; });
     expect(parse('in-transit', IN_TRANSIT, empty, undated)).toEqual({ status: 'in_transit', current_stage: 'in_transit',
       current_stage_source: expect.stringMatching(/^wording:/), last_status_text: 'EN TRANSITO A VILLA MUESTRA', provider_code: '5',
-      last_update: null, expected_delivery: '2026-10-09', service_name: 'PAQUETE EXPRESS', summary_only: true, events: [] });
+      last_update: null, expected_delivery: '2026-10-09', service_name: 'PAQUETE EXPRESS', receiver_name: 'SAMPLE PERSON',
+      receiver_address: 'CL 10 11 12\nVILLA MUESTRA-VALLE', summary_only: true, events: [] });
     // A dated record without milestones is one scan.
     expect(parse('in-transit', IN_TRANSIT, empty).events).toHaveLength(1);
     const blank = changed('in-transit-record', (body) => { Object.assign(body.data, { date: null, estadoActual: null, eventCode: '', description: '' }); });

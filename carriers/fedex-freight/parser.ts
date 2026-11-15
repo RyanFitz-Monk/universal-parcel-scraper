@@ -95,34 +95,37 @@ function scanClock(scan: Record<string, unknown>): { time: string; timestamp: nu
   throw new SchemaError(PROVIDER, 'FedEx Freight returned an invalid scan time');
 }
 
-/**
- * A scan's wording: its status, then its details. A delivery keeps its status
- * alone, since the person who signed is read nowhere.
- */
-function wording(status: string, details: string, delivered: boolean): string {
-  if (!details || delivered || status.toLowerCase().includes(details.toLowerCase())) return status;
+/** A scan's wording: its status, then its details. */
+function wording(status: string, details: string): string {
+  if (!details || status.toLowerCase().includes(details.toLowerCase())) return status;
   return status ? `${status}: ${details}` : details;
 }
 
-interface Row { event: CarrierEvent; timestamp: number }
+interface Row { event: CarrierEvent; timestamp: number; signee: string }
 
-/** One scan: its clock, wording, code and the terminal's or customer's town. The signee is never read. */
+/**
+ * One scan: its clock, wording, code, the terminal's or customer's town and,
+ * on a delivery, who signed. A delivery is staged by its status alone, since
+ * its details name the person who signed.
+ */
 function rowOf(scan: unknown): Row {
   if (!isRecord(scan)) throw new SchemaError(PROVIDER, 'FedEx Freight returned an invalid scan');
   const code = text(scan, 'statusCD', 8).toUpperCase();
   const exceptionCode = text(scan, 'statusExceptionCode', 16);
   const delivered = code === 'DL' || flag(scan, 'delivered');
-  const description = wording(text(scan, 'status', 200), text(scan, 'scanDetails', 300), delivered);
+  const status = text(scan, 'status', 200);
+  const description = wording(status, text(scan, 'scanDetails', 300));
   if (!description) throw new SchemaError(PROVIDER, 'FedEx Freight returned a scan without its wording');
   const { timestamp, ...clock } = scanClock(scan);
   const location = text(scan, 'scanLocation', 120);
-  const staged = fedexFreightStage(code, exceptionCode, description);
+  const staged = fedexFreightStage(code, exceptionCode, delivered && status ? status : description);
   return {
     event: {
       ...clock, ...(location ? { location } : {}), description, ...(code ? { provider_code: code } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
     },
     timestamp,
+    signee: delivered ? text(scan, 'recipientSignee', 160) : '',
   };
 }
 
@@ -137,12 +140,26 @@ function weight(shipment: Record<string, unknown>): number | null {
   return Number.isFinite(pounds) && pounds > 0 && pounds < 1_000_000 ? Math.round(pounds * POUNDS_TO_KG * 1000) / 1000 : null;
 }
 
-/** The destination's country code, never the rest of the consignee's address. */
+/** The destination's country code. */
 function destinationCountry(shipment: Record<string, unknown>): string | null {
   const address = shipment.recipientAddress;
   if (!isRecord(address)) return null;
   const country = text(address, 'countryCode', 4).toUpperCase();
   return /^[A-Z]{2}$/.test(country) ? country : null;
+}
+
+/**
+ * The consignee's address: its street lines, then "City, ST 12345". The
+ * reply often gives the town and state alone.
+ */
+function consigneeAddress(shipment: Record<string, unknown>): string {
+  const address = shipment.recipientAddress;
+  if (!isRecord(address)) return '';
+  const street = list(address, 'streetLines', 10).map((line) => (typeof line === 'string' ? clean(line, 120) : '')).filter(Boolean);
+  const city = text(address, 'city', 80);
+  const region = [text(address, 'stateOrProvinceCode', 8), text(address, 'postalCode', 16)].filter(Boolean).join(' ');
+  const town = city && region ? `${city}, ${region}` : city || region;
+  return [...street, town].filter(Boolean).join('\n');
 }
 
 /** The package that answers the requested PRO, or the error the reply amounts to. */
@@ -188,8 +205,9 @@ function shipmentFor(payload: unknown, number: string): Record<string, unknown> 
 /**
  * The reply of the tracking page's `track-shipments` call for one PRO number:
  * `output.packages` holds the shipments it found, each with its summary and
- * its scans newest first. The shipper, consignee and receiver, the signee,
- * addresses, references, bills of lading and coordinates are never read.
+ * its scans newest first. It reads the consignee's address and who signed;
+ * the shipper, the driver, references, bills of lading and coordinates are
+ * never read.
  */
 export function parseFedexFreight(payload: unknown, raw: string): CarrierResult {
   const number = normalizeFedexFreightNumber(raw);
@@ -208,6 +226,8 @@ export function parseFedexFreight(payload: unknown, raw: string): CarrierResult 
   if (listsNewestFirst(rows.map(({ event }) => event)) === false) rows.reverse();
   rows.sort((left, right) => right.timestamp - left.timestamp);
   const events = rows.map((row) => row.event);
+  const address = consigneeAddress(shipment);
+  const signer = text(shipment, 'receivedByNm', 160);
 
   const summaryCode = text(shipment, 'keyStatusCD', 8).toUpperCase();
   const summaryText = text(shipment, 'keyStatus', 200);
@@ -221,6 +241,8 @@ export function parseFedexFreight(payload: unknown, raw: string): CarrierResult 
       ...(summaryCode ? { provider_code: summaryCode } : {}),
       last_update: null,
       expected_delivery: staged && FINAL.has(staged.stage) ? null : estimate(shipment),
+      ...(address ? { receiver_address: address } : {}),
+      ...(staged?.stage === 'delivered' && signer ? { signed_by: signer } : {}),
       summary_only: true,
       events: [],
     };
@@ -229,7 +251,10 @@ export function parseFedexFreight(payload: unknown, raw: string): CarrierResult 
   const newest = events[0]!;
   const decider = events.find((event) => event.stage);
   const stage = decider?.stage as Stage | undefined;
-  const deliveredAt = stage === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
+  const delivery = stage === 'delivered' ? rows.find((row) => row.event.stage === 'delivered') : undefined;
+  const deliveredAt = delivery?.event.time;
+  // The page's summary names who signed; the delivery scan's signee is the fallback.
+  const signedBy = delivery ? signer || delivery.signee : '';
   const service = text(shipment, 'serviceDesc', 80);
   const kilograms = weight(shipment);
   const country = destinationCountry(shipment);
@@ -244,6 +269,8 @@ export function parseFedexFreight(payload: unknown, raw: string): CarrierResult 
     ...(kilograms ? { weight_kg: kilograms } : {}),
     ...(service ? { service_name: service } : {}),
     ...(country ? { destination_country: country } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

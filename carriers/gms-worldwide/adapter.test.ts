@@ -27,8 +27,8 @@ const changed = (name: string, change: (order: Order, rows: Row[]) => void) => {
 const reply = (body: unknown, init: ResponseInit = {}) => new Response(typeof body === 'string' ? body : JSON.stringify(body),
   { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } });
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
-// The invented consignee, receiver, references and links of the fixtures.
-const PRIVATE = /Sample (?:Road|Person)|SAMPLE PERSON|SAMPLE-REF|example\.invalid|\.jpg|0{10}|Demobad/;
+// The invented phones, references and links of the fixtures.
+const PRIVATE = /SAMPLE-REF|example\.invalid|\.jpg|0{10}/;
 
 describe('GMS Worldwide Express HTTP adapter', () => {
   it('asks the tracking page’s lookup for the consignment number once, through the supplied transport', async () => {
@@ -48,11 +48,11 @@ describe('GMS Worldwide Express HTTP adapter', () => {
     expect(String(fetcher.mock.calls[1]![0])).toBe(`${GMS_API}?cnno=${DELIVERED}`);
   });
 
-  it('keeps the number, the scans on India’s clock and their offices, and nothing about the consignee', () => {
+  it('keeps the number, the scans on India’s clock and their offices, the consignee’s address and the receiver', () => {
     const result = parseGms(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered (POD)', last_update: '2026-03-12T05:45:42Z', delivered_at: '2026-03-12T05:45:42Z',
-      expected_delivery: null, timezone: 'Asia/Kolkata' });
+      expected_delivery: null, timezone: 'Asia/Kolkata', receiver_address: '1 Sample Road, Demobad\n000000', signed_by: 'SAMPLE PERSON' });
     expect(result).not.toHaveProperty('summary_only');
     expect(result.events!.map((event) => [event.time, event.stage, event.location, event.description])).toEqual([
       // Listed after the out-for-delivery scan on the same clock, the delivery is the newest.
@@ -72,7 +72,7 @@ describe('GMS Worldwide Express HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(PRIVATE);
     expect(JSON.stringify(result)).not.toMatch(/STD|https?:/);
     expect(Object.keys(result).sort()).toEqual(['current_stage', 'current_stage_source', 'delivered_at', 'events', 'expected_delivery',
-      'last_status_text', 'last_update', 'status', 'timezone']);
+      'last_status_text', 'last_update', 'receiver_address', 'signed_by', 'status', 'timezone']);
   });
 
   it('reads a delivery the last office records with its forwarding on one clock', () => {
@@ -99,7 +99,8 @@ describe('GMS Worldwide Express HTTP adapter', () => {
       delivered_at: '2026-08-07T09:40:23Z' });
     // And a delivered summary does not end a history that has not reached the delivery.
     const ahead = parseGms(changed('in-transit', (order) => { order.Cnstatus = 'Delivered (POD)'; }), IN_TRANSIT);
-    expect(ahead).toMatchObject({ current_stage: 'in_transit', last_status_text: 'RECEIVED BY OTHERPUR APEX, OTHERPUR' });
+    expect(ahead).toMatchObject({ current_stage: 'in_transit', last_status_text: 'RECEIVED BY OTHERPUR APEX, OTHERPUR', receiver_address: '000000' });
+    expect(ahead).not.toHaveProperty('signed_by');
   });
 
   it('reads one scan given on its own, a history listed oldest first and a repeated scan', () => {
@@ -118,16 +119,20 @@ describe('GMS Worldwide Express HTTP adapter', () => {
     for (const scans of [{}, { ScanDetail: {} }, { ScanDetail: [] }, undefined]) {
       const result = parseGms(changed('in-transit', (order) => { order.Scans = scans as never; }), IN_TRANSIT);
       expect(result).toEqual({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-        last_status_text: 'In Transit', last_update: null, expected_delivery: null, timezone: 'Asia/Kolkata', summary_only: true, events: [] });
+        last_status_text: 'In Transit', last_update: null, expected_delivery: null, receiver_address: '000000', timezone: 'Asia/Kolkata',
+        summary_only: true, events: [] });
     }
     expect(() => parseGms(changed('in-transit', (order) => { order.Scans = {} as never; order.Cnstatus = {}; }), IN_TRANSIT))
       .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
   });
 
-  it('takes whom a delivery names and phone numbers out of the wording, and an address out of the location', () => {
-    expect(gmsWording('Delivered to SAMPLE PERSON')).toBe('Delivered');
-    expect(gmsWording('Delivered (POD) - received by SAMPLE PERSON')).toBe('Delivered (POD)');
-    expect(gmsWording('Consignment delivered to SAMPLE PERSON 98765 43210')).toBe('Consignment delivered');
+  it('keeps whom a delivery names, takes phone numbers out of the wording, and an address out of the location', () => {
+    expect(gmsWording('Delivered to SAMPLE PERSON')).toBe('Delivered to SAMPLE PERSON');
+    expect(gmsWording('Delivered (POD) - received by SAMPLE PERSON')).toBe('Delivered (POD) - received by SAMPLE PERSON');
+    expect(gmsWording('Consignment delivered to SAMPLE PERSON 98765 43210')).toBe('Consignment delivered to SAMPLE PERSON');
+    const named = parseGms(changed('delivered', (_order, rows) => { rows[1]!.Cnstatus = 'Delivered (POD) - received by SAMPLE PERSON'; }), DELIVERED);
+    expect(named).toMatchObject({ current_stage: 'delivered', last_status_text: 'Delivered (POD) - received by SAMPLE PERSON' });
+    expect(named.events![0]).toMatchObject({ stage: 'delivered', stage_source: 'carrier_map' });
     expect(gmsWording('Consignment Out for delivery, call +91 98765 43210')).toBe('Consignment Out for delivery, call');
     // A delivery's town and every other scan keep their words.
     expect(gmsWording('Delivered AT OTHERVILLE')).toBe('Delivered AT OTHERVILLE');

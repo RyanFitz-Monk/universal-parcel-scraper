@@ -44,11 +44,11 @@
       "status",
       "history",
       "location",
-      "destination_country"
+      "destination_country",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
-      "recipient_name",
-      "recipient_address",
       "weight",
       "delivery_tracking_number"
     ],

@@ -80,19 +80,24 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('FedEx official API reply', () => {
   it('reads the API reply as it reads the tracking page reply', () => {
-    const result = parseFedExApiResponse(apiFixture(), DELIVERED_NUMBER);
-    expect(result).toEqual(parseFedExTrackingResponse(PAGE_DELIVERED, DELIVERED_NUMBER));
+    const { receiver_name: name, receiver_address: address, ...result } = parseFedExApiResponse(apiFixture(), DELIVERED_NUMBER);
+    const { receiver_address: town, ...page } = parseFedExTrackingResponse(PAGE_DELIVERED, DELIVERED_NUMBER);
+    expect(result).toEqual(page);
+    // The page names only the recipient's town; the API gives the name and the whole address.
+    expect(town).toBe('ZUERICH');
+    expect([name, address]).toEqual(['PRIVATE RECIPIENT', 'PRIVATE STREET\nPRIVATE POSTCODE ZUERICH']);
+    expect(result.signed_by).toBe('PRIVATE RECIPIENT');
     expect(result.events).toEqual([
-      { time: '2026-09-02T11:58:00+02:00', location: 'ZUERICH, CH', description: 'Delivered', provider_code: 'DL', stage: 'delivered' },
+      { time: '2026-09-02T11:58:00+02:00', location: 'ZUERICH, CH', description: 'Delivered — Signed for by: PRIVATE RECIPIENT', provider_code: 'DL', stage: 'delivered' },
       { time: '2026-09-01T08:12:00+02:00', location: 'KOELN, DE', description: 'Departed FedEx location', provider_code: 'DP', stage: 'in_transit' },
       { local_time: '2026-08-31', location: 'SEOUL, KR', description: 'Picked up', provider_code: 'PU', stage: 'accepted' },
       { time: '2026-08-30T09:05:00+09:00', location: 'SEOUL, KR', description: 'Shipment information sent to FedEx', provider_code: 'OC', stage: 'registered' },
     ]);
   });
 
-  it('keeps the recipient, shipper, signatory, street, package and service details out of the result', () => {
+  it('keeps the shipper, package and service details out of the result', () => {
     const serialized = JSON.stringify(parseFedExApiResponse(apiFixture(), DELIVERED_NUMBER));
-    for (const value of ['PRIVATE', 'INTERNATIONAL_PRIORITY', 'International Priority', 'weight', 'dimensions']) {
+    for (const value of ['PRIVATE SHIPPER', 'PRIVATE PHONE', 'INTERNATIONAL_PRIORITY', 'International Priority', 'weight', 'dimensions']) {
       expect(serialized).not.toContain(value);
     }
   });
@@ -178,7 +183,7 @@ describe('FedEx official API reply', () => {
       status: 'out_for_delivery', current_stage: 'ready_for_pickup', pickup_point: 'Example Ship Centre\n1 Example Street\n8000 ZUERICH',
     });
     expect(parseFedExApiResponse(held(true), DELIVERED_NUMBER).pickup_point).toBeUndefined();
-    expect(JSON.stringify(parseFedExApiResponse(held(false), DELIVERED_NUMBER))).not.toContain('PRIVATE');
+    expect(JSON.stringify(parseFedExApiResponse(held(false), DELIVERED_NUMBER))).not.toContain('PRIVATE CONTACT');
   });
 
   it('reports an unknown number as unlocated and a gated shipment as input-required', () => {

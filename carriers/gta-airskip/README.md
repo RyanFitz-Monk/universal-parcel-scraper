@@ -33,10 +33,10 @@ Tracked through the lookup its tracking page makes.
   that status, the newest staged scan decides.
 - A failed delivery or another problem adds the reason the reply's description gives, such as
   `Undelivered: Customer not available`. Older terminal scans put the town and province before
-  that reason; the adapter takes them as the location. A place or reason with a digit is not
-  kept.
-- The shipper's and consignee's names, addresses and phone numbers, the merchant's references,
-  scan coordinates and proof of delivery in the reply are not read.
+  that reason; the adapter takes them as the location. A place or reason with a phone number is
+  not kept.
+- The consignee's name and address are read. The shipper's, the phone numbers, the merchant's
+  references, scan coordinates and proof of delivery in the reply are not.
 - The reply has final-mile and middle-mile carrier fields, but they are empty, so no hand-off is
   reported.
 

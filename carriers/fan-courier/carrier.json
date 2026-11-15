@@ -47,13 +47,13 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "signatory"
     ],
     "discarded": [
       "milestones",
       "awb_date",
       "related_awb_numbers",
-      "recipient_name",
       "order_contents",
       "weight",
       "dimensions",

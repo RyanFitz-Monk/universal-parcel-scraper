@@ -26,6 +26,8 @@ const BLOCKED = /<title>\s*(?:Just a moment|Attention Required|Access Denied|403
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){7,}(?![A-Z\d])/gi;
+// The label written before a phone number, which goes with it.
+const PHONE_LABEL = /\b(?:tel[eé]fono|tel|cel(?:ular)?)\.?\s*:?\s*(?=\+?\d)/giu;
 // Who took or signed for the parcel, and anything after it.
 const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:recibid[oa]|firmad[oa]|entregad[oa])\s+(?:por|a)\b|recibe\s*:)[\s\S]*$/iu;
 
@@ -58,13 +60,14 @@ function codeOf(value: unknown): string {
 
 /**
  * A scan's wording as the page shows it: the title, then the description
- * when it says more, after an incident's classification. The description
- * loses a clause naming who took the parcel, and both lose phone numbers.
+ * when it says more, after an incident's classification. Both lose phone
+ * numbers.
  */
 export function forzaWording(title: string, description = '', classification = ''): string {
-  const tidy = (value: string) => clean(value.replace(PHONE, '').replace(/\s+([,;:.])/g, '$1')).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+  const tidy = (value: string) => clean(value.replace(PHONE_LABEL, '').replace(PHONE, '').replace(/\s+([,;:.])/g, '$1'))
+    .replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
   const label = tidy(title);
-  const detail = [tidy(classification), tidy(description.replace(RECEIVER, ''))].filter(Boolean).join(' - ');
+  const detail = [tidy(classification), tidy(description)].filter(Boolean).join(' - ');
   if (!detail || normalizeStatusWording(detail) === normalizeStatusWording(label)) return label;
   return label ? `${label}: ${detail}` : detail;
 }
@@ -85,13 +88,20 @@ function clockOf(value: unknown): string {
   return wall;
 }
 
-/** One milestone: its title, description, stage id and clock. Its user, map point and proof of delivery are dropped. */
+/**
+ * One milestone: its title, description, stage id and clock. It is staged
+ * without the clause naming who took the parcel. Its user, map point and
+ * proof of delivery are dropped.
+ */
 function scanOf(row: unknown): CarrierEvent {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Forza returned an invalid scan');
   const code = codeOf(row.stageId);
-  const description = forzaWording(text(row, 'title'), text(row, 'description'), code === INCIDENT ? text(row, 'clasification') : '');
+  const title = text(row, 'title');
+  const detail = text(row, 'description');
+  const classification = code === INCIDENT ? text(row, 'clasification') : '';
+  const description = forzaWording(title, detail, classification);
   if (!description) throw new SchemaError(PROVIDER, 'Forza returned a scan without wording');
-  const staged = forzaStage(code, description);
+  const staged = forzaStage(code, forzaWording(title, detail.replace(RECEIVER, ''), classification));
   return {
     local_time: clockOf(row.date),
     description,
@@ -118,8 +128,8 @@ function bindOrder(order: Record<string, unknown>, number: string): void {
  * The `GetNewDeliveryTracking` answer for one guía, decoded from its
  * envelope: `ObjectValue.IdResult` 404 for a guía the tracker does not
  * know, which the page reports as missing, else the order with its
- * milestones, newest first. The customer, sender, recipient, phone and prices
- * in the order are not kept.
+ * milestones, newest first. The recipient's name and address are read; the
+ * customer, sender, phone and prices in the order are not.
  */
 export function parseForza(payload: unknown, rawNumber: string): CarrierResult {
   const number = normalizeForzaNumber(rawNumber);
@@ -155,6 +165,9 @@ export function parseForza(payload: unknown, rawNumber: string): CarrierResult {
   const latest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const destiny = isRecord(answer.order.destiny) ? answer.order.destiny : {};
+  const receiver = text(destiny, 'receiver', 160);
+  const address = text(destiny, 'address', 300);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -162,6 +175,8 @@ export function parseForza(payload: unknown, rawNumber: string): CarrierResult {
     last_update: null,
     last_update_local: latest.local_time,
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events,
   };
 }

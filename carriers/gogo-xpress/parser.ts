@@ -17,8 +17,10 @@ const CODE = /^[a-z][a-z0-9_]{0,63}$/;
 // A clock to the second, sometimes with microseconds, and its offset: "2026-03-02 09:15:00+08".
 const CLOCK = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.\d{1,9})?(Z|[+-]\d{2}(?::?\d{2})?)$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-// The scans whose remark can name who took or refused the parcel.
-const HANDOVER = new Set(['delivered', 'failed_delivery', 'returned', 'failed_return']);
+// The scans whose remark names who took or refused the parcel at the recipient's.
+const HANDOVER = new Set(['delivered', 'failed_delivery']);
+// A return's remark names who took the parcel back, at the shipper's.
+const RETURN = new Set(['returned', 'failed_return']);
 // A delivery partner's status relayed as its staff typed it, which can name the person met.
 const RELAY = /^posted status\b/i;
 // The pickup hub's own receipt, "Received by PASIG HUB", names a place.
@@ -45,17 +47,18 @@ function raw(row: Record<string, unknown>, key: string): string {
 }
 
 /**
- * A scan's remark as the page shows it, without the people and phone numbers
- * in it. The page shows `masked_remarks` in place of the remark when a scan
- * has one. A delivery, failed delivery or return without one names who took
- * or refused the parcel, and a partner's relayed status is free text, so
- * neither is kept.
+ * A scan's remark as the page shows it, without phone numbers. The page shows
+ * `masked_remarks` in place of the remark when a scan has one. A delivery's or
+ * failed delivery's remark, which names who took or refused the parcel, is
+ * kept as written. Elsewhere the staff who received or reported something are
+ * left out, and so is a partner's relayed status, its staff's free text; a
+ * return without a masked remark names the shipper, and keeps none.
  */
 export function gogoXpressRemark(code: string, remarks: string, masked = ''): string {
-  if (!masked.trim() && HANDOVER.has(code)) return '';
+  if (!masked.trim() && RETURN.has(code)) return '';
   const line = textFromHtml((masked.trim() ? masked : remarks).replace(/\s*<br\s*\/?>\s*/gi, '. '), 500).replace(/([.!?])\.+/g, '$1');
-  if (!line || RELAY.test(line)) return '';
-  const own = HUB_RECEIPT.test(line) ? line : line.replace(PERSON, '');
+  if (!line || (!HANDOVER.has(code) && RELAY.test(line))) return '';
+  const own = HANDOVER.has(code) || HUB_RECEIPT.test(line) ? line : line.replace(PERSON, '');
   return clean(own.replace(PHONE, '')).replace(/^[\s,;:.\-–/]+|[\s,;:\-–/]+$/g, '');
 }
 

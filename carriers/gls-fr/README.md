@@ -78,8 +78,9 @@ this confirmation before they can identify the French network.
   read. A delivered parcel has none, collected there or not.
 - Not used: scraping `moncolis.gls-france.com` — the endpoint returns the same
   data as JSON.
-- The parser reads an allowlist of fields. Address, signature, contact and
-  instruction blocks are never copied; a test asserts none reach the result.
+- The parser reads an allowlist of fields. The recipient's name and address come from the
+  `adresse` block as the portal prints them, and a delivered parcel's signatory from
+  `nomSignataireColis`. Contacts and delivery instructions are not read.
 
 ## Limitations
 

@@ -85,12 +85,21 @@ function pickupPoint(found: JsonObject, events: readonly CarrierEvent[], stage: 
   return name && left.description!.toLocaleLowerCase('es').includes(name.toLocaleLowerCase('es')) ? name : '';
 }
 
+/** The destination's street, then its postcode and town, as far as the reply gives them. */
+function destinationAddress(found: JsonObject): string {
+  const address = isRecord(found.destination) && isRecord(found.destination.address) ? found.destination.address : null;
+  if (!address) return '';
+  const town = [text(address, 'postalCode', 16), text(address, 'locality', 120)].filter(Boolean).join(' ');
+  return [text(address, 'street', 200), town].filter(Boolean).join('\n');
+}
+
 /**
  * The `found` shipment of `POST /expeditions/find`. The service looked the
  * whole number up with the postcode; the reply names the shipment it
  * resolved, which may hold the number as a parcel barcode or reference it does
- * not echo. Its addresses, the sender, the recipient and their document, the
- * point's collection code and the scans' reasons are never read.
+ * not echo. The destination's address, who received a delivered parcel and the
+ * point's PIN are read; the sender, the receiver's document, the point's QR
+ * code and the scans' reasons are not.
  */
 export function parseGLSSpain(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGLSSpainNumber(raw);
@@ -126,6 +135,9 @@ export function parseGLSSpain(payload: unknown, raw: string): CarrierResult {
   const delivered = stage === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
   const point = pickupPoint(found, events, stage);
   const weight = isRecord(found.attributes) ? found.attributes.weight : undefined;
+  const address = destinationAddress(found);
+  const receivedBy = stage === 'delivered' ? text(state, 'receiverName', 160) : '';
+  const pin = isRecord(state.parcelShop) ? text(state.parcelShop, 'pin', 32) : '';
   const lastText = newest?.description ?? stateText;
   if (!lastText) throw new SchemaError(PROVIDER, 'GLS Spain returned a shipment without wording');
   return {
@@ -137,6 +149,9 @@ export function parseGLSSpain(payload: unknown, raw: string): CarrierResult {
     ...(delivered ? { delivered_at: delivered } : {}),
     ...(point ? { pickup_point: point } : {}),
     ...(typeof weight === 'number' && Number.isFinite(weight) && weight > 0 && weight <= 10_000 ? { weight_kg: weight } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(receivedBy ? { signed_by: receivedBy } : {}),
+    ...(pin ? { pickup_code: pin } : {}),
     ...(shipment !== number ? { canonical_tracking_number: shipment } : {}),
     ...(events.length ? {} : { provider_code: stateCode, summary_only: true }),
     events: events.slice(0, MAX_EVENTS),

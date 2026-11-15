@@ -93,8 +93,8 @@ function weight(value: string): number | null {
  * The reply of `admin.allcargologistics.com/api/track-shipment` for one
  * docket: `details` holds one entry per docket asked, which names it. The
  * tracking service answers a docket it does not know with `Check Docket No`.
- * The consignor, consignee, receiver, remarks, references and proof of
- * delivery link are not read.
+ * The consignee and, once delivered, the receiver who took the docket are
+ * read; the consignor, remarks, references and proof of delivery link are not.
  */
 export function parseGati(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGatiNumber(raw);
@@ -150,6 +150,8 @@ export function parseGati(payload: unknown, raw: string): CarrierResult {
   // A revised date replaces the one promised at booking.
   const expected = stage === 'delivered' ? null : day(text(detail, 'revisedAssuredDeliveryDate', 32)) ?? day(text(detail, 'assuredDlyDate', 32));
   const kilograms = weight(text(detail, 'actualWeight', 40));
+  const consignee = text(detail, 'consigneeName', 160);
+  const receiver = stage === 'delivered' ? text(detail, 'ReceiversName', 160) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -158,6 +160,8 @@ export function parseGati(payload: unknown, raw: string): CarrierResult {
     expected_delivery: expected,
     ...(delivered ? { delivered_at: delivered instanceof DateTime ? instant(delivered) : delivered.time! } : {}),
     ...(kilograms ? { weight_kg: kilograms } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(receiver ? { signed_by: receiver } : {}),
     timezone: ZONE,
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),

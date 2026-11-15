@@ -129,7 +129,7 @@ describe('Heppner status vocabulary', () => {
 });
 
 describe('Heppner response normalization', () => {
-  it('parses a provider-shaped timeline and excludes shipment parties and credentials', () => {
+  it('parses a provider-shaped timeline with the recipient and the pickup code, without the other parties', () => {
     const result = parseHeppnerTrackingResponse(trackingPayload(), TEST_TRACKING_NUMBER);
 
     expect(result).toMatchObject({
@@ -137,6 +137,8 @@ describe('Heppner response normalization', () => {
       last_status_text: 'Returned to sender',
       last_update: '2026-07-01T13:21:00Z',
       expected_delivery: null,
+      receiver_name: 'PRIVATE RECIPIENT',
+      pickup_code: 'PRIVATE PICKUP CODE',
       timezone: 'Europe/Paris',
     });
     expect(result.events).toEqual([{
@@ -173,10 +175,8 @@ describe('Heppner response normalization', () => {
     const serialized = JSON.stringify(result);
     for (const privateValue of [
       'PRIVATE SENDER',
-      'PRIVATE RECIPIENT',
       'PRIVATE ORDER REFERENCE',
       'PRIVATE MERCHANDISE',
-      'PRIVATE PICKUP CODE',
       'PRIVATE ADDRESS',
       'PRIVATE APPOINTMENT TOKEN',
     ]) expect(serialized).not.toContain(privateValue);

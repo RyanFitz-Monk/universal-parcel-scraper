@@ -170,8 +170,7 @@ export function parseGofo(payload: unknown, rawNumber: string, site: GofoSite = 
     }
     const timestamp = scanClock(row.processDate, row.processTimeZone, site);
     const location = [clean(row.processCity, 100), clean(row.processProvince, 20)].filter(Boolean).join(', ');
-    const description = mapped?.stage === 'delivered' ? 'Delivered' : rawDescription;
-    const event: CarrierEvent = { ...timestamp, description, provider_code: code,
+    const event: CarrierEvent = { ...timestamp, description: rawDescription, provider_code: code,
       ...(location ? { location } : {}), ...(mapped ? { stage: mapped.stage } : {}) };
     const key = JSON.stringify(event);
     if (!seen.has(key)) { seen.add(key); events.push(event); }

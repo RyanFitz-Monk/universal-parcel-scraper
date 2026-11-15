@@ -19,11 +19,13 @@ const NUMBER = /^PL\d{16}$/;
 // The English page's answer for a number it does not hold, and its (Polish) answer for an input it refuses.
 const NOT_FOUND = 'Shipment with such number does not exist';
 const REFUSED = 'Proszę wprowadzić właściwy numer przesyłki.';
-// The summary rows this parser reads. The delivery location (postcode and town) and every other row are never read.
+// The summary rows this parser reads; every other row is never read.
 const SHIPMENT = 'Shipment No.';
 const STATUS = 'Status';
 const DESTINATION = 'Delivery Country';
-const SUMMARY_LABELS = new Set([SHIPMENT, STATUS, DESTINATION]);
+// The delivery's postcode and town, as "00-000, Town".
+const LOCATION = 'Delivery Location';
+const SUMMARY_LABELS = new Set([SHIPMENT, STATUS, DESTINATION, LOCATION]);
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|<title>\s*Just a moment|<title>\s*Attention Required/i;
 // A terminal code: the country, then the terminal ("PLWAW").
 const BRANCH = /^([A-Z]{2})[A-Z0-9]{1,8}$/;
@@ -45,6 +47,8 @@ export function normalizeGeodisPlNumber(raw: string): string {
 export interface GeodisPlSummary {
   status: string;
   destinationCountry?: string;
+  /** The delivery's postcode and town. */
+  receiverAddress?: string;
 }
 
 /**
@@ -90,13 +94,19 @@ export function parseGeodisPlSummary(html: string, raw: string): GeodisPlSummary
   const status = summary.get(STATUS);
   if (!status) throw new SchemaError(PROVIDER, 'GEODIS Poland summary has no status');
   const destination = summary.get(DESTINATION) ?? '';
-  return { status, ...(/^[A-Z]{2}$/.test(destination) ? { destinationCountry: destination } : {}) };
+  const location = (summary.get(LOCATION) ?? '').replace(/^([^,]+),\s*/, '$1 ').trim();
+  return {
+    status,
+    ...(/^[A-Z]{2}$/.test(destination) ? { destinationCountry: destination } : {}),
+    ...(location ? { receiverAddress: location } : {}),
+  };
 }
 
 interface Scan {
   code: string;
   wall: string;
   event: CarrierEvent;
+  remarks: string;
 }
 
 /** A required text field; a number only where the reply may send a code as one. */
@@ -123,7 +133,8 @@ function wallClock(stamp: string): string {
 
 /**
  * One history row. A Polish terminal's scan is on Polish time; a terminal
- * abroad keeps its wall clock. `TS_REMARKS` is never read.
+ * abroad keeps its wall clock. Its `TS_REMARKS` are kept beside it, since a
+ * delivery's name who signed.
  */
 function projectRow(row: unknown): Scan {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'GEODIS Poland returned an invalid scan');
@@ -146,6 +157,7 @@ function projectRow(row: unknown): Scan {
       ...(location ? { location } : {}),
       provider_code: code,
     },
+    remarks: field(row, 'TS_REMARKS', 160),
   };
 }
 
@@ -160,6 +172,7 @@ function summaryOnly(summary: GeodisPlSummary): CarrierResult {
     last_update: null,
     expected_delivery: null,
     ...(summary.destinationCountry ? { destination_country: summary.destinationCountry } : {}),
+    ...(summary.receiverAddress ? { receiver_address: summary.receiverAddress } : {}),
     summary_only: true,
     events: [],
   };
@@ -225,8 +238,11 @@ export function parseGeodisPlHistory(payload: unknown, summary: GeodisPlSummary,
   const events = kept.map((scan) => scan.event).reverse();
   const newest = events[0]!;
   // The newest scan that moved the shipment decides its status; a claim does not.
-  const current = [...kept].reverse().find((scan) => scan.code !== GEODIS_PL_CLAIM && scan.event.stage)?.event;
+  const decider = [...kept].reverse().find((scan) => scan.code !== GEODIS_PL_CLAIM && scan.event.stage);
+  const current = decider?.event;
   const stage = current?.stage as Stage | undefined;
+  // The delivery's remarks name who signed.
+  const signer = stage === 'delivered' ? decider!.remarks : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -236,6 +252,8 @@ export function parseGeodisPlHistory(payload: unknown, summary: GeodisPlSummary,
     expected_delivery: null,
     ...(stage === 'delivered' && current!.time ? { delivered_at: current!.time } : {}),
     ...(summary.destinationCountry ? { destination_country: summary.destinationCountry } : {}),
+    ...(summary.receiverAddress ? { receiver_address: summary.receiverAddress } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -42,9 +42,9 @@ carrier of its own on Lisbon's clock would also split the clock the GLS networks
 - The weight, the estimated delivery day and the GLS point a parcel waits at are kept. The
   point is named only when the scan that left the parcel there names it too; otherwise the
   reply's point is the destination depot.
-- The addresses, the sender, the recipient and their identity document, the point's
-  collection code, PIN and deadline, the sender's reference and the scans' reasons are never
-  read.
+- The destination's address, as far as the reply gives it, who received a delivered parcel
+  and the point's PIN are read. The sender, the receiver's identity document, the point's QR
+  code and deadline, the sender's reference and the scans' reasons are not.
 
 ## Numbers
 

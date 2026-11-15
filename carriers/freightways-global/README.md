@@ -7,7 +7,8 @@ FG International's customs and final-mile handover leg. A partner-only page is i
 DAI Post keeps detection of its labels; there is no new broad number rule or recognition probe.
 
 All history rows are read, including the hidden parcel-detail rows used for identity checks.
-Customs-data notices are administrative. Scan clocks stay local in source order; service duration
+Customs-data notices are administrative. A scan's wording and place are kept as the page shows them,
+up to a link or phone number; a scan is staged without the recipient or signatory its wording names. Scan clocks stay local in source order; service duration
 and the page's delivery date are not an ETA. Account links, per-parcel barcodes and freeform
 references are omitted: these imported labels need sender-account context at NZ Couriers, so no
 bare-number partner lookup is inferred. Empty search results remain inconclusive because histories

@@ -34,9 +34,9 @@ function clock(raw: unknown): { local_time?: string; provider_time_text?: string
 
 /**
  * The tracker's reply for one AWB: its events, oldest first, each with its
- * code, wording, town and wall clock. The contents, weight, dimensions, the
- * payment date, the related AWBs and the masked name of whoever signed are
- * never read.
+ * code, wording, town and wall clock. The masked name of whoever signed is
+ * read from `confirmation`; the contents, weight, dimensions, the payment date
+ * and the related AWBs are never read.
  */
 export function parseFanCourier(payload: unknown, raw: string): CarrierResult {
   const number = normalizeFanCourierNumber(raw);
@@ -83,7 +83,9 @@ export function parseFanCourier(payload: unknown, raw: string): CarrierResult {
   }
   const latest = events[0]!;
   const stage = fanCourierStage(latest.provider_code!);
+  const signedBy = delivered !== -1 && isRecord(payload.confirmation) ? clean(payload.confirmation.name, 160) : '';
   return { status: stage ? languageStageStatus(stage) : 'unknown', ...(stage ? { current_stage: stage } : {}),
     last_status_text: latest.description ?? null, last_update: null, last_update_local: latest.local_time ?? null,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events };
 }

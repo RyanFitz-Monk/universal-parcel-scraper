@@ -34,10 +34,11 @@ to a partner courier. Tracked through the lookup its tracker on `app.gogoxpress.
   claim. The page hides claim and disposal scans and shows such a shipment as needing action,
   so the adapter skips those scans and reads the shipment as an exception.
 - The page shows a scan's `masked_remarks` in place of its remark, and so does the adapter.
-  Delivery and failed-delivery remarks name who took or refused the parcel, as a return's can,
-  and a partner's relayed status (`POSTED STATUS : …`) is its staff's free text; without a
-  masked remark the adapter keeps none of them. Other remarks lose who received or reported something,
-  apart from a hub's own receipt, and phone numbers.
+  Delivery and failed-delivery remarks, which name who took or refused the parcel, are kept as
+  written, a partner's relayed status (`POSTED STATUS : …`) among them. A return's remark names
+  the shipper and is kept only when masked. Other remarks lose the staff who received or
+  reported something, apart from a hub's own receipt, and a partner's relayed status. Every
+  remark loses phone numbers.
 - A scan's location is the hub that made it, as the reply names it, in lower case. A partner's
   scans name none.
 - The rider's name and phone, the item, the cash to collect, the proof-of-delivery photo and

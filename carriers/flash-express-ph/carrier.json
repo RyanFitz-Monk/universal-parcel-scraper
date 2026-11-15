@@ -55,16 +55,16 @@
       "history",
       "location",
       "provider_code",
-      "delivered_at"
+      "delivered_at",
+      "signatory",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "origin",
-      "destination",
       "sender_name",
-      "recipient_name",
       "office_contact_details",
       "driver_name",
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

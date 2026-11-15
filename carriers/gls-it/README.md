@@ -38,9 +38,9 @@ numbers, so this adapter does not share their route.
 - The national search only answers for shipments inside GLS Italy's network, so a timed scan
   is read in Italian time. A scan with only a date keeps the date as a local clock, and so does
   an hour the clocks skip in spring.
-- The weight is kept. The depots, the sender's and recipient's towns, the customer's
-  reference, the departure date, the signer and the masked name beside a delivery are never
-  read.
+- The weight, the consignee's town and the masked signer are kept; without the shipment's
+  signature, the masked name beside the delivery stands in. The depots, the sender's town,
+  the customer's reference and the departure date are never read.
 
 ## Numbers
 

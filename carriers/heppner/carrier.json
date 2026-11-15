@@ -57,11 +57,12 @@
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "recipient_name",
+      "pickup_code"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
       "recipient_address",
       "delivery_instructions"
     ],

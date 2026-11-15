@@ -41,8 +41,9 @@ Tracked through the lookup that site's tracking page makes.
 - The docket's own `docketStatus` decides a delivery, also when a later scan holds the docket.
 - The delivery date promised at booking, or its revision, is the expected delivery while the
   docket is not delivered. The booked weight, which the page does not show, is kept.
-- The consignor, consignee, receiver, delivery remarks, customer reference, booking and
-  delivery stations and the proof of delivery link are not kept.
+- The consignee is the recipient's name, and the receiver of a delivered docket is who signed.
+  The consignor, delivery remarks, customer reference, booking and delivery stations and the
+  proof of delivery link are not kept.
 
 ## Limitations
 

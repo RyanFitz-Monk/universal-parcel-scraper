@@ -5,7 +5,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, EQUICK_API, EquickTracker } from './adapter.js';
-import { equickWording, normalizeEquickNumber, parseEquick } from './parser.js';
+import { equickSigner, equickWording, normalizeEquickNumber, parseEquick } from './parser.js';
 import { equickScanStage, equickStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
@@ -71,17 +71,17 @@ describe('Equick HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(/9000001\d\d|Hold|In progress/);
   });
 
-  it('reads a delivery with the delivering carrier\'s number, without who signed, phone numbers or repeated scans', () => {
+  it('reads a delivery with the delivering carrier\'s number and who signed, without phone numbers or repeated scans', () => {
     const result = parseEquick(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update_local: '2029-12-22T13:05:00',
-      destination_country: 'DE', delivery_tracking_number: '09000000000002',
+      last_status_text: 'Delivered. Signed by SAMPLE NAME', last_update_local: '2029-12-22T13:05:00',
+      destination_country: 'DE', delivery_tracking_number: '09000000000002', signed_by: 'SAMPLE NAME',
     });
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivered_at');
     expect(summary(result)).toEqual([
-      ['2029-12-22T13:05:00', 'Delivered', 'Sampleburg', 'delivered'],
+      ['2029-12-22T13:05:00', 'Delivered. Signed by SAMPLE NAME', 'Sampleburg', 'delivered'],
       ['2029-12-22T08:12:00', 'Out for delivery. Driver', 'Sampleburg', 'out_for_delivery'],
       ['2029-12-21T22:40:00', 'At parcel delivery centre.', 'Sampleburg', 'in_transit'],
       ['2029-12-21T09:30:00', 'Order information has been transmitted to DPD.', 'Germany', 'in_transit'],
@@ -93,7 +93,7 @@ describe('Equick HTTP adapter', () => {
       ['2029-12-16T11:00:00', 'Picked up from shipper', 'Shenzhen', 'accepted'],
       ['2029-12-15T09:00:00', 'Shipping Label Created', 'China', 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE NAME|Signed|0000000"|\+49/);
+    expect(JSON.stringify(result)).not.toMatch(/0000000"|\+49/);
   });
 
   it('turns an oldest-first history round and takes the newest staged scan', () => {
@@ -140,8 +140,10 @@ describe('Equick HTTP adapter', () => {
       .toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
 
-  it('drops signers and phone numbers from a scan\'s wording', () => {
-    expect(equickWording('Delivered, received by SAMPLE NAME')).toBe('Delivered');
+  it('drops phone numbers from a scan\'s wording and reads its stage without the signer', () => {
+    expect(equickWording('Delivered, received by SAMPLE NAME')).toBe('Delivered, received by SAMPLE NAME');
+    expect(equickSigner('Delivered, received by SAMPLE NAME')).toEqual({ wording: 'Delivered', signer: 'SAMPLE NAME' });
+    expect(equickSigner('Delivered')).toEqual({ wording: 'Delivered', signer: '' });
     expect(equickWording('Call +1 (555) 000-0000 to rebook')).toBe('Call to rebook');
     expect(equickWording('Scanned on 2029-12-13')).toBe('Scanned on 2029-12-13');
   });

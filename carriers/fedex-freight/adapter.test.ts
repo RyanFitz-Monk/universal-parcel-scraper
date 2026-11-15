@@ -60,6 +60,7 @@ describe('FedEx Freight tracking adapter', () => {
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'At local facility', last_update: '2026-03-04T21:58:31-05:00', expected_delivery: '2026-03-06',
       weight_kg: 204.117, service_name: 'FedEx Freight Economy', destination_country: 'US',
+      receiver_address: '1 Sample Street\nSAMPLETON1, CO 00011',
       events: [
         staged('2026-03-04T21:58:31-05:00', 'At local facility', 'RIVERDELL, WA', 'AF', 'in_transit'),
         staged('2026-03-03T20:11:09-05:00', 'On the way', 'MESAWOOD, NV', 'IT', 'in_transit'),
@@ -71,12 +72,13 @@ describe('FedEx Freight tracking adapter', () => {
     });
   });
 
-  it('reads a delivery once per scan, with the arrival and the exception’s reason, and leaves the people and references behind', () => {
+  it('reads a delivery once per scan, with the arrival, the exception’s reason, the consignee’s address and who signed', () => {
     const result = parseFedexFreight(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-04-09T10:26:50-05:00', expected_delivery: null,
       delivered_at: '2026-04-09T10:26:50-05:00', weight_kg: 105.233, service_name: 'FedEx Freight Economy', destination_country: 'US',
+      receiver_address: '2 Sample Street\nSAMPLETON2, CO 00012', signed_by: 'SAMPLE SIGNER',
       events: [
         staged('2026-04-09T10:26:50-05:00', 'Delivered', 'PINEFIELD, CO', 'DL', 'delivered'),
         staged('2026-04-09T10:02:13-05:00', 'At delivery: Arrived at customer location for delivery', 'PINEFIELD, CO', 'AR', 'out_for_delivery'),
@@ -91,11 +93,17 @@ describe('FedEx Freight tracking adapter', () => {
         staged('2026-04-06T09:00:00-05:00', 'Shipment information sent to FedEx Freight', null, 'OC', 'registered'),
       ],
     });
-    // Parties, the receiver and signee, the driver, streets, postcodes, references and coordinates stay behind.
+    // The shipper, the driver, references and coordinates stay behind.
     const text = JSON.stringify(result);
-    for (const value of ['SYNTHSIGN', 'SAMPLE SIGNER', 'SAMPLETON', 'SHIPVILLE', 'Synthetic Way', 'Sample Street', 'Sample Driver',
-      'Sample Consignee', '00002', '00012', 'PO-SYNTH', 'BOL-SYNTH', 'SHIP-REF', '-90.0001', '-91.2345', 'Prepaid', '2461000'])
+    for (const value of ['SHIPVILLE', 'Synthetic Way', 'Sample Driver', 'Sample Consignee', '00002', 'PO-SYNTH', 'BOL-SYNTH',
+      'SHIP-REF', '-90.0001', '-91.2345', 'Prepaid', '2461000'])
       expect(text, value).not.toContain(value);
+    // Without the summary's name, the delivery scan's signee signed; the town alone is the address the reply gives.
+    const signee = parseFedexFreight(delivered((payload) => {
+      shipment(payload).receivedByNm = '';
+      shipment(payload).recipientAddress = { streetLines: [''], city: 'SAMPLETON2', stateOrProvinceCode: 'CO', postalCode: '', countryCode: 'US' };
+    }), DELIVERED);
+    expect(signee).toMatchObject({ signed_by: 'SYNTHSIGN', receiver_address: 'SAMPLETON2, CO' });
   });
 
   it('keeps a scan without an offset as a wall clock, and orders scans by clock with ties in the reply’s order', () => {
@@ -141,10 +149,9 @@ describe('FedEx Freight tracking adapter', () => {
     expect(unknown.delivered_at).toBeUndefined();
     expect(unknown.events![0]).toEqual({ time: '2026-04-09T10:26:50-05:00', description: 'Synthetic note', location: 'PINEFIELD, CO',
       provider_code: 'ZZ' });
-    // A delivery keeps its status alone; details that repeat the status add nothing.
+    // A delivery keeps its details and is staged by its status; details that repeat the status add nothing.
     const detailed = parseFedexFreight(delivered((payload) => { scans(payload)[0].scanDetails = 'Signed for by SYNTHSIGN'; }), DELIVERED);
-    expect(detailed.events![0]!.description).toBe('Delivered');
-    expect(JSON.stringify(detailed)).not.toContain('SYNTHSIGN');
+    expect(detailed.events![0]).toMatchObject({ description: 'Delivered: Signed for by SYNTHSIGN', stage: 'delivered' });
     const repeated = parseFedexFreight(delivered((payload) => { scans(payload)[2].scanDetails = 'out for delivery'; }), DELIVERED);
     expect(repeated.events![2]!.description).toBe('Out for delivery');
   });
@@ -154,6 +161,7 @@ describe('FedEx Freight tracking adapter', () => {
     expect(parseFedexFreight(bare, DELIVERED)).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       provider_code: 'DL', last_update: null, expected_delivery: null, summary_only: true, events: [],
+      receiver_address: '2 Sample Street\nSAMPLETON2, CO 00012', signed_by: 'SAMPLE SIGNER',
     });
     const nothing = delivered((payload) => { shipment(payload).scanEventList = null; shipment(payload).keyStatus = ''; });
     expect(() => parseFedexFreight(nothing, DELIVERED)).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));

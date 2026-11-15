@@ -51,10 +51,11 @@ describe('GIG Logistics HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered shipment’s scans on their wall clocks, with their codes and service centres, and none of the addresses or names', () => {
+  it('reads a delivered shipment’s scans on their wall clocks, with their codes and service centres, and the destination address', () => {
     const result = parseGigLogistics(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'SHIPMENT COLLECTED BY CUSTOMER', last_update: null, last_update_local: '2026-04-16T09:39:12', expected_delivery: null });
+      last_status_text: 'SHIPMENT COLLECTED BY CUSTOMER', last_update: null, last_update_local: '2026-04-16T09:39:12', expected_delivery: null,
+      receiver_address: '2 Example Road, Sample City 300001, Edo, Nigeria' });
     // No instant to give it.
     expect(result).not.toHaveProperty('delivered_at');
     expect(result.events!.map((event) => [event.local_time, event.location, event.description, event.provider_code, event.stage])).toEqual([
@@ -74,7 +75,7 @@ describe('GIG Logistics HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => !('time' in event) && event.stage_source === 'carrier_map')).toBe(true);
     const json = JSON.stringify(result);
-    for (const excluded of ['Sample Staff', 'SAMPLE RECEIVER', 'Sample Street', 'Example Road', '100001', 'Sample Close', 'Example Town', 'NotSpecified', 'WHEN SHIPMENT']) {
+    for (const excluded of ['Sample Staff', 'SAMPLE RECEIVER', 'Sample Street', '100001', 'Sample Close', 'Example Town', 'NotSpecified', 'WHEN SHIPMENT']) {
       expect(json).not.toContain(excluded);
     }
   });

@@ -65,14 +65,16 @@ describe('GOFO US history', () => {
     const value = fixture(); item(value).trackEventCount = count;
     expect(() => parseGofo(value, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
-  it('binds both identities and uses per-scan offsets without projecting private delivery text or unlabelled weight', () => {
+  it('binds both identities and uses per-scan offsets, keeping the delivery wording without unlabelled weight', () => {
     const result = normalizeCarrierResult(parseGofo(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: '2026-01-04T12:00:00-08:00', delivered_at: '2026-01-04T12:00:00-08:00', expected_delivery: null, destination_country: 'US',
       service_name: 'GOFO EXPRESS' });
     expect(parseGofo(counterFixture(), NUMBER)).not.toHaveProperty('service_name');
     expect(result.events).toHaveLength(4);
-    expect(result.events?.[0]).toMatchObject({ time: result.last_update, description: 'Delivered', location: 'Example City, EX' });
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|weight|processDept|proof/);
+    expect(result.events?.[0]).toMatchObject({ time: result.last_update, description: 'Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL',
+      location: 'Example City, EX', stage: 'delivered' });
+    expect(result.last_status_text).toBe('Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL');
+    expect(JSON.stringify(result)).not.toMatch(/weight|processDept|proof/);
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     const active = fixture(); item(active).trackEventList.shift(); item(active).estimatedArrivalTime = '2026-01-08'; bind(active);
     const evidence: Record<string, boolean> = { history: !!result.events?.length, location: !!result.events?.some(event => event.location), delivered_at: !!result.delivered_at,
@@ -335,7 +337,7 @@ describe('GOFO US history', () => {
     expect(() => parseGofo(negative, NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
     const value = fixture(); item(value).trackEventList.unshift({ ...item(value).trackEventList[0], processCode: '__proto__', processContent: 'Awaiting review' }); bind(value);
     expect(parseGofo(value, NUMBER)).toMatchObject({ status: 'unknown', last_status_text: 'Awaiting review' });
-    expect(parseGofo(value, NUMBER).events?.[1]!.description).toBe('Delivered');
+    expect(parseGofo(value, NUMBER).events?.[1]).toMatchObject({ description: 'Delivered, Door/Yard. PRIVATE_SYNTHETIC_DETAIL', stage: 'delivered' });
     expect(gofoStatus('__proto__')).toBeUndefined();
     item(value).trackEventList.push(item(value).trackEventList[0]); bind(value);
     expect(parseGofo(value, NUMBER).events).toHaveLength(5);

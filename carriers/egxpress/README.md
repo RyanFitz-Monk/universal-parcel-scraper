@@ -7,8 +7,10 @@ The adapter makes the single-shipment guest request built by the [official track
 account or CAPTCHA. The returned waybill must match before its history is read.
 
 The scan list supplies the current state; empty summary fields do not create events. Clocks keep the
-carrier's local date and time without an asserted offset. Delivery descriptions omit the recipient and
-identity document, and shipment-level personal, account, cash and package-content fields are discarded.
+carrier's local date and time without an asserted offset. The delivery row keeps the carrier's wording,
+which names who took the parcel and their identity document; that name is `signed_by`. The recipient's name
+and the address written after it in the consignee details are read; sender, account, cash and package-content
+fields are discarded.
 An empty history is inconclusive. Only the carrier's explicit missing-waybill reply counts as not found;
 browser checks, malformed JSON and HTTP failures keep their own error kinds.
 

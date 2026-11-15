@@ -57,7 +57,7 @@ describe('Estes tracking adapter', () => {
     expect(result).toEqual({
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Arrived at Riverton, WA (992) delivery facility', last_update: '2026-03-04T21:58:31-08:00',
-      expected_delivery: '2026-03-06', weight_kg: 204.117,
+      expected_delivery: '2026-03-06', weight_kg: 204.117, receiver_address: 'Sampleton, ZZ',
       events: [
         terminal('2026-03-04T21:58:31-08:00', 'Arrived at Riverton, WA (992) delivery facility', 'West Riverton, WA'),
         // Rows stamped alike keep the later one listed first.
@@ -72,18 +72,19 @@ describe('Estes tracking adapter', () => {
         { time: '2026-03-02T14:05:11-06:00', description: 'Pickup Location Serviced', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    // Parties, references, the driver, streets, postcodes, phones and coordinates stay behind.
+    // The shipper, references, the driver, terminals' streets, postcodes, phones and coordinates stay behind.
     const text = JSON.stringify(result);
-    for (const value of ['Sample Driver', 'Sampleton', 'Shipville', 'Synthetic Way', '00000', '00002', 'PO-SYNTH-1', 'BOL-SYNTH-1',
+    for (const value of ['Sample Driver', 'Shipville', 'Synthetic Way', '00000', '00002', 'PO-SYNTH-1', 'BOL-SYNTH-1',
       '-90.0001', '(000)', 'example.invalid', 'not guaranteed']) expect(text, value).not.toContain(value);
   });
 
-  it('reads a delivery once per row, with its time, and leaves the receiver, appointment and stop behind', () => {
+  it('reads a delivery once per row, with its time, the consignee and who signed, and leaves the appointment behind', () => {
     const result = parseEstes(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivery Completed - OK', last_update: '2026-04-09T10:26:50-06:00', expected_delivery: null,
-      delivered_at: '2026-04-09T10:26:50-06:00', weight_kg: 105.233,
+      delivered_at: '2026-04-09T10:26:50-06:00', weight_kg: 105.233, receiver_name: 'Sample Consignee',
+      receiver_address: '1 Sample Street\nSampleton, ZZ 00001', signed_by: 'SAMPLE SIGNER',
       events: [
         { time: '2026-04-09T10:26:50-06:00', description: 'Delivery Completed - OK', provider_code: 'OK', stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2026-04-09T10:20:05-06:00', description: 'Unload at Delivery Location', stage: 'out_for_delivery', stage_source: 'carrier_map' },
@@ -97,7 +98,7 @@ describe('Estes tracking adapter', () => {
       ],
     });
     const text = JSON.stringify(result);
-    for (const value of ['SAMPLE SIGNER', 'Sample Consignee', 'Sample Street', '00001', '-91.2345', 'SHIP-REF-2', 'BOL-SYNTH-2',
+    for (const value of ['-91.2345', 'SHIP-REF-2', 'BOL-SYNTH-2',
       'appointment', '08:00:00', 'Sample Driver', 'subject to change']) expect(text, value).not.toContain(value);
   });
 
@@ -106,6 +107,7 @@ describe('Estes tracking adapter', () => {
     expect(result).toEqual({
       status: 'exception', current_stage: 'failed_attempt', current_stage_source: 'carrier_map',
       last_status_text: 'Delivery Attempted - Freight Refused', last_update: '2026-05-11T11:05:30-06:00', expected_delivery: '2026-05-11',
+      receiver_name: 'Sample Consignee', receiver_address: '1 Sample Street\nSampleton, ZZ 00001',
       events: [
         { time: '2026-05-11T11:05:30-06:00', description: 'Delivery Attempted - Freight Refused', provider_code: 'RF',
           stage: 'failed_attempt', stage_source: 'carrier_map' },

@@ -21,7 +21,7 @@ const CLOCK = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))?$/;
 // numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 // Who took a delivered parcel, after the delivery's own words.
-const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:signed(?: for)? by|signatory|received by)\b[\s\S]*$/i;
+const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:signed(?: for)? by|signatory|received by)\b\s*:?\s*([\s\S]*)$/i;
 const MAX_NUMBERS = 50;
 const MAX_ROWS = 500;
 
@@ -40,10 +40,19 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
   return clean(value, maxLength);
 }
 
-/** A scan's wording without who signed for it or phone numbers. */
+function tidy(value: string): string {
+  return clean(value.replace(/\s+([,;:.])/g, '$1')).replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** A scan's wording without phone numbers. */
 export function equickWording(value: string): string {
-  return clean(value.replace(RECEIVER, '').replace(PHONE, '').replace(/\s+([,;:.])/g, '$1'))
-    .replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
+  return tidy(value.replace(PHONE, ''));
+}
+
+/** The wording a scan's stage is read from, without who signed for it, and that person. */
+export function equickSigner(wording: string): { wording: string; signer: string } {
+  const signer = RECEIVER.exec(wording);
+  return signer ? { wording: tidy(wording.slice(0, signer.index)) || wording, signer: tidy(signer[1]!) } : { wording, signer: '' };
 }
 
 /** A scan's clock as an ISO wall time, to the second; the day and time must exist. */
@@ -56,9 +65,10 @@ function wallClock(value: string): string {
 }
 
 /** The scans under the number's key, deduplicated, with the delivering carrier's numbers they carry. */
-function scans(rows: unknown[], number: string): { events: CarrierEvent[]; country: string; partners: Set<string> } {
+function scans(rows: unknown[], number: string): { events: CarrierEvent[]; country: string; partners: Set<string>; signers: Map<CarrierEvent, string> } {
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signers = new Map<CarrierEvent, string>();
   const partners = new Set<string>();
   let country = '';
   for (const row of rows) {
@@ -77,15 +87,18 @@ function scans(rows: unknown[], number: string): { events: CarrierEvent[]; count
     const key = JSON.stringify([local, description, location]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = equickScanStage(description);
-    events.push({
+    const { wording, signer } = equickSigner(description);
+    const staged = equickScanStage(wording);
+    const event: CarrierEvent = {
       local_time: local,
       description,
       ...(location ? { location } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
-    });
+    };
+    events.push(event);
+    if (signer) signers.set(event, signer);
   }
-  return { events, country, partners };
+  return { events, country, partners, signers };
 }
 
 /**
@@ -114,7 +127,7 @@ export function parseEquick(payload: unknown, raw: string): CarrierResult {
   if (!Array.isArray(rows)) throw new SchemaError(PROVIDER, 'Equick returned a shipment with invalid scans');
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Equick returned an oversized history');
 
-  const { events, country, partners } = scans(rows, number);
+  const { events, country, partners, signers } = scans(rows, number);
   if (!events.length) throw new NoHistoryError(PROVIDER);
   // Newest first, as the tracker lists them by wall clock; an oldest-first reply is turned round.
   // The clocks can be several places', so the order otherwise stands.
@@ -124,6 +137,7 @@ export function parseEquick(payload: unknown, raw: string): CarrierResult {
   const stage = scanned?.stage as Stage | undefined;
   const destination = country ? countryCode(country) : null;
   const [partner] = partners;
+  const signedBy = stage === 'delivered' ? signers.get(scanned!) : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source! } : {}),
@@ -134,6 +148,7 @@ export function parseEquick(payload: unknown, raw: string): CarrierResult {
     ...(destination ? { destination_country: destination } : country ? { destination_country_name: country } : {}),
     // The delivering carrier's number, when the scans carry one; the reply does not name the carrier.
     ...(partners.size === 1 && PARTNER_NUMBER.test(partner!) ? { delivery_tracking_number: partner! } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: newestFirst,
   };
 }

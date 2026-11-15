@@ -22,8 +22,9 @@ Recognition asks the same page: a scan says GO Logistics holds the number.
 - Scans are dated on Sydney's clock without an offset.
 - The scans carry no code; their wordings are mapped in [statuses.json](statuses.json), and another
   wording falls to the shared wording rules.
-- A delivery adds the signatory, the number of pieces and the signature image. These and the
-  driver's number are not kept.
+- A delivery adds the signatory, the number of pieces and the signature image. Its wording keeps
+  the signatory and the pieces, and the signatory is read; the stage comes from the delivery's
+  own words. The signature image and the driver's number are not kept.
 - The tracker keeps scans for years, and a number used again lists every consignment under it,
   oldest first. A delivery followed by a new booking or collection closes the earlier one, so only
   the latest consignment is read.

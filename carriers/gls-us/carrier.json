@@ -61,13 +61,13 @@
       "status",
       "history",
       "location",
-      "eta"
+      "eta",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "delivered_at",
-      "recipient_address",
-      "recipient_name",
-      "signatory",
       "proof_of_delivery",
       "signature",
       "customer_reference",

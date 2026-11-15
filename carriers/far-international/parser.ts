@@ -22,7 +22,7 @@ const ONWARD = /^[A-Z0-9]{8,40}$/;
 // A Chinese scan with its English translation: the English is kept.
 const BILINGUAL = /^[^A-Za-z]*\p{Script=Han}[^A-Za-z]*?\s+([A-Za-z][^\p{Script=Han}]*)$/u;
 // Who took a delivered parcel, as a delivery scan can name them.
-const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signatory|signature)\b.*$/i;
+const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signatory|signature)\b\s*:?\s*(.*)$/i;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
 
@@ -77,6 +77,7 @@ export function parseFar(html: string, raw: string): CarrierResult {
 
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signers = new Map<CarrierEvent, string>();
   for (const row of rows) {
     const cells = $(row).children('span').toArray().map((cell) => $(cell).text());
     if (cells.length !== 4) throw new SchemaError(PROVIDER, 'FAR International returned an incomplete scan');
@@ -86,15 +87,20 @@ export function parseFar(html: string, raw: string): CarrierResult {
     if (!shown) continue;
     const wording = BILINGUAL.exec(shown)?.[1]?.trim() || shown;
     const worded = farStage(wording);
-    // Who took a delivery is left out, and the rest staged again.
-    const description = worded?.stage === 'delivered' ? clean(wording.replace(RECEIVER, ''), 300) || wording : wording;
-    const staged = description === wording ? worded : farStage(description) ?? worded;
+    // Who took a delivery stays in its wording; the rest is staged again without them.
+    const signer = worded?.stage === 'delivered' ? RECEIVER.exec(wording) : null;
+    const bare = signer ? clean(wording.slice(0, signer.index), 300) : '';
+    const staged = bare ? farStage(bare) ?? worded : worded;
+    const description = wording;
     const location = place(cells[1]!);
     const key = JSON.stringify([time.time ?? time.local_time, location, description]);
     if (seen.has(key)) continue;
     seen.add(key);
-    events.push({ ...time, ...(location ? { location } : {}), description,
-      ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) });
+    const event: CarrierEvent = { ...time, ...(location ? { location } : {}), description,
+      ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) };
+    events.push(event);
+    const name = clean(signer?.[1], 160);
+    if (name) signers.set(event, name);
   }
   if (!events.length) throw new NoHistoryError(PROVIDER);
 
@@ -108,6 +114,7 @@ export function parseFar(html: string, raw: string): CarrierResult {
   // The last-mile label, listed after the parcel has reached the departure hub, is no step back.
   const staged = events.find((event) => event.stage && event.stage !== 'registered') ?? events.find((event) => event.stage);
   const stage = staged?.stage as Stage | undefined;
+  const signedBy = stage === 'delivered' ? signers.get(staged!) : undefined;
   const onward = entry.find('.search_resulttop > h2').toArray().map((line) => $(line))
     .filter((line) => clean(line.children('span').first().text(), 20) === '尾程单号：')
     .map((line) => normalizeTrackingNumber(clean(line.clone().children().remove().end().text(), 64)))[0];
@@ -120,6 +127,7 @@ export function parseFar(html: string, raw: string): CarrierResult {
     expected_delivery: null,
     ...(stage === 'delivered' && staged!.time ? { delivered_at: staged!.time } : {}),
     ...(onward && onward !== number && ONWARD.test(onward) ? { delivery_tracking_number: onward } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

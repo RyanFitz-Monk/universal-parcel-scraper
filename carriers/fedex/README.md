@@ -130,7 +130,10 @@ fallback')`.
   or 15-digit number, or a 20-digit one whose check fails, gets a partner only when a scan
   names the USPS number. Most Ground Economy parcels say instead that FedEx Ground delivers
   them, and name no partner.
-- Delivered scans are rewritten to "Delivered" because FedEx's line names the signatory.
+- Delivered scans keep FedEx's line, which names the signatory. The signatory comes from
+  `receivedByNm` on the page and `deliveryDetails` in the API. The recipient's name and
+  address come from `recipientName` and `recipientAddress` on the page, which often gives
+  only `recipientCity`, and from `recipientInformation` in the API.
 - Scan times come from `date` + `time` + `gmtOffset`. FedEx sends its pickup (`PU`) with a
   00:00:00 time and no offset. That scan keeps its day in `local_time`, and in
   `last_update_local` when it is the newest, instead of an invented midnight. It sorts by the
@@ -185,8 +188,8 @@ application identifiers and issued tokens stay outside the repository.
 
 - Cold browser sessions often get 403, and a retained session can lose acceptance at any
   time.
-- Sender, recipient, signatory, service description, weight and dimensions are in the reply
-  but never read; a test asserts it.
+- Sender, phone numbers, service description, weight and dimensions are in the reply but
+  never read; a test asserts it.
 - The API parser and its fixture follow FedEx's published Track API schema.
 - The anonymous reply carries the hold-location fields, but no held parcel's reply has been
   captured, so their parsing follows the page bundle. For a hold arranged after shipping

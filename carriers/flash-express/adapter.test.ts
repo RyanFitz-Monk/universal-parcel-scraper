@@ -43,11 +43,12 @@ describe('Flash Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the delivery on the Bangkok clock, without the people and phone numbers the reply names', () => {
+  it('reads the delivery on the Bangkok clock with who signed and the destination, without the couriers and phone numbers', () => {
     const result = parseFlashExpress(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Your parcel has been delivered. Thank you for using Flash Express service.',
-      last_update: '2026-03-04T14:28:38+07:00', delivered_at: '2026-03-04T14:28:38+07:00', expected_delivery: null });
+      last_status_text: 'Your parcel has been delivered and signed by 【Sample Person(In Person)】. Thank you for using Flash Express service.',
+      last_update: '2026-03-04T14:28:38+07:00', delivered_at: '2026-03-04T14:28:38+07:00', expected_delivery: null,
+      receiver_address: 'Sample Province', signed_by: 'Sample Person(In Person)' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage ?? null])).toEqual([
       ['2026-03-04T14:28:38+07:00', 'DELIVERY_CONFIRM', 'delivered'],
       ['2026-03-04T14:20:55+07:00', 'PHONE', null],
@@ -70,7 +71,9 @@ describe('Flash Express HTTP adapter', () => {
     expect(result.events![4]).not.toHaveProperty('location');
     expect(result.events!.at(-1)).toMatchObject({ description: 'Your parcel has been picked up by the [FH-Sample Agent] courier.',
       location: 'Origin District, Origin Province' });
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Person|Courier)|In Person|000\*|0000000|fle-asset|signer|【/);
+    expect(JSON.stringify({ ...result, signed_by: undefined, last_status_text: undefined, events: result.events?.slice(1) })).not.toMatch(/Sample (?:Person|Courier)|In Person|000\*|0000000|fle-asset|signer|【/);
+    // Before the delivery, nobody has signed.
+    expect(parseFlashExpress(fixture('in-transit'), IN_TRANSIT)).not.toHaveProperty('signed_by');
   });
 
   it('lets the summary decide a journey that ended, whatever scan comes last', () => {
@@ -116,24 +119,26 @@ describe('Flash Express HTTP adapter', () => {
       last_status_text: 'Your shipment has been delivered. Thank you for using Flash Express!' });
   });
 
-  it('takes the signer, phone numbers and changed details out of the wording, and the place off its end', () => {
+  it('keeps the signer and changed details in the description, stages without them, and takes phone numbers and the place off', () => {
     expect(flashExpressWording('Your parcel has been delivered and signed by 【Sample Person(Reception)】. Thank you for using Flash Express service.,【Sample District】,【Sample Province】'))
-      .toEqual({ description: 'Your parcel has been delivered. Thank you for using Flash Express service.', location: 'Sample District, Sample Province' });
-    expect(flashExpressWording('พัสดุของคุณถูกเซ็นรับแล้ว เซ็นรับโดย ตัวอย่าง')).toEqual({ description: 'พัสดุของคุณถูกเซ็นรับแล้ว', location: '' });
+      .toEqual({ description: 'Your parcel has been delivered and signed by 【Sample Person(Reception)】. Thank you for using Flash Express service.',
+        wording: 'Your parcel has been delivered. Thank you for using Flash Express service.', location: 'Sample District, Sample Province' });
+    expect(flashExpressWording('พัสดุของคุณถูกเซ็นรับแล้ว เซ็นรับโดย ตัวอย่าง'))
+      .toEqual({ description: 'พัสดุของคุณถูกเซ็นรับแล้ว เซ็นรับโดย ตัวอย่าง', wording: 'พัสดุของคุณถูกเซ็นรับแล้ว', location: '' });
     expect(flashExpressWording('พัสดุของคุณถูกเซ็นรับแล้ว เซ็นรับโดย【ตัวอย่าง】,【เขตตัวอย่าง】,【จังหวัดตัวอย่าง】'))
-      .toEqual({ description: 'พัสดุของคุณถูกเซ็นรับแล้ว', location: 'เขตตัวอย่าง, จังหวัดตัวอย่าง' });
+      .toEqual({ description: 'พัสดุของคุณถูกเซ็นรับแล้ว เซ็นรับโดย【ตัวอย่าง】', wording: 'พัสดุของคุณถูกเซ็นรับแล้ว', location: 'เขตตัวอย่าง, จังหวัดตัวอย่าง' });
     expect(flashExpressWording('Call the courier on 000-000-0000 or 000****0000 for help,【Sample Province】'))
-      .toEqual({ description: 'Call the courier on or for help', location: 'Sample Province' });
-    expect(flashExpressWording('ข้อมูลพัสดุมีการเปลี่ยนแปลงชื่อผู้รับ จาก ตัวอย่าง เปลี่ยนเป็น ตัวอย่าง', 'CHANGE_PARCEL_INFO').description)
-      .toBe('ข้อมูลพัสดุมีการเปลี่ยนแปลงชื่อผู้รับ');
-    expect(flashExpressWording('Your parcel information has been modified, recipient name from Sample to Sample', 'CUSTOMER_CHANGE_PARCEL_INFO').description)
+      .toEqual({ description: 'Call the courier on or for help', wording: 'Call the courier on or for help', location: 'Sample Province' });
+    expect(flashExpressWording('ข้อมูลพัสดุมีการเปลี่ยนแปลงชื่อผู้รับ จาก ตัวอย่าง เปลี่ยนเป็น ตัวอย่าง', 'CHANGE_PARCEL_INFO'))
+      .toMatchObject({ description: 'ข้อมูลพัสดุมีการเปลี่ยนแปลงชื่อผู้รับ จาก ตัวอย่าง เปลี่ยนเป็น ตัวอย่าง', wording: 'ข้อมูลพัสดุมีการเปลี่ยนแปลงชื่อผู้รับ' });
+    expect(flashExpressWording('Your parcel information has been modified, recipient name from Sample to Sample', 'CUSTOMER_CHANGE_PARCEL_INFO'))
+      .toMatchObject({ description: 'Your parcel information has been modified, recipient name from Sample to Sample', wording: 'Your parcel information has been modified' });
+    expect(flashExpressWording('Your parcel information has been modified: address changed to 1 Sample Road', 'CHANGE_PARCEL_INFO').wording)
       .toBe('Your parcel information has been modified');
-    expect(flashExpressWording('Your parcel information has been modified: address changed to 1 Sample Road', 'CHANGE_PARCEL_INFO').description)
-      .toBe('Your parcel information has been modified');
-    expect(flashExpressWording('You have modified parcel information.', 'CUSTOMER_CHANGE_PARCEL_INFO').description)
+    expect(flashExpressWording('You have modified parcel information.', 'CUSTOMER_CHANGE_PARCEL_INFO').wording)
       .toBe('You have modified parcel information.');
     // Only a changed detail loses what follows "from".
-    expect(flashExpressWording('Your parcel is being transported from 【A_HUB】to 【B_DC】.').description).toBe('Your parcel is being transported from 【A_HUB】to 【B_DC】.');
+    expect(flashExpressWording('Your parcel is being transported from 【A_HUB】to 【B_DC】.').wording).toBe('Your parcel is being transported from 【A_HUB】to 【B_DC】.');
     expect(flashExpressWording('Your parcel has arrived at 【SMP_DC】').description).toBe('Your parcel has arrived at 【SMP_DC】');
     // A rescheduled delivery's date stays.
     expect(flashExpressWording('You have changed delivery time：2026-05-09 (please do not operate frequently)').description)

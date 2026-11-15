@@ -23,10 +23,11 @@ const environment = (fetcher: typeof fetch) => ({ fetcher, env: {}, trawl: null,
   recorder: { step() {}, lookup() {} } });
 
 describe('GLS Italy direct tracking', () => {
-  it('reads the scans newest first in Italian time, with the weight and nothing private', () => {
+  it('reads the scans newest first in Italian time, with the weight, the consignee\'s town and the masked signer', () => {
     const result = normalizeCarrierResult(parseGLSItaly(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered.', last_update: '2026-03-05T11:42:00+01:00', expected_delivery: null, weight_kg: 1.4 });
+      last_status_text: 'Delivered.', last_update: '2026-03-05T11:42:00+01:00', expected_delivery: null, weight_kg: 1.4,
+      receiver_address: 'Secretville - YY', signed_by: 'PR**** RE********' });
     expect(result).not.toHaveProperty('last_update_local');
     // The repeated scan is kept once.
     expect(result.events).toHaveLength(9);
@@ -41,7 +42,10 @@ describe('GLS Italy direct tracking', () => {
     expect(result.events?.at(-1)).toMatchObject({ local_time: '2026-03-01', stage: 'registered', location: 'Sample Depot Town' });
     expect(result.events?.slice(0, -1).every((event) => event.time && !('local_time' in event))).toBe(true);
     expect(result).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|Pr\*{4}|PR\*{4}|Secretville|Privatetown|SAMPLE DEPOT|EXAMPLE DEPOT|Departure|02\/03\/2026|Volume|2,0/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|Pr\*{4}|Privatetown|SAMPLE DEPOT|EXAMPLE DEPOT|Departure|02\/03\/2026|Volume|2,0/);
+    // Without the shipment's signature, the note beside the delivery names who took it; before the delivery, nobody signed.
+    expect(parseGLSItaly(shipment((row) => { delete row.signature; }), NUMBER).signed_by).toBe('Pr**** Re********');
+    expect(parseGLSItaly(shipment((row) => { row.history.shift(); }), NUMBER)).not.toHaveProperty('signed_by');
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     expect(metadata.capabilities).toEqual(['history', 'location', 'weight']);
     expect(metadata.tracking).toMatchObject({ adapter: 'gls-it', steps: ['direct', 'retry'], localClocks: true });

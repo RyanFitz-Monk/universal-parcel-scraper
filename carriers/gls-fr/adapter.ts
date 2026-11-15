@@ -3,9 +3,9 @@
  *
  * One bounded GET per lookup ('direct' step). The response carries the parcel
  * record, its event list, and blocks describing the people involved; `parse()`
- * builds its result from an explicit allowlist of status, timing, sender and
- * operational-location fields, so recipient names, street addresses, contacts,
- * signatures and delivery instructions never leave this module. While the parcel
+ * builds its result from an explicit allowlist of status, timing, sender,
+ * recipient and operational-location fields; contacts and delivery
+ * instructions never leave this module. While the parcel
  * waits at a shop, a locker or its depot, a second GET reads that place's record,
  * as the tracking page does, for its name and address.
  */
@@ -217,6 +217,18 @@ function pointLines(name: string, street: string[], postcode: string, town: stri
   return [name, ...street, [/^\d{5}$/.test(postcode) ? postcode : '', town].filter(Boolean).join(' ')].join('\n');
 }
 
+/**
+ * The recipient's name and address from the parcel's `adresse` block, as the
+ * tracking page prints them: the name, the street and its second line, then the
+ * postcode and town. The complement, email and phone are not read.
+ */
+function recipient(block: unknown): { name: string; address: string } {
+  if (!isRecord(block)) return { name: '', address: '' };
+  const street = [block.libelle1Adresse, block.libelle2Adresse].map((line) => clean(line, 120)).filter(Boolean).join(' ');
+  const town = [cleanScalar(block.codePostalAdresse, 10), clean(block.villeAdresse, 80)].filter(Boolean).join(' ');
+  return { name: clean(block.raisonSociale, 160), address: [street, town].filter(Boolean).join('\n') };
+}
+
 interface ParsedTracking {
   result: CarrierResult;
   /** The parcel's own code, which the tracking page names in the point's request. */
@@ -294,6 +306,8 @@ function parseTracking(payload: unknown, trackingNumber: string): ParsedTracking
   // The portal shows this label as the sender.
   const sender = clean(parcel.libelleExpediteur, 200);
   const deliveredAt = status === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
+  const receiver = recipient(payload.adresse);
+  const signedBy = status === 'delivered' ? clean(parcel.nomSignataireColis, 160) : '';
   return {
     result: {
       status,
@@ -304,6 +318,9 @@ function parseTracking(payload: unknown, trackingNumber: string): ParsedTracking
       expected_delivery: settled ? null : expectedDelivery(parcel.dateTheoriqueLivraison),
       ...(sender ? { sender_name: sender } : {}),
       ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
+      ...(receiver.name ? { receiver_name: receiver.name } : {}),
+      ...(receiver.address ? { receiver_address: receiver.address } : {}),
+      ...(signedBy ? { signed_by: signedBy } : {}),
       timezone: TIMEZONE,
       events,
     },

@@ -129,13 +129,23 @@ describe('GLS US HTTP adapter', () => {
     }), NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
 
-  it('never reads the recipient, the signer or the shipper’s reference', () => {
-    const result = parseGlsUs(changed((shipment) => Object.assign(shipment, {
+  it('reads the recipient, the delivery town and the signer, without the shipper’s reference', () => {
+    const recipient = (shipment: Record<string, unknown>) => Object.assign(shipment, {
       deliveryCompany: 'Sample Company', deliveryContact: 'Sample Person', signedBy: 'Sample Signer', reference: 'SAMPLE-REF-1',
       deliveryAddress: { company: 'Sample Company', city: 'Sample City', state: 'CA', country: 'US', zip: '00000' },
       hasPodImage: true, hasSignatureImage: true, controlNumber: 123, stopId: 456,
-    })), NUMBER);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Company|Person|Signer)|SAMPLE-REF|00000|123|456/);
+    });
+    const result = parseGlsUs(changed(recipient), NUMBER);
+    expect(result).toMatchObject({ receiver_name: 'Sample Person', receiver_address: 'Sample City, CA 00000', signed_by: 'Sample Signer' });
+    expect(JSON.stringify(result)).not.toMatch(/Sample Company|SAMPLE-REF|123|456/);
+    // Without a contact the company is the recipient; before the delivery nobody signed.
+    const company = parseGlsUs(changed((shipment) => {
+      recipient(shipment).deliveryContact = '';
+      shipment.status = 'out for delivery';
+      shipment.transitDetails.shift();
+    }), NUMBER);
+    expect(company).toMatchObject({ status: 'out_for_delivery', receiver_name: 'Sample Company' });
+    expect(company).not.toHaveProperty('signed_by');
   });
 
   it('reads only the service’s unknown-number answer as not found, and binds the reply to the whole number', () => {

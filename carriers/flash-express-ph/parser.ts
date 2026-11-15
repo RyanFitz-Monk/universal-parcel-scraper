@@ -56,13 +56,13 @@ function scanTime(row: Record<string, unknown>): { time: string; at: number } {
 function projectRow(row: Record<string, unknown>): (FlashExpressScan & { code: string }) | null {
   const code = text(row, 'route_action', 64);
   const message = text(row, 'message', 1000).replace(COURIER, '');
-  const { description, location } = flashExpressWording(code === 'PENDING_RETURN' ? message.replace(RETURNED_AT, 'returned.') : message,
+  const { description, wording, location } = flashExpressWording(code === 'PENDING_RETURN' ? message.replace(RETURNED_AT, 'returned.') : message,
     code, { provinceFirst: true });
   if (!description) throw new SchemaError(PROVIDER, 'Flash Express Philippines returned a scan without wording');
   // A linehaul van scan can come with a dash for its wording, which says nothing.
   if (!/[\p{L}\p{N}]/u.test(description)) return null;
   const { time, at } = scanTime(row);
-  const staged = flashExpressPhStage(code, description);
+  const staged = flashExpressPhStage(code, wording);
   const event: CarrierEvent & { time: string; description: string } = {
     time,
     ...(location ? { location } : {}),
@@ -120,5 +120,11 @@ export function parseFlashExpressPh(payload: unknown, raw: string): CarrierResul
     return projectRow(row) ?? [];
   });
   markReturnLeg(scans);
-  return flashExpressResult(PROVIDER, scans, typeof entry.state === 'number' ? entry.state : undefined);
+  // The recipient's name, town and province, and the name of who signed.
+  const signed = isRecord(entry.sign_info) ? text(entry.sign_info, 'signer_content', 160) : '';
+  return flashExpressResult(PROVIDER, scans, typeof entry.state === 'number' ? entry.state : undefined, {
+    name: text(entry, 'dst_name', 160),
+    address: [text(entry, 'dst_city_name', 120), text(entry, 'dst_province_name', 120)].filter(Boolean).join(', '),
+    signer: signed,
+  });
 }

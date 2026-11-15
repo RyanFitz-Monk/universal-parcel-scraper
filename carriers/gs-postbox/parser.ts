@@ -125,12 +125,26 @@ function pickupPoint(events: readonly CarrierEvent[], stage: Stage | undefined):
 }
 
 /**
+ * The recipient's name, partly masked as the page shows it, and their address
+ * when the page shows more of it than asterisks.
+ */
+function recipient(data: Record<string, unknown>): { name: string; address: string } {
+  const receiver = isRecord(data.receiver) ? data.receiver : {};
+  const shown = (value: unknown, maxLength: number) => {
+    const line = clean(value, maxLength);
+    return /[\p{L}\p{N}]/u.test(line) ? line : '';
+  };
+  const address = [shown(receiver.baseAddress, 200), shown(receiver.detailAddress, 200)].filter(Boolean).join(' ');
+  return { name: shown(receiver.name, 80), address };
+}
+
+/**
  * The tracking page `GET /invoice/tracking.do?invoice_no=` renders for one
  * number. Its script holds `trackingInfo`: the page's code, the number, the
- * service, the network that carries the parcel and its scans, oldest first.
- * Code 100 is a number the tracker has no record of; any other code but 200
- * is a parcel the page cannot show. The sender, the recipient and the goods
- * are not read.
+ * service, the network that carries the parcel, the recipient and its scans,
+ * oldest first. Code 100 is a number the tracker has no record of; any other
+ * code but 200 is a parcel the page cannot show. The sender, the phones and
+ * the goods are not read.
  */
 export function parseGsPostboxPage(page: string, raw: string): CarrierResult {
   const number = normalizeGsPostboxNumber(raw);
@@ -167,6 +181,7 @@ export function parseGsPostboxPage(page: string, raw: string): CarrierResult {
   const stage = current.stage as Stage | undefined;
   const service = clean(data.serviceName, 40);
   const pickup = pickupPoint(events, stage);
+  const receiver = recipient(data);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current.stage_source ?? 'carrier_map' } : {}),
@@ -178,6 +193,8 @@ export function parseGsPostboxPage(page: string, raw: string): CarrierResult {
     ...(pickup ? { pickup_point: pickup } : {}),
     ...(service ? { service_name: service } : {}),
     ...(network.partner ? { delivery_carrier: network.partner } : {}),
+    ...(receiver.name ? { receiver_name: receiver.name } : {}),
+    ...(receiver.address ? { receiver_address: receiver.address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

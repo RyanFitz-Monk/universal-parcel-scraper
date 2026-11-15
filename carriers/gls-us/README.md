@@ -39,9 +39,10 @@ The default budget is 15 seconds.
   gives its customer support hours in, whatever the destination.
 - The date at the end of "ARRIVAL SCAN - DELIVERY SCHED FOR" stays in the wording. The estimate
   is the reply's estimated delivery day, given only while the parcel moves.
-- The recipient's company, contact and address, the signer, the shipper's reference, the
-  delivery time, the proof of delivery and signature images and the delivery-route widget are
-  never read.
+- The recipient's contact, else its company, the delivery address's town, state and ZIP code,
+  and who signed a delivered parcel are read; the reply has no street. The shipper's
+  reference, the delivery time, the proof of delivery and signature images and the
+  delivery-route widget are never read.
 - Providers name the network "GLS US", "GLS (US)" or "GSO (GLS US)". It is not one of bare
   "GLS"'s networks, so the European networks' shared clock and number hints stay theirs.
 - Detection offers it, at low confidence, for SH and eighteen digits, the shape of the public

@@ -53,7 +53,9 @@
       "progress_rail",
       "contact_details",
       "payment_details",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "recipient_name",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -63,11 +65,12 @@
       "delivered_at",
       "eta",
       "service_name",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "origin",
-      "destination",
       "progress_rail",
       "contact_details",
       "payment_details",

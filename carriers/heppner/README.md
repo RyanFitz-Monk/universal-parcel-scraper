@@ -45,8 +45,9 @@ for the other three.
 - Scan stamps always carry an offset and are normalized to UTC. The local time helper stays
   because `explicitOffsetTime` in `core/time` preserves the source offset instead.
 - `events[].location` is always empty: the only location-shaped fields (including
-  `agency_location`) repeat the delivery address, not a depot. Parties, references,
-  merchandise, pickup codes and appointment tokens are never retained; a test asserts it.
+  `agency_location`) repeat an address, not a depot. The recipient's name (`customer_name`)
+  and the pickup code are read; the sender, references, merchandise and appointment tokens are
+  not.
 
 ## Limitations
 

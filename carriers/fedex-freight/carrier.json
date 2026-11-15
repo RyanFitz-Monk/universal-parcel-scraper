@@ -66,14 +66,14 @@
       "service_name",
       "destination_country",
       "provider_code",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
       "sender_details",
       "recipient_name",
-      "recipient_address",
-      "signatory",
       "customer_reference"
     ],
     "unavailable": [

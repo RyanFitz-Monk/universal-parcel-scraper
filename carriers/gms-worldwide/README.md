@@ -40,13 +40,14 @@ lookup.
   in either order, so a delivery among them is the newest. A consignment without scans is a
   summary-only answer.
 - A scan's office, as `<city> RO APEX, <city>` or `<locality> BO, <city>`, is its location. A
-  delivery's wording loses whom it names after "to" or "by", and every wording loses phone
-  numbers.
+  delivery's wording keeps whom it names after "to" or "by", and its stage is read from the
+  words before them. Every wording loses phone numbers.
+- The consignee's address and PIN code are kept, and on a delivery the receiver the reply's
+  `Status` names, without their phone.
 
 ## Limitations
 
-- No expected delivery, weight, service name or provider code. Only the number, the scans and
-  the summary's status are kept; the reply's other details are not.
+- No expected delivery, weight, service name or provider code.
 
 ## Numbers
 

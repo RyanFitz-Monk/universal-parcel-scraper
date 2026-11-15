@@ -63,7 +63,8 @@ describe('GTA AirSkip HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Shipper|Recipient|Merchant)|Sample Lane|Example Road|SAMPLE|A0A|example\.invalid|photo|1\.5|Discard/);
+    expect(result).toMatchObject({ receiver_name: 'Sample Recipient', receiver_address: '2 Example Road\nSAMPLE DESTINATION, ON A0A 0A0' });
+    expect(JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined })).not.toMatch(/Sample (?:Shipper|Recipient|Merchant)|Sample Lane|Example Road|SAMPLE|A0A|example\.invalid|photo|1\.5|Discard/);
   });
 
   it('reads a parcel sent back after a failed delivery, with the reason the driver gave', () => {
@@ -119,7 +120,7 @@ describe('GTA AirSkip HTTP adapter', () => {
     }), RETURNED)).toMatchObject({ current_stage: 'returned', last_status_text: 'General Delay' });
   });
 
-  it('keeps a reason or a place only when it holds no digit, and an offset the reply gives as an instant', () => {
+  it('keeps a reason or a place only when it holds no phone number, and an offset the reply gives as an instant', () => {
     const result = parseGtaAirskip(changed('returned', (shipment) => {
       shipment.Events[7]!.Description = 'Call 000 000 0000';
       shipment.Events[1]!.Location = '1 Sample Street, Sampleville, ON';
@@ -129,7 +130,9 @@ describe('GTA AirSkip HTTP adapter', () => {
     expect(result.events![0]).not.toHaveProperty('local_time');
     expect(result).toMatchObject({ last_update: '2026-01-16T23:40:25.857Z' });
     expect(result.events!.find((event) => event.provider_code === '10')).toMatchObject({ description: 'Undelivered' });
-    expect(result.events!.at(-2)).not.toHaveProperty('location');
+    expect(result.events!.at(-2)).toMatchObject({ location: '1 Sample Street, Sampleville, ON' });
+    const called = parseGtaAirskip(changed('returned', (shipment) => { shipment.Events[1]!.Location = 'Sampleville, ON 000-000-0000'; }), RETURNED);
+    expect(called.events!.at(-2)).not.toHaveProperty('location');
   });
 
   it('reads an empty list as not found and a refused lookup as inconclusive', () => {

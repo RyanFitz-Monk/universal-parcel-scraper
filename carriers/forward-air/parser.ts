@@ -204,6 +204,8 @@ export function parseForwardAir(payload: unknown, raw: string): CarrierResult {
   const stage = staged?.stage as Stage | undefined;
   const expected = stage === 'delivered' || stage === 'returned' ? { expected_delivery: null } : estimate(shipment.record);
   const kilograms = weight(shipment.record);
+  // The consignee's signer on the proof of delivery, as the summary names them.
+  const signer = delivery ? text(shipment.record, 'PodSignedBy', 160) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source! } : {}),
@@ -213,6 +215,7 @@ export function parseForwardAir(payload: unknown, raw: string): CarrierResult {
     ...expected,
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
     ...(kilograms ? { weight_kg: kilograms } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -45,9 +45,10 @@ Tracked through the lookup its tracking page makes.
   goes to the shared wording rules. Its description is the page's title, then its description
   when that says more. Incidents (`stageId` 45) put their classification first, as the page does,
   and are staged by that wording.
-- Descriptions lose a clause naming who took the parcel and phone numbers. The customer's,
-  sender's and recipient's names, the recipient's phone, the prices, the courier's user, the map
-  points and the proof of delivery in the order are not kept.
+- Descriptions lose phone numbers. A clause naming who took the parcel stays, and the scan is
+  staged without it. The recipient's name and address come from the order's `destiny`. The
+  customer's and sender's names, the recipient's phone, the prices, the courier's user, the map
+  points and the proof of delivery are not kept.
 - The page also calls `GetTrackingPublic` for a summary with the destination town and an
   estimate. It answers older guías with a relay failure, and the adapter does not ask it.
 

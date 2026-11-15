@@ -45,11 +45,11 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "recipient_address"
     ],
     "discarded": [
       "origin",
-      "destination",
       "event_details",
       "recipient_name",
       "staff_details"

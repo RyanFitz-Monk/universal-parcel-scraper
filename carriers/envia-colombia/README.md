@@ -34,8 +34,9 @@ makes.
   such as the guía's creation, and stays a `local_time` date.
 - The record's `eta` is the expected delivery day until the guía is delivered, and its
   `serviceType` the service name.
-- The record also carries the sender's and recipient's names, phone numbers and addresses, the
-  amount to collect and a proof-of-delivery image. The adapter does not read them.
+- The record's recipient name is read, and so is their address, with the destination town on its
+  second line. The sender, the phone numbers, the amount to collect and the proof-of-delivery
+  image are not.
 - The service can take many seconds to answer for a guía it does not know, so the adapter's
   default budget is thirty seconds.
 

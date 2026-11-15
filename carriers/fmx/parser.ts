@@ -21,6 +21,8 @@ const CHALLENGE = /_cf_chl_opt|cf-turnstile|<title>\s*(?:Just a moment|Attention
 // The whole heading the tracker shows, in place of a consignment, for a number it has no data for.
 const PLACEHOLDER = '* Consignment Data Generated, Awaiting for Handover';
 const NUMBER_LABEL = 'Tracking Number:';
+const DESTINATION_LABEL = 'Destination';
+const SIGNATORY_LABEL = 'Signatory:';
 const MAX_EVENTS = 200;
 
 /** A number for FMX's tracker: MYX and ten digits. */
@@ -87,6 +89,12 @@ function eventsOf($: CheerioAPI, timeline: Selection): CarrierEvent[] {
   return events.sort((left, right) => right.local_time!.localeCompare(left.local_time!));
 }
 
+/** The card's value under a label, or nothing when the card leaves it blank. */
+function cardValue($: CheerioAPI, label: string): string {
+  const labels = $('small').filter((_, small) => clean($(small).text(), 40) === label);
+  return labels.length === 1 ? clean(labels.closest('p').next('.des_1').text(), 160) : '';
+}
+
 /**
  * The tracker's page for one number, `/result_detail.php?p=1&conno=`, which
  * its server renders: a stage bar, a card with the destination town, the
@@ -94,8 +102,9 @@ function eventsOf($: CheerioAPI, timeline: Selection): CarrierEvent[] {
  * dates and the signatory, and the timeline of scans. The card's number must
  * be the one asked. A number the tracker has no data for gets one heading,
  * "* Consignment Data Generated, Awaiting for Handover", and no card; the
- * page's language links must then carry the number asked. The stage bar, the
- * destination, the references, the dates and the signatory are not kept.
+ * page's language links must then carry the number asked. The destination
+ * town and the signatory are read; the stage bar, the references and the
+ * dates are not.
  */
 export function parseFmx(html: string, raw: string): CarrierResult {
   const number = normalizeFmxNumber(raw);
@@ -125,6 +134,8 @@ export function parseFmx(html: string, raw: string): CarrierResult {
   if (!newest) throw new NoHistoryError(PROVIDER);
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const town = cardValue($, DESTINATION_LABEL);
+  const signatory = cardValue($, SIGNATORY_LABEL);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -132,6 +143,8 @@ export function parseFmx(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     expected_delivery: null,
+    ...(town ? { receiver_address: town } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

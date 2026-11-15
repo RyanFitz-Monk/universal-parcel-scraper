@@ -100,10 +100,19 @@ function estimateDay(value: unknown): string | null {
   return wallClock(value)?.slice(0, 10) ?? null;
 }
 
+/** The delivery address's town, state and ZIP code ("Poway, CA 92064"); the reply has no street. */
+function deliveryTown(record: Record<string, unknown>): string {
+  const address = isRecord(record.deliveryAddress) ? record.deliveryAddress : {};
+  const town = clean(address.city, 80);
+  const region = [clean(address.state, 8), clean(address.zip, 16)].filter(Boolean).join(' ');
+  return [town, region].filter(Boolean).join(', ');
+}
+
 /**
  * GLS US's tracking summaries for one number. Only the shipments filed under the whole number
- * are read. The recipient's company, contact and address, the signer, the shipper's reference,
- * proof-of-delivery and signature flags and the delivery-route widget are never read.
+ * are read. The recipient's contact or company, the delivery address's town and who signed are
+ * read; the shipper's reference, proof-of-delivery and signature flags and the delivery-route
+ * widget are not.
  */
 export function parseGlsUs(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGlsUsNumber(raw);
@@ -127,6 +136,9 @@ export function parseGlsUs(payload: unknown, raw: string): CarrierResult {
   if (!newest && !summary) throw new IndeterminateError(PROVIDER, 'GLS US returned a shipment without scans or status');
   const open = current?.status !== 'delivered' && current?.stage !== 'returned';
   const source = current && current !== summary ? staged?.stage_source ?? 'carrier_map' : 'carrier_map';
+  const receiver = clean(record.deliveryContact, 160) || clean(record.deliveryCompany, 160);
+  const address = deliveryTown(record);
+  const signedBy = current?.status === 'delivered' ? clean(record.signedBy, 160) : '';
   return {
     status: current?.status ?? 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: source } : {}),
@@ -134,6 +146,9 @@ export function parseGlsUs(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     ...(newest ? { last_update_local: newest.local_time! } : {}),
     expected_delivery: open ? estimateDay(record.estimatedDeliveryDate) : null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
   };

@@ -70,11 +70,11 @@ describe('FMX tracking', () => {
     expect(fmxTrackingUrl(NUMBER)).toBe(fetcher.mock.calls[0]![0]);
   });
 
-  it('reads the scans newest first, on wall clocks with no zone, without the card’s details', () => {
+  it('reads the scans newest first, on wall clocks with no zone, and the destination town without the references', () => {
     const result = parseFmx(destroyed(), NUMBER);
     expect(result).toEqual({
       status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map', last_status_text: 'Shipment Destroyed',
-      last_update: null, last_update_local: '2026-03-09T11:30:00', expected_delivery: null,
+      last_update: null, last_update_local: '2026-03-09T11:30:00', expected_delivery: null, receiver_address: 'Sampletown',
       events: [
         { local_time: '2026-03-09T11:30:00', location: STATION, description: 'Shipment Destroyed', stage: 'exception', stage_source: 'carrier_map' },
         { local_time: '2026-02-02T17:45:10', location: STATION, description: 'Parcel returned to shipper', stage: 'returned', stage_source: 'carrier_map' },
@@ -82,11 +82,11 @@ describe('FMX tracking', () => {
           stage: 'customs', stage_source: 'carrier_map' },
       ],
     });
-    // The destination, the references and the template's customer code stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Sampletown|SYNTHETIC-REF|A000000/);
+    // The references and the template's customer code stay out.
+    expect(JSON.stringify(result)).not.toMatch(/SYNTHETIC-REF|A000000/);
   });
 
-  it('drops the signatory and the delivery date, and stages a wording the map does not list by the shared rules or not at all', () => {
+  it('reads the signatory without the delivery date, and stages a wording the map does not list by the shared rules or not at all', () => {
     const page = withRows(row('2026-03-10 09:00:00', 'Synthetic note'), row('2026-03-10 08:00:00', 'Delivered'))
       .replace(/(Signatory:<\/small> <\/p>\s*<h6 class="des_1">)\s*/, '$1SYNTHETIC SIGNER')
       .replace(/(Delivery Date:<\/small> <\/p>\s*<span class="des_1">)/, '$12026-03-10 08:00:00');
@@ -97,7 +97,7 @@ describe('FMX tracking', () => {
     ]);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
       last_status_text: 'Synthetic note', last_update_local: '2026-03-10T09:00:00' });
-    expect(JSON.stringify(result)).not.toContain('SYNTHETIC SIGNER');
+    expect(result.signed_by).toBe('SYNTHETIC SIGNER');
     expect(result).not.toHaveProperty('delivered_at');
   });
 

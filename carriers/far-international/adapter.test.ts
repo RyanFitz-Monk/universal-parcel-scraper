@@ -49,10 +49,10 @@ describe('FAR International HTTP adapter', () => {
     const result = parseFar(page('delivered'), PARCEL);
     // The summary reads 在途 (in transit) under a delivery.
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Package delivered', last_update: '2026-03-12T12:11:15-05:00', expected_delivery: null,
-      delivered_at: '2026-03-12T12:11:15-05:00', delivery_tracking_number: '799900000001' });
+      last_status_text: 'Package delivered, signed for by A. TESTER', last_update: '2026-03-12T12:11:15-05:00', expected_delivery: null,
+      delivered_at: '2026-03-12T12:11:15-05:00', delivery_tracking_number: '799900000001', signed_by: 'A. TESTER' });
     expect(result.events!.map((event) => [event.time, event.location, event.description, event.stage])).toEqual([
-      ['2026-03-12T12:11:15-05:00', 'Springfield, IL, US', 'Package delivered', 'delivered'],
+      ['2026-03-12T12:11:15-05:00', 'Springfield, IL, US', 'Package delivered, signed for by A. TESTER', 'delivered'],
       ['2026-03-12T07:05:00-05:00', 'SPRINGFIELD, IL, US', 'On FedEx vehicle for delivery', 'out_for_delivery'],
       // The row listed twice counts once.
       ['2026-03-12T06:45:00-05:00', 'SPRINGFIELD, IL, US', 'At local FedEx facility', 'in_transit'],
@@ -68,7 +68,7 @@ describe('FAR International HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('local_time' in event))).toBe(true);
     const json = JSON.stringify(result);
-    for (const excluded of ['TESTER', '1Z0000000000000000', '在途', '【']) expect(json).not.toContain(excluded);
+    for (const excluded of ['1Z0000000000000000', '在途', '【']) expect(json).not.toContain(excluded);
   });
 
   it('keeps the wall clock of a scan without a zone, in the page’s order, and the English half of bilingual wording', () => {
@@ -117,8 +117,9 @@ describe('FAR International HTTP adapter', () => {
     const worded = parseFar(rows(row('2026-03-12 12:00:00', '【Springfield,IL,US】', 'GMT-05:00', 'Shipment delivered, signed by SAMPLE RECIPIENT'),
       row('2026-03-12 11:00:00', '', 'GMT-05:00', 'Sample Status Note')), PARCEL);
     expect(worded.events!.map((event) => [event.description, event.location, event.stage, event.stage_source])).toEqual([
-      ['Shipment delivered', 'Springfield, IL, US', 'delivered', 'wording:language'], ['Sample Status Note', undefined, undefined, undefined]]);
-    expect(JSON.stringify(worded)).not.toContain('SAMPLE RECIPIENT');
+      ['Shipment delivered, signed by SAMPLE RECIPIENT', 'Springfield, IL, US', 'delivered', 'wording:language'],
+      ['Sample Status Note', undefined, undefined, undefined]]);
+    expect(worded).toMatchObject({ signed_by: 'SAMPLE RECIPIENT' });
     const unstaged = parseFar(rows(row('2026-03-12 11:00:00', '【ORD】', 'GMT-05:00', 'Sample Status Note')), PARCEL);
     expect(unstaged).toMatchObject({ status: 'unknown', last_status_text: 'Sample Status Note' });
     expect(unstaged).not.toHaveProperty('current_stage');

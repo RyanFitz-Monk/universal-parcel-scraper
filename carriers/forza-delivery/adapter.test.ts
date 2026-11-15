@@ -57,12 +57,14 @@ describe('Forza Delivery tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered guía newest first, with wall clocks, stage ids and nobody’s name, phone or price', () => {
+  it('reads a delivered guía newest first, with wall clocks, stage ids and the recipient, without phones or prices', () => {
     const result = parseForzaReply(text('delivered'), DELIVERED);
     expect(result).toEqual(expect.objectContaining({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Entregado', last_update: null, last_update_local: '2026-03-12T14:07:31', expected_delivery: null }));
+      last_status_text: 'Entregado: Entregado a Sample Recipient', last_update: null, last_update_local: '2026-03-12T14:07:31',
+      expected_delivery: null, receiver_name: 'Sample Recipient' }));
+    expect(result).not.toHaveProperty('receiver_address');
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.description, event.stage])).toEqual([
-      ['2026-03-12T14:07:31', '5', 'Entregado', 'delivered'],
+      ['2026-03-12T14:07:31', '5', 'Entregado: Entregado a Sample Recipient', 'delivered'],
       ['2026-03-12T08:52:10', '4', 'En ruta', 'out_for_delivery'],
       ['2026-03-12T06:40:00', '11', 'Arribó a las instalaciones', 'in_transit'],
       ['2026-03-11T21:15:44', '19', 'En Tránsito', 'in_transit'],
@@ -77,7 +79,12 @@ describe('Forza Delivery tracking adapter', () => {
     ]);
     expect(result.events!.every((event) => !event.time && !event.location && event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(result)).not.toMatch(/Sample|0000-0000|00000000|Comprobante|Price|SAMPLEAPP/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Customer|Sender)|0000-0000|00000000|Comprobante|Price|SAMPLEAPP/);
+    // The destination's address, when the order gives one.
+    const addressed = parseForza(edited('delivered', (answer) => {
+      (answer.ObjectValue.order as Record<string, unknown>).destiny = { address: 'Sample Street 1, Sample Town', receiver: 'Sample Recipient' };
+    }), DELIVERED);
+    expect(addressed.receiver_address).toBe('Sample Street 1, Sample Town');
   });
 
   it('reads a guía between facilities as in transit', async () => {
@@ -87,12 +94,12 @@ describe('Forza Delivery tracking adapter', () => {
       events: [{ provider_code: '10' }, {}, {}, { stage: 'accepted' }, { description: 'Generado', stage: 'registered' }] });
   });
 
-  it('shows a description that says more, after an incident’s classification, without people or phone numbers', () => {
+  it('shows a description that says more, after an incident’s classification, without phone numbers', () => {
     expect(forzaWording('Entregado', 'Entregado')).toBe('Entregado');
     expect(forzaWording('Entregado', ' entregado ')).toBe('Entregado');
-    expect(forzaWording('Entregado', 'Entregado a Sample Person')).toBe('Entregado');
-    expect(forzaWording('Entregado', 'Recibido por Sample Person en portería')).toBe('Entregado');
-    expect(forzaWording('Entregado', 'Recibe: Sample Person')).toBe('Entregado');
+    expect(forzaWording('Entregado', 'Entregado a Sample Person, tel. 0000-0000')).toBe('Entregado: Entregado a Sample Person');
+    expect(forzaWording('Entregado', 'Recibido por Sample Person en portería')).toBe('Entregado: Recibido por Sample Person en portería');
+    expect(forzaWording('Entregado', 'Recibe: Sample Person')).toBe('Entregado: Recibe: Sample Person');
     expect(forzaWording('Visita', 'Cliente ausente, llamar al 0000-0000')).toBe('Visita: Cliente ausente, llamar al');
     expect(forzaWording('Novedad', 'Sample note', 'Sample classification')).toBe('Novedad: Sample classification - Sample note');
     expect(forzaWording('', 'Sample note')).toBe('Sample note');

@@ -57,11 +57,11 @@ describe('Forward Air HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the newest shipment under a reused waybill, each station clock in the zone it names, without people or references', () => {
+  it('reads the newest shipment under a reused waybill, each station clock in the zone it names, and who signed, without references', () => {
     const result = parseForwardAir(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Invoiced', last_update: '2026-03-20T10:05:00-04:00', expected_delivery: null,
-      delivered_at: '2026-03-17T14:20:00-05:00', weight_kg: 113.398 });
+      delivered_at: '2026-03-17T14:20:00-05:00', weight_kg: 113.398, signed_by: 'J SAMPLE' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage ?? null, event.location, event.description]))
       .toEqual([
         // Billing after the delivery moves nothing.
@@ -78,8 +78,8 @@ describe('Forward Air HTTP adapter', () => {
         ['2026-03-15T11:10:00-04:00', 'DPUP', 'registered', 'ATL', 'Dispatched for Pickup'],
       ]);
     expect(result.events!.every((event) => event.local_time === undefined)).toBe(true);
-    // The older shipment and the one found by its reference are not read, nor is anyone named.
-    expect(JSON.stringify(result)).not.toMatch(/2023|SEA|J SAMPLE|SAMPLE (?:CLERK|DRIVER|DISPATCH)|OLDSAMPLE|PO-SAMPLE|9000001|000200002|1000002|GabsKey|SrOid/);
+    // The older shipment and the one found by its reference are not read, nor is the staff who recorded the scans.
+    expect(JSON.stringify({ ...result, signed_by: undefined })).not.toMatch(/2023|SEA|J SAMPLE|SAMPLE (?:CLERK|DRIVER|DISPATCH)|OLDSAMPLE|PO-SAMPLE|9000001|000200002|1000002|GabsKey|SrOid/);
   });
 
   it('keeps a Mountain or unlabelled clock as the station’s wall clock, and reads a repeated hour as its first occurrence', () => {

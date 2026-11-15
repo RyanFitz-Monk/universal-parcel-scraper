@@ -64,15 +64,15 @@
       "service_name",
       "weight",
       "eta",
-      "failed_delivery_reason"
+      "failed_delivery_reason",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
       "delivered_at",
       "origin",
-      "destination",
       "sender_name",
-      "recipient_name",
       "parcel_count",
       "customer_reference",
       "proof_of_delivery"

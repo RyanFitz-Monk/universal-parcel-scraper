@@ -59,7 +59,9 @@
       "history",
       "location",
       "weight",
-      "progress_rail"
+      "progress_rail",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
@@ -67,10 +69,8 @@
       "departure_date",
       "depots",
       "sender_town",
-      "recipient_address",
       "customer_reference",
-      "recipient_name",
-      "signature"
+      "recipient_name"
     ],
     "unavailable": [
       "eta",

@@ -20,7 +20,7 @@ type Row = Record<string, unknown>;
 const text = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 const history = (name: string) => JSON.parse(text(`${name}.json`)) as Row[];
 const search = (number = NUMBER) => text('search-in-transit.html').replaceAll(NUMBER, number);
-const summary = { status: 'Shipment in Line-haul', destinationCountry: 'DE' };
+const summary = { status: 'Shipment in Line-haul', destinationCountry: 'DE', receiverAddress: '00-000 Exampletown' };
 const page = (body: string, init: ResponseInit = {}) => new Response(body, { ...init, headers: { 'Content-Type': 'text/html; charset=utf-8', ...init.headers } });
 const json = (body: unknown) => new Response(JSON.stringify(body), { headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
@@ -50,10 +50,12 @@ describe('GEODIS Poland HTTP adapter', () => {
     expect(geodisPlHistoryUrl(NUMBER)).toBe(historyUrl);
   });
 
-  it('reads the summary rows it needs and never the delivery location', () => {
+  it('reads the summary rows it needs, with the delivery location as the recipient’s address', () => {
     expect(parseGeodisPlSummary(search(), NUMBER)).toEqual(summary);
     const result = parseGeodisPlHistory(history('history-in-transit'), parseGeodisPlSummary(search(), NUMBER), LATER);
-    expect(JSON.stringify(result)).not.toMatch(/00-000|Exampletown|w przewozie|grouoage/);
+    expect(result.receiver_address).toBe('00-000 Exampletown');
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/w przewozie|grouoage/);
   });
 
   it('dates Polish terminals on Polish time, newest first, with the page’s labels', () => {
@@ -84,7 +86,9 @@ describe('GEODIS Poland HTTP adapter', () => {
       ['30', 'in_transit', 'carrier_map'], ['20', 'in_transit', 'carrier_map'], ['10', 'accepted', 'carrier_map'],
     ]);
     expect(result.events![0]!.description).toBe('Claim Received');
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic Signer|TS_REMARKS|Pseudoscan|"100"/);
+    // The delivery that stands names who signed in its remarks.
+    expect(result.signed_by).toBe('Synthetic Signer');
+    expect(JSON.stringify(result.events)).not.toMatch(/Synthetic Signer|TS_REMARKS|Pseudoscan|"100"/);
   });
 
   it('keeps the wall clock of a terminal abroad and a code the page does not label', () => {
@@ -159,7 +163,8 @@ describe('GEODIS Poland HTTP adapter', () => {
       .toThrow(expect.objectContaining({ kind: 'schema' }));
     expect(() => parseGeodisPlSummary(search().replace('<dt>Items Number</dt>', '<dt>Status</dt>'), NUMBER))
       .toThrow(expect.objectContaining({ kind: 'schema' }));
-    expect(parseGeodisPlSummary(search().replace('DE&nbsp;', ''), NUMBER)).toEqual({ status: 'Shipment in Line-haul' });
+    expect(parseGeodisPlSummary(search().replace('DE&nbsp;', ''), NUMBER)).toEqual({ status: 'Shipment in Line-haul', receiverAddress: '00-000 Exampletown' });
+    expect(parseGeodisPlSummary(search().replace('00-000, Exampletown', ''), NUMBER)).toEqual({ status: 'Shipment in Line-haul', destinationCountry: 'DE' });
   });
 
   it('keeps an unknown number, a refused one, a moved page, a browser check and a broken reply apart', async () => {

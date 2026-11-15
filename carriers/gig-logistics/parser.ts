@@ -76,9 +76,9 @@ function place(row: Record<string, unknown>): string {
  * the code's fixed wording in `ScanStatus`. A waybill it does not have gets
  * `Code` "400" and "Invalid waybill number!!". Only scans naming the whole
  * waybill asked are read, and of them only the code, its wording, the clock
- * and the service centre: the origin and destination addresses, the incident
- * text the page shows, which can name the receiver, and the scanning staff
- * are never read.
+ * and the service centre. The destination address is the recipient's; the
+ * origin address, the incident text the page shows and the scanning staff are
+ * never read.
  */
 export function parseGigLogistics(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGigLogisticsNumber(raw);
@@ -142,6 +142,7 @@ export function parseGigLogistics(payload: unknown, raw: string): CarrierResult 
   // A record of the booking logged after the parcel moved is no step back.
   const scanned = events.find((event) => event.stage && event.stage !== 'registered') ?? events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  const address = text(shipment, 'Destination', 300);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source } : {}),
@@ -150,6 +151,7 @@ export function parseGigLogistics(payload: unknown, raw: string): CarrierResult 
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(stage === 'delivered' && scanned?.time ? { delivered_at: scanned.time } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

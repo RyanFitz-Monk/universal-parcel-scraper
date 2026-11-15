@@ -80,9 +80,14 @@ describe('AllcargoGATI HTTP adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !event.local_time)).toBe(true);
   });
 
-  it('keeps no consignor, consignee, receiver, remark, reference or proof of delivery link', () => {
-    const text = JSON.stringify(parseGati(fixture('delivered'), DELIVERED));
-    expect(text).not.toMatch(/SAMPLE|Asha|Ravi|neighbour|good condition|viewPOD|gati\.com|NORTHPUR|SOUTHGANJ|SUR EXPRESS|10000001"/);
+  it('reads the consignee and who received the docket, without the consignor, remarks, references or proof of delivery link', () => {
+    const result = parseGati(fixture('delivered'), DELIVERED);
+    expect(result).toMatchObject({ receiver_name: 'Asha Example', signed_by: 'Asha Example' });
+    const text = JSON.stringify(result);
+    expect(text).not.toMatch(/SAMPLE|Ravi|neighbour|good condition|viewPOD|gati\.com|NORTHPUR|SOUTHGANJ|SUR EXPRESS|10000001"/);
+    const transit = parseGati(fixture('in-transit'), IN_TRANSIT);
+    expect(transit.receiver_name).toBe('Vikram Example');
+    expect(transit).not.toHaveProperty('signed_by');
   });
 
   it('reads a docket on its way with the delivery date promised at booking, or its revision', () => {

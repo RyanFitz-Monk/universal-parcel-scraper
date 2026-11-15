@@ -43,16 +43,16 @@ FedEx entry.
   the terminal's zone, and the page converts each one by that offset, so the adapter keeps it as
   given. A scan without an offset keeps `local_time`.
 - A scan's description is its status, then its details, such as
-  `Shipment exception: Weather – Delay in transit`; the delivery keeps its status alone. Its
-  `statusCD` stages it, as mapped in [status.ts](status.ts). An arrival with the exception code
+  `Shipment exception: Weather – Delay in transit`. Its `statusCD` stages it, as mapped in
+  [status.ts](status.ts); a delivery is staged by its status alone. An arrival with the exception code
   `DARV` is the driver at the consignee's site, so it counts as out for delivery.
 - `delivered_at` is the delivery scan's instant. The weight is the shipment's total in pounds,
   given in kilograms. The estimate is the day of `estDeliveryDt` and is dropped once the freight
   is delivered. The service and the destination's country come from the summary. With no scan
   yet, the answer is the summary's status alone.
-- The reply also names the shipper and consignee with their towns, the receiver and the person
-  who signed, references, bills of lading and the driver, and carries coordinates. None of them
-  is read.
+- The consignee's address comes from `recipientAddress`, often its town and state alone. Who
+  signed is the summary's `receivedByNm`, else the delivery scan's `recipientSignee`. The
+  shipper, references, bills of lading, the driver and the coordinates are not read.
 
 ## Limitations
 

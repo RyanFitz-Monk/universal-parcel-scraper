@@ -25,11 +25,12 @@ const environment = (fetcher: typeof fetch) => ({ fetcher, env: {}, trawl: null,
   userAgent: 'HostAgent/1.0', recorder: { step() {}, lookup() {} } });
 
 describe('GLS Spain direct tracking', () => {
-  it('reads the scans newest first as instants, with their codes, the weight and the point, and nothing private', () => {
+  it('reads the scans newest first as instants, with their codes, the weight, the point, the town and who received it', () => {
     const result = normalizeCarrierResult(parseGLSSpain(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-03-06T10:21:00Z', delivered_at: '2026-03-06T10:21:00Z',
-      expected_delivery: null, pickup_point: 'Example Point Shop', weight_kg: 1.2 });
+      expected_delivery: null, pickup_point: 'Example Point Shop', weight_kg: 1.2,
+      receiver_address: 'PRIVATETOWN', signed_by: 'PRIVATE RECEIVER' });
     // The repeated scan is kept once.
     expect(result.events).toHaveLength(8);
     expect(result.events!.map((event) => [event.provider_code, event.stage])).toEqual([
@@ -41,7 +42,13 @@ describe('GLS Spain direct tracking', () => {
     expect(result.events!.every((event) => /Z$/.test(event.time ?? '') && !('location' in event))).toBe(true);
     expect(result).not.toHaveProperty('canonical_tracking_number');
     expect(result).not.toHaveProperty('summary_only');
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|SAMPLE|Sample|99997|99998|000000000|Mon to Fri/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE(?!TOWN| RECEIVER)|SAMPLE|Sample|99997|99998|000000000|Mon to Fri/);
+    expect(result).not.toHaveProperty('pickup_code');
+    // A fuller destination address gives its street, then its postcode and town.
+    const street = parseGLSSpain(shipment((found) => {
+      found.destination = { address: { street: 'Calle Ejemplo 1', postalCode: '99999', locality: 'Pueblo' } };
+    }), NUMBER);
+    expect(street.receiver_address).toBe('Calle Ejemplo 1\n99999 Pueblo');
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     expect(metadata.tracking).toMatchObject({ adapter: 'gls-es', steps: ['direct', 'retry'],
       requirements: [expect.objectContaining({ field: 'postcode', validator: 'internationalPostcode' })] });
@@ -52,12 +59,14 @@ describe('GLS Spain direct tracking', () => {
   it('names the point only while the parcel waits there or once collected from it, and only when its scan names it too', () => {
     const waiting = parseGLSSpain(shipment((found) => {
       found.tracking.shift();
-      found.state = { code: 'receivedOnParcel', description: 'Received in GLS Point', parcelShop: { codeQr: 'PRIVATE', pin: 'PRIVATE' } };
+      found.state = { code: 'receivedOnParcel', description: 'Received in GLS Point', receiverName: 'NOT YET',
+        parcelShop: { codeQr: 'PRIVATEQR', pin: '4821' } };
     }), NUMBER);
     expect(waiting).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup', last_status_text: 'Received in Example Point Shop',
-      pickup_point: 'Example Point Shop' });
+      pickup_point: 'Example Point Shop', pickup_code: '4821' });
     expect(waiting).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(waiting)).not.toMatch(/PRIVATE/);
+    expect(waiting).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(waiting)).not.toMatch(/PRIVATEQR/);
     const otherPoint = parseGLSSpain(shipment((found) => { (found.parcelShop as Record<string, unknown>).name = 'Another Shop'; }), NUMBER);
     expect(otherPoint).not.toHaveProperty('pickup_point');
     // Before the parcel reaches a point, the reply's point is the destination depot.

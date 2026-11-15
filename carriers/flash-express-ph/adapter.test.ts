@@ -47,11 +47,12 @@ describe('Flash Express Philippines HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the delivery on Manila’s clock, town before province, without the people and phone numbers the reply names', () => {
+  it('reads the delivery on Manila’s clock, town before province, with the recipient and who signed, without the couriers and phone numbers', () => {
     const result = parseFlashExpressPh(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Your parcel has been delivered. Thank you for using Flash Express service.',
-      last_update: '2026-03-04T14:28:38+08:00', delivered_at: '2026-03-04T14:28:38+08:00', expected_delivery: null });
+      last_status_text: 'Your parcel has been delivered and signed by 【Sample Person(In Person)】. Thank you for using Flash Express service.',
+      last_update: '2026-03-04T14:28:38+08:00', delivered_at: '2026-03-04T14:28:38+08:00', expected_delivery: null,
+      receiver_name: 'Sample Recipient', receiver_address: 'Sample City, Sample Province', signed_by: 'Sample Person' });
     // The repeated courier scan counts once and the van scan worded with a dash is left out.
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage ?? null])).toEqual([
       ['2026-03-04T14:28:38+08:00', 'DELIVERY_CONFIRM', 'delivered'],
@@ -69,7 +70,8 @@ describe('Flash Express Philippines HTTP adapter', () => {
     expect(result.events!.at(-1)).toMatchObject({ description: 'Your parcel has been picked up by the [ORG_SP] courier.',
       location: 'Origin City, Origin Province' });
     expect(result.events!.some((event) => 'provider_leg' in event)).toBe(false);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Person|Courier|Sender|Recipient)|In Person|0900|signer|【/);
+    expect(JSON.stringify({ ...result, receiver_name: undefined, signed_by: undefined, last_status_text: undefined,
+      events: result.events?.slice(1) })).not.toMatch(/Sample (?:Person|Courier|Sender|Recipient)|In Person|0900|signer|【/);
     // The older courier wording named the courier after the note.
     const named = parseFlashExpressPh(changed('delivered', (_body, entry) => {
       entry.parcel_routes[2]!.message = 'Your parcel is being delivered by Flash Express. Courier informationSample Courier (000000) 090****0000'

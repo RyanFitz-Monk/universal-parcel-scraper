@@ -56,20 +56,22 @@ describe('GO Logistics tracking', () => {
     expect(goLogisticsTrackingUrl(NUMBER)).toBe(fetcher.mock.calls[0]![0]);
   });
 
-  it('reads the history newest first on Sydney’s clock, without the driver, the signatory or the signature', () => {
+  it('reads the history newest first on Sydney’s clock and the signatory, without the driver or the signature', () => {
     const result = parseGoLogistics(delivered(), NUMBER);
     expect(result).toEqual({
-      status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Consignment Delivered',
-      last_update: '2025-03-04T09:47:00+11:00', expected_delivery: null, timezone: 'Australia/Sydney',
+      status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
+      last_status_text: 'Consignment Delivered Signed by Sample Signatory - 2 pieces',
+      last_update: '2025-03-04T09:47:00+11:00', expected_delivery: null, signed_by: 'Sample Signatory', timezone: 'Australia/Sydney',
       events: [
-        { time: '2025-03-04T09:47:00+11:00', description: 'Consignment Delivered', stage: 'delivered', stage_source: 'carrier_map' },
+        { time: '2025-03-04T09:47:00+11:00', description: 'Consignment Delivered Signed by Sample Signatory - 2 pieces',
+          stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2025-03-04T06:20:00+11:00', description: 'Consignment Accepted for Delivery', stage: 'out_for_delivery', stage_source: 'carrier_map' },
         { time: '2025-03-03T16:05:00+11:00', description: 'Data Uploaded', stage: 'in_transit', stage_source: 'carrier_map' },
         { time: '2025-03-03T14:40:00+11:00', description: 'Consignment Collected', stage: 'accepted', stage_source: 'carrier_map' },
         { time: '2025-03-03T14:15:00+11:00', description: 'Add To Consignment', stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/Signatory|pieces|base64|Driver|0001|0002/);
+    expect(JSON.stringify(result)).not.toMatch(/base64|Driver|0001|0002/);
   });
 
   it('reads the latest consignment of a number used again', () => {

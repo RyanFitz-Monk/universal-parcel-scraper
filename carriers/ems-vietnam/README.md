@@ -31,13 +31,15 @@ through the lookup its tracking page makes.
 - Each scan has a date and a second, with no zone. A scan at a Vietnamese office, by its
   six-digit code, is read in `Asia/Ho_Chi_Minh`, which has no daylight saving, and a delivery
   gives `delivered_at`. A scan without one keeps its wall clock in `local_time`.
-- The customer-service line, the postman's name and phone after a handover, receivers, signers
-  and phone numbers are taken out of the wording. Office addresses and phones, the sender, the
-  recipient, the customer code and the sender's reference in the record are not kept.
+- The customer-service line, the postman's name and phone after a handover, and phone numbers
+  are taken out of the wording. A receiver or signer stays in it, and the stage is read without
+  them. The record's recipient name and address are read; office addresses and phones, the
+  sender, the customer code and the sender's reference are not kept.
 - The delivery table and the record's summary repeat the history's delivery outcomes with the
-  receiver's name and the reason for a failed attempt, so they are not read. Delivery rows dated
-  in full belong to the international exchange, which the history does not hold; they mark the
-  history as truncated so fallback providers can add the foreign leg.
+  reason for a failed attempt. Only the receiver a successful delivery names is read from them,
+  as `signed_by`. Delivery rows dated in full belong to the international exchange, which the
+  history does not hold; they mark the history as truncated so fallback providers can add the
+  foreign leg.
 - Cash-on-delivery steps and the routing note beside each delivery round move nothing.
 
 ## Limitations

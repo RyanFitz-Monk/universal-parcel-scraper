@@ -111,6 +111,18 @@ function terminalPlace(movement: Record<string, unknown>): string {
 
 interface Row { event: CarrierEvent; timestamp: number; order: number }
 
+/** The consignee's name and address, from the delivery stop or else the consignee party. */
+function consignee(shipment: Record<string, unknown>, movements: unknown[]): { name: string; address: string } {
+  const stop = movements.find((movement) => isRecord(movement) && text(movement, 'id', 32) === 'Delivery') as Record<string, unknown> | undefined;
+  const place = (stop && record(stop, 'location')) ?? record(shipment, 'consigneeParty');
+  const address = place && record(place, 'address');
+  if (!place) return { name: '', address: '' };
+  const lines = address ? list(address, 'line', 4).map((line) => (typeof line === 'string' ? cleanScalar(line, 120) : '')).filter(Boolean) : [];
+  const town = address ? [text(address, 'city', 100), [text(address, 'state', 8), text(address, 'postalCode', 16)].filter(Boolean).join(' ')]
+    .filter(Boolean).join(', ') : '';
+  return { name: text(place, 'name', 160), address: [...lines, town].filter(Boolean).join('\n') };
+}
+
 /** One status row: its clock, Estes's wording, the reason code and the terminal's place. */
 function rowOf(status: unknown, location: string, order: number): Row | null {
   if (!isRecord(status)) throw new SchemaError(PROVIDER, 'Estes returned an invalid status');
@@ -145,8 +157,9 @@ function estimate(shipment: Record<string, unknown>): { expected_delivery: strin
  * The reply of `GET /shipmenttracking/history?pro={number}`: `data` holds the
  * shipment the PRO names, with its current status and its movements (pickup,
  * terminals, delivery), each with its status rows. Every clock carries its
- * offset. The consignee and shipper, the person who signed, the driver, the
- * appointment, references, documents and coordinates are never read.
+ * offset. The consignee's name and address and the person who signed are
+ * read; the shipper, the driver, the appointment, references, documents and
+ * coordinates are not.
  */
 export function parseEstes(payload: unknown, raw: string): CarrierResult {
   const number = normalizeEstesNumber(raw);
@@ -172,7 +185,8 @@ export function parseEstes(payload: unknown, raw: string): CarrierResult {
   const rows: Row[] = [];
   const seen = new Set<string>();
   let order = 0;
-  for (const movement of list(shipment, 'movementHistory', MAX_MOVEMENTS)) {
+  const movements = list(shipment, 'movementHistory', MAX_MOVEMENTS);
+  for (const movement of movements) {
     if (!isRecord(movement)) throw new SchemaError(PROVIDER, 'Estes returned an invalid movement');
     const place = terminalPlace(movement);
     for (const status of list(movement, 'statusHistory', MAX_ROWS)) {
@@ -201,6 +215,8 @@ export function parseEstes(payload: unknown, raw: string): CarrierResult {
   const stage = decider?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? instant(shipment, 'deliveryDate', 'deliveryTime') : null;
   const pounds = Number(text(shipment, 'totalWeight', 16));
+  const recipient = consignee(shipment, movements);
+  const signedBy = text(shipment, 'receivedBy', 160);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: decider!.stage_source } : {}),
@@ -210,6 +226,9 @@ export function parseEstes(payload: unknown, raw: string): CarrierResult {
     ...(stage && FINAL.has(stage) ? { expected_delivery: null } : estimate(shipment)),
     ...(delivered ? { delivered_at: delivered.iso } : {}),
     ...(Number.isFinite(pounds) && pounds > 0 && pounds < 1_000_000 ? { weight_kg: Math.round(pounds * POUNDS_TO_KG * 1000) / 1000 } : {}),
+    ...(recipient.name ? { receiver_name: recipient.name } : {}),
+    ...(recipient.address ? { receiver_address: recipient.address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     ...(summaryOnly ? { summary_only: true } : {}),
     // A summary is no scan of its own.
     events: summaryOnly ? [] : events.slice(0, MAX_EVENTS),

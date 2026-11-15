@@ -49,15 +49,15 @@
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
       "departure_date",
       "sender_name",
-      "recipient_name",
       "origin",
-      "destination",
       "parcel_count",
       "parcel_scans",
       "order_contents"

@@ -57,26 +57,33 @@ const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8
 // A phone number with its middle masked, as the page lists the courier's calls.
 const MASKED_PHONE = /\d{2,4}\*{3,}\d{2,4}/g;
 
-/**
- * A scan's wording and place: the district and province suffix becomes the
- * place. A tracker that names the province first gets it put after the town.
- */
-export function flashExpressWording(raw: string, code = '', options: { provinceFirst?: boolean } = {}): { description: string; location: string } {
-  const value = clean(raw, 1000);
-  const suffix = PLACE.exec(value);
-  const places = suffix ? [...suffix[0].matchAll(/【([^】]*)】/g)].map((match) => clean(match[1], 100)).filter(Boolean) : [];
-  if (options.provinceFirst) places.reverse();
-  let wording = suffix ? value.slice(0, suffix.index) : value;
-  if (CHANGE_CODES.has(code)) wording = wording.replace(CHANGE, '');
-  const description = clean(wording
-    .replace(SIGNER, '')
+/** Wording without its phone numbers, empty brackets and stray punctuation. */
+function tidy(value: string): string {
+  return clean(value
     .replace(PHONE, '')
     .replace(MASKED_PHONE, '')
     .replace(/【\s*】/g, '')
     .replace(/\[\s+/g, '[').replace(/\s+\]/g, ']')
     .replace(/\s+([,，;；.。])/g, '$1'), 500)
     .replace(/^[\s,，;；]+|[\s,，;；]+$/g, '');
-  return { description, location: [...new Set(places)].join(', ') };
+}
+
+/**
+ * A scan's wording and place: the district and province suffix becomes the
+ * place. A tracker that names the province first gets it put after the town.
+ * The description keeps who signed and what a change of details changed;
+ * `wording`, which stages the scan, leaves both out.
+ */
+export function flashExpressWording(raw: string, code = '', options: { provinceFirst?: boolean } = {}): {
+  description: string; wording: string; location: string;
+} {
+  const value = clean(raw, 1000);
+  const suffix = PLACE.exec(value);
+  const places = suffix ? [...suffix[0].matchAll(/【([^】]*)】/g)].map((match) => clean(match[1], 100)).filter(Boolean) : [];
+  if (options.provinceFirst) places.reverse();
+  const body = suffix ? value.slice(0, suffix.index) : value;
+  const bare = (CHANGE_CODES.has(code) ? body.replace(CHANGE, '') : body).replace(SIGNER, '');
+  return { description: tidy(body), wording: tidy(bare), location: [...new Set(places)].join(', ') };
 }
 
 /** A scan's time: its wall clock in Bangkok. */
@@ -92,10 +99,10 @@ function scanTime(row: Record<string, unknown>): string {
 
 function projectRow(row: Record<string, unknown>): FlashExpressScan {
   const code = text(row, 'route_action', 64);
-  const { description, location } = flashExpressWording(text(row, 'message', 1000), code);
+  const { description, wording, location } = flashExpressWording(text(row, 'message', 1000), code);
   if (!description) throw new SchemaError(PROVIDER, 'Flash Express returned a scan without wording');
   const time = scanTime(row);
-  const staged = flashExpressStage(code, description);
+  const staged = flashExpressStage(code, wording);
   const event: FlashExpressScan['event'] = {
     time,
     ...(location ? { location } : {}),
@@ -112,13 +119,22 @@ export interface FlashExpressScan {
   at: number;
 }
 
+/** The recipient and who signed, as a Flash tracker's summary gives them. */
+export interface FlashExpressRecipient {
+  name?: string;
+  address?: string;
+  signer?: string;
+}
+
 /**
- * One parcel's answer from its scans, in the reply's order, and the summary's
- * numeric state, which Flash's trackers in Thailand and the Philippines share.
- * A scan repeated on the same clock with the same code, wording and place
- * counts once.
+ * One parcel's answer from its scans, in the reply's order, the summary's
+ * numeric state, which Flash's trackers in Thailand and the Philippines share,
+ * and the recipient. A scan repeated on the same clock with the same code,
+ * wording and place counts once.
  */
-export function flashExpressResult(provider: string, scans: readonly FlashExpressScan[], state: number | undefined): CarrierResult {
+export function flashExpressResult(
+  provider: string, scans: readonly FlashExpressScan[], state: number | undefined, recipient: FlashExpressRecipient = {},
+): CarrierResult {
   const seen = new Set<string>();
   const events: { event: CarrierEvent; at: number; index: number }[] = [];
   for (const { event, at } of scans) {
@@ -146,6 +162,9 @@ export function flashExpressResult(provider: string, scans: readonly FlashExpres
     last_update: newest.time!,
     expected_delivery: null,
     ...(delivery ? { delivered_at: delivery.time! } : {}),
+    ...(recipient.name ? { receiver_name: recipient.name } : {}),
+    ...(recipient.address ? { receiver_address: recipient.address } : {}),
+    ...(stage === 'delivered' && recipient.signer ? { signed_by: recipient.signer } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };
@@ -187,5 +206,9 @@ export function parseFlashExpress(payload: unknown, raw: string): CarrierResult 
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Flash Express returned an invalid scan');
     return projectRow(row);
   });
-  return flashExpressResult(PROVIDER, scans, typeof entry.state === 'number' ? entry.state : undefined);
+  // The tracker names the destination's province, and who signed as the delivery wording shows them.
+  const signed = isRecord(entry.sign_info) ? text(entry.sign_info, 'signer_show', 160) : '';
+  return flashExpressResult(PROVIDER, scans, typeof entry.state === 'number' ? entry.state : undefined, {
+    address: text(entry, 'dst_province_name', 120), signer: signed,
+  });
 }

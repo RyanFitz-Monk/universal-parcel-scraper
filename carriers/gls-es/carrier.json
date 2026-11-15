@@ -88,20 +88,20 @@
       "pickup_point",
       "weight",
       "provider_code",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_address",
+      "signatory",
+      "pickup_code"
     ],
     "discarded": [
       "pickup_point_address",
       "pickup_deadline",
-      "pickup_code",
       "parcel_count",
       "progress_rail",
       "sender_name",
       "customer_reference",
       "origin",
-      "destination",
       "office_contact_details",
-      "recipient_name",
       "recipient_verification",
       "payment_details"
     ],

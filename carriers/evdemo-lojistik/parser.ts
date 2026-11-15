@@ -18,6 +18,9 @@ const HEADINGS = ['TARİH', 'DURUM'];
 // "18.10.2026 - 00:19", once the page's run of spaces before the dash is folded.
 const CLOCK = /^(\d{2})\.(\d{2})\.(\d{4}) - (\d{2}):(\d{2})$/;
 const NUMBER_LABEL = /^Gönderi Takip Numarası:/;
+// The details' labels for the recipient's masked name and the arrival province.
+const RECIPIENT_LABEL = /^Alıcı\s*:$/;
+const PROVINCE_LABEL = /^Varış ili\s*:$/;
 // The tracker's notice for a number it does not know, which it also shows without one.
 const NOT_FOUND = /^Takip numarası hatalı olabilir, lütfen bilgileri kontrol ediniz\.?$/;
 // Firewall and bot-check pages that could stand in for the tracker's own.
@@ -57,9 +60,9 @@ function wallClock(raw: string): string {
  * Each package's newest scan follows in its own table. A number the tracker
  * does not know gets the search form with a notice that it may be wrong.
  *
- * The page must name the whole number asked. The sender's and recipient's
- * masked names, the departure and arrival provinces, the departure date and
- * the packages, named after their contents, are not read.
+ * The page must name the whole number asked. The recipient's masked name and
+ * the arrival province are read; the sender's masked name, the departure
+ * province and date and the packages, named after their contents, are not.
  */
 export function parseEvdemo(html: string, raw: string): CarrierResult {
   const number = normalizeEvdemoNumber(raw);
@@ -77,6 +80,14 @@ export function parseEvdemo(html: string, raw: string): CarrierResult {
   const printed = headers.length === 1 && labels.length === 1 ? clean(labels.children('span').first().text(), 64) : '';
   if (!/^\d{1,40}$/.test(printed)) throw new SchemaError(PROVIDER, 'Evdemo Lojistik did not name the shipment');
   if (printed !== number) throw new IndeterminateError(PROVIDER, 'Evdemo Lojistik answered for another shipment');
+
+  // A detail is the text after its bold label.
+  const detail = (label: RegExp): string => {
+    const cell = $('.kargo-sonuc').children('div').filter((_, element) => label.test(clean($(element).children('strong').first().text(), 40))).first();
+    return cell.length ? clean(cell.clone().children('strong').remove().end().text(), 160) : '';
+  };
+  const receiver = detail(RECIPIENT_LABEL);
+  const province = detail(PROVINCE_LABEL);
 
   // The shipment's table; each package's sits further down, in its own block.
   const tables = $('.tracking-info-detail').children('table');
@@ -119,6 +130,8 @@ export function parseEvdemo(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(province ? { receiver_address: province } : {}),
     events,
   };
 }

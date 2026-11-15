@@ -48,15 +48,15 @@
     ],
     "scraped": [
       "history",
-      "location"
+      "location",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
-      "destination",
       "customer_reference",
       "departure_date",
-      "delivered_at",
-      "signatory"
+      "delivered_at"
     ],
     "unavailable": [
       "provider_code",

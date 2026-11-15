@@ -28,8 +28,9 @@ cross-border e-commerce imports at its KLIA gateway. Its site is fmx.asia.
 - The map stages the wordings seen, where `…` stands for the station a wording names. Other wordings go
   through the shared wording rules, and one they do not read has no stage.
 - The stage bar above the card is not read: no capture shows a step marked on it.
-- The destination town, the shipper's references, the pickup and delivery dates and the signatory are not
-  read. The second reference can show a template expression the page leaks.
+- The card's destination town is the recipient's address and its signatory who signed. The shipper's
+  references and the pickup and delivery dates are not read. The second reference can show a template
+  expression the page leaks.
 
 ## Limitations
 

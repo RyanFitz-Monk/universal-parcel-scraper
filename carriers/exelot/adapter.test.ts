@@ -63,8 +63,8 @@ describe('Exelot HTTP adapter', () => {
     expect(result).not.toHaveProperty('pickup_point');
     expect(result.events!.map((event) => [event.time, event.description, event.location ?? null, event.provider_code, event.stage]))
       .toEqual([
-        // The delivery happens at the recipient's address: its place is not kept.
-        ['2026-03-03T10:47:21Z', 'Delivered', null, '52', 'delivered'],
+        // The delivery happens at the recipient's address: its place is kept as Exelot names it.
+        ['2026-03-03T10:47:21Z', 'Delivered', '"7" Sampleville IL', '52', 'delivered'],
         ['2026-03-03T05:02:33Z', 'Messenger with package out for delivery', 'Exampleton IL', '50', 'out_for_delivery'],
         ['2026-03-02T14:15:00Z', 'Package in sorting center', 'Exampleton IL', '21', 'in_transit'],
         ['2026-03-02T09:30:00Z', 'Package released from customs', 'Testburg IL', '48', 'in_transit'],
@@ -78,9 +78,9 @@ describe('Exelot HTTP adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('local_time' in event))).toBe(true);
   });
 
-  it('keeps no person, contact, address, remark, order, origin district, partner link or scan note', () => {
+  it('keeps no contact, sender address, remark, order, origin district, partner link or scan note', () => {
     const text = JSON.stringify(parseExelot(parcels('delivered'), DELIVERED)) + JSON.stringify(parseExelot(parcels('ready-for-pickup'), PICKUP));
-    for (const kept of ['Dana', '050', 'example.com', 'Sampleville', '"7"', 'noon', 'Samplecounty', 'Sample Couriers', 'couriers.example',
+    for (const kept of ['Dana', '050', 'example.com', 'noon', 'Samplecounty', 'Sample Couriers', 'couriers.example',
       'opaque', 'Flight XX', 'Example Road', 'Synthetic sub text', 'bakery', '31.0000', '09:00', 'homeDelivery', 'pickupPoint']) {
       expect(text, kept).not.toContain(kept);
     }

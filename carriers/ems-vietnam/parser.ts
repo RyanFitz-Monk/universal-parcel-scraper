@@ -46,8 +46,12 @@ const LEGACY_OFFICE = /^\d{6}\s*-\s*(.+)$/;
 const HELPLINE = /\(\s*Đầu mối CSKH[^)]*\)?/gi;
 // The postman the older layout names after the handover: "Đã giao cho bưu tá: name SĐT: phone".
 const POSTMAN = /(bưu tá(?: phát)?)\s*:[\s\S]*$/i;
-// A receiver, a signer or a phone after its label: the rest of the wording goes.
-const PERSON = /\s*[,;.\-–]?\s*(?:(?:người nhận|người ký|ký nhận|điện thoại|s?[đð]t)\s*:|s[đð]t\b)[\s\S]*$/i;
+// A phone after its label: the rest of the wording goes.
+const PHONE_LABEL = /\s*[,;.\-–]?\s*(?:(?:điện thoại|s?[đð]t)\s*:|s[đð]t\b)[\s\S]*$/i;
+// A receiver or a signer after its label, which the wording keeps and its stage does not read.
+const PERSON = /\s*[,;.\-–]?\s*(?:người nhận|người ký|ký nhận)\s*:[\s\S]*$/i;
+// The delivery table's receiver: "Đã phát thành công . Người nhận:()Name. Ghi chú: (note)".
+const RECEIVED_BY = /người nhận\s*:\s*(?:\([^)]*\))?\s*(.+?)\s*(?:\.\s*ghi chú\s*:[\s\S]*)?$/i;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
@@ -64,10 +68,10 @@ function bracketed(value: string, start: number): { inner: string; end: number }
 
 /**
  * A scan's wording, code and office. The wording loses its code, the office
- * and what follows it (the customer-service line), a postman's name, a
- * receiver or signer and phone numbers.
+ * and what follows it (the customer-service line), a postman's name and phone
+ * numbers. `wording` also leaves out a receiver or signer, for the stage.
  */
-export function emsVietnamScanText(raw: string): { code: string; description: string; office: string } {
+export function emsVietnamScanText(raw: string): { code: string; description: string; office: string; wording: string } {
   const value = clean(raw.normalize('NFC'), 1000);
   const code = CODE.exec(value)?.[1] ?? '';
   let rest = code ? value.replace(CODE, '') : value;
@@ -78,9 +82,9 @@ export function emsVietnamScanText(raw: string): { code: string; description: st
     office = clean(inner.replace(/^\s*\d{6}\s*:/, ''), 120);
     rest = rest.slice(0, at);
   }
-  const description = clean(rest.replace(HELPLINE, '').replace(POSTMAN, '$1').replace(PERSON, '').replace(PHONE, ''))
-    .replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
-  return { code, description, office };
+  const trim = (wording: string) => clean(wording).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+  const description = trim(rest.replace(HELPLINE, '').replace(POSTMAN, '$1').replace(PHONE_LABEL, '').replace(PHONE, ''));
+  return { code, description, office, wording: trim(description.replace(PERSON, '')) || description };
 }
 
 /** The wall clock of `NGAY` (day/month/year) and `GIO`, to the second. */
@@ -108,7 +112,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
   const clock = vietnamese
     ? { time: firstOccurrence(DateTime.fromISO(wall, { zone: ZONE })).toISO({ suppressMilliseconds: true })! }
     : { local_time: wall };
-  const staged = emsVietnamStage(scan.code, scan.description);
+  const staged = emsVietnamStage(scan.code, scan.wording);
   const event: CarrierEvent = {
     ...clock,
     ...(office ? { location: office } : {}),
@@ -136,6 +140,15 @@ function country(info: Record<string, unknown>): string | null {
 function weightKg(info: Record<string, unknown>): number | null {
   const grams = cleanScalar(info.KHOI_LUONG, 16);
   return /^\d{1,7}(?:\.\d+)?$/.test(grams) && Number(grams) > 0 ? Number(grams) / 1000 : null;
+}
+
+/** Who took the item, from the newest delivery row or the record's summary that names them. */
+function receivedBy(deliveries: Record<string, unknown>[], info: Record<string, unknown>): string {
+  for (const wording of [...deliveries.map((row) => text(row, 'TRANG_THAI')).reverse(), text(info, 'TRANG_THAI')]) {
+    const name = /phát thành công/i.test(wording) ? RECEIVED_BY.exec(wording)?.[1] : undefined;
+    if (name) return clean(name.replace(PHONE_LABEL, '').replace(PHONE, ''), 160);
+  }
+  return '';
 }
 
 /**
@@ -198,6 +211,9 @@ export function parseEmsVietnam(payload: unknown, raw: string): CarrierResult {
   const abroad = deliveries.some((row) => DATED_CLOCK.test(text(row, 'GIO_TRANG_THAI', 32)));
   const destination = country(info);
   const weight = weightKg(info);
+  const receiver = text(info, 'HO_TEN_NHAN', 160);
+  const address = text(info, 'DIA_CHI_NHAN', 300);
+  const signedBy = receivedBy(deliveries, info);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -208,6 +224,9 @@ export function parseEmsVietnam(payload: unknown, raw: string): CarrierResult {
     ...(delivered ? { delivered_at: delivered } : {}),
     ...(weight ? { weight_kg: weight } : {}),
     ...(destination ? { destination_country: destination } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(abroad || events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

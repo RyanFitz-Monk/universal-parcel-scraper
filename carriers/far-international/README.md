@@ -21,6 +21,8 @@ adapter reads FAR's own results page for its waybills.
 - Older scans pair Chinese wording with its English translation, of which the English is kept.
   Newer scans are English or Chinese, with the last-mile carrier's own wording near the end. They
   are staged by the wording recorded in [statuses.json](statuses.json), then the shared rules.
+  A delivery that names who signed keeps the name in its wording and gives `signed_by`; its
+  stage is read without it.
 - The status above the scans is not read: it can still read 在途 (in transit) under a delivery.
   The delivery date beside it is not read either; `delivered_at` is the delivery scan's instant.
 - The last-mile label is often listed after the parcel reached the departure hub, so it is no

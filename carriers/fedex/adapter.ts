@@ -291,16 +291,33 @@ function holdLocation(nameValue: unknown, addressValue: unknown, residential: bo
   const name = clean(nameValue, 200);
   const address: JsonObject = isRecord(addressValue) ? addressValue : {};
   if (!name || residential || address.residential === true) return '';
+  const lines = streetAndTown(address);
+  return lines ? `${name}\n${lines}` : name;
+}
+
+/**
+ * An address's street lines, then its town: "City, ST 12345" or, without a state or
+ * province, "postcode city". Empty without a street or a town.
+ */
+function streetAndTown(address: JsonObject): string {
   const street = Array.isArray(address.streetLines)
     ? address.streetLines.map((line) => clean(line, 120)).filter(Boolean)
     : [];
   const city = clean(address.city, 80);
-  if (street.length === 0 || !city) return name;
+  if (street.length === 0 || !city) return '';
   const postcode = cleanScalar(address.postalCode, 16);
   // A US state or Canadian province comes before the postcode, after the town.
   const region = clean(address.stateOrProvinceCode, 40);
   const town = region ? `${city}, ${[region, postcode].filter(Boolean).join(' ')}` : [postcode, city].filter(Boolean).join(' ');
-  return [name, street[0], street.slice(1).join(', '), town].filter(Boolean).join('\n');
+  return [street[0], street.slice(1).join(', '), town].filter(Boolean).join('\n');
+}
+
+/** The recipient's address: its street and town, else the town alone, with its state or province. */
+function recipientAddress(address: unknown, city: unknown = undefined): string {
+  const record: JsonObject = isRecord(address) ? address : {};
+  const town = clean(record.city ?? city, 80);
+  const region = clean(record.stateOrProvinceCode, 40);
+  return streetAndTown(record) || (town && region ? `${town}, ${region}` : town);
 }
 
 // FedEx flags a parcel scanned in after the day's cutoff, or dropped off after the
@@ -376,6 +393,10 @@ interface FedExShipment {
   deliveredAt: unknown;
   /** The hold location, whether or not the parcel waits there yet. */
   holdLocation: string;
+  /** The recipient's name and address, and who signed for the parcel. */
+  receiver: string;
+  receiverAddress: string;
+  signedBy: string;
 }
 
 const GENERIC_TRANSIT = 'On the way';
@@ -402,11 +423,10 @@ function shipmentResult(shipment: FedExShipment, number: string): CarrierResult 
     if (!scan.description) continue;
     const stage = fedexScanStage(scan.code, scan.wording);
     const { clock } = scan;
-    // A delivered scan names its signatory; the event keeps the fact, not the name.
     const event: CarrierEvent = {
       ...clock,
       ...(scan.location ? { location: scan.location } : {}),
-      description: stage === 'delivered' ? 'Delivered' : scan.description,
+      description: scan.description,
       ...(scan.code ? { provider_code: scan.code } : {}),
       ...(stage ? { stage } : {}),
     };
@@ -447,7 +467,7 @@ function shipmentResult(shipment: FedExShipment, number: string): CarrierResult 
   return {
     status,
     ...(stage ? { current_stage: stage } : {}),
-    last_status_text: delivered ? 'Delivered' : statusText,
+    last_status_text: statusText,
     last_update: newest?.time || null,
     // A newest scan dated by its day alone has no instant, only that day.
     ...(!newest?.time && typeof newest?.local_time === 'string' ? { last_update_local: newest.local_time } : {}),
@@ -457,6 +477,9 @@ function shipmentResult(shipment: FedExShipment, number: string): CarrierResult 
     ...(delivered && deliveredAt(shipment.deliveredAt)
       ? { delivered_at: deliveredAt(shipment.deliveredAt) } : {}),
     ...(pickupPoint ? { pickup_point: pickupPoint } : {}),
+    ...(shipment.receiver ? { receiver_name: shipment.receiver } : {}),
+    ...(shipment.receiverAddress ? { receiver_address: shipment.receiverAddress } : {}),
+    ...(delivered && shipment.signedBy ? { signed_by: shipment.signedBy } : {}),
     ...(postal ? { delivery_carrier: 'usps', delivery_tracking_number: postal } : {}),
     ...(trimmed.length === 0 ? { summary_only: true } : {}),
     events: trimmed,
@@ -519,6 +542,9 @@ export function parseFedExTrackingResponse(payload: unknown, trackingNumber: str
     estimate: { expected_delivery: expectedDelivery(shipment.estDeliveryDt) },
     deliveredAt: shipment.actDeliveryDt,
     holdLocation: holdLocation(shipment.halCmpnyName, shipment.halAddress, shipment.halresidential === true),
+    receiver: clean(shipment.recipientName, 160) || clean(shipment.recipientCmpnyName, 160),
+    receiverAddress: recipientAddress(shipment.recipientAddress, shipment.recipientCity),
+    signedBy: clean(shipment.receivedByNm, 160),
   }, number);
 }
 
@@ -549,8 +575,8 @@ function apiEstimate(result: JsonObject): Estimate {
 
 /**
  * The official Track API's answer (`POST /track/v1/trackingnumbers`). It reads
- * the scans, the latest status, the delivery dates and the hold location; the
- * recipient, shipper, signatory, package and service blocks are never read.
+ * the scans, the latest status, the delivery dates, the hold location, the
+ * recipient and who signed; the shipper, package and service blocks are never read.
  */
 export function parseFedExApiResponse(payload: unknown, trackingNumber: string, readAt = Date.now()): CarrierResult {
   const number = normalizeFedExTrackingNumber(trackingNumber);
@@ -583,6 +609,9 @@ export function parseFedExApiResponse(payload: unknown, trackingNumber: string, 
     ? latest.ancillaryDetails.filter(isRecord).map((detail) => clean(detail.reasonDescription)).filter(Boolean) : [];
   const hold: JsonObject = isRecord(result.holdAtLocation) ? result.holdAtLocation : {};
   const held: JsonObject = isRecord(hold.locationContactAndAddress) ? hold.locationContactAndAddress : {};
+  const recipient: JsonObject = isRecord(result.recipientInformation) ? result.recipientInformation : {};
+  const contact: JsonObject = isRecord(recipient.contact) ? recipient.contact : {};
+  const delivery: JsonObject = isRecord(result.deliveryDetails) ? result.deliveryDetails : {};
   return shipmentResult({
     scans: scans.slice(0, MAX_EVENTS_TO_INSPECT).map((raw) => ({
       description: scanDescription(clean(raw.eventDescription), clean(raw.exceptionDescription)),
@@ -598,6 +627,9 @@ export function parseFedExApiResponse(payload: unknown, trackingNumber: string, 
     estimate: apiEstimate(result),
     deliveredAt: apiDate(result, 'ACTUAL_DELIVERY'),
     holdLocation: holdLocation(isRecord(held.contact) ? held.contact.companyName : undefined, held.address, false),
+    receiver: clean(contact.personName, 160) || clean(contact.companyName, 160),
+    receiverAddress: recipientAddress(recipient.address),
+    signedBy: clean(delivery.signedByName, 160) || clean(delivery.receivedByName, 160),
   }, number);
 }
 

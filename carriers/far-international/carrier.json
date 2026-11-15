@@ -44,7 +44,8 @@
       "location",
       "offset_timestamps",
       "delivered_at",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -52,7 +53,8 @@
       "location",
       "offset_timestamps",
       "delivered_at",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": [

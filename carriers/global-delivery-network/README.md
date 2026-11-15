@@ -17,8 +17,8 @@ newest first. The parcel number on the page must be the one asked.
   such as "Handed over to NZ Post", is in transit.
 - The scans give a wall clock without a zone, and a place as a town and a country code
   ("AUCKLAND - NZ"), read as "AUCKLAND, NZ". A scan without a place takes its neighbours' zone.
-- The destination is the address's country. The recipient, the address, the weight and the
-  partner's reference are not kept.
+- The destination is the address's country. The recipient's name and address are read from
+  the page's fields; the weight and the partner's reference are not kept.
 
 ## Limitations
 

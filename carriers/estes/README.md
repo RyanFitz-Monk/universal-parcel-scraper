@@ -47,9 +47,10 @@ not asked for them; Estes tracking runs when the caller names the carrier.
 - The weight is the shipment's total in pounds, given in kilograms. The estimate is a day or a
   period of days and is dropped once the freight is delivered or returned. The delivery time is
   the shipment's own.
-- The reply also carries the consignee and shipper, the person who signed, the driver, the
+- The consignee's name and address come from the delivery stop, or the consignee's town from the
+  shipment before there is one, and `receivedBy` is who signed. The shipper, the driver, the
   appointment, references, documents, the pieces and cube, the terminals' streets, phones and
-  emails, and coordinates from the drivers' handhelds. None of them is read.
+  emails, and coordinates from the drivers' handhelds are not read.
 
 ## Limitations
 

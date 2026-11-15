@@ -39,11 +39,11 @@
       "piece_count"
     ],
     "scraped": [
-      "history"
+      "history",
+      "signatory"
     ],
     "discarded": [
       "driver_name",
-      "signatory",
       "signature",
       "piece_count"
     ],

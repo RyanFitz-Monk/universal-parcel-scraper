@@ -4,7 +4,7 @@ import { isFreightwaysGlobalReference } from '../../core/detection/freightwaysGl
 import { normalizeTrackingNumber } from '../../core/detection/normalize.js';
 import { InvalidInputError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
-import { languageStageStatus } from '../../core/status/index.js';
+import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { clean } from '../../core/transport/text.js';
 import { freightwaysGlobalStage } from './status.js';
 
@@ -20,14 +20,16 @@ export function freightwaysGlobalUrl(number: string): string {
   const value = normalizeFreightwaysGlobalNumber(number).replace(/^(\d+)(NZC\d{9})$/, '$1-$2');
   return `https://track.fgmailconnect.co.nz/?${new URLSearchParams({ id: value })}`;
 }
-function wording(value: string): string {
-  const text = clean(value, 1000).split(/https?:\/\/|\b(?:recipient|consignee|signed by|phone)\s*[:：]?/i, 1)[0]!.trim();
+/** A scan's wording up to a link or phone number, and the part before who received or signed, which stages it. */
+function wording(value: string): { description: string; staged: string } {
+  const text = clean(value, 1000).split(/https?:\/\/|\bphone\s*[:：]?/i, 1)[0]!.trim();
   if (!text || /[<>@]|\d{7,}/.test(text)) throw new SchemaError(PROVIDER, 'Freightways Global returned no logistics description');
-  return text;
+  const bare = text.split(/\b(?:recipient|consignee|signed by)\s*[:：]?/i, 1)[0]!.trim();
+  return { description: text, staged: bare || text };
 }
 function place(value: string): string {
   const text = clean(value, 250);
-  return /[<>@]|https?:|\d{5,}|\b(?:phone|street|road|avenue|apartment|address)\b/i.test(text) ? '' : text;
+  return /[<>@]|https?:|\d{7,}|\bphone\b/i.test(text) ? '' : text;
 }
 export function parseFreightwaysGlobal(html: string, raw: string): CarrierResult {
   const number = normalizeFreightwaysGlobalNumber(raw), $ = load(html); $('script,style,template').remove();
@@ -80,7 +82,8 @@ export function parseFreightwaysGlobal(html: string, raw: string): CarrierResult
     if (++scans > 500 || !day || !cells.eq(1).hasClass('time')) throw new SchemaError(PROVIDER, 'Freightways Global returned an invalid scan');
     const time = DateTime.fromFormat(`${day} ${clean(cells.eq(1).text(), 32)}`, 'yyyy-MM-dd h:mm a', { locale: 'en', zone: 'UTC' });
     if (!time.isValid) throw new SchemaError(PROVIDER, 'Freightways Global returned an invalid local clock');
-    const description = wording(cells.eq(2).text()), stage = freightwaysGlobalStage(null, description), location = place(cells.eq(3).text());
+    const { description, staged } = wording(cells.eq(2).text());
+    const stage = freightwaysGlobalStage(null, staged), location = place(cells.eq(3).text());
     clearance ||= description === 'Customs cleared in NZ'; handover ||= description === 'Handed over to final mile carrier.';
     const event: CarrierEvent = { local_time: time.toFormat("yyyy-MM-dd'T'HH:mm:ss"), description,
       ...(location ? { location } : {}), ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
@@ -88,7 +91,7 @@ export function parseFreightwaysGlobal(html: string, raw: string): CarrierResult
   }
   if (!events.length) throw new NoHistoryError(PROVIDER, 'Freightways Global returned no dated history');
   if (!clearance || !handover) throw new NoHistoryError(PROVIDER, 'The portal did not show its own inbound forwarding leg', { reason: 'unsupported_service' });
-  const newest = events[0]!, stage = freightwaysGlobalStage(null, newest.description!);
+  const newest = events[0]!, stage = newest.stage as Stage | undefined;
   const service = clean(load(fact('Service')).text(), 80), mass = clean(load(fact('Total Weight')).text(), 40);
   if (!service || /[<>@]|https?:|\d{7,}/.test(service)) throw new SchemaError(PROVIDER, 'Freightways Global returned an invalid service');
   const weight = /^(\d+(?:\.\d+)?) Kg$/.exec(mass);

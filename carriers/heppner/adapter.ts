@@ -9,11 +9,11 @@
  * the credential we sent before it is used, so a portal that answered for a
  * different shipment cannot redirect the lookup.
  *
- * Privacy: the detail payload also carries shipment parties, references,
- * merchandise descriptions, appointment tokens and depot addresses. `parse()`
- * builds events from an explicit allowlist (time, our own description, stage,
- * event code) and keeps no location at all, because the only location field
- * the endpoint offers is the delivery address.
+ * The detail payload also carries shipment parties, references, merchandise
+ * descriptions, appointment tokens and an address on some scans. `parse()`
+ * reads the recipient's name and the pickup code, and builds events from an
+ * explicit allowlist (time, our own description, stage, event code) with no
+ * location, because the scans' only location field is an address, not a depot.
  */
 import { Buffer } from 'node:buffer';
 import { DateTime } from 'luxon';
@@ -223,6 +223,8 @@ export function parseHeppnerTrackingResponse(
   if (parsed.length === 0) throw new SchemaError('Heppner', 'Heppner did not return tracking history');
   const latest = parsed[0]!;
   const latestKnown = parsed.find((item) => item.status !== 'unknown');
+  const receiver = cleanScalar(matching.customer_name, 160);
+  const pickupCode = cleanScalar(matching.pickup_code, 64);
   return {
     status: latest.status !== 'unknown' ? latest.status : latestKnown?.status ?? 'unknown',
     current_stage: latest.status !== 'unknown'
@@ -231,6 +233,8 @@ export function parseHeppnerTrackingResponse(
     last_status_text: latest.event.description ?? 'Tracking information received',
     last_update: latest.event.time ?? null,
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(pickupCode ? { pickup_code: pickupCode } : {}),
     timezone: 'Europe/Paris',
     events: parsed.map(({ event }) => event),
   };

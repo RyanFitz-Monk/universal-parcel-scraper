@@ -45,10 +45,10 @@ recipient's postcode, through the public search behind the Track & Trace page on
 - The estimate is the estimated arrival at the destination, as its day in Vienna, which is what
   the page shows. The actual delivery time and arrivals at a port or airport are not estimates.
   It is cleared once the shipment is delivered or returned.
-- The weight in kilograms and the shipment type, under the page's names, are kept. The sender's
-  and recipient's postcodes and towns, references, customer numbers, partner references,
-  remarks, CO2 figures, documents, the internal German wording and warehouse events are never
-  read.
+- The weight in kilograms and the shipment type, under the page's names, are kept, and the
+  consignee's postcode and town become the recipient's address. The sender's postcode and town,
+  references, customer numbers, partner references, remarks, CO2 figures, documents, the
+  internal German wording and warehouse events are never read.
 
 ## Numbers
 

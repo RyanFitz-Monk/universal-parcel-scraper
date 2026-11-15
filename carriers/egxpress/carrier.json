@@ -59,14 +59,16 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "origin",
       "destination",
       "weight",
       "parcel_count",
-      "recipient_details",
       "sender_details",
       "customer_reference",
       "cod_amount",

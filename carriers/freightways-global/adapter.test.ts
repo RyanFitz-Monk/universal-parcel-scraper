@@ -36,13 +36,17 @@ describe('Freightways Global inbound history', () => {
     expect(detectCarrierMatch(NUMBER).carrier).toBe('dai-post');
     expect(recognitionCandidates(NUMBER).map(item => item.carrier)).not.toContain('freightways-global');
   });
-  it('validates beyond the projection cap and preserves unknown states without copying contacts', () => {
+  it('validates beyond the projection cap, keeps the recipient a scan names and stages it without them', () => {
     const extra = Array.from({ length: 101 }, (_, i) => `<tr><td></td><td class="time">1:00 am</td><td>Processing ${i}</td><td></td><td></td></tr>`).join('');
     const html = fixture().replace('</tbody>', extra + '</tbody>');
     expect(parseFreightwaysGlobal(html, NUMBER)).toMatchObject({ history_truncated: true, events: expect.any(Array) });
     expect(parseFreightwaysGlobal(html, NUMBER).events).toHaveLength(100);
     expect(() => parseFreightwaysGlobal(html.replace('Processing 100', 'PRIVATE@invalid.example'), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     const changed = fixture().replace('Delivered', 'Processing update. Recipient: PRIVATE');
-    const result = parseFreightwaysGlobal(changed, NUMBER); expect(result.status).toBe('unknown'); expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    const result = parseFreightwaysGlobal(changed, NUMBER); expect(result.status).toBe('unknown');
+    expect(result.last_status_text).toBe('Processing update. Recipient: PRIVATE');
+    const signed = parseFreightwaysGlobal(fixture().replace('Delivered', 'Delivered Signed by: SAMPLE PERSON'), NUMBER);
+    expect(signed).toMatchObject({ status: 'delivered', last_status_text: 'Delivered Signed by: SAMPLE PERSON' });
+    expect(parseFreightwaysGlobal(fixture().replace('Blenheim', '1 Sample Road, Blenheim'), NUMBER).events![0]!.location).toBe('1 Sample Road, Blenheim');
   });
 });

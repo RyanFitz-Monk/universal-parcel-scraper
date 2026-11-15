@@ -41,7 +41,8 @@
       "history",
       "location",
       "delivered_at",
-      "eta"
+      "eta",
+      "delivery_detail"
     ],
     "scraped": [
       "status",
@@ -49,10 +50,10 @@
       "location",
       "delivered_at",
       "service_name",
-      "eta"
+      "eta",
+      "delivery_detail"
     ],
     "discarded": [
-      "delivery_detail",
       "proof_images",
       "coordinates",
       "departments",

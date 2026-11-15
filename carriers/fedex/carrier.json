@@ -44,7 +44,10 @@
       "eta",
       "location",
       "pickup_point",
-      "delivery_partner"
+      "delivery_partner",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -53,12 +56,13 @@
       "location",
       "pickup_point",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
-      "recipient name and address",
       "shipper details",
-      "signature",
       "weight",
       "dimensions",
       "service options"

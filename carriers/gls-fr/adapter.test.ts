@@ -262,7 +262,7 @@ describe('GLS France status mapping', () => {
 });
 
 describe('GLS France response normalization', () => {
-  it('sorts and normalizes safe events without retaining recipient or address data', () => {
+  it('sorts and normalizes events and reads the recipient, the address and the signatory, without contacts', () => {
     const result = parseGLSFranceTrackingResponse(deliveredFixture(), TRACKING_NUMBER);
 
     expect(result).toMatchObject({
@@ -287,13 +287,14 @@ describe('GLS France response normalization', () => {
       stage: 'registered',
       provider_code: 'CON',
     }]);
+    expect(result).toMatchObject({ receiver_name: 'Private Company', receiver_address: '10 Private Street\n99999 PRIVATE TOWN',
+      signed_by: 'Private Recipient' });
     const serialized = JSON.stringify(result);
     for (const privateValue of [
-      'Private Recipient',
       'Private delivery instruction',
-      'Private Company',
-      'Private Street',
       'private@example.test',
+      '+33000000000',
+      'private reference',
       'private address code',
     ]) {
       expect(serialized).not.toContain(privateValue);
@@ -565,7 +566,9 @@ describe('GLS France pickup point', () => {
       redirect: 'error',
       headers: expect.objectContaining({ Origin: 'https://moncolis.gls-france.com' }),
     });
-    expect(JSON.stringify(result)).not.toMatch(/MONDAY|09:00|0\.000000|Private|private/);
+    expect(result).toMatchObject({ receiver_name: 'Private Company' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/MONDAY|09:00|0\.000000|Private (?:Recipient|delivery)|private/);
 
     const collected = waitingFixture();
     collected.colis.statutColis = 'LIV';

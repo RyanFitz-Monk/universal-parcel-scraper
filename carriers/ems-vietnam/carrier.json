@@ -59,7 +59,8 @@
       "customer_reference",
       "office_addresses",
       "contact_details",
-      "failed_delivery_reason"
+      "failed_delivery_reason",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -68,7 +69,10 @@
       "provider_code",
       "delivered_at",
       "weight",
-      "destination_country"
+      "destination_country",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "origin_country",
@@ -76,8 +80,6 @@
       "delivery_office",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "customer_reference",
       "office_addresses",
       "contact_details",

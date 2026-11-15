@@ -33,9 +33,11 @@ Home agents that take in parcels. Tracked through the lookup its tracking page m
   parcel can be reopened and delivered, and calls and reminders can follow a delivery.
 - The wording ends with the scan's district and province, each in 【】, which become the
   location. Sites are Flash's own codes and names inside the wording.
-- The delivery wording names who signed, which the adapter removes, along with phone numbers
-  and the old and new values of changed details. The reply's courier names and phones, the
-  branch phones, the call list, the signer and the delivery photos are not kept.
+- The delivery wording names who signed, and a change of details gives the old and new
+  values. Both stay in the description and are left out when the scan is staged. Phone
+  numbers are removed. Who signed comes from the summary's `signer_show` and the recipient's
+  address is the destination province. The courier names and phones, the branch phones, the
+  call list and the delivery photos are not kept.
 - Some histories use newer wording, whose scans carry no state of their own. The codes are the
   same.
 

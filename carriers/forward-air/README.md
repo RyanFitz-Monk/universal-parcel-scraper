@@ -39,9 +39,9 @@ Tracked through the lookup its tracking page makes.
   freight is due at the destination station. The delivery instant is the delivery scan's. The
   weight is kept when the reply gives it in pounds.
 - A scan's location is its station code, such as an airport's, as the page shows it.
-- The page shows who recorded each scan as its signatory; the reply also names the consignee's
-  signer, the paying customer's account and the customer's reference. None of them is read, nor
-  are the manifest numbers and piece counts.
+- The consignee's signer, `PodSignedBy`, is who signed for a delivered shipment. The page also
+  shows who recorded each scan as its signatory, which is not read, nor are the paying
+  customer's account, the customer's reference, the manifest numbers and piece counts.
 
 ## Limitations
 

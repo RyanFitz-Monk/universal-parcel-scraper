@@ -2,7 +2,7 @@
 
 Each file follows the shape of the reply `POST track/v2/track-shipments` gives: `output.packages`
 with each shipment's summary, parties and scans, newest first, trimmed to the fields the adapter
-reads and the personal ones it must leave behind. PRO numbers, towns, parties, references,
+reads and the ones it leaves behind. PRO numbers, towns, parties, references,
 coordinates and clocks are invented.
 
 - `in-transit.json`: a shipment at its delivering terminal, with an estimated day.

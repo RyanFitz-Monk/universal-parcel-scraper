@@ -18,6 +18,9 @@ const NUMBER = /^FB\d{16}$/;
 // The tracker's answer for an invoice it does not know, or no longer keeps.
 const UNKNOWN = /alert\(\s*'It is not a valid FASTBOX invoice number\./;
 const INFO_COLUMNS = ['Destination Country', 'Domestic Invoice No', 'Shipping Company', 'Departed From'];
+// The recipient's columns after those, spelled as the page spells them.
+const RECIPIENT_COLUMN = /^Rec(?:ie|ei)pient$/i;
+const ADDRESS_COLUMN = /^Rec(?:ie|ei)pient['’]s Address$/i;
 const EVENT_COLUMNS = 'DATE TIME|STATUS|Location|Shipping|Detail';
 const WALL_CLOCK = /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})$/;
 // Fastbox's warehouse and Korea Post date their rows in Korea.
@@ -81,7 +84,7 @@ function handoff(company: string, invoice: string): Pick<CarrierResult, 'deliver
  * The page `fastbox.co.kr/DHUB/tracking.php?fb_invoice_no={number}` answers,
  * with the invoice in its search form. A known invoice has a shipment table
  * (destination, the partner's domestic invoice and name, the origin, then the
- * recipient's name and address, which are never read) and a table of rows,
+ * recipient's masked name and address) and a table of rows,
  * oldest first: Fastbox's own steps, then the partner's scans, relayed with
  * the platform's status tag. An invoice the tracker does not know, or no longer
  * keeps, gets the form alone and an alert.
@@ -101,10 +104,14 @@ export function parseFastbox(html: string, raw: string): CarrierResult {
   if (info.length !== 1 || rows.length !== 1) invalid('Fastbox returned a page the adapter does not know');
   const columns = headings($, info);
   if (INFO_COLUMNS.some((column, index) => columns[index] !== column)) invalid('Fastbox returned a shipment table the adapter does not know');
-  // The shipment's first four cells only: the recipient's follow.
-  const shipment = cellsOf($, info.find('tbody > tr').first().get(0)!).slice(0, INFO_COLUMNS.length)
-    .map((_, cell) => clean($(cell).text(), 120)).get();
-  const [country = '', invoice = '', company = '', departed = ''] = shipment;
+  const cells = cellsOf($, info.find('tbody > tr').first().get(0)!).map((_, cell) => clean($(cell).text(), 300)).get();
+  const [country = '', invoice = '', company = '', departed = ''] = cells.slice(0, INFO_COLUMNS.length).map((cell) => cell.slice(0, 120));
+  const recipient = (heading: RegExp) => {
+    const index = columns.findIndex((column) => heading.test(column));
+    return index >= INFO_COLUMNS.length ? cells[index] ?? '' : '';
+  };
+  const receiver = recipient(RECIPIENT_COLUMN).slice(0, 160);
+  const address = recipient(ADDRESS_COLUMN);
 
   const lines = rows.find('tbody > tr').toArray();
   if (lines.length > MAX_ROWS) invalid('Fastbox returned an oversized history');
@@ -149,6 +156,8 @@ export function parseFastbox(html: string, raw: string): CarrierResult {
     ...(origin ? { origin_country: origin } : {}),
     ...(destination ? { destination_country: destination } : {}),
     ...handoff(company, invoice),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -34,10 +34,11 @@ describe('Evdemo Lojistik HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the shipment’s scans as wall clocks, newest first, staged by their wording, and nothing about the people or the packages', () => {
+  it('keeps the shipment’s scans as wall clocks, newest first, staged by their wording, with the recipient and nothing about the sender or the packages', () => {
     const result = parseEvdemo(text('delivered.html'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Kargonuzu Teslim Ettik', last_update: null, last_update_local: '2026-03-14T16:27:00', expected_delivery: null });
+      last_status_text: 'Kargonuzu Teslim Ettik', last_update: null, last_update_local: '2026-03-14T16:27:00', expected_delivery: null,
+      receiver_name: 'Ör*****ek', receiver_address: 'Sample Province' });
     // The row the page lists twice is kept once.
     expect(result.events!.map((event) => [event.local_time, event.description, event.stage])).toEqual([
       ['2026-03-14T16:27:00', 'Kargonuzu Teslim Ettik', 'delivered'],
@@ -50,7 +51,7 @@ describe('Evdemo Lojistik HTTP adapter', () => {
       ['2026-03-07T10:30:00', 'Gönderi Talebiniz Oluşturuldu', 'registered'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.location === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SA\*|Ör\*|Örnekşehir|Sample Province|SAMPLE WARDROBE|koli/);
+    expect(JSON.stringify(result)).not.toMatch(/SA\*|Örnekşehir|SAMPLE WARDROBE|koli/);
   });
 
   it('reads a parcel on its way back to the sender and then returned', () => {
@@ -65,7 +66,8 @@ describe('Evdemo Lojistik HTTP adapter', () => {
   it('reads the older layout, with the rail’s labels and without a headline', () => {
     const result = parseEvdemo(text('in-transit.html'), OTHER);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Taşıma Durumunda', last_update_local: '2026-01-15T11:38:00' });
+      last_status_text: 'Taşıma Durumunda', last_update_local: '2026-01-15T11:38:00', receiver_name: 'Ex**********le',
+      receiver_address: 'Sample Province' });
     expect(result.events!.map((event) => [event.local_time, event.description, event.stage])).toEqual([
       ['2026-01-15T11:38:00', 'Taşıma Durumunda', 'in_transit'],
       ['2026-01-14T14:24:00', 'Çıkış Dağıtım Merkezinde', 'in_transit'],

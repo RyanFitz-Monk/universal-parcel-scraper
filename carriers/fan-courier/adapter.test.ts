@@ -12,10 +12,10 @@ const fixture = (name = 'delivered') => JSON.parse(readFileSync(new URL(`./fixtu
 const environment = (fetcher: typeof fetch) => ({ fetcher, trawl: null, browserExecutablePath: null, recorder: NOOP_RECORDER, env: {} });
 
 describe('FAN Courier events', () => {
-  it('reads coded events newest first on local clocks, up to the delivery, without private detail', () => {
+  it('reads coded events newest first on local clocks, up to the delivery, with who signed and without other private detail', () => {
     const result = normalizeCarrierResult(parseFanCourier(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered',
-      last_update: null, last_update_local: '2026-01-07T14:05:51' });
+      last_update: null, last_update_local: '2026-01-07T14:05:51', signed_by: 'P****E N***E' });
     // The tracker hides the warehouse scan after the delivery.
     expect(result.events).toHaveLength(10);
     expect(result.events?.[0]).toEqual({ description: 'Delivered', provider_code: 'S2', local_time: '2026-01-07T14:05:51',
@@ -25,7 +25,7 @@ describe('FAN Courier events', () => {
     expect(result.events?.[5]).toMatchObject({ provider_code: 'C1', stage: 'out_for_delivery' });
     expect(result.events?.at(-1)).toMatchObject({ provider_code: 'C0', stage: 'accepted', location: 'Exampleville' });
     expect(result.events?.every(event => !('time' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|P\*{4}E|4000000000099|weight|dimensions|confirmation|payment/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|4000000000099|weight|dimensions|confirmation|payment/);
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     expect(metadata.capabilities).toEqual(['history', 'location', 'provider_code']);
     expect(metadata.tracking).toMatchObject({ adapter: 'fan-courier', steps: ['direct'], localClocks: true });
@@ -38,6 +38,7 @@ describe('FAN Courier events', () => {
     expect(result.events?.[1]).toMatchObject({ provider_code: 'H17', stage: 'in_transit' });
     expect(result.events?.[2]).toMatchObject({ provider_code: 'S6', stage: 'exception' });
     expect(JSON.stringify(result)).not.toContain('4000000000058');
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('leaves a code the map does not know without a stage', () => {

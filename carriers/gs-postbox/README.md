@@ -36,8 +36,9 @@ number. Tracked through the page its tracking form opens.
   knows its name.
 - The page adds "했습니다." to most wordings when it shows them. The wording is kept as the data
   gives it.
-- The sender's and the recipient's names, which the page shows partly masked, their masked
-  phones and addresses, and the goods are not read.
+- The recipient's name is read as the page shows it, partly masked, and so is their address
+  when the page shows more of it than asterisks. The sender, the masked phones and the goods
+  are not read.
 
 ## Limitations
 

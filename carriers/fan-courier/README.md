@@ -41,8 +41,8 @@ FAN Courier for them. The adapter refuses any other shape without a request.
   an AWB of its own, which the page shows and the adapter does not follow.
 - The page hides the events after the last delivery, and so does the adapter.
 - Clocks carry no offset and stay local wall times, read in the catalog zone.
-- The contents, weight, dimensions, payment date, related AWBs and the masked name of the
-  person who signed are never read.
+- The masked name of the person who signed a delivery is `signed_by`. The contents, weight,
+  dimensions, payment date and related AWBs are never read.
 - Recognition asks the tracker and knows an AWB when it returns events.
 
 ## Links

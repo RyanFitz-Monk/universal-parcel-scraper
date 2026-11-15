@@ -51,13 +51,13 @@ describe('GoGo Xpress HTTP adapter', () => {
   it('reads a delivered parcel newest first at Manila’s offset, with the hub that scanned it', () => {
     const result = parseGogoXpress(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: '2026-03-04T15:42:10+08:00', expected_delivery: null,
-      delivered_at: '2026-03-04T15:42:10+08:00' });
+      last_status_text: 'Delivered: Parcel received by Consignee Sample Person', last_update: '2026-03-04T15:42:10+08:00',
+      expected_delivery: null, delivered_at: '2026-03-04T15:42:10+08:00' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null, event.description])).toEqual([
-      ['2026-03-04T15:42:10+08:00', 'delivered', 'delivered', null, 'Delivered'],
+      ['2026-03-04T15:42:10+08:00', 'delivered', 'delivered', null, 'Delivered: Parcel received by Consignee Sample Person'],
       ['2026-03-04T13:05:44+08:00', 'out_for_delivery', 'out_for_delivery', null, 'Out for delivery'],
-      // The partner's relayed wording names the person met, so only the status stays.
-      ['2026-03-04T11:20:00+08:00', 'failed_delivery', 'failed_attempt', null, 'Failed delivery'],
+      // The partner's relayed wording names the person met, and stays.
+      ['2026-03-04T11:20:00+08:00', 'failed_delivery', 'failed_attempt', null, 'Failed delivery: POSTED STATUS : CONSIGNEE OUT ASPER SAMPLE PERSON'],
       ['2026-03-04T07:55:18+08:00', 'out_for_delivery', 'out_for_delivery', null, 'Out for delivery'],
       // A partner's scan takes the clock it happened at, not the later one GoGo Xpress recorded it at.
       ['2026-03-04T00:40:31+08:00', 'in_transit', 'in_transit', null, 'In transit: FORWARDED TO SAMPLE DELIVERY TEAM'],
@@ -76,9 +76,9 @@ describe('GoGo Xpress HTTP adapter', () => {
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && event.local_time === undefined)).toBe(true);
   });
 
-  it('keeps no rider, person met, proof of delivery, item or cash to collect', () => {
+  it('keeps no rider, phone, proof of delivery, item or cash to collect', () => {
     const result = JSON.stringify([parseGogoXpress(fixture('delivered'), DELIVERED), parseGogoXpress(fixture('in-transit'), IN_TRANSIT)]);
-    expect(result).not.toMatch(/Sample (?:Rider|Courier|Person|Item|Gadget)|0900000000|0917|example\.invalid|450|1299|POSTED|ASPER|Consignee|New pickup date|<br/i);
+    expect(result).not.toMatch(/Sample (?:Rider|Courier|Item|Gadget)|0900000000|0917|example\.invalid|450|1299|New pickup date|<br/i);
   });
 
   it('reads a parcel on its way with its estimate, once per repeated scan, with the carrier’s masked remark', async () => {
@@ -174,6 +174,7 @@ describe('GoGo Xpress HTTP adapter', () => {
     const fallback = parseGogoXpress(changed('delivered', (shipment) => {
       shipment.events.booked![0]!.status_updated_at = null;
       shipment.events.delivered![0]!.status_name = null;
+      shipment.events.delivered![0]!.remarks = null;
     }), DELIVERED);
     expect(fallback.events!.at(-1)).toMatchObject({ time: '2026-03-02T09:05:11+08:00' });
     expect(fallback.events![0]).toMatchObject({ description: 'Delivered' });
@@ -201,9 +202,11 @@ describe('GoGo Xpress HTTP adapter', () => {
     await expect(lookup(() => reply('', { status: 503 }))).rejects.toMatchObject({ kind: 'maintenance' });
   });
 
-  it('drops who took, refused or reported the parcel, and phone numbers, from a remark', () => {
-    expect(gogoXpressRemark('delivered', 'Parcel received by Authorized Receiver Sample')).toBe('');
-    expect(gogoXpressRemark('failed_delivery', 'POSTED STATUS : CONSIGNEE OUT ASPER SAMPLE PERSON /')).toBe('');
+  it('keeps who took or refused the parcel, and drops the staff who reported it and phone numbers, from a remark', () => {
+    expect(gogoXpressRemark('delivered', 'Parcel received by Authorized Receiver Sample')).toBe('Parcel received by Authorized Receiver Sample');
+    expect(gogoXpressRemark('failed_delivery', 'POSTED STATUS : CONSIGNEE OUT ASPER SAMPLE PERSON /'))
+      .toBe('POSTED STATUS : CONSIGNEE OUT ASPER SAMPLE PERSON');
+    expect(gogoXpressRemark('returned', 'Parcel received by Shipper Sample Person')).toBe('');
     // The page's masked wording replaces the remark, and stays.
     expect(gogoXpressRemark('failed_delivery', 'POSTED STATUS : CONSIGNEE OUT ASPER SAMPLE PERSON /', 'Delivery unsuccessful due to: recipient unavailable'))
       .toBe('Delivery unsuccessful due to: recipient unavailable');

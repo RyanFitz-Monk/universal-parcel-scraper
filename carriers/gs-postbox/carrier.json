@@ -66,11 +66,11 @@
       "delivered_at",
       "pickup_point",
       "service_name",
-      "delivery_partner"
+      "delivery_partner",
+      "recipient_name"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
       "order_contents"
     ],
     "unavailable": [

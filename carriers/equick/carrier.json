@@ -45,14 +45,16 @@
       "status",
       "history",
       "location",
-      "destination_country"
+      "destination_country",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
       "destination_country",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": [

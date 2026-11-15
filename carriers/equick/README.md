@@ -32,8 +32,9 @@ delivers them. Tracked through the lookup its tracking page makes.
 - Scans carry the delivering carrier's number in `destinationWBNo` once Equick has handed the
   parcel over; it becomes the delivery tracking number. The reply does not name that carrier,
   so there is no delivery carrier.
-- Scan wordings lose who signed for the parcel and phone numbers. The destination country is
-  the scans' `traceCountry`.
+- Scan wordings lose phone numbers. A delivery keeps who signed for the parcel, which is also
+  `signed_by`; the stage is read without it. The destination country is the scans'
+  `traceCountry`.
 
 ## Limitations
 

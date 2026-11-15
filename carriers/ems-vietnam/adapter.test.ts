@@ -52,11 +52,14 @@ describe('EMS Vietnam HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history on Vietnam’s clock, without the receiver, the helpline or the notes’ stage', () => {
+  it('reads a delivered history on Vietnam’s clock, with the recipient’s address and receiver, without the helpline or the notes’ stage', () => {
     const result = parseEmsVietnam(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Đã thu tiền bưu tá', last_update: '2026-05-07T20:09:28+07:00', expected_delivery: null,
-      delivered_at: '2026-05-07T10:30:33+07:00', weight_kg: 0.25, destination_country: 'VN' });
+      delivered_at: '2026-05-07T10:30:33+07:00', weight_kg: 0.25, destination_country: 'VN',
+      receiver_address: 'Phường Mẫu Ba - Thành phố Mẫu B - Thành phố Mẫu B', signed_by: 'Người Nhận Mẫu' });
+    // The record leaves the recipient's name empty.
+    expect(result).not.toHaveProperty('receiver_name');
     expect(result).not.toHaveProperty('last_update_local');
     expect(result).not.toHaveProperty('history_truncated');
     // The repeated arrival is kept once.
@@ -80,7 +83,13 @@ describe('EMS Vietnam HTTP adapter', () => {
     ]);
     expect(result.events!.slice(0, 2).map((event) => event.description)).toEqual(['Đã thu tiền bưu tá', 'Phát thành công (Delivered)']);
     expect(result.events!.at(-1)).toMatchObject({ description: 'Chấp nhận gửi (Posting / Collection)', stage_source: 'carrier_map' });
-    expect(JSON.stringify(result)).not.toMatch(/Người|CSKH|0000|Số \d|Đường|Phường|C000000000|Chưa phát/);
+    expect(JSON.stringify(result.events)).not.toMatch(/Người|CSKH|0000|Số \d|Đường|Phường|C000000000|Chưa phát/);
+    expect(JSON.stringify(result)).not.toMatch(/Người Gửi|CSKH|0000|Số \d|Đường|C000000000|Chưa phát/);
+  });
+
+  it('reads the record’s recipient name when it has one', () => {
+    const named = changed('delivered', (body) => { body.TBL_INFO.HO_TEN_NHAN = 'Người Nhận Mẫu Khác  '; });
+    expect(parseEmsVietnam(named, DELIVERED)).toMatchObject({ receiver_name: 'Người Nhận Mẫu Khác', signed_by: 'Người Nhận Mẫu' });
   });
 
   it('reads an item on its way, from the pickup request, without the sender’s reference', () => {
@@ -106,7 +115,8 @@ describe('EMS Vietnam HTTP adapter', () => {
       ['2026-03-18T15:25:15+07:00', 'Đã đóng chuyến thư đi', 'in_transit', 'Bưu cục Mẫu A'],
       ['2026-03-18T09:37:08+07:00', 'Chấp nhận gửi', 'accepted', 'Bưu cục Mẫu A'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/NGUYỄN|SĐT|ÐT|0900|000\.|mẫu\./);
+    expect(result).toMatchObject({ signed_by: 'mẫu' });
+    expect(JSON.stringify(result)).not.toMatch(/NGUYỄN|SĐT|ÐT|0900|000\.|Ghi chú/);
   });
 
   it('keeps a scan outside Vietnam on its wall clock and marks the international exchange as missing', () => {
@@ -129,16 +139,18 @@ describe('EMS Vietnam HTTP adapter', () => {
     expect(result.events!.at(-1)).toMatchObject({ description: 'Đã phân hướng lấy hàng (Data out for Pickup)' });
   });
 
-  it('takes the code, the office, people and phone numbers out of a scan’s wording', () => {
+  it('takes the code, the office, the postman and phone numbers out of a scan’s wording, and keeps who received it', () => {
     expect(emsVietnamScanText('EMI - Phát thành công (Delivered) (700300: BCVH Mẫu - Thành phố Mẫu B    ) (Đầu mối CSKH: 0000 000000)'))
-      .toEqual({ code: 'EMI', description: 'Phát thành công (Delivered)', office: 'BCVH Mẫu - Thành phố Mẫu B' });
+      .toEqual({ code: 'EMI', description: 'Phát thành công (Delivered)', office: 'BCVH Mẫu - Thành phố Mẫu B', wording: 'Phát thành công (Delivered)' });
     expect(emsVietnamScanText('Đã đến bưu cục (Arrival at PO) (700300: BCVH Mẫu (Quận Mẫu) - Thành phố Mẫu B)'))
-      .toEqual({ code: '', description: 'Đã đến bưu cục (Arrival at PO)', office: 'BCVH Mẫu (Quận Mẫu) - Thành phố Mẫu B' });
+      .toEqual({ code: '', description: 'Đã đến bưu cục (Arrival at PO)', office: 'BCVH Mẫu (Quận Mẫu) - Thành phố Mẫu B', wording: 'Đã đến bưu cục (Arrival at PO)' });
     expect(emsVietnamScanText('Chấp nhận gửi (Đầu mối CSKH: 000.00.000.000\r\n)').description).toBe('Chấp nhận gửi');
     expect(emsVietnamScanText('Đã giao cho bưu tá:  NGUYỄN VĂN MẪU SĐT:0900000000').description).toBe('Đã giao cho bưu tá');
     expect(emsVietnamScanText('EDG - Đã giao bưu tá phát: Người Mẫu').description).toBe('Đã giao bưu tá phát');
-    expect(emsVietnamScanText('Đã phát thành công . Người nhận:()Người Nhận Mẫu').description).toBe('Đã phát thành công');
-    expect(emsVietnamScanText('Phát thành công, người ký: Người Mẫu').description).toBe('Phát thành công');
+    expect(emsVietnamScanText('Đã phát thành công . Người nhận:()Người Nhận Mẫu'))
+      .toMatchObject({ description: 'Đã phát thành công . Người nhận:()Người Nhận Mẫu', wording: 'Đã phát thành công' });
+    expect(emsVietnamScanText('Phát thành công, người ký: Người Mẫu, SĐT: 0900 000 000'))
+      .toMatchObject({ description: 'Phát thành công, người ký: Người Mẫu', wording: 'Phát thành công' });
     expect(emsVietnamScanText('Phát không thành công - Điện thoại: 0900 000 000').description).toBe('Phát không thành công');
     expect(emsVietnamScanText('Liên hệ người nhận 0900.000.000 để hẹn lại').description).toBe('Liên hệ người nhận để hẹn lại');
     // Short numbers stay.

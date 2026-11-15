@@ -43,9 +43,11 @@ challenge, not a missing parcel.
 - The wording ends with the scan's province and town, each in 【】, which become the location
   with the town first. Sites are Flash's own codes and names inside the wording. A van scan
   worded with a dash says nothing and is left out.
-- The adapter removes who signed, the sender named in the pending-return wording, the courier
-  details of the older wording and phone numbers. The reply's sender and recipient names,
-  origin and destination, courier names and phones, outlet phones, call list and signer are
+- The adapter removes the sender named in the pending-return wording, the courier details of
+  the older wording and phone numbers. Who signed stays in the delivery wording, which is
+  staged without it. The recipient's name, town and province come from `dst_name`,
+  `dst_city_name` and `dst_province_name`, and who signed from `sign_info.signer_content`.
+  The sender's name, the origin, courier names and phones, outlet phones and the call list are
   not kept. The adapter asks without the signature photos.
 
 ## Limitations

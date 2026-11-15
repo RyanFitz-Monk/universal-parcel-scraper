@@ -53,14 +53,14 @@
       "history",
       "location",
       "provider_code",
-      "delivered_at"
+      "delivered_at",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "origin",
-      "destination",
       "office_contact_details",
       "driver_name",
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

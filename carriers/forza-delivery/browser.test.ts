@@ -28,12 +28,13 @@ function harness(response = reply()) {
 afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 
 describe('Forza private browser recovery', () => {
-  it('uses the guest request, keeps wall clocks and strips recipient detail', async () => {
+  it('uses the guest request, keeps wall clocks and reads the recipient without the sender or the relay', async () => {
     const h = harness();
     const result = await h.run();
     expect(result.current_stage).toBe('delivered');
     expect(result.events![0]).toMatchObject({ local_time: '2026-03-12T14:07:31' });
-    expect(JSON.stringify(result)).not.toMatch(/Sample|SAMPLEAPP|Comprobante/);
+    expect(result.receiver_name).toBe('Sample Recipient');
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Customer|Sender)|SAMPLEAPP|Comprobante/);
     expect(h.fetcher).toHaveBeenCalledExactlyOnceWith('/fd2/Home.aspx/API', expect.objectContaining({
       method: 'POST', redirect: 'error', signal: expect.any(AbortSignal), body: forzaLookupBody(number),
     }));

@@ -78,6 +78,9 @@ export interface EnviaShipment {
   service: string;
   /** The estimated delivery day. */
   eta: string | null;
+  /** The recipient's name, and their street with the destination town on the next line. */
+  receiver: string;
+  address: string;
 }
 
 function estimate(value: unknown): string | null {
@@ -96,9 +99,8 @@ export function isEnviaNotFound(payload: unknown): boolean {
 /**
  * The reply of `/tracking/individual`, which the tracking page posts first.
  * A guía the service does not know is HTTP 404 with `success` false and its
- * own message. The record also carries the sender's and recipient's names,
- * phone numbers and addresses, the proof-of-delivery image and payment
- * details, which are not read.
+ * own message. The recipient's name and address are read; the sender, the
+ * phone numbers, the proof-of-delivery image and payment details are not.
  */
 export function readEnviaShipment(payload: unknown, raw: string): EnviaShipment {
   const number = normalizeEnviaNumber(raw);
@@ -122,6 +124,8 @@ export function readEnviaShipment(payload: unknown, raw: string): EnviaShipment 
     date,
     service: text(data, 'serviceType', 80),
     eta: estimate(data.eta),
+    receiver: text(data, 'receiverName', 160),
+    address: [text(data, 'receiverAddress', 300), text(data, 'destination', 120)].filter(Boolean).join('\n'),
   };
 }
 
@@ -184,7 +188,11 @@ export function parseEnvia(shipment: EnviaShipment, history: unknown, raw: strin
   }
   // Newest first; milestones at one clock keep the reply's order, which is newest first too.
   const events = scans.sort((a, b) => b.at - a.at || a.order - b.order).map((item) => item.event);
-  const service = shipment.service ? { service_name: shipment.service } : {};
+  const service = {
+    ...(shipment.service ? { service_name: shipment.service } : {}),
+    ...(shipment.receiver ? { receiver_name: shipment.receiver } : {}),
+    ...(shipment.address ? { receiver_address: shipment.address } : {}),
+  };
 
   if (!events.length) {
     // A guía the service knows without a dated state: its current state alone.

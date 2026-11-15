@@ -39,10 +39,11 @@ describe('Global Delivery Network tracker page', () => {
     expect(detectCarrierMatch(NUMBER).candidates).not.toContain('global-delivery-network');
   });
 
-  it('reads the scans newest first on their wall clocks and keeps no recipient or reference', () => {
+  it('reads the scans newest first on their wall clocks and the recipient, without the weight or reference', () => {
     const result = parseGdn(page(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered',
-      last_update: null, last_update_local: '2026-02-15T11:21:00', destination_country: 'NZ' });
+      last_update: null, last_update_local: '2026-02-15T11:21:00', destination_country: 'NZ',
+      receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET\nPRIVATE POSTCODE PRIVATE CITY' });
     expect(result.events).toEqual([
       { local_time: '2026-02-15T11:21:00', description: 'Delivered', stage: 'delivered', stage_source: 'wording:language' },
       { local_time: '2026-02-15T09:13:00', description: 'With courier for delivery', stage: 'out_for_delivery', stage_source: 'carrier_map' },
@@ -53,7 +54,7 @@ describe('Global Delivery Network tracker page', () => {
         stage: 'in_transit', stage_source: 'wording:language' },
       { local_time: '2026-01-20T20:19:41', description: 'Electronic Information Submitted by Shipper', stage: 'registered', stage_source: 'wording:language' },
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|8\.5/);
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATEREF|8\.5/);
   });
 
   it('dates each scan in the zone of its place or its neighbours', () => {

@@ -19,7 +19,7 @@ describe('GOFO Canada history', () => {
     expect(result).toMatchObject({ status: 'delivered', last_update: '2026-01-04T12:00:00-05:00', delivered_at: '2026-01-04T12:00:00-05:00',
       destination_country: 'CA', service_name: 'CIRRO Parcel' });
     expect(result.events?.map(event => [event.time, event.description, event.stage])).toEqual([
-      ['2026-01-04T12:00:00-05:00', 'Delivered', 'delivered'],
+      ['2026-01-04T12:00:00-05:00', 'Delivered, Front Desk/Reception.', 'delivered'],
       ['2026-01-04T08:00:00-05:00', 'Out for Delivery', 'out_for_delivery'],
       ['2026-01-03T15:00:00-08:00', 'Arrived at GOFO Regional Hub', 'in_transit'],
       ['2026-01-01T12:00:00-05:00', 'Shipping Label Created', 'registered'],

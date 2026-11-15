@@ -24,7 +24,7 @@ so the two carriers share one status map.
 
 ## Limitations
 
-Delivery prose, proof images and weight are left out, as on GOFO US.
+Proof images and weight are left out, as on GOFO US.
 `expected_delivery` is GOFO's `estimatedArrivalTime`, as on GOFO US.
 
 ## Testing

@@ -31,7 +31,8 @@ one more when the first fails to connect or hangs.
 - Scan times carry no offset. Each scan keeps its wall clock in `local_time`, and Node lookups
   date it on the zone of its place, else of the scans around it, else Nigeria's
   (`dateLocalClocks`), with the basis that chose it. An offset the reply states is kept.
-- The origin and destination addresses and the scanning staff's names are never read.
+- The destination address is the recipient's address, as the reply writes it. The origin
+  address and the scanning staff's names are never read.
 
 ## Limitations
 

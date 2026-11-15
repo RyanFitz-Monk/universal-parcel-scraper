@@ -85,11 +85,17 @@ function weight(row: JsonObject): number | null {
   return Number.isFinite(kilograms) && kilograms > 0 ? kilograms : null;
 }
 
+/** The consignee's town and province, as the reply's delivery address names them ("Town - PR"). */
+function consigneeTown(row: JsonObject): string {
+  const delivery = records(row.addresses).find((address) => address.type === 'DELIVERY');
+  return delivery && isRecord(delivery.value) ? textFromHtml(delivery.value.name1, 160) : '';
+}
+
 /**
  * The tracker's reply for one national shipment: its scans, newest first as
- * the page lists them, each with its sentence, town and wall clock. The
- * addresses, the signer, the note beside a delivery (the masked name of who
- * took it) and the customer's references are never read.
+ * the page lists them, each with its sentence, town and wall clock, the
+ * consignee's town and who signed. The depots, the sender's town, the
+ * departure date and the customer's references are never read.
  */
 export function parseGLSItaly(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGLSItalyNumber(raw);
@@ -103,6 +109,8 @@ export function parseGLSItaly(payload: unknown, raw: string): CarrierResult {
 
   const events: CarrierEvent[] = [];
   const seen = new Set<string>();
+  // The note beside the newest delivery: the masked name of who took it.
+  let deliveryNote = '';
   for (const scan of row.history) {
     if (!isRecord(scan)) throw new SchemaError(PROVIDER, 'GLS Italy returned an invalid scan');
     const sentence = textFromHtml(scan.evtDscr, 500);
@@ -116,6 +124,7 @@ export function parseGLSItaly(payload: unknown, raw: string): CarrierResult {
     if (seen.has(key)) continue;
     seen.add(key);
     const stage = glsItalyScanStage(description);
+    if (!deliveryNote && stage?.stage === 'delivered') deliveryNote = textFromHtml(scan.note, 160);
     events.push({ ...clock, description, ...(location ? { location } : {}),
       ...(stage ? { stage: stage.stage, stage_source: stage.source } : {}) });
   }
@@ -129,6 +138,10 @@ export function parseGLSItaly(payload: unknown, raw: string): CarrierResult {
     : latest.stage ? { stage: latest.stage as ClassifiedWording['stage'], source: latest.stage_source! }
       : rail ? { stage: rail, source: 'carrier_map' } : null;
   const kilograms = weight(row);
+  const town = consigneeTown(row);
+  // Who signed, masked as the page shows them: the shipment's signature, else the delivery's note.
+  const signature = isRecord(row.signature) ? textFromHtml(row.signature.value, 160) : '';
+  const signedBy = current?.stage === 'delivered' ? signature || deliveryNote : '';
   return {
     status: current ? languageStageStatus(current.stage) : 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: current.source } : {}),
@@ -138,6 +151,8 @@ export function parseGLSItaly(payload: unknown, raw: string): CarrierResult {
     // The day a redelivery was booked for, until a newer scan.
     expected_delivery: (current?.stage !== 'delivered' ? glsItalyBookedDay(latest.description!) : undefined) ?? null,
     ...(kilograms !== null ? { weight_kg: kilograms } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
   };
 }

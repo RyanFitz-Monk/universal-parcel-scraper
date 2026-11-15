@@ -47,8 +47,11 @@ describe('Gebrüder Weiss public search', () => {
       ['2030-03-05T14:30:00+01:00', 'Sampletown, AT', 'RDGW/400/A12', 'picked up', 'accepted'],
       ['2030-03-05T14:29:50+01:00', 'Sampletown, AT', 'RDGW/166/138', 'arrival time at consignee / shipper', undefined],
     ]);
-    // Places, references, customer numbers, partner references, CO2 figures and the internal wording stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Exampledorf|Senderburg|9999|9998|55555|PARTNERREF|Synthetisch|ZZ12345|SMP7000000001|7000000001|999999|12\.3/);
+    // The consignee's postcode and town are read; the shipper's, references, customer numbers, partner references,
+    // CO2 figures and the internal wording stay out.
+    const { receiver_address: address, ...rest } = result;
+    expect(address).toBe('9999 Exampledorf');
+    expect(JSON.stringify(rest)).not.toMatch(/Exampledorf|Senderburg|9999|9998|55555|PARTNERREF|Synthetisch|ZZ12345|SMP7000000001|7000000001|999999|12\.3/);
   });
 
   it('hides internal events, drops a twin without a place, stages the way back and reads a foreign branch clock', () => {
@@ -69,7 +72,8 @@ describe('Gebrüder Weiss public search', () => {
       // A Romanian branch's wall clock, read by the service as Vienna time: an hour earlier, just before its record.
       ['2030-03-28T19:18:11+02:00', 'Sampleni, RO', 'RDGW/180/004', 'in_transit'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/internal change|RDGW\/641|Példafalva|9997|8000000002|SMH7000000002/);
+    expect(result.receiver_address).toBe('9997 Példafalva');
+    expect(JSON.stringify(result)).not.toMatch(/internal change|RDGW\/641|8000000002|SMH7000000002/);
   });
 
   it('keeps a branch clock in a country of several zones as a wall clock, and re-reads one west of Vienna', () => {

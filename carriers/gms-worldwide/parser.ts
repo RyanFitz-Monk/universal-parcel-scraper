@@ -22,8 +22,8 @@ const ZONE = 'Asia/Kolkata';
 const SCAN_DAY = /^(\d{1,2}) ([A-Za-z]{3}) (\d{4})$/;
 const SCAN_CLOCK = /^(\d{1,2}):(\d{2}):(\d{2}) ([AP]M)$/i;
 const CLOCK = 'dd MMM yyyy hh:mm:ss a';
-// "Delivered to …" or "Delivered (POD) - received by …" could name who took
-// the consignment, so a delivery keeps its words before that.
+// "Delivered to …" or "Delivered (POD) - received by …" names who took the
+// consignment; the stage is read from the words before that.
 const DELIVERED_TO = /^((?:Consignment\s+)?Delivered(?:\s*\(POD\))?)\s*[-,:]?\s*\b(?:(?:received|signed|taken|collected)\s+)?(?:to|by)\b[\s\S]*$/i;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<!\d)\+?\d(?:[\s().-]{0,2}\d){8,}(?!\d)/g;
@@ -49,9 +49,14 @@ function text(value: unknown, what: string, maxLength = 300): string {
   return clean(value, maxLength);
 }
 
-/** A wording without phone numbers; a delivery loses whom it names. */
+/** A wording without phone numbers. */
 export function gmsWording(wording: string): string {
-  return clean(wording.replace(DELIVERED_TO, '$1').replace(PHONE, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+  return clean(wording.replace(PHONE, ''), 200).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** A wording's stage, read without whom a delivery names. */
+function wordingStage(description: string): ReturnType<typeof gmsStage> {
+  return gmsStage(description.replace(DELIVERED_TO, '$1'));
 }
 
 /** A scan's wall clock, read in India and read back unchanged, as an instant. */
@@ -78,7 +83,7 @@ function projectRow(row: unknown, index: number): Scan {
   const time = scanTime(text(row.ScanDate, 'scan date', 20), text(row.ScanTime, 'scan time', 20));
   const office = clean(text(row.Scan, 'scan office', 120).replace(PHONE, ''), 120).replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '');
   const location = PIN_CODE.test(office) ? '' : office;
-  const staged = gmsStage(description);
+  const staged = wordingStage(description);
   const event: CarrierEvent = {
     time,
     ...(location ? { location } : {}),
@@ -103,8 +108,9 @@ function scanRows(scans: unknown): unknown[] {
  * The reply of the tracking page's lookup, `get-consignment.php?cnno={number}`.
  * A consignment it knows is an `Order` naming its number in `@attributes`,
  * with a summary status and its scans, newest first; one it does not know is
- * `{"Status":"NO DATA"}`. Only the number, the scans and the summary status
- * are read; the consignee's details, references, images and booking fields are not.
+ * `{"Status":"NO DATA"}`. The number, the scans, the summary status, the
+ * consignee's address and PIN code and, on a delivery, the receiver its
+ * `Status` names are read; phones, references, images and booking fields are not.
  */
 export function parseGms(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGmsNumber(raw);
@@ -142,16 +148,27 @@ export function parseGms(payload: unknown, raw: string): CarrierResult {
     .map(({ event }) => event);
 
   const summary = text(order.Cnstatus, 'status', 200);
+  // The consignee's address, then its PIN code.
+  const address = [text(order.ConsigneeAddress, 'consignee address'), text(order.ConsigneePincode, 'consignee PIN code', 16)]
+    .filter(Boolean).join('\n');
+  const receiver = address ? { receiver_address: address } : {};
+  // A delivered consignment's receiver and their phone, comma-separated.
+  const receivedBy = (stage: Stage | undefined) => {
+    const name = stage === 'delivered' ? gmsWording(text(order.Status, 'receiver', 200)) : '';
+    return name ? { signed_by: name } : {};
+  };
   if (!events.length) {
     // The page shows the summary's status over "No Data Available." for the history.
     if (!summary) throw new NoHistoryError(PROVIDER);
-    const summed = gmsStage(gmsWording(summary));
+    const summed = wordingStage(gmsWording(summary));
     return {
       status: summed ? languageStageStatus(summed.stage) : 'unknown',
       ...(summed ? { current_stage: summed.stage, current_stage_source: summed.source } : {}),
       last_status_text: gmsWording(summary),
       last_update: null,
       expected_delivery: null,
+      ...receiver,
+      ...receivedBy(summed?.stage),
       timezone: ZONE,
       summary_only: true,
       events: [],
@@ -169,6 +186,8 @@ export function parseGms(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: current!.time! } : {}),
+    ...receiver,
+    ...receivedBy(stage),
     timezone: ZONE,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

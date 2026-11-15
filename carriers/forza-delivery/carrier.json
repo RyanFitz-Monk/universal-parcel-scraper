@@ -57,7 +57,9 @@
     "scraped": [
       "status",
       "history",
-      "provider_code"
+      "provider_code",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
@@ -65,7 +67,6 @@
       "destination",
       "parcel_count",
       "item_category",
-      "recipient_name",
       "signatory",
       "sender_name",
       "proof_of_delivery",

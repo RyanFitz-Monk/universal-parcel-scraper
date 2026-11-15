@@ -39,14 +39,15 @@ the separate [`geodis`](../geodis/README.md) carrier.
 - Identical rows, which a shipment of several items can repeat, become one scan. A scan dated
   over an hour after the read is held back.
 - A shipment without scans gives the summary's status alone.
-- The summary also shows terminals, dates, the shipment type, the item list and the delivery
-  postcode and town. The adapter reads only the status and the delivery country. The history's
-  remarks, which can name who signed, are never read.
+- The summary also shows terminals, dates, the shipment type and the item list. The adapter
+  reads the status, the delivery country and the delivery postcode and town, which become the
+  recipient's address. The remarks of the delivery that decides the status name who signed;
+  other remarks are not read.
 - Neither reply names a partner or its number, so there is no hand-off.
 
 ## Limitations
 
-- No delivery estimate, weight, service name, sender, recipient or proof of delivery.
+- No delivery estimate, weight, service name, sender, recipient's name or proof of delivery.
 - Scans at terminals abroad have no established zone.
 
 ## Numbers

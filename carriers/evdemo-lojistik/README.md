@@ -27,8 +27,8 @@ Kayseri through its own branches. Tracked through its tracking page's own lookup
   mapped. The rail itself is not read.
 - A shipment of several packages adds a table per package with its contents and newest scan.
   The shipment's own table is the history; the package tables are not kept.
-- The sender's and recipient's masked names, the departure and arrival provinces and the
-  departure date are not kept.
+- The recipient's masked name is read, and the arrival province is the recipient's address. The
+  sender's masked name, the departure province and the departure date are not kept.
 - The tracker matches the whole number only; a shorter or longer one gets the not-found notice.
 
 ## Limitations

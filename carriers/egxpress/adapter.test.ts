@@ -24,6 +24,7 @@ const events = (result: ReturnType<typeof parseEgxpress>) => result.events!.map(
   event.description, event.provider_code, event.stage, event.location]);
 const CHALLENGE = '<html><title>Just a moment...</title><script>window._cf_chl_opt={};</script></html>';
 const PERSONAL = /SYNTHETIC (?:RECIPIENT|SENDER|ACCOUNT|MERCHANT|CONTENTS|INSTRUCTIONS|PARTNER)|Example Road|98765012345678|815\.25/i;
+const COMMERCIAL = /SYNTHETIC (?:SENDER|ACCOUNT|MERCHANT|CONTENTS|INSTRUCTIONS|PARTNER)|815\.25/i;
 
 describe('EGXPRESS domestic HTTP adapter', () => {
   it('reads the official single-waybill guest request through the supplied transport and user agent', async () => {
@@ -45,12 +46,14 @@ describe('EGXPRESS domestic HTTP adapter', () => {
     expect(inspect([recorder.step.mock.calls, recorder.lookup.mock.calls], { depth: 10 })).not.toMatch(PERSONAL);
   });
 
-  it('keeps the whole dated history and local clocks while dropping personal and commercial fields', () => {
+  it('keeps the whole dated history, local clocks and recipient while dropping sender and commercial fields', () => {
     const result = parseEgxpress(fixture(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-04-04T15:21:00', expected_delivery: null });
+      last_status_text: 'Delivered To :SYNTHETIC RECIPIENT ID:98765012345678', last_update: null,
+      last_update_local: '2026-04-04T15:21:00', expected_delivery: null, receiver_name: 'SYNTHETIC RECIPIENT',
+      receiver_address: '100 Example Road', signed_by: 'SYNTHETIC RECIPIENT' });
     expect(events(result)).toEqual([
-      ['2026-04-04T15:21:00', 'Delivered', 'POD', 'delivered', 'Sample Destination'],
+      ['2026-04-04T15:21:00', 'Delivered To :SYNTHETIC RECIPIENT ID:98765012345678', 'POD', 'delivered', 'Sample Destination'],
       ['2026-04-04T08:42:00', 'With Delivery Courier', 'OFD', 'out_for_delivery', 'Sample Destination'],
       ['2026-04-03T07:02:00', 'Arrived at Hub', 'AH', 'in_transit', 'Sample Destination'],
       ['2026-04-03T01:13:00', 'Sent to Sample Destination', 'DF', 'in_transit', 'Sample Hub'],
@@ -59,10 +62,23 @@ describe('EGXPRESS domestic HTTP adapter', () => {
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('summary_only');
     expect(result).not.toHaveProperty('history_truncated');
-    expect(JSON.stringify(result)).not.toMatch(PERSONAL);
+    expect(JSON.stringify(result)).not.toMatch(COMMERCIAL);
     expect(result).not.toHaveProperty('weight_kg');
     expect(result).not.toHaveProperty('sender_name');
-    expect(result).not.toHaveProperty('receiver_name');
+  });
+
+  it('reads the stage of a named receipt from its label and leaves an address without its name unread', () => {
+    const received = changed((body) => {
+      Object.assign(body.trackInfo[0]!.trackList[1]!, { status: 'RCV', remarks: 'Received by SYNTHETIC RECIPIENT' });
+      body.trackInfo[0]!.shipmentInformation.consigneeDetails = '100 Example Road';
+      body.trackInfo[0]!.trackList[0]!.deliveredTo = '';
+    });
+    const result = parseEgxpress(received, NUMBER);
+    const label = egxpressStage('RCV', 'Received');
+    expect(result.events![1]!.description).toBe('Received by SYNTHETIC RECIPIENT');
+    expect([result.events![1]!.stage, result.events![1]!.stage_source]).toEqual([label?.stage, label?.source]);
+    expect(result).toMatchObject({ signed_by: 'SYNTHETIC RECIPIENT' });
+    expect(result).not.toHaveProperty('receiver_address');
   });
 
   it('uses each scan’s own code rather than applying the delivery summary to the history', () => {

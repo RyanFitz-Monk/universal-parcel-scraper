@@ -47,9 +47,13 @@ describe('Fastbox parser', () => {
     });
   });
 
-  it("never reads the recipient's name or address", () => {
-    const text = JSON.stringify(parseFastbox(fixture('in-transit'), NUMBER));
-    expect(text).not.toMatch(/RECIPIENT|STREET|EXAMPLE STATE/);
+  it("reads the recipient's masked name and address", () => {
+    expect(parseFastbox(fixture('in-transit'), NUMBER)).toMatchObject({ receiver_name: 'EXAMPLE RECIPIENT*****',
+      receiver_address: 'EXAMPLE STATE EXAMPLE TOWN 1 EXAMPLE STREET*****' });
+    const without = parseFastbox(fixture('in-transit').replace(/<th scope="col">Reciepient<\/th>[\s\S]*?<\/th>/, '')
+      .replace(/<td>EXAMPLE RECIPIENT[\s\S]*?<\/td>\s*<td>[^<]*<\/td>/, ''), NUMBER);
+    expect(without).not.toHaveProperty('receiver_name');
+    expect(without).not.toHaveProperty('receiver_address');
   });
 
   it('names the partner only when its name and its invoice name the same carrier', () => {

@@ -67,15 +67,15 @@
       "delivered_at",
       "weight",
       "provider_code",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
       "sender_name",
       "sender_details",
-      "recipient_name",
-      "recipient_address",
-      "signatory",
       "driver_name",
       "scheduled_delivery",
       "customer_reference",

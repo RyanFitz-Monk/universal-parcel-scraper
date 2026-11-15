@@ -12,6 +12,8 @@
   "adresse": {
     "raisonSociale": "Private Company",
     "libelle1Adresse": "10 Private Street",
+    "codePostalAdresse": "99999",
+    "villeAdresse": "PRIVATE TOWN",
     "email": "private@example.test",
     "telephone": "+33000000000"
   },

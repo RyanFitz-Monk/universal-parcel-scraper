@@ -70,8 +70,14 @@ describe('GS Postbox HTTP adapter', () => {
     expect(result.events![3]!.description).toBe('출고센터 배송준비중 입니다.');
     // GS Networks carries the parcel itself: there is no hand-off.
     expect(result).not.toHaveProperty('delivery_carrier');
-    // The sender, the recipient, their masked phones and the goods are not read.
-    expect(JSON.stringify(result)).not.toMatch(/가\*다|나\*라|000\*{4}0000|잡화|GS네트웍스|SLOW/);
+    // The recipient's masked name is read; an address of asterisks, the sender, the masked phones and the goods are not.
+    expect(result.receiver_name).toBe('나*라');
+    expect(result).not.toHaveProperty('receiver_address');
+    expect(JSON.stringify(result)).not.toMatch(/가\*다|000\*{4}0000|\*{3}|잡화|GS네트웍스|SLOW/);
+    const addressed = parseGsPostboxPage(changed('delivered', (info) => {
+      (info.receiver as Row).baseAddress = '서울 샘플구 예시로 1';
+    }), DELIVERED);
+    expect(addressed.receiver_address).toBe('서울 샘플구 예시로 1');
   });
 
   it('reads a parcel on its way with no pickup point yet', () => {

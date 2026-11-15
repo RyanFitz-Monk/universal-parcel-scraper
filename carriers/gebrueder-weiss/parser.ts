@@ -155,8 +155,9 @@ function estimateOf(order: Record<string, unknown>): string | null {
  * and the postcode, each with its status events. The search matches the
  * number in several references, so the shipment is the one whose order
  * number, request number or a sender's reference is the whole number.
- * Addresses, names, customer numbers, partner references, remarks, the CO2
- * figures, documents and the internal German wording are never read.
+ * The consignee's postcode and town are read. The shipper's, names, customer
+ * numbers, partner references, remarks, the CO2 figures, documents and the
+ * internal German wording are never read.
  */
 export function parseGebruederWeiss(payload: unknown, raw: string): CarrierResult {
   const number = normalizeGebruederWeissNumber(raw);
@@ -197,6 +198,8 @@ export function parseGebruederWeiss(payload: unknown, raw: string): CarrierResul
   const weight = order.gross_weight_unit === 'KGM' && typeof order.gross_weight === 'number'
     && Number.isFinite(order.gross_weight) && order.gross_weight > 0 ? order.gross_weight : null;
   const service = SERVICES.get(clean(order.shipment_type, 40).toUpperCase());
+  const consignee = isRecord(order.consignee) ? order.consignee : {};
+  const address = [clean(consignee.zip, 16), clean(consignee.city, 80)].filter(Boolean).join(' ');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: decider!.stage_source } : {}),
@@ -207,6 +210,7 @@ export function parseGebruederWeiss(payload: unknown, raw: string): CarrierResul
     ...(stage === 'delivered' && decider!.time ? { delivered_at: decider!.time } : {}),
     ...(weight ? { weight_kg: weight } : {}),
     ...(service ? { service_name: service } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

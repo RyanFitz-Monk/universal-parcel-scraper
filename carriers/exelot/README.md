@@ -34,8 +34,9 @@ tracker page makes.
   page's titles and descriptions. The provider code joins the code and sub-code as the page does,
   and the stage follows the code.
 - The lookup names the place of each scan, which the page does not show. Only a town with its
-  country code, or a country code alone, is kept. A delivery, a refusal or a failed attempt
-  happens at the recipient's address and can name part of it, so its place is never kept.
+  country code, or a country code alone, is kept, except on a delivery, a refusal or a failed
+  attempt: those happen at the recipient's address, and their place is kept as Exelot names
+  it, part of that address included.
 - The pickup point the page shows is kept with its name, street and town.
 - The remark, the buyer's masked email and phone, the order number, the origin district, the
   delivery partner's name, number and link, and any note on a scan are not kept.
