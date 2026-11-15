@@ -127,7 +127,7 @@ describe('Aramex direct tracking', () => {
       await expect(new AramexTracker({ fetcher }).fetch(NUMBER)).rejects.toMatchObject({
         kind: status === 429 ? 'rate_limited' : 'challenge', retryAfterMs: 7_200_000,
         diagnostics: { body_signals: ['access_denied'] },
-        request: { url: 'https://www.aramex.com/track/details?q=[redacted]' },
+        request: { url: expect.stringMatching(/^https:\/\/www\.aramex\.com\/track\/details\?q=[^&[]+$/) },
       });
       expect(fetcher).toHaveBeenCalledTimes(2);
     }

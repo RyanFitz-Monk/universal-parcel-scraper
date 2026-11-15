@@ -65,6 +65,7 @@
       "firstOccurrence",
       "formatTrackingNumber",
       "hasDirectHandoffAdapter",
+      "hasPrivateDeliveryDetails",
       "inferStage",
       "isAmazonTrackingNumber",
       "isPartialAnswer",

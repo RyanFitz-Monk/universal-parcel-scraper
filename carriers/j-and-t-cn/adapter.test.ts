@@ -92,7 +92,7 @@ describe('J&T Express China HTTP adapter', () => {
     }))).toThrow(NoHistoryError);
   });
 
-  it('asks the second stage, with the answer’s code, for the scans of an answer that lists none, and keeps the code out of diagnostics', async () => {
+  it('asks the second stage, with the answer’s code, for the scans of an answer that lists none, and keeps the code in diagnostics', async () => {
     const fetcher = site(() => reply(fixture('without-scans')));
     const result = await carrier(fetcher).track({ number: NUMBER, phoneDigits: DIGITS });
     expect(result.events!.map((event) => [event.time, event.description])).toEqual([
@@ -103,12 +103,12 @@ describe('J&T Express China HTTP adapter', () => {
     expect(`${asked.origin}${asked.pathname}`).toBe(J_AND_T_CN_SCANS_API);
     expect(Object.fromEntries(asked.searchParams)).toEqual({ waybillList: NUMBER, code: 'SYNTHETICSTAGECODE' });
     expect((fetcher.mock.calls[1]![1]!.headers as Record<string, string>).sign).toMatch(/^[0-9a-f]{32}$/);
-    // The second stage refused: its diagnostics keep neither the code nor the digits.
+    // The second stage refused: its diagnostics keep the address it asked.
     const refused = site(() => reply(fixture('without-scans')), () => Object.defineProperty(reply({}, { status: 403 }), 'url',
       { value: `${J_AND_T_CN_SCANS_API}?waybillList=${NUMBER}&code=SYNTHETICSTAGECODE` }));
     const failure = await carrier(refused).track({ number: NUMBER, phoneDigits: DIGITS }).catch((error: unknown) => error) as UpstreamHttpError;
     expect(failure).toBeInstanceOf(UpstreamHttpError);
-    expect(JSON.stringify([failure.request, failure.diagnostics])).not.toMatch(/SYNTHETICSTAGECODE|0042/);
+    expect(failure.request?.url).toContain('code=SYNTHETICSTAGECODE');
     // A second stage without scans leaves a waybill J&T knows without history.
     const empty = site(() => reply(fixture('without-scans')), () => reply(changed('second-stage', (body) => { body.data[0]!.details = []; })));
     await expect(carrier(empty).track({ number: NUMBER, phoneDigits: DIGITS })).rejects.toBeInstanceOf(NoHistoryError);
@@ -154,11 +154,10 @@ describe('J&T Express China HTTP adapter', () => {
     await expect(tracked(() => new Response(null, { status: 302, headers: { Location: '/elsewhere' } }))).rejects.toMatchObject({ kind: 'transport' });
   });
 
-  it('keeps the phone digits out of the diagnostics of a refused request', async () => {
+  it('keeps the phone digits in the diagnostics of a refused request', async () => {
     const asked = vi.fn<typeof fetch>(async (input) => Object.defineProperty(reply({}, { status: 403 }), 'url', { value: String(input) }));
     const failure = await carrier(asked).track({ number: NUMBER, phoneDigits: DIGITS }).catch((error: unknown) => error) as UpstreamHttpError;
-    expect(failure.request?.url).toContain('phoneLast=[redacted]');
-    expect(JSON.stringify([failure.message, failure.request, failure.diagnostics])).not.toContain(DIGITS);
+    expect(failure.request?.url).toContain(`phoneLast=${DIGITS}`);
   });
 
   it('takes JT or UT and thirteen digits, and puts JT before thirteen bare digits as the page does', () => {

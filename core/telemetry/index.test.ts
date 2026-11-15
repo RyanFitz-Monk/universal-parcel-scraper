@@ -9,7 +9,7 @@ const SECRETS = ['querysentinel', 'fragmentsentinel', 'requestbodysentinel', 'au
   'apikeysentinel', 'setcookiesentinel', 'replybodysentinel', 'invalidreplysentinel'];
 const URL = 'https://carrier.example/track?accessKey=querysentinel&lang=en#fragmentsentinel';
 const INIT = {
-  method: 'POST', body: JSON.stringify({ answer: 'requestbodysentinel' }),
+  method: 'POST', body: JSON.stringify({ number: 'TEST123', session: { token: 'requestbodysentinel' } }),
   headers: { Accept: 'application/json', Authorization: 'Bearer authorizationsentinel', Cookie: 'session=cookiesentinel',
     'X-Api-Key': 'apikeysentinel' },
 };
@@ -46,10 +46,11 @@ it('hands recorders transport errors without credentials, through causes and agg
   expect(steps.map((step) => step.outcome)).toEqual(['challenge', 'indeterminate']);
   expect(lookups[0]!.error).toBe(failure);
 
-  // The details stay, without their values; adapters still read the reply by name.
+  // The details stay, without the credentials' values; adapters still read the reply by name.
   const [refusal, network, parse] = ((failure as Error).cause as AggregateError).errors as [UpstreamHttpError, UpstreamNetworkError, Error & { response_body?: string }];
-  const request = { url: 'https://carrier.example/track?accessKey=[redacted]&lang=[redacted]#[redacted]', method: 'POST',
-    headers: { accept: 'application/json', authorization: '[redacted]', cookie: '[redacted]', 'x-api-key': '[redacted]' }, body: '[redacted]' };
+  const request = { url: 'https://carrier.example/track?accessKey=[redacted]&lang=en#[redacted]', method: 'POST',
+    headers: { accept: 'application/json', authorization: '[redacted]', cookie: '[redacted]', 'x-api-key': '[redacted]' },
+    body: '{"number":"TEST123","session":"[redacted]"}' };
   expect(refusal.request).toMatchObject(request);
   expect(network.request).toMatchObject(request);
   expect(refusal.diagnostics).toMatchObject({ body_read: 'complete', body_signals: ['access_denied'],

@@ -258,6 +258,13 @@ order, reversing an oldest-first list rather than sorting it; the shared provide
 An answer that dates every scan alike numbers none. A wall clock without a zone is compared only
 with the answer's other wall clocks, read the same whatever the host's zone.
 
+A result's `receiver_name`, `receiver_address`, `signed_by` and `pickup_code` hold what the
+carrier shows about the recipient: the name the parcel is addressed to, the delivery address,
+who signed for or took the parcel, and the code that releases it at a locker or point. Adapters
+read them as the carrier gives them, masked or not. `hasPrivateDeliveryDetails` tells whether a
+scan's wording or place names a code, a door number or a signature, for a host that shows the
+history to people other than the parcel's owner.
+
 A result's `pickup_point` is the point the parcel waits at for collection: its name, then its
 address on the following lines. On a delivered parcel it is the point the recipient collected
 it from. A parcel brought to the door has none, although some carriers still name a point
@@ -289,10 +296,12 @@ estimate costs a request of its own, as
 Mondial Relay's website does after its app, keeps it while its day is ahead and no newer scan
 shows. An answer without an estimate says nothing about an earlier one; a carrier that states its
 estimate no longer holds, without a new one, marks the answer `expected_delivery_withdrawn`. An adapter with `recordsSteps` reports its own lookup, so dispatch
-does not wrap its telemetry a second time. The errors a `StepRecorder` receives keep no
-credential where a serializer finds it: `UpstreamHttpError` and `UpstreamNetworkError` redact
-credential headers, an address's user info, query values and fragment, and the request body,
-and a reply's body excerpt is read by name only. `CarrierError.reason` separates expected details,
+does not wrap its telemetry a second time. The errors a `StepRecorder` receives keep what
+explains a failure, the tracking number, postcode or phone digits in a query or body included,
+and no credential where a serializer finds it: `UpstreamHttpError` and `UpstreamNetworkError`
+redact credential headers, an address's user info and fragment, and the query parameters and
+JSON, form or XML body fields named after a key, token, secret, session or signature, and a
+reply's body excerpt is read by name only. `CarrierError.reason` separates expected details,
 such as Amazon Shipping's expired history, from transport failures. An inconclusive error
 for the carrier's own answer that it holds no history under the number, an empty result or
 not-found notice, carries `portal_not_found`, so a consumer can tell that answer from an

@@ -83,17 +83,32 @@ it('skips binary bodies and does not interpret a bare 403 as a known challenge',
   expect(empty.diagnostics).toMatchObject({ body_read: 'empty', body_signals: [] });
 });
 
-it('retains request details on HTTP and network failures, without session headers, query values or form inputs', async () => {
+it('retains request details on HTTP and network failures, without session headers or credential values', async () => {
   const url = 'https://carrier.example/tracking?number=TEST123&token=fixture';
   const init = { method: 'POST', headers: { Cookie: 'session=fixture', Authorization: 'Bearer fixture', Accept: 'text/html' },
-    body: 'number=TEST123&postcode=1234' };
+    body: 'number=TEST123&postcode=1234&api_key=fixture' };
   for (const fetcher of [
     async () => new Response('Refused TEST123', { status: 403 }),
     async () => { throw new Error('Connection reset'); },
   ]) {
     const error = await fetchBounded(url, init, { provider: 'Test carrier', timeoutMs: 8000, fetcher }).catch(error => error);
-    expect(error.request).toEqual({ url: 'https://carrier.example/tracking?number=[redacted]&token=[redacted]', method: 'POST',
+    expect(error.request).toEqual({ url: 'https://carrier.example/tracking?number=TEST123&token=[redacted]', method: 'POST',
       headers: { cookie: '[redacted]', authorization: '[redacted]', accept: 'text/html' },
-      body: '[redacted]', body_truncated: false, timeout_ms: 8000 });
+      body: 'number=TEST123&postcode=1234&api_key=[redacted]', body_truncated: false, timeout_ms: 8000 });
+  }
+});
+
+it('redacts the credentials of a JSON, cut JSON or XML request body and keeps the rest', async () => {
+  const bodies: [string, string][] = [
+    [JSON.stringify({ number: 'TEST123', auth: { apiKey: 'fixture' }, items: [{ token: 'fixture' }] }),
+      '{"number":"TEST123","auth":"[redacted]","items":[{"token":"[redacted]"}]}'],
+    ['{"number":"TEST123","accessToken":"fixture","postcode":"12', '{"number":"TEST123","accessToken":"[redacted]","postcode":"12'],
+    ['<req><number>TEST123</number><ns:ApiKey>fixture</ns:ApiKey></req>', '<req><number>TEST123</number><ns:ApiKey>[redacted]</ns:ApiKey></req>'],
+  ];
+  for (const [body, kept] of bodies) {
+    const error = await fetchBounded('https://carrier.example/track', { method: 'POST', body }, {
+      provider: 'Test carrier', timeoutMs: 8000, fetcher: async () => new Response('Refused', { status: 403 }),
+    }).catch(error => error);
+    expect(error.request.body).toBe(kept);
   }
 });

@@ -17,6 +17,7 @@ export { trackingLanguageStage, languageStageStatus } from './language.js';
 export { classifyWording, wordingStage } from './wording.js';
 export type { ClassifiedWording } from './wording.js';
 export { recipientAction, RECIPIENT_ACTIONS } from './action.js';
+export { hasPrivateDeliveryDetails } from './private.js';
 export type { RecipientAction } from './action.js';
 
 /** What a carrier's explicit status map yields for one raw code or wording. */

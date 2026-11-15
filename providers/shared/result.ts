@@ -10,6 +10,7 @@
  */
 import { DateTime } from 'luxon';
 import { trackingLanguageStage } from '../../core/status/index.js';
+import { hasPrivateDeliveryDetails } from '../../core/status/private.js';
 import { countryCode, countryKeepsOffset, usStateTimeZone } from '../../core/time/index.js';
 import { CHINESE_CITIES, CHINESE_PROVINCES } from './china.js';
 import { deliveryForecastRemainder, nonterminalEnglishReturn } from '../../core/status/language.js';
@@ -43,6 +44,8 @@ export function numberOf(raw: string): string {
   return number;
 }
 
+export { hasPrivateDeliveryDetails };
+
 export function text(value: unknown): string {
   return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, 500) : '';
 }
@@ -59,12 +62,6 @@ export function text(value: unknown): string {
 // day, which its own adapter leaves out, says nothing either.
 export function isNotice(description: string): boolean {
   return /enter .*?(?:postal|post|zip|phone)|select (?:a |the )?(?:carrier|destination country)|no information about your (?:package|parcel|shipment)|tracking (?:is |temporarily )?unavailable|tracking number (?:not found|is incorrect|must (?:only )?(?:contain|consist|be)\b)|check that (?:the |your )?tracking number is correct|no tracking (?:information|data)|delivery preference|captcha|verify (?:you|your)|enable javascript|try again later|by tapping the button|^(?:shipment parameters|recipient information) updated[.!]?$|^a preferred drop-off location was booked\b|^a desired (?:day for delivery|paketshop|parcel ?shop) (?:has been|was) booked\b|^keine weiteren details erforderlich[.!]?$|^(?:[a-z]+(?: [a-z]+){0,3}, )?(?:manifested but not collected email|clean email notification) sent to\b|^(?:[a-z]+(?: [a-z]+){0,3}, )?(?:delivery|collect) (?:email|sms) alert sent[.!]?$|^data prevista de entrega[.!]?$/i.test(description);
-}
-
-// Raw text, so accented and plain spellings are both listed. A carrier receiving the
-// parcel ("Recibido por Estafeta") and German "Firma" (a business) are not private.
-export function hasPrivateDeliveryDetails(description: string): boolean {
-  return /\bpin\s*:|(?:access|security|pickup|collection) code|(?:door|house) (?:no\b|number)|signed (?:for )?by|signature|numero civico|firmato da|signe par|signé par|code (?:de retrait|d['’]acc[eè]s)|num[eé]ro de (?:rue|maison)|abholcode|zugangscode|hausnummer|unterschrieben von|codice (?:di ritiro|di accesso)|c[oó]digo (?:pin|secreto|de (?:recogida|retirada|retiro|acceso|acesso|entrega|seguridad|seguran[cç]a|levantamento|recolha|desbloqueo|desbloqueio|apertura|abertura))|firmad[oa] por|firma del destinatari|assinad[oa] por|assinatura|n[uú]mero (?:de (?:portal|puerta|casa|piso|vivienda|pol[ií]cia)|da (?:porta|casa))|(?:porta|puerta) n\.?\s?[º°]|n\.?\s?[º°] (?:de |da )?porta/i.test(description);
 }
 
 // Labels providers put where a place belongs: a feed's system user ("US, SYSTEM, SYSTEM", "SYSTEM, [US]"),

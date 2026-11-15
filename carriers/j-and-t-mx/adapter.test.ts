@@ -147,14 +147,13 @@ describe('J&T Express Mexico HTTP adapter', () => {
     await expect(tracked(() => new Response(null, { status: 302, headers: { Location: '/elsewhere' } }))).rejects.toMatchObject({ kind: 'transport' });
   });
 
-  it('keeps the phone digits out of the diagnostics of a refused request', async () => {
+  it('keeps the phone digits in the diagnostics of a refused request', async () => {
     const asked = vi.fn<typeof fetch>(async (input) => Object.defineProperty(
       reply({ code: 'FORBIDDEN' }, { status: 403 }), 'url', { value: String(input) }));
     const failure = await carrier(asked).track({ number: DELIVERED, phoneDigits: DIGITS }).catch((error: unknown) => error) as UpstreamHttpError;
     expect(failure).toBeInstanceOf(UpstreamHttpError);
-    expect(failure.request?.url).toContain('phoneVerify=[redacted]');
-    expect(failure.diagnostics?.response_url).toContain('phoneVerify=[redacted]');
-    expect(JSON.stringify([failure.message, failure.request, failure.diagnostics])).not.toContain(DIGITS);
+    expect(failure.request?.url).toContain(`phoneVerify=${DIGITS}`);
+    expect(failure.diagnostics?.response_url).toContain(`phoneVerify=${DIGITS}`);
   });
 
   it('takes JMX and twelve digits only', () => {

@@ -1,9 +1,11 @@
 /**
  * What transport errors keep of a request and of the reply that refused it. Errors
- * reach step recorders and whatever serializes them, so no credential stays in an
- * enumerable field: credential header values, an address's user info, query values
- * and fragment, and a request body read `[redacted]`. A reply's body is kept for
- * adapters to read by name, but is not enumerable.
+ * reach step recorders and whatever serializes them, such as a host's logs and error
+ * reports, so they keep what explains a failure, the tracking number and postcode in a
+ * query or body included, and no credential: credential header values, an address's user
+ * info and fragment, and query parameters and body fields named after a key, token, secret,
+ * session or signature read `[redacted]`. A reply's body is kept for adapters to read by
+ * name, but is not enumerable.
  */
 import type { UpstreamHttpDiagnostics } from '../transport/upstreamHttpDiagnostics.js';
 import type { UpstreamRequestDiagnostics } from './index.js';
@@ -20,24 +22,56 @@ function redactedHeaders(headers: Record<string, string>): Record<string, string
     : headers;
 }
 
-/** The address with its user info, query values and fragment redacted; parameter names stay. */
+/** Query parameters and body fields named after a key, token, secret, password, session, signature or authorization. */
+const CREDENTIAL_NAME = /token|secret|passw|key$|^key|api[-_]?key|session|sig(?:nature)?$|^sig|auth|credential|csrf|xsrf|^x-amz-|^code_verifier$/i;
+
+/** `name=value` pairs, as a query or a form body writes them, with the credentials' values redacted. */
+function redactedPairs(pairs: string): string {
+  return pairs.split('&').map((part) => {
+    const equals = part.indexOf('=');
+    if (equals < 0) return part;
+    let name = part.slice(0, equals);
+    try { name = decodeURIComponent(name.replace(/\+/g, ' ')); } catch { /* A malformed escape keeps its raw name. */ }
+    return CREDENTIAL_NAME.test(name) ? `${part.slice(0, equals)}=${REDACTED}` : part;
+  }).join('&');
+}
+
+/** The address with its user info, fragment and credential parameters' values redacted. */
 function redactedAddress(address: string): string {
   if (typeof address !== 'string') return address;
   const hash = address.indexOf('#');
   const beforeHash = hash < 0 ? address : address.slice(0, hash);
   const question = beforeHash.indexOf('?');
   const base = (question < 0 ? beforeHash : beforeHash.slice(0, question)).replace(/^([a-z][a-z\d+.-]*:\/\/)[^/@]*@/i, `$1${REDACTED}@`);
-  const query = question < 0 ? '' : `?${beforeHash.slice(question + 1).split('&').map((part) => {
-    const equals = part.indexOf('=');
-    return equals < 0 ? part && REDACTED : `${part.slice(0, equals)}=${REDACTED}`;
-  }).join('&')}`;
+  const query = question < 0 ? '' : `?${redactedPairs(beforeHash.slice(question + 1))}`;
   return base + query + (hash < 0 ? '' : `#${REDACTED}`);
+}
+
+/** A JSON value with the credential fields' values redacted, at any depth. */
+function redactedJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactedJson);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([name, item]) => [name, CREDENTIAL_NAME.test(name) ? REDACTED : redactedJson(item)]));
+}
+
+/** A request body as sent, with the credential fields of a JSON or form body redacted. */
+function redactedBody(body: unknown): unknown {
+  if (typeof body !== 'string') return body === undefined ? body : REDACTED;
+  const trimmed = body.trim();
+  if (/^[[{]/.test(trimmed)) {
+    try { return JSON.stringify(redactedJson(JSON.parse(trimmed))); } catch { /* A cut JSON body is read as text. */ }
+  }
+  if (/^[^\s=&]+=[^\s]*$/.test(trimmed)) return redactedPairs(trimmed);
+  // Text, a cut JSON body or XML: a credential's quoted JSON value or element text.
+  return body
+    .replace(/("([^"\\]{1,80})"\s*:\s*)"(?:[^"\\]|\\.)*"?/g, (whole, before: string, name: string) => CREDENTIAL_NAME.test(name) ? `${before}"${REDACTED}"` : whole)
+    .replace(/<([\w:.-]{1,80})>[^<]*<\/\1>/g, (whole, name: string) => CREDENTIAL_NAME.test(name.replace(/^.*:/, '')) ? `<${name}>${REDACTED}</${name}>` : whole);
 }
 
 export function redactedRequest(request: UpstreamRequestDiagnostics): UpstreamRequestDiagnostics {
   return {
     ...request, url: redactedAddress(request.url), headers: redactedHeaders(request.headers),
-    ...(request.body === undefined ? {} : { body: REDACTED }),
+    ...(request.body === undefined ? {} : { body: redactedBody(request.body) as string }),
   };
 }
 

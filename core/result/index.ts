@@ -2,8 +2,8 @@
  * The result every adapter and provider returns, and its normalization.
  *
  * What it is: the shape contract between the carrier package and the host
- * (status, stage, estimate, sender/pickup names, weight, and the projected
- * events). What it is not: it does not classify wording into stages or touch
+ * (status, stage, estimate, sender, recipient and pickup details, weight, and
+ * the projected events). What it is not: it does not classify wording into stages or touch
  * the database; the host's sync does that after `normalizeCarrierResult`. It
  * reads only the few customs wordings that ask the recipient to act.
  * An event with no `stage` means "no explicit mapping" (see
@@ -117,7 +117,17 @@ export interface CarrierResult extends JsonObject {
    * a return goes back to: a name an earlier answer gave no longer stands. Absent says nothing.
    */
   sender_name?: string | null;
+  /** Who the parcel is addressed to, as the carrier shows the name, masked or not. */
   receiver_name?: string | null;
+  /**
+   * Where the parcel is addressed, as the carrier shows it: the street on the first line, then
+   * the postcode and town, or only the town or postcode when the carrier gives no more.
+   */
+  receiver_address?: string | null;
+  /** Who signed for or took the parcel at its delivery, as the carrier names them. */
+  signed_by?: string | null;
+  /** The code that releases the parcel at a locker or pickup point, as the carrier gives it to the recipient. */
+  pickup_code?: string | null;
   /**
    * The point the parcel waits at for collection: its name, then its address on
    * the following lines. On a delivered parcel, the point it was collected from;
@@ -179,6 +189,9 @@ const OPTIONAL_TEXT_FIELDS = [
   'expected_delivery_from',
   'sender_name',
   'receiver_name',
+  'receiver_address',
+  'signed_by',
+  'pickup_code',
   'pickup_point',
   'delivered_at',
   'dimensions_text',
