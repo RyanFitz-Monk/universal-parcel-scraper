@@ -11,7 +11,7 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -22,7 +22,7 @@
           "aramex-nz"
         ]
       },
-      "note": "TrackShip's Gruber Logistics page gives it as a tracking code example."
+      "note": "TrackShip's Gruber Logistics page gives it as a tracking code example. GRUBER's tracker answers it with a groupage shipment delivered in France."
     },
     {
       "number": "9M2619316413",
@@ -33,7 +33,7 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -44,7 +44,7 @@
           "aramex-nz"
         ]
       },
-      "note": "TrackShip's Gruber Logistics page gives it as a tracking code example."
+      "note": "TrackShip's Gruber Logistics page gives it as a tracking code example. GRUBER's tracker answers it with a groupage shipment delivered in France."
     }
   ]
 }

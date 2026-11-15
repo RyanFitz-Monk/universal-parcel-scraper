@@ -18,17 +18,57 @@
   "timezone": "Europe/Rome",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "gruber-logistics",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps",
+    "location"
+  ],
   "portal": {
     "url": "https://glapptracking.gruber-logistics.com/?trackingId={trackingNumber}",
     "searchUrl": "https://glapptracking.gruber-logistics.com/search-tracking-number",
     "canaryUrl": "https://glapptracking.gruber-logistics.com/search-tracking-number",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
+    "shows": [
+      "status",
+      "progress_rail",
+      "history",
+      "location",
+      "eta",
+      "origin",
+      "destination",
+      "order_reference",
+      "customer_reference",
+      "references",
+      "weight",
+      "volume",
+      "parcel_count"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps"
+    ],
+    "discarded": [
+      "progress_rail",
+      "eta",
+      "origin",
+      "destination",
+      "order_reference",
+      "customer_reference",
+      "references",
+      "weight",
+      "volume",
+      "parcel_count"
+    ],
     "unavailable": []
   },
   "links": [

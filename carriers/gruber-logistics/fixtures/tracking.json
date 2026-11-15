@@ -1,0 +1,164 @@
+{
+  "id_order": "5-T-PD-2026-4676",
+  "id_tracking": "NM2619316412",
+  "order_number": "4676/PD/2026",
+  "order_date": "2026-01-21T16:52:00.000Z",
+  "order_status": "DONE",
+  "order_reference": [
+    {
+      "type": "BARCODE",
+      "value": "SP26#PD#4676SCT"
+    }
+  ],
+  "transport_document": [
+    {
+      "_id": "6989baf807cb3300431fb63a",
+      "number": "DDT 489",
+      "date": "2026-01-20T00:00:00.000Z"
+    }
+  ],
+  "stops": [
+    {
+      "stop_type": "PICKUP",
+      "address": {
+        "city": "LIMENA",
+        "zip": "35010",
+        "province": "PD",
+        "country": "IT"
+      },
+      "goods": [
+        {
+          "weight": 40,
+          "ums": []
+        }
+      ]
+    },
+    {
+      "stop_type": "DROPOFF_PARTNER",
+      "address": {
+        "city": "GASNY ",
+        "zip": "27620",
+        "province": "",
+        "country": "FR"
+      },
+      "goods": [
+        {
+          "weight": 40,
+          "ums": []
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "event_type": {
+        "name": "RIE",
+        "description": "Ritiro eseguito"
+      },
+      "expected_datetime": "2026-01-21T08:30:00+0100",
+      "isExpected": false,
+      "timezone": "Europe/Rome",
+      "datetime": "2026-01-21T14:11:00+0100",
+      "address": {
+        "localita": "LIMENA",
+        "nazione": "IT"
+      },
+      "note": ""
+    },
+    {
+      "event_type": {
+        "name": "VPG",
+        "description": "Partito da deposito Gruber"
+      },
+      "expected_datetime": null,
+      "isExpected": false,
+      "timezone": "Europe/Rome",
+      "datetime": "2026-01-23T11:10:00+0100",
+      "address": {
+        "localita": "PADOVA",
+        "nazione": "IT"
+      },
+      "note": ""
+    },
+    {
+      "event_type": {
+        "name": "VAD",
+        "description": "Arrivato a deposito"
+      },
+      "expected_datetime": null,
+      "isExpected": false,
+      "timezone": "Europe/Paris",
+      "datetime": "2026-01-27T09:30:00+0100",
+      "address": {
+        "localita": "Limeil-Brévannes",
+        "nazione": "FR"
+      },
+      "note": ""
+    },
+    {
+      "event_type": {
+        "name": "SIT",
+        "description": "Spedizione in transito"
+      },
+      "expected_datetime": null,
+      "isExpected": false,
+      "timezone": "",
+      "datetime": "2026-01-27T21:24:00+0000",
+      "address": {
+        "localita": "",
+        "nazione": ""
+      },
+      "note": ""
+    },
+    {
+      "event_type": {
+        "name": "SIT",
+        "description": "Spedizione in transito"
+      },
+      "expected_datetime": null,
+      "isExpected": false,
+      "timezone": "",
+      "datetime": "2026-01-30T08:58:00+0000",
+      "address": {
+        "localita": "",
+        "nazione": ""
+      },
+      "note": ""
+    },
+    {
+      "event_type": {
+        "name": "402",
+        "description": "Stock Closed"
+      },
+      "expected_datetime": null,
+      "isExpected": false,
+      "timezone": "",
+      "datetime": "2026-01-30T09:08:00+0000",
+      "address": {
+        "localita": "",
+        "nazione": ""
+      },
+      "note": ""
+    },
+    {
+      "event_type": {
+        "name": "COR",
+        "description": "Spedizione consegnata"
+      },
+      "expected_datetime": null,
+      "isExpected": false,
+      "timezone": "Europe/Paris",
+      "datetime": "2026-01-30T14:00:00+0100",
+      "address": {
+        "localita": "GASNY ",
+        "nazione": "FR"
+      },
+      "note": ""
+    }
+  ],
+  "goods_summary": {
+    "weight": 40,
+    "volume": 0.2275,
+    "qty": 1
+  }
+}

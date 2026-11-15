@@ -2242,6 +2242,11 @@ export const trackingLinkCases: TrackingLinkCase[] = [
   { carrier: 'viadireta', number: 'VD900000000017',
     route: /^https:\/\/www\.viadireta\.pt\/tracking\?codigo=VD900000000017$/,
     marker: /ainda não está a ser possível verificar o estado da sua encomenda|not yet possible to check the status of your order|Envio Nº|Shipment No\./ },
+  // The single-page tracker asks its gateway for the number in its address and goes back to its search form
+  // when the gateway does not know it.
+  { carrier: 'gruber-logistics', number: 'ZZ0000000199',
+    route: /^https:\/\/glapptracking\.gruber-logistics\.com\/(?:\?trackingId=ZZ0000000199|search-tracking-number)$/,
+    marker: /Cerca tracking spedizione|Numero tracking|Search Tracking Number|Suche nach Tracking-Nummer/ },
 ];
 
 /**

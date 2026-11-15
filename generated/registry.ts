@@ -300,6 +300,7 @@ import { adapter as gofoIt } from '../carriers/gofo-it/adapter.js';
 import { adapter as gofoNl } from '../carriers/gofo-nl/adapter.js';
 import { adapter as gogoXpress } from '../carriers/gogo-xpress/adapter.js';
 import { adapter as grandSlamExpress } from '../carriers/grand-slam-express/adapter.js';
+import { adapter as gruberLogistics } from '../carriers/gruber-logistics/adapter.js';
 import { adapter as gsPostbox } from '../carriers/gs-postbox/adapter.js';
 import { adapter as gsiExpress } from '../carriers/gsi-express/adapter.js';
 import { adapter as gtaAirskip } from '../carriers/gta-airskip/adapter.js';
@@ -1079,6 +1080,7 @@ export const REGISTRY: RegistryDefinition = {
     "gofo-nl": gofoNl,
     "gogo-xpress": gogoXpress,
     "grand-slam-express": grandSlamExpress,
+    "gruber-logistics": gruberLogistics,
     "gs-postbox": gsPostbox,
     "gsi-express": gsiExpress,
     "gta-airskip": gtaAirskip,
@@ -2163,7 +2165,7 @@ export const REGISTRY: RegistryDefinition = {
     "greenposta": "universal",
     "greenway-vn": "universal",
     "groupe-guilbault": "universal",
-    "gruber-logistics": "universal",
+    "gruber-logistics": "gruber-logistics",
     "gs-postbox": "gs-postbox",
     "gsi-express": "gsi-express",
     "gta-airskip": "gta-airskip",

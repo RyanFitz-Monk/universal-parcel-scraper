@@ -325,6 +325,7 @@ import { statusMap as gofoIt } from '../../carriers/gofo-it/status.js';
 import { statusMap as gofoNl } from '../../carriers/gofo-nl/status.js';
 import { statusMap as gogoXpress } from '../../carriers/gogo-xpress/status.js';
 import { statusMap as grandSlamExpress } from '../../carriers/grand-slam-express/status.js';
+import { statusMap as gruberLogistics } from '../../carriers/gruber-logistics/status.js';
 import { statusMap as gsPostbox } from '../../carriers/gs-postbox/status.js';
 import { statusMap as gsiExpress } from '../../carriers/gsi-express/status.js';
 import { statusMap as gtaAirskip } from '../../carriers/gta-airskip/status.js';
@@ -853,7 +854,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   fleetex, fleetoptics, flippost, fmx, followmont, 'fm-transportes': fmTransportes, 'forward-air': forwardAir, 'forza-delivery': forzaDelivery, 'four-px': fourPx, foxpost, 'franch-express': franchExpress, fukuyama, gaash, gati, gdex,
   'gebrueder-weiss': gebruederWeiss, geis, 'geniki-taxydromiki': geniki, geodis, 'geodis-pl': geodisPl, 'gig-logistics': gigLogistics, 'global-delivery-network': globalDeliveryNetwork, 'gls-ch': glsCh, 'gls-de': glsDe, 'gls-es': glsEs, 'gls-fr': glsFr, 'gls-it': glsIt, 'gls-us': glsUs,
   globalpost, 'gms-worldwide': gmsWorldwide, 'go-express': goExpress, 'go-logistics-au': goLogisticsAu, go4, gobolt, gofo, 'gofo-ca': gofoCa, 'gofo-es': gofoEs, 'gofo-fr': gofoFr, 'gofo-it': gofoIt, 'gofo-nl': gofoNl, 'gogo-xpress': gogoXpress,
-  'grand-slam-express': grandSlamExpress, 'gs-postbox': gsPostbox, 'gsi-express': gsiExpress, 'gta-airskip': gtaAirskip, 'gtl-goto': gtlGoto, guatex, gzyl,
+  'grand-slam-express': grandSlamExpress, 'gruber-logistics': gruberLogistics, 'gs-postbox': gsPostbox, 'gsi-express': gsiExpress, 'gta-airskip': gtaAirskip, 'gtl-goto': gtlGoto, guatex, gzyl,
   hanjin, 'happy-post': happyPost, haypost, 'hct-logistics': hctLogistics, helthjem, heppner, hepsijet, hermes, 'hermes-at': hermesAt, 'hermes-de': hermesDe, hitch, hispapost, homexpress, 'hongkong-post': hongkongPost,
   horoz, 'hound-express': houndExpress, 'houng-ah-loun': houngAhLoun, hovership, 'hr-parcel': hrParcel, 'hrvatska-posta': hrvatskaPosta, huahan, 'huaya-express': huayaExpress, 'hunter-express': hunterExpress, hywl,
   'icc-worldwide': iccWorldwide, 'ics-courier': icsCourier, 'ids-logistik': idsLogistik, 'ilyang-logis': ilyangLogis, imile,

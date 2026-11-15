@@ -25760,7 +25760,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Rome",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "gruber-logistics"
     },
     "canaryUrl": "https://glapptracking.gruber-logistics.com/search-tracking-number",
     "trackingUrlTemplate": "https://glapptracking.gruber-logistics.com/?trackingId={trackingNumber}",
