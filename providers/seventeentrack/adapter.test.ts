@@ -595,6 +595,9 @@ describe('17TRACK result parsing', () => {
       .toEqual(['2026-11-09T09:39:40.000Z', '2026-11-09T09:10:26.000Z']);
     expect(parse17TrackResponse(reply(190384, 'US', [row('2026-11-09', '10:39:40', 'Delivered', '')]), number).events?.[0]?.local_time)
       .toBe('2026-11-09T10:39:40');
+    // A hand-over to a warehouse is no delivery: a row of Juxi's own, as labeled.
+    expect(parse17TrackResponse(reply(190384, 'CH', [row('2026-11-09', '10:39:40', 'Delivered to warehouse', '')]), number).events?.[0]?.time)
+      .toBe('2026-11-09T02:39:40.000Z');
     // Another feed keeps 17TRACK's reading.
     expect(parse17TrackResponse(reply(100999, 'US', [row('2026-11-08', '11:14:15', 'Arrived', 'Miami,FL')]), number).events?.[0]?.time)
       .toBe('2026-11-08T03:14:15.000Z');
