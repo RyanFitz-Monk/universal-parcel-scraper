@@ -80,7 +80,8 @@ Tracked through the lookup its tracking page makes.
 - The delivering partner and its number are not named: the reply leaves them empty.
 - A copy listed without the scan it copies keeps the offset it carries, which can be the
   destination's on Beijing's wall clock. The app's scan-identity policy lets that scan take the
-  copy's row over once JCEX lists it.
+  copy's row over once JCEX lists it. It also reads a partner's place stored as JCEX writes it,
+  `TOWN;ST;;-05:00`, as the same place as `TOWN, ST, US`.
 - Other JCEX number layouts are not looked up until one is seen.
 - The origin address can change; the CDN answers then, when it connects. A custom fetch
   transport must support the request's `dispatcher` option to reach the origin; one that ignores

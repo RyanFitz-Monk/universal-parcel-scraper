@@ -257,6 +257,12 @@ describe('JCEX HTTP adapter', () => {
       { ...scan, providerCode: 'InTransit_Other' }]) {
       expect(policy?.matches?.(scan, other)).toBe(false);
     }
+    // A partner's scan stored with its place as JCEX writes it is the same scan read as a place.
+    const partner = { stage: 'out_for_delivery', description: 'Out for Delivery', location: 'IL, US', providerCode: '' };
+    expect(policy?.matches?.(partner, { ...partner, location: ';IL;;-06:00' })).toBe(true);
+    expect(policy?.matches?.({ ...partner, location: 'Example Town, IL, US' }, { ...partner, location: 'Example Town;IL;;-05:00' })).toBe(true);
+    expect(policy?.matches?.(partner, { ...partner, location: ';TN;;-06:00' })).toBe(false);
+    expect(policy?.matches?.(partner, { ...partner, location: 'Example Town;IL;;-05:00' })).toBe(false);
   });
 
   it('keeps a copy\'s offset when JCEX lists no scan it copies', () => {
