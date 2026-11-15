@@ -116,7 +116,7 @@ describe('Lingdong International tracking adapter', () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json(fixture('no-track'))).mockResolvedValueOnce(html(page('page-handed')));
     const result = await adapter(environment(fetcher)).track({ number: NUMBER });
     expect(result).toMatchObject({ last_status_text: 'Shipment information received', last_update: '2026-03-02T16:15:01+08:00',
-      destination_country: 'ES', delivery_tracking_number: PARTNER });
+      destination_country: 'ES', delivery_tracking_number: PARTNER, current_stage: 'registered', current_stage_source: 'carrier_map' });
     expect(result.events).toHaveLength(1);
     // The page shows the order for the one number its form echoes, and not for an own number it shows as the tracking number.
     expect(() => parseLingdongPage(page('page-handed'), UNKNOWN, READ_AT)).toThrow('did not show the number as one shipment');
