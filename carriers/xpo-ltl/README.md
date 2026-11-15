@@ -11,7 +11,8 @@ only the summary. Browser recognition is a separate opt-in phase.
 The browser observes the current tracking endpoint before opening the page. It scopes
 the checkbox solver to the visible reCAPTCHA widget; XPO's own client obtains its guest
 session and submits verification. The final response must name the whole PRO in both
-the envelope and shipment. Intermediate challenges retain their failure kind.
+the envelope and shipment. Intermediate challenges retain their failure kind. A read
+TRAWL gives up for lack of time fails as `budget`, not as the service's HTTP 500.
 
 Both routes combine shipment status with history and remove bookkeeping, duplicate
 rows and delivery route details. Party information and document links are discarded.

@@ -598,6 +598,20 @@ describe('DHL public browser API', () => {
     await expect(new DhlExpressTracker(browser([captured(), captured({}, 428)])).browser(number)).rejects.toThrow(ChallengeError);
     await expect(new DhlExpressTracker(browser([{ ...captured(), body: '<html>blocked</html>' }])).browser(number)).rejects.toThrow(ChallengeError);
   });
+  it('fails a browser read TRAWL gave up for lack of time as the budget running out, and its other failures as before', async () => {
+    const reply = (reason: string, error = 'Max tier reached without success') => new Response(JSON.stringify({ error,
+      timings: [{ tier: 3, status: 'error', reason }] }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    for (const [answer, kind] of [
+      [() => reply('Scrape deadline exceeded', 'Scrape deadline exceeded'), 'budget'],
+      [() => reply('evaluate: The operation was aborted. '), 'budget'],
+      [() => reply('proxy-connection-failed'), 'indeterminate'],
+    ] as const) {
+      const env = environment(vi.fn<typeof fetch>(), new TrawlClient('https://browser.example', async () => answer()));
+      const error: unknown = await new DhlExpressTracker(env).browser(number, { budgetMs: 20_000 }).catch((caught: unknown) => caught);
+      expect(error).toMatchObject({ kind, provider: 'DHL Express' });
+      if (kind === 'budget') expect((error as Error).cause).toMatchObject({ status: 500 });
+    }
+  });
   it('recognizes only the observed not-found envelope on the matching query', async () => {
     const missing = { status: 404, title: 'No result found', detail: 'No shipment with given tracking number found.' };
     expect(await adapter(browser([captured(missing, 404)])).recognizeWithBrowser!(number)).toEqual({ known: false, lastActivityAt: null });

@@ -8,7 +8,7 @@
  * response capture, cookies, user agent) and the legacy `/v1` command API
  * (`request.get`). Both are bounded like every other provider call.
  */
-import { CarrierError, ChallengeError, UpstreamHttpError, type CarrierErrorOptions } from '../errors/index.js';
+import { BudgetExceededError, CarrierError, ChallengeError, UpstreamHttpError, type CarrierErrorOptions } from '../errors/index.js';
 import { decodeText, fetchBounded, parseJsonBytes } from './boundedFetch.js';
 import { cleanScalar } from './text.js';
 import { isRecord, type JsonObject } from '../types.js';
@@ -106,6 +106,14 @@ export function trawlOutOfTime(error: unknown): boolean {
   return /"error"\s*:\s*"Scrape deadline exceeded"/.test(reply)
     || (/"error"\s*:\s*"Max tier reached without success"/.test(reply)
       && /"reason"\s*:\s*"[^"]*(?:budget exhausted|operation was aborted)/.test(reply));
+}
+
+/**
+ * A rejection handler for a carrier's TRAWL read: a read given up for lack of time says nothing
+ * about the page, so it fails as the lookup's budget. Other failures pass through unchanged.
+ */
+export function budgetWhenOutOfTime(provider: string, budgetMs: number): (error: unknown) => never {
+  return (error) => { throw trawlOutOfTime(error) ? new BudgetExceededError(provider, budgetMs, { cause: error }) : error; };
 }
 
 /**

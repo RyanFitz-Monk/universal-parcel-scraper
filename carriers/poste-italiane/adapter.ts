@@ -9,7 +9,7 @@ import { clean, fetchBounded, parseJsonBytes, UpstreamHttpError, userAgentOf } f
 import { isRecord } from '../../core/types.js';
 import { runSteps } from '../../core/runner/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
-import type { TrawlClient } from '../../core/transport/trawl.js';
+import { budgetWhenOutOfTime, type TrawlClient } from '../../core/transport/trawl.js';
 import { transportOf } from '../../core/transport/transportOf.js';
 import { classifyPosteItalianeStatus, posteItalianeMovementWording, posteItalianeUncollected } from './status.js';
 
@@ -419,7 +419,8 @@ export class PosteItalianeTracker {
     const timeoutMs = Math.floor(remainingMs - 2000);
     const page = await this.options.trawl!.scrape({ url: posteItalianeTrackingUrl(number), skipHttp: true, maxTier: 3,
       captureResponses: [TRACKING_ENDPOINT], maxTimeout: timeoutMs, settleTimeout: timeoutMs },
-    { provider: 'Poste Italiane', timeoutMs, signal, requireSolved: false, captureWindow: 'last', maxBytes: 6 * MAX_RESPONSE_BYTES });
+    { provider: 'Poste Italiane', timeoutMs, signal, requireSolved: false, captureWindow: 'last', maxBytes: 6 * MAX_RESPONSE_BYTES })
+      .catch(budgetWhenOutOfTime('Poste Italiane', remainingMs));
     signal.throwIfAborted();
     const responses = page.capturedResponses.filter(row => row.url === TRACKING_ENDPOINT);
     const response = responses.at(-1);

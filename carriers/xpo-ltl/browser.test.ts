@@ -73,4 +73,23 @@ describe('XPO current public tracker', () => {
       await expect(carrier.recognizeWithBrowser!(number, { budgetMs: 8000 })).rejects.toMatchObject({ kind });
     }
   });
+
+  it('fails a browser read TRAWL gave up for lack of time as the budget running out, and its other failures as before', async () => {
+    const timeOut = (reason: string, error = 'Max tier reached without success') => new Response(JSON.stringify({ error,
+      timings: [{ tier: 3, status: 'error', reason }] }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    for (const [answer, kind] of [
+      [() => timeOut('Scrape deadline exceeded', 'Scrape deadline exceeded'), 'budget'],
+      [() => timeOut('evaluate: The operation was aborted. '), 'budget'],
+      [() => timeOut('proxy-connection-failed'), 'indeterminate'],
+    ] as const) {
+      const recorded: { step: string; outcome: string }[] = [];
+      const carrier = adapter({ env: {}, fetcher: async () => new Response('The requested URL was rejected. Please consult with your administrator.'),
+        trawl: new TrawlClient('http://browser.test', async () => answer()),
+        recorder: { ...NOOP_RECORDER, step: value => { recorded.push(value); } }, browserExecutablePath: null });
+      const error: unknown = await carrier.track({ number }, { budgetMs: 8000 }).catch((caught: unknown) => caught);
+      expect(error).toMatchObject({ kind });
+      expect(recorded.map(row => [row.step, row.outcome])).toEqual([['direct', 'challenge'], ['trawl', kind]]);
+      if (kind === 'budget') expect((error as Error).cause).toMatchObject({ status: 500 });
+    }
+  });
 });

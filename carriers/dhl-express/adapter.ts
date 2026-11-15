@@ -9,6 +9,7 @@ import { recoverableByDefault, runSteps, type StepContext } from '../../core/run
 import { paddedDate } from '../../core/time/fields.js';
 import { explicitOffsetTime, zonedTime } from '../../core/time/index.js';
 import { clean, parseJsonBytes } from '../../core/transport/index.js';
+import { budgetWhenOutOfTime } from '../../core/transport/trawl.js';
 import { isRecord } from '../../core/types.js';
 import { DhlTrackingApi, isMissingShipment } from './api.js';
 import { facilityZone } from './clock.js';
@@ -265,7 +266,8 @@ export class DhlExpressTracker {
     if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, budget.budgetMs);
     const page = await this.environment.trawl.scrape({ url: `https://www.dhl.com/global-en/home/tracking/tracking-parcel.html?submit=1&tracking-id=${number}`, skipHttp: true, maxTier: 3,
       maxTimeout: timeoutMs, captureResponses: [BROWSER_API], settleTimeout: timeoutMs,
-    }, { provider: PROVIDER, timeoutMs, signal: budget.signal, maxBytes: 6_000_000, requireSolved: false });
+    }, { provider: PROVIDER, timeoutMs, signal: budget.signal, maxBytes: 6_000_000, requireSolved: false })
+      .catch(budgetWhenOutOfTime(PROVIDER, budget.budgetMs));
     budget.signal.throwIfAborted();
     const captures = page.capturedResponses.filter((r) => {
       try { const url = new URL(r.url); return url.origin + url.pathname === BROWSER_API && !url.username && !url.password

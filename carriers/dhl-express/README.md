@@ -60,7 +60,8 @@ page in a fresh context and captures its matching `utapi` response. The browser
 lets the page complete its verification and repeat tracking after an HTTP 428;
 the intermediate challenge is not a shipment answer. HTTP recognition never
 launches a browser; browser recognition is a separate opt-in phase and retains
-its history.
+its history. A browser read TRAWL gives up for lack of time fails as `budget`, not as the
+service's HTTP 500.
 
 The tracking API and the global page give DHL's delivery estimate (`estimatedTimeOfDelivery`),
 kept as its day until the shipment is delivered or returned. `direct` reads no estimate.

@@ -664,6 +664,24 @@ describe('PosteItalianeTracker fetch', () => {
     }
   });
 
+  it('fails a browser read TRAWL gave up for lack of time as the budget running out, and its other failures as before', async () => {
+    const reply = (reason: string, error = 'Max tier reached without success') => response({ error,
+      timings: [{ tier: 3, status: 'error', reason }] }, 500);
+    for (const [answer, kind] of [
+      [() => reply('Scrape deadline exceeded', 'Scrape deadline exceeded'), 'budget'],
+      [() => reply('evaluate: The operation was aborted. '), 'budget'],
+      [() => reply('proxy-connection-failed'), 'indeterminate'],
+    ] as const) {
+      const step = vi.fn();
+      const tracker = new PosteItalianeTracker({ fetcher: async () => response(gate, 400),
+        trawl: new TrawlClient('http://browser.test', async () => answer()), recorder: { lookup() {}, step } });
+      const error: unknown = await tracker.fetch(TRACKING_NUMBER, { budgetMs: 20_000 }).catch((caught: unknown) => caught);
+      expect(error).toMatchObject({ kind });
+      expect(step.mock.calls.map(([row]) => [row.step, row.outcome])).toEqual([['direct', 'challenge'], ['trawl', kind]]);
+      if (kind === 'budget') expect((error as Error).cause).toMatchObject({ status: 500 });
+    }
+  });
+
   it('does not launch recovery without enough time or after cancellation', async () => {
     const service = browser([capture(parcel())]);
     const controller = new AbortController();

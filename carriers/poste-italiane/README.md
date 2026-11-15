@@ -59,6 +59,7 @@ Italiane for a number issued abroad.
    remains a failure, allowing enabled providers to recover. While TRAWL's audio pause is on,
    the page is not opened: it would show the same challenge. HTTP recognition uses only `direct`.
    Both steps share the caller's budget; browser recovery needs at least eight seconds left.
+   A browser read TRAWL gives up for lack of time fails as `budget`, not as the service's HTTP 500.
    If the widget disappears while its verified lookup is in flight, capture waits for that
    request within the same deadline. A later failed request cannot leave an earlier answer
    looking complete.

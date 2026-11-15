@@ -2,7 +2,7 @@ import { BudgetExceededError, ChallengeError, IndeterminateError, RateLimitedErr
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { clean } from '../../core/transport/index.js';
-import type { TrawlClient } from '../../core/transport/trawl.js';
+import { budgetWhenOutOfTime, type TrawlClient } from '../../core/transport/trawl.js';
 import { isRecord } from '../../core/types.js';
 import { normalizeXpoLtlNumber, PROVIDER, XPO_LTL_MAX_BYTES } from './parser.js';
 import { xpoLtlEventStage, xpoLtlSummaryStatus } from './status.js';
@@ -83,7 +83,8 @@ export async function xpoBrowser(trawl: TrawlClient, raw: string, signal: AbortS
   if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, remainingMs);
   const page = await trawl.scrape({ url: `${ORIGIN}/public-app/shipments?referenceNumber=${number}`, skipHttp: true, maxTier: 3,
     captureResponses: [endpoint], maxTimeout: timeoutMs, settleTimeout: timeoutMs },
-  { provider: PROVIDER, timeoutMs, signal, requireSolved: false, captureWindow: 'last', maxBytes: 6 * XPO_LTL_MAX_BYTES });
+  { provider: PROVIDER, timeoutMs, signal, requireSolved: false, captureWindow: 'last', maxBytes: 6 * XPO_LTL_MAX_BYTES })
+    .catch(budgetWhenOutOfTime(PROVIDER, remainingMs));
   signal.throwIfAborted();
   const responses = page.capturedResponses.filter(row => row.url === endpoint);
   const response = responses.at(-1);
