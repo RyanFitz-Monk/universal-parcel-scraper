@@ -1,0 +1,36 @@
+{
+  "id": "golucky",
+  "displayName": "GoLucky Express",
+  "aliases": [
+    "GoLucky",
+    "喜运达",
+    "喜运达速递",
+    "深圳喜运达供应链科技有限公司"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#ff1136"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.goluckyvip.com/shipment.html",
+    "canaryUrl": "https://www.goluckyvip.com/shipment.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

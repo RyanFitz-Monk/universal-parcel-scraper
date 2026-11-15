@@ -1,0 +1,31 @@
+{
+  "id": "senda-insular",
+  "displayName": "Senda Insular",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#1e8cbe"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://clientes.sendainsular.com/DlWebTrackingVWE/",
+    "canaryUrl": "https://clientes.sendainsular.com/DlWebTrackingVWE/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

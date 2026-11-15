@@ -1,0 +1,41 @@
+{
+  "id": "enviopack-mx",
+  "displayName": "Envíopack México",
+  "aliases": [
+    "Enviopack MX"
+  ],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#ff6000"
+  },
+  "selectable": true,
+  "timezone": "America/Mexico_City",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.enviopack.com.mx/{trackingNumber}",
+    "searchUrl": "https://tracking.enviopack.com.mx/",
+    "canaryUrl": "https://tracking.enviopack.com.mx/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.enviopack.com.mx"
+      ],
+      "path": "^/([A-Za-z0-9]+)/?$"
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,34 @@
+{
+  "id": "afimex",
+  "displayName": "Afimex",
+  "aliases": [
+    "AFIMEX",
+    "AFIMEX Paquetería y Logística"
+  ],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#ff6b00"
+  },
+  "selectable": true,
+  "timezone": "America/Monterrey",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://afimex.net/rastrea-envio",
+    "canaryUrl": "https://afimex.net/rastrea-envio",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

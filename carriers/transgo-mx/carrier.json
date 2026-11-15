@@ -1,0 +1,34 @@
+{
+  "id": "transgo-mx",
+  "displayName": "TransGo",
+  "aliases": [
+    "Trans Go",
+    "Trans Go Bajío"
+  ],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#283068"
+  },
+  "selectable": true,
+  "timezone": "America/Mexico_City",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.transgo.mx/",
+    "canaryUrl": "https://www.transgo.mx/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

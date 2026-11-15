@@ -1,0 +1,34 @@
+{
+  "id": "transports-besson",
+  "displayName": "Transports Besson",
+  "aliases": [
+    "Réseau Besson",
+    "Besson"
+  ],
+  "region": {
+    "countries": [
+      "FR"
+    ]
+  },
+  "brand": {
+    "color": "#13502e"
+  },
+  "selectable": true,
+  "timezone": "Europe/Paris",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.reseaubesson.com/",
+    "canaryUrl": "https://www.reseaubesson.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

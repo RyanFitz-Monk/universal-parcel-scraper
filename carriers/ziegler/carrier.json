@@ -1,0 +1,34 @@
+{
+  "id": "ziegler",
+  "displayName": "Ziegler",
+  "aliases": [
+    "Ziegler Group"
+  ],
+  "region": {
+    "countries": [
+      "BE",
+      "FR"
+    ]
+  },
+  "brand": {
+    "color": "#066a5d"
+  },
+  "selectable": true,
+  "timezone": "Europe/Brussels",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.tzg-infocenter.com/easytrack/",
+    "canaryUrl": "https://www.tzg-infocenter.com/easytrack/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,35 @@
+{
+  "id": "ocolchonespack",
+  "displayName": "Ocolchonespack",
+  "aliases": [
+    "OcoPack",
+    "Logística OcoPack"
+  ],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#343a40"
+  },
+  "selectable": true,
+  "timezone": "America/Mexico_City",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://ocolchonespack.com/guia.php?{trackingNumber}",
+    "searchUrl": "https://ocolchonespack.com/home.php",
+    "canaryUrl": "https://ocolchonespack.com/home.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "dylo-express",
+  "displayName": "Dylo Express",
+  "aliases": [
+    "Dylo"
+  ],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#00827e"
+  },
+  "selectable": true,
+  "timezone": "America/Monterrey",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://dashboard-parner.dylo.com/rastreo",
+    "canaryUrl": "https://dashboard-parner.dylo.com/rastreo",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "enviopack-ar",
+  "displayName": "Envíopack Argentina",
+  "aliases": [
+    "Enviopack AR"
+  ],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#ff6000"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.enviopack.com.ar/{trackingNumber}",
+    "searchUrl": "https://tracking.enviopack.com.ar/",
+    "canaryUrl": "https://tracking.enviopack.com.ar/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.enviopack.com.ar"
+      ],
+      "path": "^/([A-Za-z0-9]+)/?$"
+    }
+  ],
+  "detection": []
+}

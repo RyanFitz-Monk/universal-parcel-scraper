@@ -279,10 +279,16 @@ describe('carrier names reported by universal providers', () => {
     expect(carrierIdFromName('DER KURIER (SK)')).toBeUndefined();
   });
 
-  it("keeps GLS US out of bare GLS's networks", () => {
+  it("keeps GLS US and GLS Canada out of bare GLS's networks", () => {
     expect(brandCarrierIds('GLS')).not.toContain('gls-us');
+    expect(brandCarrierIds('GLS')).not.toContain('gls-ca');
     expect(carrierBrand('gls-us')).toBeUndefined();
+    expect(carrierBrand('gls-ca')).toBeUndefined();
     expect(carrierBrand('gls-de')).toBe('gls');
+  });
+
+  it.each(['GLS Canada', 'Dicom', 'Dicom Transportation Group'])('maps %s to GLS Canada, which runs a system of its own', (name) => {
+    expect(carrierIdFromName(name)).toBe('gls-ca');
   });
 
   it.each([

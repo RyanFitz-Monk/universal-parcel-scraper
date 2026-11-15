@@ -6921,6 +6921,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "afimex": {
+    "displayName": "Afimex",
+    "color": "#ff6b00",
+    "aliases": [
+      "AFIMEX",
+      "AFIMEX Paquetería y Logística"
+    ],
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Monterrey",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://afimex.net/rastrea-envio",
+    "trackingSearchUrl": "https://afimex.net/rastrea-envio",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "agt-kurye": {
     "displayName": "AGT Kurye",
     "color": "#2e2d2d",
@@ -13111,6 +13132,41 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "chic-express": {
+    "displayName": "Chic Express",
+    "color": "#0e8157",
+    "aliases": [
+      "ChicExpress",
+      "起客国际物流",
+      "起客国际"
+    ],
+    "countries": [
+      "CN",
+      "AE",
+      "SA"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.chicexpressglobal.com/tracking/",
+    "trackingUrlTemplate": "https://www.chicexpressglobal.com/tracking/?s={trackingNumber}",
+    "trackingSearchUrl": "https://www.chicexpressglobal.com/tracking/",
+    "linkRules": [
+      {
+        "domains": [
+          "chicexpressglobal.com"
+        ],
+        "pathPattern": "^/tracking/?$",
+        "params": [
+          "s"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "chilexpress": {
     "displayName": "Chilexpress",
     "color": "#ffb81c",
@@ -17047,7 +17103,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "DHL Parcel Netherlands",
       "DHL Parcel Benelux",
       "DHL eCommerce Benelux",
-      "DHL Parcel (NL)"
+      "DHL Parcel (NL)",
+      "DHL eCommerce Belgium",
+      "DHL Parcel Belgium"
     ],
     "countries": [
       "NL",
@@ -19078,6 +19136,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "dylo-express": {
+    "displayName": "Dylo Express",
+    "color": "#00827e",
+    "aliases": [
+      "Dylo"
+    ],
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Monterrey",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://dashboard-parner.dylo.com/rastreo",
+    "trackingSearchUrl": "https://dashboard-parner.dylo.com/rastreo",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "dynalogic": {
     "displayName": "Dynalogic",
     "color": "#66839c",
@@ -20559,6 +20637,62 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://www.envialia.com/",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "enviopack-ar": {
+    "displayName": "Envíopack Argentina",
+    "color": "#ff6000",
+    "aliases": [
+      "Enviopack AR"
+    ],
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.enviopack.com.ar/",
+    "trackingUrlTemplate": "https://tracking.enviopack.com.ar/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.enviopack.com.ar/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.enviopack.com.ar"
+        ],
+        "path": "^/([A-Za-z0-9]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
+  "enviopack-mx": {
+    "displayName": "Envíopack México",
+    "color": "#ff6000",
+    "aliases": [
+      "Enviopack MX"
+    ],
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Mexico_City",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.enviopack.com.mx/",
+    "trackingUrlTemplate": "https://tracking.enviopack.com.mx/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.enviopack.com.mx/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.enviopack.com.mx"
+        ],
+        "path": "^/([A-Za-z0-9]+)/?$"
+      }
+    ],
     "detectionRules": []
   },
   "eparcel-kr": {
@@ -22805,7 +22939,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "壹号专线",
       "深圳市壹号专线供应链有限公司",
       "Shenzhen 1st International Logistics",
-      "Shenzhen 1st International Logistics (Group) Co."
+      "Shenzhen 1st International Logistics (Group) Co.",
+      "深圳市一代国际货运代理有限公司",
+      "一代国际物流"
     ],
     "countries": [
       "CN"
@@ -24881,6 +25017,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "gls-ca": {
+    "displayName": "GLS Canada",
+    "color": "#ffdd00",
+    "aliases": [
+      "Dicom",
+      "Dicom Transportation Group"
+    ],
+    "countries": [
+      "CA"
+    ],
+    "selectable": true,
+    "timezone": "America/Toronto",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://gls-group.com/CA/en/send-and-receive/track-a-shipment/",
+    "trackingUrlTemplate": "https://gls-group.com/CA/en/send-and-receive/track-a-shipment/?match={trackingNumber}",
+    "trackingSearchUrl": "https://gls-group.com/CA/en/send-and-receive/track-a-shipment/",
+    "linkRules": [
+      {
+        "domains": [
+          "gls-group.com",
+          "gls-group.eu"
+        ],
+        "pathPattern": "^/CA/",
+        "params": [
+          "match"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "gls-es": {
     "displayName": "GLS Spain",
     "color": "#ffdd00",
@@ -25661,6 +25830,29 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://www.golilla.it/",
     "trackingSearchUrl": "https://my.golilla.it/segui",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "golucky": {
+    "displayName": "GoLucky Express",
+    "color": "#ff1136",
+    "aliases": [
+      "GoLucky",
+      "喜运达",
+      "喜运达速递",
+      "深圳喜运达供应链科技有限公司"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.goluckyvip.com/shipment.html",
+    "trackingSearchUrl": "https://www.goluckyvip.com/shipment.html",
     "linkRules": [],
     "detectionRules": []
   },
@@ -28938,6 +29130,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "preferred": true
       }
     ]
+  },
+  "itc-delivery": {
+    "displayName": "ITC Delivery",
+    "color": "#d4212a",
+    "countries": [
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/New_York",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.itcdelivery.com/track/",
+    "trackingSearchUrl": "https://www.itcdelivery.com/track/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "j-and-t-au": {
     "displayName": "J&T Express Australia",
@@ -34824,6 +35033,29 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "mebel-taxi": {
+    "displayName": "Mebel Taxi",
+    "color": "#ffc000",
+    "aliases": [
+      "MebelTaxi",
+      "Mebel-Taxi"
+    ],
+    "countries": [
+      "PL",
+      "DE",
+      "AT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Warsaw",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://mebel-taxi.pl/",
+    "trackingSearchUrl": "https://mebel-taxi.pl/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "meest": {
     "displayName": "Meest",
     "color": "#0061af",
@@ -37350,6 +37582,49 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "ock-cn": {
+    "displayName": "OCK",
+    "color": "#d7000f",
+    "aliases": [
+      "触达物流",
+      "触达物流科技（深圳）有限公司"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.ock56.com/track.php",
+    "trackingSearchUrl": "https://www.ock56.com/track.php",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "ocolchonespack": {
+    "displayName": "Ocolchonespack",
+    "color": "#343a40",
+    "aliases": [
+      "OcoPack",
+      "Logística OcoPack"
+    ],
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Mexico_City",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ocolchonespack.com/home.php",
+    "trackingUrlTemplate": "https://ocolchonespack.com/guia.php?{trackingNumber}",
+    "trackingSearchUrl": "https://ocolchonespack.com/home.php",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "ocs-ana": {
     "displayName": "OCS ANA Group",
     "color": "#0a3382",
@@ -37615,7 +37890,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "Eesti Post",
       "Estonian Post",
-      "Estonia Post"
+      "Estonia Post",
+      "Post11"
     ],
     "countries": [
       "EE",
@@ -42431,6 +42707,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "quick-couriers-pk": {
+    "displayName": "Quick Couriers Service",
+    "color": "#006cbc",
+    "aliases": [
+      "Quick Couriers"
+    ],
+    "countries": [
+      "PK"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Karachi",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://quickcouriersservice.com/tracking/",
+    "trackingUrlTemplate": "https://quickcouriersservice.com/tracking/?CN={trackingNumber}",
+    "trackingSearchUrl": "https://quickcouriersservice.com/tracking/",
+    "linkRules": [
+      {
+        "domains": [
+          "quickcouriersservice.com"
+        ],
+        "pathPattern": "^/tracking/?$",
+        "params": [
+          "CN"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "quick-fort": {
     "displayName": "Quick Fort",
     "color": "#0a275f",
@@ -44922,12 +45229,30 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "senda-insular": {
+    "displayName": "Senda Insular",
+    "color": "#1e8cbe",
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://clientes.sendainsular.com/DlWebTrackingVWE/",
+    "trackingSearchUrl": "https://clientes.sendainsular.com/DlWebTrackingVWE/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "sendex": {
     "displayName": "Sendex",
     "color": "#de172e",
     "aliases": [
       "SendEx",
-      "Sendex by Coordi"
+      "Sendex by Coordi",
+      "Senda Express"
     ],
     "countries": [
       "MX"
@@ -50447,6 +50772,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "tmg-jp": {
+    "displayName": "T.M.G",
+    "color": "#1c3c8d",
+    "aliases": [
+      "TMG",
+      "TMG Group",
+      "株式会社T.M.G"
+    ],
+    "countries": [
+      "JP"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Tokyo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://track.tmg-cts.com/cts/TmgCargoSearchAction.do",
+    "trackingSearchUrl": "https://track.tmg-cts.com/cts/TmgCargoSearchAction.do?method_id=INIT",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "tmm-express": {
     "displayName": "TMM Express",
     "color": "#650360",
@@ -51485,6 +51832,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "transgo-mx": {
+    "displayName": "TransGo",
+    "color": "#283068",
+    "aliases": [
+      "Trans Go",
+      "Trans Go Bajío"
+    ],
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Mexico_City",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.transgo.mx/",
+    "trackingSearchUrl": "https://www.transgo.mx/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "transilvania-post": {
     "displayName": "Transilvania Post",
     "color": "#fdbe0f",
@@ -51623,6 +51991,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "transportes-condesa": {
+    "displayName": "Transportes Condesa",
+    "color": "#101888",
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Monterrey",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.tcondesa.com.mx/Home/Support",
+    "trackingSearchUrl": "https://www.tcondesa.com.mx/Home/Support",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "transportes-rapex": {
     "displayName": "Transportes Rapex",
     "color": "#3191af",
@@ -51652,6 +52037,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "transports-besson": {
+    "displayName": "Transports Besson",
+    "color": "#13502e",
+    "aliases": [
+      "Réseau Besson",
+      "Besson"
+    ],
+    "countries": [
+      "FR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Paris",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.reseaubesson.com/",
+    "trackingSearchUrl": "https://www.reseaubesson.com/",
+    "linkRules": [],
     "detectionRules": []
   },
   "transpress": {
@@ -56786,6 +57192,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "ziegler": {
+    "displayName": "Ziegler",
+    "color": "#066a5d",
+    "aliases": [
+      "Ziegler Group"
+    ],
+    "countries": [
+      "BE",
+      "FR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Brussels",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.tzg-infocenter.com/easytrack/",
+    "trackingSearchUrl": "https://www.tzg-infocenter.com/easytrack/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "zimpost": {
     "displayName": "Zimpost",
     "color": "#ee1c25",
@@ -57226,6 +57653,7 @@ export const CARRIER_IDS = [
   "aetos-courier",
   "aex-paraguay",
   "afghan-post",
+  "afimex",
   "agt-kurye",
   "ahamove",
   "ahl-courier",
@@ -57404,6 +57832,7 @@ export const CARRIER_IDS = [
   "changjiang-express",
   "chazki",
   "cheetah-delivery",
+  "chic-express",
   "chilexpress",
   "china-railway-express",
   "chinz-logistics",
@@ -57564,6 +57993,7 @@ export const CARRIER_IDS = [
   "dsv",
   "dtd-pk",
   "dx",
+  "dylo-express",
   "dynalogic",
   "e-cargo",
   "e-commerce-international",
@@ -57606,6 +58036,8 @@ export const CARRIER_IDS = [
   "energo",
   "envia-colombia",
   "envialia",
+  "enviopack-ar",
+  "enviopack-mx",
   "eparcel-kr",
   "epost-global",
   "equick",
@@ -57728,6 +58160,7 @@ export const CARRIER_IDS = [
   "globalpost",
   "globex-post",
   "gls-at",
+  "gls-ca",
   "gls-es",
   "gls-it",
   "gls-pl",
@@ -57747,6 +58180,7 @@ export const CARRIER_IDS = [
   "gofo-nl",
   "gogo-xpress",
   "golilla",
+  "golucky",
   "goodluck-courier",
   "goodmaji",
   "gordom-logistika",
@@ -57845,6 +58279,7 @@ export const CARRIER_IDS = [
   "irs-romexpress",
   "islandwide-express",
   "israel-post",
+  "itc-delivery",
   "j-and-t-au",
   "j-and-t-br",
   "j-and-t-cargo",
@@ -58013,6 +58448,7 @@ export const CARRIER_IDS = [
   "maxzeego",
   "mayiyinfu",
   "mds-collivery",
+  "mebel-taxi",
   "meest",
   "megacity-courier",
   "meihoo-pegasus",
@@ -58088,6 +58524,8 @@ export const CARRIER_IDS = [
   "obibox",
   "oca",
   "ocasa",
+  "ock-cn",
+  "ocolchonespack",
   "ocs-ana",
   "odm-express",
   "okaken",
@@ -58225,6 +58663,7 @@ export const CARRIER_IDS = [
   "qt-express",
   "quality-post",
   "quantium-solutions",
+  "quick-couriers-pk",
   "quick-fort",
   "quick-rabbit",
   "quicksilver-sa",
@@ -58298,6 +58737,7 @@ export const CARRIER_IDS = [
   "seino",
   "seino-super-express",
   "seko",
+  "senda-insular",
   "sendex",
   "sending",
   "sendle",
@@ -58454,6 +58894,7 @@ export const CARRIER_IDS = [
   "tirupati-courier",
   "tiui",
   "tma-companies",
+  "tmg-jp",
   "tmm-express",
   "tnt-au",
   "tnt-it",
@@ -58483,11 +58924,14 @@ export const CARRIER_IDS = [
   "transaher",
   "transcorp",
   "transfera",
+  "transgo-mx",
   "transilvania-post",
   "transmission",
   "transnatur",
   "transport-rdl",
+  "transportes-condesa",
   "transportes-rapex",
+  "transports-besson",
   "transpress",
   "travel-express",
   "trendyol-express",
@@ -58641,6 +59085,7 @@ export const CARRIER_IDS = [
   "zeleris",
   "zes-express",
   "zheldor",
+  "ziegler",
   "zimpost",
   "zipasgo",
   "zippd",
@@ -58795,6 +59240,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "aetos-courier": [],
   "aex-paraguay": [],
   "afghan-post": [],
+  "afimex": [],
   "agt-kurye": [],
   "ahamove": [],
   "ahl-courier": [],
@@ -58973,6 +59419,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "changjiang-express": [],
   "chazki": [],
   "cheetah-delivery": [],
+  "chic-express": [],
   "chilexpress": [],
   "china-railway-express": [],
   "chinz-logistics": [],
@@ -59133,6 +59580,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "dsv": ["dsv-stt"],
   "dtd-pk": [],
   "dx": ["dx-1"],
+  "dylo-express": [],
   "dynalogic": [],
   "e-cargo": [],
   "e-commerce-international": ["e-commerce-international-1"],
@@ -59175,6 +59623,8 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "energo": ["energo-1"],
   "envia-colombia": [],
   "envialia": [],
+  "enviopack-ar": [],
+  "enviopack-mx": [],
   "eparcel-kr": ["eparcel-kr-1"],
   "epost-global": ["epost-global-1"],
   "equick": ["equick-eqk"],
@@ -59297,6 +59747,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "globalpost": ["globalpost-1"],
   "globex-post": [],
   "gls-at": ["gls-at-1","gls-at-2"],
+  "gls-ca": [],
   "gls-es": ["gls-es-1","gls-es-2"],
   "gls-it": ["gls-it-1","gls-it-digit-depot"],
   "gls-pl": ["gls-pl-1","gls-pl-2"],
@@ -59316,6 +59767,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "gofo-nl": ["gofo-nl-1"],
   "gogo-xpress": ["gogo-xpress-1"],
   "golilla": [],
+  "golucky": [],
   "goodluck-courier": [],
   "goodmaji": [],
   "gordom-logistika": [],
@@ -59414,6 +59866,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "irs-romexpress": [],
   "islandwide-express": [],
   "israel-post": ["israel-post-1","israel-post-s10"],
+  "itc-delivery": [],
   "j-and-t-au": ["j-and-t-au-1"],
   "j-and-t-br": ["j-and-t-br-1"],
   "j-and-t-cargo": ["j-and-t-cargo-1","j-and-t-cargo-2"],
@@ -59582,6 +60035,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "maxzeego": [],
   "mayiyinfu": ["mayiyinfu-1","mayiyinfu-2"],
   "mds-collivery": [],
+  "mebel-taxi": [],
   "meest": ["meest-1","meest-2","meest-3"],
   "megacity-courier": [],
   "meihoo-pegasus": ["meihoo-pegasus-1"],
@@ -59657,6 +60111,8 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "obibox": ["obibox-1"],
   "oca": [],
   "ocasa": ["ocasa-1"],
+  "ock-cn": [],
+  "ocolchonespack": [],
   "ocs-ana": [],
   "odm-express": [],
   "okaken": [],
@@ -59794,6 +60250,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "qt-express": [],
   "quality-post": [],
   "quantium-solutions": [],
+  "quick-couriers-pk": [],
   "quick-fort": ["quick-fort-1"],
   "quick-rabbit": ["quick-rabbit-1","quick-rabbit-2","quick-rabbit-3"],
   "quicksilver-sa": ["quicksilver-sa-1"],
@@ -59867,6 +60324,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "seino": [],
   "seino-super-express": [],
   "seko": [],
+  "senda-insular": [],
   "sendex": [],
   "sending": ["sending-1"],
   "sendle": ["sendle-1"],
@@ -60023,6 +60481,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "tirupati-courier": [],
   "tiui": [],
   "tma-companies": [],
+  "tmg-jp": [],
   "tmm-express": [],
   "tnt-au": ["tnt-au-1"],
   "tnt-it": ["tnt-it-1","tnt-it-check"],
@@ -60052,11 +60511,14 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "transaher": ["transaher-1"],
   "transcorp": [],
   "transfera": [],
+  "transgo-mx": [],
   "transilvania-post": [],
   "transmission": ["transmission-1"],
   "transnatur": [],
   "transport-rdl": [],
+  "transportes-condesa": [],
   "transportes-rapex": [],
+  "transports-besson": [],
   "transpress": [],
   "travel-express": [],
   "trendyol-express": [],
@@ -60210,6 +60672,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "zeleris": ["zeleris-1"],
   "zes-express": ["zes-express-1"],
   "zheldor": [],
+  "ziegler": [],
   "zimpost": [],
   "zipasgo": [],
   "zippd": [],

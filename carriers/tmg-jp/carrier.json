@@ -1,0 +1,35 @@
+{
+  "id": "tmg-jp",
+  "displayName": "T.M.G",
+  "aliases": [
+    "TMG",
+    "TMG Group",
+    "株式会社T.M.G"
+  ],
+  "region": {
+    "countries": [
+      "JP"
+    ]
+  },
+  "brand": {
+    "color": "#1c3c8d"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tokyo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://track.tmg-cts.com/cts/TmgCargoSearchAction.do?method_id=INIT",
+    "canaryUrl": "https://track.tmg-cts.com/cts/TmgCargoSearchAction.do",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

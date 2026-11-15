@@ -1,0 +1,46 @@
+{
+  "id": "gls-ca",
+  "displayName": "GLS Canada",
+  "aliases": [
+    "Dicom",
+    "Dicom Transportation Group"
+  ],
+  "region": {
+    "countries": [
+      "CA"
+    ]
+  },
+  "brand": {
+    "color": "#ffdd00"
+  },
+  "selectable": true,
+  "timezone": "America/Toronto",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://gls-group.com/CA/en/send-and-receive/track-a-shipment/?match={trackingNumber}",
+    "searchUrl": "https://gls-group.com/CA/en/send-and-receive/track-a-shipment/",
+    "canaryUrl": "https://gls-group.com/CA/en/send-and-receive/track-a-shipment/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "gls-group.com",
+        "gls-group.eu"
+      ],
+      "pathPattern": "^/CA/",
+      "params": [
+        "match"
+      ]
+    }
+  ],
+  "detection": []
+}

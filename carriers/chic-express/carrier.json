@@ -1,0 +1,48 @@
+{
+  "id": "chic-express",
+  "displayName": "Chic Express",
+  "aliases": [
+    "ChicExpress",
+    "起客国际物流",
+    "起客国际"
+  ],
+  "region": {
+    "countries": [
+      "CN",
+      "AE",
+      "SA"
+    ]
+  },
+  "brand": {
+    "color": "#0e8157"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.chicexpressglobal.com/tracking/?s={trackingNumber}",
+    "searchUrl": "https://www.chicexpressglobal.com/tracking/",
+    "canaryUrl": "https://www.chicexpressglobal.com/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "chicexpressglobal.com"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "s"
+      ]
+    }
+  ],
+  "detection": []
+}

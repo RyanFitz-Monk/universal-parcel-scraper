@@ -1,0 +1,31 @@
+{
+  "id": "transportes-condesa",
+  "displayName": "Transportes Condesa",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#101888"
+  },
+  "selectable": true,
+  "timezone": "America/Monterrey",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.tcondesa.com.mx/Home/Support",
+    "canaryUrl": "https://www.tcondesa.com.mx/Home/Support",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

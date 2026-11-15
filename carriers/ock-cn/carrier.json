@@ -1,0 +1,34 @@
+{
+  "id": "ock-cn",
+  "displayName": "OCK",
+  "aliases": [
+    "触达物流",
+    "触达物流科技（深圳）有限公司"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#d7000f"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.ock56.com/track.php",
+    "canaryUrl": "https://www.ock56.com/track.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

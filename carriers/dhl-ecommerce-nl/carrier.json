@@ -5,7 +5,9 @@
     "DHL Parcel Netherlands",
     "DHL Parcel Benelux",
     "DHL eCommerce Benelux",
-    "DHL Parcel (NL)"
+    "DHL Parcel (NL)",
+    "DHL eCommerce Belgium",
+    "DHL Parcel Belgium"
   ],
   "region": {
     "countries": [

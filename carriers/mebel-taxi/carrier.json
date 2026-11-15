@@ -1,0 +1,36 @@
+{
+  "id": "mebel-taxi",
+  "displayName": "Mebel Taxi",
+  "aliases": [
+    "MebelTaxi",
+    "Mebel-Taxi"
+  ],
+  "region": {
+    "countries": [
+      "PL",
+      "DE",
+      "AT"
+    ]
+  },
+  "brand": {
+    "color": "#ffc000"
+  },
+  "selectable": true,
+  "timezone": "Europe/Warsaw",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://mebel-taxi.pl/",
+    "canaryUrl": "https://mebel-taxi.pl/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}
