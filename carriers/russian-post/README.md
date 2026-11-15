@@ -31,6 +31,10 @@ page has not shown yet are mapped from the operation list of the open-source
 [lapaygroup/RussianPost](https://github.com/lapaygroup/RussianPost/blob/master/src/StatusList.php)
 client, which names each operation in Russian.
 
+The English feed gives some acceptance attributes, the simplified pre-filled and prepaid ones,
+in Russian. Their entries in `statuses.json` give the English the adapter shows instead, and a row
+stored with the Russian label is taken over by the English one at the same instant and place.
+
 ## Network access
 
 The website and tracking API require Russian egress. Consumers supply an appropriately routed

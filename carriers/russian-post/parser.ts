@@ -6,7 +6,7 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
-import { russianPostStage } from './status.js';
+import { russianPostEnglish, russianPostStage } from './status.js';
 
 export const PROVIDER = 'Russian Post';
 
@@ -65,7 +65,8 @@ export function parseRussianPost(payload: unknown, raw: string): CarrierResult {
     }
     if (row.operationType === 3) returnLeg = true;
     const code = `${row.operationType}.${row.operationAttr}`;
-    const description = text(row.humanStatus || row.humanOperationStatus);
+    const wording = text(row.humanStatus || row.humanOperationStatus);
+    const description = russianPostEnglish(wording) ?? wording;
     const time = typeof row.date === 'string' ? row.date : '';
     if (!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(time) || !explicitOffsetTime(time)) {
       throw new SchemaError(PROVIDER, 'Russian Post returned an invalid scan timestamp');
@@ -73,7 +74,7 @@ export function parseRussianPost(payload: unknown, raw: string): CarrierResult {
     const city = row.cityName == null || row.cityName === '' ? '' : text(row.cityName, 160);
     const country = row.countryName == null || row.countryName === '' ? '' : text(row.countryName, 80);
     const location = [city, country].filter(Boolean).join(', ');
-    const staged = russianPostStage(code, description, returnLeg || (row === history[0] && item.isReturned === true));
+    const staged = russianPostStage(code, wording, returnLeg || (row === history[0] && item.isReturned === true));
     const event: CarrierEvent = { time, description, provider_code: code, ...(location ? { location } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) };
     const key = JSON.stringify(event);

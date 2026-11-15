@@ -1,5 +1,7 @@
+import { statusWordings } from '../../core/status/english.js';
 import { classifyWording, type ClassifiedWording, type Stage } from '../../core/status/index.js';
-import type { CarrierStatusMap } from '../../core/status/statusMap.js';
+import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
+import statuses from './statuses.json' with { type: 'json' };
 
 const CODES: ReadonlyMap<string, Stage> = new Map([
   ['28.0', 'registered'],
@@ -34,3 +36,9 @@ export const statusMap: CarrierStatusMap = {
   stage: code => codeStage(code ?? ''),
   gaps: [...DELIVERY].map(code => ({ code, note: 'Delivery completes the forward or return leg; the adapter reads it with the preceding return operation.' })),
 };
+
+// The English feed gives some acceptance attributes' labels in Russian. Their entries give the English shown instead.
+const WORDINGS = statusWordings(statuses.entries);
+
+/** The English shown for a label the English feed gives in Russian, or undefined. */
+export const russianPostEnglish = (wording: string): string | undefined => WORDINGS.english(normalizeStatusWording(wording));

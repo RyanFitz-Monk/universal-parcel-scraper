@@ -4,6 +4,7 @@ import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, RUSSIAN_POST_ENDPOINT, RussianPostTracker } from './adapter.js';
 import { parseRussianPost, russianPostNumber } from './parser.js';
+import { russianPostEnglish } from './status.js';
 
 const NUMBER = '8546073916204' + [...'0123456789'].find(digit => CHECKSUMS.gs1('8546073916204' + digit))!;
 const row = (operationType = 2, operationAttr = 6, humanStatus = 'Delivered to the addressee', date = '2026-03-12T16:58:40.000+07:00') => ({
@@ -81,6 +82,20 @@ describe('Russian Post anonymous tracking', () => {
       expect(statusMapAnswer({ carrier: 'russian-post', providerCode: code, description: 'Упрощенный предоплаченный' }), code).toEqual({ kind: 'mapped', stage: 'accepted' });
     }
     expect(statusMapAnswer({ carrier: 'russian-post', providerCode: '10.0', description: 'Example' })).toEqual({ kind: 'mapped', stage: 'in_transit' });
+  });
+
+  it('shows English for the acceptance labels the English feed gives in Russian', () => {
+    for (const [code, russian, english] of [[7, 'Упрощенный предзаполненный', 'Simplified acceptance, pre-filled'], [8, 'Упрощенный предоплаченный', 'Simplified acceptance, prepaid']] as const) {
+      const body = fixture(); Object.assign(body[0]!.trackingItem, { globalStatus: 'IN_PROGRESS',
+        trackingHistoryItemList: [row(8, 0, 'Sorting', '2026-03-11T09:00:00.000+03:00'), row(1, code, russian, '2026-03-10T12:00:00.000+03:00')] });
+      const accepted = parseRussianPost(body, NUMBER).events!.at(-1)!;
+      expect(accepted, russian).toMatchObject({ description: english, provider_code: `1.${code}`, stage: 'accepted', stage_source: 'carrier_map' });
+      expect(russianPostEnglish(russian)).toBe(english);
+      for (const description of [russian, english]) {
+        expect(statusMapAnswer({ carrier: 'russian-post', providerCode: `1.${code}`, description })).toEqual({ kind: 'mapped', stage: 'accepted' });
+      }
+    }
+    expect(russianPostEnglish('Arrived at the Post office')).toBeUndefined();
   });
 
   it('does not end a return while later sorting or transport continues', () => {

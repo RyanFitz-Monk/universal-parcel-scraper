@@ -23,12 +23,22 @@
       "confirmedBy": "live"
     },
     {
+      "code": "1.7",
+      "wording": "Упрощенный предзаполненный",
+      "stage": "accepted",
+      "english": "Simplified acceptance, pre-filled",
+      "language": "ru",
+      "confirmedBy": "source",
+      "note": "Label the open-source lapaygroup/RussianPost client's operation list (src/StatusList.php) gives this operation: acceptance (operation type 1), simplified, its form pre-filled. The English feed gives it in Russian, like 1.8."
+    },
+    {
       "code": "1.8",
       "wording": "Упрощенный предоплаченный",
       "stage": "accepted",
+      "english": "Simplified acceptance, prepaid",
       "language": "ru",
       "confirmedBy": "live",
-      "note": "Acceptance (operation type 1), simplified and prepaid. Every type 1 attribute is an acceptance."
+      "note": "Acceptance (operation type 1), simplified and prepaid. Every type 1 attribute is an acceptance. The English feed gives this attribute's label in Russian."
     },
     {
       "code": "8.0",

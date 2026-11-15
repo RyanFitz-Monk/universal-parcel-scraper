@@ -677,6 +677,18 @@ describe('same-instant identity policies', () => {
     expect(policy?.matches?.(english, english)).toBe(false);
   });
 
+  it('lets a Russian Post acceptance shown in English take over the row stored with its Russian label', () => {
+    const policy = sameInstantIdentityPolicy('russian-post', { supportsScanMatching: true });
+    expect(policy).toMatchObject({ storedSources: ['russian-post'], requireProviderCode: false, matchEachScan: true });
+    const english = { stage: 'accepted', description: 'Simplified acceptance, pre-filled', location: 'Example City, Russia', providerCode: '1.7' };
+    const russian = { ...english, description: 'Упрощенный предзаполненный' };
+    expect(policy?.matches?.(english, russian)).toBe(true);
+    for (const different of [{ ...russian, location: 'Another City, Russia' }, { ...russian, providerCode: '1.8' }, { ...russian, description: 'Упрощенный предоплаченный' }]) {
+      expect(policy?.matches?.(english, different)).toBe(false);
+    }
+    expect(policy?.matches?.(english, english)).toBe(false);
+  });
+
   it('lets a Posti scan whose status now ends with a full stop take over the row stored without it', () => {
     const policy = sameInstantIdentityPolicy('posti', { supportsScanMatching: true });
     const stored = { stage: 'in_transit', description: 'Item has been registered The item can be registered several times.', location: 'EXAMPLE CITY', providerCode: '' };

@@ -59,6 +59,7 @@ import { sameInstantIdentityPolicy as postaSlovenije } from '../../carriers/post
 import { sameInstantIdentityPolicy as posteItaliane } from '../../carriers/poste-italiane/identity.js';
 import { sameInstantIdentityPolicy as posti } from '../../carriers/posti/identity.js';
 import { parcelforceIdentityPolicy as parcelforce, sameInstantIdentityPolicy as royalMail } from '../../carriers/royal-mail/identity.js';
+import { sameInstantIdentityPolicy as russianPost } from '../../carriers/russian-post/identity.js';
 import { sameInstantIdentityPolicy as sfExpress } from '../../carriers/sf-express/identity.js';
 import { sameInstantIdentityPolicy as shouwu } from '../../carriers/shouwu/identity.js';
 import { sameInstantIdentityPolicy as speedpak } from '../../carriers/speedpak/identity.js';
@@ -132,7 +133,7 @@ export interface SameInstantIdentityPolicy {
 }
 
 const policies: ReadonlyMap<string, SameInstantIdentityPolicy> = new Map(
-  [aliexpress, allegroOne, amazonShipping, australiaPost, austrianPost, brt, canadaPost, chinaPost, chronopost, ciblex, correiosBr, correosExpress, correosSpain, ctt, cttyex, delhivery, dhl, dhlEcommerce, dhlEcommercePl, dhlExpress, dhlink, dpd, dpdGermany, dpdFrance, dpdPoland, dpdRomania, dpdUk, fedex, firstLine, glsItaly, gofoFrance, gofoItaly, gzyl, hermesGermany, huayaExpress, imile, indiaPost, inpost, jAndTAu, jcex, jdLogistics, jrt, jsExpress, laPoste, lbcExpress, linhan, mayiyinfu, mondialRelay, mrw, nacex, nzPost, packeta, parcelforce, pitneyBowes, pocztaPolska, posMalaysia, postlogistics, postnord, postaSlovenije, posteItaliane, posti, royalMail, sfExpress, shouwu, speedpak, speedy, spxBr, sunYou, thhy, ups, usps, swissPost, vintedGo, yanwen, yilongLogistics, yto, yunExpress, zto, ztoInternational, universal].map((policy) => [policy.sourceCarrierId, policy]),
+  [aliexpress, allegroOne, amazonShipping, australiaPost, austrianPost, brt, canadaPost, chinaPost, chronopost, ciblex, correiosBr, correosExpress, correosSpain, ctt, cttyex, delhivery, dhl, dhlEcommerce, dhlEcommercePl, dhlExpress, dhlink, dpd, dpdGermany, dpdFrance, dpdPoland, dpdRomania, dpdUk, fedex, firstLine, glsItaly, gofoFrance, gofoItaly, gzyl, hermesGermany, huayaExpress, imile, indiaPost, inpost, jAndTAu, jcex, jdLogistics, jrt, jsExpress, laPoste, lbcExpress, linhan, mayiyinfu, mondialRelay, mrw, nacex, nzPost, packeta, parcelforce, pitneyBowes, pocztaPolska, posMalaysia, postlogistics, postnord, postaSlovenije, posteItaliane, posti, royalMail, russianPost, sfExpress, shouwu, speedpak, speedy, spxBr, sunYou, thhy, ups, usps, swissPost, vintedGo, yanwen, yilongLogistics, yto, yunExpress, zto, ztoInternational, universal].map((policy) => [policy.sourceCarrierId, policy]),
 );
 
 const wording = (scan: SameInstantScan) => scan.description.replace(/\s+/g, ' ').trim().toLowerCase();
