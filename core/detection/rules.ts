@@ -3,7 +3,8 @@
  *
  * What it is: whether a catalog detection rule's pattern fits a normalized
  * number and its rawPattern the printed one, with each rule's expressions
- * compiled once. Detection and recognition share it.
+ * compiled once, and whether a rule rests on its check digit alone. Detection
+ * and recognition share it.
  * What it is not: no checksum and no carrier choice.
  */
 import type { DetectionRule } from '../catalog/types.js';
@@ -30,4 +31,12 @@ export function compiledRuleFits(expressions: CompiledRule, normalized: string, 
 /** The rule's pattern fits the normalized number, and its rawPattern, if any, the printed input. */
 export function ruleFits(rule: DetectionRule, normalized: string, printed: string): boolean {
   return compiledRuleFits(compiledRule(rule), normalized, printed);
+}
+
+/** A pattern that is a bare run of digits: only its check digit points to its carrier. */
+const BARE_DIGITS = /^\^(?:\\d|\[0-9\])\{\d+\}\$$/;
+
+/** The rule takes any run of digits of its length, and only its check digit backs its carrier. */
+export function restsOnCheckDigit(rule: DetectionRule): boolean {
+  return rule.checksum !== undefined && BARE_DIGITS.test(rule.pattern);
 }

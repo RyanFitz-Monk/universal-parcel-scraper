@@ -63,6 +63,19 @@ describe('prefixed Asian shipment references and shared numeric formats', () => 
     }
   });
 
+  it("prefers 4PX alone for a waybill of 311 that FedEx's or SF Express's check digit also passes", () => {
+    // Synthetic numbers: FedEx's check digit passes, SF Express's, then both.
+    for (const [number, others] of [['311999999999', ['fedex']], ['311999999991', ['sf-express']], ['311999999955', ['fedex', 'sf-express']]] as const) {
+      const match = detectCarrierMatch(number);
+      expect(match.preferred, number).toEqual(['four-px']);
+      expect(match.candidates[0], number).toBe('four-px');
+      expect(match.candidates, number).toEqual(expect.arrayContaining([...others]));
+    }
+    // Their check digits still lead other twelve digits.
+    expect(detectCarrierMatch('312999999907').preferred).toEqual(['fedex']);
+    expect(detectCarrierMatch('312999999991').preferred).toEqual(['sf-express']);
+  });
+
   it('ranks a carrier whose check digit passes ahead of popularity alone', () => {
     // Synthetic twelve digits; only the first passes Purolator's Luhn check.
     expect(recognitionCandidates('300000000004')[0]!.carrier).toBe('purolator');

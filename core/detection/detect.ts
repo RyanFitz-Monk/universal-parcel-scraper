@@ -8,7 +8,8 @@
  * failed checksum kept their carrier out of those candidates.
  * What it is not: no network lookup, no provider I/O, no carrier ranking by
  * popularity — only the rules declared in the catalog decide. A `preferred`
- * rule only moves its carrier to the front of the suggestions. A carrier that
+ * rule only moves its carrier to the front of the suggestions, and one that
+ * rests on a check digit alone gives way to a narrower one. A carrier that
  * follows parcels under their delivery carrier's number is no rival to the one
  * carrier that issues it: the issuer's high-confidence rule names the issuer,
  * and the follower is kept in `origins`. A `standalone` rule offers its
@@ -21,7 +22,7 @@ import { followsPartnerNumbers } from '../catalog/origins.js';
 import { CHECKSUMS } from './checksums.js';
 import { isCttExpressTrackingNumber } from './cttExpress.js';
 import { normalizeTrackingNumber } from './normalize.js';
-import { compiledRule, compiledRuleFits, ruleFits, type CompiledRule } from './rules.js';
+import { compiledRule, compiledRuleFits, restsOnCheckDigit, ruleFits, type CompiledRule } from './rules.js';
 import type { CarrierDetection, ChecksumRejection, DetectionOptions } from './types.js';
 
 function checksumPasses(rule: DetectionRule, trackingNumber: string): boolean {
@@ -94,22 +95,28 @@ function detect(raw: string, inText = false): { detection: CarrierDetection; rej
     return { detection: { carrier: 'unknown', confidence: 'none', candidates: [], preferred: [] }, rejections: [] };
   }
 
-  const matches: { carrier: CarrierId; confidence: 'high' | 'low'; preferred: boolean }[] = [];
+  const matches: { carrier: CarrierId; confidence: 'high' | 'low'; preferred: boolean; checkDigitOnly: boolean }[] = [];
   const rejected: RejectedRule[] = [];
   for (const group of groupsOfRules()) {
     if (!group.anyPattern.test(trackingNumber)) continue;
     for (const entry of group.carriers) {
       if (entry.carrier === 'ctt-express' && !isCttExpressTrackingNumber(trackingNumber)) continue;
       const rule = decisiveRule(entry, trackingNumber, printed, rejected, inText);
-      if (rule) matches.push({ carrier: entry.carrier, confidence: rule.confidence, preferred: rule.preferred === true });
+      if (rule) {
+        matches.push({ carrier: entry.carrier, confidence: rule.confidence, preferred: rule.preferred === true, checkDigitOnly: restsOnCheckDigit(rule) });
+      }
     }
   }
 
   const highConfidence = matches.filter((match) => match.confidence === 'high');
   const ranked = highConfidence.length > 0 ? highConfidence : matches;
-  // Number evidence first; catalog order otherwise.
-  const preferred = ranked.filter((match) => match.preferred).map((match) => match.carrier);
-  const candidates = [...preferred, ...ranked.filter((match) => !match.preferred).map((match) => match.carrier)];
+  // Number evidence first; catalog order otherwise. A check digit alone, which one run of digits
+  // of its length in ten or so passes, yields to a narrower preferred shape: some of 4PX's
+  // twelve-digit waybills of 311 pass FedEx's or SF Express's check digit too.
+  const narrower = ranked.some((match) => match.preferred && !match.checkDigitOnly);
+  const backed = ranked.filter((match) => match.preferred && !(narrower && match.checkDigitOnly));
+  const preferred = backed.map((match) => match.carrier);
+  const candidates = [...preferred, ...ranked.filter((match) => !backed.includes(match)).map((match) => match.carrier)];
   // A rule counts when passing its checksum would have listed its carrier: a
   // low-confidence rule would still be hidden by a high-confidence match.
   const rejections = rejected

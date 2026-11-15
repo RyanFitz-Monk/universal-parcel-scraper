@@ -59,8 +59,9 @@ reports the catalog carrier both agree on, never the card's phone numbers, and
 provider discovery confirms the operator separately. The feed also answers
 partners' numbers, 4PX's `OLS` references and its twelve-digit waybills. Twelve
 digits are shared by many carriers, so detection suggests 4PX only for the waybills
-starting 311 that parcels in the app showed 4PX's own tracker answering, and recognition
-asks 4PX first for them. The range moves on as 4PX issues waybills. It also follows the Cainiao Express `DOFR…HD` numbers of parcels 4PX hands to
+starting 311 that parcels in the app showed 4PX's own tracker answering, first even when
+FedEx's or SF Express's check digit also passes, and recognition asks 4PX first for them.
+The range moves on as 4PX issues waybills. It also follows the Cainiao Express `DOFR…HD` numbers of parcels 4PX hands to
 Cainiao Express in France, from the first mile; Cainiao answers them only once Cainiao
 Express has the parcel, without 4PX's leg. Aggregators name 4PX "4PX Express" for those, and
 that name is an alias, so their naming leads to this adapter, which still has to find the parcel.

@@ -18,8 +18,8 @@
         "carrier": "unknown",
         "confidence": "low",
         "candidates": [
-          "fedex",
           "four-px",
+          "fedex",
           "mondial-relay",
           "colis-prive",
           "mrw",

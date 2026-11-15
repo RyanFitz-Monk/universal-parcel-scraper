@@ -56,6 +56,9 @@ adapter and successful history retrieval are separate claims in the coverage dat
 A carrier's detection rules are tried in order, and the first that matches, checksum included,
 sets its confidence. A narrower high-confidence rule therefore comes before a broader one; the
 detection sweep fails when an earlier rule hides a high-confidence rule from every sample.
+A `preferred` rule lists its carrier first among low-confidence suggestions. One that rests on
+a check digit alone, its pattern a bare run of digits, gives way to a narrower preferred rule
+the number also fits: FedEx's and SF Express's twelve digits to 4PX's waybills of 311.
 
 An adapter is built by a factory that receives an `AdapterEnvironment`. That environment is
 its only way to the network, and no framework or app import is allowed. The registry creates

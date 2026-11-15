@@ -13,7 +13,7 @@ import { CHECKSUMS } from '../detection/checksums.js';
 import { detectCarrierMatch } from '../detection/detect.js';
 import { normalizeTrackingNumber } from '../detection/normalize.js';
 import { isPhoneNumber } from '../detection/phone.js';
-import { ruleFits } from '../detection/rules.js';
+import { restsOnCheckDigit, ruleFits } from '../detection/rules.js';
 import { AUTOMATIC_CARRIER_IDS, CARRIER_DEFINITIONS, carrierAdapter, requiredRequirements } from './definitions.js';
 import { carrierBrand } from './networks.js';
 import type { CarrierInputField } from './types.js';
@@ -60,16 +60,13 @@ export function recognitionNumberShape(number: string): string | undefined {
     .map((run) => `${/^[0-9]/.test(run) ? 'D' : 'A'}${run.length}`).join('');
 }
 
-/** A rule whose pattern is a bare run of digits: only its check digit points to its carrier. */
-const BARE_DIGITS = /^\^(?:\\d|\[0-9\])\{\d+\}\$$/;
-
 /** Whether the rule that offered a carrier for this number passed a check digit, and backs it with nothing more. */
 function checkDigit(carrier: string, normalized: string, printed: string): 'passes' | 'backs' | undefined {
   const rule = CARRIER_DEFINITIONS[carrier as CarrierId]?.detectionRules.find((candidate) =>
     ruleFits(candidate, normalized, printed)
     && (!candidate.checksum || CHECKSUMS[candidate.checksum](normalized)));
   if (rule?.checksum === undefined) return undefined;
-  return rule.preferred && BARE_DIGITS.test(rule.pattern) ? 'backs' : 'passes';
+  return rule.preferred && restsOnCheckDigit(rule) ? 'backs' : 'passes';
 }
 
 const BROWSER_RECOGNITION_RANKS: Readonly<Record<string, number | undefined>> = Object.fromEntries(
