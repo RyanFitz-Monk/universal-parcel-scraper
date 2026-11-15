@@ -24,6 +24,13 @@ const API = 'https://digitalapi.auspost.com.au/shipments-gateway/v1/watchlist/sh
 const MAX_BYTES = 1_000_000;
 const DIRECT_TIMEOUT_MS = 10_000;
 const RETRY_MIN_BROWSER_MS = 8_000;
+/**
+ * How long `adaptive` sends first reads through the proxy after the original route was refused.
+ * Refusals come in spells, and the retry after one starts with what the refusal left of the budget,
+ * so it often runs out. A short window spares the next reads that loss; a longer one mostly slows
+ * reads the original route would answer sooner, and adds proxy requests.
+ */
+const ADAPTIVE_WINDOW_MS = 15 * 60_000;
 // Match the official Android app's HTTP client and channel. DataDome can still
 // challenge this request; fetch's default `Accept-Language: *` also causes refusals.
 const APP_HEADERS = { Accept: 'application/json', 'Accept-Language': 'en-AU', AP_APP_ID: 'MYPOST', AP_CHANNEL_NAME: 'ANDROID',
@@ -287,24 +294,29 @@ export interface AustraliaPostTrackerOptions {
   recorder?: StepRecorder;
   fallbackProxyUrl?: string;
   /**
-   * Where the first browser read goes: the original route (`default`), or the configured proxy
-   * (`residential`). The retry after a challenge takes the other route.
+   * Where the first browser read goes: the original route (`default`), the configured proxy
+   * (`residential`), or the proxy for a while after the original route was refused (`adaptive`).
+   * The retry after a challenge takes the other route.
    */
-  firstRoute?: 'default' | 'residential';
+  firstRoute?: 'default' | 'residential' | 'adaptive';
 }
+
+const FIRST_ROUTES: ReadonlySet<unknown> = new Set(['default', 'residential', 'adaptive']);
 
 export class AustraliaPostTracker {
   private readonly fallbackProxy: string | null;
-  private readonly proxyFirst: boolean;
+  private readonly firstRoute: NonNullable<AustraliaPostTrackerOptions['firstRoute']>;
+  /** Until when, by `Date.now()`, an `adaptive` first read goes through the proxy. */
+  private residentialUntil = 0;
 
   constructor(private readonly options: AustraliaPostTrackerOptions) {
     const proxy = options.fallbackProxyUrl?.trim() || null;
     if (proxy) browserContextProxy(proxy);
     this.fallbackProxy = proxy;
-    if (options.firstRoute !== undefined && options.firstRoute !== 'default' && options.firstRoute !== 'residential') {
-      throw new TypeError('Australia Post first route must be default or residential');
+    if (options.firstRoute !== undefined && !FIRST_ROUTES.has(options.firstRoute)) {
+      throw new TypeError('Australia Post first route must be default, residential or adaptive');
     }
-    this.proxyFirst = options.firstRoute === 'residential' && proxy !== null;
+    this.firstRoute = proxy ? options.firstRoute ?? 'default' : 'default';
   }
 
   async fetch(raw: string, context: TrackingContext = {}): Promise<CarrierResult> {
@@ -314,6 +326,7 @@ export class AustraliaPostTracker {
     context.signal?.throwIfAborted();
     const trawl = this.options.trawl;
     const deadline = performance.now() + budgetMs;
+    const proxyFirst = this.firstRoute === 'residential' || (this.firstRoute === 'adaptive' && Date.now() < this.residentialUntil);
     let route: 'default' | 'residential' = 'default';
     let reads = 0;
     let history = false;
@@ -354,6 +367,15 @@ export class AustraliaPostTracker {
       history = !!result.events?.length;
       return result;
     };
+    const read = async (signal: AbortSignal, remainingMs: number, proxy: string | null): Promise<CarrierResult> => {
+      try {
+        return await browser(signal, remainingMs, proxy);
+      } catch (error) {
+        // Each refusal on the original route starts the window again.
+        if (!proxy && error instanceof ChallengeError && this.firstRoute === 'adaptive') this.residentialUntil = Date.now() + ADAPTIVE_WINDOW_MS;
+        throw error;
+      }
+    };
     // A gateway that refuses plain HTTP refuses it for days: the browser step reads the parcel meanwhile.
     const rest = new DirectRest('australia-post', trawl);
     return runSteps({ carrier: 'australia-post', budgetMs, signal: context.signal, recorder: routed }, [{
@@ -377,14 +399,14 @@ export class AustraliaPostTracker {
     }, {
       // The browser reads the same gateway, so it cannot improve on an inconclusive entry.
       enabled: trawl !== null, recovers: (error) => recoverableByDefault(error) && !(error instanceof IndeterminateError),
-      id: 'trawl', run: ({ signal, remainingMs }) => browser(signal, remainingMs, this.proxyFirst ? this.fallbackProxy : null),
+      id: 'trawl', run: ({ signal, remainingMs }) => read(signal, remainingMs, proxyFirst ? this.fallbackProxy : null),
     }, {
       // The other route after a challenge. A first read through the proxy also falls back when the
       // proxy fails to carry it, so a proxy outage leaves the original route.
       id: 'trawl', enabled: trawl !== null && this.fallbackProxy !== null,
-      recovers: error => (error instanceof ChallengeError || (this.proxyFirst && carrierErrorKind(error) === 'transport'))
+      recovers: error => (error instanceof ChallengeError || (proxyFirst && carrierErrorKind(error) === 'transport'))
         && deadline - performance.now() >= TRAWL_TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
-      run: ({ signal, remainingMs }) => browser(signal, remainingMs, this.proxyFirst ? null : this.fallbackProxy),
+      run: ({ signal, remainingMs }) => read(signal, remainingMs, proxyFirst ? null : this.fallbackProxy),
     }]);
   }
 }
