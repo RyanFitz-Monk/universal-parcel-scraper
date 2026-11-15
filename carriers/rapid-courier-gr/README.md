@@ -13,7 +13,10 @@ Its tracking form accepts 6 to 10 digits. No public page shows a whole number, s
 ## Why there is no adapter
 
 Its tracking page runs on Hermes Courier App, a courier software by JK Software, and shows a
-voucher's status. With no public number to check its replies against, there is no adapter.
+voucher's status. The page posts `action=hermes_track` and `tracking_number` to the site's
+`wp-admin/admin-ajax.php`, without a token, and puts the HTML fragment it gets back on the page. The
+page's script names no status, so the fragment's layout and wordings are known only from a found
+voucher. With no public number to check its replies against, there is no adapter.
 
 ## Links
 
