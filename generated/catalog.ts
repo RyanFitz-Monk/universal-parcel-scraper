@@ -5825,9 +5825,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "mode": "automatic",
       "adapter": "360lion"
     },
-    "canaryUrl": "https://www.360lion.com/",
+    "canaryUrl": "https://toms.360lion.com/track",
     "trackingUrlTemplate": "https://toms.360lion.com/track?trackNumber={trackingNumber}",
-    "trackingSearchUrl": "https://www.360lion.com/",
+    "trackingSearchUrl": "https://toms.360lion.com/track",
     "linkRules": [
       {
         "domains": [
