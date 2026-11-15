@@ -133,17 +133,18 @@ export function isCorreosExpressFailedRound(label: string): boolean {
 /**
  * The label a scan's description opens with: the description is the label,
  * then any fixed explanation. A failed round's note opens with its fixed
- * opening, which the Portuguese localizador words its own way.
+ * opening, which the Portuguese localizador words its own way. A delivery
+ * stored as "Delivered" stands for ENTREGADO.
  */
 export function correosExpressDescriptionLabel(description: string): string {
   const text = description.replace(/\s+/g, ' ').trim();
+  if (text.toLowerCase() === 'delivered') return 'ENTREGADO';
   if (/^su env[ií]o no ha podido ser entregado\b/iu.test(text)) return FAILED_ROUND;
   if (/^(?:não foi poss[ií]vel entregar o seu envio|o seu envio não pôde ser entregue)\b/iu.test(text)) return FAILED_ROUND_PT;
   return text.split('.')[0]!.trim();
 }
 
 export function classifyCorreosExpressDescription(description: string): ClassifiedStatus | undefined {
-  if (description.trim().toLowerCase() === 'delivered') return labels.ENTREGADO;
   return classifyCorreosExpressStatus(correosExpressDescriptionLabel(description));
 }
 
@@ -154,6 +155,6 @@ export const statusMap: CarrierStatusMap = {
     return (label ? classifyCorreosExpressStatus(label) : classifyCorreosExpressDescription(wording))?.stage;
   },
   gaps: [
-    { wording: 'tracking update', note: 'A form scan whose label the map does not know, shown under a neutral wording so its note cannot carry personal details.' },
+    { wording: 'tracking update', note: 'A form scan whose label the map does not know, shown under a neutral wording; its own wording is kept as its original one.' },
   ],
 };

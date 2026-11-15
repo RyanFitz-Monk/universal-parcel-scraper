@@ -329,21 +329,30 @@ describe('CTT response parsing', () => {
     expect(result.events?.map((event) => event.description)).toEqual(['Delivered parcel', 'Em trânsito']);
   });
 
-  it('never retains sender or recipient identity blocks', () => {
+  it('reads the recipient\'s name and address and who received the parcel, never the sender\'s identity', () => {
     const result = parseCttTrackingResponse({ data: { ObjectEventsFromQuery: record() } }, TRACKING_NUMBER);
+    expect(result).toMatchObject({ receiver_name: 'Secret Recipient', receiver_address: '1 Example Street\n1000-001 Lisboa',
+      signed_by: 'Secret Receptor' });
     const serialized = JSON.stringify(result);
-    for (const secret of [
-      'Secret Sender', 'Secret Recipient', 'Secret Receptor', 'sender@example.invalid',
-      '1 Example Street', 'SenderEmail', 'RecipientAddress', 'ReceptorName',
-    ]) {
+    for (const secret of ['Secret Sender', 'sender@example.invalid', 'SenderEmail', 'RecipientAddress', 'ReceptorName']) {
       expect(serialized).not.toContain(secret);
     }
+    // An address without a Portuguese postcode after its last comma stays as written.
+    const abroad = parseCttTrackingResponse({ data: { ObjectEventsFromQuery: record({ RecipientAddress: '1 Example Street, Example Town' }) } }, TRACKING_NUMBER);
+    expect(abroad.receiver_address).toBe('1 Example Street, Example Town');
+    // Only a delivered parcel names who received it, and fields of another type are left out.
+    const moving = parseCttTrackingResponse({ data: { ObjectEventsFromQuery: record({ Recipient: 7, RecipientAddress: null,
+      Events: { List: [{ DateTime: '2026-01-01T08:00:00+00:00', State: 'Aceite', StateId: 2, Event: 'Shipment accepted', EventCode: 'EMA', Local: 'Test Depot' }] } }) } },
+    TRACKING_NUMBER);
+    expect(moving.current_stage).toBe('accepted');
+    for (const field of ['receiver_name', 'receiver_address', 'signed_by']) expect(moving).not.toHaveProperty(field);
   });
 
   it('produces every capability carrier.json declares', () => {
     const result = parseCttTrackingResponse({ data: { ObjectEventsFromQuery: record() } }, TRACKING_NUMBER);
-    expect(CAPABILITIES).toEqual(['history', 'location', 'provider_code']);
+    expect(CAPABILITIES).toEqual(['history', 'location', 'provider_code', 'receiver_name', 'receiver_address', 'signed_by']);
     expect(result.events?.length).toBeGreaterThan(0);
+    expect(result.receiver_name && result.receiver_address && result.signed_by).toBeTruthy();
     expect(result.events?.some((event) => event.location)).toBe(true);
     expect(result.events?.some((event) => event.provider_code)).toBe(true);
   });

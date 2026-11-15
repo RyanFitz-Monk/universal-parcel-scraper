@@ -37,12 +37,13 @@ describe('eCourier HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel newest first in Dhaka time, once per scan, without staff, riders or addresses', () => {
+  it('reads a delivered parcel newest first in Dhaka time, once per scan, with its recipient, without staff, riders or the merchant', () => {
     const result = parseEcourier(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-03-04T15:05:00+06:00', expected_delivery: null,
-      service_name: 'Standard', delivered_at: '2026-03-04T15:05:00+06:00',
+      service_name: 'Standard', delivered_at: '2026-03-04T15:05:00+06:00', receiver_name: 'SYNTHETIC RECIPIENT',
+      receiver_address: 'House 0, Road 0, Example Area, Area: RIVERSIDE 3, Thana: Riverside\nDhaka-0000',
       events: [
         { time: '2026-03-04T15:05:00+06:00', description: 'Delivered', location: 'Riverside Branch (D90) - Dhaka - RIVERSIDE 3',
           stage: 'delivered', stage_source: 'carrier_map' },
@@ -62,7 +63,12 @@ describe('eCourier HTTP adapter', () => {
           stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic|SYNTHETIC|0170|Example|Fullfillemnt|\(riverside\)|Elapsed/);
+    expect(JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined }))
+      .not.toMatch(/Synthetic|SYNTHETIC|0170|Example|Fullfillemnt|\(riverside\)|Elapsed/);
+    // Without the merchant's entry before it, an entry cannot be told to be the recipient's.
+    const alone = parseEcourier(fixture('delivered').replace(/<li><span>Synthetic Shop Ltd\.<\/span>[^\n]*\n/, ''), DELIVERED);
+    expect(alone).not.toHaveProperty('receiver_name');
+    expect(alone).not.toHaveProperty('receiver_address');
   });
 
   it('reads a parcel in transit through the adapter', async () => {
@@ -76,6 +82,8 @@ describe('eCourier HTTP adapter', () => {
       ['Initiated API', 'registered', null],
     ]);
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).toMatchObject({ receiver_name: 'SYNTHETIC RECIPIENT',
+      receiver_address: 'House 0, Road 0, Example Area, Area: HILLTOP, Thana: Hilltop\nChattogram-0000' });
     expect(JSON.stringify(result)).not.toMatch(/Synthetic|0180/);
   });
 

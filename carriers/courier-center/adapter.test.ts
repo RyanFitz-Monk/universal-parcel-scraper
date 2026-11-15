@@ -11,6 +11,8 @@ import statuses from './statuses.json' with { type: 'json' };
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 
 const DELIVERED = '013000000017';
+// The delivery's line as the page writes it, with who took the parcel and when.
+const DELIVERY_WORDING = 'Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙ*****, Ημ/νια: 26/10/2026, Ώρα: 13:27';
 const IN_TRANSIT = '013000000024';
 const ELTA = '013000000031';
 const BOX_NOW = '013000000048';
@@ -50,7 +52,7 @@ describe('Courier Center HTTP adapter', () => {
   it('reads each scan as a Greek wall clock, across the end of summer time, and stages it by its wording', () => {
     const result = parseCourierCenter(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Η αποστολή παραδόθηκε στον παραλήπτη', last_update: '2026-10-26T13:27:00+02:00', expected_delivery: null,
+      last_status_text: DELIVERY_WORDING, last_update: '2026-10-26T13:27:00+02:00', expected_delivery: null,
       delivered_at: '2026-10-26T13:27:00+02:00', service_name: '17:00 ΕΠΟΜΕΝΗ ΜΕΡΑ ΧΕΡΣΑΙΟ/ΝΗΣΙ' });
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result.events!.map((event) => [event.time, event.stage ?? null, event.location ?? null])).toEqual([
@@ -73,11 +75,22 @@ describe('Courier Center HTTP adapter', () => {
     expect(result.events!.map((event) => event.description)).toContain('Εστάλη μήνυμα για την δυνατότητα αναδρομολόγησης σε Clever Point');
   });
 
-  it('keeps no recipient, phone, link, reference, origin or destination', () => {
+  it('reads the recipient\'s town and who took the parcel, and keeps no phone, link, reference or origin', () => {
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT], ['elta', ELTA], ['box-now', BOX_NOW]] as const) {
-      const text = JSON.stringify(parseCourierCenter(fixture(name), number));
+      const result = parseCourierCenter(fixture(name), number);
+      expect(result.receiver_address, name).toBe('ΠΡΟΟΡΙΣΜΟΣ');
+      expect(result.signed_by, name).toBe(name === 'delivered' ? 'ΔΕΙ*****' : undefined);
+      // The delivery's own wording, which names who took the parcel and when, is kept.
+      const text = JSON.stringify({ ...result, receiver_address: undefined, signed_by: undefined,
+        last_status_text: result.last_status_text === DELIVERY_WORDING ? undefined : result.last_status_text,
+        events: result.events?.map((event) => (event.description === DELIVERY_WORDING ? {} : event)) });
       expect(text, name).not.toMatch(/ΔΕΙ\*|\*{3}|00000\]|2100000000|5550123|ΑΦΕΤΗΡΙΑ|ΠΡΟΟΡΙΣΜΟΣ|link\.example|https?:|@|SAMPLE-REF|ΔΙΟΙΚΗΣΗ|WEB STATION|ΤΗΛΕΦΩΝΟ|EMAIL|Ημ\/νια|Ειδοποίησης|99999|LOCKERS-ATH|ELTA COURIER/);
     }
+    const delivered = parseCourierCenter(fixture('delivered'), DELIVERED);
+    expect(delivered.events![0]).toMatchObject({ description: DELIVERY_WORDING, stage: 'delivered' });
+    // A page without the recipient's town leaves it out.
+    expect(parseCourierCenter(changed('delivered', (html) => html.replace('<span>ΠΡΟΟΡΙΣΜΟΣ</span>', '<span></span>')), DELIVERED))
+      .not.toHaveProperty('receiver_address');
   });
 
   it('reads a failed attempt and a parcel out again by their scans while the status has not settled', () => {
@@ -140,9 +153,9 @@ describe('Courier Center HTTP adapter', () => {
     expect(parseCourierCenter(padded, ELTA).events!.at(-1)).toMatchObject({ time: '2026-10-08T11:12:00+03:00' });
   });
 
-  it('takes people, phones, links and notice numbers out of the wording', () => {
+  it('takes phones, links and notice numbers out of the wording, and keeps who took a delivery', () => {
     expect(courierCenterWording('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ ΔΕΙΓΜΑΤΟΣ, Ημ/νια: 26/10/2026, Ώρα: 13:27'))
-      .toBe('Η αποστολή παραδόθηκε στον παραλήπτη');
+      .toBe('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ ΔΕΙΓΜΑΤΟΣ, Ημ/νια: 26/10/2026, Ώρα: 13:27');
     expect(courierCenterWording('ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ ΣΤΟ ΤΗΛΕΦΩΝΟ: [*******00000] ΜΕ ΘΕΜΑ: [Εστάλη μήνυμα για την δυνατότητα αναδρομολόγησης σε Clever Point με επιλογή σημείου μέσω https://link.example/sample0]'))
       .toBe('Εστάλη μήνυμα για την δυνατότητα αναδρομολόγησης σε Clever Point');
     expect(courierCenterWording('Msg_History_Entry_2|ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΑΦΙΞΗΣ ΑΠΟΣΤΟΛΗΣ ΣΤΟΝ ΠΑΡΑΛΗΠΤΗ ΣΤΟ EMAIL: sample@example.com'))
@@ -182,7 +195,8 @@ describe('Courier Center HTTP adapter', () => {
   it('reads a shipment without scans by its status alone, or as no history', () => {
     expect(parseCourierCenter(withoutRows(fixture('delivered')), DELIVERED)).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'DeliveryCompleted',
-      provider_code: '29', last_update: null, expected_delivery: null, service_name: '17:00 ΕΠΟΜΕΝΗ ΜΕΡΑ ΧΕΡΣΑΙΟ/ΝΗΣΙ', summary_only: true, events: [],
+      provider_code: '29', last_update: null, expected_delivery: null, service_name: '17:00 ΕΠΟΜΕΝΗ ΜΕΡΑ ΧΕΡΣΑΙΟ/ΝΗΣΙ', receiver_address: 'ΠΡΟΟΡΙΣΜΟΣ',
+      summary_only: true, events: [],
     });
     // The page reads "(0) None" as the sender not having handed the parcel over yet.
     expect(parseCourierCenter(withoutRows(fixture('delivered')).replace('(29) DeliveryCompleted', '(0) None'), DELIVERED))
@@ -331,7 +345,8 @@ describe('Courier Center status vocabulary', () => {
   it('reads either casing, and leaves an unknown scan or status unmapped', () => {
     expect(courierCenterStage('ΑΝΑΘΕΣΗ ΑΠΟΣΤΟΛΗΣ ΓΙΑ ΠΑΡΑΔΟΣΗ ΣΕ ΔΙΑΝΟΜΕΑ')).toBe('out_for_delivery');
     expect(courierCenterStage('παραδοθηκε.')).toBe('delivered');
-    expect(courierCenterStage('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ')).toBeUndefined();
+    expect(courierCenterStage('Η αποστολή παραδόθηκε στον παραλήπτη: ΔΕΙΓΜΑ')).toBe('delivered');
+    expect(statusMap.stage(null, DELIVERY_WORDING.toLowerCase())).toBe('delivered');
     expect(statusMap.stage(null, 'synthetic scan')).toBeUndefined();
     expect(statusMapAnswer({ carrier: 'courier-center', providerCode: null, description: 'Synthetic scan' })).toEqual({ kind: 'unknown' });
     expect(statusMapAnswer({ carrier: 'courier-center', providerCode: '99', description: 'SyntheticStatus' })).toEqual({ kind: 'unknown' });

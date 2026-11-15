@@ -19,6 +19,10 @@ const RESULT_FOR = '조회한 결과입니다';
 const MISSING = '결과가 없습니다.';
 // The delivery result's label in the parcel's details.
 const OUTCOME = '배송/출고결과:';
+// The recipient's table, its name, and who took the parcel at its delivery.
+const RECIPIENT = '받는 사람';
+const NAME = '성명:';
+const SIGNATORY = '인수자:';
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 // Bot checks a CDN or firewall could put in place of the page.
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|<title>\s*Just a moment|g-recaptcha|h-captcha|AwsWafIntegration|awswaf\.com/i;
@@ -45,9 +49,15 @@ function scanDay(text: string): string {
   return day ?? invalid('Chunil Express returned an invalid scan date');
 }
 
-/** The value beside a label in one of the parcel's detail tables, by the label without its spaces. */
-function detail($: CheerioAPI, label: string): string {
-  const values = $('table.table02 tr').filter((_, row) => clean($(row).children('td').first().text()).replace(/\s/g, '') === label)
+/**
+ * The value beside a label in one of the parcel's detail tables, by the label without its spaces,
+ * in the table headed by `section` when the label recurs in others.
+ */
+function detail($: CheerioAPI, label: string, section?: string): string {
+  const tables = section
+    ? $('table.table03').filter((_, table) => clean($(table).find('.txtTitle').text()).includes(section)).next('table.table02')
+    : $('table.table02');
+  const values = tables.find('tr').filter((_, row) => clean($(row).children('td').first().text()).replace(/\s/g, '') === label)
     .map((_, row) => clean($(row).children('td').eq(1).text(), 80)).get();
   if (values.length > 1) invalid('Chunil Express returned repeated parcel details');
   return values[0] ?? '';
@@ -57,9 +67,9 @@ function detail($: CheerioAPI, label: string): string {
  * The page `www.chunil.co.kr/HTrace/HTrace.jsp?transNo={number}` answers. The
  * search field keeps the number asked; a parcel's details are headed by it,
  * and its route table lists the scans oldest first, each with its day,
- * branch, the branch's phone number and status. The sender, the recipient and
- * the signer (masked names), the goods, the parcel count and the branches'
- * phone numbers are not read.
+ * branch, the branch's phone number and status. The recipient's and the
+ * signer's names are read, masked as the page shows them. The sender, the
+ * goods, the parcel count and the branches' phone numbers are not.
  */
 export function parseChunil(html: string, raw: string): CarrierResult {
   const number = normalizeChunilNumber(raw);
@@ -124,6 +134,8 @@ export function parseChunil(html: string, raw: string): CarrierResult {
       : staged ? { stage: staged.stage as Stage, source: staged.stage_source! } : result;
   const newest = events[0];
   const fromOutcome = decided === result && result !== null && !delivery;
+  const recipient = detail($, NAME, RECIPIENT);
+  const signatory = detail($, SIGNATORY);
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -131,6 +143,8 @@ export function parseChunil(html: string, raw: string): CarrierResult {
     last_update: null,
     ...(newest && !fromOutcome ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

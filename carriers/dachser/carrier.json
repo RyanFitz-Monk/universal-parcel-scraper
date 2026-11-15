@@ -35,7 +35,9 @@
   },
   "capabilities": [
     "history",
-    "eta"
+    "eta",
+    "receiver_name",
+    "receiver_address"
   ],
   "portal": {
     "canaryUrl": "https://customeriberia.dachser.com/customerarea/",
@@ -52,12 +54,12 @@
     "scraped": [
       "status",
       "history",
-      "eta"
+      "eta",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "recipient_contact",
       "signature"
     ],

@@ -6,7 +6,7 @@ import { InputRequiredError, InvalidInputError, NotFoundError, SchemaError, Upst
 import type { CarrierResult } from '../../core/result/index.js';
 import { paddedDate } from '../../core/time/fields.js';
 import { firstOccurrence } from '../../core/time/index.js';
-import { cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
+import { clean, cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { eventLabel, plainText, shipmentStatus } from './status.js';
 
@@ -116,12 +116,17 @@ export function parseDachserTrackingResponse(payload: unknown, trackingNumber: s
       }
     }
   }
+  // The recipient's name and address, as the detail page shows them.
+  const recipient = clean(payload.nombreDestinatario, 120);
+  const address = clean(payload.direccionDestinatario, 200);
   return {
     status: status.status,
     last_status_text: status.text,
     last_update: lastUpdate?.toISO({ suppressMilliseconds: true }) ?? null,
     expected_delivery: expectedDelivery,
     timezone: 'Europe/Madrid',
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events,
   };
 }

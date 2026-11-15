@@ -72,7 +72,7 @@ describe('Chukou1 HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel as wall clocks, newest first, without postcodes or the proof of delivery', () => {
+  it('reads a delivered parcel as wall clocks, newest first, with the destination postcode apart and without the proof of delivery', () => {
     const result = normalizeCarrierResult(parseChukou1(fixture('delivered'), DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
       last_status_text: 'SPRINGFIELD, ZZ, Delivered, In/At Mailbox -> Your item was delivered in or at the mailbox at 1:48 pm on September 12, 2026 in SPRINGFIELD, ZZ.',
@@ -100,7 +100,9 @@ describe('Chukou1 HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.provider_code === undefined)).toBe(true);
     expect(result.events!.filter((event) => event.location).every((event) => event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/(?<!\d)0000[12](?!\d)|JVBERi|Chukou1|Unknown/);
+    expect(result.receiver_address).toBe('00001-0000');
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify({ ...result, receiver_address: undefined })).not.toMatch(/(?<!\d)0000[12](?!\d)|JVBERi|Chukou1|Unknown/);
     // The delivery carrier and its number propose the confirmation lookup.
     expect(deliveryHandoff('chukou1', DELIVERED, result)).toMatchObject({ carrier: 'usps', number: USPS });
   });
@@ -149,24 +151,30 @@ describe('Chukou1 HTTP adapter', () => {
     ]) expect(handoff(change)).toEqual(none);
   });
 
-  it('drops phone numbers, the receiver of a delivery, every form of the destination postcode and repeated parts', () => {
-    const scans = (postcode: string, ...descriptions: string[]) => parseChukou1(changed('delivered', (shipment) => {
+  it('drops phone numbers, a delivery’s courier, every form of the destination postcode and repeated parts, and keeps who signed', () => {
+    const parsed = (postcode: string, ...descriptions: string[]) => parseChukou1(changed('delivered', (shipment) => {
       shipment.destinctPostCode = postcode;
       shipment.supplierTrackingDetails[0]!.trackingDetails = descriptions.map((description, index) =>
         ({ description, dateTimeString: `Sep 2${index} 2026 10:00 AM`, viewOrder: index + 1 }));
-    }), DELIVERED).events!.filter((event) => !event.location).map((event) => event.description);
-    expect(scans('ZZ1 1ZZ',
+    }), DELIVERED);
+    const result = parsed('ZZ1 1ZZ',
       'Exampleton,ZZ1 1ZZ, Exampleton, ZZ11ZZ, Delivered, signed by A. SAMPLE',
       'Exampleton, Out for delivery, call +44 0000 000000',
       'Exampleton, Delivered to the recipient, 签收人是【示例】',
       'Exampleton, Arrived at the delivery office, received by the delivery office',
-    )).toEqual([
-      'Exampleton, Arrived at the delivery office, received by the delivery office',
-      'Exampleton, Delivered to the recipient',
-      'Exampleton, Out for delivery, call',
-      'Exampleton, Delivered',
-      'Shipment information received',
+      'Exampleton, 已妥投, 投递员: 示例员',
+    );
+    expect(result.events!.filter((event) => !event.location).map((event) => [event.description, event.stage])).toEqual([
+      ['Exampleton, 已妥投', undefined],
+      ['Exampleton, Arrived at the delivery office, received by the delivery office', 'in_transit'],
+      ['Exampleton, Delivered to the recipient, 签收人是【示例】', 'delivered'],
+      ['Exampleton, Out for delivery, call', 'out_for_delivery'],
+      ['Exampleton, Delivered, signed by A. SAMPLE', 'delivered'],
+      ['Shipment information received', 'registered'],
     ]);
+    // The newest delivery that names who took the parcel.
+    expect(result).toMatchObject({ signed_by: '示例', receiver_address: 'ZZ1 1ZZ' });
+    expect(parsed('ZZ1 1ZZ', 'Exampleton, Delivered, signed by A. SAMPLE')).toMatchObject({ signed_by: 'A. SAMPLE' });
   });
 
   it('keeps the page’s Delivered over an earlier scan, and a later return over it', () => {

@@ -34,11 +34,11 @@ describe('DPD Romania HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history newest first, with offset clocks and without the recipient or proof of delivery', () => {
+  it('reads a delivered history newest first, with offset clocks and the masked signatory, without the proof of delivery', () => {
     const result = parseDpdRo(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-03-04T11:20:30+02:00', delivered_at: '2026-03-04T11:20:30+02:00',
-      expected_delivery: null });
+      expected_delivery: null, signed_by: 'ABC**********' });
     expect(result.events!.map(event => [event.time, event.provider_code, event.stage ?? null, event.location ?? null])).toEqual([
       ['2026-03-04T11:20:30+02:00', '-14', 'delivered', 'Example City'],
       ['2026-03-04T08:05:00+02:00', '12', 'out_for_delivery', 'Example City'],
@@ -50,10 +50,14 @@ describe('DPD Romania HTTP adapter', () => {
       ['2026-03-02T09:15:00+02:00', '148', 'registered', null],
     ]);
     expect(result.events![2]).toEqual({ time: '2026-03-04T07:30:00+02:00', description: 'Predict', provider_code: '175' });
-    const kept = JSON.stringify(result);
+    const kept = JSON.stringify({ ...result, signed_by: undefined });
     for (const dropped of ['ABC**', 'received from', 'SYNTHETIC-POD-TOKEN', 'Expected Delivery', '09:00 - 12:00']) {
       expect(kept).not.toContain(dropped);
     }
+    // Only a delivery's note names who took the parcel.
+    const undelivered = fixture('delivered') as { events: Record<string, unknown>[] };
+    undelivered.events = undelivered.events.slice(0, -1).concat({ ...undelivered.events.at(-1)!, operationCode: 12, description: 'Out for Delivery' });
+    expect(parseDpdRo(undelivered, DELIVERED).signed_by).toBeUndefined();
   });
 
   it('keeps the Predict window on its day while the parcel is out for delivery, until the window has passed', () => {

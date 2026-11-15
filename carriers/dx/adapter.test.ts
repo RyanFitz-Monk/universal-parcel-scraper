@@ -61,22 +61,26 @@ describe('DX Freight tracking adapter', () => {
     expect(dxFreightUrl('12345678', 'd02x285')).toBe(`${DX_FREIGHT_LOOKUP}?consno=12345678&postcode=D02X285`);
   });
 
-  it('reads a delivered history as wall clocks, without the signatory, the order number or a delivery date', () => {
+  it('reads a delivered history as wall clocks, with who signed, without the order number or a delivery date', () => {
     const result = normalizeCarrierResult(parseDxFreight(deliveredHistory, deliveredMenu, DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: '1 of 1 items delivered.', last_update: null, last_update_local: '2026-09-15T13:12:00', expected_delivery: null,
-      service_name: 'Overnight', weight_kg: 12.5 });
+      last_status_text: '1 of 1 items delivered. Signed a sample', last_update: null, last_update_local: '2026-09-15T13:12:00',
+      expected_delivery: null, service_name: 'Overnight', weight_kg: 12.5, signed_by: 'a sample' });
     expect(result.events?.map(event => [event.local_time, event.description, event.location, event.stage, event.stage_source])).toEqual([
-      ['2026-09-15T13:12:00', '1 of 1 items delivered.', 'SAMPLETON', 'delivered', 'carrier_map'],
+      ['2026-09-15T13:12:00', '1 of 1 items delivered. Signed a sample', 'SAMPLETON', 'delivered', 'carrier_map'],
       ['2026-09-15T07:05:00', 'Scanned 1 of 1 items onto delivery vehicle.', 'SAMPLETON', 'out_for_delivery', 'carrier_map'],
       ['2026-09-15T03:44:00', 'Scan at delivery depot', 'SAMPLETON', 'in_transit', 'carrier_map'],
       ['2026-09-14T17:20:00', 'Scan at delivery depot', 'EXAMPLEFORD', 'in_transit', 'carrier_map'],
       ['2026-09-14T11:02:00', 'Data Received', 'EXAMPLEFORD', 'registered', 'carrier_map'],
     ]);
     expect(result.events?.every(event => !event.time && !event.provider_code)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Signed|a sample|SO000001/);
+    expect(JSON.stringify(result)).not.toMatch(/SO000001/);
     expect(dxWording(' 1 of 1 items  delivered.  Signed A. Name-Example ')).toBe('1 of 1 items delivered.');
     expect(dxWording('Signed for by a neighbour')).toBe('');
+    const neighbour = edit(deliveredHistory, $ => {
+      $('table[id$="_StatusGridView"] tr').eq(1).children('td').eq(1).text('1 of 1 items delivered. Signed for by: A. Neighbour');
+    });
+    expect(parseDxFreight(neighbour, deliveredMenu, DELIVERED)).toMatchObject({ current_stage: 'delivered', signed_by: 'A. Neighbour' });
   });
 
   it("reads a consignment on its delivery vehicle with the menu's delivery day, in the year after the despatch that fits", () => {
@@ -89,6 +93,7 @@ describe('DX Freight tracking adapter', () => {
       ['2026-10-07T18:45:00', 'in_transit'], ['2026-10-07T12:15:00', 'registered'],
     ]);
     expect(JSON.stringify(result)).not.toContain('REF-0002');
+    expect(result.signed_by).toBeUndefined();
 
     const newYear = edit(transitHistory, $ => {
       $('span[id$="_lbl_consdate"]').text('30/12/2026');
@@ -114,7 +119,9 @@ describe('DX Freight tracking adapter', () => {
       $('table[id$="_StatusGridView"] tr').eq(1).children('td').eq(1).text('1 of 2 items  delivered.  Signed a sample');
     });
     expect(parseDxFreight(partial, transitMenu, IN_TRANSIT)).toMatchObject({ status: 'in_transit', current_stage: 'in_transit',
-      last_status_text: '1 of 2 items delivered.', expected_delivery: '2026-10-08' });
+      last_status_text: '1 of 2 items delivered. Signed a sample', expected_delivery: '2026-10-08' });
+    // Who signed for part of the consignment did not sign for its delivery.
+    expect(parseDxFreight(partial, transitMenu, IN_TRANSIT).signed_by).toBeUndefined();
     const oldestFirst = edit(deliveredHistory, $ => {
       const table = $('table[id$="_StatusGridView"]');
       const body = table.children('tbody').length ? table.children('tbody') : table;

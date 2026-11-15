@@ -147,8 +147,9 @@ with [DPD Switzerland](../dpd/README.md), whose Pickup shops
   `DeliveryZipCode`. A matching one returns `DataViewStatus`
   `DeliveryZipCode_isValid`; a wrong one, or any postcode for an unknown parcel,
   returns `ERROR_TRACKING_DELIVERYZIPCODE_NOT_VALID` with the anonymous view.
-  For a delivered parcel, the verified view adds only the recipient's name and
-  driver tip details, which are not read.
+  For a delivered parcel, the verified view adds the recipient's name, which is
+  read with the street the reply gives for the delivery address, and driver tip
+  details, which are not.
 - `UpdateNewDeliveryData` and `addParcelIfNoTrackingdataAvailable` stay false,
   so a lookup changes nothing in the session.
 - The recipient address reads Germany for parcels delivered in other
@@ -157,8 +158,10 @@ with [DPD Switzerland](../dpd/README.md), whose Pickup shops
   three-letter placeholder.
 - Scans carry English wording without codes. Each known wording is mapped
   whole in [status.ts](status.ts), because the shared classifier misreads
-  several of them. A collection the sender booked is still registration; the
-  recipient's collection from a Pickup station or shop is the delivery, though
+  several of them. An unmapped wording that names who took the parcel is
+  described as a delivery update, keeping its wording as the original, so the
+  shared classifier does not stage it. A collection the sender booked is still
+  registration; the recipient's collection from a Pickup station or shop is the delivery, though
   the progress rail already reads delivered while the shop holds the parcel. A
   delivered rail sets the status only beside a newest scan that is a delivery
   or has no stage; beside another, such as a failed attempt, the scan's stage
@@ -201,7 +204,7 @@ with [DPD Switzerland](../dpd/README.md), whose Pickup shops
 
 ## Limitations
 
-Recipient details and addresses, delivery proofs and preference links are discarded.
+The guest API's recipient details and addresses, delivery proofs and preference links are discarded.
 No UK service is inferred from a German result. The app service's reason codes
 and driver details are not projected. The app service does not name the sender,
 nor does the guest API's unverified reply. An estimate requires a forecast in

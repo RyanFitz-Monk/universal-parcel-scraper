@@ -14,9 +14,9 @@ recipient's postcode.
    - A 404 or any 3xx is not-found (`ColisPriveTrackingError`): an unknown
      shipment is bounced to the search page instead of answering 404.
    - Other non-2xx statuses throw `UpstreamHttpError`.
-2. `parse()` removes `.divDesti` (recipient name and address), requires the
-   `.BandeauInfoColis` banner, checks the displayed 12-character number matches
-   the credential, then reads the status banner and timeline rows.
+2. `parse()` reads `.divDesti`, the recipient's name and address, then removes it,
+   requires the `.BandeauInfoColis` banner, checks the displayed 12-character number
+   matches the credential, then reads the status banner and timeline rows.
 
 ## Notes
 
@@ -37,8 +37,9 @@ recipient's postcode.
   country code and thirteen digits, Cainiao's `CNG` numbers with fourteen digits
   and numbers that open with DobroPost's prefix `DBRPST` also end in five digits;
   detection does not read those as a postcode.
-- `.divDesti` is removed before any text is read, not filtered afterwards — a
-  later selector can forget a filter, not a removal.
+- `.divDesti` lists the recipient's name, street, and postcode and town, one per line. It is
+  read on its own and then removed, not filtered afterwards: a later selector can forget a
+  filter, not a removal.
 - A page for another shipment is a schema error, never a result.
 - The timeline prints `DD/MM/YYYY` with no clock, so each scan keeps its day alone in
   `local_time` and the catalog marks its scans as dated by day by design. `dateKey()`
@@ -70,7 +71,6 @@ recipient's postcode.
 
 - The page has no scan location or weight.
 - Undocumented HTML; markup changes fail loudly as schema errors.
-- Recipient name and address are never read; the offline test asserts it.
 
 ## Testing
 

@@ -48,9 +48,11 @@ trace-and-track system of its own. Tracked through both.
   entered the scan, not the scan's place, and many places name no country.
 - Both trackers write the same event numbers, which stage a scan. The documents prepared before
   the collection are a registration.
-- The service type, the masked signatory and the destination's town are not kept, nor DPEX
-  China's notes on a scan, which can name who signed, and its references. The proof of
-  delivery, behind a check of the recipient's phone number or email, is not read.
+- DPEX China's note on a delivery names who signed, and is read as the signatory; its notes on
+  other scans and its references are not kept. The GETOnline page's service type, masked
+  signatory and destination town are not read, as the GETOnline parser it shares with SkyNet
+  does not read them. The proof of delivery, behind a check of the recipient's phone number or
+  email, is not read.
 - The track-and-trace page's search button opens `dpexonline.com/trace-and-track/index?id=`,
   another copy of DPEX's own system, which did not know air waybills the other two track. The
   adapter does not ask it.

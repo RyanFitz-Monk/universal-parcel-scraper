@@ -30,7 +30,9 @@
   },
   "capabilities": [
     "history",
-    "location"
+    "location",
+    "receiver_name",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.chunil.co.kr/HTrace/HTrace.jsp?transNo={trackingNumber}",
@@ -52,12 +54,12 @@
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "signatory",
       "origin",
       "destination",
       "office_contact_details",

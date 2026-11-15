@@ -42,14 +42,15 @@ trace its API page documents.
 - The estimate is the trace's estimated delivery day, else the day of the newest "Appointment
   Set" row. It is dropped once it is behind the history or the freight is delivered.
 - The weight is given in pounds and kept in kilograms.
-- The reply names the shipper's and consignee's towns, ZIP codes and terminals, holds the bill of
-  lading, purchase order and quote number, the pallets and pieces, and gives the delivery's
-  clock, its status and the signer, whom the summary status names too. None of them is read.
+- The consignee's town, state and ZIP code are read as the recipient's address, and a delivery's
+  signer as who signed for it. The shipper's town, the terminals, the bill of lading, purchase
+  order and quote number, the pallets and pieces, and the delivery's clock and status are not
+  read.
 
 ## Limitations
 
-- No offsets, no delivery time as an instant, no sender, recipient or proof of delivery. Dohrn
-  links scanned documents only for shippers tracking with their account.
+- No offsets, no delivery time as an instant, no sender, recipient name or street, or proof of
+  delivery. Dohrn links scanned documents only for shippers tracking with their account.
 - A PRO reaches the adapter when it is filed under Dohrn or opened from a Dohrn link: its digits
   are shared by many carriers, so no rule claims them and preflight does not ask it.
 - Dohrn's PROs run densely, so a mistyped PRO can open another shipper's shipment or rate quote.

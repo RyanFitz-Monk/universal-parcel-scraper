@@ -40,14 +40,14 @@ beyond its network to partner carriers. Tracked through the lookup its tracking 
 - A shipment handed to A. Duie Pyle, Southeastern Freight Lines or Oak Harbor, partners the reply
   names by their SCAC, names that partner and its PRO. The status then relays the partner's scans.
   Dayton Freight's own expedited and truckload services are not partners.
-- The status names who signed for a delivery and the trailer, and its service center comes with
-  its address, phone and position; none of them is read. The shipment page adds the weight, piece
+- A delivered status names who signed for it, which is read. The trailer and the service
+  center's address, phone and position are not. The shipment page adds the weight, piece
   count, references, service centers and delivery ETA window. The adapter does not read it: it
   answers an unknown PRO with a generic error.
 
 ## Limitations
 
-- No history, sender, recipient, signature, weight or delivery receipt; documents need an
+- No history, sender, recipient, signature image, weight or delivery receipt; documents need an
   account.
 - A PRO reaches the adapter when it is filed under Dayton Freight or opened from a Dayton Freight
   link: its lengths are shared by many carriers, so no rule claims them and preflight does not

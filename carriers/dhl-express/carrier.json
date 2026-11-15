@@ -33,7 +33,8 @@
   "capabilities": [
     "history",
     "location",
-    "eta"
+    "eta",
+    "signed_by"
   ],
   "portal": {
     "url": "https://mydhl.express.dhl/gb/en/tracking.html#/results?id={trackingNumber}",
@@ -51,7 +52,8 @@
       "status",
       "history",
       "location",
-      "eta"
+      "eta",
+      "signatory"
     ],
     "discarded": [
       "signature"

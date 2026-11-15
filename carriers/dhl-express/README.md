@@ -173,8 +173,11 @@ several clocks and no region, or a country DHL writes in a form the rule does no
 The rule knows English country names, the forms on DHL's scans (`UK`, `USA`, `NETHERLANDS,
 THE`, `THE PEOPLE'S REPUBLIC OF CHINA`) and those of DHL's country list. DHL has renamed a
 country on its scans before, so a scan can meet a form the rule has yet to learn. The global
-portal's explicit offsets provide dated instants. Recipient details, piece identifiers and
-proof-of-delivery links are discarded. A blocked HTTP request requires a configured
+portal's explicit offsets provide dated instants. The mobile API's proof of delivery names
+who signed, which a delivered shipment keeps. A delivery row from the tracking API or the
+global page reads "Delivered", as the mobile API words it, so the feeds match, and keeps
+DHL's wording as `original_description`. Other recipient details, piece identifiers and
+proof-of-delivery links are not read. A blocked HTTP request requires a configured
 browser service with the DHL Express capture helper.
 
 ## Testing

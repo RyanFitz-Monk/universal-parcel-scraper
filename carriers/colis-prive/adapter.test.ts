@@ -154,7 +154,7 @@ describe('Colis Privé wording classifier', () => {
 });
 
 describe('Colis Privé HTML normalization', () => {
-  it('verifies the requested shipment and parses status history without retaining recipient data', () => {
+  it('verifies the requested shipment and parses status history with the recipient block, without the contact line', () => {
     const result = parseColisPriveTrackingHtml(
       trackingPage(),
       PUBLIC_SYNTHETIC_CREDENTIAL,
@@ -194,10 +194,25 @@ describe('Colis Privé HTML normalization', () => {
         stage: 'registered',
       },
     ]);
-    const serialized = JSON.stringify(result);
-    for (const privateValue of [...FIXTURE.recipientBlock, FIXTURE.recipientContact]) {
-      expect(serialized).not.toContain(privateValue);
-    }
+    // The block's name, then its street and its postcode and town.
+    expect(result).toMatchObject({ receiver_name: FIXTURE.recipientBlock[0], receiver_address: FIXTURE.recipientBlock.slice(1).join('\n') });
+    // Its text is not read again as a status, and the contact line is not kept.
+    expect(result.events!.map((event) => event.description).join('|')).not.toContain(FIXTURE.recipientBlock[0]);
+    expect(JSON.stringify(result)).not.toContain(FIXTURE.recipientContact);
+  });
+
+  it('reads the recipient block as far as it goes, and a page without one as no recipient', () => {
+    const block = (lines: string[]) => parseColisPriveTrackingHtml(trackingPage().replace(FIXTURE.recipientBlock.join('<br>'), lines.join('<br/>')),
+      PUBLIC_SYNTHETIC_CREDENTIAL);
+    expect(block(['PRIVATE RECIPIENT', '10 PRIVATE STREET', 'BAT PRIVATE', '75012 PRIVATE CITY']))
+      .toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: '10 PRIVATE STREET, BAT PRIVATE\n75012 PRIVATE CITY' });
+    expect(block(['PRIVATE RECIPIENT', '75012 PRIVATE CITY'])).toMatchObject({ receiver_address: '75012 PRIVATE CITY' });
+    const town = block(['75012 PRIVATE CITY']);
+    expect(town).toMatchObject({ receiver_address: '75012 PRIVATE CITY' });
+    expect(town).not.toHaveProperty('receiver_name');
+    const none = block([]);
+    expect(none).not.toHaveProperty('receiver_name');
+    expect(none).not.toHaveProperty('receiver_address');
   });
 
   it('reads the newest announced appointment or relay drop-off day until the parcel settles or passes it', () => {
@@ -222,6 +237,8 @@ describe('Colis Privé HTML normalization', () => {
     const checks: Record<string, () => boolean> = {
       history: () => (result.events?.length ?? 0) > 0,
       eta: () => Boolean(result.expected_delivery),
+      receiver_name: () => Boolean(result.receiver_name),
+      receiver_address: () => Boolean(result.receiver_address),
     };
     expect(CAPABILITIES.length).toBeGreaterThan(0);
     for (const capability of CAPABILITIES) {

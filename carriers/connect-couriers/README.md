@@ -32,9 +32,11 @@ it on another network's waybill. Tracked through the lookup its tracking page ma
 - The piece's headline status decides a delivery or a cancellation; otherwise the newest scan
   does.
 - Each scan names the staff account behind it, which the page does not show and the adapter
-  does not keep. The recipient's town, the piece count, the shipment date and the weight,
-  dimensions and packaging, all free text, are not kept either. A signatory or phone number
-  in a scan's wording is removed.
+  does not keep. The piece count, the shipment date and the weight, dimensions and packaging,
+  all free text, are not kept either. The recipient's town is the only part of their address
+  the reply gives. A phone number in a scan's wording is removed. A scan keeps who signed for
+  the parcel, the newest that names them gives `signed_by`, and the map stages the wording
+  without them.
 - The reply names no partner network or partner number, so there is no hand-off.
 
 ## Limitations

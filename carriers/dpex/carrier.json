@@ -32,7 +32,8 @@
     "history",
     "provider_code",
     "location",
-    "destination_country"
+    "destination_country",
+    "signed_by"
   ],
   "portal": {
     "url": "https://dpex.com/track-and-trace/?cn={trackingNumber}",
@@ -52,11 +53,11 @@
       "history",
       "provider_code",
       "location",
-      "destination_country"
+      "destination_country",
+      "signatory"
     ],
     "discarded": [
-      "service_type",
-      "signatory"
+      "service_type"
     ],
     "unavailable": [
       "eta",

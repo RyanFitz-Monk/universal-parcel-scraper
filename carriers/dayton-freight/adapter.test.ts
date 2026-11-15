@@ -55,19 +55,25 @@ describe('Dayton Freight HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered status and its pickup as wall clocks, without the signer, trailer or service center', () => {
+  it('reads a delivered status, its signer and its pickup as wall clocks, without the trailer or service center', () => {
     const result = parseDayton(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'delivered to destination', last_update: null, last_update_local: '2026-03-12T14:07:00',
-      expected_delivery: null, summary_only: true,
+      expected_delivery: null, signed_by: 'J Sample', summary_only: true,
       events: [
         { local_time: '2026-03-12T14:07:00', location: 'EXAMPLEVILLE, OH', description: 'delivered to destination', provider_code: 'DLV',
           stage: 'delivered', stage_source: 'carrier_map' },
         { local_time: '2026-03-10T15:42:00', description: 'Picked Up', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/J Sample|500001|SAMPLETON|Example PKWY|8005550100|46999|40\.12|Appointment/);
+    expect(JSON.stringify({ ...result, signed_by: undefined })).not.toMatch(/J Sample|500001|SAMPLETON|Example PKWY|8005550100|46999|40\.12|Appointment/);
+    // Only a delivery's signer is read, and only a text one.
+    const named = (signedBy: unknown, activityCode = 'DLV') => parseDayton(delivered((shipment) => {
+      Object.assign(shipment.status, { signedBy, activityCode });
+    }), DELIVERED);
+    expect(named(42)).not.toHaveProperty('signed_by');
+    expect(named('J Sample', 'OFD')).not.toHaveProperty('signed_by');
   });
 
   it('reads a partner’s status on a ten-digit PRO, the appointment and the partner taking the freight on', () => {

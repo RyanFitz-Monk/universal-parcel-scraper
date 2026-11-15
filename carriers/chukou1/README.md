@@ -42,8 +42,10 @@ EC-FirstClass platform makes.
 - The shipment's `Delivered` stands over an earlier scan, unless a later one says the parcel
   went back. `InProcess` and `InTransit` stage a parcel no scan stages.
 - Scans lose the destination postcode, other bare postcodes and site codes, phone numbers, a
-  delivery's receiver and repeated parts. The proof of delivery, a PDF of photos embedded in
-  the reply, and the origin supplier are not kept.
+  delivery's courier and repeated parts. The destination postcode is kept as the recipient's
+  address, the only part of it the reply holds. A delivery scan keeps who signed for the
+  parcel, and the newest that names them gives `signed_by`. The proof of delivery, a PDF of
+  photos embedded in the reply, and the origin supplier are not kept.
 - The reply names the destination carrier by its service or its feed, and its number. When the
   catalog tracks that carrier and the number is one of its own, they become `delivery_carrier`
   and `delivery_tracking_number`, without the ZIP code a USPS routing barcode opens with.

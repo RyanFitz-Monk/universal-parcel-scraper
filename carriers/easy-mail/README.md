@@ -28,8 +28,9 @@ Tracked through the tracker page Easy Mail's website opens for a voucher.
   to a store is accepted on its arrival there. A non-delivery reason is a failed attempt, except
   collection at the store, which leaves the parcel waiting there.
 - The current status over the scans repeats the newest scan and is only checked for its voucher.
-- The delivery's masked recipient and the store's phone and address are not kept. Older lookups
-  name SPEEDEX as a store for the last leg; it names no place, so that scan has no location.
+- A delivered parcel's current status names who took it, masked as the page shows them; that
+  name is the signatory. The store's phone and address are not kept. Older lookups name SPEEDEX
+  as a store for the last leg; it names no place, so that scan has no location.
 - The partner voucher column was empty in every lookup seen, and is not read.
 
 ## Limitations

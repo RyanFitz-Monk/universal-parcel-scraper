@@ -133,6 +133,23 @@ function info($: CheerioAPI, content: Cheerio<Element>, label: string): string {
 }
 
 /**
+ * The recipient's name and address: the second of the delivery information's
+ * two entries, after the merchant's. The address names its area and thana on
+ * one line and ends with the city and its postcode, which go on the next.
+ */
+function recipientOf($: CheerioAPI, content: Cheerio<Element>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const entries = content.find('.track-delivery-info li').toArray();
+  if (entries.length !== 2) return {};
+  const entry = $(entries[1]).clone();
+  const name = scrubbed(entry.children('span').first().text(), 120);
+  entry.children('span').first().remove();
+  const written = scrubbed(entry.text(), 300);
+  const city = /,\s*City:\s*([^,]+)$/i.exec(written);
+  const address = city ? [clean(written.slice(0, city.index), 300), clean(city[1], 80)].filter(Boolean).join('\n') : written;
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/**
  * eCourier's tracking page for one ID. A known parcel gets its package
  * information, naming the ID, and its scans grouped by day; an unknown one
  * gets "No Result Found" in its place.
@@ -165,6 +182,7 @@ export function parseEcourier(html: string, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(service ? { service_name: service } : {}),
+    ...recipientOf($, content),
     ...(stage === 'delivered' ? { delivered_at: current!.time } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

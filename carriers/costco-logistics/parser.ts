@@ -3,7 +3,7 @@ import { isCostcoLogisticsReference } from '../../core/detection/costcoLogistics
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
 import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
-import { languageStageStatus } from '../../core/status/index.js';
+import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { paddedDate } from '../../core/time/fields.js';
 import { clean, textFromHtml } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
@@ -42,16 +42,26 @@ function wallClock(date: unknown, time: unknown): string {
   return parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }
 
-function wording(value: unknown): string {
+// Who took the parcel, as a scan's wording can go on: "Delivery Completed signed by …".
+const HANDOVER = /\s+(?:signed (?:for )?by|received by|delivered to)\b.*$/i;
+const SIGNATORY = /\s(?:signed (?:for )?by|received by)\s*:?\s*([^,;]+)/i;
+
+/**
+ * A scan's wording without links, emails or phone numbers; the part the map
+ * stages, before any handover; and who signed for the parcel when it names them.
+ */
+function wording(value: unknown): { description: string; staging: string; signatory: string } {
   if (typeof value !== 'string' || value.length > 1000) throw new SchemaError(PROVIDER, 'Costco Logistics returned a scan without its wording');
-  const description = textFromHtml(value, 1000)
-    .replace(/\s+(?:signed (?:for )?by|received by|delivered to)\b.*$/i, '')
-    .replace(/https?:\/\/\S+|\S+@\S+\.\S+|\+?\b\d[\d ().-]{7,}\d\b/gi, '').trim();
-  if (!description) throw new SchemaError(PROVIDER, 'Costco Logistics returned a scan without its wording');
-  return clean(description, 500);
+  const description = clean(textFromHtml(value, 1000).replace(/https?:\/\/\S+|\S+@\S+\.\S+|\+?\b\d[\d ().-]{7,}\d\b/gi, ''), 500);
+  const staging = description.replace(HANDOVER, '').trim();
+  if (!staging) throw new SchemaError(PROVIDER, 'Costco Logistics returned a scan without its wording');
+  return { description, staging, signatory: clean(SIGNATORY.exec(description)?.[1], 120) };
 }
 
-/** Only the bound parcel's milestones; location strings can be recipient addresses. */
+/**
+ * Only the bound parcel's milestones, its delivery address and who signed for it;
+ * location strings can be recipient addresses and are not read.
+ */
 export function parseCostcoLogistics(payload: unknown, raw: string): CarrierResult {
   const number = normalizeCostcoLogisticsNumber(raw);
   if (!isRecord(payload) || !isRecord(payload.status)) throw new SchemaError(PROVIDER, 'Costco Logistics returned an invalid tracking envelope');
@@ -64,7 +74,7 @@ export function parseCostcoLogistics(payload: unknown, raw: string): CarrierResu
   const detail: unknown = shipment.trackingDetails[0];
   if (!isRecord(detail) || detail.trackingNumber !== number) throw new IndeterminateError(PROVIDER, 'Costco Logistics answered for another parcel');
   if (!Array.isArray(detail.orderDetailList) || detail.orderDetailList.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Costco Logistics returned invalid history groups');
-  const scans: { event: CarrierEvent; index: number }[] = [];
+  const scans: { event: CarrierEvent; index: number; signatory: string }[] = [];
   for (const group of detail.orderDetailList) {
     if (!isRecord(group) || !Array.isArray(group.orderList)) throw new SchemaError(PROVIDER, 'Costco Logistics returned an invalid history group');
     if (scans.length + group.orderList.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Costco Logistics returned too many scans');
@@ -72,9 +82,13 @@ export function parseCostcoLogistics(payload: unknown, raw: string): CarrierResu
       if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Costco Logistics returned an invalid scan');
       // Current wording distinguishes arrival from departure on the delivery round;
       // legacy status repeats "Received at MDO" for both.
-      const description = wording(row.resultStatus), local_time = wallClock(group.date, row.time);
-      const stage = costcoLogisticsStage(description);
-      scans.push({ index: scans.length, event: { local_time, description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) } });
+      const { description, staging, signatory } = wording(row.resultStatus), local_time = wallClock(group.date, row.time);
+      const stage = costcoLogisticsStage(staging);
+      // A staged scan keeps its whole wording; one the map does not stage is described
+      // without its handover, so the signatory does not stage it either.
+      const written = stage || staging === description ? { description } : { description: staging, original_description: description };
+      scans.push({ index: scans.length, signatory: stage === 'delivered' ? signatory : '',
+        event: { local_time, ...written, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) } });
     }
   }
   if (!scans.length) throw new NoHistoryError(PROVIDER);
@@ -86,9 +100,13 @@ export function parseCostcoLogistics(payload: unknown, raw: string): CarrierResu
     seen.add(key);
     return true;
   });
-  const latest = events[0]!, stage = costcoLogisticsStage(latest.description!);
+  const latest = events[0]!, stage = latest.stage as Stage | undefined;
+  // The newest delivery that names who signed for it, and the address the parcel is delivered to.
+  const signatory = scans.find(scan => scan.signatory)?.signatory;
+  const address = clean(detail.address, 300);
   return { status: stage ? languageStageStatus(stage) : 'unknown', ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
-    last_status_text: latest.description!, last_update: null, last_update_local: latest.local_time!, expected_delivery: null, events };
+    last_status_text: latest.description!, last_update: null, last_update_local: latest.local_time!, expected_delivery: null,
+    ...(address ? { receiver_address: address } : {}), ...(signatory ? { signed_by: signatory } : {}), events };
 }
 
 export function parseCostcoLogisticsBody(body: string, number: string): CarrierResult {

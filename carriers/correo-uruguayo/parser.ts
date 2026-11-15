@@ -65,31 +65,40 @@ function office(value: string): string {
 }
 
 /**
- * A scan's wording up to its first colon. A delivery or a delivery attempt,
- * "ENTREGADO A: …" or "INTENTO DE ENTREGA: …", goes on with recipient
- * details; the delivery keeps "ENTREGADO".
+ * A scan's wording up to its first colon, as the map stages it. A delivery or a delivery
+ * attempt, "ENTREGADO A: …" or "INTENTO DE ENTREGA: …", goes on with recipient details;
+ * the delivery stages as "ENTREGADO".
  */
 function wording(value: string): string {
   const colon = value.indexOf(':');
   return colon < 0 ? clean(value, 200) : clean(value.slice(0, colon), 200).replace(/\s+A$/i, '');
 }
 
-/** A scan's clock, office, wording and code; its office code, source, operator, round and delivery note are left out. */
-function scanOf(row: unknown): CarrierEvent {
+// Who took a delivered item, and the identity document number the post writes after them:
+// "ENTREGADO A: MARIA EJEMPLO 1.234.567-8".
+const DELIVERED_TO = /^ENTREGADO A:\s*(.*?)(?:\s+[\d.]+-\d)?$/i;
+
+/**
+ * A scan's clock, office, wording and code, and who took a delivered item; its office code,
+ * source, operator, round and delivery note are left out.
+ */
+function scanOf(row: unknown): { event: CarrierEvent; signatory: string } {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Correo Uruguayo returned an invalid scan');
-  const description = wording(text(row, 'evento', 2_000));
-  if (!description) throw new SchemaError(PROVIDER, 'Correo Uruguayo returned a scan without wording');
+  const description = clean(text(row, 'evento', 2_000), 300);
+  const staging = wording(description);
+  if (!staging) throw new SchemaError(PROVIDER, 'Correo Uruguayo returned a scan without wording');
   const local = wallClock(text(row, 'fecha', 32));
   const location = office(text(row, 'ubicacion', 160));
   const provider = code(row);
-  const staged = correoUruguayoStage(description);
-  return {
+  const staged = correoUruguayoStage(staging);
+  const event: CarrierEvent = {
     local_time: local,
     ...(location ? { location } : {}),
     description,
     ...(provider ? { provider_code: provider } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
+  return { event, signatory: clean(DELIVERED_TO.exec(description)?.[1], 120) };
 }
 
 /** The item's codes: `idNacional`, the post's own, and `idInternacional`, the one it came with. */
@@ -135,8 +144,10 @@ export function parseCorreoUruguayo(payload: unknown, rawNumber: string): Carrie
   if (rows.length > MAX_SCANS) throw new SchemaError(PROVIDER, 'Correo Uruguayo returned an oversized history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signatories = new Map<CarrierEvent, string>();
   rows.forEach((row) => {
-    const event = scanOf(row);
+    const { event, signatory } = scanOf(row);
+    if (signatory) signatories.set(event, signatory);
     // A scan the reply lists twice is kept once, as is a delivery the office and
     // the international exchange both report in the same minute under their own codes.
     const identity = JSON.stringify([event.local_time, event.description]);
@@ -158,6 +169,8 @@ export function parseCorreoUruguayo(payload: unknown, rawNumber: string): Carrie
   const source = current && stage === scanned ? current.stage_source : 'carrier_map';
   // The other code the item carries: the one it came with, or the one the post gave it.
   const other = number === national ? international : national;
+  // The newest delivery that names who took the item.
+  const signatory = signatories.get(events.find((event) => signatories.has(event))!);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -165,6 +178,7 @@ export function parseCorreoUruguayo(payload: unknown, rawNumber: string): Carrie
     last_update: null,
     last_update_local: latest.local_time!,
     expected_delivery: null,
+    ...(signatory ? { signed_by: signatory } : {}),
     ...(other && isValidS10TrackingNumber(other)
       ? number === national ? { international_tracking_number: other } : { canonical_tracking_number: other } : {}),
     events,

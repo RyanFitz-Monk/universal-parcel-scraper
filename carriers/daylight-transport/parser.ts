@@ -142,16 +142,28 @@ function deliveryClock(window: Record<string, unknown>): string | null {
 }
 
 /**
+ * The consignee's name, and its address: the street lines, then the ZIP code,
+ * town and state. Lenient: a field of another type is left out.
+ */
+function recipient(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const consignee = isRecord(shipment.consignee) ? shipment.consignee : {};
+  const name = clean(consignee.name, 120);
+  const street = [clean(consignee.address1, 120), clean(consignee.address2, 120)].filter(Boolean).join(', ');
+  const town = [clean(consignee.postalCode, 16), clean(consignee.city, 80), clean(consignee.state, 8)].filter(Boolean).join(' ');
+  const address = [street, town].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/**
  * The replies of the two lookups the shipment page at
  * `mydaylight.dylt.com/external/shipment?probill={number}` makes:
  * `api/v1/shipments/public` gives the shipment's details and
  * `api/v1/shipments/history/public` its history, newest first. A probill the
  * tracker does not know is an HTTP 404 with an empty search in the details and
- * an empty history. The details must name the probill asked. They also hold
- * the shipper, the consignee and the forwarder with their addresses, contacts,
+ * an empty history. The details must name the probill asked. The consignee's
+ * name and address are read. The shipper and the forwarder, the contacts,
  * phones and e-mails, the customer's references, the items and their weights,
- * the billing party and the delivery notification's e-mails; none of them is
- * read.
+ * the billing party and the delivery notification's e-mails are not.
  */
 export function parseDaylight(details: { status: number; body: unknown }, history: unknown, raw: string): CarrierResult {
   const number = normalizeDaylightNumber(raw);
@@ -211,6 +223,7 @@ export function parseDaylight(details: { status: number; body: unknown }, histor
     ...(current?.local_time ? { last_update_local: current.local_time } : {}),
     // Until the delivery, the page shows the delivery window as the estimated delivery time.
     ...(settled ? { expected_delivery: null } : deliveryWindow(record(shipment, 'delivery'))),
+    ...recipient(shipment),
     ...(rows.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

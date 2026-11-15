@@ -22,6 +22,8 @@ const referenceFixture = (number: string) => { const value = portugalFixture(); 
 const pickupFixture = () => JSON.parse(readFileSync(new URL('./fixtures/collected-pickup-point.json', import.meta.url), 'utf8'));
 const returnedFixture = () => JSON.parse(readFileSync(new URL('./fixtures/returned-pickup-point.json', import.meta.url), 'utf8'));
 const PICKUP_POINT = 'Example Parcel Shop\nCalle Ejemplo 1, 00000 Ejemplo';
+/** A result without the recipient's postcode and the pickup PIN, which the fixtures hold as private markers. */
+const shared = (result: object) => JSON.stringify({ ...result, receiver_address: undefined, pickup_code: undefined });
 
 describe('Ecoscooting parcel history', () => {
   it.each([PORTUGAL_NUMBER, SPAIN_NUMBER])('binds %s history and its separate affirmative completion schema', number => {
@@ -31,7 +33,8 @@ describe('Ecoscooting parcel history', () => {
     expect(result.events?.map(event => event.stage)).toEqual(['delivered', 'out_for_delivery', 'in_transit', 'in_transit', 'in_transit', 'registered']);
     // Sorting scans carry another local offset than last-mile scans; epochs keep them in order.
     expect(result.events?.slice(2, 4).map(event => event.time)).toEqual(['2026-01-08T12:00:00Z', '2026-01-07T12:00:00Z']);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|imgUrl|opCode|Latitude|Longitude|outOrder|toZip|feature|cainiaoId|solution/);
+    expect(result.receiver_address).toBe('PRIVATE_SYNTHETIC_POSTCODE');
+    expect(shared(result)).not.toMatch(/PRIVATE|imgUrl|opCode|Latitude|Longitude|outOrder|toZip|feature|cainiaoId|solution/);
     for (const entry of statuses.entries) expect(ecoscootingStatus(entry.code, entry.wording)?.stage, entry.code).toBe(entry.stage);
     // The app's review reads the same records through the declared map.
     for (const entry of statuses.entries) {
@@ -78,7 +81,8 @@ describe('Ecoscooting parcel history', () => {
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Your shipment has been collected by consignee at the parcelshop',
       last_update: '2026-02-06T17:30:00Z', delivered_at: '2026-02-06T17:30:00Z', weight_kg: 1.25, pickup_point: PICKUP_POINT });
     expect(result.events?.map(event => event.stage)).toEqual(['delivered', 'ready_for_pickup', 'out_for_delivery', 'failed_attempt', 'out_for_delivery', 'in_transit', 'registered', 'registered']);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|imgUrl|opCode|opRemark|Latitude|Longitude|outOrder|toZip|feature|cainiaoId|popStation|pinCode/);
+    expect(result.pickup_code).toBe('PRIVATE_SYNTHETIC_PICKUP_PIN');
+    expect(shared(result)).not.toMatch(/PRIVATE|imgUrl|opCode|opRemark|Latitude|Longitude|outOrder|toZip|feature|cainiaoId|popStation|pinCode/);
     // Checked in by the shop, the parcel waits there.
     const waiting = pickupFixture(); waiting.statuses.shift();
     expect(parseEcoscooting(waiting, NUMBER)).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup', pickup_point: PICKUP_POINT });
@@ -139,7 +143,7 @@ describe('Ecoscooting parcel history', () => {
     expect(result).not.toHaveProperty('delivered_at');
     expect(result.events?.map(event => event.stage)).toEqual([...Array(7).fill('returned'), 'ready_for_pickup', 'out_for_delivery', 'out_for_delivery',
       'in_transit', 'in_transit', 'in_transit', 'registered']);
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|imgUrl|opCode|opRemark|Latitude|Longitude|outOrder|toZip|feature|cainiaoId/);
+    expect(shared(result)).not.toMatch(/PRIVATE|imgUrl|opCode|opRemark|Latitude|Longitude|outOrder|toZip|feature|cainiaoId/);
     const expired = returnedFixture(); expired.statuses = expired.statuses.slice(6);
     expect(parseEcoscooting(expired, NUMBER)).toMatchObject({ status: 'exception', current_stage: 'returned',
       last_status_text: 'Your shipment has expired at the parcelshop, and will be returned to sender' });
@@ -199,10 +203,17 @@ describe('Ecoscooting parcel history', () => {
     const result = normalizeCarrierResult(parseEcoscooting(fixture(), NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: '2026-01-04T19:00:00Z', delivered_at: '2026-01-04T19:00:00Z', expected_delivery: null, weight_kg: 4.301 });
     expect(result.events).toHaveLength(4); expect(result.events?.[2]).toMatchObject({ stage: 'failed_attempt' });
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|Latitude|Longitude|outOrder|toZip|feature/);
+    // The destination's postcode and town are the recipient's address; nothing else locates them.
+    expect(result.receiver_address).toBe('PRIVATE_SYNTHETIC_POSTCODE Example City');
+    expect(result.pickup_code).toBeUndefined();
+    expect(shared(result)).not.toMatch(/PRIVATE|Latitude|Longitude|outOrder|toZip|feature/);
+    // A postcode given as a number still reads; a town of another type is left out.
+    const postcodeOnly = fixture(); postcodeOnly.packageParam.toZipcode = 1234; postcodeOnly.packageParam.toCity = { name: 'Example City' };
+    expect(parseEcoscooting(postcodeOnly, NUMBER).receiver_address).toBe('1234');
     const metadata = JSON.parse(readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'));
     const evidence: Record<string, boolean> = { history: !!result.events?.length, weight: result.weight_kg === 4.301, delivered_at: !!result.delivered_at,
-      pickup_point: parseEcoscooting(pickupFixture(), NUMBER).pickup_point === PICKUP_POINT };
+      pickup_point: parseEcoscooting(pickupFixture(), NUMBER).pickup_point === PICKUP_POINT,
+      receiver_address: !!result.receiver_address, pickup_code: !!parseEcoscooting(pickupFixture(), NUMBER).pickup_code };
     for (const capability of metadata.capabilities) expect(evidence[capability], capability).toBe(true);
   });
   it('rejects wrong parcel and per-scan identities, malformed or excessive history', () => {

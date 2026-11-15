@@ -127,12 +127,14 @@ function unifiedResult(shipment: Record<string, unknown>): CarrierResult {
   if (!shipment.events.length) throw new IndeterminateError(PROVIDER, 'DHL has no shipment activity');
   const event = (row: unknown): CarrierEvent => {
     if (!isRecord(row) || typeof row.description !== 'string' || !row.description.trim()) throw new SchemaError(PROVIDER, 'DHL returned an invalid event');
-    const description = row.statusCode === 'delivered' ? 'Delivered' : clean(row.description).slice(0, 1000);
+    // A delivery reads "Delivered", as the mobile API words it, so both feeds give the record one wording; DHL's own stays beside it.
+    const worded = clean(row.description).slice(0, 1000);
+    const description = row.statusCode === 'delivered' ? 'Delivered' : worded;
     const mapped = dhlExpressStage(description, typeof row.status === 'string' ? row.status : null);
     const time = typeof row.timestamp === 'string' && /(?:Z|[+-](?:[01]\d|2[0-3]):?[0-5]\d)$/i.test(row.timestamp)
       ? explicitOffsetTime(row.timestamp)?.iso : undefined;
     const address = isRecord(row.location) && isRecord(row.location.address) ? row.location.address : {};
-    return { description, stage: mapped.stage, stage_source: mapped.source,
+    return { description, ...(worded !== description ? { original_description: worded } : {}), stage: mapped.stage, stage_source: mapped.source,
       ...(time ? { time } : {}), ...(typeof address.addressLocality === 'string' ? { location: clean(address.addressLocality).slice(0, 300) } : {}),
       ...(typeof row.status === 'string' ? { provider_code: row.status.slice(0, 100) } : {}) };
   };
@@ -161,7 +163,10 @@ function blankCheckpoint(row: unknown): boolean {
   });
 }
 
-/** A waybill can be reused. Multiple or duplicate shipments need recipient disambiguation. */
+/**
+ * A waybill can be reused. Multiple or duplicate shipments need recipient disambiguation.
+ * A delivered shipment's proof of delivery (`signature`) names who signed for it.
+ */
 export function parse(payload: unknown, raw: string): CarrierResult {
   const number = normalizeNumber(raw);
   if (isRecord(payload) && payload.results === undefined && Array.isArray(payload.errors) && payload.errors.length === 1
@@ -193,9 +198,11 @@ export function parse(payload: unknown, raw: string): CarrierResult {
   const status: CarrierStatus = current.stage === 'delivered' ? 'delivered' : current.stage === 'out_for_delivery' ? 'out_for_delivery'
     : ['exception', 'failed_attempt', 'returned'].includes(current.stage!) ? 'exception'
       : ['pending', 'registered'].includes(current.stage!) ? 'pending' : 'in_transit';
+  const signatory = current.stage === 'delivered' && isRecord(shipment.signature) ? clean(shipment.signature.signatory, 120) : '';
   return { status, current_stage: current.stage, current_stage_source: current.stage_source,
     last_status_text: current.description, last_update: current.time ?? null,
-    ...(typeof current.local_time === 'string' ? { last_update_local: current.local_time } : {}), events,
+    ...(typeof current.local_time === 'string' ? { last_update_local: current.local_time } : {}),
+    ...(signatory ? { signed_by: signatory } : {}), events,
     ...(typeof shipment.consigneeCountryCode === 'string' && /^[A-Z]{2}$/.test(shipment.consigneeCountryCode)
       ? { destination_country: shipment.consigneeCountryCode } : {}) };
 }

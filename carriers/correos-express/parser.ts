@@ -50,9 +50,10 @@ const PORTUGAL: ReadonlySet<string> = new Set([
 
 /**
  * The sentences that explain a situation, the same for every shipment, as the
- * form and the localizador write them in Spanish and in Portuguese. Whatever
- * else follows a label, such as a pickup point's name and address, a reason
- * that names the recipient or a courier's note, is dropped.
+ * form and the localizador write them in Spanish and in Portuguese. A scan's
+ * description keeps its label and these sentences; whatever else the form
+ * writes after a label, such as a pickup point's name and address, a reason
+ * that names the recipient or a courier's note, stays in its original wording.
  */
 const EXPLANATIONS: readonly string[] = [
   'Ya hemos recibido la información de su envío, en breve dispondremos de su mercancía',
@@ -125,6 +126,11 @@ const EXPLANATIONS: readonly string[] = [
  * before the next text, which then opens with a capital.
  */
 export function fixedExplanation(text: string): string {
+  return explained(text).sentences;
+}
+
+/** The fixed sentences a text opens with, and what it goes on with after them. */
+function explained(text: string): { sentences: string; rest: string } {
   let rest = text.normalize('NFC').replace(/­/g, '').replace(/\s+/g, ' ').replace(/^[.\s]+/, '');
   const kept: string[] = [];
   while (rest) {
@@ -134,7 +140,7 @@ export function fixedExplanation(text: string): string {
     kept.push(`${sentence}.`);
     rest = rest.slice(sentence.length).replace(/^[.\s]+/, '');
   }
-  return kept.join(' ');
+  return { sentences: kept.join(' '), rest };
 }
 
 export function normalizeCorreosExpressNumber(raw: string): string {
@@ -181,18 +187,19 @@ export interface CorreosExpressFeedScan {
   explanation: string;
 }
 
-/** The localizador's history of a shipment, oldest first, and the shipment it names. */
+/** The localizador's history of a shipment, oldest first, the shipment it names and the recipient's name it gives. */
 export interface CorreosExpressFeed {
   shipment: string;
   scans: CorreosExpressFeedScan[];
+  recipient?: string;
 }
 
 /**
  * The Correos group's localizador reply for a Correos Express number. The
  * localizador knows a parcel label by its shipment, which it names, and lists
  * the label among the shipment's associated parcels. Null when it has no trace
- * of the number. Recipient, reference, cash-on-delivery and parcel details in
- * the reply are not read.
+ * of the number. Its `nombre_cliente` is the recipient's name; its reference,
+ * cash-on-delivery and parcel details are not read.
  */
 export function parseCorreosExpressFeed(payload: unknown, raw: string): CorreosExpressFeed | null {
   const number = normalizeCorreosExpressNumber(raw);
@@ -222,23 +229,32 @@ export function parseCorreosExpressFeed(payload: unknown, raw: string): CorreosE
     if (!clock || (code && !/^[A-Z0-9]{2,16}$/.test(code))) throw new SchemaError(PROVIDER, 'The Correos localizador returned an invalid scan');
     return { local_time: clock, ...(code ? { code } : {}), explanation: fixedExplanation(clean(event.desTextoAmpliado, 500)) };
   });
-  return { shipment, scans };
+  const recipient = clean(envelope.nombre_cliente, 120);
+  return { shipment, scans, ...(recipient ? { recipient } : {}) };
 }
 
-/** A scan before its description is written: the label it shows and the fixed explanation that goes with it. */
+/**
+ * A scan before its description is written: the label it shows, the fixed
+ * explanation that goes with it and, for a form row, the row's own wording.
+ */
 interface Scan {
   event: CarrierEvent;
   label: string;
   explanation: string;
   mapped: ClassifiedStatus | undefined;
+  wording?: string;
 }
 
-/** The description a scan keeps: its label and fixed explanation, or a neutral wording when the label is unknown. */
-function described({ event, label, explanation, mapped }: Scan): CarrierEvent {
-  const description = !mapped ? 'Tracking update' : mapped.status === 'delivered' ? 'Delivered'
+/**
+ * The description a scan keeps: its label and fixed explanation, or a neutral
+ * wording when the label is unknown. A form row that says more keeps its
+ * wording as its original one, which no stage is read from.
+ */
+function described({ event, label, explanation, mapped, wording }: Scan): CarrierEvent {
+  const description = !mapped ? 'Tracking update'
     // A failed round's explanation opens with the label.
     : isCorreosExpressFailedRound(label) ? explanation || label : explanation ? `${label}. ${explanation}` : label;
-  return { description, ...event };
+  return { description, ...(wording ? { original_description: wording } : {}), ...event };
 }
 
 const minute = (scan: Scan | CorreosExpressFeedScan) => {
@@ -433,13 +449,14 @@ export function readCorreosExpress(html: string, raw: string, feed?: CorreosExpr
     const rawStatus = clean(cells.eq(2).text(), 500);
     if (!rawStatus) throw new SchemaError(PROVIDER, 'Correos Express returned an empty scan');
     // The carrier sometimes leaves the label blank and puts a free-form
-    // incident note after the first period. Only known labels and the fixed
-    // explanations are retained. A failed round's note opens with a fixed
-    // phrase and then gives the reason, which can name the recipient; only a
-    // fixed reason is kept.
+    // incident note after the first period. The description keeps known
+    // labels and the fixed explanations; the row's whole wording is its
+    // original one. A failed round's note opens with a fixed phrase and then
+    // gives the reason, which can name the recipient; the description keeps
+    // only a fixed reason.
     const failed = FAILED_NOTE.test(rawStatus);
     const label = failed ? (language === 'pt' ? FAILED_ROUND_PT : FAILED_ROUND) : rawStatus.split('.')[0]!.trim();
-    const explanation = fixedExplanation(failed ? rawStatus : rawStatus.slice(rawStatus.indexOf('.') + 1 || rawStatus.length));
+    const { sentences: explanation, rest } = explained(failed ? rawStatus : rawStatus.slice(rawStatus.indexOf('.') + 1 || rawStatus.length));
     const clock = scanClock(cells.eq(0).text());
     const location = clean(cells.eq(1).text(), 200);
     const mapped = classifyCorreosExpressStatus(label);
@@ -447,7 +464,7 @@ export function readCorreosExpress(html: string, raw: string, feed?: CorreosExpr
     if (seen.has(key)) continue;
     seen.add(key);
     unread ||= !mapped && label !== '';
-    scans.push({ label, explanation: mapped ? explanation : '', mapped,
+    scans.push({ label, explanation: mapped ? explanation : '', mapped, ...(!mapped || rest ? { wording: rawStatus } : {}),
       event: { ...(mapped ? { provider_status: label, stage: mapped.stage } : {}), ...clock, ...(location ? { location } : {}) } });
   }
   // The localizador names a label's shipment; the form may name it too, and then both must agree.
@@ -463,8 +480,12 @@ export function readCorreosExpress(html: string, raw: string, feed?: CorreosExpr
   const wall = latest.local_time ?? latest.time;
   const latestDay = typeof wall === 'string' ? wall.slice(0, 10) : null;
   const active = mapped && ['pending', 'in_transit', 'out_for_delivery'].includes(mapped.status);
+  // The proof of delivery names who took the parcel; the delivery PIN releases it to the recipient.
+  const signatory = mapped?.status === 'delivered' ? clean($('#podNombre').val(), 120) : '';
+  const pin = clean($('#pinModal .modal-body span').first().text(), 40);
   return { unread, result: project(events, { expected_delivery: active && day && latestDay && day >= latestDay ? day : null,
-    ...(shipment ? { canonical_tracking_number: shipment } : {}) }) };
+    ...(shipment ? { canonical_tracking_number: shipment } : {}), ...(bound && feed.recipient ? { receiver_name: feed.recipient } : {}),
+    ...(signatory ? { signed_by: signatory } : {}), ...(pin ? { pickup_code: pin } : {}) }) };
 }
 
 /**
@@ -485,5 +506,6 @@ export function correosExpressFeedResult(feed: CorreosExpressFeed, raw: string, 
   const ordered = [...distinct.values()].sort((left, right) => (left.scan.local_time < right.scan.local_time ? 1
     : left.scan.local_time > right.scan.local_time ? -1 : right.index - left.index));
   const events = ordered.map(({ scan }) => described(feedScan(scan, language)));
-  return project(events, feed.shipment === number ? {} : { canonical_tracking_number: feed.shipment });
+  return project(events, { ...(feed.shipment === number ? {} : { canonical_tracking_number: feed.shipment }),
+    ...(feed.recipient ? { receiver_name: feed.recipient } : {}) });
 }

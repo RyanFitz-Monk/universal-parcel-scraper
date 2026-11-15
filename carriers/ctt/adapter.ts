@@ -146,6 +146,17 @@ function scanClock(value: unknown, location: string, partner: string | null, cou
   return Number.isFinite(read) ? { local_time: wall, timestamp: read } : null;
 }
 
+/**
+ * The recipient's address as the record writes it, "1 Example Street, 1000-001 Lisboa":
+ * a Portuguese postcode and its town after the last comma go on a line of their own.
+ */
+function addressOf(value: unknown): string {
+  const address = clean(value, 300);
+  const comma = address.lastIndexOf(',');
+  const town = comma < 0 ? '' : address.slice(comma + 1).trim();
+  return /^\d{4}-\d{3}\s/.test(town) && address.slice(0, comma).trim() ? `${address.slice(0, comma).trim()}\n${town}` : address;
+}
+
 export function parseCttTrackingResponse(payload: unknown, trackingNumber: string): CarrierResult {
   const requested = normalizeCttTrackingNumber(trackingNumber);
   if (!isRecord(payload)) throw new SchemaError('CTT', 'CTT returned an invalid tracking response');
@@ -159,9 +170,12 @@ export function parseCttTrackingResponse(payload: unknown, trackingNumber: strin
   const rawEvents = record.Events;
   const eventsList = isRecord(rawEvents) && Array.isArray(rawEvents.List) ? rawEvents.List : null;
   if (eventsList === null) throw new SchemaError('CTT', 'CTT returned invalid tracking history');
-  // Only the parcel's countries are read: the recipient's, to tell a parcel
-  // bound abroad, and the origin's on mail from abroad, the sender's country
-  // or else the one whose post issued the number.
+  // The parcel's countries are read: the recipient's, to tell a parcel bound
+  // abroad, and the origin's on mail from abroad, the sender's country or else
+  // the one whose post issued the number. The recipient's name and address are
+  // read as the record gives them; the sender's identity and contacts are not.
+  const name = clean(record.Recipient, 120), address = addressOf(record.RecipientAddress);
+  const addressee = { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
   const recipient = clean(record.RecipientCountryCode, 8).toUpperCase();
   const abroad = /^[A-Z]{2}$/.test(recipient) && recipient !== 'PT' ? recipient : null;
   const sender = clean(record.SenderCountryCode, 8).toUpperCase();
@@ -190,9 +204,7 @@ export function parseCttTrackingResponse(payload: unknown, trackingNumber: strin
     parsed.push({
       // Local mixes depot codes and point names (operational locations, kept
       // coarse). A bare number, such as the Spanish post office code on the
-      // acceptance CTT relays from Correos, names no place. Sender/recipient
-      // identity, contact and address blocks travel on the record but are
-      // deliberately never retained.
+      // acceptance CTT relays from Correos, names no place.
       // An unmapped state keeps no stage: the sync classifies the wording and
       // records where the stage came from instead of assuming movement here.
       event: {
@@ -228,9 +240,12 @@ export function parseCttTrackingResponse(payload: unknown, trackingNumber: strin
       last_update: events[0]?.time ?? null,
       ...(events[0]?.local_time ? { last_update_local: events[0].local_time } : {}),
       expected_delivery: null,
+      ...addressee,
       events,
     };
   }
+  // Who received a delivered parcel.
+  const receptor = latest.classified!.status === 'delivered' ? clean(record.ReceptorName, 120) : '';
   return {
     status: latest.classified!.status,
     current_stage: latest.classified!.stage,
@@ -238,6 +253,8 @@ export function parseCttTrackingResponse(payload: unknown, trackingNumber: strin
     last_update: latest.event.time ?? null,
     ...(latest.event.local_time ? { last_update_local: latest.event.local_time } : {}),
     expected_delivery: null,
+    ...addressee,
+    ...(receptor ? { signed_by: receptor } : {}),
     events,
   };
 }

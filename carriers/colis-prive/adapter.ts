@@ -3,8 +3,8 @@
  *
  * One bounded GET per lookup ('direct' step). The page is server-rendered HTML
  * that contains the status banner, the timeline table and — in a `.divDesti`
- * block — the recipient's name and full delivery address. That block is removed
- * before any text is read, so nothing identifying a person can reach the result.
+ * block — the recipient's name and full delivery address. That block becomes the
+ * result's recipient and is then removed, so no other selector reads it.
  *
  * The lookup credential is the 12-character shipment number followed by the
  * recipient's postcode: five digits in France, four in Belgium, bare or after
@@ -114,6 +114,23 @@ export function colisPriveTrackingUrl(rawCredential: string, rawPostcode = ''): 
   return url.toString();
 }
 
+// A line that opens with a French, Belgian or Luxembourg postcode, as an address's town line does.
+const TOWN_LINE = /^(?:\d{5}|[BL]?-?\d{4})\s/i;
+
+/**
+ * The recipient block's lines: the name, then the street and the postcode and town. A block of
+ * one line is the name, or the town line alone; the address keeps its street lines on one.
+ */
+function recipientOf(block: string): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const lines = block.split('\n').map((line) => clean(line, 200)).filter(Boolean).slice(0, 6);
+  if (!lines.length) return {};
+  const named = lines.length > 1 || !TOWN_LINE.test(lines[0]!);
+  const address = named ? lines.slice(1) : lines;
+  const town = address.length > 1 && TOWN_LINE.test(address.at(-1)!) ? address.pop()! : '';
+  const written = [address.join(', '), town].filter(Boolean).join('\n');
+  return { ...(named ? { receiver_name: lines[0]! } : {}), ...(written ? { receiver_address: written } : {}) };
+}
+
 export function parseColisPriveTrackingHtml(
   html: string,
   rawCredential: string,
@@ -122,8 +139,11 @@ export function parseColisPriveTrackingHtml(
   if (!html.trim()) throw new SchemaError(PROVIDER, 'Colis Privé returned an empty tracking response');
 
   const $ = load(html);
-  // This section contains the recipient's name and full delivery address. Remove it
-  // before reading any text from the response and never include it in adapter output.
+  // This section holds the recipient's name, then their address, one line each. It is
+  // read on its own and removed, so no other selector takes its text for a status.
+  const block = $('.divDesti .tdText').first();
+  block.find('br').replaceWith('\n');
+  const recipient = recipientOf(block.text());
   $('.divDesti').remove();
 
   const banner = $('.BandeauInfoColis').first();
@@ -200,6 +220,7 @@ export function parseColisPriveTrackingHtml(
     last_update: null,
     ...(events[0]?.local_time ? { last_update_local: events[0].local_time } : {}),
     expected_delivery: expected,
+    ...recipient,
     timezone: TIMEZONE,
     events,
   };

@@ -27,7 +27,8 @@
   "capabilities": [
     "history",
     "location",
-    "provider_code"
+    "provider_code",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.correos.cl/seguimiento-en-linea",
@@ -37,17 +38,16 @@
       "status",
       "history",
       "location",
-      "recipient_name"
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "signatory"
     ],
-    "discarded": [
-      "recipient_name"
-    ],
+    "discarded": [],
     "unavailable": []
   },
   "links": [],

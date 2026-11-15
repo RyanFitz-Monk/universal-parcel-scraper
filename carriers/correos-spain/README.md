@@ -109,8 +109,8 @@ Correos de Chile (`correos-chile`) are separate carriers.
 - Weight (`peso`, grams → kg) and dimensions (`largo`/`ancho`/`alto` → `L x W x H cm`) are
   kept: operational data users check against a merchant listing. Some international items give
   the sides in metres; when all three are below 1 they are converted to centimetres.
-- `nombre_cliente` is not projected: for a private recipient it is a person's name. Address,
-  phone and signature blocks are never read; a test asserts it.
+- `nombre_cliente` is the recipient's name, read as `receiver_name`. Address, phone and
+  signature blocks are never read; a test asserts it.
 - At most 20 events are returned, newest first.
 - Not used: scraping `correos.es/.../detalle`. It is a JavaScript app and its HTML carries no
   history.

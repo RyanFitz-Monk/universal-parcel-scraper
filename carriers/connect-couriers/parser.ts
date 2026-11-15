@@ -40,12 +40,22 @@ function sameNumber(value: unknown, number: string): boolean {
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who signed for the parcel, after a delivery's wording.
-const SIGNATORY = /\s*[,;:.\-–(]?\s*\bsigned\s+(?:for\s+)?by\b[\s\S]*$/i;
+// Who signed for the parcel, after a delivery's wording: "Delivered - signed by Sample Person".
+const SIGNATORY = /\s*[,;:.\-–(]?\s*\bsigned\s+(?:for\s+)?by\b\s*:?\s*([^,;()]*)[\s\S]*$/i;
 
-/** A scan's wording without a signatory or phone numbers. */
+function trimmed(value: string): string {
+  return clean(value).replace(/^[\s,;:.\-–/]+|[\s,;:\-–/]+$/g, '');
+}
+
+/** A scan's wording without phone numbers. */
 export function connectCouriersWording(raw: string): string {
-  return clean(raw.replace(SIGNATORY, '').replace(PHONE, '')).replace(/^[\s,;:.\-–/]+|[\s,;:\-–/]+$/g, '');
+  return trimmed(raw.replace(PHONE, ''));
+}
+
+/** The wording without who signed, as the map stages it, and who signed. */
+function signedWording(description: string): { wording: string; signatory: string } {
+  const signatory = SIGNATORY.exec(description);
+  return { wording: signatory ? trimmed(description.slice(0, signatory.index)) : description, signatory: clean(signatory?.[1], 120) };
 }
 
 /**
@@ -78,25 +88,28 @@ function concerns(row: Record<string, unknown>, number: string): boolean {
   });
 }
 
-function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent } {
+function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent; signatory: string } {
   const description = connectCouriersWording(text(row, 'stageStatus'));
   if (!description) throw new SchemaError(PROVIDER, 'Connect Couriers returned a scan without wording');
   const local = scanClock(row);
-  const staged = connectCouriersStage(description);
+  // The scan keeps who signed; the map stages its wording without them.
+  const { wording, signatory } = signedWording(description);
+  const staged = connectCouriersStage(wording);
   const event: CarrierEvent = {
     local_time: local,
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local, description]), event };
+  return { key: JSON.stringify([local, description]), event, signatory };
 }
 
-/** The scans of the parcel asked, from the history's date groups. */
-function scans(data: Record<string, unknown>, number: string): CarrierEvent[] {
+/** The scans of the parcel asked, from the history's date groups, with who signed for it. */
+function scans(data: Record<string, unknown>, number: string): { events: CarrierEvent[]; signatory: string } {
   const groups = data.trackingHistory ?? [];
   if (!Array.isArray(groups) || groups.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Connect Couriers returned an invalid history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signatories = new Map<CarrierEvent, string>();
   for (const group of groups) {
     if (!isRecord(group)) throw new SchemaError(PROVIDER, 'Connect Couriers returned an invalid history group');
     // The page skips a group without items.
@@ -109,14 +122,17 @@ function scans(data: Record<string, unknown>, number: string): CarrierEvent[] {
       if (seen.has(scan.key)) continue;
       seen.add(scan.key);
       events.push(scan.event);
+      if (scan.signatory) signatories.set(scan.event, scan.signatory);
       if (events.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Connect Couriers returned an oversized history');
     }
   }
   // Newest first; the groups are by day, and the scans within one are in no order.
-  return events
+  const sorted = events
     .map((event, index) => ({ event, index }))
     .sort((a, b) => (b.event.local_time as string).localeCompare(a.event.local_time as string) || a.index - b.index)
     .map(({ event }) => event);
+  // The newest scan that names who signed.
+  return { events: sorted, signatory: signatories.get(sorted.find((event) => signatories.has(event))!) ?? '' };
 }
 
 /** The piece of the consignment that is the parcel asked. */
@@ -131,7 +147,7 @@ function piece(data: Record<string, unknown>, number: string): Record<string, un
 /** The headline status's word for a parcel whose journey ended or stopped. */
 function headlineStage(found: Record<string, unknown>): Stage | undefined {
   if (typeof found.stageStatus !== 'string') return undefined;
-  const stage = connectCouriersStage(connectCouriersWording(found.stageStatus))?.stage;
+  const stage = connectCouriersStage(signedWording(connectCouriersWording(found.stageStatus)).wording)?.stage;
   return stage === 'delivered' || stage === 'returned' || stage === 'exception' ? stage : undefined;
 }
 
@@ -139,6 +155,11 @@ function headlineStage(found: Record<string, unknown>): Stage | undefined {
 function destination(found: Record<string, unknown>): string | null {
   if (!isRecord(found.recipient)) return null;
   return countryCode(clean(found.recipient.countryCode, 8)) ?? countryCode(clean(found.recipient.country, 60));
+}
+
+/** The recipient's town, all the reply gives of their address. */
+function recipientTown(found: Record<string, unknown>): string {
+  return isRecord(found.recipient) ? clean(found.recipient.cityTown, 120) : '';
 }
 
 /**
@@ -160,7 +181,7 @@ export function parseConnectCouriers(payload: unknown, raw: string): CarrierResu
   if (!isRecord(data) || typeof data.trackingNumber !== 'string') throw new SchemaError(PROVIDER, 'Connect Couriers returned a shipment without its number');
   if (!sameNumber(data.trackingNumber, number)) throw new IndeterminateError(PROVIDER, 'Connect Couriers answered for another shipment');
   const found = piece(data, number);
-  const events = scans(data, number);
+  const { events, signatory } = scans(data, number);
   if (!events.length) throw new NoHistoryError(PROVIDER);
 
   const newest = events[0]!;
@@ -169,6 +190,7 @@ export function parseConnectCouriers(payload: unknown, raw: string): CarrierResu
   const stage = (headline ?? scanned?.stage) as Stage | undefined;
   const source = headline && headline !== scanned?.stage ? 'carrier_map' : scanned?.stage_source;
   const country = destination(found);
+  const town = recipientTown(found);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -176,6 +198,8 @@ export function parseConnectCouriers(payload: unknown, raw: string): CarrierResu
     last_update: null,
     last_update_local: newest.local_time,
     ...(country ? { destination_country: country } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

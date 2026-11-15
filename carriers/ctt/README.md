@@ -84,8 +84,10 @@ carrier.
 - Event `Local` mixes depot codes and point names. It is kept as a coarse location and never
   refined into an address. A bare number, such as the Spanish post office code on the
   acceptance CTT relays from Correos, is no place and is dropped.
-- Sender and recipient names, contacts and addresses are on the record but never read; a
-  test asserts it. Only the recipient's country is read, for the clocks above.
+- The recipient's name (`Recipient`) and address (`RecipientAddress`) are read, and on a
+  delivered parcel who received it (`ReceptorName`). A Portuguese postcode and town after the
+  address's last comma go on a line of their own. The sender's name and contacts are not read.
+  The recipient's country is read for the clocks above.
 - At most 20 events are returned, newest first.
 - The user-facing link is the legacy `objectSearch.jspx?objects=` page: CTT links it from
   its own site and it survives `appserver` host changes.

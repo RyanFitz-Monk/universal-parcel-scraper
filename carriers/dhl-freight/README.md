@@ -33,9 +33,9 @@ Tracked through ActiveTracing's own search.
   driver is on the way to the shipper and stays registered.
 - The consignee's postcode and an image security code unlock the proof of delivery and more
   details. The history does not need them, and the adapter does not ask for them.
-- The weight, the product and the consignee's country are kept. The consignee's and shipper's
-  towns, the volume, the pallet count, the pickup and delivery dates and the package list are
-  not. Packages' own scans, on a separate tab, are not read.
+- The weight, the product, the consignee's country and the consignee's town, as the recipient's
+  address, are kept. The shipper's town, the volume, the pallet count, the pickup and delivery
+  dates and the package list are not. Packages' own scans, on a separate tab, are not read.
 - dhl.com's tracking page also answers these consignments through `/utapi`, with status codes
   and seconds, but Akamai's challenge turns plain HTTP clients away with HTTP 428 or a reset
   stream, so only a browser reads it. DHL's Shipment Tracking API needs a key from a developer

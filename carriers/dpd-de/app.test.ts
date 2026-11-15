@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { IndeterminateError } from '../../core/errors/index.js';
+import type { CarrierResult } from '../../core/result/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { TrawlClient } from '../../core/transport/trawl.js';
 import { createTracker } from '../../facade/index.js';
@@ -21,6 +22,10 @@ const failure = (operation: string, ...codes: string[]) => `<soap:Envelope xmlns
   + `<${operation}Response xmlns="https://cloud.dpd.com/"><${operation}Result><Ack>false</Ack><ErrorDataList>`
   + codes.map(code => `<ErrorData><ErrorID>1</ErrorID><ErrorCode>${code}</ErrorCode><ErrorMsg>PRIVATE_MARKER</ErrorMsg></ErrorData>`).join('')
   + `</ErrorDataList></${operation}Result></${operation}Response></soap:Body></soap:Envelope>`;
+
+/** A result without what it shows of the recipient, which the fixtures fill with private markers. */
+const withoutRecipient = (result: CarrierResult) => JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined,
+  events: result.events?.map(event => ({ ...event, original_description: undefined })) });
 
 interface Call { operation: string; body: string; headers: Headers; signal?: AbortSignal | null }
 
@@ -57,7 +62,18 @@ describe('DPD Germany app service', () => {
       { local_time: '2026-01-01T13:29:00', provider_time_text: '01.01.2026 13:29', description: 'Order information has been transmitted to DPD.', stage: 'registered', stage_source: 'carrier_map' },
     ]);
     expect(result.expected_delivery).toBe('2026-01-03');
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|SYNTHETIC|estimated/);
+    // The recipient's name and street; the reference and the depot's mail are not read.
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET' });
+    expect(withoutRecipient(result)).not.toMatch(/PRIVATE|SYNTHETIC|estimated/);
+  });
+
+  it('reads no recipient from a view that leaves the name and the street empty', async () => {
+    const anonymous = fixture('tracking').replace('<ReceiverName>PRIVATE RECIPIENT</ReceiverName>', '<ReceiverName />')
+      .replaceAll('<Name>PRIVATE RECIPIENT</Name><Street>PRIVATE STREET</Street>', '');
+    const result = await service({ getTrackingData: [() => xml(anonymous)] }).track();
+    expect(result.receiver_name).toBeUndefined();
+    expect(result.receiver_address).toBeUndefined();
+    expect(result.events).toHaveLength(5);
   });
 
   const noAnnouncement = () => fixture('scans').replace(/<TrackingScan>\s*<ScanDate>03\.01\.2026<\/ScanDate>\s*<ScanTime>06:00<\/ScanTime>[\s\S]*?<\/TrackingScan>/, '');
@@ -74,7 +90,7 @@ describe('DPD Germany app service', () => {
     const baseline = await service().track();
     const result = await service({ getTrackingData: [() => xml(withForecast(fields))] }).track();
     expect(result).toEqual({ ...baseline, expected_delivery: '2026-01-04 10:15–12:45' });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(withoutRecipient(result)).not.toContain('PRIVATE');
   });
 
   it.each([
@@ -270,16 +286,17 @@ describe('DPD Germany app service', () => {
     await expect(track()).rejects.toMatchObject({ kind });
   });
 
-  it('leaves unknown wording unstaged, hides delivery prose and reads the status from the rail', async () => {
+  it('leaves unknown wording unstaged, describes delivery prose neutrally with its wording as the original and reads the status from the rail', async () => {
     const scans = fixture('scans').replace('Unfortunately we have not been able to deliver your parcel.', 'Delivered to PRIVATE NEIGHBOUR')
       .replace('Unfortunately we have not been able to deliver your parcel.', 'A future notice')
       .replace('<Location>Musterstadt (DE)</Location>\n            <ServiceCode>101</ServiceCode>\n            <TrackingScanAdditionalList><TrackingScanAdditionalType><AdditionalCode>999', '<Location>Elsewhere</Location>\n            <ServiceCode>101</ServiceCode>\n            <TrackingScanAdditionalList><TrackingScanAdditionalType><AdditionalCode>999');
     const { track } = service({ getTrackingScanList: [() => xml(scans)] });
     const result = await track();
     expect(result.events?.[0]).toEqual({ local_time: '2026-01-03T09:40:00', provider_time_text: '03.01.2026 09:40', description: 'A future notice' });
-    expect(result.events?.[1]).toEqual({ time: '2026-01-03T09:40:00+01:00', location: 'Musterstadt, DE', description: 'Delivery update' });
+    expect(result.events?.[1]).toEqual({ time: '2026-01-03T09:40:00+01:00', location: 'Musterstadt, DE', description: 'Delivery update',
+      original_description: 'Delivered to PRIVATE NEIGHBOUR' });
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_update: null, last_update_local: '2026-01-03T09:40:00' });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(withoutRecipient(result)).not.toContain('PRIVATE');
   });
 
   it('ends a lookup with its signal, and the opening with the last lookup that asked for it', async () => {

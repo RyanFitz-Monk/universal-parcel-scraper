@@ -46,14 +46,16 @@ interface Scan {
   readonly receipt: boolean;
   /** The office's Bulgarian name, to match the office storing the parcel. */
   readonly office: string;
+  /** Who took the parcel, as a delivery names them. */
+  readonly signatory: string;
   readonly wall: string;
   readonly index: number;
 }
 
 /**
- * One scan as the tracker shows it, without the names it carries for people:
- * the recipient on a delivery and the courier on a courier scan. An order
- * changing the delivery terms keeps its subject, not its number.
+ * One scan as the tracker shows it. A delivery keeps the name of who took the
+ * parcel; a courier scan leaves out the courier's. An order changing the
+ * delivery terms keeps its subject, not its number.
  */
 function projectScan(row: Record<string, unknown>, code: string): Omit<Scan, 'wall' | 'index' | 'event'> & { event: Omit<CarrierEvent, 'time'> } {
   const name = clean(row.name, 200);
@@ -62,7 +64,7 @@ function projectScan(row: Record<string, unknown>, code: string): Omit<Scan, 'wa
   let description = scan.wording;
   let location = '';
   if (code === 'office') location = text;
-  else if (code === 'courier_direction' && text) description = `${scan.wording}: ${text}`;
+  else if ((code === 'courier_direction' || code === 'client') && text) description = `${scan.wording}: ${text}`;
   else if (code === 'instruction') {
     const subject = /\bfor:\s*(.{1,120})$/i.exec(clean(row.nameLatin, 200)) ?? /\bза:\s*(.{1,120})$/i.exec(name);
     if (subject) description = `${scan.wording}: ${subject[1]!.trim()}`;
@@ -74,7 +76,7 @@ function projectScan(row: Record<string, unknown>, code: string): Omit<Scan, 'wa
   }
   const receipt = row.isReceipt === true;
   return {
-    code, receipt, office: code === 'office' ? name : '',
+    code, receipt, office: code === 'office' ? name : '', signatory: code === 'client' ? text.slice(0, 120) : '',
     event: {
       description: receipt ? `Return receipt: ${description}` : description,
       provider_code: receipt ? RECEIPT_CODE : code,
@@ -139,6 +141,7 @@ export function parseEcont(payload: unknown, rawNumber: string): CarrierResult {
     ?? (events.find(event => event.stage)?.stage as Stage | undefined);
   const delivery = stage === 'delivered' ? ordered.find(scan => !scan.receipt && scan.code === 'client') : undefined;
   const pickupPoint = stage === 'ready_for_pickup' ? store?.event.location : undefined;
+  const recipient = clean(track.receiverName, 120);
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -148,6 +151,8 @@ export function parseEcont(payload: unknown, rawNumber: string): CarrierResult {
     last_update: events[0]?.time ?? null,
     ...(delivery?.event.time ? { delivered_at: delivery.event.time } : {}),
     ...(pickupPoint ? { pickup_point: pickupPoint } : {}),
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(delivery?.signatory ? { signed_by: delivery.signatory } : {}),
     timezone: ZONE,
     events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),

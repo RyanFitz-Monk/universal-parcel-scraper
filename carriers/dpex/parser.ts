@@ -56,8 +56,8 @@ function json(text: string): unknown {
   }
 }
 
-/** One scan: the entering station's wall clock, the event's tracker number and wording, and its place. */
-function scanOf([track, event]: Row, place: unknown): CarrierEvent {
+/** One scan: the entering station's wall clock, the event's tracker number and wording, and its place, with its note. */
+function scanOf([track, event]: Row, place: unknown): { scan: CarrierEvent; notes: string } {
   const clock = typeof track.TrackDateTime === 'string' ? CLOCK.exec(track.TrackDateTime) : null;
   const code = text(event.TrackEventCode);
   const description = clean(event.TrackEventCustViewName, 300);
@@ -65,11 +65,14 @@ function scanOf([track, event]: Row, place: unknown): CarrierEvent {
   const location = clean(place, 120);
   const staged = dpexStage(code, description);
   return {
-    local_time: `${clock[1]}T${clock[2]}`,
-    ...(location && location !== 'N/A' ? { location } : {}),
-    description,
-    provider_code: code,
-    ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
+    scan: {
+      local_time: `${clock[1]}T${clock[2]}`,
+      ...(location && location !== 'N/A' ? { location } : {}),
+      description,
+      provider_code: code,
+      ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
+    },
+    notes: clean(track.TrackNotes, 120),
   };
 }
 
@@ -78,7 +81,8 @@ function scanOf([track, event]: Row, place: unknown): CarrierEvent {
  * writes the history into the page's script as JSON, oldest first: for each
  * scan the number, the station's clock, the event and, in a list beside it,
  * the place. Every scan must name the number asked. A number the system holds
- * nothing for comes back as its "No track found" entry.
+ * nothing for comes back as its "No track found" entry. A delivery's note
+ * names who signed; the other scans' notes are not read.
  */
 export function parseDpexChina(html: string, rawNumber: string): CarrierResult {
   const number = normalizeDpexNumber(rawNumber);
@@ -106,7 +110,9 @@ export function parseDpexChina(html: string, rawNumber: string): CarrierResult {
     throw new IndeterminateError(PROVIDER, 'DPEX China answered for another shipment');
   }
   // Oldest first on the page; newest first here, the page's order kept for scans of the same minute.
-  const events = rows.map((row, index) => scanOf(row, names[index])).reverse();
+  const scans = rows.map((row, index) => scanOf(row, names[index])).reverse();
+  const signatory = scans.find(({ scan, notes }) => scan.stage === 'delivered' && notes)?.notes;
+  const events = scans.map(({ scan }) => scan);
   const newest = events[0]!;
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
@@ -120,6 +126,7 @@ export function parseDpexChina(html: string, rawNumber: string): CarrierResult {
     last_update_local: newest.local_time!,
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

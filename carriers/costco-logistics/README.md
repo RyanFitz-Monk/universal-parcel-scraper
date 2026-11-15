@@ -16,8 +16,10 @@ page's wording: the legacy `status` repeats the same text for arrival and out fo
 Scan clocks retain the delivering market's wall time; the API states no offset.
 General clock resolution can add a separately labelled deduction without replacing that wall time.
 
-Location strings can contain the delivery address, so they are omitted along with contact,
-order, payment and scheduling fields. Delivery slots are not interpreted as estimates.
+The parcel's `address` is read as the recipient's address, as the reply writes it. A
+delivered scan's wording is kept whole, and the name after "signed by" or "received by" is
+read as the signatory. Scan locations can be the same address and are not read, nor are
+contact, order, payment and scheduling fields. Delivery slots are not interpreted as estimates.
 Nine-digit orders, work-order searches, scheduling capabilities and account pages are not
 used. Only the API's exact `98` / `NODATAFOUND` envelope is a missing parcel; verification,
 rate limits, empty histories and changed replies retain their failure kinds.

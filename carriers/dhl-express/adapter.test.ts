@@ -11,7 +11,7 @@ import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 
 const number = '1234567891';
 const payload = () => ({ results: [{ id: number, duplicate: false, hasDuplicateShipment: false,
-  consigneeCountryCode: 'CA', signature: { signatory: 'PRIVATE', link: { url: 'https://example.invalid/private' } },
+  consigneeCountryCode: 'CA', signature: { signatory: 'A SAMPLE', link: { url: 'https://example.invalid/private' } },
   checkpoints: [
     { description: 'Delivered', date: 'Monday, October 05, 2026', time: '15:06', location: 'EXAMPLE CITY - CANADA' },
     { description: 'Shipment is out with courier for delivery', date: 'Monday, October 05, 2026', time: '12:35' },
@@ -44,9 +44,9 @@ describe('DHL Express projection', () => {
     expect(() => parse(missing, '1234567880')).toThrow(SchemaError);
     expect(() => normalizeNumber('1234567890')).toThrow(InvalidInputError);
   });
-  it('binds the waybill, maps milestones and preserves facility-local clocks without recipient data', () => {
+  it('binds the waybill, maps milestones, preserves facility-local clocks and reads who signed, without other recipient data', () => {
     const result = parse(payload(), number);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', destination_country: 'CA',
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', destination_country: 'CA', signed_by: 'A SAMPLE',
       last_update: null, last_update_local: '2026-10-05T15:06:00', events: [
         { local_time: '2026-10-05T15:06:00', stage: 'delivered' },
         { local_time: '2026-10-05T12:35:00', stage: 'out_for_delivery' }, { local_time: '2026-10-02T17:18:00', stage: 'accepted' },
@@ -54,6 +54,13 @@ describe('DHL Express projection', () => {
     // A consumer reads an offset-less `time` in the catalog zone, which is UTC here.
     expect(result.events?.some((event) => 'time' in event)).toBe(false);
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|private|signature|signatory/);
+    // Only a delivery names who signed, and only as text.
+    const moving = payload(); moving.results[0]!.checkpoints.shift();
+    expect(parse(moving, number).signed_by).toBeUndefined();
+    for (const signatory of ['', ' ', 42, null]) {
+      const odd = payload(); Object.assign(odd.results[0]!.signature, { signatory });
+      expect(parse(odd, number).signed_by).toBeUndefined();
+    }
   });
   it("keeps a delivery of some pieces on the stage before it, without delivering the shipment or moving it back", () => {
     const partial = 'Partial delivery of one or more pieces of a multi-piece shipment';
@@ -252,10 +259,10 @@ describe('DHL Express retrieval', () => {
 });
 
 describe('DHL mobile API', () => {
-  it('derives status from sorted scans, uses English local dates and discards recipient and piece data', () => {
+  it('derives status from sorted scans, uses English local dates, reads who signed and discards other recipient and piece data', () => {
     const data = mobilePayload(); data[0]!.checkpoints.reverse();
     const result = parseMobile(data, number);
-    expect(result).toMatchObject({ status: 'delivered', last_update: null, last_update_local: '2026-10-05T15:06:00',
+    expect(result).toMatchObject({ status: 'delivered', last_update: null, last_update_local: '2026-10-05T15:06:00', signed_by: 'A SAMPLE',
       events: [{ stage: 'delivered', local_time: '2026-10-05T15:06:00' }, { stage: 'out_for_delivery' }, { stage: 'accepted' }] });
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|private|signature|signatory|pIds|counter|pieces/);
   });
@@ -558,11 +565,12 @@ describe('DHL public browser API', () => {
     expect(() => parseUnified(empty, number)).toThrow(IndeterminateError);
     expect(() => parseUnified({ shipments: [null] }, number)).toThrow(SchemaError);
   });
-  it('does not invent UTC offsets or retain a delivery signatory', () => {
+  it('keeps DHL\'s wording of a delivery beside the one it stages, and does not invent UTC offsets', () => {
     const data = unifiedPayload(); data.shipments[0]!.events[0]!.description = 'Delivered to PRIVATE';
     for (const value of ['2026-10-05T15:06:00', '2026-10-05T15:06:00+99:00', '2026-02-30T15:06:00Z']) {
       data.shipments[0]!.events[0]!.timestamp = value;
-      expect(parseUnified(data, number).events?.[0]).toMatchObject({ description: 'Delivered' });
+      expect(parseUnified(data, number).events?.[0]).toMatchObject({ description: 'Delivered', original_description: 'Delivered to PRIVATE',
+        stage: 'delivered' });
       expect(parseUnified(data, number).events?.[0]?.time).toBeUndefined();
     }
   });

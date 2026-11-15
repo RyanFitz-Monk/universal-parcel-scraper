@@ -31,7 +31,8 @@
   },
   "capabilities": [
     "history",
-    "location"
+    "location",
+    "signed_by"
   ],
   "portal": {
     "url": "https://ahiva.correo.com.uy/servicioConsultaTntIps-web/SeguimientoJSNuevo?codigoPieza={trackingNumber}",
@@ -46,7 +47,8 @@
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "discarded": [
       "notices"

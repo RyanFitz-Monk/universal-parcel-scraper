@@ -56,10 +56,11 @@ describe('DPD Portugal tracking adapter', () => {
     expect(String(global.mock.calls[0]![0])).toBe(dpdPtLookupUrl(DELIVERED));
   });
 
-  it('reads a delivered history as wall clocks, newest first, without the receiver, the window, the map or the proof', () => {
+  it('reads a delivered history as wall clocks, newest first, with who took the parcel, without the window, the map or the proof', () => {
     const result = normalizeCarrierResult(parseDpdPt(delivered, DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'PROVA DE ENTREGA', last_update: null, last_update_local: '2026-03-05T11:30:00', expected_delivery: null });
+      last_status_text: 'PROVA DE ENTREGA', last_update: null, last_update_local: '2026-03-05T11:30:00', expected_delivery: null,
+      signed_by: 'ANA EXEMPLO' });
     expect(result.pickup_point).toBeUndefined();
     expect(result.events?.map(event => [event.local_time, event.provider_code, event.description, event.stage, event.stage_source])).toEqual([
       ['2026-03-05T11:30:00', 'POD', 'PROVA DE ENTREGA', 'delivered', 'carrier_map'],
@@ -80,7 +81,7 @@ describe('DPD Portugal tracking adapter', () => {
       ['2026-03-01T18:28:00', '007', 'DEPOSITADO PELO CLIENTE/EXPEDIDOR', 'accepted', 'carrier_map'],
     ]);
     expect(result.events?.every(event => !event.time && !event.location && !event.point)).toBe(true);
-    const json = JSON.stringify(result);
+    const json = JSON.stringify({ ...result, signed_by: undefined });
     for (const kept of ['ANA EXEMPLO', '10:45', 'REF0000001', '999', '38.7', 'example.invalid']) expect(json, kept).not.toContain(kept);
   });
 
@@ -96,7 +97,7 @@ describe('DPD Portugal tracking adapter', () => {
     // The recipient's collection there names the point; a door delivery after it does not.
     const collected = history(['POD', '14-10-2026', '15:52', 'PROVA DE ENTREGA', 'RECIPIENT'], ['706', '14-10-2026', '09:00', 'HORÁRIO DE ENTREGA ENVIADA AO DESTINATÁRIO'],
       ['002', '13-10-2026', '18:45', 'RECEPCIONADO PELO PONTO DE ENTREGA', 'LOJA EXEMPLO'], ['001', '13-10-2026', '18:21', 'ENTREGUE PELA DPD NO PONTO DE ENTREGA', 'PT00002']);
-    expect(parseDpdPt(collected, DELIVERED)).toMatchObject({ current_stage: 'delivered', pickup_point: 'LOJA EXEMPLO' });
+    expect(parseDpdPt(collected, DELIVERED)).toMatchObject({ current_stage: 'delivered', pickup_point: 'LOJA EXEMPLO', signed_by: 'RECIPIENT' });
     const door = history(['POD', '15-10-2026', '11:00', 'PROVA DE ENTREGA'], ['OFD', '15-10-2026', '08:00', 'EM DISTRIBUIÇÃO'],
       ['002', '13-10-2026', '18:45', 'RECEPCIONADO PELO PONTO DE ENTREGA', 'LOJA EXEMPLO']);
     expect(parseDpdPt(door, DELIVERED).pickup_point).toBeUndefined();
@@ -131,6 +132,8 @@ describe('DPD Portugal tracking adapter', () => {
       ['008', '11-08-2026', '00:05', 'DATA DE PERMANÊNCIA EM LOJA EXPIRADA'], ['002', '04-08-2026', '10:28', 'RECEPCIONADO PELO PONTO DE ENTREGA', 'LOJA EXEMPLO']);
     expect(parseDpdPt(returned, DELIVERED)).toMatchObject({ status: 'exception', current_stage: 'returned', last_status_text: 'PROVA DE ENTREGA' });
     expect(parseDpdPt(returned, DELIVERED).pickup_point).toBeUndefined();
+    // The proof of a return's delivery to the sender names no one who took the parcel for its recipient.
+    expect(parseDpdPt(returned, DELIVERED).signed_by).toBeUndefined();
     expect(stages(returned)).toEqual([['POD', 'returned'], ['OFD', 'out_for_delivery'], ['424', 'exception'], ['012', 'in_transit'],
       ['008', 'exception'], ['002', 'ready_for_pickup']]);
     const sentBack = history(['611', '18-09-2026', '09:44', 'ENCOMENDA DEVOLVIDA AO EXPEDIDOR', 'PT00'], ['POD', '09-09-2026', '17:13', 'PROVA DE ENTREGA']);

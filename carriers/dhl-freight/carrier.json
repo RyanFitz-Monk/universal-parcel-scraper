@@ -46,7 +46,8 @@
     "location",
     "service_name",
     "weight",
-    "destination_country"
+    "destination_country",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://activetracing.dhl.com/DatPublic/datSelection.do?autoSearch=true&search=consignmentId&l=DE&a={trackingNumber}",
@@ -75,10 +76,10 @@
       "location",
       "service_name",
       "weight",
-      "destination_country"
+      "destination_country",
+      "destination"
     ],
     "discarded": [
-      "destination",
       "origin",
       "parcel_count",
       "volume",

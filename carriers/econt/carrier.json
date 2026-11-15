@@ -34,7 +34,9 @@
     "location",
     "provider_code",
     "delivered_at",
-    "pickup_point"
+    "pickup_point",
+    "receiver_name",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.econt.com/services/track-shipment/{trackingNumber}",
@@ -54,13 +56,14 @@
       "location",
       "provider_code",
       "delivered_at",
-      "pickup_point"
+      "pickup_point",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
       "driver_name",
       "order_references",
-      "recipient_name",
       "sender_name"
     ],
     "unavailable": [

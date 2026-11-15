@@ -9,8 +9,8 @@ The adapter reads its public tracking page.
 `GET shipecom.com/track/{number}` returns the page, rendered by the server, without a session or
 CAPTCHA. Its result section names a state and repeats the number asked, which must be the one
 asked. A known parcel has a status heading, a progress rail, its delivery time, the destination's
-postal code prefix and the tracking history. Only the history is kept: each scan's wording, its
-instant with an offset, and the town for a pickup. A number the tracker does not know comes with
+postal code prefix and the tracking history. The history is kept, with each scan's wording, its
+instant with an offset and the town for a pickup, and so is the destination. A number the tracker does not know comes with
 HTTP 404 and the state `not_found`, which is read as not found; a 404 without it is a moved route.
 
 Recognition asks the same page: a history says Ecom Logistics holds the number.
@@ -19,7 +19,8 @@ Recognition asks the same page: a history says Ecom Logistics holds the number.
 
 - The scans carry no code; their wordings are mapped in [statuses.json](statuses.json), and another
   wording falls to the shared wording rules.
-- The destination is a postal code prefix of the recipient's address, so it is left out.
+- The destination is the prefix of the recipient's postal code, the only part of their address the
+  page shows. It is read as the recipient's address as it stands.
 
 ## Numbers
 

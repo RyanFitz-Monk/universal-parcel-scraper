@@ -52,13 +52,14 @@ describe('Chunil Express HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'chunil', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads a delivered route newest first as days, at branches, without names, phone numbers or goods', () => {
+  it('reads a delivered route newest first as days, at branches, with the recipient’s and signer’s masked names, without phone numbers or goods', () => {
     const result = parseChunil(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: '배송완료', last_update: null, last_update_local: '2026-03-04', expected_delivery: null,
+      receiver_name: '예**', signed_by: '예**',
     });
-    for (const field of ['summary_only', 'delivered_at', 'receiver_name', 'sender_name', 'history_truncated']) {
+    for (const field of ['summary_only', 'delivered_at', 'receiver_address', 'sender_name', 'history_truncated']) {
       expect(result).not.toHaveProperty(field);
     }
     expect(events(result)).toEqual([
@@ -71,7 +72,7 @@ describe('Chunil Express HTTP adapter', () => {
       ['2026-03-02', '접수', 'accepted', '천일샘플'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && !('provider_code' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/샘\*\*|예\*\*|000-000-0000|샘플 상품|샘플로|예시로|2BOX/);
+    expect(JSON.stringify(result)).not.toMatch(/샘\*\*|000-000-0000|샘플 상품|샘플로|예시로|2BOX/);
   });
 
   it('reads an in-transit route by its newest staged scan, with the delivery result still empty', () => {
@@ -79,7 +80,10 @@ describe('Chunil Express HTTP adapter', () => {
     expect(result).toMatchObject({
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: '도착터미널하차', last_update: null, last_update_local: '2026-10-13', expected_delivery: null,
+      receiver_name: '예**',
     });
+    // Nobody has signed yet.
+    expect(result).not.toHaveProperty('signed_by');
     expect(events(result).map(([day, label, stage]) => [day, label, stage])).toEqual([
       ['2026-10-13', '도착터미널하차', 'in_transit'],
       ['2026-10-12', '발송터미널출발', 'in_transit'],

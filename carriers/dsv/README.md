@@ -60,8 +60,9 @@ Each row keeps its event code, its English wording with the reasons the page sho
 place without postcodes. The reply gives most clocks an offset and labels some local clocks Z;
 the page prints each clock as written, and the adapter keeps them as wall clocks. The agreed
 delivery day, else the estimated one, is the delivery estimate until the shipment is delivered.
-The parties, references, addresses, goods, the recipient on a delivery and the packages' own rows
-are not read.
+The recipient's name and address come from the delivery address, or from the consignee's postcode
+and town when there is none, and the name a delivery row gives is kept as who signed. The sender,
+references, goods and the packages' own rows are not read.
 
 ## Recognition
 
@@ -91,8 +92,8 @@ shipment.
 Clocks are the wall clocks of each place, without an offset, so they stay local. A booking comes
 with its day alone.
 
-The parties, their towns and postcodes, the references, contacts, proofs of delivery and the
-shipment key are not read.
+The search's consignee gives the recipient's name and address. The sender, the references,
+contacts, proofs of delivery and the shipment key are not read.
 
 ## Limitations
 

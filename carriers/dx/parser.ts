@@ -38,6 +38,7 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const MAX_PLANNED_DAYS = 92;
 // A delivery names whoever signed for it: "1 of 1 items delivered. Signed A Name".
 const SIGNATORY = /\s*\bSigned\b[\s\S]*$/i;
+const SIGNER = /\bSigned\b(?:\s+(?:for\s+)?by\b)?\s*:?\s*(.*)$/i;
 const WEIGHT = /^(\d{1,5}(?:\.\d{1,3})?) ?kg$/i;
 const SERVICE = /^[A-Za-z0-9][A-Za-z0-9 /&+().-]{0,59}$/;
 const HEADER = ['Date', 'Status', 'Location'];
@@ -121,7 +122,7 @@ function wallClock(text: string): string {
   return `${day}T${String(hours).padStart(2, '0')}:${match[5]}:00`;
 }
 
-/** A scan's wording without the name of whoever signed for the delivery. */
+/** A scan's wording without the name of whoever signed for the delivery, as the map stages it. */
 export function dxWording(text: string): string {
   return clean(text, 300).replace(SIGNATORY, '').replace(/[\s,;:-]+$/, '');
 }
@@ -158,7 +159,8 @@ function weight($: CheerioAPI): number | null {
   return kilograms > 0 ? kilograms : null;
 }
 
-function rows($: CheerioAPI): CarrierEvent[] {
+/** The scans in the page's order, and who signed for each delivery that names them. */
+function rows($: CheerioAPI): { events: CarrierEvent[]; signatories: ReadonlyMap<CarrierEvent, string> } {
   const table = $('table[id$="_StatusGridView"]');
   if (table.length > 1) throw new SchemaError(PROVIDER, 'DX returned more than one history');
   if (!table.length) {
@@ -172,36 +174,42 @@ function rows($: CheerioAPI): CarrierEvent[] {
   if (lines.length - 1 > MAX_ROWS) throw new SchemaError(PROVIDER, 'DX returned an oversized history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const signatories = new Map<CarrierEvent, string>();
   for (const line of lines.slice(1).toArray()) {
     const cells = $(line).children('td');
     if (cells.length !== HEADER.length) throw new SchemaError(PROVIDER, 'DX changed its history layout');
     const local = wallClock(clean(cells.eq(0).text(), 24));
-    const description = dxWording(cells.eq(1).text());
+    const description = clean(cells.eq(1).text(), 300);
+    const staging = dxWording(description);
     const location = clean(cells.eq(2).text(), 80);
     // A row that only named a signatory says nothing else.
-    if (!description) continue;
+    if (!staging) continue;
     const key = JSON.stringify([local, description, location]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = dxStage(description);
-    events.push({
+    const staged = dxStage(staging);
+    const event: CarrierEvent = {
       local_time: local, description, ...(location ? { location } : {}),
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
-    });
+    };
+    const signatory = staged?.stage === 'delivered' ? clean(SIGNER.exec(description)?.[1], 120) : '';
+    if (signatory) signatories.set(event, signatory);
+    events.push(event);
   }
-  return events;
+  return { events, signatories };
 }
 
 /**
  * The two pages the freight tracker shows in the session its lookup opened:
  * the menu with the delivery date, and the tracking history with the service,
- * weight and scans newest first. Both must name the number asked.
+ * weight and scans newest first. A delivery scan keeps its wording, and the
+ * name after "Signed" is read as who signed. Both must name the number asked.
  */
 export function parseDxFreight(history: string, menu: string, raw: string): CarrierResult {
   const number = normalizeDxNumber(raw);
   const planned = boundPage(menu, number);
   const $ = boundPage(history, number);
-  const events = rows($);
+  const { events, signatories } = rows($);
   if (!events.length) throw new NoHistoryError(PROVIDER);
   // Newest first, as the page lists them; an oldest-first page is turned round.
   const newestFirst = (events[0]!.local_time as string) < (events.at(-1)!.local_time as string) ? events.reverse() : events;
@@ -213,6 +221,8 @@ export function parseDxFreight(history: string, menu: string, raw: string): Carr
   const expected = day && day >= (newest.local_time as string).slice(0, 10) ? day : null;
   const service = clean(field($, 'lbl_service')?.text(), 60);
   const kilograms = weight($);
+  // The newest delivery that names who signed.
+  const signatory = signatories.get(newestFirst.find((event) => signatories.has(event))!);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -222,6 +232,7 @@ export function parseDxFreight(history: string, menu: string, raw: string): Carr
     expected_delivery: expected,
     ...(SERVICE.test(service) ? { service_name: service } : {}),
     ...(kilograms ? { weight_kg: kilograms } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

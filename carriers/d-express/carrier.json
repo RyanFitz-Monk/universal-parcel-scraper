@@ -31,7 +31,9 @@
   "capabilities": [
     "history",
     "location",
-    "delivered_at"
+    "delivered_at",
+    "receiver_name",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://www.dexpress.rs/rs/pracenje-posiljaka/{trackingNumber}",
@@ -54,12 +56,12 @@
       "status",
       "history",
       "location",
-      "delivered_at"
-    ],
-    "discarded": [
+      "delivered_at",
       "recipient_name",
       "recipient_address",
-      "destination",
+      "destination"
+    ],
+    "discarded": [
       "parcel_count",
       "office_contact_details",
       "payment_details",

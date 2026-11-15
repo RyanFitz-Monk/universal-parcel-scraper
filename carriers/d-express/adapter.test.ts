@@ -66,8 +66,23 @@ describe('D Express HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.local_time === undefined && event.location === undefined)).toBe(true);
     expect(result).not.toHaveProperty('summary_only');
-    // The recipient, the town, the parcel count and the centre's phone stay out.
-    expect(JSON.stringify(result)).not.toMatch(/Sam\*|Sample|000-000|Broj|Grad|Primalac/);
+    // The recipient's masked name and address and the town are read; the parcel count and the centre's phone stay out.
+    expect(result).toMatchObject({ receiver_name: 'Sam********', receiver_address: 'Sam********\nSample Town (Sample District)' });
+    expect(JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined })).not.toMatch(/Sam\*|Sample|000-000|Broj|Grad|Primalac/);
+  });
+
+  it('reads the recipient’s address and town as far as the page gives them', () => {
+    const townOnly = parseDexpress(changed('in-transit', (body) => field(body, 'Adresa', '-')), IN_TRANSIT);
+    expect(townOnly).toMatchObject({ receiver_name: 'Sam********', receiver_address: 'Sample Town (Sample District)' });
+    const addressOnly = parseDexpress(changed('in-transit', (body) => field(body, 'Grad', '-')), IN_TRANSIT);
+    expect(addressOnly.receiver_address).toBe('Sam********');
+    const none = parseDexpress(changed('in-transit', (body) => {
+      field(body, 'Primalac', '-');
+      field(body, 'Adresa', '');
+      field(body, 'Grad', '-');
+    }), IN_TRANSIT);
+    expect(none).not.toHaveProperty('receiver_name');
+    expect(none).not.toHaveProperty('receiver_address');
   });
 
   it('puts the centre holding the shipment on the current scan', () => {
@@ -118,7 +133,8 @@ describe('D Express HTTP adapter', () => {
 
   it('keeps a current status without scans as a summary, and nothing at all as no history', () => {
     const summary = parseDexpress(changed('in-transit', (body) => { body.historyStatuses = []; }), IN_TRANSIT);
-    expect(summary).toMatchObject({ summary_only: true, current_stage: 'failed_attempt', last_update: '2026-03-03T16:02:03+01:00', events: [] });
+    expect(summary).toMatchObject({ summary_only: true, current_stage: 'failed_attempt', last_update: '2026-03-03T16:02:03+01:00', events: [],
+      receiver_name: 'Sam********', receiver_address: 'Sam********\nSample Town (Sample District)' });
     expect(parseDexpress(changed('delivered', (body) => { delete (body as Record<string, unknown>).historyStatuses; }), DELIVERED))
       .toMatchObject({ summary_only: true, current_stage: 'delivered', delivered_at: '2026-10-26T11:42:07+01:00' });
     expect(() => parseDexpress(changed('in-transit', (body) => {

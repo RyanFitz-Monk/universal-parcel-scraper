@@ -49,15 +49,15 @@ describe('Econt HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(2);
   });
 
-  it('reads a delivered shipment newest first in Sofia time, without people, receipts or order numbers', () => {
+  it('reads a delivered shipment newest first in Sofia time, with its recipient and who took it, without couriers or order numbers', () => {
     const result = parseEcont(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-03-05T12:00:00+02:00', delivered_at: '2026-03-04T11:45:00+02:00',
-      timezone: 'Europe/Sofia' });
+      timezone: 'Europe/Sofia', receiver_name: 'Synthetic Recipient', signed_by: 'Synthetic Recipient' });
     expect(result.pickup_point).toBeUndefined();
     expect(result.events!.map(event => [event.time, event.provider_code, event.stage ?? null, event.description, event.location ?? null])).toEqual([
-      ['2026-03-05T12:00:00+02:00', 'receipt', null, 'Return receipt: Delivered', null],
-      ['2026-03-04T11:45:00+02:00', 'client', 'delivered', 'Delivered', null],
+      ['2026-03-05T12:00:00+02:00', 'receipt', null, 'Return receipt: Delivered: Example Shop', null],
+      ['2026-03-04T11:45:00+02:00', 'client', 'delivered', 'Delivered: Synthetic Recipient', null],
       ['2026-03-04T09:00:00+02:00', 'courier', 'out_for_delivery', 'Submitted to courier', null],
       ['2026-03-03T17:20:00+02:00', 'failed_delivery', 'failed_attempt', 'Failed delivery (Absent receiver)', 'Obraztsovo Iztok'],
       ['2026-03-03T10:00:00+02:00', 'instruction', null, 'Change delivery terms: change of delivery address', null],
@@ -67,10 +67,18 @@ describe('Econt HTTP adapter', () => {
       ['2026-03-02T16:05:00+02:00', 'office', 'in_transit', 'Arrival at an office', 'Primergrad Tsentar'],
       ['2026-03-02T15:10:00+02:00', 'courier', 'accepted', 'Submitted to courier', null],
     ]);
-    const kept = JSON.stringify(result);
-    for (const dropped of ['Synthetic Recipient', 'Example Shop', 'Primeren', 'Drug Kurier', 'Куриер', '260303000001', 'Отсъствие']) {
+    const kept = JSON.stringify({ ...result, events: result.events!.filter(event => event.provider_code !== 'receipt') });
+    for (const dropped of ['Example Shop', 'Primeren', 'Drug Kurier', 'Куриер', '260303000001', 'Отсъствие']) {
       expect(kept).not.toContain(dropped);
     }
+    // A delivery that names no one leaves the signatory out, and a reply without the recipient's name leaves that out.
+    const unnamed = fixture('delivered') as { tracks: Array<{ receiverName: unknown; trace: Array<{ event: string | null; name: string; nameLatin: string }> }> };
+    unnamed.tracks[0]!.receiverName = null;
+    for (const row of unnamed.tracks[0]!.trace) if (row.event === 'client') Object.assign(row, { name: '', nameLatin: '' });
+    const bare = parseEcont(unnamed, DELIVERED);
+    expect(bare.receiver_name).toBeUndefined();
+    expect(bare.signed_by).toBeUndefined();
+    expect(bare.events![1]!.description).toBe('Delivered');
   });
 
   it('names the storing office as the pickup point in summer time, only when one of its scans names it', () => {

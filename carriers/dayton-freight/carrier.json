@@ -32,7 +32,8 @@
     "provider_code",
     "eta",
     "delivery_partner",
-    "delivery_tracking_number"
+    "delivery_tracking_number",
+    "signed_by"
   ],
   "portal": {
     "url": "https://tools.daytonfreight.com/tracking/detail/{trackingNumber}",
@@ -64,12 +65,12 @@
       "eta",
       "eta_window",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [
       "weight",
       "parcel_count",
-      "signatory",
       "origin",
       "destination",
       "office_contact_details",

@@ -30,7 +30,8 @@
   },
   "capabilities": [
     "history",
-    "location"
+    "location",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://shipecom.com/track/{trackingNumber}",
@@ -48,13 +49,13 @@
     "scraped": [
       "history",
       "location",
-      "offset_timestamps"
+      "offset_timestamps",
+      "destination"
     ],
     "discarded": [
       "status",
       "progress_rail",
-      "delivered_at",
-      "destination"
+      "delivered_at"
     ],
     "unavailable": [
       "provider_code",

@@ -163,11 +163,16 @@ describe('DSV tracking adapter', () => {
     expect(parseDsvStatuses(day, ROAD).expected_delivery_from).toBeUndefined();
   });
 
-  it('never reads the parties, references, contacts or the shipment key', async () => {
+  it('reads the consignee as the recipient, and never the sender, references, contacts or the shipment key', async () => {
     const result = await carrier(routes('search-road', null, 'statuses-road')).track({ number: BOOKING });
     const air = await carrier(routes('search-air', 'details-air', 'statuses-air')).track({ number: HOUSE_BILL });
+    expect(result).toMatchObject({ receiver_name: 'Example Receiver', receiver_address: '2 Sample Road\n11111 RECEIVERTOWN' });
+    // The air shipment's consignee has no name or street.
+    expect(air).toMatchObject({ receiver_address: '99999-000 RECEIVERTOWN' });
+    expect(air.receiver_name).toBeUndefined();
     for (const answer of [result, air]) {
-      expect(JSON.stringify(answer)).not.toMatch(/Example (?:Sender|Receiver|Signer)|Sample (?:Street|Road)|RECEIVERTOWN|00000(?!-)|11111|99999-000|PO-EXAMPLE|example@|\+00|00000000-0000|123\.4/);
+      // The recipient aside, nothing else of the parties shows.
+      expect(JSON.stringify({ ...answer, receiver_name: undefined, receiver_address: undefined })).not.toMatch(/Example (?:Sender|Receiver|Signer)|Sample (?:Street|Road)|RECEIVERTOWN|00000(?!-)|11111|99999-000|PO-EXAMPLE|example@|\+00|00000000-0000|123\.4/);
     }
   });
 
@@ -223,7 +228,8 @@ describe('DSV tracking adapter', () => {
     expect(() => pickDsvShipment({ data: [...air, ...road] }, 'POEXAMPLE1')).toThrow(expect.objectContaining({ reason: 'reference_only' }));
     expect(() => pickDsvShipment({ data: [...road, { ...road[0], randomIdentifier: AIR_KEY }] }, BOOKING))
       .toThrow(expect.objectContaining({ kind: 'indeterminate', reason: 'several_parcels' }));
-    expect(pickDsvShipment({ data: [...air, ...road] }, BOOKING)).toEqual(ROAD);
+    expect(pickDsvShipment({ data: [...air, ...road] }, BOOKING))
+      .toEqual({ ...ROAD, recipient: { receiver_name: 'Example Receiver', receiver_address: '2 Sample Road\n11111 RECEIVERTOWN' } });
   });
 
   it('takes letters and digits myDSV searches, without a request for anything else', async () => {
@@ -475,7 +481,7 @@ describe('DSV former DB Schenker tracker', () => {
       .toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
 
-  it('keeps a delivery, its recipient and the parties out of what it returns, and drops the estimate once delivered', async () => {
+  it('reads a delivery, who signed and the recipient, keeps the other parties out, and drops the estimate once delivered', async () => {
     const delivered = land(payload => {
       payload.events.push({ ...payload.events[6], code: 'DLV', date: '2026-05-14T10:05:00+02:00', comment: 'Delivered',
         location: { name: 'Receivertown 99999', code: 'ZZT', countryCode: 'XC' }, recipient: 'Example Signer' });
@@ -485,7 +491,27 @@ describe('DSV former DB Schenker tracker', () => {
       last_update_local: '2026-05-14T10:05:00', expected_delivery: null });
     expect(result.events![0]).toEqual({ local_time: '2026-05-14T10:05:00', description: 'Delivered', provider_code: 'DLV',
       location: 'Receivertown, XC', stage: 'delivered', stage_source: 'carrier_map' });
-    expect(JSON.stringify(result)).not.toMatch(/Example (?:Sender|Receiver|Signer|service|terms)|Sample (?:Street|Road)|SENDERTOWN|RECEIVERTOWN|ORIGIN\b|11111|99999|EXAMPLE|123\.4|ZZXAA|99900000011|CTTS/);
+    expect(result).toMatchObject({ receiver_name: 'Example Receiver', receiver_address: '2 Sample Road\n99999 RECEIVERTOWN',
+      signed_by: 'Example Signer' });
+    // The recipient and who signed aside, nothing else of the parties shows.
+    expect(JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined, signed_by: undefined })).not.toMatch(/Example (?:Sender|Receiver|Signer|service|terms)|Sample (?:Street|Road)|SENDERTOWN|RECEIVERTOWN|ORIGIN\b|11111|99999|EXAMPLE|123\.4|ZZXAA|99900000011|CTTS/);
+    // Without a delivery address, the consignee's postcode and town; a name on a failed delivery
+    // is not who signed, and neither is a name that is not text.
+    const consignee = land(payload => {
+      (payload.location as Record<string, unknown>).deliverTo = null;
+      payload.events[7]!.recipient = 'Example Signer';
+    });
+    const failed = await carrier(former('schenker-search', consignee)).track({ number: STT });
+    expect(failed).toMatchObject({ current_stage: 'failed_attempt', receiver_address: '99999 RECEIVERTOWN' });
+    expect(failed.receiver_name).toBeUndefined();
+    expect(failed.signed_by).toBeUndefined();
+    const odd = land(payload => {
+      payload.events.push({ ...payload.events[6], code: 'DLV', date: '2026-05-14T10:05:00+02:00', comment: 'Delivered',
+        recipient: { name: 'Example Signer' } });
+    });
+    const unsigned = await carrier(former('schenker-search', odd)).track({ number: STT });
+    expect(unsigned).toMatchObject({ current_stage: 'delivered', receiver_name: 'Example Receiver' });
+    expect(unsigned.signed_by).toBeUndefined();
     // Without an agreed day, the estimated one.
     const estimated = land(payload => { payload.deliveryDate = { estimated: '2026-05-15T00:00:00Z', agreed: null }; });
     await expect(carrier(former('schenker-search', estimated)).track({ number: STT })).resolves.toMatchObject({ expected_delivery: '2026-05-15' });

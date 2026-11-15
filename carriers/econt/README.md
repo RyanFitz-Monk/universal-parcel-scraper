@@ -33,10 +33,11 @@ API gives for the same scans in summer and in winter. The adapter gives them Sof
 and keeps a clock in the hour a clock change skips or repeats as local time.
 
 Each scan has a kind, worded as the tracker's English page text words it. Its text names the
-office for an office scan, which becomes the location, and the line for a line-haul scan, which
-is added to the wording. The recipient on a delivery and the courier on a courier scan are
-dropped, as are the sender and recipient name fields and an order's number; an order changing
-the delivery terms keeps its subject. A courier scan before any office or line scan is a
+office for an office scan, which becomes the location, the line for a line-haul scan and who
+took the parcel for a delivery, both added to the wording. The newest delivery's name is the
+signatory, and the reply's recipient name field is read. The courier on a courier scan, the
+sender name field and an order's number are dropped; an order changing the delivery terms
+keeps its subject. A courier scan before any office or line scan is a
 pickup from the sender, and later ones take the parcel out for delivery. Scans the reply flags
 as the return receipt's are filed under `receipt` without a stage.
 

@@ -132,17 +132,38 @@ function estimateOf(value: unknown): string | null {
   return null;
 }
 
+/** A place's postcode and town. */
+function townOf(place: unknown): string {
+  return isRecord(place) ? [cleanScalar(place.postCode, 16), clean(place.city, 80)].filter(Boolean).join(' ') : '';
+}
+
+/**
+ * The recipient's name and address: the delivery address's street, then its postcode and
+ * town, else the consignee's postcode and town.
+ */
+function recipientOf(location: unknown): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  if (!isRecord(location)) return {};
+  const to: Record<string, unknown> = isRecord(location.deliverTo) ? location.deliverTo : {};
+  const name = clean(to.name, 120);
+  const delivery = [clean(to.street, 160), townOf(to)].filter(Boolean).join('\n');
+  const address = delivery || townOf(location.consigneePlace);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
 interface Scan {
   readonly event: CarrierEvent;
   readonly index: number;
+  /** The name a delivery row gives, of who took the shipment. */
+  readonly signatory: string;
 }
 
 /**
  * A road shipment's details from the former DB Schenker tracker. The number
  * must be one of the shipment's own ids. The history is the shipment's status
  * rows: a code, English wording, a wall clock, a place and the reasons the
- * page shows. The parties, their references, addresses and goods, the
- * recipient's name on a delivery and the packages' own rows are not read.
+ * page shows. The recipient's name and address are read, and the name a
+ * delivery row gives as who signed. The sender, the references, the goods and
+ * the packages' own rows are not read.
  */
 export function parseDsvSchenkerShipment(payload: unknown, rawNumber: string, id: string): CarrierResult {
   const number = normalizeDsvNumber(rawNumber);
@@ -175,7 +196,7 @@ export function parseDsvSchenkerShipment(payload: unknown, rawNumber: string, id
     const identity = JSON.stringify(event);
     if (seen.has(identity)) return;
     seen.add(identity);
-    scans.push({ event, index });
+    scans.push({ event, index, signatory: classified?.stage === 'delivered' ? clean(row.recipient, 120) : '' });
   });
   if (!scans.length) throw new IndeterminateError(PROVIDER, 'DSV\'s former DB Schenker tracker returned the shipment without a history', { reason: 'no_history' });
   // Newest first. The reply runs oldest first, so rows at the same clock keep its order reversed.
@@ -188,6 +209,7 @@ export function parseDsvSchenkerShipment(payload: unknown, rawNumber: string, id
   const latest = events[0]!;
   const stage = latest.stage as Stage | undefined;
   const expected = stage === 'delivered' ? null : estimateOf(payload.deliveryDate);
+  const signatory = scans.find(scan => scan.signatory)?.signatory;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: latest.stage_source } : {}),
@@ -195,6 +217,8 @@ export function parseDsvSchenkerShipment(payload: unknown, rawNumber: string, id
     last_update: null,
     last_update_local: latest.local_time,
     expected_delivery: expected,
+    ...recipientOf(payload.location),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

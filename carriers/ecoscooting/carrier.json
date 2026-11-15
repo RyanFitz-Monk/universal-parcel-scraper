@@ -30,7 +30,9 @@
     "history",
     "pickup_point",
     "weight",
-    "delivered_at"
+    "delivered_at",
+    "receiver_address",
+    "pickup_code"
   ],
   "portal": {
     "url": "https://ecoscooting.com/tracking/{trackingNumber}",
@@ -49,14 +51,14 @@
       "history",
       "pickup_point",
       "weight",
-      "delivered_at"
+      "delivered_at",
+      "recipient_address",
+      "pickup_code"
     ],
     "discarded": [
-      "postcodes",
       "coordinates",
       "order_references",
-      "routing_features",
-      "pickup_code"
+      "routing_features"
     ],
     "unavailable": []
   },

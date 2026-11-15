@@ -21,16 +21,16 @@ copy that has no offset, and 17TRACK's rows, labelled with Chile's winter offset
 in summer too, are read on it ([17TRACK](../../providers/seventeentrack/README.md)).
 Providers name the carrier "Correos Chile", and ParcelsApp also "Chile Post" or "Chile Correos".
 
-Future progress-rail markers, customer details, delivery names, identity
-numbers, notices and the branch directory are excluded. Free-form status text is
-replaced with a neutral update. A scan whose whole wording is a known status keeps
-its wording and gets a stage. Admission, customs entry, delivery rounds and delivery
+Future progress-rail markers, identity numbers, notices and the branch directory
+are excluded. The name the portal gives a delivered parcel's receiver, `NombreEntrega`,
+is `signed_by`. Free-form status text reads as a neutral update, so the shared wording
+rules do not stage it, and keeps its own wording as `original_description`. A scan
+whose whole wording is a known status keeps its wording and gets a stage. Admission, customs entry, delivery rounds and delivery
 must also carry the portal's code. The scans of a parcel leaving Chile match by wording alone,
 since providers and an [open-source client's example](https://github.com/josemontesp/correos-chile-npm/blob/277942058928b2101ea8a1a3777e282bfcb48252/ReadMe.md)
 give them without one. The parcel app's review (`statusMap`) reads the same and marks
-the neutral update a deliberate gap, whatever code comes with it: the stored scan keeps
-none of the text it replaced. A direct answer with no staged scan would read to a consumer
-as lost progress. A missing shipment response may also mean its
+the neutral update a deliberate gap, whatever code comes with it. A direct answer
+with no staged scan would read to a consumer as lost progress. A missing shipment response may also mean its
 history expired, so it remains inconclusive.
 Its not-found notice carries the reason `portal_not_found`, so a consumer can
 tell the carrier's answer from an outage.

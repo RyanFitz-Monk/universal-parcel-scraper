@@ -26,7 +26,9 @@
     "localClocks": true
   },
   "capabilities": [
-    "history"
+    "history",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://logistics.costco.com/tracking?id={trackingNumber}",
@@ -38,10 +40,11 @@
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
-      "recipient_details",
       "event_locations",
       "scheduling_fields"
     ],

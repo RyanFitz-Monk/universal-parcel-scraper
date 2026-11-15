@@ -60,6 +60,18 @@ function text(node: XmlNode, name: string, maxLength = 200): string {
   return clean(found?.text ?? '', maxLength);
 }
 
+/** A detail read leniently: a field that is repeated or nests elements is left out. */
+function detail(node: XmlNode, name: string, maxLength: number): string {
+  const found = elements(node, name);
+  return found.length === 1 && !found[0]!.children.length ? clean(found[0]!.text, maxLength) : '';
+}
+
+/** The consignee's town, state and ZIP code, as one line: "Exampleville, WI 53000". */
+function consigneeTown(shipment: XmlNode): string {
+  const town = [detail(shipment, 'destcity', 80), detail(shipment, 'deststate', 8)].filter(Boolean).join(', ');
+  return [town, detail(shipment, 'destzip', 16)].filter(Boolean).join(' ');
+}
+
 /** "2026-05-19" as a calendar day, or null when it is not a real one. */
 function isoDay(value: string): string | null {
   const match = ISO_DAY.exec(value);
@@ -145,9 +157,9 @@ function failure(root: XmlNode, pro: string): never {
 /**
  * The reply of Dohrn's XML trace (`protracexml.htm`) for one PRO, without a
  * login: the shipment with its lifecycle and its history, newest first, or an
- * error naming the number. The references, the terminals, the shipper's and
- * consignee's towns and ZIP codes, the pieces, the delivery's clock and
- * status, and the signer, whom the summary status also names, are never read.
+ * error naming the number. The consignee's town and ZIP code are read, and on
+ * a delivery the signer. The references, the terminals, the shipper's town,
+ * the pieces and the delivery's clock and status are not.
  */
 export function parseDohrn(xml: string, raw: string): CarrierResult {
   const pro = normalizeDohrnNumber(raw);
@@ -184,6 +196,8 @@ export function parseDohrn(xml: string, raw: string): CarrierResult {
   const shown = settled ? lifecycle || events.find((event) => event.stage === headline.stage)?.description || newest?.description
     : newest?.description;
   const weight = weightKg(text(root, 'weight', 16));
+  const town = consigneeTown(root);
+  const signer = decided?.stage === 'delivered' ? detail(root, 'receivedby', 120) : '';
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -192,6 +206,8 @@ export function parseDohrn(xml: string, raw: string): CarrierResult {
     ...(newest ? { last_update_local: newest.local_time! } : {}),
     expected_delivery: decided && FINAL.has(decided.stage) ? null : estimate(root, events),
     ...(weight !== null ? { weight_kg: weight } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(newest ? {} : { summary_only: true }),
     events,
   };

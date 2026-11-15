@@ -32,7 +32,9 @@
     "location",
     "eta",
     "delivery_partner",
-    "delivery_tracking_number"
+    "delivery_tracking_number",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.delnext.com/PT/track_your_parcel?tracking_code={trackingNumber}",
@@ -58,13 +60,13 @@
       "location",
       "eta",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "destination",
+      "recipient_name"
     ],
     "discarded": [
-      "destination",
       "progress_rail",
       "proof_of_delivery",
-      "recipient_name",
       "signature",
       "delivery_options"
     ],

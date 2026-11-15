@@ -61,7 +61,19 @@ describe('Chronodiali HTTP adapter', () => {
     // The page's own message where it has one, else the reply's label; never the delivery trip.
     expect(result.events!.slice(1, 3).map((event) => event.description)).toEqual(['Out For Delivery', 'Delivery Scheduled']);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && event.local_time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Sender|Recipient|Courier|Shop|goods)|\+0{12}|Sample Street|Example Avenue|SAMPLE-|SMPL|FLM Trip|example\.invalid|249|0\.5|Call Log/);
+    expect(result).toMatchObject({ receiver_name: 'Sample Recipient', receiver_address: '2 Example Avenue\n00000 Exampleville' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Sender|Courier|Shop|goods)|\+0{12}|Sample Street|SAMPLE-|SMPL|FLM Trip|example\.invalid|249|0\.5|Call Log/);
+  });
+
+  it('reads who took the parcel at its delivery, and the recipient’s details as far as the reply gives them', () => {
+    const signed = parseChronodiali(changed('delivered', (shipment) => { shipment.receiver_name = 'Synthetic Signatory'; }), DELIVERED);
+    expect(signed).toMatchObject({ signed_by: 'Synthetic Signatory', receiver_name: 'Sample Recipient' });
+    const town = parseChronodiali(changed('in-transit', (shipment) => {
+      shipment.destination_details = { name: null, address_line_1: null, city: 'Exampleville', pincode: null };
+    }), IN_TRANSIT);
+    expect(town).toMatchObject({ receiver_address: 'Exampleville' });
+    expect(town).not.toHaveProperty('receiver_name');
   });
 
   it('keeps a parcel from abroad waiting for customs, without the partner hub as a place', () => {

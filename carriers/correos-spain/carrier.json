@@ -30,7 +30,8 @@
     "pickup_point",
     "weight",
     "dimensions",
-    "delivered_at"
+    "delivered_at",
+    "receiver_name"
   ],
   "portal": {
     "url": "https://www.correos.es/es/es/herramientas/localizador/envios/detalle?tracking-number={trackingNumber}",
@@ -53,10 +54,10 @@
       "weight",
       "dimensions",
       "pickup_point",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name"
     ],
     "discarded": [
-      "recipient_name",
       "recipient_address",
       "signature"
     ],

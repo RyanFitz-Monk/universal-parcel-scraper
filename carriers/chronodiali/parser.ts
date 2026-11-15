@@ -4,7 +4,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { listsNewestFirst } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, epochMillisTime } from '../../core/time/index.js';
-import { clean } from '../../core/transport/index.js';
+import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { chronodialiMappedStage, chronodialiStage } from './status.js';
 
@@ -107,8 +107,8 @@ function instant(value: unknown): { iso: string; timestamp: number } {
 interface Scan { event: CarrierEvent; timestamp: number; code: string }
 
 /**
- * One event: its type, clock and hub. The courier, the recipient's
- * signature and photos, the GPS position, the vehicle and the trip are not read.
+ * One event: its type, clock and hub. The courier, the signature and photos,
+ * the GPS position, the vehicle and the trip are not read.
  */
 function projectEvent(row: Record<string, unknown>): Scan | null {
   const code = text(row, 'type', 64);
@@ -129,11 +129,29 @@ function projectEvent(row: Record<string, unknown>): Scan | null {
 }
 
 /**
+ * The recipient as `destination_details` names them, and who took the parcel at its delivery
+ * (`receiver_name`): the street lines, then the postcode and town.
+ */
+function recipient(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address' | 'signed_by'> {
+  // Details only: a field of another type leaves it out rather than failing the lookup.
+  const details = isRecord(payload.destination_details) ? payload.destination_details : {};
+  const name = cleanScalar(details.name, 120);
+  const street = [1, 2, 3, 4, 5].map((line) => cleanScalar(details[`address_line_${line}`], 200)).filter(Boolean).join(', ');
+  const town = [cleanScalar(details.pincode, 16), cleanScalar(details.city, 120)].filter(Boolean).join(' ');
+  const address = [street, town].filter(Boolean).join('\n');
+  const signed = cleanScalar(payload.receiver_name, 120);
+  return {
+    ...(name ? { receiver_name: name } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signed ? { signed_by: signed } : {}),
+  };
+}
+
+/**
  * The reply of Shipsy's `consignment/track` for Chronodiali's account. An
  * unknown number is HTTP 400 with `Consignment not found`. A shipment must name
- * the number asked. The reply also holds the sender's and recipient's names,
- * phones and addresses, the cash-on-delivery amount and proof-of-delivery
- * images, none of which is read.
+ * the number asked. The sender's details, the phones, the cash-on-delivery
+ * amount and proof-of-delivery images are not read.
  */
 export function parseChronodiali(payload: unknown, raw: string): CarrierResult {
   const number = normalizeChronodialiNumber(raw);
@@ -178,6 +196,7 @@ export function parseChronodiali(payload: unknown, raw: string): CarrierResult {
     ...(stage ? { status: languageStageStatus(stage), current_stage: stage, current_stage_source: source ?? 'carrier_map' } : { status: 'unknown' as const }),
     expected_delivery: null,
     ...(destination ? { destination_country: destination } : {}),
+    ...recipient(payload),
   };
   if (!events.length) {
     // A shipment created without a scan yet, which the page reports as being processed.

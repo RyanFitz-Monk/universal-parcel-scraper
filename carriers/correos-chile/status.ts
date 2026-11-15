@@ -42,15 +42,15 @@ export function classifyCorreosChileScan(code: string, wording: string): Classif
   return WORDINGS.get(label) ?? null;
 }
 
-/** The wording the parser gives a scan in place of free-form status text, kept out of public histories. */
+/** The wording the parser gives a scan in place of free-form status text, which keeps it as its original wording. */
 export const NEUTRAL_UPDATE = 'Actualización del envío';
 
 /**
  * What the map says about one scan: its wording, with the portal's code where a stage needs it,
- * as the parser reads them. The neutral update in place of free-form wording is a gap: the stored
- * scan keeps none of the wording it replaced, and the portal's code alone does not tell a stage.
+ * as the parser reads them. The neutral update in place of free-form wording is a gap: its own
+ * wording is kept beside it, unstaged, and the portal's code alone does not tell a stage.
  */
-const NEUTRAL_GAP = 'Free-form status text the parser replaces for privacy; the stored scan keeps none of it to map.';
+const NEUTRAL_GAP = 'Free-form status text the parser does not stage; the scan keeps it as its original wording.';
 
 export const statusMap: CarrierStatusMap = {
   // Gaps read the portal's icon codes as one: the neutral update comes with any of them, or none.

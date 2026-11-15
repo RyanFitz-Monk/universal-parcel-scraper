@@ -31,7 +31,9 @@
     "history",
     "location",
     "eta",
-    "weight"
+    "weight",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://facts.dohrn.com/scripts/cgiip.exe/protraceext.htm?wpro={trackingNumber}",
@@ -56,16 +58,16 @@
       "history",
       "location",
       "eta",
-      "weight"
+      "weight",
+      "signatory",
+      "destination"
     ],
     "discarded": [
       "delivered_at",
       "parcel_count",
       "service_name",
       "customer_reference",
-      "origin",
-      "destination",
-      "signatory"
+      "origin"
     ],
     "unavailable": [
       "offset_timestamps",

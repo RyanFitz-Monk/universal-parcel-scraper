@@ -38,7 +38,9 @@ when the first fails to connect or hangs. The tracker runs on the rtb56 platform
 - The tracker's unknown-number answer is a not-found. Its "Parameter error" is a schema
   failure and any other refusal is inconclusive. Redirects, 404s and browser checks are never
   read as a missing parcel.
-- The merchant's order reference, the signatory and the proof-of-delivery link are not read.
+- A delivered parcel's `signatory_name` is read as who signed for it. The merchant's order
+  reference and the proof-of-delivery link are not read. The rtb56 scan reader shared with
+  YYpost cuts who signed from a scan's wording.
 
 ## Limitations
 

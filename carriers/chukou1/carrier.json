@@ -34,7 +34,9 @@
     "location",
     "destination_country",
     "delivery_partner",
-    "delivery_tracking_number"
+    "delivery_tracking_number",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://ec.chukou1.com/track?track_number={trackingNumber}",
@@ -54,10 +56,11 @@
       "location",
       "destination_country",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "postcodes",
+      "signatory"
     ],
     "discarded": [
-      "postcodes",
       "proof_of_delivery"
     ],
     "unavailable": [

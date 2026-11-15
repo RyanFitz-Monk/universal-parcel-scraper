@@ -26,7 +26,8 @@
     "history",
     "location",
     "delivered_at",
-    "offset_timestamps"
+    "offset_timestamps",
+    "signed_by"
   ],
   "portal": {
     "url": "https://trackntrace.easymail.gr/{trackingNumber}",
@@ -37,7 +38,7 @@
       "history",
       "location",
       "delivered_at",
-      "recipient_name",
+      "signatory",
       "office_contact_details"
     ],
     "scraped": [
@@ -45,10 +46,10 @@
       "history",
       "location",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "signatory"
     ],
     "discarded": [
-      "recipient_name",
       "office_contact_details"
     ],
     "unavailable": [

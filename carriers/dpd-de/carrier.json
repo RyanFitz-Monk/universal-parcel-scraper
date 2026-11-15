@@ -52,7 +52,9 @@
     "weight",
     "dimensions",
     "delivered_at",
-    "provider_code"
+    "provider_code",
+    "receiver_name",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://tracking.dpd.de/status/en_US/parcel/{trackingNumber}",
@@ -74,11 +76,11 @@
       "weight",
       "dimensions",
       "delivered_at",
-      "provider_code"
+      "provider_code",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
-      "recipient_name",
-      "recipient_address",
       "proof_of_delivery"
     ],
     "unavailable": []

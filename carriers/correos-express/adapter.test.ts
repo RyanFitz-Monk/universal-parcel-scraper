@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { load } from 'cheerio';
 import { describe, expect, it, vi } from 'vitest';
 import { sameInstantIdentityPolicy } from '../../app.js';
-import { normalizeCarrierResult } from '../../core/result/index.js';
+import { normalizeCarrierResult, type CarrierResult } from '../../core/result/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import type { StepRecord } from '../../core/telemetry/index.js';
 import { resultTimezone } from '../../core/time/result.js';
@@ -50,6 +50,9 @@ const routed = (form: () => Response | Promise<Response>, localizador: () => Res
   vi.fn(async (url: string | URL | Request) => (String(url).startsWith(FORM) ? form() : localizador())) as unknown as typeof fetch;
 const environment = (fetcher: typeof fetch) => ({ fetcher, env: {}, trawl: null, browserExecutablePath: null, recorder: { step() {}, lookup() {} } });
 const urls = (fetcher: typeof fetch) => vi.mocked(fetcher).mock.calls.map(([url]) => String(url));
+/** A result without the fields that keep what the carrier shows of the recipient: its scans' own wording, the names and the PIN. */
+const shared = (result: CarrierResult) => JSON.stringify({ ...result, receiver_name: undefined, signed_by: undefined, pickup_code: undefined,
+  events: result.events?.map(event => ({ ...event, original_description: undefined })) });
 const EXPLAINED = {
   INFORMADO: 'Ya hemos recibido la información de su envío, en breve dispondremos de su mercancía. Si necesita información adicional por favor póngase en contacto con su remitente.',
   EN_RUTA: 'Su envío está en uno de nuestro vehículos siendo transportado a la localidad de destino. Lo recibirá en la fecha de entrega prevista.',
@@ -59,16 +62,21 @@ const EXPLAINED = {
 };
 
 describe('Correos Express direct tracking', () => {
-  it('projects matching actual scans, their depots\' clocks, locality and date-only estimates without private details', () => {
+  it('projects matching actual scans, their depots\' clocks, locality, date-only estimates and the delivery PIN', () => {
     const result = normalizeCarrierResult(parseCorreosExpress(html, NUMBER));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'NUEVO REPARTO',
       last_update: '2026-01-05T18:27:00+01:00', expected_delivery: '2026-01-06' });
     expect(result.last_update_local).toBeUndefined();
     expect(result.events).toHaveLength(7);
     expect(result.events?.[0]).toMatchObject({ time: '2026-01-05T18:27:00+01:00', location: 'BARCELONA2', provider_status: 'NUEVO REPARTO', stage: 'in_transit' });
-    // Notes that are not the carrier's fixed sentences are dropped whole.
+    // Notes that are not the carrier's fixed sentences stay in the scan's original wording only.
     expect(result.events?.map(event => event.description)).toEqual(['NUEVO REPARTO', 'EN ALMACÉN', 'EN REPARTO', 'EN DESTINO',
       'EN RUTA A LOCALIDAD DE DESTINO', 'ADMITIDO', 'INFORMADO']);
+    expect(result.events?.map(event => event.original_description)).toEqual(['NUEVO REPARTO. PRIVATE_SYNTHETIC_DELIVERY_COMMENT',
+      'EN ALMACÉN. Su envío no ha podido ser entregado.', undefined, undefined, 'EN RUTA A LOCALIDAD DE DESTINO. PRIVATE_SYNTHETIC_OTHER_COMMENT',
+      undefined, 'INFORMADO. Ya hemos recibido la información de su envío.']);
+    expect(result.pickup_code).toBe('PRIVATE_SYNTHETIC_PIN');
+    expect(result.signed_by).toBeUndefined();
     // The host and aggregators relaying these wall clocks read them in Spanish time.
     expect(resultTimezone('correos-express', result)).toBe('Europe/Madrid');
     expect(result.events?.map(event => event.stage)).toEqual(['in_transit', 'exception', 'out_for_delivery', 'in_transit', 'in_transit', 'accepted', 'registered']);
@@ -78,18 +86,23 @@ describe('Correos Express direct tracking', () => {
       '2025-12-30T13:15:00+01:00']);
     expect(result.events?.every(event => !event.local_time && !event.provider_code)).toBe(true);
     expect(result.delivered_at).toBeUndefined();
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
+    // The proof of delivery's signature is not read.
+    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC_SIGNATURE');
     expect(classifyCorreosExpressStatus('constructor')).toBeUndefined();
   });
 
-  it('keeps the fixed sentences that explain a label and drops what follows them', () => {
+  it('describes a scan by its label and the fixed sentences that explain it, and keeps what follows them as its original wording', () => {
     const result = parseCorreosExpress(explained, NUMBER);
     expect(result.events?.map(event => event.description)).toEqual(['NUEVO REPARTO', `EN ALMACÉN. ${EXPLAINED.ADDRESS}`,
       `EN REPARTO. ${EXPLAINED.EN_REPARTO}`, 'EN DESTINO', `EN RUTA A LOCALIDAD DE DESTINO. ${EXPLAINED.EN_RUTA}`, 'ADMITIDO',
       `INFORMADO. ${EXPLAINED.INFORMADO}`]);
     expect(result.events?.map(event => event.stage)).toEqual(['in_transit', 'exception', 'out_for_delivery', 'in_transit', 'in_transit', 'accepted', 'registered']);
+    expect(result.events?.map(event => event.original_description)).toEqual(['NUEVO REPARTO. PRIVATE_SYNTHETIC_DELIVERY_COMMENT',
+      `EN ALMACÉN. ${EXPLAINED.ADDRESS} PRIVATE_SYNTHETIC_NOTE`, undefined, undefined,
+      `EN RUTA A LOCALIDAD DE DESTINO. ${EXPLAINED.EN_RUTA}PRIVATE_SYNTHETIC_OTHER_COMMENT`, undefined, undefined]);
     expect(result.events?.every(event => !event.provider_code)).toBe(true);
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
   });
 
   it('maps every recorded label and situation code, and every situation to a mapped label', () => {
@@ -149,7 +162,8 @@ describe('Correos Express direct tracking', () => {
     for (const [label, status, stage] of [['EN GESTIÓN', 'exception', 'exception'], [ended, 'exception', 'returned']] as const) {
       const result = parseCorreosExpress(edit($ => $('tbody tr').first().find('td').last().text(`${label}. PRIVATE_SYNTHETIC_NOTE`)), NUMBER);
       expect(result).toMatchObject({ status, current_stage: stage, last_status_text: label, expected_delivery: null });
-      expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+      expect(result.events?.[0]!.original_description).toBe(`${label}. PRIVATE_SYNTHETIC_NOTE`);
+      expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
     }
     const explained = parseCorreosExpress(edit($ => $('tbody tr').first().find('td').last()
       .text(`${ended}.. Tiempo de recogida finalizado en Punto de Conveniencia`)), NUMBER);
@@ -186,7 +200,7 @@ describe('Correos Express direct tracking', () => {
     }
   });
 
-  it('retains label-free and unrecognized native scans without exposing incident details', () => {
+  it('retains label-free and unrecognized native scans under a neutral description, with their own wording as the original', () => {
     const changed = edit($ => {
       const first = $('tbody tr').first();
       first.find('td').last().text('. PRIVATE_SYNTHETIC_INCIDENT');
@@ -206,26 +220,35 @@ describe('Correos Express direct tracking', () => {
     ]);
     expect(result.events?.[0]!.provider_status).toBeUndefined();
     expect(result.events?.[1]!.provider_status).toBeUndefined();
-    expect(result.events?.[2]).toMatchObject({ description: 'Delivered', stage: 'delivered' });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(result.events?.map(event => event.original_description).slice(0, 3)).toEqual(['. PRIVATE_SYNTHETIC_INCIDENT',
+      'FIRMADO POR PRIVATE_SYNTHETIC_NAME. Su envío está entregado.', 'ENTREGADO. PRIVATE_SYNTHETIC_SIGNATURE']);
+    expect(result.events?.[2]).toMatchObject({ description: 'ENTREGADO', stage: 'delivered' });
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
   });
 
-  it('keeps only the fixed wording of a label-free failed round and reads pickup-point scans', () => {
+  it('describes a label-free failed round by its fixed wording, and reads pickup-point scans and the signatory', () => {
     const result = normalizeCarrierResult(parseCorreosExpress(failedRound, NUMBER));
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered',
-      last_update: '2026-01-16T17:40:00+01:00', delivered_at: '2026-01-16T17:40:00+01:00', expected_delivery: null });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'ENTREGADO. Su envío está entregado.',
+      last_update: '2026-01-16T17:40:00+01:00', delivered_at: '2026-01-16T17:40:00+01:00', expected_delivery: null,
+      signed_by: 'PRIVATE_SYNTHETIC_NAME' });
     expect(result.events?.map(event => event.stage)).toEqual(['delivered', 'ready_for_pickup', 'in_transit', 'failed_attempt',
       'out_for_delivery', 'in_transit', 'in_transit', 'accepted', 'registered']);
     expect(result.events?.[2]!.description).toBe('ENTREGADO EN PUNTO DE CONVENIENCIA. Su envío se encuentra en el punto de conveniencia seleccionado y en breve recibirá las instrucciones para recogerlo.');
+    expect(result.events?.[2]!.original_description).toMatch(/recogerlo\.PRIVATE_SYNTHETIC_PICKUP_POINT$/);
     expect(result.events?.[3]).toEqual({ description: FAILED_ROUND, provider_status: FAILED_ROUND, stage: 'failed_attempt',
+      original_description: '. Su envío no ha podido ser entregado por PRIVATE_SYNTHETIC_REASON. Si PRIVATE_SYNTHETIC_INSTRUCTIONS.',
       time: '2026-01-15T09:45:00+01:00', location: 'VALENCIA' });
     expect(result.events?.[8]!.description).toBe('INFORMADO. Ya hemos recibido la información de su envío, en breve dispondremos de su mercancía.');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC_SIGNATURE');
     for (const note of ['. Su envío no ha podido ser entregado por PRIVATE_SYNTHETIC_REASON.',
       'Su envío no ha podido ser entregado por PRIVATE_SYNTHETIC_REASON', '. SU ENVIO NO HA PODIDO SER ENTREGADO POR PRIVATE_SYNTHETIC_REASON']) {
       const newest = parseCorreosExpress(edit($ => { $('tbody tr').slice(0, 3).remove(); $('tbody tr').first().find('td').last().text(note); }, failedRound), NUMBER);
       expect(newest).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: FAILED_ROUND, expected_delivery: null });
-      expect(JSON.stringify(newest)).not.toContain('PRIVATE_SYNTHETIC');
+      expect(newest.events?.[0]!.original_description).toBe(note);
+      // Only a delivered parcel's proof of delivery names who took it.
+      expect(newest.signed_by).toBeUndefined();
+      expect(shared(newest)).not.toContain('PRIVATE_SYNTHETIC');
     }
     // A reason the carrier gives every shipment is kept with the round.
     const reasoned = parseCorreosExpress(edit($ => { $('tbody tr').slice(0, 3).remove(); $('tbody tr').first().find('td').last().text(`. ${EXPLAINED.ADDRESS}`); }, failedRound), NUMBER);
@@ -249,7 +272,8 @@ describe('Correos Express direct tracking', () => {
         expect(result.delivered_at).toBeUndefined();
         expect(result.events?.[0]!.local_time).toBeUndefined();
         expect(result.events?.[0]!.provider_status).toBeUndefined();
-        expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+        expect(result.events?.[0]!.original_description).toBe('NUEVO ESTADO. PRIVATE_SYNTHETIC_DETAIL');
+        expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
         if (clock) expect(result.events?.[0]!.provider_time_text).toBe(clock);
       }
     }
@@ -271,7 +295,7 @@ describe('Correos Express direct tracking', () => {
       expect(result, place).toMatchObject({ status: 'delivered', last_update: null, last_update_local: '2026-01-05T18:27:00' });
       expect(result.delivered_at).toBeUndefined();
     }
-    for (const result of [terminal('ENTREGADO'), returned]) expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    for (const result of [terminal('ENTREGADO'), returned]) expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
   });
 
   it('keeps provider positions while deduplicating and bounds retained history', () => {
@@ -419,7 +443,7 @@ describe('Correos Express history from the Correos localizador', () => {
       `EN DESTINO. ${EXPLAINED.EN_DESTINO}`, `EN ALMACÉN. ${EXPLAINED.ADDRESS}`, `EN REPARTO. ${EXPLAINED.EN_REPARTO}`,
       `EN DESTINO. ${EXPLAINED.EN_DESTINO}`, `EN RUTA A LOCALIDAD DE DESTINO. ${EXPLAINED.EN_RUTA}`, 'ADMITIDO', `INFORMADO. ${EXPLAINED.INFORMADO}`]);
     expect(resultTimezone('correos-express', result)).toBe('Europe/Madrid');
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
   });
 
   it('dates a form row to the minute it shows, whether or not the localizador answers', () => {
@@ -460,7 +484,12 @@ describe('Correos Express history from the Correos localizador', () => {
   it('reads the localizador reply only for the whole number or a label of the shipment it names', () => {
     expect(feed.shipment).toBe(NUMBER);
     expect(feed.scans).toHaveLength(9);
-    expect(JSON.stringify(feed)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(feed.recipient).toBe('PRIVATE_SYNTHETIC_NAME');
+    expect(JSON.stringify({ ...feed, recipient: undefined })).not.toContain('PRIVATE_SYNTHETIC');
+    // The form's page takes the recipient's name from the localizador of its own shipment only.
+    expect(parseCorreosExpress(html, NUMBER, feed).receiver_name).toBe('PRIVATE_SYNTHETIC_NAME');
+    expect(parseCorreosExpress(html, NUMBER, { ...feed, shipment: OTHER }).receiver_name).toBeUndefined();
+    expect(parseCorreosExpress(html, NUMBER).receiver_name).toBeUndefined();
     expect(parseCorreosExpressFeed(noTrace(), NUMBER)).toBeNull();
     expect(parseCorreosExpressFeed(noTrace()[0], NUMBER)).toBeNull();
     const labelled = feedPayload((envelope) => { envelope.codEnvio = SHIPMENT; });
@@ -487,7 +516,8 @@ describe('Correos Express history from the Correos localizador', () => {
   it('answers from the localizador alone only with Correos Express situation codes', () => {
     const result = normalizeCarrierResult(correosExpressFeedResult(feed, NUMBER));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_update: null,
-      last_status_text: 'NUEVO REPARTO. Concertación entrega flexible.', last_update_local: '2026-01-05T18:27:05', expected_delivery: null });
+      last_status_text: 'NUEVO REPARTO. Concertación entrega flexible.', last_update_local: '2026-01-05T18:27:05', expected_delivery: null,
+      receiver_name: 'PRIVATE_SYNTHETIC_NAME' });
     expect(result.events?.map(({ local_time, description }) => [local_time, description])).toEqual([
       ['2026-01-05T18:27:05', 'NUEVO REPARTO. Concertación entrega flexible.'],
       ['2026-01-03T08:30:12', `EN DESTINO. ${EXPLAINED.EN_DESTINO}`],
@@ -645,9 +675,9 @@ describe('Correos Express in Portuguese', () => {
     const result = normalizeCarrierResult(parseCorreosExpress(portuguese, NUMBER));
     const facts = (read: typeof result) => read.events?.map(({ time, local_time, location, stage }) => [time ?? local_time, location, stage]);
     expect(facts(result)).toEqual(facts(spanish));
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivered',
-      last_update: spanish.last_update, delivered_at: spanish.delivered_at, expected_delivery: null });
-    expect(result.events?.map(event => event.description)).toEqual(['Delivered',
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'ENTREGUE. Seu envio foi entregue.',
+      last_update: spanish.last_update, delivered_at: spanish.delivered_at, expected_delivery: null, signed_by: 'PRIVATE_SYNTHETIC_NAME' });
+    expect(result.events?.map(event => event.description)).toEqual(['ENTREGUE. Seu envio foi entregue.',
       'DISPONÍVEL EM PONTO DE CONVENIÊNCIA. Sua remessa já está disponível no ponto de conveniência selecionado para retirada.',
       // The Portuguese form runs the pickup point's name straight on from the sentence.
       'ENTREGUE EM PONTO DE CONVENIÊNCIA. Sua remessa está no ponto de conveniência selecionado e em breve você receberá instruções para retirá-la.',
@@ -660,7 +690,7 @@ describe('Correos Express in Portuguese', () => {
     expect(result.events?.[3]).toMatchObject({ provider_status: FAILED_ROUND_PT, stage: 'failed_attempt' });
     // Each description reads back to its scan's stage as the app keys it.
     for (const { description, stage } of result.events!) expect(statusMap.stage(null, normalizeStatusWording(description!)), description).toBe(stage);
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
     for (const [label, status, stage] of [['A SER GERENCIADO', 'exception', 'exception'], ['DEVOLVIDO', 'exception', 'returned'],
       ['EM ARMAZÉM', 'exception', 'exception'], ['EM REDISTRIBUIÇÃO', 'in_transit', 'in_transit'],
       ['O PRAZO PARA RETIRADA DA REMESSA NO PONTO DE CONVENIÊNCIA SELECIONADO TERMINOU E ELA SERÁ DEVOLVIDA À SUA ORIGEM', 'exception', 'returned']] as const) {
@@ -687,7 +717,7 @@ describe('Correos Express in Portuguese', () => {
       ['2026-01-15T07:30:00+01:00', undefined, 'out_for_delivery', 'EM DISTRIBUIÇÃO. Seu envio encontra-se em distribuição. Será entregue na data prevista.'],
     ]);
     expect(result.events?.[7]).toMatchObject({ provider_code: 'X060000V', description: expect.stringMatching(/^NO DESTINO\. Seu envio/) });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
+    expect(shared(result)).not.toContain('PRIVATE_SYNTHETIC');
     const alone = normalizeCarrierResult(correosExpressFeedResult(portugueseFeed, NUMBER, 'pt'));
     expect(alone).toMatchObject({ status: 'out_for_delivery', last_status_text: IN_DELIVERY });
     expect(alone.events?.map(event => event.description)).toEqual([IN_DELIVERY, 'CAMBIO DE DESTINO', NOT_DELIVERED,
@@ -713,6 +743,10 @@ describe('Correos Express in Portuguese', () => {
     expect(policy.matches!(scan('EM DISTRIBUIÇÃO', 'out_for_delivery'), scan('EN DESTINO', 'in_transit'))).toBe(false);
     expect(policy.matches!(scan('EM DISTRIBUIÇÃO', 'out_for_delivery'), scan('EN REPARTO', 'out_for_delivery', 'MADRID'))).toBe(false);
     expect(policy.matches!(scan('Tracking update', ''), scan('EN REPARTO', 'out_for_delivery'))).toBe(false);
+    // A delivery stored as "Delivered" takes the carrier's wording in place.
+    for (const wording of ['ENTREGADO. Su envío está entregado.', 'ENTREGUE. Seu envio foi entregue.']) {
+      expect(policy.matches!(scan(wording, 'delivered'), scan('Delivered', 'delivered')), wording).toBe(true);
+    }
   });
 
   it('asks the form and the localizador in Portuguese for a Portuguese reader, and in Spanish for anyone else', async () => {
@@ -735,7 +769,7 @@ describe('Correos Express in Portuguese', () => {
     expect(urls(asked).filter(url => !url.startsWith(FEED))).toEqual([FORM_PT, FORM]);
     expect(urls(asked).filter(url => url.startsWith(FEED)).map(url => new URL(url).searchParams.get('codIdioma'))).toEqual(['PT', 'ES']);
     const kept = await adapter(environment(answering(unread, () => new Response('Unavailable', { status: 503 })))).track({ number: NUMBER, language: 'pt' });
-    expect(kept.events?.map(event => event.description).slice(0, 3)).toEqual(['Delivered', 'Tracking update',
+    expect(kept.events?.map(event => event.description).slice(0, 3)).toEqual(['ENTREGUE. Seu envio foi entregue.', 'Tracking update',
       'ENTREGUE EM PONTO DE CONVENIÊNCIA. Sua remessa está no ponto de conveniência selecionado e em breve você receberá instruções para retirá-la.']);
     // A note without a label reads no better in Spanish, so it is not asked again.
     const note = answering(edit($ => $('tbody tr').eq(1).find('td').last().text('. PRIVATE_SYNTHETIC_INCIDENT'), portuguese), () => response(failedRound));

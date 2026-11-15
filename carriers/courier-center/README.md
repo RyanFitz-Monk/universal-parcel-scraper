@@ -39,11 +39,13 @@ over in Greece. Tracked through its tracking page's own result page.
 - The page's own script hides bag scans, departures, the web order and some partner rows in the
   browser, and rewrites some wording. The adapter keeps every row in the server's wording. The
   English store shows the same Greek scans, so the adapter reads the Greek page.
-- A delivery's line names who took the parcel and when, a message names the masked phone it
-  went to and can carry a link to reroute the parcel, and a failed attempt has a notice number.
-  Those parts are dropped, and every line loses phone numbers and email addresses. The sender's
-  and recipient's towns, the delivery station's phone, the references and the piece count are
-  not kept.
+- A delivery's line names who took the parcel, masked, and when. It is kept whole, and the name
+  is read as the signatory. The recipient's town, where the page says the parcel goes, is read
+  as the recipient's address.
+- A message names the masked phone it went to and can carry a link to reroute the parcel, and a
+  failed attempt has a notice number. Those parts are dropped, and every line loses phone
+  numbers and email addresses. The sender's town, the delivery station's phone, the references
+  and the piece count are not kept.
 - When Courier Center hands a parcel over, its waybill field reads `{waybill} / {number}` with
   an ELTA item code or a BOX NOW parcel id, and the partner's scans follow on the same page.
   The adapter reports that partner and its number. ELTA's offices lose the postcode before

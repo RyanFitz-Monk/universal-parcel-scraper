@@ -105,11 +105,11 @@ describe('DPEX Worldwide HTTP adapter', () => {
     }
   });
 
-  it('reads DPEX China’s history on the stations’ wall clocks and drops the notes', () => {
+  it('reads DPEX China’s history on the stations’ wall clocks and who signed for the delivery', () => {
     const result = parseDpexChina(fixture('china-delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-16T14:41:00', expected_delivery: null,
-      destination_country: 'SG' });
+      destination_country: 'SG', signed_by: 'S. SAMPLE' });
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.provider_code, event.stage, event.location])).toEqual([
       ['2026-03-16T14:41:00', '1', 'delivered', 'Singapore'],
       ['2026-03-16T09:05:00', '15', 'out_for_delivery', 'Singapore'],
@@ -123,8 +123,11 @@ describe('DPEX Worldwide HTTP adapter', () => {
       ['2026-03-14T10:05:00', '91', 'registered', 'Sampleport (Guangdong) - CHINA'],
       ['2026-03-14T10:05:00', '90', 'registered', 'Sampleport (Guangdong) - CHINA'],
     ]);
-    // The scans' notes, which can name the recipient, and the references are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/Sample note|S\. SAMPLE|SAMPLE API|Track[A-Z]/);
+    // The other scans' notes and the references are not kept.
+    expect(JSON.stringify(result)).not.toMatch(/Sample note|SAMPLE API|Track[A-Z]/);
+    expect(JSON.stringify(result.events)).not.toMatch(/S\. SAMPLE/);
+    // A note on any other scan names no signatory.
+    expect(parseDpexChina(fixture('china-in-transit'), IN_TRANSIT)).not.toHaveProperty('signed_by');
   });
 
   it('binds DPEX China’s answer to the number asked', () => {
@@ -159,7 +162,9 @@ describe('DPEX Worldwide HTTP adapter', () => {
 
   it('follows the GETOnline history with DPEX China’s scans from before it', async () => {
     const delivered = await carrier(trackers(() => reply(fixture('delivered')), () => reply(fixture('china-delivered')))).track({ number: DELIVERED });
-    expect(delivered).toMatchObject({ status: 'delivered', last_update: '2026-03-16T14:41:00+08:00', destination_country: 'SG' });
+    // DPEX China names who signed for the delivery both show.
+    expect(delivered).toMatchObject({ status: 'delivered', last_update: '2026-03-16T14:41:00+08:00', destination_country: 'SG',
+      signed_by: 'S. SAMPLE' });
     expect(scans(delivered.events)).toEqual([
       ...scans(parseDpex(fixture('delivered'), DELIVERED).events),
       // DPEX China's own scans of the same parcel at the origin; its copies of the page's scans are left out.
@@ -168,6 +173,7 @@ describe('DPEX Worldwide HTTP adapter', () => {
     // The page's scans lead even when DPEX China has not copied the latest of them.
     const moving = await carrier(trackers(() => reply(fixture('in-transit')), () => reply(fixture('china-in-transit')))).track({ number: IN_TRANSIT });
     expect(moving).toMatchObject({ status: 'in_transit', last_update_local: '2026-04-21T07:36:00', last_status_text: 'Arrived Depot', destination_country: 'AU' });
+    expect(moving).not.toHaveProperty('signed_by');
     expect(scans(moving.events)).toEqual([
       ...scans(parseDpex(fixture('in-transit'), IN_TRANSIT).events),
       ['2026-04-19T13:25:00', '2'], ['2026-04-19T09:10:00', '91'], ['2026-04-19T09:10:00', '90'],
@@ -176,7 +182,8 @@ describe('DPEX Worldwide HTTP adapter', () => {
 
   it('takes the history of the one tracker that has it, or DPEX China’s when it holds a later scan', async () => {
     const china = await carrier(trackers(() => reply(fixture('not-found')), () => reply(fixture('china-delivered')))).track({ number: DELIVERED });
-    expect(china).toMatchObject({ status: 'delivered', last_update: null, last_update_local: '2026-03-16T14:41:00', destination_country: 'SG' });
+    expect(china).toMatchObject({ status: 'delivered', last_update: null, last_update_local: '2026-03-16T14:41:00', destination_country: 'SG',
+      signed_by: 'S. SAMPLE' });
     expect(china.events).toHaveLength(10);
     const getOnline = await carrier(trackers(() => reply(fixture('delivered')), () => reply(chinaUnknown(DELIVERED)))).track({ number: DELIVERED });
     expect(getOnline).toEqual(parseDpex(fixture('delivered'), DELIVERED));

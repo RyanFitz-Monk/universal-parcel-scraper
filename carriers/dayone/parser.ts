@@ -3,6 +3,7 @@ import { InvalidInputError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode } from '../../core/time/index.js';
+import { clean } from '../../core/transport/index.js';
 import { RTB56_MAX_BYTES, rtb56Entry, rtb56Scans, rtb56Text } from '../yypost/rtb56.js';
 import { dayoneCodeStage, dayoneStage } from './status.js';
 
@@ -27,8 +28,9 @@ export function normalizeDayoneNumber(raw: string): string {
  * network's scans, newest wall clock first, each with the offset of its
  * place. A number the tracker does not know gets `success` 0 and its "No
  * query to track information" message. Only the entry whose
- * `server_hawbcode` is the whole number asked is read; the merchant's order
- * reference, the signatory and the proof of delivery are never read.
+ * `server_hawbcode` is the whole number asked is read. A delivered parcel's
+ * `signatory_name` is who took it; the merchant's order reference and the
+ * proof of delivery are not read.
  */
 export function parseDayone(payload: unknown, raw: string): CarrierResult {
   const number = normalizeDayoneNumber(raw);
@@ -44,6 +46,7 @@ export function parseDayone(payload: unknown, raw: string): CarrierResult {
   const destinationName = rtb56Text(item, 'destination_country_enname', PROVIDER, 80);
   const country = countryCode(destination) ?? countryCode(destinationName);
   const channel = normalizeTrackingNumber(rtb56Text(item, 'channel_hawbcode', PROVIDER, 64));
+  const signatory = stage === 'delivered' ? clean(item.signatory_name, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned?.stage_source ?? 'carrier_map' } : {}),
@@ -52,6 +55,7 @@ export function parseDayone(payload: unknown, raw: string): CarrierResult {
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(stage === 'delivered' && scanned?.time ? { delivered_at: scanned.time } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     ...(country ? { destination_country: country } : destinationName ? { destination_country_name: destinationName } : {}),
     // The network's own number for the parcel; the hand-off decides who that is.
     ...(REFERENCE.test(channel) && channel !== number ? { delivery_tracking_number: channel } : {}),

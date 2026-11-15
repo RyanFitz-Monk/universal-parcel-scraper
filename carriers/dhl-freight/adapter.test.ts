@@ -59,7 +59,7 @@ describe('DHL Freight HTTP adapter', () => {
     const result = parse(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-04T14:55:00', expected_delivery: null,
-      service_name: 'DHL Road Freight Standard', weight_kg: 1250, destination_country: 'AT' });
+      service_name: 'DHL Road Freight Standard', weight_kg: 1250, destination_country: 'AT', receiver_address: 'ZIELDORF' });
     expect(result.events!.map((event) => [event.local_time, event.description, event.location ?? null, event.stage ?? null])).toEqual([
       // The delivery rows name no terminal.
       ['2026-03-04T14:55:00', 'Delivered', null, 'delivered'],
@@ -72,8 +72,8 @@ describe('DHL Freight HTTP adapter', () => {
       ['2026-03-02', 'Consignment created', 'MUSTERSTADT, DE', 'registered'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    // The consignee's town, the IDs, the volume and the package list stay out.
-    expect(JSON.stringify(result)).not.toMatch(/ZIELDORF|00012345678|900000001|SMP-DL|JND|1\.2|pallet|captcha/i);
+    // The IDs, the volume and the package list stay out.
+    expect(JSON.stringify(result)).not.toMatch(/00012345678|900000001|SMP-DL|JND|1\.2|pallet|captcha/i);
   });
 
   it('reads a consignment between terminals, asked by one of its packages', () => {
@@ -81,6 +81,7 @@ describe('DHL Freight HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Shipped from terminal',
       last_update_local: '2026-03-05T18:10:00', service_name: 'DHL Road Freight Standard', weight_kg: 8 });
     expect(result).not.toHaveProperty('destination_country');
+    expect(result).not.toHaveProperty('receiver_address');
     expect(result.events!.map((event) => event.stage)).toEqual(['in_transit', 'in_transit', 'accepted', 'registered']);
   });
 

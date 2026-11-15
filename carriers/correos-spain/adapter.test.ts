@@ -318,17 +318,21 @@ describe('Correos Spain response parsing', () => {
     expect(result.events?.[0]).toMatchObject({ description: 'Shipment collected', provider_code: 'HI10002V', stage: 'accepted' });
   });
 
-  it('retains weight and parcel data, never the customer name or raw keys', () => {
+  it('retains the recipient\'s name, weight and parcel data, never raw keys', () => {
     const result = parseCorreosSpainTrackingResponse([envelope()], TRACKING_NUMBER);
-    expect(result.receiver_name).toBeUndefined();
     expect(result).toMatchObject({
+      receiver_name: 'Example Customer',
       weight_kg: 1.5,
       dimensions_text: '30 x 20 x 10 cm',
       delivered_at: '2026-04-29T13:12:42+02:00',
     });
     const serialized = JSON.stringify(result);
-    for (const secret of ['nombre_cliente', 'Example Customer', 'nom_codired', 'peso', 'largo', 'ancho', 'alto']) {
+    for (const secret of ['nombre_cliente', 'nom_codired', 'peso', 'largo', 'ancho', 'alto']) {
       expect(serialized).not.toContain(secret);
+    }
+    // A name of another type, or none, leaves it out.
+    for (const name of [null, 42, { name: 'Example' }, ' ']) {
+      expect(parseCorreosSpainTrackingResponse([envelope({ nombre_cliente: name })], TRACKING_NUMBER).receiver_name).toBeUndefined();
     }
   });
 
@@ -365,9 +369,10 @@ describe('Correos Spain response parsing', () => {
   });
 
   it('produces every capability carrier.json declares', () => {
-    expect(CAPABILITIES).toEqual(['history', 'pickup_point', 'weight', 'dimensions', 'delivered_at']);
+    expect(CAPABILITIES).toEqual(['history', 'pickup_point', 'weight', 'dimensions', 'delivered_at', 'receiver_name']);
     const delivered = parseCorreosSpainTrackingResponse([envelope()], TRACKING_NUMBER);
     expect(delivered.events?.length).toBeGreaterThan(0);
+    expect(delivered.receiver_name).toBe('Example Customer');
     expect(delivered.weight_kg).toBe(1.5);
     expect(delivered.dimensions_text).toBe('30 x 20 x 10 cm');
     expect(delivered.delivered_at).toBe('2026-04-29T13:12:42+02:00');

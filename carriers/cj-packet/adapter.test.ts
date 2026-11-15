@@ -48,7 +48,7 @@ describe('CJ Packet HTTP adapter', () => {
 
   it('reads a delivered history at each scan’s offset, with the courier and its number', () => {
     const result = parseCjPacket(fixture('delivered'), DELIVERED);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Package delivered',
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Package delivered, signed by Sample Person',
       last_update: '2026-05-12T13:05:10-04:00', expected_delivery: null, delivered_at: '2026-05-12T13:05:10-04:00',
       service_name: 'CJPacket Ordinary B', destination_country: 'US',
       // A routing barcode gives its package identifier, without the recipient's ZIP code.
@@ -71,8 +71,10 @@ describe('CJ Packet HTTP adapter', () => {
     ]);
     expect(result.events!.at(-1)).toMatchObject({ stage_source: 'carrier_map' });
     expect(result.events!.at(-1)).not.toHaveProperty('time');
-    expect(result.events!.slice(0, 3).map((event) => event.description)).toEqual(['Package delivered', 'Out for delivery', 'Arrived at local delivery center']);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Shop|Person)|SAMPLE2|DP0000|LP0000|000-000-0000|42000000/);
+    expect(result.events!.slice(0, 3).map((event) => event.description))
+      .toEqual(['Package delivered, signed by Sample Person', 'Out for delivery', 'Arrived at local delivery center']);
+    expect(result.signed_by).toBe('Sample Person');
+    expect(JSON.stringify(result)).not.toMatch(/Sample Shop|SAMPLE2|DP0000|LP0000|000-000-0000|42000000/);
   });
 
   it('lets the scans say whether customs still holds a parcel at the destination, in the reply’s order', () => {
@@ -154,7 +156,7 @@ describe('CJ Packet HTTP adapter', () => {
       .toEqual(['2026-09-22T16:48:00', '2026-09-21T21:47:00+01:00', '2026-09-21T10:22:00']);
   });
 
-  it('takes the courier’s support contact, phone numbers, addresses and the person who signed out of the wording', () => {
+  it('takes the courier’s support contact, phone numbers and addresses out of the wording, and keeps who signed', () => {
     expect(cjPacketWording('Delivered, At the door/Yard，For Delivery Issues & Tracking Support, Contact Sample Courier at +1 000 000-0000 or help@sample.example'))
       .toBe('Delivered, At the door/Yard');
     expect(cjPacketWording('Arrived at the station, call 000-000-0000')).toBe('Arrived at the station, call');
@@ -163,7 +165,12 @@ describe('CJ Packet HTTP adapter', () => {
       shipment.trackEvent[0]!.activity = '<b>[US,SAMPLE CITY,ST]</b> Package delivered, received by Sample Person';
       shipment.trackEvent[1]!.activity = 'Out for delivery, signed by nobody yet';
     }), DELIVERED);
-    expect(result.events!.slice(0, 2).map((event) => event.description)).toEqual(['Package delivered', 'Out for delivery, signed by nobody yet']);
+    expect(result.events!.slice(0, 2).map((event) => [event.description, event.stage]))
+      .toEqual([['Package delivered, received by Sample Person', 'delivered'], ['Out for delivery, signed by nobody yet', 'out_for_delivery']]);
+    // Only a delivery names who took the parcel.
+    expect(result.signed_by).toBe('Sample Person');
+    const unsigned = parseCjPacket(changed('delivered', (shipment) => { shipment.trackEvent[0]!.activity = 'Package delivered'; }), DELIVERED);
+    expect(unsigned).not.toHaveProperty('signed_by');
     // A line left empty says nothing and is skipped.
     const empty = parseCjPacket(changed('delivered', (shipment) => { shipment.trackEvent[1]!.activity = '<br>'; }), DELIVERED);
     expect(empty.events).toHaveLength(11);

@@ -5,6 +5,7 @@ import { windowEstimate, type WindowEstimate } from '../../core/result/window.js
 import type { ClassifiedStatus, Stage } from '../../core/status/index.js';
 import { paddedDate } from '../../core/time/fields.js';
 import { calendarDay, isoTime, zonedTime } from '../../core/time/index.js';
+import { clean } from '../../core/transport/index.js';
 import type { XmlNode } from '../../core/transport/xml.js';
 import {
   children, DpdAppService, DpdOtherCountryError, invalid, one, optional, PostcodeRejected, scalar, SessionExpired, type DpdDePartner,
@@ -105,6 +106,24 @@ function shopOf(row: XmlNode): { id: string; name: string } | undefined {
   return undefined;
 }
 
+/** A field the result can do without: empty, rather than a refused reply, when it is missing, repeated or not text. */
+function spare(node: XmlNode | undefined, name: string, max: number): string {
+  const matches = node ? children(node, name) : [];
+  return matches.length === 1 && !matches[0]!.children.length ? clean(matches[0]!.text ?? '', max) : '';
+}
+
+/**
+ * The recipient as the service shows them: the order's receiver name, else the delivery
+ * address's, and the street of the address the parcel goes to, else of its label's. The
+ * anonymous view leaves them empty.
+ */
+function recipientOf(tracking: XmlNode): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const addresses = ['ShipAddress', 'LabelAddress'].map(name => children(tracking, name)).flatMap(found => (found.length === 1 ? found : []));
+  const name = spare(children(tracking, 'OrderInfo')[0], 'ReceiverName', 120) || addresses.map(address => spare(address, 'Name', 120)).find(Boolean);
+  const street = addresses.map(address => spare(address, 'Street', 200)).find(Boolean);
+  return { ...(name ? { receiver_name: name } : {}), ...(street ? { receiver_address: street } : {}) };
+}
+
 /** The measured length, width and height, in millimetres; the shipper's own figures are not read. */
 function dimensionsOf(order: XmlNode): string | null {
   const sides = ['Length', 'Width', 'Height'].map(name => scalar(order, name, 16));
@@ -150,10 +169,14 @@ export function parseDpdDeApp(data: XmlNode, scans: XmlNode, number: string): { 
     const stage = Object.hasOwn(DPD_DE_APP_SCANS, key) ? DPD_DE_APP_SCANS[key] : dpdDeShopCollectionStage(key, waited, previous);
     if (stage === 'ready_for_pickup') [shop, waited] = [shopOf(row), true];
     previous = stage ?? previous;
+    // A wording the map does not know that names who took the parcel is described neutrally, so the
+    // shared rules give it no stage the map did not; it keeps its own wording as the original.
+    const named = /\b(?:delivered to|signed (?:for )?by|received by)\b/i.test(wording);
     const event: CarrierEvent = {
       ...(place?.[2] === 'DE' ? { time: clock.iso } : { local_time: clock.iso.slice(0, 19), provider_time_text: `${day} ${time}` }),
       ...(place ? { location: `${place[1]}, ${place[2]}` } : {}),
-      description: /\b(?:delivered to|signed (?:for )?by|received by)\b/i.test(wording) ? 'Delivery update' : wording,
+      description: named ? 'Delivery update' : wording,
+      ...(named ? { original_description: wording } : {}),
       ...(stage ? { stage, stage_source: 'carrier_map' } : {}),
     };
     // Reason codes and service descriptions are not projected.
@@ -210,6 +233,7 @@ function reply(
     ...(dimensions ? { dimensions_text: dimensions } : {}),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(pickup ? { pickup_point: pickup.name } : {}),
+    ...recipientOf(tracking),
     events: events.slice(0, 100),
   };
   return { result, shop: pickup?.id ?? '' };

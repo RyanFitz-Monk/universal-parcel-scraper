@@ -90,7 +90,9 @@ describe('Daylight Transport HTTP adapter', () => {
       ['2026-03-09T08:58:21', 'Pickup Requested', 'registered', 'SAMPLETON, CA'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source !== 'none')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SUPPLY|EXAMPLE OUTFITTERS|JANE|JOHN|EXAMPLE AVE|SAMPLE RD|90000|07000|555 010|example\.com|BOL-SAMPLE|PO-SAMPLE|900001|SAMPLE CRATES|CALL|EXA-DYLT|DYLT/);
+    // The consignee's name and address, and nothing else of the parties.
+    expect(result).toMatchObject({ receiver_name: 'EXAMPLE OUTFITTERS', receiver_address: '200 SAMPLE RD, DOCK 4\n07000 EXAMPLEVILLE NJ' });
+    expect(JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined })).not.toMatch(/SAMPLE SUPPLY|EXAMPLE OUTFITTERS|JANE|JOHN|EXAMPLE AVE|SAMPLE RD|90000|07000|555 010|example\.com|BOL-SAMPLE|PO-SAMPLE|900001|SAMPLE CRATES|CALL|EXA-DYLT|DYLT/);
   });
 
   it('reads an in-transit history, its newest staged row and the delivery window', () => {
@@ -111,7 +113,14 @@ describe('Daylight Transport HTTP adapter', () => {
       ['2026-10-15T13:30:46', 'Arrived At Shipper', 'registered', 'SAMPLE VALLEY, CA'],
       ['2026-10-15T06:06:29', 'Freight Bill Entered', 'registered', 'SAMPLEBURG'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/PAT EXAMPLE|EXAMPLE PARTS|ALEX|EXAMPLE LN|SAMPLE BLVD|43000|91000|SBG|SVL|PRTR|Residential/);
+    expect(result).toMatchObject({ receiver_name: 'PAT EXAMPLE', receiver_address: '400 EXAMPLE LN\n43000 SAMPLEBURG OH' });
+    // Only what the consignee gives; a field of another type is left out.
+    const townOnly = parseDaylight(details('in-transit', (item) => { item.consignee = { name: 7, city: 'SAMPLEBURG' }; }), history('in-transit'), IN_TRANSIT);
+    expect(townOnly.receiver_address).toBe('SAMPLEBURG');
+    expect(townOnly).not.toHaveProperty('receiver_name');
+    const unnamed = parseDaylight(details('in-transit', (item) => { item.consignee = 'SAMPLE'; }), history('in-transit'), IN_TRANSIT);
+    expect(unnamed).not.toHaveProperty('receiver_address');
+    expect(JSON.stringify({ ...result, receiver_name: undefined, receiver_address: undefined })).not.toMatch(/PAT EXAMPLE|EXAMPLE PARTS|ALEX|EXAMPLE LN|SAMPLE BLVD|43000|91000|SBG|SVL|PRTR|Residential/);
   });
 
   it('gives the delivery window from both its ends: a slot on one day, days across days, a day for one end', () => {

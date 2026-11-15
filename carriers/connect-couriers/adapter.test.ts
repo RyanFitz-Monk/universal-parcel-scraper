@@ -47,7 +47,7 @@ describe('Connect Couriers HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('orders a day’s scans by their wall clocks and keeps neither the staff accounts nor the recipient’s town', () => {
+  it('orders a day’s scans by their wall clocks, with the recipient’s town and without the staff accounts', () => {
     const result = parseConnectCouriers(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-12T15:20:00', destination_country: 'MT' });
@@ -63,7 +63,9 @@ describe('Connect Couriers HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.location === undefined && event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(result)).not.toMatch(/sample\.|@connect|@partner|SAMPLETOWN|100001|Package|Origin|Shipment picked up/i);
+    expect(result.receiver_address).toBe('SAMPLETOWN');
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify({ ...result, receiver_address: undefined })).not.toMatch(/sample\.|@connect|@partner|SAMPLETOWN|100001|Package|Origin|Shipment picked up/i);
   });
 
   it('keeps the scans of the piece asked out of a consignment of several', () => {
@@ -97,12 +99,19 @@ describe('Connect Couriers HTTP adapter', () => {
     expect(unmapped.events![0]!.stage).toBeUndefined();
   });
 
-  it('takes a signatory and phone numbers out of the wording', () => {
-    expect(connectCouriersWording('Delivered - signed by Sample Person')).toBe('Delivered');
-    expect(connectCouriersWording('Delivered (signed for by Sample Person)')).toBe('Delivered');
+  it('takes phone numbers out of the wording, and keeps who signed, staged as the wording without them', () => {
+    expect(connectCouriersWording('Delivered - signed by Sample Person')).toBe('Delivered - signed by Sample Person');
+    expect(connectCouriersWording('Delivered (signed for by Sample Person)')).toBe('Delivered (signed for by Sample Person)');
     expect(connectCouriersWording('Attempted Delivery / Client not home, call +000 0000 0000')).toBe('Attempted Delivery / Client not home, call');
     expect(connectCouriersWording(' Out for Delivery ')).toBe('Out for Delivery');
     expect(connectCouriersWording('Awaiting collection by recipient as requested')).toBe('Awaiting collection by recipient as requested');
+    const signed = parseConnectCouriers(changed('delivered', (data) => {
+      data.trackingHistory[0]!.items[1]!.stageStatus = 'Delivered (signed for by Sample Person)';
+      data.packageData[0]!.stageStatus = 'Delivered - signed by Sample Person';
+    }), DELIVERED);
+    expect(signed).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', signed_by: 'Sample Person',
+      last_status_text: 'Delivered (signed for by Sample Person)' });
+    expect(signed.events![0]).toMatchObject({ description: 'Delivered (signed for by Sample Person)', stage: 'delivered', stage_source: 'carrier_map' });
   });
 
   it('reads an unknown number as not found, a failed lookup as inconclusive and a shipment without scans as no history', () => {

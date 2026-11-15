@@ -31,7 +31,9 @@
   "capabilities": [
     "history",
     "location",
-    "eta"
+    "eta",
+    "receiver_name",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://mydaylight.dylt.com/external/shipment?probill={trackingNumber}",
@@ -64,13 +66,13 @@
       "history",
       "location",
       "eta",
-      "eta_window"
+      "eta_window",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "contact_details",
       "postcodes",
       "customer_reference",

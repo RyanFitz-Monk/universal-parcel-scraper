@@ -215,9 +215,11 @@ function parseTracking(payload: unknown, trackingNumber: string, expeditionCode?
   const sides = dims.every((value) => value < 1) ? dims.map((value) => Math.round(value * 1000) / 10) : dims;
   const dimensionsText = dims.every((value) => Number.isFinite(value) && value > 0)
     ? `${sides[0]} x ${sides[1]} x ${sides[2]} cm` : null;
-  // nombre_cliente names a person in the doorstep case, so it is never
-  // projected; weight and dimensions are operational parcel data.
+  // nombre_cliente is the recipient's name, as the tracker shows it; weight and
+  // dimensions are operational parcel data.
+  const recipient = clean(envelope.nombre_cliente, 120);
   const extras = {
+    ...(recipient ? { receiver_name: recipient } : {}),
     ...(weightKg != null ? { weight_kg: weightKg } : {}),
     ...(dimensionsText ? { dimensions_text: dimensionsText } : {}),
   };

@@ -32,7 +32,9 @@
     "location",
     "service_name",
     "offset_timestamps",
-    "delivered_at"
+    "delivered_at",
+    "receiver_name",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://ecourier.com.bd/tracking?tracking_no={trackingNumber}",
@@ -60,15 +62,15 @@
       "location",
       "service_name",
       "offset_timestamps",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "awb_date",
       "transit_time",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "staff_details",
       "driver_name",
       "contact_details"

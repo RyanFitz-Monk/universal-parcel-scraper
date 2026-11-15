@@ -19,7 +19,7 @@ describe('DPD Germany live guest tracking', () => {
     const first = await app.track(number, { signal: AbortSignal.timeout(110_000), timeoutMs: 110_000 });
     expect(first.events?.length).toBeGreaterThan(0);
     expect(first.status).not.toBe('unknown');
-    expect(JSON.stringify(first)).not.toMatch(/receiver|recipient|street|phone/i);
+    expect(JSON.stringify({ ...first, receiver_name: undefined, receiver_address: undefined })).not.toMatch(/receiver|recipient|street|phone/i);
     const started = performance.now();
     const again = await app.track(number, { signal: AbortSignal.timeout(15_000), timeoutMs: 15_000 });
     expect(again.events).toEqual(first.events);

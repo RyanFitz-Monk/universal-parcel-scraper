@@ -31,7 +31,10 @@
     "location",
     "delivered_at",
     "destination_country",
-    "offset_timestamps"
+    "offset_timestamps",
+    "receiver_name",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://chronodiali.ma/suivi_colis.html?id={trackingNumber}",
@@ -53,13 +56,14 @@
       "location",
       "delivered_at",
       "destination_country",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "sender_name",
       "sender_town",
-      "recipient_name",
-      "destination",
       "payment_details"
     ],
     "unavailable": [

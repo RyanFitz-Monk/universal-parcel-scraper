@@ -139,9 +139,8 @@ function milestone(clock: string, description: string, stage: 'accepted' | 'cust
  * Freight's tracking search makes: `{"dflResults":[…],"dfxResults":[…],
  * "dftResults":[…]}`, each result a shipment's current status, pickup, delivery,
  * estimate and partners. It has no history. Every list empty is the page's "No
- * results". The status names who signed for a delivery and the trailer, and its
- * service center comes with its address, phone and position; none of them is
- * read.
+ * results". A delivered status names who signed for it. Its trailer, and its
+ * service center's address, phone and position, are not read.
  */
 export function parseDayton(payload: unknown, raw: string): CarrierResult {
   const number = normalizeDaytonNumber(raw);
@@ -185,6 +184,7 @@ export function parseDayton(payload: unknown, raw: string): CarrierResult {
     ?? (code || activity ? { stage: 'in_transit', source: 'carrier_map' } : { stage: events[0]!.stage as Stage, source: 'carrier_map' });
   const stage = decided.stage;
   const settled = stage === 'delivered' || stage === 'returned';
+  const signatory = stage === 'delivered' ? clean(status.signedBy, 120) : '';
   return {
     status: languageStageStatus(stage),
     current_stage: stage,
@@ -193,6 +193,7 @@ export function parseDayton(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     ...(current.local_time ? { last_update_local: current.local_time } : {}),
     ...(settled ? { expected_delivery: null } : estimateOf(shipment)),
+    ...(signatory ? { signed_by: signatory } : {}),
     ...handoff(shipment),
     ...(pro !== number ? { canonical_tracking_number: pro } : {}),
     summary_only: true,

@@ -81,6 +81,19 @@ function predictWindowOf(scan: Scan, newest: number): string | null {
   return null;
 }
 
+// Who took the parcel, as the delivery scan's note names them, masked: "received from: ABC****".
+const RECEIVED_FROM = /^received from:\s*(.+)$/i;
+
+/** The name the newest delivery's note gives for who took the parcel. */
+function signatoryOf(ordered: readonly Scan[]): string {
+  const delivery = ordered.find(scan => scan.event.stage === 'delivered');
+  for (const comment of (Array.isArray(delivery?.row.comments) ? delivery.row.comments.slice(0, 20) : []).filter(isRecord)) {
+    const name = clean(RECEIVED_FROM.exec(clean(comment.text, 200))?.[1], 120);
+    if (name) return name;
+  }
+  return '';
+}
+
 export function parseDpdRo(payload: unknown, rawNumber: string): CarrierResult {
   const number = normalizeDpdRoNumber(rawNumber);
   if (!isRecord(payload) || !Array.isArray(payload.events) || payload.events.length > 300) throw new SchemaError(PROVIDER);
@@ -116,6 +129,7 @@ export function parseDpdRo(payload: unknown, rawNumber: string): CarrierResult {
   const estimate = stage && ON_THE_WAY.has(stage)
     ? ordered.map((scan) => predictWindowOf(scan, ordered[0]!.at) ?? estimateOf(scan.row)).find(Boolean) ?? null
     : null;
+  const signatory = signatoryOf(ordered);
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -125,6 +139,7 @@ export function parseDpdRo(payload: unknown, rawNumber: string): CarrierResult {
     last_update: events[0]?.time ?? null,
     expected_delivery: estimate,
     ...(delivered ? { delivered_at: delivered.time } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     // Parcels for Cyprus, Shein's and Temu's among them, go on to ACS under its own number.
     ...speedyDeliveryPartner(payload.externalCarriermappings, number),
     events: events.slice(0, 100),

@@ -39,7 +39,8 @@ const SCANS: ReadonlyArray<readonly [RegExp, Stage]> = [
   [/^σε διανομεα προσ παραδοση$/, 'out_for_delivery'],
   // Followed by the reason and the date, as "Αποτυχία παράδοσης, Αιτιολογία: …".
   [/^αποτυχια παραδοσησ(?:[ ,:].*)?$/, 'failed_attempt'],
-  [/^η αποστολη παραδοθηκε στον παραληπτη$/, 'delivered'],
+  // Followed by who took the parcel and when, as "…παραλήπτη: ΔΕΙ*****, Ημ/νια: …".
+  [/^η αποστολη παραδοθηκε στον παραληπτη(?:[\s:.,].*)?$/, 'delivered'],
   [/^παραδοθηκε απο διανομεα$/, 'delivered'],
   [/^η αποστολη εχει παραδοθει$/, 'delivered'],
   [/^παραδοθηκε$/, 'delivered'],

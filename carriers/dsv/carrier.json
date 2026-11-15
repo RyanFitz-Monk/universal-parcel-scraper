@@ -38,7 +38,10 @@
     "history",
     "location",
     "provider_code",
-    "eta"
+    "eta",
+    "receiver_name",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://mydsv.com/track-shipment?query={trackingNumber}",
@@ -60,13 +63,15 @@
       "history",
       "location",
       "eta",
-      "provider_code"
+      "provider_code",
+      "recipient_address",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "service_name",
       "sender_town",
-      "recipient_address",
       "postcodes"
     ],
     "unavailable": [

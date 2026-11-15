@@ -94,10 +94,12 @@ describe('Easy Mail HTTP adapter', () => {
     expect(parseEasyMail(store, IN_TRANSIT)).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup' });
   });
 
-  it('keeps no recipient, store phone or address, and no store named after a partner', () => {
+  it('reads who took a delivered parcel, masked, and keeps no store phone or address, and no store named after a partner', () => {
+    expect(parseEasyMail(fixture('delivered'), DELIVERED).signed_by).toBe('Δ********* Δ*********');
+    expect(parseEasyMail(fixture('in-transit'), IN_TRANSIT).signed_by).toBeUndefined();
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
       const text = JSON.stringify(parseEasyMail(fixture(name), number));
-      expect(text, name).not.toMatch(/\*{3}|2100000000|Τηλέφωνο|Διεύθυνση|Δείγματος 1|store\//);
+      expect(text, name).not.toMatch(/2100000000|Τηλέφωνο|Διεύθυνση|Δείγματος 1|store\//);
     }
     const partner = changed('delivered', (html) => html.replaceAll('ΠΑΡΑΔΕΙΓΜΑ', 'SPEEDEX'));
     expect(parseEasyMail(partner, DELIVERED).events!.slice(0, 6).map((event) => event.location ?? null)).toEqual(Array(6).fill(null));

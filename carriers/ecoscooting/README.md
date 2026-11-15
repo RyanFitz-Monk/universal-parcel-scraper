@@ -47,9 +47,10 @@ They stay after collection so the parcel still shows where it was collected. An
 address part the reply spells `NaN` is left out. A
 parcel the courier delivers instead (`GTMS_SIGNED`, `LM_SIGN_SUCCESS`) has none,
 and neither has a returned one, which no longer waits there.
-The pickup PIN, the shop's phone, opening hours and station id are never read.
-Destination addresses, postcodes, coordinates, delivery photos, order
-identifiers and routing features are excluded. References
+The pickup PIN is the pickup code, and the destination's postcode and town are
+the recipient's address. The shop's phone, opening hours and station id are
+never read, nor are coordinates, delivery photos, order identifiers and routing
+features. References
 start with the destination postcode, after any `CN` country prefix, so samples
 and fixtures use zeros there. An 18-digit label is a Spanish postcode, four zeros and
 a nine-digit counter. No other carrier's 18-digit numbers in the corpus follow that

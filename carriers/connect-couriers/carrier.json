@@ -30,7 +30,9 @@
   },
   "capabilities": [
     "history",
-    "destination_country"
+    "destination_country",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.connectcouriers.eu/tracking/?tracking_number={trackingNumber}",
@@ -51,12 +53,13 @@
     "scraped": [
       "status",
       "history",
-      "destination_country"
+      "destination_country",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "origin",
-      "destination",
       "parcel_count",
       "departure_date",
       "weight",

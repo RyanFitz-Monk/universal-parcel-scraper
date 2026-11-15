@@ -97,12 +97,15 @@ describe('Dachser response normalization', () => {
     }
   });
 
-  it('discards sender, recipient, contact, signature and internal notes', () => {
-    const serialized = JSON.stringify(parseDachserTrackingResponse(inTransit(), SHIPMENT_NUMBER));
+  it('reads the recipient\'s name and address and discards the sender, contact, signature and internal notes', () => {
+    const result = parseDachserTrackingResponse(inTransit(), SHIPMENT_NUMBER);
+    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET 12' });
+    const unnamed = parseDachserTrackingResponse({ ...inTransit(), nombreDestinatario: 42, direccionDestinatario: null }, SHIPMENT_NUMBER);
+    expect(unnamed.receiver_name).toBeUndefined();
+    expect(unnamed.receiver_address).toBeUndefined();
+    const serialized = JSON.stringify(result);
     for (const privateValue of [
       'PRIVATE SENDER SL',
-      'PRIVATE RECIPIENT',
-      'PRIVATE STREET 12',
       '+34000000000',
       'private@example.test',
       'PRIVATE SIGNATURE',
@@ -111,10 +114,12 @@ describe('Dachser response normalization', () => {
   });
 
   it('covers every capability declared in carrier.json', () => {
-    expect(capabilities).toEqual(['history', 'eta']);
+    expect(capabilities).toEqual(['history', 'eta', 'receiver_name', 'receiver_address']);
     const result = parseDachserTrackingResponse(inTransit(), SHIPMENT_NUMBER);
     expect(result.events?.length).toBeGreaterThan(0);
     expect(result.expected_delivery).toBe('2026-09-15');
+    expect(result.receiver_name).toBeTruthy();
+    expect(result.receiver_address).toBeTruthy();
   });
 
   it('classifies a negative or rescheduled notice before the delivery word it contains', () => {

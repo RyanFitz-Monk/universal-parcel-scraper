@@ -45,7 +45,9 @@
   },
   "capabilities": [
     "history",
-    "eta"
+    "eta",
+    "receiver_name",
+    "receiver_address"
   ],
   "portal": {
     "url": "https://colisprive.com/moncolis/pages/DetailColis.aspx?numColis={trackingNumber}&lang=fr",
@@ -62,12 +64,11 @@
     "scraped": [
       "status",
       "history",
-      "eta"
-    ],
-    "discarded": [
+      "eta",
       "recipient_name",
       "recipient_address"
     ],
+    "discarded": [],
     "unavailable": []
   },
   "links": [

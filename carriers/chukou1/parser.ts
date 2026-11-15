@@ -65,8 +65,10 @@ function scanClock(row: Record<string, unknown>): string {
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who took or delivered the parcel, after a delivery scan's wording.
-const RECEIVER = /\s*[,，;；:：.]?\s*(?:\b(?:signed for by|signed by|received by)\b|签收人是?|投递员|派件员|快递员|收件人)[\s\S]*$/i;
+// The courier who delivered the parcel, after a delivery scan's wording.
+const COURIER = /\s*[,，;；:：.]?\s*(?:投递员|派件员|快递员)[\s\S]*$/;
+// Who took the parcel, as a delivery scan names them: "signed by A. SAMPLE", "签收人是【示例】".
+const SIGNATORY = /(?:\b(?:signed for by|signed by|received by)\b|签收人是?)\s*[:：]?\s*【?([^,，;；【】]+)/i;
 const HANDOVER = /\bdelivered\b|\bsigned\b|签收|妥投|投递/i;
 // A part that is only a postcode or a site code: "00001", "00001-0000", "00000033".
 const CODE_PART = /^\d{4,}(?:-\d{4})?$/;
@@ -81,13 +83,13 @@ function postcodePattern(postcode: string): RegExp {
 /**
  * A scan's text as its parts: the comma-separated place and wording, without
  * the destination postcode, other bare postcodes and site codes, phone
- * numbers, a delivery's receiver, or a part repeated ("Springfield,ZZ,00001,
+ * numbers, a delivery's courier, or a part repeated ("Springfield,ZZ,00001,
  * Springfield, ZZ, 00001, Delivered" is Springfield, ZZ, Delivered).
  */
 function scanParts(raw: string, postcode: string): string[] {
   let value = raw.replace(PHONE, '');
   if (postcode) value = value.replace(postcodePattern(postcode), '');
-  if (HANDOVER.test(value)) value = value.replace(RECEIVER, '');
+  if (HANDOVER.test(value)) value = value.replace(COURIER, '');
   const parts = value.split(',').map((part) => clean(part.replace(/\s+([.;:])/g, '$1')).replace(/^[\s.;:]+/, ''))
     .filter((part) => part && !CODE_PART.test(part));
   const seen = new Set<string>();
@@ -99,7 +101,7 @@ function scanParts(raw: string, postcode: string): string[] {
   });
 }
 
-interface Scan { local: string; event: CarrierEvent; tail: string }
+interface Scan { local: string; event: CarrierEvent; tail: string; signatory?: string }
 
 /**
  * One scan. Chukou1's own scans write the place, then the wording ("SHENZHEN,
@@ -124,7 +126,8 @@ function projectScan(row: unknown, postcode: string, own: boolean): Scan | null 
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { local, event, tail: parts.at(-1)!.toLocaleLowerCase('en-US') };
+  const signatory = HANDOVER.test(whole) ? clean(SIGNATORY.exec(whole)?.[1], 120) : '';
+  return { local, event, tail: parts.at(-1)!.toLocaleLowerCase('en-US'), ...(signatory ? { signatory } : {}) };
 }
 
 /**
@@ -152,7 +155,7 @@ function handoff(shipment: Record<string, unknown>, number: string, feeds: strin
  * (`firstLegTrackingDetails`) and the scans of the carriers it handed the
  * parcel to, one feed each, all newest first. A number it does not know comes
  * back with the status `NotFound`. The shipment must be the number asked. Its
- * proof of delivery, destination postcode and origin supplier are not kept.
+ * proof of delivery and origin supplier are not kept.
  */
 export function parseChukou1(payload: unknown, raw: string): CarrierResult {
   const number = normalizeChukou1Number(raw);
@@ -194,13 +197,15 @@ export function parseChukou1(payload: unknown, raw: string): CarrierResult {
     const scan = projectScan(row, postcode, true);
     if (scan) scans.push(scan);
   }
-  const events = scans.filter(({ event }) => {
+  const kept = scans.filter(({ event }) => {
     const key = JSON.stringify([event.local_time, event.location, event.description]);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).sort((a, b) => (a.local < b.local ? 1 : a.local > b.local ? -1 : 0)).map(({ event }) => event);
+  }).sort((a, b) => (a.local < b.local ? 1 : a.local > b.local ? -1 : 0));
+  const events = kept.map(({ event }) => event);
   if (!events.length) throw new NoHistoryError(PROVIDER);
+  const signatory = kept.find((scan) => scan.signatory)?.signatory;
 
   // Newest first by their wall clocks, which are each place's own.
   const newest = events[0]!;
@@ -220,6 +225,9 @@ export function parseChukou1(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...handoff(shipment, number, feeds.map((feed) => feed.name)),
     ...(country ? { destination_country: country } : {}),
+    // The destination postcode is all the reply gives of the recipient's address.
+    ...(postcode ? { receiver_address: postcode } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

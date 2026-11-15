@@ -122,9 +122,13 @@ export function parseEasyMail(html: string, raw: string): CarrierResult {
   }
   const details = tableUnder($, DETAILS);
   if (!details?.length) throw new SchemaError(PROVIDER, 'Easy Mail returned a page without the shipment');
-  // The current status repeats the newest scan; its voucher is checked too.
+  // The current status repeats the newest scan; its voucher is checked too. Its delivery
+  // details name who took a delivered parcel, masked as the page shows them.
+  let signatory = '';
   for (const row of tableUnder($, SUMMARY)?.find('tbody > tr').toArray() ?? []) {
     bindRow(clean($(row).children('th').first().text(), 40), voucher);
+    const cells = $(row).children('th, td');
+    if (easyMailStage(clean(cells.eq(3).text(), 300)) === 'delivered') signatory ||= clean(cells.eq(5).text(), 120);
   }
   const events = scansOf($, details.find('tbody > tr'), voucher).map((scan) => scan.event);
   if (!events.length) throw new NoHistoryError(PROVIDER);
@@ -139,6 +143,7 @@ export function parseEasyMail(html: string, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(delivery ? { delivered_at: delivery.time! } : {}),
+    ...(delivery && signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

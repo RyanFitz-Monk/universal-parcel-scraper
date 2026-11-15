@@ -35,13 +35,13 @@ lookups its shipment page makes.
 - Until the delivery, the estimate is the delivery window the details give, from its start to
   its end.
 - Appointment rows, needed or made, can come before the pickup and have no stage.
-- The details hold the shipper, the consignee and the forwarder with their addresses, contacts,
-  phones and e-mails, references, items, weights, special instructions and notification e-mails;
-  none of them is read.
+- The consignee's name and address are read, the address as its street lines, then its ZIP
+  code, town and state. The shipper, the forwarder, contacts, phones, e-mails, references, items,
+  weights, special instructions and notification e-mails in the details are not.
 
 ## Limitations
 
-- No sender, recipient, signature or delivery receipt.
+- No sender, signature or delivery receipt.
 - A probill reaches the adapter when it is filed under Daylight Transport or opened from a
   Daylight link: eight digits are shared by many carriers, so no rule claims them and preflight
   does not ask it.

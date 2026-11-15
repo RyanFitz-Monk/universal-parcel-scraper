@@ -1698,6 +1698,7 @@
       "last_update": null,
       "expected_delivery": null,
       "weight_kg": 4.301,
+      "receiver_address": "PRIVATE_SYNTHETIC_POSTCODE Example City",
       "events": [
         {
           "provider_time_text": "2026-01-04 20:00:00 UTC+1",
@@ -1772,9 +1773,11 @@
       "last_status_text": "NUEVO REPARTO",
       "last_update": "2026-01-05T18:27:00+01:00",
       "expected_delivery": "2026-01-06",
+      "pickup_code": "PRIVATE_SYNTHETIC_PIN",
       "events": [
         {
           "description": "NUEVO REPARTO",
+          "original_description": "NUEVO REPARTO. PRIVATE_SYNTHETIC_DELIVERY_COMMENT",
           "provider_status": "NUEVO REPARTO",
           "stage": "in_transit",
           "time": "2026-01-05T18:27:00+01:00",
@@ -1782,6 +1785,7 @@
         },
         {
           "description": "EN ALMACÉN",
+          "original_description": "EN ALMACÉN. Su envío no ha podido ser entregado.",
           "provider_status": "EN ALMACÉN",
           "stage": "exception",
           "time": "2026-01-02T10:01:00+01:00",
@@ -1803,6 +1807,7 @@
         },
         {
           "description": "EN RUTA A LOCALIDAD DE DESTINO",
+          "original_description": "EN RUTA A LOCALIDAD DE DESTINO. PRIVATE_SYNTHETIC_OTHER_COMMENT",
           "provider_status": "EN RUTA A LOCALIDAD DE DESTINO",
           "stage": "in_transit",
           "time": "2026-01-01T06:03:00+01:00",
@@ -1817,6 +1822,7 @@
         },
         {
           "description": "INFORMADO",
+          "original_description": "INFORMADO. Ya hemos recibido la información de su envío.",
           "provider_status": "INFORMADO",
           "stage": "registered",
           "time": "2025-12-30T13:15:00+01:00",
@@ -2672,6 +2678,7 @@
       "last_update": null,
       "expected_delivery": null,
       "weight_kg": 4.301,
+      "receiver_address": "PRIVATE_SYNTHETIC_POSTCODE",
       "events": [
         {
           "provider_time_text": "2026-01-10 12:00:00 UTC+0",

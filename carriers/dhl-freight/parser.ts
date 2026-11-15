@@ -124,10 +124,16 @@ function weightOf(fields: Map<string, string>): number | undefined {
   return Number.isFinite(weight) && weight > 0 ? weight : undefined;
 }
 
-/** The country of the consignee's place; the town stays out. */
+/** The country of the consignee's place. */
 function destinationOf(fields: Map<string, string>): string | undefined {
   const place = fields.get('consignee location') ?? '';
   return PLACE.test(place) ? countryCode(place.slice(0, 2)) ?? undefined : undefined;
+}
+
+/** The town of the consignee's place, the only part of the consignee's address the page shows. */
+function consigneeTown(fields: Map<string, string>): string {
+  const place = fields.get('consignee location') ?? '';
+  return PLACE.test(place) ? clean(place.slice(5), 120) : '';
 }
 
 /** The search page's answer: a notice that nothing matched the number it repeats in its field. */
@@ -146,8 +152,8 @@ function absence($: CheerioAPI, query: DhlFreightQuery): never {
  * with a status, the terminal and the terminal's date and time. The page must
  * list the number asked among the consignment's IDs, order code or packages.
  * An unknown number keeps the search page, with a notice under the field it
- * was typed in. The consignee's town, the references, the volume and the
- * package scans are never read.
+ * was typed in. The consignee's town is read as the recipient's address; the
+ * references, the volume and the package scans are not.
  */
 export function parseDhlFreight(html: string, query: DhlFreightQuery): CarrierResult {
   const $ = load(html);
@@ -179,6 +185,7 @@ export function parseDhlFreight(html: string, query: DhlFreightQuery): CarrierRe
   const service = fields.get('product');
   const weight = weightOf(fields);
   const destination = destinationOf(fields);
+  const town = consigneeTown(fields);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -189,6 +196,7 @@ export function parseDhlFreight(html: string, query: DhlFreightQuery): CarrierRe
     ...(service ? { service_name: service } : {}),
     ...(weight ? { weight_kg: weight } : {}),
     ...(destination ? { destination_country: destination } : {}),
+    ...(town ? { receiver_address: town } : {}),
     events,
   };
 }

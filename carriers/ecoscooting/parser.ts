@@ -1,7 +1,7 @@
 import { IndeterminateError, NoHistoryError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { epochMillisTime } from '../../core/time/index.js';
-import { clean } from '../../core/transport/index.js';
+import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { isSheinPackageNumber } from '../../core/detection/shein.js';
 import { ecoscootingRequestNumber, isEcoscootingLabel } from './number.js';
@@ -80,18 +80,23 @@ export function parseEcoscooting(payload: unknown, rawNumber: string): CarrierRe
   const current = ecoscootingStatus(String(latest.provider_code), latest.description);
   const dims = isRecord(payload.packageParam.dimWeight) ? payload.packageParam.dimWeight : {};
   const grams = typeof dims.weight === 'string' && /^\d+(?:\.\d+)?$/.test(dims.weight) ? Number(dims.weight) : Number.NaN;
+  // The destination's postcode and town, the whole of the recipient's address the reply gives.
+  const destination = [cleanScalar(listed.toZipcode, 32), clean(listed.toCity, 120)].filter(Boolean).join(' ');
+  // The PIN the recipient collects the parcel with at the pickup point.
+  const pin = isRecord(payload.popStationParam) ? cleanScalar(payload.popStationParam.pinCode, 40) : '';
   return { status: current?.status ?? 'unknown', ...(current ? { current_stage: current.stage } : {}),
     last_status_text: latest.description, last_update: latest.time ?? null, expected_delivery: null,
     ...(current?.stage === 'delivered' && latest.time ? { delivered_at: latest.time } : {}),
     ...(dims.weightUnit === 'g' && Number.isFinite(grams) && grams > 0 ? { weight_kg: grams / 1000 } : {}),
+    ...(destination ? { receiver_address: destination } : {}), ...(pin ? { pickup_code: pin } : {}),
     ...pickupPoint(payload.popStationParam, events, current?.stage), events: events.slice(0, 100) };
 }
 
 // A shop's name and address, once a scan places the parcel there. It stays
 // after collection so the parcel still says where it was collected, but a
 // delivery by the courier, at the door, has none, and neither has a parcel on
-// its way back to the sender, which no longer waits there. The pickup PIN, the
-// shop's phone and the station id are never read.
+// its way back to the sender, which no longer waits there. The shop's phone and
+// the station id are never read.
 function pickupPoint(station: unknown, events: CarrierEvent[], stage: string | undefined): { pickup_point?: string } {
   if (!isRecord(station) || stage === 'returned' || !events.some(event => PICKUP_POINT_CODES.has(String(event.provider_code)))) return {};
   if (stage === 'delivered' && !COLLECTION_CODES.has(String(events[0]?.provider_code))) return {};

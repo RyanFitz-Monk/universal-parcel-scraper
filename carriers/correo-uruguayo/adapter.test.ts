@@ -44,13 +44,14 @@ describe('Correo Uruguayo tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a domestic delivery newest first, with each scan’s wall clock, office and code, and without the recipient', () => {
+  it('reads a domestic delivery newest first, with each scan’s wall clock, office and code, and who took it', () => {
     const result = parseCorreoUruguayo(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'ENTREGADO', last_update: null, last_update_local: '2026-04-09T11:05:00', expected_delivery: null });
+      last_status_text: 'ENTREGADO A: MARIA EJEMPLO MUESTRA 0.000.000-0', last_update: null, last_update_local: '2026-04-09T11:05:00',
+      expected_delivery: null, signed_by: 'MARIA EJEMPLO MUESTRA' });
     // The international exchange's copy of the delivery, in the same minute, is kept once.
     expect(result.events!.map((event) => [event.local_time, event.location, event.description, event.provider_code, event.stage])).toEqual([
-      ['2026-04-09T11:05:00', 'Sucursal Muestra, SUC, VILLA EJEMPLO', 'ENTREGADO', '16', 'delivered'],
+      ['2026-04-09T11:05:00', 'Sucursal Muestra, SUC, VILLA EJEMPLO', 'ENTREGADO A: MARIA EJEMPLO MUESTRA 0.000.000-0', '16', 'delivered'],
       ['2026-04-09T08:12:00', 'Sucursal Muestra, SUC, VILLA EJEMPLO', 'ASIGNADO A DISTRIBUCION', '4', 'out_for_delivery'],
       ['2026-04-08T19:40:00', 'Planta de Muestra, VILLA EJEMPLO', 'PROCESADO EN OFICINA', '12', 'in_transit'],
       ['2026-04-08T10:02:00', 'Oficina Ejemplo, PUEBLO MUESTRA', 'EN TRANSITO A DESTINO', '1', 'in_transit'],
@@ -58,7 +59,7 @@ describe('Correo Uruguayo tracking adapter', () => {
     ]);
     // The reply names no zone, so no scan gets an instant.
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/MARIA|0\.000|SAMPLE|RUTA|XX|TYT|IPS/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE|RUTA|XX|TYT|IPS/);
     const kept = new Set(['local_time', 'location', 'description', 'provider_code', 'stage', 'stage_source']);
     expect(result.events!.flatMap((event) => Object.keys(event)).filter((key) => !kept.has(key))).toEqual([]);
     expect(result).not.toHaveProperty('international_tracking_number');
@@ -67,8 +68,9 @@ describe('Correo Uruguayo tracking adapter', () => {
       item.eventos.unshift({ ...item.eventos[0]!, fecha: '09/04/2026 12:30', evento: 'INTENTO DE ENTREGA: SAMPLE 0.000.000-0', codigoevento: '36' });
       item.codigoEtapaEntrega = 'EN_PROCESO_ENTREGA';
     }), DELIVERED);
-    expect(attempt).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: 'INTENTO DE ENTREGA' });
-    expect(JSON.stringify(attempt)).not.toMatch(/SAMPLE|0\.000/);
+    expect(attempt).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: 'INTENTO DE ENTREGA: SAMPLE 0.000.000-0' });
+    // An attempt names nobody who took the item.
+    expect(attempt).not.toHaveProperty('signed_by');
   });
 
   it('reads an item between offices as in transit', async () => {
@@ -110,7 +112,7 @@ describe('Correo Uruguayo tracking adapter', () => {
     expect(repeated.events).toHaveLength(5);
     // The same wording in another minute is another scan.
     const again = parseCorreoUruguayo(edited('delivered', (item) => { item.eventos.splice(2, 0, { ...item.eventos[2]!, fecha: '09/04/2026 08:17' }); }), DELIVERED);
-    expect(again.events!.map((event) => event.description)).toEqual(['ENTREGADO', 'ASIGNADO A DISTRIBUCION', 'ASIGNADO A DISTRIBUCION',
+    expect(again.events!.map((event) => event.description)).toEqual(['ENTREGADO A: MARIA EJEMPLO MUESTRA 0.000.000-0', 'ASIGNADO A DISTRIBUCION', 'ASIGNADO A DISTRIBUCION',
       'PROCESADO EN OFICINA', 'EN TRANSITO A DESTINO', 'INGRESO A CORREO URUGUAYO']);
     const unknown = parseCorreoUruguayo(edited('in-transit', (item) => {
       item.eventos.unshift({ fecha: '13/05/2026 08:00', evento: 'EVENTO DE MUESTRA', ubicacion: null, codigoevento: 99 });

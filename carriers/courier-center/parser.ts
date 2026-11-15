@@ -42,7 +42,7 @@ const ENTRY = /^Msg_History_Entry_\d+\|/i;
 // A message to the recipient: the masked phone it went to, then its subject.
 const MESSAGE = /^ΑΠΟΣΤΟΛΗ ΕΝΗΜΕΡΩΣΗΣ ΠΑΡΑΛΗΠΤΗ ΣΤΟ ΤΗΛΕΦΩΝΟ:\s*\[[^\]]*\]\s*ΜΕ ΘΕΜΑ:\s*\[([\s\S]*)\]$/u;
 // The rest of a delivery's wording names who took the parcel, then the delivery's date and time.
-const DELIVERY = /^((?:Η αποστολή )?παραδόθηκε στον παραλήπτη)(?:[\s:.,][\s\S]*)?$/iu;
+const DELIVERY = /^(?:Η αποστολή )?παραδόθηκε στον παραλήπτη\s*:\s*(.+?)(?:\s*,\s*Ημ\/νια\s*:[\s\S]*)?$/iu;
 // The notice number of a failed delivery, and all after it.
 const NOTICE_NUMBER = /\s*,?\s*Αρ\.?\s*Ειδοποίησης\s*:[\s\S]*$/iu;
 // A recipient's request to reroute names the point, then the charge and the amount.
@@ -58,17 +58,17 @@ const PHONE = /(?<![\dA-Z])(?:\+?30)?[26]\d{9}(?![\dA-Z])/g;
 const EMAIL = /\S+@\S+\.\S+/g;
 
 /**
- * A scan's wording without what it says about the recipient. A message keeps
- * only its subject, without the masked phone it went to and the link it
- * carried; a delivery loses who took the parcel; a failed delivery loses its
- * notice number; a reroute request loses its charge; every line loses phone
- * numbers and email addresses.
+ * A scan's wording without contact details and links. A message keeps only
+ * its subject, without the masked phone it went to and the link it carried; a
+ * failed delivery loses its notice number; a reroute request loses its
+ * charge; every line loses phone numbers and email addresses. A delivery keeps
+ * who took the parcel and when.
  */
 export function courierCenterWording(raw: string): string {
   let text = clean(raw, 1_000).replace(ENTRY, '');
   const message = MESSAGE.exec(text);
   if (message) text = message[1]!.replace(LINK, '');
-  text = text.replace(DELIVERY, '$1').replace(NOTICE_NUMBER, '').replace(REROUTE, '$1').replace(CONTACT, '').replace(LINK, '');
+  text = text.replace(NOTICE_NUMBER, '').replace(REROUTE, '$1').replace(CONTACT, '').replace(LINK, '');
   return clean(text.replace(MASKED, '').replace(EMAIL, '').replace(PHONE, '').replace(/\s+([,.:;)])/g, '$1'), 300)
     .replace(/^[\s,.:;(-]+|[\s,:;(-]+$/g, '');
 }
@@ -98,6 +98,8 @@ interface Scan {
   readonly index: number;
   readonly timestamp: number;
   readonly event: CarrierEvent;
+  /** Who took the parcel, as a delivery names them. */
+  readonly signatory: string;
 }
 
 function scansOf($: CheerioAPI): Scan[] {
@@ -118,7 +120,8 @@ function scansOf($: CheerioAPI): Scan[] {
     const identity = JSON.stringify([iso, description, location]);
     if (seen.has(identity)) continue;
     seen.add(identity);
-    scans.push({ index, timestamp, event: {
+    const signatory = stage === 'delivered' ? clean(DELIVERY.exec(description)?.[1], 120) : '';
+    scans.push({ index, timestamp, signatory, event: {
       time: iso,
       ...(location ? { location } : {}),
       description,
@@ -178,14 +181,18 @@ export function parseCourierCenter(html: string, raw: string): CarrierResult {
 
   const summary = SUMMARY.exec(clean($('.track-header .info .status span').first().text(), 80));
   const summaryStage = summary ? courierCenterSummaryStage(summary[2]!) : undefined;
-  const events = scansOf($).map((scan) => scan.event);
+  const scans = scansOf($);
+  const events = scans.map((scan) => scan.event);
   const service = serviceOf($);
+  // The recipient's town, which the page gives as where the parcel goes.
+  const town = clean($('.track-header .info .send-to span').first().text(), 120);
+  const recipient = town ? { receiver_address: town } : {};
   if (!events.length) {
     if (!summary || !summaryStage) throw new NoHistoryError(PROVIDER);
     return {
       status: languageStageStatus(summaryStage.stage), current_stage: summaryStage.stage, current_stage_source: 'carrier_map',
       last_status_text: summary[2]!, provider_code: summary[1]!, last_update: null, expected_delivery: null,
-      ...(service ? { service_name: service } : {}), summary_only: true, events: [],
+      ...(service ? { service_name: service } : {}), ...recipient, summary_only: true, events: [],
     };
   }
 
@@ -195,6 +202,8 @@ export function parseCourierCenter(html: string, raw: string): CarrierResult {
   // Clever Point; otherwise the newest scan with a stage, else the summary.
   const stage = (summaryStage?.settles ? summaryStage.stage : scanned?.stage ?? summaryStage?.stage) as Stage | undefined;
   const delivery = stage === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  // The newest delivery that names who took the parcel.
+  const signatory = scans.find((scan) => scan.signatory)?.signatory;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -204,6 +213,8 @@ export function parseCourierCenter(html: string, raw: string): CarrierResult {
     ...(delivery ? { delivered_at: delivery.time! } : {}),
     ...(service ? { service_name: service } : {}),
     ...(partner ? partnerOf(partner, events) : {}),
+    ...recipient,
+    ...(signatory ? { signed_by: signatory } : {}),
     events,
   };
 }

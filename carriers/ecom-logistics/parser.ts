@@ -50,13 +50,20 @@ function eventsOf($: CheerioAPI): CarrierEvent[] {
   return events.sort((left, right) => Date.parse(right.time!) - Date.parse(left.time!));
 }
 
+/** The destination the result's facts name: the prefix of the recipient's postal code, as the page shows it. */
+function destinationOf($: CheerioAPI): string {
+  const facts = $('main section[data-track-result] dl.track-facts > div')
+    .filter((_, fact) => clean($(fact).children('dt').text(), 40) === 'Destination');
+  return facts.length === 1 ? clean(facts.children('dd').text(), 16) : '';
+}
+
 /**
  * The page `shipecom.com/track/{number}`, which the server renders. Its result
  * section names a state (`delivered`, `not_found`) and repeats the number
  * asked. A known parcel has a status heading, a progress rail, the delivery
  * time, the destination's postal code prefix and the tracking history. A number
  * it does not know comes with HTTP 404, the state `not_found` and no history.
- * Only the history is kept.
+ * The history and the destination are kept.
  */
 export function parseEcom(html: string, raw: string): CarrierResult {
   const number = normalizeEcomNumber(raw);
@@ -80,12 +87,14 @@ export function parseEcom(html: string, raw: string): CarrierResult {
   if (!newest) throw new NoHistoryError(PROVIDER);
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
+  const destination = destinationOf($);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
     last_status_text: newest.description!,
     last_update: newest.time!,
     expected_delivery: null,
+    ...(destination ? { receiver_address: destination } : {}),
     events,
   };
 }

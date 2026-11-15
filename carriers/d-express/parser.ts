@@ -44,12 +44,15 @@ interface Summary {
   status: string;
   time: ParsedTime | null;
   where: string;
+  recipient: string;
+  address: string;
 }
 
 /**
  * The summary the page shows above the history, a list of labels and values:
- * the current status, its time and where the shipment is. The recipient, the
- * address, the town, the parcel count and the regional centre's phone are not read.
+ * the current status, its time, where the shipment is, and the recipient's
+ * name, address and town, masked as the page shows them. The parcel count and
+ * the regional centre's phone are not read.
  */
 function summaryOf(html: string): Summary {
   const $ = load(html);
@@ -68,7 +71,15 @@ function summaryOf(html: string): Summary {
     }
   });
   const time = fields.get('Vreme statusa');
-  return { status: fields.get('Trenutni status') ?? '', time: time ? clockOf(time) : null, where: fields.get('Lokacija') ?? '' };
+  // The address on its first line, then the town.
+  const address = [fields.get('Adresa'), fields.get('Grad')].filter(Boolean).join('\n');
+  return {
+    status: fields.get('Trenutni status') ?? '',
+    time: time ? clockOf(time) : null,
+    where: fields.get('Lokacija') ?? '',
+    recipient: clean(fields.get('Primalac'), 120),
+    address,
+  };
 }
 
 function scanOf(row: unknown): { event: CarrierEvent; timestamp: number } {
@@ -135,6 +146,8 @@ export function parseDexpress(payload: unknown, raw: string): CarrierResult {
     last_status_text: summary.status || newest!.description!,
     last_update: summary.time?.iso ?? newest?.time ?? null,
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...(summary.recipient ? { receiver_name: summary.recipient } : {}),
+    ...(summary.address ? { receiver_address: summary.address } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

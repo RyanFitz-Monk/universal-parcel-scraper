@@ -30,7 +30,7 @@ describe('Correos de Chile anonymous tracking', () => {
     }
   });
 
-  it('projects current physical scans, not future progress markers or recipient data', () => {
+  it('projects current physical scans, not future progress markers, identity numbers or notices', () => {
     const result = normalizeCarrierResult(parseCorreosChileTracking(fixture, NUMBER));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_update: null,
       last_update_local: '2026-09-05T01:24:00', last_status_text: 'ENVÍO EN PROCESO DE INTERNACIÓN AL PAÍS' });
@@ -40,6 +40,8 @@ describe('Correos de Chile anonymous tracking', () => {
     // The portal's admission, with its code, keeps its wording.
     expect(result.events?.[1]).toMatchObject({ description: 'ENVÍO ADMITIDO', provider_code: '001', stage: 'accepted' });
     expect(result.delivered_at).toBeUndefined();
+    // Nobody has taken a parcel still in customs.
+    expect(result).not.toHaveProperty('signed_by');
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE_SYNTHETIC|sucursales|Iconos|Codigo|Referencia|RutEntrega/);
     for (const entry of statuses.entries as { code?: string; wording: string; stage: string }[]) {
       expect(classifyCorreosChileScan(entry.code ?? '', entry.wording)?.stage).toBe(entry.stage);
@@ -56,10 +58,11 @@ describe('Correos de Chile anonymous tracking', () => {
     const result = parseCorreosChileTracking(payload({ seguimiento: JSON.stringify(body) }), NUMBER);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: 'ENVÍO EN PROCESO DE INTERNACIÓN' });
     expect(result.events?.map((event) => [event.description, event.stage])).toEqual(scans);
-    // Only the whole wording counts: more text after it is free text, and stays neutral.
+    // Only the whole wording counts: more text after it is free text, and stays neutral beside its own wording.
     body.historial = [{ ...body.historial[0], Estado: 'ENVÍO DESPACHADO A PRIVATE_SYNTHETIC_RECIPIENT' }];
-    expect(parseCorreosChileTracking(payload({ seguimiento: JSON.stringify(body) }), NUMBER))
-      .toMatchObject({ status: 'unknown', last_status_text: 'Actualización del envío' });
+    const free = parseCorreosChileTracking(payload({ seguimiento: JSON.stringify(body) }), NUMBER);
+    expect(free).toMatchObject({ status: 'unknown', last_status_text: 'Actualización del envío' });
+    expect(free.events?.[0]).toMatchObject({ description: 'Actualización del envío', original_description: 'ENVÍO DESPACHADO A PRIVATE_SYNTHETIC_RECIPIENT' });
   });
 
   it('requires both exact provider references, bounded nonempty history and valid response shapes', () => {
@@ -100,14 +103,23 @@ describe('Correos de Chile anonymous tracking', () => {
     expect(result.events?.[1]!.local_time).toBe('2026-08-31T19:20:00');
   });
 
-  it('does not expose untyped recipient-like scan text or free-form provider codes', () => {
+  it('keeps untyped recipient-like scan text as the original wording of a neutral, unstaged update, without free-form provider codes', () => {
     const body = detail();
     body.historial[0] = { ...body.historial[0], Estado: 'ENTREGADO A PRIVATE_SYNTHETIC_RECIPIENT', Icono: 'recipient-ID' };
-    const result = parseCorreosChileTracking(payload({ seguimiento: JSON.stringify(body) }), NUMBER);
+    const result = normalizeCarrierResult(parseCorreosChileTracking(payload({ seguimiento: JSON.stringify(body) }), NUMBER));
     expect(result).toMatchObject({ status: 'unknown', last_status_text: 'Actualización del envío' });
-    expect(result.events?.[0]!.description).toBe('Actualización del envío');
+    expect(result.events?.[0]).toMatchObject({ description: 'Actualización del envío', original_description: 'ENTREGADO A PRIVATE_SYNTHETIC_RECIPIENT' });
+    expect(result.events?.[0]!.stage).toBeUndefined();
     expect(result.events?.[0]!.provider_code).toBeUndefined();
-    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC_RECIPIENT');
+    expect(result).not.toHaveProperty('signed_by');
+  });
+
+  it('reads who took a delivered parcel, without their identity number', () => {
+    const body = detail();
+    body.historial.unshift({ ...body.historial[0], FechaDate: '2026-09-09T12:00:00', Fecha: '09/09/2026. - 12:00', Estado: 'ENVÍO ENTREGADO', Icono: '006' });
+    const result = parseCorreosChileTracking(payload({ seguimiento: JSON.stringify(body) }), NUMBER);
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', signed_by: 'PRIVATE_SYNTHETIC_RECIPIENT' });
+    expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC_IDENTITY');
   });
 
   it('requires a current same-origin resource and CSRF token, classifies challenges', () => {

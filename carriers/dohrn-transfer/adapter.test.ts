@@ -18,8 +18,8 @@ const reply = (body: string | Uint8Array<ArrayBuffer>, status = 200) => new Resp
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 const rows = (result: ReturnType<typeof parseDohrn>) =>
   result.events!.map(event => [event.local_time, event.location ?? null, event.description, event.stage ?? null]);
-// The references, parties, terminals, ZIP codes, delivery clock and the signer.
-const PRIVATE = /55501|PO-7700|9010000001|BOL-0042|60000|53000|SMP|EXV|FCV|SPF|SIGNER|Signed|14:20|DOK|Manifested|En-route|LAST @/i;
+// The references, the shipper's ZIP code, the terminals, the delivery clock and the summary status.
+const PRIVATE = /55501|PO-7700|9010000001|BOL-0042|60000|SMP|EXV|FCV|SPF|Signed:|14:20|DOK|Manifested|En-route|LAST @/i;
 
 describe('Dohrn Transfer tracking adapter', () => {
   it('asks the XML trace once for the whole PRO through the supplied transport and records the step', async () => {
@@ -37,10 +37,11 @@ describe('Dohrn Transfer tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the history newest first, as wall clocks, without the rows the tracking page hides or anything private', () => {
+  it('reads the history newest first, as wall clocks, the consignee\'s town and the signer, without the rows the tracking page hides', () => {
     const result = parseDohrn(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-11T14:31:00', expected_delivery: null, weight_kg: 453.592 });
+      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-11T14:31:00', expected_delivery: null, weight_kg: 453.592,
+      receiver_address: 'Exampleville, WI 53000', signed_by: 'SAMPLE SIGNER' });
     expect(rows(result)).toEqual([
       ['2026-03-11T14:31:00', 'Exampleville, WI', 'Delivered', 'delivered'],
       ['2026-03-11T07:45:00', 'Testburg, WI', 'Out For Delivery', 'out_for_delivery'],
@@ -72,7 +73,11 @@ describe('Dohrn Transfer tracking adapter', () => {
     const result = parseDohrn(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Trailer Departed For Sample Falls, Mn', last_update_local: '2026-11-03T02:10:00',
-      expected_delivery: '2026-11-05', weight_kg: 113.398 });
+      expected_delivery: '2026-11-05', weight_kg: 113.398, receiver_address: 'Sample Falls, MN' });
+    // Only a delivery names who took the freight.
+    expect(result).not.toHaveProperty('signed_by');
+    expect(parseDohrn(fixture('in-transit').replace('<receivedby></receivedby>', '<receivedby>SAMPLE SIGNER</receivedby>'), IN_TRANSIT))
+      .not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-11-03T02:10:00', 'Midtown, IA', 'Trailer Departed For Sample Falls, Mn', 'in_transit'],
       // A time without digits leaves the day.

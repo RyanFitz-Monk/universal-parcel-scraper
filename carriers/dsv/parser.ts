@@ -48,18 +48,31 @@ export interface DsvShipment {
   readonly mode: string;
   /** Whether the search result names the number as one of the shipment's own ids. */
   readonly own: boolean;
+  /** The consignee's name and address, as the search gives them. */
+  readonly recipient?: Pick<CarrierResult, 'receiver_name' | 'receiver_address'>;
+}
+
+/** The consignee's name, and its address: the street lines, then the postcode and town. */
+function recipientOf(value: unknown): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  if (!isRecord(value)) return {};
+  const name = clean(value.name, 120);
+  const street = [value.addressLine1, value.addressLine2, value.addressLine3].map(line => clean(line, 120)).filter(Boolean).join(', ');
+  const town = [cleanScalar(value.zip, 16), clean(value.city, 80)].filter(Boolean).join(' ');
+  const address = [street, town].filter(Boolean).join('\n');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
 }
 
 function shipmentOf(entry: Record<string, unknown>, own: boolean): DsvShipment {
   const key = typeof entry.randomIdentifier === 'string' ? entry.randomIdentifier : '';
   if (!KEY.test(key)) throw new SchemaError(PROVIDER, 'myDSV returned a shipment without its key');
-  return { key, mode: clean(entry.modeOfTransport, 40).toUpperCase(), own };
+  const recipient = recipientOf(entry.consignee);
+  return { key, mode: clean(entry.modeOfTransport, 40).toUpperCase(), own, ...(Object.keys(recipient).length ? { recipient } : {}) };
 }
 
 /**
  * The public search's reply: every shipment whose ids or references match the
- * number. Only the shipment's ids, key and mode of transport are read; the
- * parties, addresses and references are not.
+ * number. The shipment's ids, key and mode of transport are read, and the
+ * consignee's name and address; the sender and the references are not.
  */
 export function pickDsvShipment(payload: unknown, rawNumber: string): DsvShipment {
   const number = normalizeDsvNumber(rawNumber);
@@ -186,7 +199,8 @@ interface Scan {
  * The shipment's history from myDSV's status service: milestone groups whose
  * rows carry a date type, English wording, a wall clock and a place. Planned
  * and requested dates are estimates, not scans; the estimated delivery is the
- * delivery estimate until the shipment is delivered.
+ * delivery estimate until the shipment is delivered. The recipient comes from
+ * the search.
  */
 export function parseDsvStatuses(payload: unknown, shipment: DsvShipment): CarrierResult {
   if (!isRecord(payload) || !(Array.isArray(payload.events) || payload.events === null)
@@ -239,6 +253,7 @@ export function parseDsvStatuses(payload: unknown, shipment: DsvShipment): Carri
     last_update_local: latest.local_time,
     expected_delivery: pending ? expected.to : null,
     ...(pending && expected.from !== expected.to ? { expected_delivery_from: expected.from } : {}),
+    ...shipment.recipient,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

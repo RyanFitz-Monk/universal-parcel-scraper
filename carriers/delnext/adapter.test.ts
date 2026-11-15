@@ -50,10 +50,11 @@ describe('Delnext tracking adapter', () => {
       headers: { Accept: 'text/html', 'User-Agent': 'SyntheticHost/1.0' } });
   });
 
-  it('reads a delivered history as wall clocks, newest first, with each scan’s own line and without the recipient', () => {
+  it('reads a delivered history as wall clocks, newest first, with each scan’s own line, the destination town and who took the parcel', () => {
     const result = normalizeCarrierResult(parseDelnext(delivered, DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Entregue', last_update: null, last_update_local: '2026-01-09T15:42:00', expected_delivery: null });
+      last_status_text: 'Entregue', last_update: null, last_update_local: '2026-01-09T15:42:00', expected_delivery: null,
+      receiver_address: 'Aldeia Destino', signed_by: 'Maria Exemplo' });
     expect(result.events?.map(event => [event.local_time, event.location, event.description, event.stage])).toEqual([
       ['2026-01-09T15:42:00', 'Vila Exemplo', 'Entregue', 'delivered'],
       ['2026-01-09T09:05:00', 'Vila Exemplo', 'Encomenda em distribuição. Esperamos fazer a entrega durante o dia de hoje', 'out_for_delivery'],
@@ -67,10 +68,16 @@ describe('Delnext tracking adapter', () => {
       ['2026-01-06T10:02:00', 'Cidade Origem', 'Envio registado no sistema Delnext', 'registered'],
     ]);
     expect(result.events?.every(event => event.stage_source === 'carrier_map' && !event.time)).toBe(true);
-    const json = JSON.stringify(result);
+    const json = JSON.stringify({ ...result, receiver_address: undefined, signed_by: undefined });
     for (const dropped of ['Maria Exemplo', 'Aldeia Destino', 'Proof of Delivery', 'Incidência', 'atualizada', 'image_proxy']) {
       expect(json, dropped).not.toContain(dropped);
     }
+    // Only a delivered parcel's proof of delivery names who took it.
+    const $ = load(delivered);
+    $('.feed-item').first().remove();
+    const undelivered = parseDelnext($.html(), DELIVERED);
+    expect(undelivered).toMatchObject({ current_stage: 'out_for_delivery', receiver_address: 'Aldeia Destino' });
+    expect(undelivered).not.toHaveProperty('signed_by');
   });
 
   it('reads a parcel on its way with the estimate, while the estimate is not behind the scans', () => {
@@ -103,7 +110,7 @@ describe('Delnext tracking adapter', () => {
       last_status_text: 'A sua encomenda será entregue por: DPD DE', summary_only: true, events: [],
       delivery_carrier: 'dpd-de', delivery_tracking_number: DPD_DE_NUMBER });
     expect(deliveryHandoff('delnext', PARTNER, result)).toEqual({ carrier: 'dpd-de', number: DPD_DE_NUMBER, basis: 'partner' });
-    expect(JSON.stringify(result)).not.toContain('Beispielstadt');
+    expect(result.receiver_address).toBe('Beispielstadt');
     // A notice naming another partner, a number not of the partner's shape or the
     // code itself, and a partner outside the catalog keep only the wording.
     for (const [name, number, notice] of [['DPD DE', DPD_DE_NUMBER, 'MRW'], ['DPD DE', '250012345678901234', 'DPD DE'],
@@ -120,7 +127,7 @@ describe('Delnext tracking adapter', () => {
   it('reads a cancelled parcel’s line without a day as its state', () => {
     expect(parseDelnext(page('cancelled'), CANCELLED)).toEqual({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map',
       last_status_text: 'A Delnext recebeu corretamente os dados da sua encomenda mas o remetente cancelou o envio', last_update: null,
-      expected_delivery: null, summary_only: true, events: [] });
+      expected_delivery: null, receiver_address: 'Vila Exemplo', summary_only: true, events: [] });
   });
 
   it('reads the empty search page for the code asked as not found, and a page without scans as no history', async () => {

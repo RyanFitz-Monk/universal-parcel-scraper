@@ -11,5 +11,5 @@ a clock to the second, a situation code or none and an explanation, and the ship
 associated parcel label.
 
 Numbers, places, dates, clocks and notes are invented. The fixed explanation sentences are the
-carrier's own. Every private field holds a `PRIVATE_SYNTHETIC` marker that the tests require
-never to reach a result.
+carrier's own. Every private field holds a `PRIVATE_SYNTHETIC` marker. The tests let a marker
+reach a result only as a scan's original wording, the signatory or the delivery PIN.

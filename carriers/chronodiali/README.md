@@ -28,9 +28,10 @@ Al-Maghrib and Geopost. Tracked through the lookup its tracking page makes.
   alone.
 - An event's hub is its location. The partner hub a parcel from abroad waits at for customs,
   `3PL HUB`, names no place and is dropped.
-- The reply also holds the sender's and recipient's names, phones and addresses, the
+- The recipient's name and address come from `destination_details`, and the person who took
+  the parcel at its delivery from `receiver_name`. The sender's details, the phones, the
   cash-on-delivery amount, the courier, GPS positions, delivery trips and proof-of-delivery
-  images. The page shows the names, towns and amount. None of it is kept.
+  images are not kept.
 
 ## Limitations
 

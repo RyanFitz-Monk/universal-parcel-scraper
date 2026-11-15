@@ -44,9 +44,10 @@ Recognition stays HTTP-only.
   notice on the page names the same partner and its number has that partner's shape, the
   partner and its number are handed off. The notice often holds a stale partner or a
   placeholder, so it is not read alone.
-- The destination town, the recipient's name and signature in the proof of delivery, and the
-  forms to change a delivery are not read. Those forms ask for the recipient's postcode or
-  phone; the adapter never opens them.
+- The header's destination town is read as the recipient's address, and the name the proof of
+  delivery gives a delivered parcel as who took it. The signature and the forms to change a
+  delivery are not read. Those forms ask for the recipient's postcode or phone; the adapter
+  never opens them.
 
 ## Limitations
 

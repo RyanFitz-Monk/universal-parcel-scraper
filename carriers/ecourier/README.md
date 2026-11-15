@@ -29,8 +29,9 @@ its tracking page.
   once.
 - `Delivery Agent Assigned` is the rider taking the parcel at the delivering branch, so it stays
   in transit; `On the way to Delivery` is out for delivery.
-- `Delivery Type` is the service name. The order's creation day and the time since, and the
-  merchant's and recipient's names and addresses are not kept.
+- `Delivery Type` is the service name. The recipient's name and address are read from the second
+  of the delivery information's two entries, with the city and its postcode on their own line.
+  The order's creation day and the time since, and the merchant's name and address, are not kept.
 - eCourier's merchant API needs the merchant's keys and is not used.
 
 ## Limitations

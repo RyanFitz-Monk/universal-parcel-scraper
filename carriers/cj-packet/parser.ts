@@ -24,8 +24,8 @@ const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
 // between them, as phone numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
-// Who took a delivered parcel, after the delivery's own words.
-const RECEIVER = /\s*[,;:.\-–]\s*(?:signed(?: for)? by|signatory|received by|recibido por|entregado a)\b[\s\S]*$/i;
+// Who took a delivered parcel, after the delivery's own words: "Package delivered, signed by Sample Person".
+const RECEIVER = /[,;:.\-–]\s*(?:signed(?: for)? by|signatory|received by|recibido por|entregado a)\b\s*:?\s*([^,;]+)/i;
 const MAX_SHIPMENTS = 50;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
@@ -80,13 +80,13 @@ function scanClock(row: Record<string, unknown>): { time: string } | { local_tim
   return time ? { time } : { local_time: local };
 }
 
-function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent } | null {
+function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent; signatory?: string } | null {
   // The page writes the line out as HTML.
   const activity = textFromHtml(text(row, 'activity', 1000), 1000);
   const place = PLACE.exec(activity);
-  let description = cjPacketWording(place ? activity.slice(place[0].length) : activity);
+  const description = cjPacketWording(place ? activity.slice(place[0].length) : activity);
   const staged = cjPacketStage(description);
-  if (staged?.stage === 'delivered') description = description.replace(RECEIVER, '');
+  const signatory = staged?.stage === 'delivered' ? clean(RECEIVER.exec(description)?.[1], 120) : '';
   const clock = scanClock(row);
   // A line left empty says nothing to keep.
   if (!description) return null;
@@ -97,7 +97,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
     ...(location ? { location } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([clock, description, location]), event };
+  return { key: JSON.stringify([clock, description, location]), event, ...(signatory ? { signatory } : {}) };
 }
 
 /**
@@ -152,12 +152,15 @@ export function parseCjPacket(payload: unknown, raw: string): CarrierResult {
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'CJ Packet returned an oversized history');
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  let signatory: string | undefined;
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'CJ Packet returned an invalid scan');
     const scan = projectRow(row);
     if (!scan || seen.has(scan.key)) continue;
     seen.add(scan.key);
     events.push(scan.event);
+    // The newest delivery that names who took the parcel.
+    signatory ??= scan.signatory;
   }
 
   const code = summaryCode(shipment);
@@ -194,6 +197,7 @@ export function parseCjPacket(payload: unknown, raw: string): CarrierResult {
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     ...facts,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

@@ -33,7 +33,8 @@
     "history",
     "provider_code",
     "eta_window",
-    "pickup_point"
+    "pickup_point",
+    "signed_by"
   ],
   "portal": {
     "url": "https://tracking.dpd.pt/pt?reference={trackingNumber}",
@@ -56,13 +57,13 @@
       "history",
       "provider_code",
       "eta_window",
-      "pickup_point"
+      "pickup_point",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "coordinates",
       "depot_code",
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

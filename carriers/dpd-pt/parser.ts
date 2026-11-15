@@ -140,9 +140,9 @@ export function parseDpdPt(html: string, raw: string): CarrierResult {
     // Its day and time are when DPD set the expected day: as a step it would show a day the parcel was not due.
     if (code === DPD_PT_FORECAST) continue;
     // The comment column mixes the receiver's name, delivery windows, depot
-    // and pickup point codes and references; only a pickup point's name and a
-    // window message's hours are read.
-    const comment = code === DPD_PT_POINT_RECEIPT || code === DPD_PT_WINDOW ? clean(cells.eq(4).text(), 120) : '';
+    // and pickup point codes and references; only a pickup point's name, a
+    // window message's hours and the name a proof of delivery gives are read.
+    const comment = code === DPD_PT_POINT_RECEIPT || code === DPD_PT_WINDOW || code === DPD_PT_DELIVERY ? clean(cells.eq(4).text(), 120) : '';
     const key = JSON.stringify([local_time, code, description]);
     // The page lists some scans twice.
     if (seen.has(key)) continue;
@@ -185,6 +185,9 @@ export function parseDpdPt(html: string, raw: string): CarrierResult {
   const read = decider?.stage as Stage | undefined;
   const stage = returning && read && read !== 'returned' ? 'exception' : read;
   const point = stage === 'ready_for_pickup' || stage === 'delivered' ? pickupPoint(scans) : null;
+  // Who took the parcel: the name on the newest proof of delivery that is the delivery, not one
+  // that later scans take back or a return's to the sender.
+  const signatory = scans.find(({ code, event }) => code === DPD_PT_DELIVERY && event.stage === 'delivered' && event.stage_source !== 'none')?.comment;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: decider!.stage_source } : {}),
@@ -193,6 +196,7 @@ export function parseDpdPt(html: string, raw: string): CarrierResult {
     last_update_local: events[0]!.local_time,
     expected_delivery: deliveryWindow(scans, stage),
     ...(point ? { pickup_point: point } : {}),
+    ...(signatory ? { signed_by: signatory } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

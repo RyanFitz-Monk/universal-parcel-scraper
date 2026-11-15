@@ -41,7 +41,9 @@ rule.
   read in `Europe/Madrid`.
 - The estimate is the first of `fechaEntregaAplazada`, `fCompromiso`, `fechaPrimeraEntrega`,
   dropped once delivered.
-- Sender, recipient, contact, signature and internal per-event notes are never read.
+- The recipient's name and address are read as the reply gives them (`nombreDestinatario`,
+  `direccionDestinatario`). The sender, contact details, signature and internal per-event notes
+  are not.
 
 ## Limitations
 

@@ -32,9 +32,11 @@ function wallClock(event: CarrierEvent): string {
  * page's history leads, as its clocks can carry a zone, followed by DPEX
  * China's scans from before its first: the documents, the collection and the
  * first legs. DPEX China's history stands alone when it holds a later scan.
+ * Only DPEX China names who signed for a delivery both show.
  */
 function combine(getOnline: CarrierResult | undefined, china: CarrierResult | undefined): CarrierResult | undefined {
   if (!getOnline || !china) return getOnline ?? china;
+  const signed = getOnline.current_stage === 'delivered' && china.signed_by ? { signed_by: china.signed_by } : {};
   const clocks = (getOnline.events ?? []).map(wallClock).sort();
   const theirs = (china.events ?? []).map(wallClock).sort();
   if (!clocks.length || theirs.at(-1)! > clocks.at(-1)!) {
@@ -42,13 +44,14 @@ function combine(getOnline: CarrierResult | undefined, china: CarrierResult | un
     return country ? { ...china, destination_country: country } : china;
   }
   const earlier = (china.events ?? []).filter((event) => wallClock(event) < clocks[0]!);
-  if (!earlier.length) return getOnline;
+  if (!earlier.length) return { ...getOnline, ...signed };
   const events = [...getOnline.events!, ...earlier];
   const stage = events.find((event) => event.stage);
   return {
     ...getOnline,
     ...(stage ? { status: languageStageStatus(stage.stage as Stage), current_stage: stage.stage, current_stage_source: stage.stage_source } : {}),
     ...(getOnline.destination_country ?? china.destination_country ? { destination_country: getOnline.destination_country ?? china.destination_country } : {}),
+    ...signed,
     events,
   };
 }

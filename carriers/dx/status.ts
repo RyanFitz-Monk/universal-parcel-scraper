@@ -11,7 +11,7 @@ const WORDINGS: ReadonlyMap<string, Stage> = new Map([
 ]);
 // "Scanned 1 of 2 items onto delivery vehicle."
 const LOADED = /^scanned (\d{1,4}) of (\d{1,4}) items? onto delivery vehicle\.?$/;
-// "1 of 1 items delivered.", once the signatory's name is cut.
+// "1 of 1 items delivered.", without the signatory's name that follows it.
 const DELIVERED = /^(\d{1,4}) of (\d{1,4}) items? delivered\.?$/;
 
 /** The stage DX's wording gives a scan. */

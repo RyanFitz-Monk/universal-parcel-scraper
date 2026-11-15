@@ -34,7 +34,9 @@
     "delivered_at",
     "offset_timestamps",
     "delivery_partner",
-    "delivery_tracking_number"
+    "delivery_tracking_number",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.courier.gr/track/result/?tracknr={trackingNumber}",
@@ -50,11 +52,11 @@
       "delivery_tracking_number",
       "parcel_count",
       "origin",
-      "destination",
+      "recipient_address",
       "postcodes",
       "customer_reference",
       "office_contact_details",
-      "recipient_name",
+      "signatory",
       "contact_details",
       "delivery_options",
       "progress_rail"
@@ -67,16 +69,16 @@
       "delivered_at",
       "offset_timestamps",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
       "origin",
-      "destination",
       "postcodes",
       "customer_reference",
       "office_contact_details",
-      "recipient_name",
       "contact_details",
       "delivery_options",
       "progress_rail"

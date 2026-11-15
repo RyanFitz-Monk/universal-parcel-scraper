@@ -31,8 +31,9 @@ page.
   page.
 - The parcel's delivery result repeats the delivery. A delivery there settles a parcel whose
   route lacks it, and the result stands in for an empty route.
-- The sender's, recipient's and signer's masked names, the goods, the parcel count, the sending
-  and arrival branches and every branch's phone number are not kept.
+- The recipient's and signer's names are kept masked, as the page shows them. The sender's
+  name, the goods, the parcel count, the sending and arrival branches and every branch's phone
+  number are not kept. The page comments its addresses out, so the adapter reads none.
 
 ## Limitations
 

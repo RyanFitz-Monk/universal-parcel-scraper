@@ -32,7 +32,8 @@ DX's other trackers are left to enabled universal providers.
 
 - The scans carry no codes, so their wording gives the stage. A delivery of fewer items than
   the consignment holds leaves it in transit.
-- A delivery scan names whoever signed for it. The name is cut from the wording.
+- A delivery scan names whoever signed for it. The scan keeps its wording, the name is read as
+  who signed, and the stage comes from the wording before it.
 - Clocks are the depot's wall time without an offset, printed with a two-digit year and a
   12-hour clock.
 - The menu gives the planned delivery day as a weekday, a day and a month. The year is the

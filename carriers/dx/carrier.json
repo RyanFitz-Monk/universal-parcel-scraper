@@ -49,7 +49,8 @@
     "location",
     "eta",
     "weight",
-    "service_name"
+    "service_name",
+    "signed_by"
   ],
   "portal": {
     "url": "https://my.dxdelivery.com/query?tracking_number={trackingNumber}",
@@ -74,13 +75,13 @@
       "location",
       "eta",
       "weight",
-      "service_name"
+      "service_name",
+      "signatory"
     ],
     "discarded": [
       "parcel_count",
       "customer_reference",
       "departure_date",
-      "signatory",
       "delivery_options"
     ],
     "unavailable": [

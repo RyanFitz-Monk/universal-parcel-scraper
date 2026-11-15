@@ -60,11 +60,14 @@ function operationalOffice(value: unknown): string {
   return /^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ -]{2,79}$/.test(office) ? office : '';
 }
 
-function scanDescription(value: string, mapped: ReturnType<typeof classifyCorreosChileScan>): string {
-  if (mapped) return clean(value, 160);
-  // Estado is an untyped provider string. Avoid projecting free-form recipient
-  // or delivery details into a publicly visible history field.
-  return NEUTRAL_UPDATE;
+/**
+ * A scan's wording. Estado is an untyped provider string: free-form text the map does not stage
+ * reads as a neutral update, so the shared wording rules do not stage it either, and keeps its
+ * own wording beside it.
+ */
+function scanDescription(value: string, mapped: ReturnType<typeof classifyCorreosChileScan>): Pick<CarrierEvent, 'description' | 'original_description'> {
+  if (mapped) return { description: clean(value, 160) };
+  return { description: NEUTRAL_UPDATE, original_description: clean(value, 300) };
 }
 
 export function parseCorreosChileTracking(payload: unknown, raw: string): CarrierResult {
@@ -99,21 +102,23 @@ export function parseCorreosChileTracking(payload: unknown, raw: string): Carrie
     }
     const code = /^\d{1,3}$/.test(clean(row.Icono, 32)) ? clean(row.Icono, 32) : '';
     const mapped = classifyCorreosChileScan(code, rawStatus);
-    const description = scanDescription(rawStatus, mapped);
+    const wording = scanDescription(rawStatus, mapped);
     const time = scanClock(row.FechaDate, row.Fecha);
     const location = operationalOffice(row.Oficina);
     const key = JSON.stringify([row.FechaDate, row.Fecha, rawStatus, row.Icono, row.Oficina]);
     if (seen.has(key)) continue;
     seen.add(key);
-    events.push({ ...time, description, ...(code ? { provider_code: code } : {}),
+    events.push({ ...time, ...wording, ...(code ? { provider_code: code } : {}),
       ...(location ? { location } : {}), ...(mapped ? { stage: mapped.stage } : {}) });
   }
   // The portal renders the first history row as current and fades all later
   // rows; retain that order even when the newest row has an unresolved clock.
   const newest = events[0]!;
   const mapped = classifyCorreosChileScan(String(newest.provider_code ?? ''), newest.description ?? '');
+  // Who the portal says took a delivered parcel; its identity number is not read.
+  const signatory = events.some((event) => event.stage === 'delivered') ? clean(detail.NombreEntrega, 120) : '';
   return { status: mapped?.status ?? 'unknown', ...(mapped ? { current_stage: mapped.stage } : {}),
     last_status_text: newest.description, last_update: null,
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
-    expected_delivery: null, events: events.slice(0, 100) };
+    expected_delivery: null, ...(signatory ? { signed_by: signatory } : {}), events: events.slice(0, 100) };
 }

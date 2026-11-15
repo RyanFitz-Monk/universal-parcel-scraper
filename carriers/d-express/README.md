@@ -30,8 +30,9 @@ page makes.
   about a place.
 - A redirect to a parcel locker, chosen by the recipient on the tracking page, moves nothing and
   has no stage.
-- The recipient's masked name and address, the town, the parcel count, the regional centre's
-  phone, the delivery options and the fiscal receipt link in the reply are not kept.
+- The recipient's masked name is read as `receiver_name`, and the masked address with the town
+  under it as `receiver_address`. The parcel count, the regional centre's phone, the delivery
+  options and the fiscal receipt link in the reply are not kept.
 - The adapter sends only two letters and ten digits, in capitals.
 
 ## Limitations

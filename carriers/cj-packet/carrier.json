@@ -36,7 +36,8 @@
     "destination_country",
     "delivery_partner",
     "delivery_tracking_number",
-    "delivered_at"
+    "delivered_at",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.cjpacket.com/?trackingNumber={trackingNumber}",
@@ -66,7 +67,8 @@
       "destination_country",
       "delivery_partner",
       "delivery_tracking_number",
-      "delivered_at"
+      "delivered_at",
+      "signatory"
     ],
     "discarded": [
       "origin_country",

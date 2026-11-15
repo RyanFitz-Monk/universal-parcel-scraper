@@ -28,7 +28,7 @@ const withGroups = (groups: unknown) => {
 };
 
 describe('Costco Logistics browser tracking', () => {
-  it('keeps all milestones, current wording and local clocks without recipient or scheduling fields', () => {
+  it('keeps all milestones, current wording, local clocks and the delivery address without scheduling fields', () => {
     const result = parseCostcoLogistics(fixture(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: null,
       last_update_local: '2026-09-11T13:04:00', expected_delivery: null });
@@ -39,8 +39,15 @@ describe('Costco Logistics browser tracking', () => {
       ['2026-09-07T00:00:00', 'registered'], ['2026-09-07T00:00:00', 'registered'],
     ]);
     expect(result.events!.every(event => !event.time && !event.location && !event.provider_code)).toBe(true);
-    const text = JSON.stringify(result);
+    expect(result.receiver_address).toBe('17 Synthetic Recipient Street, Example City');
+    expect(result.signed_by).toBeUndefined();
+    // Scan locations, which can be the same address, are not read.
+    const text = JSON.stringify({ ...result, receiver_address: undefined });
     for (const secret of [NUMBER, 'Synthetic', 'Depot Road', '202-555', '00000', 'scheduling', 'appointment']) expect(text).not.toContain(secret);
+    for (const address of [null, 17, { street: 'Example' }]) {
+      const p = fixture(); (p.serviceResponse.trackingDetails[0] as Record<string, unknown>).address = address;
+      expect(parseCostcoLogistics(p, NUMBER).receiver_address).toBeUndefined();
+    }
     expect(result.events![1]!.description).toBe('Out for Delivery');
     expect(result.events![2]!.description).toBe('Arrived at Costco Delivery Center');
     expect(result.delivered_at).toBeUndefined();
@@ -105,13 +112,21 @@ describe('Costco Logistics browser tracking', () => {
     expect(() => parseCostcoLogisticsBody('{broken', NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
   });
 
-  it('does not treat an unused passive-script address as a challenge, and strips names from scan wording', () => {
+  it('does not treat an unused passive-script address as a challenge, and reads who signed for a delivery from its wording', () => {
     const p = fixture();
     p.serviceResponse.trackingDetails[0]!.showLink = 'https://example.invalid/challenge-platform';
-    p.serviceResponse.trackingDetails[0]!.orderDetailList[0]!.orderList[0]!.resultStatus = 'Delivery Completed signed by Synthetic Recipient';
+    p.serviceResponse.trackingDetails[0]!.orderDetailList[0]!.orderList[0]!.resultStatus = 'Delivery Completed signed by Synthetic Signatory';
     const result = parseCostcoLogisticsBody(JSON.stringify(p), NUMBER);
-    expect(result).toMatchObject({ status: 'delivered', last_status_text: 'Delivery Completed' });
-    expect(JSON.stringify(result)).not.toContain('Synthetic');
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Delivery Completed signed by Synthetic Signatory',
+      signed_by: 'Synthetic Signatory' });
+    expect(result.events![0]).toMatchObject({ description: 'Delivery Completed signed by Synthetic Signatory', stage: 'delivered' });
+    // A wording the map does not stage is described without its handover, which keeps it unstaged.
+    p.serviceResponse.trackingDetails[0]!.orderDetailList[0]!.orderList[0]!.resultStatus = 'New carrier wording received by Synthetic Signatory';
+    const unstaged = parseCostcoLogisticsBody(JSON.stringify(p), NUMBER);
+    expect(unstaged).toMatchObject({ status: 'unknown', last_status_text: 'New carrier wording' });
+    expect(unstaged.events![0]).toEqual({ local_time: '2026-09-11T13:04:00', description: 'New carrier wording',
+      original_description: 'New carrier wording received by Synthetic Signatory' });
+    expect(unstaged.signed_by).toBeUndefined();
   });
 
   it('uses one exact guest page and capture URL through the supplied transport and recorder', async () => {

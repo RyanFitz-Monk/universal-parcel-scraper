@@ -39,8 +39,9 @@ which often prints its own number. Tracked through the lookup its tracking page 
   on, such as customs at the destination. A delivery's time is its delivered scan's when that
   scan has an offset.
 - The courier's lines can open with their place in brackets, which stands in for a missing
-  location. A courier's support contact appended to a line, phone numbers, e-mail addresses
-  and the person who signed for a delivery are taken out of the wording.
+  location. A courier's support contact appended to a line, phone numbers and e-mail addresses
+  are taken out of the wording. A delivery keeps the person who signed for it, and the newest
+  that names them gives `signed_by`.
 - The courier's number comes from the reply's last-mile field, which the page labels "Last Mile
   Delivery Tracking Number". The courier is handed over when the reply names one the catalog
   knows and its rules fit that number. A USPS routing barcode gives its package identifier.
@@ -49,8 +50,8 @@ which often prints its own number. Tracked through the lookup its tracking page 
 
 ## Limitations
 
-- No delivery estimate, weight, sender or recipient. The page's day count is the time in
-  transit, not an estimate.
+- No delivery estimate, weight, sender or recipient's name or address. The page's day count is
+  the time in transit, not an estimate.
 - Older parcels drop out of the tracker, which then answers as for an unknown number.
 
 ## Numbers

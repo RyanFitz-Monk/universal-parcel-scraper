@@ -32,7 +32,8 @@
     "location",
     "delivered_at",
     "delivery_tracking_number",
-    "destination_country"
+    "destination_country",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.dayonetrack.com/track?trackNo={trackingNumber}",
@@ -51,11 +52,11 @@
       "location",
       "destination_country",
       "offset_timestamps",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [
       "customer_reference",
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

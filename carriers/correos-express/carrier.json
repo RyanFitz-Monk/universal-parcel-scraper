@@ -30,7 +30,10 @@
   "capabilities": [
     "history",
     "location",
-    "eta"
+    "eta",
+    "receiver_name",
+    "signed_by",
+    "pickup_code"
   ],
   "portal": {
     "url": "https://s.correosexpress.com/",
@@ -48,12 +51,15 @@
       "status",
       "history",
       "location",
-      "estimated_delivery"
+      "estimated_delivery",
+      "delivery_comments",
+      "recipient_name",
+      "signatory",
+      "pickup_code"
     ],
     "discarded": [
       "proof_of_delivery",
-      "contact_details",
-      "delivery_comments"
+      "contact_details"
     ],
     "unavailable": [
       "offset_timestamps"

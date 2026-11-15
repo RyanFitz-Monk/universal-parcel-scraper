@@ -32,9 +32,9 @@ lookup its tracking page makes.
 - The two systems number their scans apart: one code can carry two wordings, and one wording
   two codes. The wording sets the stage, unknown wording goes to the shared rules, and the code
   is kept. A delivery both report in the same minute is kept once.
-- The adapter keeps each scan's wording up to its first colon. Delivery and attempt wordings,
-  `ENTREGADO A:` and `INTENTO DE ENTREGA:`, go on with recipient details, which are not kept; the
-  delivery reads `ENTREGADO`.
+- The map stages each scan's wording up to its first colon, and the scan keeps it whole.
+  Delivery and attempt wordings, `ENTREGADO A:` and `INTENTO DE ENTREGA:`, go on with recipient
+  details. The newest delivery's name, without the identity number after it, is `signed_by`.
 - The entry's `codigoEtapaEntrega` is the step of the page's progress bar. Its delivered step
   marks the item delivered when the scans do not; the other steps stage an item only when no
   scan does.
@@ -45,8 +45,8 @@ lookup its tracking page makes.
 
 ## Limitations
 
-- The tracker has no ETA, weight, service, origin, destination, recipient or delivery instant
-  with a zone.
+- The tracker has no ETA, weight, service, origin, destination, recipient's address or delivery
+  instant with a zone.
 - Older items go to the archive; the tracker then shows only the day of the last scan, and the
   adapter reports the history as expired.
 - The adapter takes only S10 codes with a valid check digit.

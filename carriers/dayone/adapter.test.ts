@@ -58,11 +58,11 @@ describe('DayOne HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel by its scans’ instants, with the places, the network’s number and none of the merchant’s or recipient’s details', () => {
+  it('reads a delivered parcel by its scans’ instants, with the places, the network’s number and its signatory, and none of the merchant’s details', () => {
     const result = parseDayone(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'DELIVERED WITH SAFE DROP', last_update: '2026-04-16T08:58:12+10:00', delivered_at: '2026-04-16T08:58:12+10:00',
-      expected_delivery: null, destination_country: 'AU', delivery_tracking_number: 'UL123456785YP' });
+      expected_delivery: null, destination_country: 'AU', delivery_tracking_number: 'UL123456785YP', signed_by: 'SAMPLE RECIPIENT' });
     expect(result).not.toHaveProperty('last_update_local');
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result.events!.map((event) => [event.time, event.location, event.description, event.stage])).toEqual([
@@ -83,7 +83,7 @@ describe('DayOne HTTP adapter', () => {
       ['2026-04-06T11:18:01+08:00', undefined, 'Order processed by shipper', 'registered'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('provider_code' in event))).toBe(true);
-    const json = JSON.stringify(result);
+    const json = JSON.stringify({ ...result, signed_by: undefined });
     for (const excluded of ['SAMPLEORDER0001', 'SAMPLE RECIPIENT', 'example.com', '900000', 'D009', 'Case Close']) expect(json).not.toContain(excluded);
   });
 
@@ -96,6 +96,8 @@ describe('DayOne HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'SHIPPING INFORMATION RECEIVED BY AUSTRALIA POST', last_update: '2026-04-10T10:00:00+10:00' });
     expect(result).not.toHaveProperty('delivered_at');
+    // Only a delivered parcel's signatory is who took it.
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('keeps a wall clock without a valid offset, in the tracker’s order, and checks every clock', () => {
@@ -116,7 +118,7 @@ describe('DayOne HTTP adapter', () => {
     }
   });
 
-  it('takes the summary’s status when no scan has a stage, stages new wording through the shared rules, and drops who took a delivery', () => {
+  it('takes the summary’s status when no scan has a stage, stages new wording through the shared rules, and drops who took a delivery from its scan', () => {
     const summary = parseDayone(changed((item) => { item.track_status = 'DD'; item.details = [scan('2026-04-16 07:00:00', 'Sample Status Note', '+10:00')]; }), DELIVERED);
     expect(summary).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', current_stage_source: 'carrier_map' });
     expect(summary.events![0]).not.toHaveProperty('stage');

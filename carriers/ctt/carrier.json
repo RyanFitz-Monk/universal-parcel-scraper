@@ -26,7 +26,10 @@
   "capabilities": [
     "history",
     "location",
-    "provider_code"
+    "provider_code",
+    "receiver_name",
+    "receiver_address",
+    "signed_by"
   ],
   "portal": {
     "url": "https://www.ctt.pt/feapl_2/app/open/objectSearch/objectSearch.jspx?objects={trackingNumber}",
@@ -45,12 +48,13 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
-      "sender_name",
-      "recipient_name",
-      "recipient_address"
+      "sender_name"
     ],
     "unavailable": []
   },

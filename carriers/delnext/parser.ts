@@ -19,6 +19,8 @@ export const DELNEXT_MAX_BYTES = 2 * 1024 * 1024;
 const NUMBER = /^[A-Z0-9]{6,7}$/;
 const CODE_LABEL = 'Código de rastreio:';
 const PARTNER_LABEL = 'A sua encomenda será entregue por:';
+// The town the parcel is addressed to, in the header.
+const DESTINATION_LABEL = 'Destino:';
 const HISTORY_HEADING = 'Informação detalhada';
 const ESTIMATE_LABEL = 'Entrega prevista entre:';
 const DAY = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}:\d{2}))?$/;
@@ -105,6 +107,12 @@ function handoff($: CheerioAPI, partner: string | undefined, number: string): Pi
 
 interface Row { event: CarrierEvent; dated: boolean }
 
+/** The town the header names, and who the proof of delivery says took a delivered parcel. */
+function recipient($: CheerioAPI, destination: string, stage: Stage | undefined): Pick<CarrierResult, 'receiver_address' | 'signed_by'> {
+  const signatory = stage === 'delivered' ? clean($('#proof_of_delivery .resname').first().text(), 120) : '';
+  return { ...(destination ? { receiver_address: destination } : {}), ...(signatory ? { signed_by: signatory } : {}) };
+}
+
 /**
  * The tracker's page for one code: a header naming the code and, for a parcel
  * a partner delivers, that partner; a progress bar; then the scans, newest
@@ -129,9 +137,11 @@ export function parseDelnext(html: string, raw: string): CarrierResult {
 
   let code: string | undefined;
   let partner: string | undefined;
+  let destination = '';
   for (const box of info.find('.tracking-details-box-content').toArray()) {
     const title = clean($(box).find('.tracking-title').first().text(), 120);
     if (title === CODE_LABEL) code = clean($(box).find('.tracking-details').first().text(), 40).toUpperCase();
+    else if (title === DESTINATION_LABEL) destination = clean($(box).find('.tracking-details').first().text(), 120);
     else if (title.startsWith(PARTNER_LABEL)) partner = clean(title.slice(PARTNER_LABEL.length), 60) || undefined;
   }
   if (code === undefined) throw new SchemaError(PROVIDER, 'Delnext changed its tracking header');
@@ -184,13 +194,14 @@ export function parseDelnext(html: string, raw: string): CarrierResult {
     if (decider) {
       const stage = decider.stage as Stage;
       return { status: languageStageStatus(stage), current_stage: stage, current_stage_source: decider.stage_source!,
-        last_status_text: decider.description!, last_update: null, expected_delivery: null, ...partnerFields, summary_only: true, events: [] };
+        last_status_text: decider.description!, last_update: null, expected_delivery: null, ...partnerFields,
+        ...recipient($, destination, stage), summary_only: true, events: [] };
     }
     // A parcel a partner delivers has no scans of Delnext's own: the page names the partner instead.
     if (partner) {
       return { status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
         last_status_text: `${PARTNER_LABEL} ${partner}`, last_update: null, expected_delivery: null, ...partnerFields,
-        summary_only: true, events: [] };
+        ...recipient($, destination, 'in_transit'), summary_only: true, events: [] };
     }
     throw new NoHistoryError(PROVIDER);
   }
@@ -204,6 +215,7 @@ export function parseDelnext(html: string, raw: string): CarrierResult {
     last_update_local: events[0]!.local_time,
     expected_delivery: estimate($, stage, events[0]!.local_time),
     ...partnerFields,
+    ...recipient($, destination, stage),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

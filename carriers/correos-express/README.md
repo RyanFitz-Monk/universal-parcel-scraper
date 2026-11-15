@@ -81,17 +81,20 @@ the delivery's when it is the newest scan.
 Calendar estimates retain date-only precision while the delivery is active;
 estimates older than the latest scan are omitted. A rescheduled round does not establish dispatch.
 
-Only recognized status labels, the locality column and the fixed sentences the
-carrier explains each situation with are retained. Anything else after a label
-is dropped: a pickup point's name and address, a courier's note, a reason that
-names the recipient. A failed delivery round has no label, only a note that
-opens with "Su envío no ha podido ser entregado" ("Não foi possivel entregar o
-seu envio") and then gives the reason; it is a failed attempt, and the reason
-is kept only when it is one of the fixed ones. Other scans with missing or
-unrecognized labels remain neutral tracking updates, so an older delivery does
-not become current. Contact fields, the
-delivery PIN and proof of delivery are excluded, as are the localizador's
-recipient, reference, cash-on-delivery and parcel fields.
+A scan's description is its recognized label and the fixed sentences the
+carrier explains each situation with. Whatever else the form writes after a
+label, such as a pickup point's name and address, a courier's note or a reason
+that names the recipient, stays in the scan's original wording, which no stage
+is read from. A failed delivery round has no label, only a note that opens with
+"Su envío no ha podido ser entregado" ("Não foi possivel entregar o seu envio")
+and then gives the reason; it is a failed attempt, and its description keeps
+the reason only when it is one of the fixed ones. Other scans with missing or
+unrecognized labels are described as neutral tracking updates, so an older
+delivery does not become current. The delivery PIN is read as the pickup code,
+and a delivered parcel's proof-of-delivery name as its signatory. The
+localizador's `nombre_cliente` is the recipient's name. Contact fields and the
+signature are not read, nor are the localizador's reference, cash-on-delivery
+and parcel fields.
 
 The initial page contains every error message hidden in its markup. A form
 negative requires the server-selected no-history code and the matching request

@@ -58,11 +58,11 @@ describe('Ecom Logistics tracking', () => {
     expect(ecomTrackingUrl(NUMBER)).toBe(fetcher.mock.calls[0]![0]);
   });
 
-  it('reads the history newest first, with its offsets and the pickup town, without the destination prefix', () => {
+  it('reads the history newest first, with its offsets and the pickup town, and the destination prefix as the recipient’s address', () => {
     const result = parseEcom(delivered(), NUMBER);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
-      last_update: '2031-04-19T14:06:40-04:00', expected_delivery: null,
+      last_update: '2031-04-19T14:06:40-04:00', expected_delivery: null, receiver_address: 'A0A',
       events: [
         { time: '2031-04-19T14:06:40-04:00', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2031-04-19T06:25:47-04:00', description: 'Outbound onto Delivery Truck', stage: 'out_for_delivery', stage_source: 'carrier_map' },
@@ -73,7 +73,7 @@ describe('Ecom Logistics tracking', () => {
         { time: '2031-04-16T15:48:35-04:00', location: 'Sampletown, ON, Canada', description: 'Picked Up', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/A0A|synthetic-form-token/);
+    expect(JSON.stringify(result)).not.toMatch(/synthetic-form-token/);
   });
 
   it('reads a parcel on its way, keeps scans of one instant in the page’s order and stages another wording by the shared rules or not at all', () => {
