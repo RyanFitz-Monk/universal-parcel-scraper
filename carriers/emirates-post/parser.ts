@@ -8,15 +8,13 @@ import { paddedDate } from '../../core/time/fields.js';
 import { countryCode, explicitOffsetTime, zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
+import { EMIRATES_POST_ZONE, UAE_PLACE } from './clock.js';
 import { emiratesPostStage } from './status.js';
 
 export const PROVIDER = 'Emirates Post';
 export const EMIRATES_POST_MAX_BYTES = 2_000_000;
 const TRACK_PATH = '/all-services/track-a-package/step-two';
 const MAX_EVENTS = 2000;
-// These places identify a UAE office. A foreign office or a bare postal code
-// keeps its own wall clock; neither the issuer nor the destination dates it.
-const UAE_PLACE = /\b(?:Dubai|Abu[ -]+Dhabi|Sharjah|Ajman|Fujairah|Umm[ -]+Al[ -]+Quwain|Ras[ -]+Al[ -]+Khaimah)\b/i;
 const WALL = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} (?:AM|PM)$/;
 // "Shipped to SEYCHELLES", "Arrived at SEYCHELLES": the wording ends with where the item goes,
 // a country or a city.
@@ -48,8 +46,8 @@ function clockOf(value: unknown, location: string): Partial<CarrierEvent> {
   const parsed = DateTime.fromFormat(wall, 'dd/MM/yyyy hh:mm:ss a', { locale: 'en-US', zone: 'UTC' });
   if (!parsed.isValid || parsed.year < 2000) throw new SchemaError(PROVIDER, 'Emirates Post returned an invalid scan clock');
   const local_time = parsed.toFormat("yyyy-MM-dd'T'HH:mm:ss");
-  const instant = UAE_PLACE.test(location) ? zonedTime(local_time, "yyyy-MM-dd'T'HH:mm:ss", 'Asia/Dubai') : null;
-  return { local_time, ...(instant ? { time: instant.iso, time_zone: 'Asia/Dubai', time_zone_basis: 'place' } : {}) };
+  const instant = UAE_PLACE.test(location) ? zonedTime(local_time, "yyyy-MM-dd'T'HH:mm:ss", EMIRATES_POST_ZONE) : null;
+  return { local_time, ...(instant ? { time: instant.iso, time_zone: EMIRATES_POST_ZONE, time_zone_basis: 'place' } : {}) };
 }
 
 /** Read only the single-number server-rendered lookup; omit parties and links. */

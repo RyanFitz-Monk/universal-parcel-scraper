@@ -484,6 +484,10 @@ step exists for future protocol changes.
   copy of the departure from the British office of exchange has the digits of Royal
   Mail's own scan, on London time, so a location in another country dates its scans
   instead; read in the catalog zone, that copy came an hour early.
+  So was "Emirates Post Group", Emirates Post, on Dubai time: its own tracker gives the same
+  scans at the same digits, on Dubai's clock where it names a UAE city, and read on the
+  catalog's UTC they came four hours late, after the UPU's copies of them. One that names a
+  UAE city is placed there.
   Royal Mail's relays of its partners' scans abroad are on Central European time
   whatever the country's clock: its receipt and departure at France's office of exchange
   have the digits of La Poste's own scans, and its "Item Received" and customs scans in
@@ -579,6 +583,10 @@ step exists for future protocol changes.
   DHL Paket names the country of its arrival abroad ("Portugal") on that country's wall
   clock, as DHL's own tracker shows it ([DHL](../../carriers/dhl/README.md)): read on
   Berlin's clock, it came an hour before the delivering partner's own scan of it.
+  HayPost (Armenia Post) names an office abroad by its postcode and IPS's name of its country
+  ("Russian Federation"): read on Yerevan's clock, its copy of Russian Post's acceptance came an
+  hour before Russian Post's own row of it. Such a copy from a country of several clocks takes
+  the zone of the origin post's scans at its minute, when the origin keeps that zone.
 - Speedaf's dates are its sites' wall clocks under a UTC label. Its own feed dates the
   scans up to the departing flight ("Cargo flight departured") on China time and the rest
   on the destination's, and Cainiao's copies of the same scans agree once read that way.

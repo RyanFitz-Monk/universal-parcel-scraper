@@ -3220,6 +3220,45 @@ describe('ParcelsApp result parsing', () => {
     ], { destinationCode: 'DZ' })?.map(([, time, zone]) => [time, zone])).toEqual([['2026-11-11T18:03:00.000Z', 'Asia/Dubai']]);
   });
 
+  it("reads a relaying post's copy of a scan in the origin country on the origin post's clock at its minute, else on its wall clock", () => {
+    // Live shape: Armenia Post (HayPost) names the Russian office by its postcode and IPS's name of Russia. Its copy of
+    // Russian Post's acceptance has its minute; read on Yerevan's clock it came an hour before it.
+    const clocks = (states: Record<string, unknown>[]) => parseParcelsAppResponse(
+      { carriers: ['Universal Postal Union', 'Russian Post', 'Armenia Post'], originCode: 'RU', destinationCode: 'AM', states }, number, identity()).events
+      ?.map(({ description, time, local_time, time_zone, time_zone_basis }) => [description, time ?? local_time, time_zone, time_zone_basis]);
+    const accepted = { date: '2026-11-14T16:18:24Z', status: 'Receiving: Simplified pre-filled', carrier: 1, location: 'EXAMPLE POST OFFICE' };
+    for (const location of ['100000 Russian Federation', '100000 Russian Federation (the)']) {
+      const copy = { date: '2026-11-14T16:18:00Z', status: 'Receive item from customer (Otb)', carrier: 2, location };
+      expect(clocks([accepted, copy])?.find(([description]) => description === 'Receive item from customer (Otb)'))
+        .toEqual(['Receive item from customer (Otb)', '2026-11-14T13:18:00.000Z', 'Europe/Moscow', 'neighbour']);
+      // With no scan of the origin's at its minute, it keeps its wall clock: Russia keeps several.
+      expect(clocks([copy])).toEqual([['Receive item from customer (Otb)', '2026-11-14T16:18:00.000', undefined, undefined]]);
+    }
+    // Its own scans at home stay on Yerevan's clock.
+    expect(clocks([{ date: '2026-11-16T10:00:00Z', status: 'Receive item at office of exchange (Inb)', carrier: 2, location: '375010 Armenia' }]))
+      .toEqual([['Receive item at office of exchange (Inb)', '2026-11-16T06:00:00.000Z', 'Asia/Yerevan', 'carrier']]);
+  });
+
+  it("reads Emirates Post's scans on Dubai's clock, placed where they name a UAE city", () => {
+    // Live shape: "Emirates Post Group" gives Emirates Post's own scans at its tracker's digits, which it dates on Dubai's
+    // clock where it names a UAE city; read as labeled they came four hours late, after the UPU's copies of them.
+    const clocks = (states: Record<string, unknown>[]) => parseParcelsAppResponse(
+      { carriers: ['Universal Postal Union', 'Emirates Post Group'], originCode: 'AE', destinationCode: 'DZ', states }, number, identity()).events
+      ?.map(({ description, time, time_zone, time_zone_basis }) => [description, time, time_zone, time_zone_basis]);
+    expect(clocks([
+      { date: '2026-11-11T22:03:23Z', status: 'Item returned from export Customs/Security', carrier: 1, location: 'DUBAI EXAMPLE CENTRE' },
+      { date: '2026-11-11T19:49:43Z', status: 'Received - shipment under processing', carrier: 1 },
+      { date: '2026-11-11T19:09:43Z', status: 'Received at counter', carrier: 1, location: 'ABU DHABI EXAMPLE' },
+    ])).toEqual([
+      ['Item returned from export Customs/Security', '2026-11-11T18:03:23.000Z', 'Asia/Dubai', 'place'],
+      ['Received - shipment under processing', '2026-11-11T15:49:43.000Z', 'Asia/Dubai', 'carrier'],
+      ['Received at counter', '2026-11-11T15:09:43.000Z', 'Asia/Dubai', 'place'],
+    ]);
+    // A scan in another country is not on Dubai's clock.
+    expect(clocks([{ date: '2026-11-13T09:00:00Z', status: 'Arrived at destination', carrier: 1, location: 'Algeria' }]))
+      .toEqual([['Arrived at destination', '2026-11-13T08:00:00.000Z', 'Africa/Algiers', 'place']]);
+  });
+
   it('reads an Australian posting its office\'s capital names on its feed\'s clock first', () => {
     // Live shape: UPU names the office "BRISBANE" and EMS gives its code for the posting
     // Australia Post received in New South Wales at +11:00, Sydney's summer clock.

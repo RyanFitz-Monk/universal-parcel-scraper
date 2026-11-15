@@ -178,6 +178,9 @@ describe('time policies', () => {
     expect(countryTimeZone('czech republic')).toBe('Europe/Prague');
     expect(countryTimeZone('UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND')).toBe('Europe/London');
     expect(countryTimeZone('United States of America')).toBeNull();
+    // IPS's ISO name for Russia, which keeps several clocks.
+    expect(countryCode('RUSSIAN FEDERATION')).toBe('RU');
+    expect(countryTimeZone('Russian Federation')).toBeNull();
     // Retired codes, subdivisions and places are not countries.
     for (const value of ['UK', 'FX', 'ON', 'Example Hub', 'EXAMPLE CITY, CA', '', undefined]) expect(countryCode(value)).toBeNull();
   });

@@ -38,6 +38,7 @@ import { chinaPostEnglish, chinaPostLabelPlace } from '../../carriers/china-post
 import { correosOriginZone } from '../../carriers/correos-spain/clock.js';
 import { cttSiteZone, portugalZone } from '../../carriers/ctt/clock.js';
 import { DHLINK_RECORD_ZONE, usClockCopy } from '../../carriers/dhlink/clock.js';
+import { EMIRATES_POST_ZONE, UAE_PLACE } from '../../carriers/emirates-post/clock.js';
 import { epostGlobalCopyZone } from '../../carriers/epost-global/status.js';
 import { FIRST_LINE_CHINA_ZONE, firstLineInChina } from '../../carriers/first-line/clock.js';
 import { juxiExpressAbroadZone } from '../../carriers/juxi-express/clock.js';
@@ -669,7 +670,11 @@ function cttZone(payload: Record<string, unknown>, location: string, date: unkno
  * time, and read on Johannesburg's, its arrival there came at the instant of
  * Parcelforce's label read on London's. "Yanwen Logistics"'s are China's: its
  * place-less shipment information came at the minute of Yanwen's own row,
- * stated +08:00, under ParcelsApp's UTC label. Their home clock is a guess,
+ * stated +08:00, under ParcelsApp's UTC label. Emirates Post's, which ParcelsApp
+ * files as "Emirates Post Group", are Dubai's: its own tracker gives the same
+ * scans at the same digits, on Dubai's clock where it names a UAE city, and
+ * read as labeled they came four hours late, after the UPU's copies of them.
+ * One naming a UAE city is placed there (`siteZone`). Their home clock is a guess,
  * which a location in another country rules out.
  */
 const HOME_COUNTRIES: Readonly<Record<string, string>> = {
@@ -678,6 +683,7 @@ const HOME_COUNTRIES: Readonly<Record<string, string>> = {
   spl: 'Asia/Riyadh', saudipost: 'Asia/Riyadh', yanwenlogistics: 'Asia/Shanghai',
   brtbartolini: 'Europe/Rome', brtbartoliniparcelid: 'Europe/Rome', brtbartolinidpd: 'Europe/Rome',
   southafricapostoffice: 'Africa/Johannesburg', southafricapost: 'Africa/Johannesburg',
+  emiratespost: EMIRATES_POST_ZONE, emiratespostgroup: EMIRATES_POST_ZONE,
 };
 /**
  * Royal Mail relays its partners' scans abroad on Central European time,
@@ -1221,10 +1227,15 @@ function placeClockLine(carrier: string, status: string, location: string, date:
  * ("Portugal") on that country's wall clock, as DHL's own tracker shows it
  * (carriers/dhl): read on Berlin's clock, it came an hour before the
  * delivering partner's own scan of it.
+ * HayPost names an office abroad by its postcode and IPS's name of its country
+ * (`IPS_OFFICE`): read on Yerevan's clock, its copy of Russian Post's
+ * acceptance came an hour before Russian Post's own row of it.
  */
 const RELAYING_POSTS: Readonly<Record<string, string>> = {
-  azerpost: 'AZ', 'correios-br': 'BR', 'correo-uruguayo': 'UY', dhl: 'DE', 'la-poste': 'FR', 'slovenska-posta': 'SK',
+  azerpost: 'AZ', 'correios-br': 'BR', 'correo-uruguayo': 'UY', dhl: 'DE', haypost: 'AM', 'la-poste': 'FR', 'slovenska-posta': 'SK',
 };
+// An office as HayPost names it after IPS: its postcode, then its country in ISO's style ("Netherlands (the)").
+const IPS_OFFICE = /^(?:\d{3,6}\s+)?(.+?)(?:\s*\(the\))?$/i;
 // Correios Brazil names the sending post's country in Portuguese after the label ParcelsApp translates
 // from its "País". There a name a Brazilian town shares, which `countryCode` leaves to the town, is the country.
 const CORREIOS_TOWN_COUNTRIES: ReadonlyMap<string, string> = new Map([['FRANCA', 'FR'], ['TAILANDIA', 'TH']]);
@@ -1235,13 +1246,19 @@ const CORREIOS_TOWN_COUNTRIES: ReadonlyMap<string, string> = new Map([['FRANCA',
  * clocks. Undefined for a scan the place does not put abroad.
  */
 function relayedPostZone(carrier: string | undefined, location: string): string | null | undefined {
-  const home = carrier && Object.hasOwn(RELAYING_POSTS, carrier) ? RELAYING_POSTS[carrier] : undefined;
   const labelled = carrier === 'correios-br' ? /^Country,\s*(.+)$/i.exec(location)?.[1] : undefined;
   const shared = labelled ? CORREIOS_TOWN_COUNTRIES.get(labelled.normalize('NFD').replace(/\p{Mn}/gu, '').trim().toUpperCase()) : undefined;
   if (shared) return countryTimeZone(shared);
-  const named = home ? [lastPlace(location), ...location.split(':')].find((part) => countryCode(part)) : undefined;
-  const country = countryCode(named);
-  return country && country !== home ? countryTimeZone(named) : undefined;
+  const named = relayedCountry(carrier, location);
+  return named ? countryTimeZone(named) : undefined;
+}
+
+/** The name of the country abroad that a relaying post's scan names (`RELAYING_POSTS`), if any. */
+function relayedCountry(carrier: string | undefined, location: string): string | undefined {
+  const home = carrier && Object.hasOwn(RELAYING_POSTS, carrier) ? RELAYING_POSTS[carrier] : undefined;
+  const place = carrier === 'haypost' ? IPS_OFFICE.exec(location.trim())?.[1] ?? location : location;
+  const named = home ? [lastPlace(place), ...place.split(':')].find((part) => countryCode(part)) : undefined;
+  return named && countryCode(named) !== home ? named : undefined;
 }
 
 /**
@@ -1383,6 +1400,7 @@ function siteZone(payload: Record<string, unknown>, state: Record<string, unknow
   // A facility's clock, whatever the label: no other step applies to it.
   if (relaysFacilityClock(name)) return facilityZone(location);
   if (carrier === 'china-post' && inChina(location)) return CHINA_POST_ZONE;
+  if (carrier === 'emirates-post' && UAE_PLACE.test(location)) return EMIRATES_POST_ZONE;
   const place = (key === 'yunexpress' ? spacedCountry(location) : null) ?? lastPlace(location);
   // A state or province the town confirms beats the country its code also
   // names ("Chicago, IL"); a merely possible one comes after ("Koeln, DE").
@@ -1674,8 +1692,9 @@ function chinaPostTwinZones(items: readonly { name: unknown; date: unknown; loca
  * in the reply's origin country, when they share one zone. Their dates are the origin office's wall
  * clock. UPU's "Posting/Collection" of an item posted in Russia, which has several clocks, came at
  * the minute of Russian Post's own acceptance on Moscow's clock and, read on ParcelsApp's UTC label,
- * three hours after it. The destination post's copy of that acceptance at the same minute is placed
- * on its own clock, so scans outside the origin are not counted.
+ * three hours after it. So is a relaying post's copy of a scan in the origin country that keeps its
+ * wall clock (`relayedPostZone`): HayPost's of that acceptance, in the words of IPS. Only a zone the
+ * origin keeps places it, and a scan placed outside the origin is not counted.
  */
 function postalTwinZones(items: readonly { name: unknown; date: unknown; location: string; offset: unknown; raw: Record<string, unknown> }[],
   zones: readonly { zone: string | null; step: ZoneStep }[], origin: string | null): (string | null)[] {
@@ -1684,14 +1703,18 @@ function postalTwinZones(items: readonly { name: unknown; date: unknown; locatio
   const shared = (found: readonly string[]) => (new Set(found).size === 1 ? found[0]! : null);
   return items.map((item, index) => {
     const key = minute(item.date);
-    if (zones[index]!.zone || item.offset || !key || !POSTAL_FEEDS.has(nameKey(item.name)) || !POSTAL_ORIGIN_LEG.test(relayedLabel(item.raw.status).trim())) return null;
+    const carrier = typeof item.name === 'string' ? carrierIdFromName(item.name) : undefined;
+    const relayed = !POSTAL_FEEDS.has(nameKey(item.name)) && origin !== null && countryCode(relayedCountry(carrier, item.location)) === origin;
+    if (zones[index]!.zone || item.offset || !key || !(relayed || (POSTAL_FEEDS.has(nameKey(item.name))
+      && POSTAL_ORIGIN_LEG.test(relayedLabel(item.raw.status).trim())))) return null;
     const twins = items.flatMap((other, at) => {
       const { zone, step } = zones[at]!;
       return at !== index && zone && step !== 'labeled' && minute(other.date) === key ? [{ zone, same: words(other.raw) === words(item.raw) }] : [];
     });
     const copied = shared(twins.filter(({ same }) => same).map(({ zone }) => zone));
     const local = origin ? shared(twins.filter(({ zone }) => keepsZone(origin, zone)).map(({ zone }) => zone)) : null;
-    return fitsPlace(copied ?? local, item.location, true);
+    const zone = copied ?? local;
+    return relayed ? (zone && keepsZone(origin, zone) ? zone : null) : fitsPlace(zone, item.location, true);
   });
 }
 
