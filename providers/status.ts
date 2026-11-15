@@ -61,6 +61,7 @@ const NO_STEP: ReadonlyArray<readonly [wording: string, note: string]> = [
   ['released', 'A release that does not say from customs or from a hold.'],
   ['driver assigned', 'A driver assigned, to a collection or to a delivery round: the wording does not say which.'],
   ['from one of our operators', "Poste Italiane's acceptance (\"Presa in carico da un nostro operatore\") as ParcelsApp relays it, without its verb: the wording alone names no step."],
+  ['da un nostro operatore', "The same acceptance in Poste Italiane's Italian, as Ship24 relays it without the label before it: the wording alone names no step."],
   ['on date', "Poste Italiane's \"in data\", the end of a movement's sentence under its milestone, as ParcelsApp relays it translated: the wording alone names no step."],
   ['parcel is with the driver', 'A parcel with a driver, collected or out for delivery: the wording does not say which.'],
   ['not received from retailer', 'A hand-over from the retailer that has not happened: no step was taken.'],

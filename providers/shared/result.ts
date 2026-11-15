@@ -579,6 +579,10 @@ function providerWordingStage(description: string): Stage | undefined {
   // Deutsche Post's posting at a retail outlet, "in der Filiale eingeliefert" in German.
   if (/^international item mailed in originating country[.!]?$/i.test(value)) return 'accepted';
   if (/^the shipment has been posted by the sender at the retail outlet[.!]?$/i.test(value)) return 'accepted';
+  // The IPS posting at a counter, with its outbound mark, as ParcelsApp relays an origin post's such as HayPost's,
+  // and Russian Post's acceptance ("Прием", every attribute of which is an acceptance) in ParcelsApp's English.
+  if (/^receive item from customer(?: \(otb\))?[.!]?$/i.test(value)) return 'accepted';
+  if (/^receiving: simplified pre-filled[.!]?$/i.test(value)) return 'accepted';
   // Canada Post's new label at a processing plant (0198), between two processing scans.
   if (/^label correction applied[.!]?$/i.test(value)) return 'in_transit';
   // SEUR's receipt at its origin facility (SX001) and Vinted Go's parcel dropped off by its sender, as their own maps read them.

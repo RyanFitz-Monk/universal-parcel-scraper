@@ -1845,6 +1845,8 @@ describe("universal providers' answers", () => {
       ['Item received in destination country', 'in_transit'],
       ['Item posted / received from customer Customer centre: Example', 'accepted'],
       ['International item mailed in originating country', 'accepted'],
+      ['Receive item from customer (Otb)', 'accepted'], ['Receive item from customer', 'accepted'],
+      ['Receiving: Simplified pre-filled', 'accepted'],
       ['The shipment has been posted by the sender at the retail outlet', 'accepted'], ['Label correction applied', 'in_transit'],
       ['Domestic allocation has begun', 'in_transit'], ['Under domestic allocation', 'in_transit'],
       ['Delivery to local courier', 'in_transit'],
@@ -1990,6 +1992,8 @@ describe("universal providers' answers", () => {
     for (const wording of ['Last-mile delivery forecast', 'Carrier update']) expect(answer('unknown', 'LAST_MILE_ASN_NOTIFY', wording), wording).toEqual(gap);
     // Poste Italiane's acceptance as ParcelsApp relays it, without its verb.
     expect(answer('unknown', null, 'From one of our operators')).toEqual(gap);
+    // The same fragment in Italian, as Ship24 relays it without the label before it.
+    expect(answer('unknown', null, 'Da un nostro operatore')).toEqual(gap);
     // Its "in data", the end of a movement's sentence, as ParcelsApp relays it translated.
     expect(answer('unknown', null, 'On date')).toEqual(gap);
     // Colis Privé's notices as ParcelsApp relays them.
