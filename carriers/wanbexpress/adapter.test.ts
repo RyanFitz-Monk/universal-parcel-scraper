@@ -115,7 +115,7 @@ describe('WanbExpress', () => {
     expect(statusMapAnswer({ carrier: 'wanbexpress', providerCode: null, description: 'Parcel is ready for hand over to distributor' }))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
     for (const wording of ['In Transit to Next Facility', 'It is currently in transit to the next facility', 'The package is being transferred to the next facility',
-      'Parcel departed from Facility.', 'Parcel received by local Facility.']) {
+      'Parcel departed from Facility.', 'Parcel received by local Facility.', 'In transit to destination facility']) {
       expect(statusMapAnswer({ carrier: 'wanbexpress', providerCode: null, description: wording }), wording).toEqual({ kind: 'mapped', stage: 'in_transit' });
     }
     // A partner's announcement other trackers relay too reads as they read it, through the shared map.

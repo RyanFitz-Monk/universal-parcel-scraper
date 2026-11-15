@@ -24,6 +24,8 @@ const UNCODED: ReadonlyMap<string, Stage | null> = new Map<string, Stage | null>
   ['parcel received by local facility.', 'in_transit'],
   ['in transit to next facility.', 'in_transit'],
   ['in transit to next facility', 'in_transit'],
+  // SpeedX's way to the delivering facility, at the same second as its line coded 57112.
+  ['in transit to destination facility', 'in_transit'],
   // USPS's notice of a parcel still moving but behind its expected day.
   ['in transit, arriving late', 'in_transit'],
   ['it is currently in transit to the next facility', 'in_transit'],
