@@ -157,6 +157,16 @@ function handoff(shipment: Record<string, unknown>): Pick<CarrierResult, 'delive
   return Object.hasOwn(PARTNERS, scac) && PARTNER_PRO.test(pro) ? { delivery_carrier: PARTNERS[scac]!, delivery_tracking_number: pro } : {};
 }
 
+/** The consignee's name and address, the street on its own lines, then the town, state and ZIP. */
+function consignee(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const party = record(shipment, 'consignee');
+  const name = text(party, 'name', 120);
+  const town = [text(party, 'city', 80), text(party, 'state', 8)].filter(Boolean).join(', ');
+  const lines = [text(party, 'address1', 120), text(party, 'address2', 120), [town, text(party, 'zip', 12)].filter(Boolean).join(' ')]
+    .filter(Boolean);
+  return { ...(name ? { receiver_name: name } : {}), ...(lines.length ? { receiver_address: lines.join('\n') } : {}) };
+}
+
 /**
  * The reply of `wp-json/adp/2/shipment/status?type=0&value={PRO}`, the lookup
  * A. Duie Pyle's shipment status page makes:
@@ -164,8 +174,8 @@ function handoff(shipment: Record<string, unknown>): Pick<CarrierResult, 'delive
  * page shows. A PRO it does not know comes back as a result holding the
  * number and `We are unable to find this shipment.`. The result also names
  * the shipper, the consignee and the paying customer with their addresses,
- * and holds the bill of lading, the purchase order and a comment; none of
- * them is read.
+ * and holds the bill of lading, the purchase order and a comment; only the
+ * consignee is read.
  */
 export function parsePyle(payload: unknown, raw: string): CarrierResult {
   const number = normalizePyleNumber(raw);
@@ -224,6 +234,7 @@ export function parsePyle(payload: unknown, raw: string): CarrierResult {
     ...(settled ? { expected_delivery: null } : estimate(windows, shipment)),
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(weight !== null ? { weight_kg: weight } : {}),
+    ...consignee(shipment),
     ...handoff(shipment),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

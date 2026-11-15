@@ -140,10 +140,10 @@ function shipmentOf(payload: unknown, number: string): Record<string, unknown> {
  * references match. A number it does not know is an HTTP 404 naming the
  * number. The shipment must carry the number asked as its pro or freight bill
  * number. Its history, `Locations`, lists the rows oldest first unless the
- * reply says `Descending`. The shipment also holds the shipper's and the
- * consignee's towns with their ZIP codes, the pickup day, the delivery's
- * arrival and departure, its signer and comment, its images and partners'
- * tracking links; none of them is read.
+ * reply says `Descending`. The consignee's town, state and ZIP code and,
+ * once delivered, the delivery's signer are read. The shipper's town, the
+ * pickup day, the delivery's arrival, departure and comment, its images and
+ * partners' tracking links are not.
  */
 export function parseCcfs(reply: { status: number; body: unknown }, raw: string): CarrierResult {
   const number = normalizeCcfsNumber(raw);
@@ -192,6 +192,9 @@ export function parseCcfs(reply: { status: number; body: unknown }, raw: string)
   const current = fromRail ? undefined : events[0];
   const settled = stage === 'delivered' || stage === 'returned';
   const pro = text(shipment, 'ProNum', 40);
+  const town = [text(shipment, 'DestCity', 80), text(shipment, 'DestState', 8)].filter(Boolean).join(', ');
+  const destination = [town, text(shipment, 'DestZip', 12)].filter(Boolean).join(' ');
+  const signer = stage === 'delivered' ? text(shipment, 'DeliverySignatory', 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -202,6 +205,8 @@ export function parseCcfs(reply: { status: number; body: unknown }, raw: string)
     ...(settled ? { expected_delivery: null } : deliveryWindow(shipment)),
     // The page heads the shipment with its pro number.
     ...(pro !== number && PRO.test(pro) ? { canonical_tracking_number: pro } : {}),
+    ...(destination ? { receiver_address: destination } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(rows.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

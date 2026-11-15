@@ -7,7 +7,7 @@ import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, AYMAKAN_TRACKING, AymakanTracker } from './adapter.js';
-import { aymakanDay, aymakanWording, latestScanDay, normalizeAymakanNumber, parseAymakan } from './parser.js';
+import { aymakanDay, aymakanTaker, aymakanWording, latestScanDay, normalizeAymakanNumber, parseAymakan } from './parser.js';
 import { aymakanStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -16,7 +16,8 @@ const IN_TRANSIT = 'AY200000002';
 const UNKNOWN = 'AY999999999';
 // The lookup's time, which sets the years of the scans' days.
 const NOW = Date.parse('2026-10-16T09:00:00Z');
-const PRIVATE = /سارة|مثال|Received by|Sampleton →|Exampleville|\*{3}/;
+// The route's origin and the masked parties, which are not kept.
+const PRIVATE = /Sampleton →|\*{3}/;
 // Cloudflare's managed challenge, which the site's CDN can serve in place of the page.
 const CHALLENGE = '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title></head><body>'
   + '<script>(function(){window._cf_chl_opt={cvId:"3",cType:"managed"};})();</script></body></html>';
@@ -50,13 +51,15 @@ describe('AyMakan tracking page', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('dates each scan to its day, and drops who took the parcel, the route and the masked parties', () => {
+  it('dates each scan to its day, reads who took the parcel and the recipient\'s town, and drops the masked parties', () => {
     const result = parse(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Shipment is delivered to customer', last_update: null, last_update_local: '2026-10-07', expected_delivery: null });
+      last_status_text: 'Shipment is delivered to customer - Received by سارة مثال', last_update: null, last_update_local: '2026-10-07',
+      expected_delivery: null, receiver_address: 'Exampleville', signed_by: 'سارة مثال' });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(result).not.toHaveProperty('summary_only');
     expect(result.events!.map((event) => [event.local_time, event.description, event.stage])).toEqual([
-      ['2026-10-07', 'Shipment is delivered to customer', 'delivered'],
+      ['2026-10-07', 'Shipment is delivered to customer - Received by سارة مثال', 'delivered'],
       ['2026-10-07', 'Shipment is out for its final destination.', 'out_for_delivery'],
       ['2026-10-06', 'Received at Sampleton Warehouse', 'in_transit'],
       ['2026-10-05', 'Shipment is received at hub', 'in_transit'],
@@ -72,7 +75,8 @@ describe('AyMakan tracking page', () => {
   it('stages a shipment received at a hub, and reads the older wordings and six-digit numbers', () => {
     const result = parse(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'Shipment is received at Sampleton hub', last_update_local: '2026-10-13' });
+      last_status_text: 'Shipment is received at Sampleton hub', last_update_local: '2026-10-13', receiver_address: 'Exampleville' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.local_time, event.stage])).toEqual([
       ['2026-10-13', 'in_transit'], ['2026-10-12', 'accepted'], ['2026-10-11', 'registered']]);
     expect(JSON.stringify(result)).not.toMatch(PRIVATE);
@@ -82,8 +86,10 @@ describe('AyMakan tracking page', () => {
   it('takes the status over the shipment for its stage, and the newest staged scan for a status it does not know', () => {
     const status = (value: string) => ($: CheerioAPI) => { $('main section h3').first().text(value); };
     // A delivery the timeline does not show yet.
-    expect(parse(edited('in-transit', status('Delivered')), IN_TRANSIT)).toMatchObject({ status: 'delivered', current_stage: 'delivered',
+    const ahead = parse(edited('in-transit', status('Delivered')), IN_TRANSIT);
+    expect(ahead).toMatchObject({ status: 'delivered', current_stage: 'delivered',
       current_stage_source: 'carrier_map', last_status_text: 'Shipment is received at Sampleton hub' });
+    expect(ahead).not.toHaveProperty('signed_by');
     expect(parse(edited('delivered', status('Synthetic Status')), DELIVERED)).toMatchObject({ current_stage: 'delivered' });
     // Scans the map does not know are staged by the shared wording rules, or not at all.
     const unknown = edited('in-transit', ($) => {
@@ -110,7 +116,14 @@ describe('AyMakan tracking page', () => {
     }), IN_TRANSIT);
     expect(failed).toMatchObject({ current_stage: 'failed_attempt', last_status_text: 'Shipment delivery attempt failed - Call' });
     expect(failed.events).toHaveLength(4);
-    expect(aymakanWording('Shipment retrieved from locker - Retrieved by Sample Person')).toBe('Shipment retrieved from locker');
+    expect(aymakanWording('Shipment retrieved from locker - Retrieved by Sample Person.')).toBe('Shipment retrieved from locker - Retrieved by Sample Person.');
+    expect(aymakanTaker('Shipment retrieved from locker - Retrieved by Sample Person')).toEqual({ stated: 'Shipment retrieved from locker', signer: 'Sample Person' });
+    expect(aymakanTaker('Shipment is received at hub')).toEqual({ stated: 'Shipment is received at hub', signer: '' });
+    // A route the page masks names no town.
+    const masked = parse(edited('in-transit', ($) => {
+      $('main section h3').filter((_, heading) => $(heading).text() === 'Shipment Details').siblings('p').text('*** → ***');
+    }), IN_TRANSIT);
+    expect(masked).not.toHaveProperty('receiver_address');
     const long = parse(edited('in-transit', ($) => {
       timeline($).html(Array.from({ length: 120 }, (_, index) => entry(`Received at Hub ${index}`, 'Tue, Oct 13')).join(''));
     }), IN_TRANSIT);

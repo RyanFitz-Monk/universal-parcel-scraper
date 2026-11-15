@@ -83,7 +83,7 @@ function scanClock(row: Record<string, unknown>): string {
   return local;
 }
 
-/** Text without the shipment's own names, which a delivery scan could carry. */
+/** Text without the shipment's own names, which a scan's place could carry. */
 function withoutNames(value: string, names: readonly RegExp[]): string {
   return clean(names.reduce((scrubbed, name) => scrubbed.replace(name, ' '), value)).replace(TRAILING, '');
 }
@@ -92,11 +92,14 @@ function projectRow(row: Record<string, unknown>, names: readonly RegExp[]): { k
   const code = text(row, 'event_state', 40);
   if (code && !STATE.test(code)) throw new SchemaError(PROVIDER, 'Bombino Express returned an invalid event state');
   // The page's line for the scan: its own wording, else the state's label.
-  const description = withoutNames(text(row, 'event_description'), names) || (code ? bombinoStateLabel(code) ?? '' : '');
+  const label = code ? bombinoStateLabel(code) ?? '' : '';
+  const wording = text(row, 'event_description');
+  const description = wording.replace(TRAILING, '') || label;
   if (!description) throw new SchemaError(PROVIDER, 'Bombino Express returned a scan without wording');
   const local = scanClock(row);
   const location = withoutNames(text(row, 'event_location', 120), names);
-  const staged = bombinoStage(code, description);
+  // A name in the wording adds nothing to the stage the rest of it gives.
+  const staged = bombinoStage(code, withoutNames(wording, names) || label);
   const event: CarrierEvent = {
     local_time: local,
     ...(location ? { location } : {}),
@@ -133,8 +136,9 @@ function forwarding(payload: Record<string, unknown>, details: unknown[], number
  * the shipment's details as `[label, value]` rows, its scans newest first and
  * each piece's own copy of them. An unknown number is HTTP 200 with the
  * lookup's message in `errors` and no details or scans. The shipment must
- * name the number asked. Names, cities, the customer reference, the weight,
- * the proof of delivery, scan remarks and the pieces are never read.
+ * name the number asked. Its details name the consignee and its city, and who
+ * received a delivered shipment. The shipper's city, the customer reference,
+ * the weight, the proof of delivery, scan remarks and the pieces are not read.
  */
 export function parseBombino(payload: unknown, raw: string): CarrierResult {
   const number = normalizeBombinoNumber(raw);
@@ -170,6 +174,9 @@ export function parseBombino(payload: unknown, raw: string): CarrierResult {
   const destination = text(payload, 'consignee_country', 80) || detail(details, 'destination');
   const country = countryCode(destination);
   const expected = stage === 'delivered' || stage === 'returned' ? null : estimate(payload);
+  const consignee = detail(details, 'consignee name');
+  const town = detail(details, 'consignee city');
+  const receiver = stage === 'delivered' ? detail(details, 'receiver name') : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -178,6 +185,9 @@ export function parseBombino(payload: unknown, raw: string): CarrierResult {
     last_update_local: newest.local_time,
     expected_delivery: expected,
     ...(country ? { destination_country: country } : destination ? { destination_country_name: destination } : {}),
+    ...(consignee ? { receiver_name: consignee } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(receiver ? { signed_by: receiver } : {}),
     ...forwarding(payload, details, number),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

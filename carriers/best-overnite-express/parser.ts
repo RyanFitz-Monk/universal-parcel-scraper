@@ -143,10 +143,26 @@ function dayOf(payload: Record<string, unknown>, key: string): string | null {
   return day;
 }
 
+/** The consignee's name and address, the street on its own lines, then the town, state and ZIP. */
+function consigneeOf(payload: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const party = record(payload, 'objConsignee');
+  const name = text(party, 'name', 120);
+  const town = [text(party, 'city', 80), text(party, 'state', 8)].filter(Boolean).join(', ');
+  const lines = [text(party, 'addresS1', 120), text(party, 'addresS2', 120), [town, text(party, 'zip', 12)].filter(Boolean).join(' ')]
+    .filter(Boolean);
+  return { ...(name ? { receiver_name: name } : {}), ...(lines.length ? { receiver_address: lines.join('\n') } : {}) };
+}
+
+/** Who signed for a delivered shipment, as the reply names them. */
+function signerOf(payload: Record<string, unknown>): Pick<CarrierResult, 'signed_by'> {
+  const signer = text(payload, 'signedBy', 120);
+  return signer ? { signed_by: signer } : {};
+}
+
 /**
  * The answer for a shipment without scans: the page then shows only its
- * status line. A delivery's names the day and time and who signed; the signer
- * is not kept. Any other line says nothing the adapter can stage.
+ * status line. A delivery's names the day and time and who signed. Any other
+ * line says nothing the adapter can stage.
  */
 function summaryOf(payload: Record<string, unknown>, zone: string | null): CarrierResult {
   const delivered = DELIVERED_STATUS.exec(text(payload, 'status', 300));
@@ -159,6 +175,8 @@ function summaryOf(payload: Record<string, unknown>, zone: string | null): Carri
     ...(clock.local_time ? { last_update_local: clock.local_time } : {}),
     expected_delivery: null,
     ...(clock.time ? { delivered_at: clock.time } : {}),
+    ...consigneeOf(payload),
+    ...signerOf(payload),
     summary_only: true, events: [],
   };
 }
@@ -171,9 +189,9 @@ function summaryOf(payload: Record<string, unknown>, zone: string | null): Carri
  * number asked. A shipment must name the PRO number asked in `proNum`. Its
  * scans come oldest first. The reply also holds the shipper's and the
  * consignee's names and addresses, who signed, the bill of lading, purchase
- * order and pickup numbers, the pallet count and the ship and delivery days;
- * only the parties' states are read, to settle the clocks' zone, and none of
- * them is kept.
+ * order and pickup numbers, the pallet count and the ship and delivery days.
+ * The consignee and, once delivered, who signed are kept; the shipper's
+ * state only settles the clocks' zone.
  */
 export function parseBoe(payload: unknown, raw: string): CarrierResult {
   const number = normalizeBoeNumber(raw);
@@ -224,6 +242,8 @@ export function parseBoe(payload: unknown, raw: string): CarrierResult {
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: settled ? null : estimate,
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
+    ...consigneeOf(payload),
+    ...(stage === 'delivered' ? signerOf(payload) : {}),
     events,
   };
 }

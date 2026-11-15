@@ -46,7 +46,7 @@ describe('An Post live guest tracking', () => {
     }
   });
 
-  it.skipIf(!process.env.AN_POST_TRACKING_NUMBER)('reads a private number on offset-less local clocks without recipient details', async () => {
+  it.skipIf(!process.env.AN_POST_TRACKING_NUMBER)('reads a private number on offset-less local clocks', async () => {
     expectHistory(await instance().track({ number: process.env.AN_POST_TRACKING_NUMBER! }));
   });
 });

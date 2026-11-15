@@ -54,7 +54,8 @@
       "history",
       "location",
       "provider_code",
-      "eta"
+      "eta",
+      "destination"
     ],
     "discarded": [
       "terminal_eta",
@@ -62,7 +63,6 @@
       "weight",
       "customer_reference",
       "origin",
-      "destination",
       "office_contact_details"
     ],
     "unavailable": [

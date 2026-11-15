@@ -93,11 +93,24 @@ function partnerNumber(raw: string, number: string): string | undefined {
   return /^[A-Z0-9]{4,40}$/.test(code) && code !== number ? code : undefined;
 }
 
+/** A recipient field: a changed or missing one is left out rather than failing the lookup. */
+function recipientText(row: unknown, key: string, maxLength = 120): string {
+  const value = isRecord(row) ? row[key] : undefined;
+  return typeof value === 'string' ? clean(value, maxLength) : '';
+}
+
+/** The recipient's town, province or state and postcode, as `TOWN, ST POSTCODE`. */
+function recipientAddress(shipment: Record<string, unknown>): string {
+  const field = (key: string) => recipientText(shipment, `to_${key}`) || recipientText(shipment, `recipient_${key}`);
+  const region = [field('province_code'), field('postal_code')].filter(Boolean).join(' ');
+  return [field('city'), region].filter(Boolean).join(', ');
+}
+
 /**
  * The reply of `GET /tracking/{shipment ID}.json`. The shipment's own ID must
- * be the one asked for. The sender's and recipient's towns and postcodes, the
- * scans' subtitles (which repeat the partner's number) and the package kind
- * are never read.
+ * be the one asked for. The recipient's name and destination are read; the
+ * sender's town and postcode, the scans' subtitles (which repeat the partner's
+ * number) and the package kind are not.
  */
 export function parseChitChats(payload: unknown, raw: string): CarrierResult {
   const number = normalizeChitChatsNumber(raw);
@@ -131,6 +144,8 @@ export function parseChitChats(payload: unknown, raw: string): CarrierResult {
   const destination = text(shipment, 'to_country_code', 8).toUpperCase();
   const partner = carrierIdFromPartner(text(shipment, 'carrier', 64));
   const delivery = partnerNumber(text(shipment, 'carrier_tracking_code', 64), number);
+  const receiver = recipientText(shipment._deprecated_fields, 'to_name');
+  const address = recipientAddress(shipment);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source } : {}),
@@ -142,6 +157,8 @@ export function parseChitChats(payload: unknown, raw: string): CarrierResult {
     ...(weight !== undefined ? { weight_kg: weight } : {}),
     ...(dimensions ? { dimensions_text: dimensions } : {}),
     ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
     ...(partner && partner !== 'chit-chats' ? { delivery_carrier: partner } : {}),
     ...(delivery ? { delivery_tracking_number: delivery } : {}),
     events: events.slice(0, MAX_EVENTS),

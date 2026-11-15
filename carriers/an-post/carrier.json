@@ -46,11 +46,11 @@
       "location",
       "pickup_point",
       "provider_code",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
-      "recipient_name",
-      "signatory",
       "customer_reference",
       "event_details",
       "origin_country",

@@ -39,14 +39,14 @@ page makes.
 - The map covers the status descriptions CCFS publishes at
   `www.ccfs.com/api/public/Service/StatusDescription`. Notices, notifications, appointments and
   billing rows have no stage.
-- The reply holds the shipper's and the consignee's towns with their ZIP codes, the pickup day,
-  the delivery's arrival and departure, its signer and comment, its images and partners'
-  tracking links; none of them is read. A row's place keeps its town and state without the ZIP
-  code.
+- The consignee's town, state and ZIP code are read as the recipient's address, and the
+  delivery's signer once the shipment is delivered. The shipper's town, the pickup day, the
+  delivery's arrival, departure and comment, its images and partners' tracking links are not
+  read. A row's place keeps its town and state without the ZIP code.
 
 ## Limitations
 
-- No sender, recipient, signature or delivery receipt. The page shows the receipt only once the
+- No sender, recipient name or delivery receipt. The page shows the receipt only once the
   consignee's address is entered.
 - A number reaches the adapter when it is filed under CCFS or opened from a CCFS link: both
   shapes are shared with other carriers, so no rule claims them and preflight does not ask it.

@@ -67,11 +67,12 @@ describe('AIT Worldwide Logistics HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'ait-worldwide', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads a delivered history newest first as wall clocks, without the appointment, the town, the signer or the office', () => {
+  it('reads a delivered history newest first as wall clocks, with the town and the signer, without the appointment or the office', () => {
     const result = parseAit(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'DELIVERED', last_update: null, last_update_local: '2026-03-12T14:40:00', expected_delivery: null,
+      receiver_address: 'SAMPLETON', signed_by: 'EXAMPLE',
     });
     for (const field of ['summary_only', 'history_truncated', 'delivered_at', 'receiver_name', 'sender_name']) {
       expect(result).not.toHaveProperty(field);
@@ -90,7 +91,8 @@ describe('AIT Worldwide Logistics HTTP adapter', () => {
       ['2026-03-04T09:01:12', 'UPLOAD', 'ORDER INFO SENT TO AIT: UPLOAD', 'registered'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.location === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLETON|EXAMPLE|555-010|Signed|APPOINTMENT|BETWEEN|explanation|emailed to/i);
+    expect(JSON.stringify({ ...result.events, last: result.last_status_text })).not.toMatch(/SAMPLETON|EXAMPLE|Signed/i);
+    expect(JSON.stringify(result)).not.toMatch(/555-010|APPOINTMENT|BETWEEN|explanation|emailed to/i);
   });
 
   it('reads an in-transit history, and the newest delivery appointment’s day and window as the estimate', () => {
@@ -110,7 +112,9 @@ describe('AIT Worldwide Logistics HTTP adapter', () => {
       ['2026-10-09T08:33:20', 'EMAILD', 'EMAILED INFO', null],
       ['2026-10-09T08:32:55', 'UPLOAD', 'ORDER INFO SENT TO AIT: UPLOAD', 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/EXAMPLE FALLS|invit|schedule/i);
+    expect(result).toMatchObject({ receiver_address: 'EXAMPLE FALLS' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/invit|schedule/i);
     const booked = parseAit(withRows(fixture('in-transit'), (rows) => {
       rows.unshift(row('2026-10-21T08:00:00', 'APPTDE', 'APPOINTMENT DELIVERY SCHEDULED ON 10/21/2026 BETWEEN 8:00 AM AND 12:00 PM'),
         row('2026-10-15T09:30:00', 'RECOVD', 'CHECKED INTO DELIVERY TERMINAL'),
@@ -146,7 +150,9 @@ describe('AIT Worldwide Logistics HTTP adapter', () => {
       expected_delivery: '2027-01-08',
     });
     expect(events(result)).toEqual([['2026-12-29T15:41:06', 'WEBENT', 'ORDER INFO SENT TO AIT: WEB', 'registered']]);
-    expect(JSON.stringify(result)).not.toMatch(new RegExp(`${OTHER}|SAMPLE|2026-12-28`));
+    // Only the shipment asked gives its town.
+    expect(result).toMatchObject({ receiver_address: 'SAMPLE JUNCTION' });
+    expect(JSON.stringify(result)).not.toMatch(new RegExp(`${OTHER}|SAMPLE RIVER|2026-12-28`));
     expect(parseAit(fixture('several'), OTHER)).toMatchObject({ expected_delivery: '2027-01-06', last_update_local: '2026-12-28T10:02:13' });
     // A weekday no nearby year has for that day gives no estimate.
     expect(parseAit(fixture('several').replace('<h3>Friday</h3>', '<h3>Monday</h3>'), INITIATED)).toMatchObject({ expected_delivery: null });
@@ -181,10 +187,13 @@ describe('AIT Worldwide Logistics HTTP adapter', () => {
     expect(parseAit(withRows(fixture('in-transit'), (_rows, grid) => { grid.Total = 40; }), IN_TRANSIT)).toMatchObject({ history_truncated: true });
   });
 
-  it('leaves the name of whoever signed out of a row’s wording', () => {
-    const result = parseAit(withRows(fixture('delivered'), (rows) => { rows[0]!.Description = 'DELIVERED - SIGNED BY PAT EXAMPLE'; }), DELIVERED);
-    expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'DELIVERED - SIGNED' });
-    expect(JSON.stringify(result)).not.toMatch(/PAT|EXAMPLE/);
+  it('keeps the name of whoever signed in a row’s wording, on the stage the wording before it gives', () => {
+    const signed = withRows(fixture('delivered'), (rows) => { rows[0]!.Description = 'DELIVERED - SIGNED BY PAT EXAMPLE'; });
+    const result = parseAit(signed, DELIVERED);
+    expect(result).toMatchObject({ current_stage: 'delivered', last_status_text: 'DELIVERED - SIGNED BY PAT EXAMPLE', signed_by: 'EXAMPLE' });
+    expect(result.events![0]).toMatchObject({ description: 'DELIVERED - SIGNED BY PAT EXAMPLE', stage: 'delivered' });
+    // Without the delivery panel's name, the row's names who signed.
+    expect(parseAit(signed.replace('<h4>Signed for by</h4><h3>EXAMPLE</h3>', ''), DELIVERED)).toMatchObject({ signed_by: 'PAT EXAMPLE' });
   });
 
   it('reads the warning for a number FasTrak does not know as not found, and one naming another number as no answer', () => {

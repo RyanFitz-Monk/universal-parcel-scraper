@@ -60,17 +60,17 @@
       "offset_timestamps",
       "eta",
       "delivered_at",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "destination",
+      "postcodes",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "departure_date",
       "parcel_count",
       "parcel_scans",
-      "origin",
-      "destination",
-      "postcodes",
-      "signatory"
+      "origin"
     ],
     "unavailable": [
       "weight",

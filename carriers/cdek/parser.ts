@@ -66,8 +66,9 @@ function scanOf(code: string, wording: unknown, clock: unknown, place: string, i
  * within each milestone grouped by the city they happened in. Milestones the
  * order has not reached yet are listed too, marked as future, and are left
  * out. A milestone without scans, such as the delivery, is an event of its
- * own. The recipient's initials, the addresses, offices, phones, pickup codes
- * and the milestones' comments are never read.
+ * own. The recipient's initials and address, and the pickup code when the
+ * reply gives one, are read. The sender's address, the offices, phones and the
+ * milestones' comments are not.
  */
 export function parseCdek(payload: unknown, raw: string): CarrierResult {
   const number = normalizeCdekNumber(raw);
@@ -122,6 +123,9 @@ export function parseCdek(payload: unknown, raw: string): CarrierResult {
   const events = scans.map(scan => scan.event);
   const newest = events[0]!;
   const stage = newest.stage as Stage | undefined;
+  const receiver = clean(data.receiverInitials, 120);
+  const address = clean(data.receiverAddress, 300);
+  const code = clean(data.pickupCode, 40);
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -131,6 +135,9 @@ export function parseCdek(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: newest.time! } : {}),
     ...(order !== number ? { canonical_tracking_number: order } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(code ? { pickup_code: code } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

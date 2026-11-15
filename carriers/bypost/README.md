@@ -22,8 +22,9 @@ wording for the code. A code the page does not list is kept without a stage, as 
 notices about a delivery date or a home delivery order.
 
 Event clocks are read only with the offset the service states. The town of a scan, the
-destination country, the weight and a single package's pickup point are read. Postcodes,
-dimensions, the signatory and the proof of delivery are left out, and the recipient's phone
+destination country, the weight and a single package's pickup point are read. The destination's
+postcode and town are read as the recipient's address, and a delivery's signature as who signed.
+Scan postcodes, dimensions and the proof of delivery are left out, and the recipient's phone
 number, which opens the proof of delivery, is never sent.
 
 ## Numbers

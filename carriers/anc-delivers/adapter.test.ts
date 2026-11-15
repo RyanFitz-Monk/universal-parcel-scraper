@@ -46,11 +46,12 @@ describe('ANC tracking', () => {
     expect(fetcher.mock.calls[0]![0]).toBe(`${ANC_API}${NUMBER}`);
   });
 
-  it('reads the reached steps newest first, on their wall clocks, without the driver or the recipient', async () => {
+  it('reads the reached steps newest first, on their wall clocks, and the recipient’s address without the driver or contacts', async () => {
     const result = await carrier(replying(() => reply(fixture()))).track({ number: NUMBER });
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', provider_code: 'delivered',
       last_status_text: 'Delivered', last_update: null, last_update_local: '2026-01-06T12:33:00', expected_delivery: null,
+      receiver_address: '1 Sample Street\nSAMPLE SUBURB NSW 0000',
       events: [
         { local_time: '2026-01-06T12:33:00', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
         { local_time: '2026-01-06T07:25:59', description: 'Onboard for delivery', stage: 'out_for_delivery', stage_source: 'carrier_map' },
@@ -58,7 +59,11 @@ describe('ANC tracking', () => {
         { local_time: '2026-01-05T06:58:48', description: 'Booked', stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE DRIVER|Sample Street|example\.com|0400|SYNTHETIC-REF|Sample Retailer|base64/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE DRIVER|example\.com|0400|SYNTHETIC-REF|Sample Retailer|base64/);
+    // A reply with only a suburb gives only the suburb.
+    const suburbOnly = { ...fixture() } as Record<string, unknown>;
+    for (const key of ['streetAddress', 'state', 'postCode']) delete suburbOnly[key];
+    expect(parseAnc(suburbOnly, NUMBER).receiver_address).toBe('SAMPLE SUBURB');
   });
 
   it('reads only the steps the delivery has reached', () => {

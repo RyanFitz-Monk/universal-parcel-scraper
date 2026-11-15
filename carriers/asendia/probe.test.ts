@@ -105,13 +105,15 @@ describe('Asendia status vocabulary', () => {
 });
 
 describe('Asendia response normalization', () => {
-  it('parses and sorts current official event fields without retaining private shipment data', () => {
+  it('parses and sorts current official event fields, reads the recipient and keeps no other private shipment data', () => {
     const result = parseAsendiaTrackingResponse(deliveredFixture(), TRACKING_NUMBER);
     expect(result).toMatchObject({
       status: 'delivered',
       last_status_text: 'Delivered',
       last_update: '2026-08-29T11:42:00+02:00',
       expected_delivery: null,
+      receiver_name: 'Private Recipient',
+      receiver_address: '10 Private Street, 8000 Private City',
       timezone: 'Europe/Zurich',
     });
     expect(result.events).toEqual([{
@@ -133,14 +135,9 @@ describe('Asendia response normalization', () => {
       stage: 'registered',
       provider_code: 'INFO_RECEIVED',
     }]);
-    const serialized = JSON.stringify(result);
-    for (const privateValue of [
-      'Private Recipient',
-      'Private Street',
-      'private-order-reference',
-      'private@example.test',
-      '8000 Private City',
-    ]) expect(serialized).not.toContain(privateValue);
+    const serialized = JSON.stringify(result.events);
+    for (const privateValue of ['Private Recipient', 'Private Street']) expect(serialized).not.toContain(privateValue);
+    for (const privateValue of ['private-order-reference', 'private@example.test']) expect(JSON.stringify(result)).not.toContain(privateValue);
   });
 
   // carrier.json declares what the registered A1 adapter produces; the portal

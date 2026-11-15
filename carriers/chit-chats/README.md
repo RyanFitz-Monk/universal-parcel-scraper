@@ -45,9 +45,10 @@ recognition asks Chit Chats about it. Partner carriers' numbers stay with those 
   recipient's ZIP code, which is dropped. A partner without an adapter keeps only its number.
 - The estimate is the day of Chit Chats' end-of-day estimate, cleared once the parcel is
   delivered or returned. No delivery time is set apart, since the delivery is a relayed scan.
-- Towns, postcodes, the recipient fields, the reply's token and the scans' subtitles, which repeat
-  the partner's routing barcode, are never read. Postcodes are cut out of scan places, and a
-  place still holding a digit is dropped as a possible street address.
+- The recipient's name and destination town, province or state and postcode are read as given.
+  The sender's town and postcode, the reply's token and the scans' subtitles, which repeat the
+  partner's routing barcode, are not. Postcodes are cut out of scan places, and a place still
+  holding a digit is dropped as a possible street address.
 
 ## Limitations
 

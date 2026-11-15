@@ -58,13 +58,13 @@
       "destination_country",
       "offset_timestamps",
       "weight",
-      "pickup_point"
+      "pickup_point",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "origin",
-      "destination",
       "dimensions",
-      "signatory",
       "proof_of_delivery",
       "postcodes"
     ],

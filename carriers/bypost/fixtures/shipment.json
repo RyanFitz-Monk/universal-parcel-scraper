@@ -3,7 +3,7 @@
   "source": "bypost",
   "status": "IN_TRANSIT",
   "origin": { "postal_code": "PRIVATE-0001", "city": "PRIVATE-ORIGIN", "country_code": "NO", "approximate": true },
-  "destination": { "postal_code": "PRIVATE-0002", "city": "PRIVATE-DESTINATION", "country_code": "NO", "approximate": true },
+  "destination": { "postal_code": "0002", "city": "Synthetic Destination", "country_code": "NO", "approximate": true },
   "packages": [
     {
       "number": "BYPKOLLI0000001",

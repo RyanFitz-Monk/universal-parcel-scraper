@@ -62,6 +62,7 @@ describe('ACI Express HTTP adapter', () => {
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'DELIVERED TO CNEE', last_update: null, last_update_local: '2026-03-05T11:34:00',
       expected_delivery: null, delivery_carrier: 'korea-post', delivery_tracking_number: DELIVERED,
+      receiver_name: '홍*동', signed_by: '홍*동 님 - 본인',
     });
     // The repeated arrival at the sorting centre is kept once, and a pickup without a time keeps its day.
     expect(events(result)).toEqual([
@@ -79,8 +80,8 @@ describe('ACI Express HTTP adapter', () => {
     for (const field of ['delivered_at', 'history_truncated', 'summary_only', 'origin_country', 'destination_country']) {
       expect(result).not.toHaveProperty(field);
     }
-    // Neither the recipient's masked name, the postman nor who took the parcel is kept.
-    expect(JSON.stringify(result)).not.toMatch(/홍\*동|김예시|수령인|집배원|본인|배달|EPOST/);
+    // The postman and the delivery's outcome are not kept.
+    expect(JSON.stringify(result)).not.toMatch(/김예시|수령인|집배원|배달|EPOST/);
     expect(deliveryHandoff('aci-express-kr', DELIVERED, result)).toEqual({ carrier: 'korea-post', number: DELIVERED, basis: 'partner' });
   });
 
@@ -88,7 +89,7 @@ describe('ACI Express HTTP adapter', () => {
     const result = parseAciExpressKr(fixture('delivered-cj'), CJ);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: '배송완료', last_update_local: '2026-07-23T15:47:26',
+      last_status_text: '배송완료', last_update_local: '2026-07-23T15:47:26', receiver_name: '홍*동', signed_by: '홍길* 님',
     });
     // The bonded warehouse's row without wording is no scan.
     expect(events(result)).toEqual([
@@ -106,7 +107,7 @@ describe('ACI Express HTTP adapter', () => {
     // CJ Logistics' rules take no ACI number, so the parcel is not handed to it.
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivery_tracking_number');
-    expect(JSON.stringify(result)).not.toMatch(/박샘플|홍길|수령인|예시장치장센터|CJNEW/);
+    expect(JSON.stringify(result)).not.toMatch(/박샘플|수령인|예시장치장센터|CJNEW/);
   });
 
   it('reads a parcel Korea Post has not scanned yet, and hands it over all the same', () => {
@@ -121,7 +122,10 @@ describe('ACI Express HTTP adapter', () => {
       ['2026-05-12T23:50:00', 'Shipment departed to Incheon International Airport', 'in_transit', null],
       ['2026-05-11', 'Shipment pick up and waiting at the origin airport', 'accepted', null],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/홍\*동|수령인|님/);
+    // The line naming who took the parcel shows only a mask before the delivery.
+    expect(result).toMatchObject({ receiver_name: '홍*동' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/수령인|님/);
   });
 
   it('keeps the page’s order over clocks from different places, and wording it does not know', () => {

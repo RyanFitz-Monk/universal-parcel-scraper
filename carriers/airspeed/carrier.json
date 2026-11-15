@@ -37,15 +37,18 @@
     "canaryUrl": "https://airspeed.ph/track-cargo/",
     "shows": [
       "status",
-      "history"
+      "history",
+      "destination_details",
+      "signatory"
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "destination_details",
+      "signatory"
     ],
     "discarded": [
       "references",
-      "destination_details",
       "location_remarks"
     ],
     "unavailable": [

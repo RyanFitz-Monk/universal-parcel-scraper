@@ -34,9 +34,9 @@ delivers across Russia and abroad. Tracked through the lookup its tracking page 
 - `deliveredDate` is the delivery day. The page reads a waybill with one as delivered whatever
   its last event, and so does the adapter, unless the last event is a delivery or a return.
 - `weight` is the weight in kilograms. `receiverCountry` names the destination country in
-  Russian.
-- The recipient, who took the parcel, the kind of shipment, the contract, the tariff and the
-  sender's and recipient's towns in the reply are not kept.
+  Russian, and `receiverCity` the recipient's town, read as `receiver_address`. `recipient`,
+  filled once the parcel is delivered, names who took it when no scan does.
+- The kind of shipment, the contract, the tariff and the sender's town are not kept.
 
 ## Limitations
 

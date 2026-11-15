@@ -59,7 +59,8 @@ describe('APC Postal Logistics HTTP adapter', () => {
     const result = parseApcPostalLogistics(parcel('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered.', last_update: null, last_update_local: '2026-03-12T13:30:43', expected_delivery: null,
-      service_name: 'APC Priority DDU w/ DC', destination_country: 'GB', delivery_carrier: 'royal-mail', delivery_tracking_number: PARTNER });
+      service_name: 'APC Priority DDU w/ DC', receiver_address: 'XX0 0XX', destination_country: 'GB', delivery_carrier: 'royal-mail',
+      delivery_tracking_number: PARTNER });
     // The partner's delivery clock is no instant.
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('expected_delivery_from');
@@ -89,9 +90,9 @@ describe('APC Postal Logistics HTTP adapter', () => {
     expect(result.events!.every((event) => !('time' in event && 'local_time' in event))).toBe(true);
   });
 
-  it('keeps no person, address, postcode, reference, partner note, link or flag', () => {
+  it('keeps no person, street, reference, partner note, link or flag', () => {
     const text = JSON.stringify(parseApcPostalLogistics(parcel('delivered'), DELIVERED)) + JSON.stringify(parseApcPostalLogistics(parcel('in-transit'), TRANSIT));
-    for (const kept of ['Dana', 'Example Street', 'Sampletown,', 'XX0', 'X0X', 'SAMPLE-SHOP', 'Item received', 'Synthetic partner note', 'royalmail.com',
+    for (const kept of ['Dana', 'Example Street', 'Sampletown,', 'SAMPLE-SHOP', 'Item received', 'Synthetic partner note', 'royalmail.com',
       'example.com', 'Unit 4', 'Sendertown', 'Sample Lane', 'PRIUDC', 'PRIPDC', 'isDutyPaid', '05:31:34 PM', 'Ready for Export', '{TRACK_NUMBER}']) {
       expect(text, kept).not.toContain(kept);
     }
@@ -101,7 +102,7 @@ describe('APC Postal Logistics HTTP adapter', () => {
     const result = parseApcPostalLogistics(parcel('in-transit'), TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Synthetic status.',
       last_update: null, last_update_local: '2026-03-09T08:05:00', expected_delivery_from: '2026-03-12', expected_delivery: '2026-03-16',
-      service_name: 'APC Priority DDP w/ DC', destination_country: 'CA' });
+      service_name: 'APC Priority DDP w/ DC', receiver_address: 'X0X 0X0', destination_country: 'CA' });
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivery_tracking_number');
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.description, event.location ?? null, event.provider_code, event.stage ?? null]))

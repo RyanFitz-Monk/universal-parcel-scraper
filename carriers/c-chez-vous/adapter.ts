@@ -5,7 +5,9 @@
  * record as JSON in a `<tracking :tracking-results="…">` attribute: the shop,
  * the recipient's name, address, phone and e-mail, the ordered articles and the
  * booked time window sit next to the per-parcel step. `parse()` reads the
- * delivery type, the step, the delivery date and its window and nothing else.
+ * delivery type, the step, the delivery date and its window, and the
+ * recipient's name and address; not the shop, the phone, the e-mail or the
+ * articles.
  *
  * The order reference alone opens that page, so it is part of the tracking
  * credential: never log it, quote it in an issue, or put a real one in a
@@ -158,6 +160,9 @@ export function parseCChezVousTrackingHtml(
   const currentStep = steps.includes(UNKNOWN_STEP) ? UNKNOWN_STEP : Math.min(...steps);
   const current = stepDetails(currentStep, kind);
   const expectedDelivery = appointmentEstimate(parcels);
+  // Every parcel of an order goes to the one recipient; `pickupName` names them, not a shop.
+  const receiver = parcels.map((parcel) => clean(parcel.pickupName, 160)).find(Boolean);
+  const address = parcels.map((parcel) => clean(parcel.address, 300)).find(Boolean);
 
   return {
     status: current?.status ?? 'unknown',
@@ -165,6 +170,8 @@ export function parseCChezVousTrackingHtml(
     last_status_text: current?.description ?? UNKNOWN_STEP_DESCRIPTION,
     last_update: null,
     expected_delivery: current?.status === 'delivered' ? null : expectedDelivery,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
     timezone: TIMEZONE,
     events: [{
       description: current?.description ?? UNKNOWN_STEP_DESCRIPTION,

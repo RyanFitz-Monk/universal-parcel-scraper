@@ -62,7 +62,8 @@ describe('Chit Chats tracking adapter', () => {
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered, Front Door/Porch', last_update: null, last_update_local: '2026-03-12T14:21:00',
       expected_delivery: null, service_name: 'Chit Chats U.S. Edge', weight_kg: 0.25, dimensions_text: '8 × 6 × 2 in',
-      destination_country: 'US', delivery_carrier: 'usps', delivery_tracking_number: PIC,
+      destination_country: 'US', receiver_name: 'SYNTHETIC RECIPIENT', receiver_address: 'SPRINGVALE, NM 86420-1357',
+      delivery_carrier: 'usps', delivery_tracking_number: PIC,
       events: [
         { local_time: '2026-03-12T14:21:00', description: 'Delivered, Front Door/Porch', location: 'SPRINGVALE, NM', provider_code: 'delivered',
           stage: 'delivered', stage_source: 'carrier_map' },
@@ -89,8 +90,8 @@ describe('Chit Chats tracking adapter', () => {
           stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    // Towns, postcodes, the recipient, the token, the subtitles and the routing ZIP are never read.
-    expect(JSON.stringify(result)).not.toMatch(/86420|98765|NORTHPORT|V0X|SYNTHETIC|synthetictoken|Postage purchased|^420/);
+    // The sender's town and postcode, the token, the subtitles and the routing ZIP are never read.
+    expect(JSON.stringify(result)).not.toMatch(/98765|NORTHPORT|V0X|synthetictoken|Postage purchased|^420/);
   });
 
   it('reads a Canada Post shipment waiting at a post office in winter time, and drops postcodes and street addresses from places', () => {
@@ -98,7 +99,9 @@ describe('Chit Chats tracking adapter', () => {
     expect(result).toMatchObject({ current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map',
       last_status_text: 'Final Notice; Item will be returned to sender if not collected within 10 days', last_update: null,
       last_update_local: '2026-01-20T09:15:00', expected_delivery: '2026-01-15', service_name: 'Chit Chats Canada Tracked', weight_kg: 1.588,
-      destination_country: 'CA', delivery_carrier: 'canada-post', delivery_tracking_number: '9999000000000017' });
+      destination_country: 'CA', receiver_address: 'NORTHVALE, QC X0X 9X9', delivery_carrier: 'canada-post',
+      delivery_tracking_number: '9999000000000017' });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(rows(result)).toEqual([
       ['2026-01-20T09:15:00', 'Final Notice; Item will be returned to sender if not collected within 10 days', 'NORTHVALE, QC', 'ready_for_pickup'],
       ['2026-01-14T13:02:00', 'Item available for pickup at Post Office', 'NORTHVALE, QC', 'ready_for_pickup'],
@@ -111,7 +114,8 @@ describe('Chit Chats tracking adapter', () => {
       ['2026-01-11T11:20:04.312-08:00', 'Received by Chit Chats', undefined, 'accepted'],
       ['2026-01-10T19:02:44.118-08:00', 'Shipment created, Chit Chats awaiting item', undefined, 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/X0X|V0V|SYNTHETIC ST/);
+    expect(JSON.stringify(result.events)).not.toMatch(/X0X|V0V|SYNTHETIC ST/);
+    expect(JSON.stringify(result)).not.toMatch(/V0V|SYNTHETIC ST/);
   });
 
   it('keeps a shipment Chit Chats still holds on its own clocks, without a partner', () => {
@@ -119,6 +123,7 @@ describe('Chit Chats tracking adapter', () => {
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Departed from Chit Chats facility', last_update: '2026-03-31T07:48:12.204-07:00', expected_delivery: '2026-04-03',
       service_name: 'Chit Chats Select', weight_kg: 1.2, dimensions_text: '10 × 8 × 4 in', destination_country: 'CA',
+      receiver_address: 'EASTPORT, ON X9X 0X0',
       events: [
         { time: '2026-03-31T07:48:12.204-07:00', description: 'Departed from Chit Chats facility', stage: 'in_transit', stage_source: 'carrier_map' },
         { time: '2026-03-30T18:03:51.977-07:00', description: 'Arrived at Chit Chats facility', stage: 'in_transit', stage_source: 'carrier_map' },
@@ -131,6 +136,24 @@ describe('Chit Chats tracking adapter', () => {
       shipment.tracking_events[0]!.created_at = '2026-03-31T07:48:12.000-07:00';
     }), TRANSIT);
     expect(relayed).toMatchObject({ last_update: null, last_update_local: '2026-03-31T07:48:12' });
+  });
+
+  it('reads the recipient\'s name and destination as far as the reply gives them, and leaves out changed fields', () => {
+    const recipient = (edit: (shipment: Shipment) => void) => {
+      const result = parseChitChats(edited('delivered', edit), DELIVERED);
+      return [result.receiver_name, result.receiver_address];
+    };
+    expect(recipient((shipment) => {
+      for (const key of ['to_city', 'to_province_code', 'to_postal_code']) delete shipment[key];
+    })).toEqual(['SYNTHETIC RECIPIENT', 'SPRINGVALE, NM 86420-1357']);
+    expect(recipient((shipment) => {
+      Object.assign(shipment, { to_city: null, recipient_city: null, to_province_code: 7, recipient_province_code: '' });
+      shipment._deprecated_fields = { to_name: ['SYNTHETIC'] };
+    })).toEqual([undefined, '86420-1357']);
+    expect(recipient((shipment) => {
+      Object.assign(shipment, { to_province_code: null, recipient_province_code: null, to_postal_code: null, recipient_postal_code: null });
+      delete shipment._deprecated_fields;
+    })).toEqual([undefined, 'SPRINGVALE']);
   });
 
   it('stages wording first, a delivery or out-for-delivery status next, and a coarse status only when the wording says nothing', () => {

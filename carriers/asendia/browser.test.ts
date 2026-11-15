@@ -5,13 +5,19 @@ import { asendiaTrackingApiUrl } from './probe.js';
 
 const number = 'ASE00000000';
 const parcel = () => ({ tracking_id: number, status: 'Delivered', destination_country_name: 'France',
-  recipient_name: 'PRIVATE', order_id: 'PRIVATE' });
+  recipient_name: 'SAMPLE RECIPIENT', recipient_address: '1 Sample Street, 00000 Sample Town', order_id: 'PRIVATE' });
 const payload = () => ({ context_code: 1000, data: [parcel()] });
 describe('Asendia global portal', () => {
   it('keeps a verified current status as a summary when recipient verification hides history', () => {
     const result = parseAsendiaGlobalResponse({ ...payload(), verification_methods: { postal_code: true } }, number);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', summary_only: true, events: [], last_update: null });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', summary_only: true, events: [], last_update: null,
+      receiver_name: 'SAMPLE RECIPIENT', receiver_address: '1 Sample Street, 00000 Sample Town' });
     expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    const anonymous: Record<string, unknown> = { ...parcel() };
+    delete anonymous.recipient_name;
+    delete anonymous.recipient_address;
+    const bare = parseAsendiaGlobalResponse({ context_code: 1000, data: [anonymous] }, number);
+    expect([bare.receiver_name, bare.receiver_address]).toEqual([undefined, undefined]);
   });
   it('requires an explicit successful empty result, and binds positive results to the full identifier', () => {
     expect(() => parseAsendiaGlobalResponse({ context_code: 1000, data: [] }, number)).toThrowError(expect.objectContaining({ kind: 'not_found' }));

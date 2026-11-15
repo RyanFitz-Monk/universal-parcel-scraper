@@ -57,12 +57,12 @@
       "status",
       "history",
       "location",
-      "eta"
+      "eta",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "signatory",
       "delivery_pin",
       "recipient_verification",
       "payment_details",

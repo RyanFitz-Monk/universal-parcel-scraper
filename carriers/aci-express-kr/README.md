@@ -40,8 +40,9 @@ Post or CJ Logistics for delivery. Tracked through its e-commerce tracking page.
 - Korea Post carries the parcel on under the same thirteen-digit number, which its rules claim,
   so the parcel is handed to it under that number. The page does not show CJ Logistics'
   waybill, and CJ's rules claim no number, so a CJ parcel has no hand-off.
-- The recipient's masked name, the column naming the postman or the delivery's outcome, the
-  driver CJ's direct routes name in a branch and the line naming who took the parcel are not
+- The recipient's masked name is read as `receiver_name`, and the line under the delivering
+  carrier's scans naming who took a delivered parcel as `signed_by`. The column naming the
+  postman or the delivery's outcome and the driver CJ's direct routes name in a branch are not
   kept.
 
 ## Limitations

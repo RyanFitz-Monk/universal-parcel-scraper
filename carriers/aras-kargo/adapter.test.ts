@@ -40,7 +40,8 @@ describe('Aras Kargo direct tracking', () => {
   it('reads the movements, the failed deliveries and the delivery as wall clocks, newest first', () => {
     const result = normalizeCarrierResult(parseAras(summary, movements, NUMBER));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'TESLİM EDİLDİ', last_update: null, last_update_local: '2026-01-12T10:20:00', expected_delivery: null });
+      last_status_text: 'TESLİM EDİLDİ', last_update: null, last_update_local: '2026-01-12T10:20:00', expected_delivery: null,
+      receiver_name: 'R---- E----', signed_by: 'T---- A----' });
     expect(result.events?.map(event => [event.local_time, event.description, event.location, event.stage])).toEqual([
       ['2026-01-12T10:20:00', 'TESLİM EDİLDİ', 'ÖRNEK', 'delivered'],
       ['2026-01-11', 'UĞRAMA NOTU BIRAKILDI (1-2)', undefined, 'failed_attempt'],
@@ -126,6 +127,11 @@ describe('Aras Kargo direct tracking', () => {
     expect(parseAras(edit(clear, $ => $('#planlanan_teslim_tarihi').text('10.01.2026')), movements, NUMBER).expected_delivery).toBeNull();
     expect(parseAras(edit(clear, $ => $('#planlanan_teslim_tarihi').text('')), movements, NUMBER).expected_delivery).toBeNull();
     expect(parseAras(edit(clear, $ => $('#Son_Durum').text('YOLDA')), movements, NUMBER)).toMatchObject({ current_stage: 'in_transit', last_status_text: 'YOLDA' });
+    // Who took the parcel is read only once it is delivered; the recipient's name always.
+    expect(parseAras(clear, movements, NUMBER)).toMatchObject({ receiver_name: 'R---- E----' });
+    expect(parseAras(clear, movements, NUMBER)).not.toHaveProperty('signed_by');
+    const blank = parseAras(edit(summary, $ => $('#alici_adi_soyadi, #LabelTeslimAlan2').text('')), movements, NUMBER);
+    expect([blank.receiver_name, blank.signed_by]).toEqual([undefined, undefined]);
   });
 
   it('keeps a delivery without its time, and new wording unstaged', () => {

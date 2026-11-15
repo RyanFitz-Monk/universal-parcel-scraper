@@ -35,17 +35,18 @@ through the lookup its tracking page makes.
   "Return To Station" as on the page.
 - Only a hub scan with a town keeps its coordinates. The others can sit at the shipper's site or
   the recipient's door.
-- The reply also gives the sender's and recipient's towns and ZIP codes, the recipient's position,
-  who took the parcel, where it was left, why a delivery failed, delivery photos and an estimate
-  the page does not show. None of them is read; only the destination country is kept. The page
-  names the Vinted Go point a parcel waits at, which the adapter does not read either.
+- The adapter reads the recipient's town and ZIP code, and who took a delivered parcel from the
+  delivery scan's `ConsigneeName`. The reply also gives the sender's town and ZIP code, the
+  recipient's position, where the parcel was left, why a delivery failed, delivery photos and an
+  estimate the page does not show, which are not read. The page names the Vinted Go point a
+  parcel waits at, which the adapter does not read either.
 
 ## Limitations
 
 - The tracker also takes five-character package codes, and `BTS` followed by such a code, and
   swaps them for the tracking number they stand for. A code that short lets a made-up value open
   a stranger's parcel, so the adapter refuses them as invalid input.
-- No estimate, weight, service, sender or recipient.
+- No estimate, weight, service, sender or recipient name.
 
 ## Numbers
 

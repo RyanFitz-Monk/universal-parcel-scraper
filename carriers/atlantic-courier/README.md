@@ -32,8 +32,9 @@ scans its tracker relays. Tracked through the lookup its tracking page makes.
 - The summary's `Delivery Date`, such as `1st August 2026 , 1:18 PM`, settles the shipment as
   delivered. Before a scan delivers it, the delivery is the newest event, on a wall clock, since
   the summary names no place. A delivery at midnight is a day without its time.
-- The consignee's name and the `Signing for` name are dropped, and removed from the scans along
-  with a partner's `signed by` or `received by` clause.
+- The consignee's name is read as `receiver_name`. Once delivered, the `Signing for` name, else
+  the name after a partner's `signed by` or `received by`, is read as `signed_by`. Scans keep
+  these names in their wording and are staged without them.
 - The summary shows the partner's forwarding number as `Fwd No`, without naming the partner. The
   relayed scans name it at most in passing, and the one seen, DPD, runs several national networks,
   so the forwarding number is not kept and there is no hand-off.

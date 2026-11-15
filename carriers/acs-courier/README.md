@@ -51,12 +51,12 @@ The reply's expected delivery day, which the page does not show, is kept while t
 moves and the day has not passed. The pickup point is the SmartPoint's name, once the parcel
 waits there or was collected from it.
 
-The reply's notes hold the recipient's name, and each scan's information can hold a masked
-signatory or sender name or a delivery problem's reason. The adapter reads the information only
-on a failed delivery, as its reason after the scan's wording, and drops any that holds an
-asterisk, a digit or an at sign, as a masked name, a phone or an address does. It reads none of
-the notes, the recipient, sender, address or branch phone fields, the progress rail or the
-summary delivery date.
+The reply names the recipient and their address, masked, and each scan's information can hold a
+masked signatory or sender name or a delivery problem's reason. The adapter reads the recipient
+fields, the information on a delivery as its signatory, and the information on a failed
+delivery as its reason after the scan's wording, dropping any reason that holds an asterisk, a
+digit or an at sign, as a masked name, a phone or an address does. It reads none of the notes,
+the sender or branch phone fields, the progress rail or the summary delivery date.
 
 ## Limitations
 

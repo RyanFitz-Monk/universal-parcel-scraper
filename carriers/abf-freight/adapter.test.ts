@@ -49,20 +49,20 @@ describe('ABF Freight tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery as an instant on the delivering center’s clock, and the pickup at a center on Central time', () => {
+  it('reads a delivery as an instant on the delivering center’s clock with who took it, and the pickup at a center on Central time', () => {
     const result = parseAbfFreight(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       // 10:15 at a center an hour behind Central is Mountain time, whatever offset the service gives it.
       last_update: '2026-03-12T10:15:00-06:00', expected_delivery: null, delivered_at: '2026-03-12T10:15:00-06:00',
-      weight_kg: 54.431, destination_country: 'US', summary_only: true,
+      signed_by: 'SYNTHETIC SIGNER', weight_kg: 54.431, destination_country: 'US', summary_only: true,
       events: [
         { time: '2026-03-12T10:15:00-06:00', description: 'Delivered', location: 'MESA LINDA, TX', stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2026-03-06T15:20:11-06:00', description: 'Picked Up', location: 'BAYPORT, TX', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    // The signer, instructions, addresses, postcodes, positions and contacts stay behind.
-    const text = JSON.stringify(result);
+    // The instructions, addresses, postcodes, positions and contacts stay behind.
+    const text = JSON.stringify({ ...result, signed_by: undefined });
     for (const value of ['SYNTHETIC', 'SAMPLE', '00000', '10.5', 'ABF SERVICE CENTER', 'Received by', '901', '902']) {
       expect(text, value).not.toContain(value);
     }

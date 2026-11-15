@@ -58,11 +58,12 @@ describe('Best Overnite Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history within California in Pacific time, without the signer or the parties', () => {
+  it('reads a delivered history within California in Pacific time, with the consignee and the signer but not the shipper', () => {
     const result = parseBoe(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'DELIVERED (CLEAR)',
       last_update: '2026-03-04T14:25:00-08:00', delivered_at: '2026-03-04T14:25:00-08:00', expected_delivery: null,
+      receiver_name: 'DOE,JANE Q', receiver_address: '100 SAMPLE WAY\nUNIT 0\nEXAMPLE CITY, CA 90999', signed_by: 'J.DOE',
     });
     expect(result).not.toHaveProperty('last_update_local');
     expect(result).not.toHaveProperty('summary_only');
@@ -71,8 +72,7 @@ describe('Best Overnite Express HTTP adapter', () => {
       ['2026-03-04T14:25:00-08:00', 'DELIVERED (CLEAR)', 'delivered', null],
       ['2026-03-02', 'PICK UP MADE', 'accepted', 'HUBTOWN'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/DOE|SAMPLE WAY|EXAMPLE|SAMPLEVILLE|FLOORING|909|SAMPLEBOL|PO0|signed/i);
-    expect(result).not.toHaveProperty('receiver_name');
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLEVILLE|FLOORING|EXAMPLE PLAZA|90998|SAMPLEBOL|PO0|signed by/i);
     expect(result).not.toHaveProperty('sender_name');
   });
 
@@ -81,10 +81,15 @@ describe('Best Overnite Express HTTP adapter', () => {
     expect(result).toMatchObject({
       status: 'in_transit', current_stage: 'accepted', last_status_text: 'PICK UP MADE',
       last_update: null, last_update_local: '2026-07-13T15:10:00', expected_delivery: '2026-07-15',
+      receiver_name: 'SAMPLE HOME STORE', receiver_address: '200 EXAMPLE ROAD\nSAMPLE MESA, AZ 85999',
     });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
     expect(events(result)).toEqual([['2026-07-13T15:10:00', 'PICK UP MADE', 'accepted', 'SAMPLE VALLEY']]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE MESA|HOME STORE|FURNITURE|EXAMPLE ROAD|859|PU0|SAMPLEBOL/i);
+    expect(JSON.stringify(result)).not.toMatch(/FURNITURE|SAMPLE AVE|SAMPLEVILLE|PU0|SAMPLEBOL/i);
+    // A consignee the reply gives without a street keeps what it has.
+    expect(parseBoe(transit((body) => { body.objConsignee = { name: '', city: 'SAMPLE MESA', state: 'AZ', zip: '' }; }), IN_TRANSIT))
+      .toMatchObject({ receiver_address: 'SAMPLE MESA, AZ' });
   });
 
   it('reads the clocks in Pacific time only between places that keep it throughout', () => {
@@ -140,6 +145,7 @@ describe('Best Overnite Express HTTP adapter', () => {
     expect(summary).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       last_update: '2026-03-04T14:25:00-08:00', expected_delivery: null, delivered_at: '2026-03-04T14:25:00-08:00',
+      receiver_name: 'DOE,JANE Q', receiver_address: '100 SAMPLE WAY\nUNIT 0\nEXAMPLE CITY, CA 90999', signed_by: 'J.DOE',
       summary_only: true, events: [],
     });
     expect(parseBoe(transit((body) => { body.collHistories = []; body.status = 'Delivered on 7/15/2026 at 11:00 signed by J.DOE'; }), IN_TRANSIT))

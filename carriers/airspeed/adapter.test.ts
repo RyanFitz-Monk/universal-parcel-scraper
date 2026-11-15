@@ -9,15 +9,20 @@ import { airspeedStage, statusMap } from './status.js';
 const NUMBER = '974682513';
 const fixture = () => readFileSync(new URL('./fixtures/tracking.html', import.meta.url), 'utf8');
 const unknown = () => fixture().replace(NUMBER, '').replace(/<table id="GridViewWaybillHistory">[\s\S]*?<\/table>/, '')
-  .replace('PRIVATE reference', '').replace('PRIVATE receiver address', '').replace('7/4/2026 2:15:16 PM', '').replace('Delivered', '');
+  .replace('PRIVATE reference', '').replace('SAMPLE DISTRICT SAMPLE CITY SAMPLE PROVINCE', '').replace('7/4/2026 2:15:16 PM', '').replace('Delivered', '');
 describe('Airspeed cargo tracker', () => {
   it('binds the separate whole waybill, reverses the grid and preserves wall clocks without mixed remarks', () => {
     const result = parseAirspeed(fixture(), NUMBER);
-    expect(result).toMatchObject({ current_stage: 'delivered', last_update: null, last_update_local: '2026-07-04T14:15:16', expected_delivery: null });
+    expect(result).toMatchObject({ current_stage: 'delivered', last_update: null, last_update_local: '2026-07-04T14:15:16', expected_delivery: null,
+      receiver_address: 'SAMPLE DISTRICT SAMPLE CITY SAMPLE PROVINCE', signed_by: 'SAMPLE RECEIVER' });
     expect(result.events!.map(event => event.stage)).toEqual(['delivered', 'accepted', undefined, 'accepted', 'registered']);
     expect(result.events!.every(event => event.local_time && !event.time && !event.location)).toBe(true);
     expect(result.events![1]!.local_time).toBe('2026-07-04T12:00:00');
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|example\.invalid/); expect(result).not.toHaveProperty('delivered_at');
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|DATE AND TIME/); expect(result).not.toHaveProperty('delivered_at');
+    // Only a delivery's remarks name who took the parcel.
+    const moving = parseAirspeed(fixture().replaceAll('Delivered', 'Received at AIC WHSE'), NUMBER);
+    expect(moving).toMatchObject({ current_stage: 'accepted', receiver_address: 'SAMPLE DISTRICT SAMPLE CITY SAMPLE PROVINCE' });
+    expect(moving).not.toHaveProperty('signed_by');
   });
   it('ignores the empty view\'s generated booking clock and rejects unbound or mixed histories', () => {
     expect(() => parseAirspeed(unknown(), NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate', reason: 'expired_or_unknown' }));

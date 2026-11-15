@@ -55,6 +55,7 @@ describe('American West HTTP adapter', () => {
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered To Customer', last_update: null, last_update_local: '2026-09-25', expected_delivery: null,
+      receiver_address: 'EXAMPLETON, TX',
     });
     for (const field of ['summary_only', 'history_truncated', 'delivered_at', 'receiver_name', 'sender_name', 'weight_kg']) {
       expect(result).not.toHaveProperty(field);
@@ -75,14 +76,16 @@ describe('American West HTTP adapter', () => {
     expect(result).toMatchObject({
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: '1st Call 2 Customer', last_update: null, last_update_local: '2026-10-16', expected_delivery: '2026-10-22',
+      receiver_address: 'EXAMPLE CITY, AZ',
     });
     expect(events(result)).toEqual([
       ['2026-10-16', 'first_contacted_date', '1st Call 2 Customer', null, null],
       ['2026-10-15', 'atadp', 'Arrived FinalMile Agent', null, 'in_transit'],
       ['2026-10-08', 'pickup_date', 'Pickup', 'SAMPLEVILLE, CA', 'accepted'],
     ]);
-    // The last town and the town it goes to are not kept before the delivery.
-    expect(JSON.stringify(result)).not.toMatch(/EXAMPLE CITY|SAMPLE-BOL|00000000000033|215|2026-10-16T/);
+    // The last town is not kept, and the town it goes to is the recipient's address, not a scan's place.
+    expect(JSON.stringify(result.events)).not.toMatch(/EXAMPLE CITY/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE-BOL|00000000000033|215|2026-10-16T/);
     expect(parseAmericanWest(withField(fixture('in-transit'), 'appointment_date', ' 10-21-2026 '), IN_TRANSIT))
       .toMatchObject({ expected_delivery: '2026-10-21' });
     expect(parseAmericanWest(withField(fixture('in-transit'), 'appointment_date', ' 11-2-2026 '), IN_TRANSIT))
@@ -116,12 +119,16 @@ describe('American West HTTP adapter', () => {
       .toMatchObject({ status: 'unknown', last_status_text: 'sample step', summary_only: true });
   });
 
-  it('keeps a town and its state and nothing else', () => {
-    const at = (value: string) => parseAmericanWest(withField(fixture('delivered'), 'delivery_location', value), DELIVERED).events![0]!.location ?? null;
+  it('keeps a town and its state and nothing else as a place, and the delivery town whole as the recipient’s address', () => {
+    const read = (value: string) => parseAmericanWest(withField(fixture('delivered'), 'delivery_location', value), DELIVERED);
+    const at = (value: string) => read(value).events![0]!.location ?? null;
     expect(at('EXAMPLETON, TX')).toBe('EXAMPLETON, TX');
     expect(at('ST. SAMPLE TX')).toBe('ST. SAMPLE, TX');
     expect(at('EXAMPLETON TX 75000')).toBeNull();
     expect(at('')).toBeNull();
+    expect(read('ST. SAMPLE TX').receiver_address).toBe('ST. SAMPLE, TX');
+    expect(read('EXAMPLETON TX 75000').receiver_address).toBe('EXAMPLETON TX 75000');
+    expect(read('')).not.toHaveProperty('receiver_address');
   });
 
   it('reads the notice for a number the tracker finds nothing under as inconclusive, since older shipments get it too', () => {

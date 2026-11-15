@@ -42,14 +42,15 @@ describe('ATS Healthcare tracking', () => {
     expect(atsTrackingUrl(NUMBER)).toBe(fetcher.mock.calls[0]![0]);
   });
 
-  it('reads the status and its wall clock, staged by the progress bar, without the signatory', () => {
+  it('reads the status and its wall clock, staged by the progress bar, and the signatory of a delivery', () => {
     const result = parseAts(delivered(), NUMBER);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       provider_code: '6', last_update: null, last_update_local: '2026-03-05T14:10:56', expected_delivery: null,
-      summary_only: true, events: [],
+      signed_by: 'SYNTHETIC SIGNER', summary_only: true, events: [],
     });
-    expect(JSON.stringify(result)).not.toContain('SYNTHETIC SIGNER');
+    // A shipment still on its way has no signatory.
+    expect(parseAts(atStep(5, 'Synthetic wording, 2026/03/05 07:15:30'), NUMBER)).not.toHaveProperty('signed_by');
   });
 
   it('stages a shipment on its way by its progress step, whatever the status words', () => {

@@ -20,7 +20,7 @@ const CLOCK = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.\d{1,9})?(Z|[+-]\
 // The tracker's word for a shipment without attachments.
 const NO_ATTACHMENT = /^NO_ATTACHMENT$/i;
 // Who took the parcel, after a delivery's wording, as 2GO's earlier tracker wrote it.
-const RECEIVER = /^(.*?\bdeliver[\s\S]*?)\s*[,;:.\-–]?\s*\b(?:received|signed)\s+by\b[\s\S]*$/i;
+const RECEIVER = /^(.*?\bdeliver[\s\S]*?)\s*[,;:.\-–]?\s*\b(?:received|signed)\s+by\b\s*:?\s*([\s\S]*)$/i;
 // A run of nine or more digits, with the separators phone numbers are written with.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 // The hub an arrival scan names.
@@ -52,9 +52,18 @@ export function isTwoGoNotFound(payload: unknown): boolean {
   return isRecord(payload) && typeof payload.error === 'string' && /\bnot found\b/i.test(payload.error);
 }
 
-/** A scan's wording, without who took the parcel or phone numbers. */
+/** A scan's wording, without phone numbers. */
 export function twoGoWording(status: string): string {
-  return clean(clean(status, 500).replace(RECEIVER, '$1').replace(PHONE, ''), 300).replace(/[\s,;:\-–]+$/, '');
+  return trimEnd(clean(clean(status, 500).replace(PHONE, ''), 300));
+}
+
+const trimEnd = (text: string) => text.replace(/[\s,;:\-–]+$/, '');
+
+/** Who took the parcel, as a delivery's wording names them, and the wording before them, which carries the stage. */
+function twoGoReceiver(wording: string): { delivery: string; signer: string } | null {
+  const match = RECEIVER.exec(wording);
+  const signer = clean(match?.[2], 120);
+  return match && signer ? { delivery: trimEnd(match[1]!), signer } : null;
 }
 
 /** A scan's clock: an instant only when the reply gives its offset, else the wall clock to the second. */
@@ -72,7 +81,7 @@ function scanClock(value: unknown): { wall: string; time?: string; local_time?: 
   return { wall, time: instant.toISO({ suppressMilliseconds: true }) };
 }
 
-interface Scan { wall: string; index: number; event: CarrierEvent }
+interface Scan { wall: string; index: number; event: CarrierEvent; signer?: string }
 
 function projectRow(row: unknown, shipment: string, index: number): Scan {
   if (!isRecord(row) || typeof row.trackingNumber !== 'string' || typeof row.status !== 'string') {
@@ -83,8 +92,9 @@ function projectRow(row: unknown, shipment: string, index: number): Scan {
   if (!description) throw new SchemaError(PROVIDER, '2GO Express returned a scan without wording');
   const { wall, ...clock } = scanClock(row.timestamp);
   const location = clean(ARRIVAL.exec(description)?.[1], 120);
-  const staged = twoGoStage(description);
-  return { wall, index, event: {
+  const receiver = twoGoReceiver(description);
+  const staged = twoGoStage(receiver?.delivery ?? description);
+  return { wall, index, ...(receiver ? { signer: receiver.signer } : {}), event: {
     ...clock, ...(location ? { location } : {}), description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   } };
@@ -130,11 +140,14 @@ export function parseTwoGo(payload: unknown, requested: string, shipment = reque
   if (!scans.length) throw new NoHistoryError(PROVIDER);
 
   // Newest first by wall clock; scans of the same second take the later row first.
-  const events = scans.sort((left, right) => right.wall.localeCompare(left.wall) || right.index - left.index).map(({ event }) => event);
+  scans.sort((left, right) => right.wall.localeCompare(left.wall) || right.index - left.index);
+  const events = scans.map(({ event }) => event);
   const newest = events[0]!;
-  const current = events.find((event) => event.stage);
+  const currentScan = scans.find(({ event }) => event.stage);
+  const current = currentScan?.event;
   const stage = current?.stage as Stage | undefined;
   const deliveredAt = stage === 'delivered' ? current!.time : undefined;
+  const signedBy = stage === 'delivered' ? currentScan!.signer : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -143,6 +156,7 @@ export function parseTwoGo(payload: unknown, requested: string, shipment = reque
     ...(newest.time ? {} : { last_update_local: newest.local_time }),
     expected_delivery: null,
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     ...(own !== number ? { canonical_tracking_number: own } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

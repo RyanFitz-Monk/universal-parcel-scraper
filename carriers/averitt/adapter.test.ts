@@ -19,7 +19,7 @@ const carrier = (fetcher: typeof fetch) => adapter(environment(fetcher));
 const rows = (result: ReturnType<typeof parseAveritt>) =>
   result.events!.map(event => [event.local_time, event.location, event.description, event.stage]);
 // Parties, references and the delivering service center the page names.
-const PRIVATE = /EXAMPLE SHIPPER|CONSIGNEE|SAMPLESIGNER|BOLSAMPLE|POSAMPLE|SERVICE CENTER/;
+const PRIVATE = /EXAMPLE SHIPPER|BOLSAMPLE|POSAMPLE|SERVICE CENTER/;
 
 describe('Averitt tracking adapter', () => {
   it('opens the direct tracking link once for the whole PRO number through the supplied transport and records the step', async () => {
@@ -36,10 +36,11 @@ describe('Averitt tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the shipment progression newest first, as wall clocks, with the weight in kilograms and no party or reference', () => {
+  it('reads the shipment progression newest first, as wall clocks, with the weight in kilograms, the consignee and no shipper or reference', () => {
     const result = parseAveritt(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-05T09:40:00', expected_delivery: null, weight_kg: 566.99 });
+      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-03-05T09:40:00', expected_delivery: null, weight_kg: 566.99,
+      receiver_name: 'EXAMPLE CONSIGNEE LLC', receiver_address: 'EXAMPLEVILLE, TN', signed_by: 'A SAMPLESIGNER' });
     expect(rows(result)).toEqual([
       ['2026-03-05T09:40:00', 'EXAMPLEVILLE, TN', 'DELIVERED', 'delivered'],
       ['2026-03-05T07:30:00', 'EXAMPLEVILLE, TN', 'OUT FOR DELIVERY', 'out_for_delivery'],
@@ -67,7 +68,12 @@ describe('Averitt tracking adapter', () => {
   it('follows the newest row past a status the page has not moved on, and keeps its own status for a delivery', () => {
     const result = parseAveritt(page('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'RELAY ARRIVAL', last_update_local: '2026-04-14T03:07:00', weight_kg: 217.724 });
+      last_status_text: 'RELAY ARRIVAL', last_update_local: '2026-04-14T03:07:00', weight_kg: 217.724,
+      receiver_name: 'EXAMPLE CONSIGNEE LLC', receiver_address: 'EXAMPLEVILLE, TN' });
+    // No one has taken it yet, and a name the page shows before the delivery is not read.
+    expect(result).not.toHaveProperty('signed_by');
+    expect(parseAveritt(page('in-transit').replace(/(Delivery Name:[\s\S]*?ae-result-list--item-val[^>]*>)\s*-\s*</, '$1A SAMPLESIGNER<'),
+      IN_TRANSIT)).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-04-14T03:07:00', 'RELAYBURG, AL', 'RELAY ARRIVAL', 'in_transit'],
       ['2026-04-13T22:41:00', 'SAMPLETOWN, GA', 'ORIGIN DEPARTURE', 'in_transit'],

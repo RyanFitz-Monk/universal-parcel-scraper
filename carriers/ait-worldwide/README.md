@@ -43,12 +43,14 @@ Recognition stays HTTP-only.
 - The progress meter over the history runs from `Initiated` to `Delivered`. A delivery, from a
   row or the meter, settles the shipment; otherwise the further of the newest staged row and the
   meter decides. A meter step ahead of every row has no clock.
-- The town the shipment is delivered to, who signed for it, the office's phone number and the
-  rows' explanations are not kept, nor are the scheduling invitation and links.
+- The town the shipment is delivered to is read as `receiver_address`, and who signed for it,
+  from the delivery panel or else a row's wording, as `signed_by`. A row keeps the signer in
+  its wording. The office's phone number and the rows' explanations are not kept, nor are the
+  scheduling invitation and links.
 
 ## Limitations
 
-- No location, weight, service, sender or recipient.
+- No location, weight, service, sender or recipient name.
 - A number reaches the adapter when it is filed under AIT or opened from a FasTrak link: bare
   digit runs are shared by many carriers, so no rule claims them and preflight does not ask it.
 

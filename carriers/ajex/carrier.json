@@ -61,11 +61,14 @@
       "offset_timestamps",
       "delivered_at",
       "destination_country",
-      "failed_delivery_reason"
+      "failed_delivery_reason",
+      "destination",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "origin",
-      "destination",
       "sender_name",
       "order_contents",
       "weight",

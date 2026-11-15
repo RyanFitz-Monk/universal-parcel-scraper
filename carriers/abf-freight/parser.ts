@@ -35,6 +35,8 @@ const SPLIT_STATE_ZONES: Readonly<Record<string, readonly string[]>> = {
   TN: ['America/Chicago', 'America/New_York'],
   TX: ['America/Chicago', 'America/Denver'],
 };
+// Who took a delivery, as the status details end: "… at 10:15 AM MDT. Received by NAME".
+const RECEIVED_BY = /\bReceived by\s+(.+?)\.?\s*$/i;
 // The progress rail's steps the page shows as done or under way.
 const REACHED = new Set(['complete', 'inProgress']);
 // The pickup kinds the page shows with a date it happened on.
@@ -221,8 +223,8 @@ function shipmentOf(payload: unknown, number: string): Record<string, unknown> {
  * The reply of `GET /api/nlo/track?ref={PRO}`: the number asked, with the
  * shipments it finds, here the shipment of that PRO. Without an account the
  * reply is a summary: the current status, the progress rail, the pickup and
- * delivery dates and the two ABF service centers. The status details name who
- * signed for a delivery; they, the parties, appointment and contacts, the
+ * delivery dates and the two ABF service centers. Only who took a delivery
+ * is read from the status details; the parties, appointment and contacts, the
  * service centers' addresses, references and documents are never read.
  */
 export function parseAbfFreight(payload: unknown, raw: string): CarrierResult {
@@ -265,6 +267,7 @@ export function parseAbfFreight(payload: unknown, raw: string): CarrierResult {
   const estimate = ESTIMATES.has(dateKind) && stage !== 'delivered' ? wallOf(text(transit, 'effectiveDate', 40)) : null;
   const weight = weightOf(details);
   const country = destination?.country;
+  const signer = stage === 'delivered' ? cleanScalar(RECEIVED_BY.exec(text(transit, 'statusDetails', 300))?.[1], 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -273,6 +276,7 @@ export function parseAbfFreight(payload: unknown, raw: string): CarrierResult {
     ...(current?.local_time ? { last_update_local: current.local_time } : {}),
     expected_delivery: estimate?.day ?? null,
     ...(delivered?.time ? { delivered_at: delivered.time } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(weight !== null ? { weight_kg: weight } : {}),
     ...(country ? { destination_country: country } : {}),
     summary_only: true,

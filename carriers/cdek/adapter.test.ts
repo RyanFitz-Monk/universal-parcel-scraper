@@ -57,10 +57,11 @@ describe('CDEK tracking adapter', () => {
     expect(new Headers(fetcher.mock.calls[1]![1]!.headers).get('user-agent')).toBe('SyntheticHost/1.0');
   });
 
-  it('reads an order collected at a pickup point newest first, on UTC clocks, by city and without people or addresses', () => {
+  it('reads an order collected at a pickup point newest first, on UTC clocks, by city, with the recipient and the pickup code', () => {
     const result = parseCdek(fixture('pickup'), PICKUP);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Вручён', last_update: '2026-05-07T15:20:30Z', delivered_at: '2026-05-07T15:20:30Z', expected_delivery: null });
+      last_status_text: 'Вручён', last_update: '2026-05-07T15:20:30Z', delivered_at: '2026-05-07T15:20:30Z', expected_delivery: null,
+      receiver_name: 'Иван П.', receiver_address: 'Образцово, ул. Вымышленная, 7', pickup_code: '4321' });
     expect(rows(result)).toEqual([
       ['2026-05-07T15:20:30Z', 'DELIVERED', 'Вручён', undefined, 'delivered'],
       ['2026-05-06T11:22:33.444Z', 'READY_FOR_PICK_UP', 'Поступил. Заберите заказ', 'Образцово', 'ready_for_pickup'],
@@ -76,7 +77,7 @@ describe('CDEK tracking adapter', () => {
     expect(result.pickup_point).toBeUndefined();
     for (const [name, number] of [['pickup', PICKUP], ['courier', COURIER]] as const) {
       const serialized = JSON.stringify(parseCdek(fixture(name), number));
-      for (const hidden of ['Иван', 'Мария', 'Вымышленн', 'Условн', 'Придуманн', 'Черов', '+7000', '4321', '50.12', 'OBR99', 'Пункт выдачи',
+      for (const hidden of ['Условн', 'Черов', '+7000', '50.12', 'OBR99', 'Пункт выдачи',
         'Заказ доставлен', '2026-05-09', '2026-05-14', '2026-06-05T11:00', '"2026-06-05"']) {
         expect(serialized, `${name} ${hidden}`).not.toContain(hidden);
       }
@@ -86,8 +87,9 @@ describe('CDEK tracking adapter', () => {
   it('leaves out milestones the order has not reached, and reads a courier’s attempts', () => {
     const result = parseCdek(fixture('courier'), COURIER);
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', last_status_text: 'Выдан курьеру',
-      last_update: '2026-06-05T06:10:00.123Z' });
+      last_update: '2026-06-05T06:10:00.123Z', receiver_name: 'Мария С.', receiver_address: 'Тестоград, ул. Придуманная, 3, кв. 5' });
     expect(result.delivered_at).toBeUndefined();
+    expect(result.pickup_code).toBeUndefined();
     expect(rows(result).map(row => [row[1], row[3], row[4]])).toEqual([
       ['PICKED_UP_BY_COURIER', 'Тестоград', 'out_for_delivery'], ['COURIER_DELIVERY_FAILED', 'Тестоград', 'failed_attempt'],
       ['PICKED_UP_BY_COURIER', 'Тестоград', 'out_for_delivery'], ['ACCEPTED_AT_COURIER_POINT', 'Тестоград', 'in_transit'],

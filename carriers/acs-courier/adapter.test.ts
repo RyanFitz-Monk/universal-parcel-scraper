@@ -95,7 +95,9 @@ describe('ACS Courier HTTP adapter', () => {
     const result = parseAcs(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivery via SmartPoint', last_update: null, last_update_local: '2030-03-07T15:55:24',
-      expected_delivery: null, pickup_point: 'SMARTPOINT LOCKER SAMPLEVILLE' });
+      expected_delivery: null, pickup_point: 'SMARTPOINT LOCKER SAMPLEVILLE',
+      // The recipient and the signatory as ACS masks them.
+      receiver_name: 'J*** D**', receiver_address: 'S*******', signed_by: 'J*** D**' });
     expect(result.delivered_at).toBeUndefined();
     expect(result.events!.map(event => [event.local_time, event.stage, event.stage_source, event.description, event.location])).toEqual([
       ['2030-03-07T15:55:24', 'delivered', 'carrier_map', 'Delivery via SmartPoint', 'SMARTPOINT LOCKER SAMPLEVILLE'],
@@ -113,7 +115,7 @@ describe('ACS Courier HTTP adapter', () => {
       ['2030-03-04T10:30:41', 'registered', 'carrier_map', 'Print ACSConnect/WebTools label', 'EXAMPLE NORTH'],
     ]);
     expect(result.events!.every(event => event.time === undefined && event.provider_code === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/J\*\*\*|D\*\*|Recipient|EXAMPLE SHOP|S\*\*\*|2100000000|2600000000|EX-\d|PICK UP/);
+    expect(JSON.stringify(result)).not.toMatch(/Recipient|EXAMPLE SHOP|2100000000|2600000000|EX-\d|PICK UP/);
   });
 
   it('keeps a failed attempt current through the notice after it, with its reason', () => {
@@ -125,8 +127,10 @@ describe('ACS Courier HTTP adapter', () => {
     expect(result.events![1]).toMatchObject({ local_time: '2030-03-05T15:20:10', description: 'Not delivered (DIFFICULT TO ACCESS AREA)',
       stage: 'failed_attempt', stage_source: 'carrier_map' });
     expect(result.pickup_point).toBeUndefined();
-    // The sender's name on the pickup scan and the masked recipient stay out.
-    expect(JSON.stringify(result)).not.toMatch(/EXAMPLE SHOP|J\*\*\*/);
+    // The sender's name on the pickup scan stays out, and nobody signed for the parcel.
+    expect(JSON.stringify(result)).not.toMatch(/EXAMPLE SHOP/);
+    expect(result).toMatchObject({ receiver_name: 'J*** D**', receiver_address: 'S*******' });
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('reads no masked name, phone or address as a failed delivery\'s reason', () => {

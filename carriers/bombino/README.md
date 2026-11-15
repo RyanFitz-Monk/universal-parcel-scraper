@@ -34,8 +34,10 @@ alongside. Tracked through the lookup its tracking page makes.
 - The forwarding number becomes the delivery tracking number, and its partner the delivery
   carrier, only when the partner's tracking link in the reply carries the number and names one
   catalog carrier. The page shows the number and links to the partner's site without naming it.
-- Names, cities, the customer reference, the chargeable weight, the proof of delivery, scan
-  remarks and the pieces are not read. A scan's wording loses the consignee's or receiver's name.
+- The shipment's details give the consignee's name and city, read as the recipient, and once
+  delivered the receiver's name, read as the signatory. The shipper's city, the customer
+  reference, the chargeable weight, the proof of delivery, scan remarks and the pieces are not
+  read. A scan's place loses the consignee's or receiver's name.
 
 ## Limitations
 

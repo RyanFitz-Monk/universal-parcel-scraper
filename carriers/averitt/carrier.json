@@ -59,13 +59,13 @@
       "location",
       "origin",
       "destination",
-      "weight"
+      "weight",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "service_type",
       "sender_name",
-      "recipient_name",
-      "signatory",
       "delivery_office",
       "parcel_count",
       "references",

@@ -43,11 +43,11 @@ describe('Bombino Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps a delivered history on its wall clocks, once per scan, without the shipment’s people or papers', () => {
+  it('keeps a delivered history on its wall clocks, once per scan, with the consignee and who received it but not the papers', () => {
     const result = parseBombino(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'SHIPMENT DELIVERED', last_update: null, last_update_local: '2026-03-12T14:05:10',
-      expected_delivery: null, destination_country: 'GB' });
+      expected_delivery: null, destination_country: 'GB', receiver_name: 'ASHA SAMPLE', receiver_address: 'SAMPLETON', signed_by: 'ASHA SAMPLE' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage, event.location])).toEqual([
       ['2026-03-12T14:05:10', 'delivered', 'delivered', 'LONDON'],
       ['2026-03-12T08:40:00', 'drs', 'out_for_delivery', 'LONDON'],
@@ -66,19 +66,20 @@ describe('Bombino Express HTTP adapter', () => {
     expect(result.events![5]).toMatchObject({ stage_source: 'wording:language' });
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
     expect(result).not.toHaveProperty('delivery_carrier');
-    expect(JSON.stringify(result)).not.toMatch(/ASHA|SAMPLETON|SAMPLE-REF|example\.invalid|00000 000000|2\.500|0000000001\d{2}/);
+    expect(JSON.stringify(result)).not.toMatch(/RECEIVED BY|SAMPLE-REF|example\.invalid|00000 000000|2\.500|0000000001\d{2}/);
   });
 
   it('names the forwarding partner and its number when the partner’s link carries it, with the estimate', () => {
     const result = parseBombino(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'SHIPMENT FORWARDED TO FEDEX',
       last_update_local: '2026-05-04T10:12:00', expected_delivery: '2026-05-08', destination_country: 'US',
-      delivery_carrier: 'fedex', delivery_tracking_number: '199999999977' });
+      delivery_carrier: 'fedex', delivery_tracking_number: '199999999977', receiver_name: 'SAMPLE TRADING LLC', receiver_address: 'SAMPLEVILLE' });
+    expect(result).not.toHaveProperty('signed_by');
     // A hold until the account is settled, then the unhold without the reply's trailing dash.
     expect(result.events!.slice(3, 5).map((event) => [event.description, event.stage])).toEqual([
       ['SHIPMENT UNHOLD', 'in_transit'], ['Shipment Hold Due to Inscan Credit Limit exceeded', 'exception'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE TRADING|SAMPLEVILLE|KARNATAKA|SAMPLE-REF|12\.000/);
+    expect(JSON.stringify(result)).not.toMatch(/KARNATAKA|SAMPLE-REF|12\.000/);
   });
 
   it('leaves the partner out unless one catalog carrier’s link carries the forwarding number', () => {
@@ -115,7 +116,7 @@ describe('Bombino Express HTTP adapter', () => {
       );
     }), DELIVERED);
     expect(result.events!.slice(0, 3).map((event) => [event.description, event.provider_code ?? null, event.stage ?? null, event.stage_source ?? null])).toEqual([
-      ['SHIPMENT DELIVERED TO', null, 'delivered', 'wording:language'],
+      ['SHIPMENT DELIVERED TO ASHA SAMPLE', null, 'delivered', 'wording:language'],
       ['Out for delivery', 're_drs', 'out_for_delivery', 'carrier_map'],
       ['SYNTHETIC NOTE', 'sample_state', null, null],
     ]);

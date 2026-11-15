@@ -28,7 +28,8 @@ describe('ACI Express live retrieval', () => {
     expect(localScans(result)).toBe(true);
     expect(result.events!.some((event) => event.stage === 'accepted')).toBe(true);
     expect(result.events!.some((event) => /^[A-Z. ]+$/.test(event.description!))).toBe(true);
-    expect(result.receiver_name ?? null).toBeNull();
+    // The page names the recipient, masked.
+    expect(result.receiver_name).toEqual(expect.any(String));
   }, 45_000);
 
   it.skipIf(!CJ)('reads a parcel CJ Logistics delivers under ACI’s own number', async () => {

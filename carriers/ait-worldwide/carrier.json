@@ -58,12 +58,12 @@
       "history",
       "provider_code",
       "eta",
-      "eta_window"
+      "eta_window",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "delivered_at",
-      "destination",
-      "signatory",
       "event_details",
       "office_contact_details",
       "delivery_options"

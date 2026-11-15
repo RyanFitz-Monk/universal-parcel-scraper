@@ -56,7 +56,9 @@
       "provider_code",
       "delivered_at",
       "destination_country",
-      "offset_timestamps"
+      "offset_timestamps",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",

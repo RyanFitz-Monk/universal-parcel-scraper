@@ -17,7 +17,7 @@ const OTHER = 'CP000000014IE';
 const REFERENCE = 'PSS00000001';
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 const json = (name: string): unknown => JSON.parse(fixture(name));
-const PRIVATE = /SYNTHETIC (?:RECIPIENT|SIGNATORY|OFFICE|SUMMARY REASON|SCAN REASON)|PSS000000SYNTHETIC|IRELAND/;
+const PRIVATE = /SYNTHETIC (?:SIGNATORY|OFFICE|SUMMARY REASON|SCAN REASON)|PSS000000SYNTHETIC|IRELAND/;
 const instance = (fetcher: typeof fetch) => adapter({
   fetcher, env: {}, trawl: null, browserExecutablePath: null, recorder: NOOP_RECORDER, userAgent: 'Host/1.0',
 });
@@ -61,8 +61,10 @@ describe('An Post guest history', () => {
     const result = normalizeCarrierResult(await instance(fetcher).track({ number: NUMBER }, { budgetMs: 5_000 }));
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map',
       last_status_text: 'Your item is now available for collection', last_update: null, last_update_local: '2026-03-12T11:56:00',
-      expected_delivery: null });
+      expected_delivery: null, receiver_name: 'SYNTHETIC RECIPIENT' });
     expect(result.summary_only).toBeUndefined();
+    // Who signed is read only once the item is delivered.
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events?.map(event => [event.local_time, event.provider_code, event.stage])).toEqual([
       ['2026-03-12T11:56:00', '70', 'ready_for_pickup'],
       ['2026-03-12T07:08:00', '4', 'out_for_delivery'],
@@ -244,6 +246,7 @@ describe('An Post guest history', () => {
       expect(result, String(activity)).toMatchObject({ status, current_stage: stage, current_stage_source: 'carrier_map',
         last_status_text: description, last_update_local: '2026-03-12T11:56:00' });
       expect(result.events).toHaveLength(8);
+      expect(result.signed_by, String(activity)).toBe(stage === 'delivered' ? 'SYNTHETIC SIGNATORY' : undefined);
       expect(JSON.stringify(result)).not.toMatch(/SAFE PLACE|NO ACCESS/);
     }
   });

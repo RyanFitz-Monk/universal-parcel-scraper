@@ -96,10 +96,16 @@ function partnerNumber(compact: string, own: readonly string[]): string | undefi
   return /^[A-Z0-9]{4,40}$/.test(code) && !own.includes(code) ? code : undefined;
 }
 
-/** The country code that ends the recipient's address, which is otherwise not read. */
+/** The country code that ends the recipient's address. */
 function destination(value: unknown): string | undefined {
   const code = / ([A-Z]{2})$/.exec(clean(value, 200))?.[1];
   return code && countryCode(code) === code ? code : undefined;
+}
+
+/** The recipient's address before that country code: the postcode, as the tracker gives it. */
+function shipTo(value: unknown, country: string | undefined): string {
+  const text = clean(value, 200);
+  return country ? clean(text.slice(0, -country.length)) : text;
 }
 
 /** The calendar day of an estimate, in UTC as the page shows it. */
@@ -116,8 +122,8 @@ function estimatedDay(value: unknown): string | null {
  * `packageNumber` is APC's number until a delivery partner takes over, then
  * the partner's number, which `carrierTrackingNumber` repeats. The tracker
  * also opens a parcel by the partner's number; such a reply is another
- * carrier's shipment. The recipient's address, the merchant's reference, the
- * partner's free text and the links are never read.
+ * carrier's shipment. The recipient's address is read; the merchant's
+ * reference, the partner's free text and the links are not.
  */
 export function parseApcPostalLogistics(payload: unknown, raw: string): CarrierResult {
   const number = normalizeApcNumber(raw);
@@ -155,6 +161,7 @@ export function parseApcPostalLogistics(payload: unknown, raw: string): CarrierR
   const to = settled ? null : estimatedDay(payload.estimatingDeliveryTimeTo);
   const service = clean(payload.serviceName, 80);
   const country = destination(payload.shipToAddress);
+  const address = shipTo(payload.shipToAddress, country);
   const partner = carrierIdFromPartner(clean(payload.finalMileCarrier, 64), clean(payload.externalTrackingUrl, 300));
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -166,6 +173,7 @@ export function parseApcPostalLogistics(payload: unknown, raw: string): CarrierR
     expected_delivery: to,
     ...(from && to && from < to ? { expected_delivery_from: from } : {}),
     ...(service ? { service_name: service } : {}),
+    ...(address ? { receiver_address: address } : {}),
     ...(country ? { destination_country: country } : {}),
     ...(partner && partner !== CARRIER ? { delivery_carrier: partner } : {}),
     ...(delivery ? { delivery_tracking_number: delivery } : {}),

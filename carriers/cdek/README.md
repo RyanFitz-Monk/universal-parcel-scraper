@@ -43,8 +43,9 @@ ParcelsApp relays CDEK's scans as labels naming the leg of the trip, such as "П
 отправителя" and "Вручено", without a code. A scan filed under CDEK's name takes its stage from
 these labels and keeps the relayed wording.
 
-The recipient's initials, the addresses, the offices with their phones, hours and coordinates,
-the courier's agreed slot, the storage deadline, payments and pickup codes are not read.
+The recipient's initials and address are read, and the pickup code when the reply gives one.
+The sender's address, the offices with their phones, hours and coordinates, the courier's agreed
+slot, the storage deadline and payments are not read.
 
 ## Limitations
 

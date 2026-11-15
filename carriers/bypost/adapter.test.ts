@@ -37,8 +37,11 @@ describe('Bypost guest adapter', () => {
   it('reads a package\'s events newest first with their offsets, towns, wording and detail', () => {
     const result = parseBypost(fixture(), NUMBER);
     expect(result).toMatchObject({ current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map', last_status_text: 'Klar for henting',
-      last_update: '2026-03-03T11:05:00Z', expected_delivery: null, destination_country: 'NO', weight_kg: 2.4, pickup_point: 'Synthetic Hentested' });
+      last_update: '2026-03-03T11:05:00Z', expected_delivery: null, destination_country: 'NO', weight_kg: 2.4, pickup_point: 'Synthetic Hentested',
+      receiver_address: '0002 Synthetic Destination' });
     expect(result.delivered_at).toBeUndefined();
+    // The signatory is kept only for a delivery.
+    expect(result.signed_by).toBeUndefined();
     expect(result.summary_only).toBeUndefined();
     expect(result.events).toEqual([
       { time: '2026-03-03T11:05:00Z', description: 'Klar for henting', provider_code: 'READY_FOR_PICKUP', location: 'Synthetic By C', stage: 'ready_for_pickup', stage_source: 'carrier_map' },
@@ -77,13 +80,26 @@ describe('Bypost guest adapter', () => {
     const delivered = parseBypost(done, NUMBER);
     expect(delivered).toMatchObject({ current_stage: 'delivered', delivered_at: '2026-03-04T09:00:00+01:00' });
     expect(delivered.weight_kg).toBeUndefined();
+    expect(delivered.signed_by).toBeUndefined();
+    // Who signed for the newest delivery, else the single package's signature.
+    const signed = changed(d => {
+      d.status = 'DELIVERED';
+      d.packages[0].events.push({ ...scan('DELIVERED', '2026-03-04T08:00:00+01:00'), signature: 'Synthetic Signer' });
+    });
+    expect(parseBypost(signed, NUMBER)).toMatchObject({ current_stage: 'delivered', signed_by: 'Synthetic Signer' });
+    const detailed = changed(d => {
+      d.status = 'DELIVERED';
+      d.packages[0].events.push(scan('DELIVERED', '2026-03-04T08:00:00+01:00'));
+      d.packages[0].detail.signature_name = 'Synthetic Detail Signer';
+    });
+    expect(parseBypost(detailed, NUMBER)).toMatchObject({ signed_by: 'Synthetic Detail Signer' });
   });
 
   it('reads a registered shipment without scans as a summary, and a cancelled one or one with an exception as stopped', () => {
     const registered = changed(d => { d.status = 'PREPARING'; d.packages[0].events = []; delete d.packages[0].detail; });
     expect(parseBypost(registered, NUMBER)).toEqual({ status: expect.any(String), current_stage: 'registered', current_stage_source: 'carrier_map',
       last_status_text: 'Sendingen er registrert og gjøres klar for transport.', last_update: null, expected_delivery: null,
-      destination_country: 'NO', weight_kg: 2.4, summary_only: true, events: [] });
+      destination_country: 'NO', weight_kg: 2.4, receiver_address: '0002 Synthetic Destination', summary_only: true, events: [] });
     const cancelled = parseBypost(changed(d => { d.status = 'CANCELLED'; }), NUMBER);
     expect(cancelled).toMatchObject({ current_stage: 'exception', last_status_text: 'Sendingen er kansellert.' });
     expect(cancelled.events).toHaveLength(4);

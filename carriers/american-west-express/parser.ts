@@ -198,8 +198,8 @@ function rowOf(html: string, number: string): Record<string, unknown> {
  * arrival there, the first call to the customer, the delivery appointment's
  * day, the ETA to the customer, the delivery's day and the progress rail. Days
  * have no clock. A number it finds nothing under gets a notice that names no
- * number. The references, pieces, weight, last town and the ETA to the final
- * mile agent are not kept.
+ * number. The delivery town is read as the recipient's address. The references,
+ * pieces, weight, last town and the ETA to the final mile agent are not kept.
  */
 export function parseAmericanWest(html: string, raw: string): CarrierResult {
   const number = normalizeAmericanWestNumber(raw);
@@ -222,6 +222,8 @@ export function parseAmericanWest(html: string, raw: string): CarrierResult {
   // newest milestone's is stale. The ETA to the final mile agent is the hub's, not the delivery's.
   const estimate = dayOf(row, 'appointment_date') ?? dayOf(row, 'deliver_by_date');
   const latest = events[0]?.local_time;
+  // The delivery town is the recipient's, as the page writes it when it is not a town and state.
+  const town = placeOf(row, 'delivery_location') || text(row, 'delivery_location');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -229,6 +231,7 @@ export function parseAmericanWest(html: string, raw: string): CarrierResult {
     last_update: null,
     ...(newest ? { last_update_local: newest.local_time } : {}),
     expected_delivery: !settled && estimate && !(latest && estimate < latest) ? estimate : null,
+    ...(town ? { receiver_address: town } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events,
   };

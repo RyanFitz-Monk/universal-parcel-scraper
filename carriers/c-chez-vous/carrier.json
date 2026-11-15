@@ -44,12 +44,12 @@
     "scraped": [
       "status",
       "eta",
-      "eta_window"
+      "eta_window",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "recipient_contact",
       "order_contents"
     ],

@@ -8,8 +8,10 @@ there is no broad numeric detection or recognition rule.
 
 The grid keeps local month/day clocks, newest first in the result, without an assumed offset.
 A pickup request precedes custody, and preparing a manifest records no movement. The combined
-location/remarks column can contain receiver and proof details, so it is omitted together with
-references and destination details. No estimate is inferred from the booking date.
+location/remarks column mixes places with receiver and proof details, so it is not read as a
+place; a delivery's `RECEIVED BY:` line in it is read as `signed_by`. The summary's destination,
+the area the waybill is addressed to, is read as `receiver_address`. References are omitted. No
+estimate is inferred from the booking date.
 
 An empty tracker view also supplies the server's current clock as its booking date. That date
 proves no booking; the empty view remains inconclusive because it supplies no bound shipment or

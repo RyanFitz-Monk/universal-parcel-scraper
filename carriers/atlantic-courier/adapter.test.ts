@@ -16,8 +16,8 @@ const reply = (body: string, status = 200) => new Response(body, { status, heade
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 const rows = (result: ReturnType<typeof parseAtlanticCourier>) =>
   result.events!.map(event => [event.time ?? event.local_time, event.location ?? null, event.description, event.stage ?? null]);
-// The consignee, whoever signed and the partner's forwarding number.
-const PRIVATE = /SAMPLE CONSIGNEE|SAMPLE RECEIVER|SAMPLE SIGNER|00000000000000/;
+// The partner's forwarding number.
+const FORWARDING = /00000000000000/;
 const ROW = (clock: string, activity: string, place: string) => `<tr><td>${clock}</td><td>${activity}</td><td>${place}</td></tr>`;
 const HEADINGS = /(<td style="color:#dc291e;font-weight:600;">Location<\/td>\s*<\/tr>)[\s\S]*?(<\/table>)/;
 const withRows = (html: string, ...lines: string[]) => html.replace(HEADINGS, (_, heading: string, end: string) => `${heading}${lines.join('')}${end}`);
@@ -44,15 +44,15 @@ describe('Atlantic International Express tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery abroad: scans in India on India’s clock, the partner’s as wall clocks, and no names or forwarding number', () => {
+  it('reads a delivery abroad: scans in India on India’s clock, the partner’s as wall clocks, the names and no forwarding number', () => {
     const result = parseAtlanticCourier(page('delivered'), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Proof of Delivery', last_update: null, last_update_local: '2026-10-09T10:25:00',
-      expected_delivery: null, destination_country: 'NZ' });
+      expected_delivery: null, destination_country: 'NZ', receiver_name: 'SAMPLE CONSIGNEE', signed_by: 'SAMPLE RECEIVER' });
     expect(rows(result)).toEqual([
       ['2026-10-09T10:25:00', 'Sampleton', 'Proof of Delivery', 'delivered'],
-      // The consignee's name after the wording is dropped.
-      ['2026-10-09T07:40:00', 'Sampleton', 'Out for Delivery', 'out_for_delivery'],
+      // The scan keeps the consignee's name after its wording.
+      ['2026-10-09T07:40:00', 'Sampleton', 'Out for Delivery - SAMPLE CONSIGNEE', 'out_for_delivery'],
       // A forecast is no scan.
       ['2026-10-08T15:55:00', 'NEW ZEALAND : NZ', 'Estimated delivery 09/10/2026', null],
       ['2026-10-07T17:44:00', 'Sample Gateway', 'In Transit to Destination', 'in_transit'],
@@ -75,8 +75,11 @@ describe('Atlantic International Express tracking adapter', () => {
     expect(result).not.toHaveProperty('delivery_tracking_number');
     expect(result).not.toHaveProperty('summary_only');
     for (const name of ['delivered', 'in-transit']) {
-      expect(JSON.stringify(parseAtlanticCourier(page(name), NUMBER)), name).not.toMatch(PRIVATE);
+      expect(JSON.stringify(parseAtlanticCourier(page(name), NUMBER)), name).not.toMatch(FORWARDING);
     }
+    // Before the delivery, the consignee is read and no one has signed.
+    expect(parseAtlanticCourier(page('in-transit'), NUMBER)).toMatchObject({ receiver_name: 'SAMPLE CONSIGNEE' });
+    expect(parseAtlanticCourier(page('in-transit'), NUMBER)).not.toHaveProperty('signed_by');
   });
 
   it('follows the newest staged scan of a shipment held in India, and stages Atlantic’s first receipt as its acceptance', () => {
@@ -151,18 +154,24 @@ describe('Atlantic International Express tracking adapter', () => {
     expect(() => parseAtlanticCourier(withRows(page('in-transit')), NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
   });
 
-  it('drops the consignee, whoever signed and the forwarding number, and scrubs their names from the scans', () => {
-    const named = (signer: string, activity: string) => rows(parseAtlanticCourier(
-      withRows(signedBy(page('delivered'), signer), ROW('09/10/2026 10:25 AM', activity, 'Sampleton')), NUMBER)).at(-1)!.at(2);
-    expect(named('SAMPLE RECEIVER', 'Delivered to SAMPLE RECEIVER at the door')).toBe('Delivered to at the door');
-    expect(named('', 'Delivered - Signed for by: SAMPLE SIGNER')).toBe('Delivered');
-    expect(named('', 'Delivered, received by SAMPLE SIGNER')).toBe('Delivered');
-    expect(named('SAMPLE CONSIGNEE', 'Out for delivery: SAMPLE CONSIGNEE')).toBe('Out for delivery');
-    // A line that names no one is not scrubbed from the scans.
+  it('keeps the names in the scans, stages them without, and reads who signed from the summary, else a partner’s scan', () => {
+    const read = (signer: string, activity: string) => parseAtlanticCourier(
+      withRows(signedBy(page('delivered'), signer), ROW('09/10/2026 10:25 AM', activity, 'Sampleton')), NUMBER);
+    const named = (signer: string, activity: string) => {
+      const result = read(signer, activity);
+      return [result.events!.at(-1)!.description, result.events!.at(-1)!.stage, result.signed_by ?? null];
+    };
+    expect(named('SAMPLE RECEIVER', 'Delivered to SAMPLE RECEIVER at the door'))
+      .toEqual(['Delivered to SAMPLE RECEIVER at the door', 'delivered', 'SAMPLE RECEIVER']);
+    expect(named('', 'Delivered - Signed for by: SAMPLE SIGNER')).toEqual(['Delivered - Signed for by: SAMPLE SIGNER', 'delivered', 'SAMPLE SIGNER']);
+    expect(named('', 'Delivered, received by SAMPLE SIGNER.')).toEqual(['Delivered, received by SAMPLE SIGNER.', 'delivered', 'SAMPLE SIGNER']);
+    expect(read('SAMPLE CONSIGNEE', 'Out for delivery: SAMPLE CONSIGNEE').events!.at(-1)).toMatchObject({
+      description: 'Out for delivery: SAMPLE CONSIGNEE', stage: 'out_for_delivery' });
+    // A line that names no one is no signer.
     for (const signer of ['delivered', 'SIGN', 'We have delivered your item an']) {
-      expect(named(signer, 'Delivered'), signer).toBe('Delivered');
+      expect(named(signer, 'Delivered'), signer).toEqual(['Delivered', 'delivered', null]);
     }
-    expect(JSON.stringify(parseAtlanticCourier(signedBy(page('delivered'), 'SAMPLE SIGNER'), NUMBER))).not.toMatch(PRIVATE);
+    expect(parseAtlanticCourier(signedBy(page('delivered'), 'SAMPLE SIGNER'), NUMBER).signed_by).toBe('SAMPLE SIGNER');
   });
 
   it('reads the destination country, by its code when the page gives one or its name reads as one', () => {

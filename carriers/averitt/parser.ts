@@ -49,9 +49,8 @@ function wallClock(text: string): string | null {
 
 /**
  * The value next to one label in a list of the page, or '' without one or
- * with the page's blank. The lists also name the shipper, the consignee, who
- * took the delivery, the references and the delivering service center; only
- * the labels asked for are read.
+ * with the page's blank. The lists also name the shipper, the references and
+ * the delivering service center; only the labels asked for are read.
  */
 function labelled($: CheerioAPI, scope: string, label: string): string {
   const items = $(`${scope} li.ae-result-list--item`)
@@ -140,8 +139,9 @@ function weightOf($: CheerioAPI): number | undefined {
  * The tracking page of `servlet/rsoLTLtrack` for one PRO number: the status,
  * the PRO number and service unit, the pickup, shipment and delivery details,
  * and the shipment progression, a row per terminal scan with its place, a wall
- * clock and the status there. A number without a shipment comes back on the
- * results page with "Nothing found to display.", which names no number.
+ * clock and the status there. The delivery details name the consignee, its
+ * town and who took the delivery. A number without a shipment comes back on
+ * the results page with "Nothing found to display.", which names no number.
  */
 export function parseAveritt(html: string, rawNumber: string): CarrierResult {
   const number = normalizeAverittNumber(rawNumber);
@@ -169,6 +169,9 @@ export function parseAveritt(html: string, rawNumber: string): CarrierResult {
   const settled = headline !== null && (SETTLED.has(headline.stage) || !scanned);
   const decided = settled ? headline : scanned ? { stage: scanned.stage as Stage, source: scanned.stage_source! } : null;
   const weight = weightOf($);
+  const recipient = labelled($, '#delivery-information', 'Consignee Name:');
+  const town = labelled($, '#delivery-information', 'Delivery Point:');
+  const taker = decided?.stage === 'delivered' ? labelled($, '#delivery-information', 'Delivery Name:') : '';
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -176,6 +179,9 @@ export function parseAveritt(html: string, rawNumber: string): CarrierResult {
     last_update: null,
     ...(newest ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(town ? { receiver_address: town } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     ...(weight ? { weight_kg: weight } : {}),
     ...(rows.length ? {} : { summary_only: true }),
     events,

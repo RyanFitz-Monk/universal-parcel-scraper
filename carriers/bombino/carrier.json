@@ -66,13 +66,13 @@
       "eta",
       "destination_country",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name",
+      "signatory",
+      "destination"
     ],
     "discarded": [
       "origin",
-      "destination",
-      "recipient_name",
-      "signatory",
       "remarks",
       "parcel_scans"
     ],

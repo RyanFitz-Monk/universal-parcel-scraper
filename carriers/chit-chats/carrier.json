@@ -73,18 +73,18 @@
       "service_name",
       "destination_country",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_address",
+      "postcodes",
+      "recipient_name"
     ],
     "discarded": [
       "delivered_at",
       "progress_rail",
-      "recipient_address",
-      "sender_town",
-      "postcodes"
+      "sender_town"
     ],
     "unavailable": [
-      "sender_name",
-      "recipient_name"
+      "sender_name"
     ]
   },
   "links": [

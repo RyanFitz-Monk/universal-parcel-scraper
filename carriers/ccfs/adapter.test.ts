@@ -56,11 +56,12 @@ describe('CCFS HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'ccfs', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads a delivered history newest first as wall clocks, at towns, without the parties, the signer or the receipt', () => {
+  it('reads a delivered history newest first as wall clocks, at towns, with the consignee\'s town and the signer, without the receipt', () => {
     const result = parseCcfs(search('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivery completed', last_update: null, last_update_local: '2026-03-12T21:48:09', expected_delivery: null,
+      receiver_address: 'EXAMPLE FALLS, MT 59000', signed_by: 'Pat Example',
     });
     for (const field of ['summary_only', 'delivered_at', 'canonical_tracking_number', 'receiver_name', 'sender_name']) {
       expect(result).not.toHaveProperty(field);
@@ -80,7 +81,7 @@ describe('CCFS HTTP adapter', () => {
       ['2026-03-09T09:41:18', 'Bill of lading scanned', 'registered', 'Sampleton, ND'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source !== 'none')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLETON|EXAMPLE FALLS|Pat Example|Jordan|dock door|58000|59000|POD|11112222|Billing complete/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLETON|Jordan|dock door|58000|POD|11112222|Billing complete/);
   });
 
   it('reads the freight bill number as the same shipment, headed by its pro number', () => {
@@ -93,15 +94,18 @@ describe('CCFS HTTP adapter', () => {
       status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       // The delay notice is the newest row and moves nothing.
       last_status_text: 'Shipment running late', last_update: null, last_update_local: '2026-10-14T20:44:28',
-      expected_delivery: '2026-10-16',
+      expected_delivery: '2026-10-16', receiver_address: 'EXAMPLE PEAK, CO 80000',
     });
+    expect(result).not.toHaveProperty('signed_by');
     expect(events(result)).toEqual([
       ['2026-10-14T20:44:28', 'Shipment running late', null, 'Sample Junction, CO'],
       ['2026-10-14T14:15:20', 'Scanned on dock', 'in_transit', 'Sample Junction, CO'],
       ['2026-10-14T14:13:41', 'Scanned on dock', 'in_transit', 'Sample Junction, CO'],
       ['2026-10-13T16:02:13', 'Bill of lading scanned', 'registered', 'Sample River, MN'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE RIVER|EXAMPLE PEAK|55000|80000|Freight on dock/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE RIVER|55000|Freight on dock/);
+    // A signatory before the delivery is not kept.
+    expect(parseCcfs(search('in-transit', (item) => { item.DeliverySignatory = 'Pat Example'; }), IN_TRANSIT)).not.toHaveProperty('signed_by');
     // A reply that lists its rows newest first is kept in its order.
     const descending = parseCcfs(search('in-transit', (item, body) => { item.Locations!.reverse(); body.Descending = true; }), IN_TRANSIT);
     expect(events(descending)).toEqual(events(result));

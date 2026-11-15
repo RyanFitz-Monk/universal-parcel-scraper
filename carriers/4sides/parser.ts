@@ -72,35 +72,56 @@ function clauses(value: string): string[] {
   return parts.map((part) => clean(part)).filter(Boolean);
 }
 
+/** A scan's wording and town, with who took the parcel and the wording before them, which carries the stage. */
+export interface FoursidesWording { description: string; location: string; stated?: string; signer?: string }
+
+const TRAIL = /[\s,;:.–-]+$/;
+
 /**
  * A scan's wording and town. The tracker writes a scan as its event, then in
  * brackets the shipment's state and labelled clauses: "Приём (В СЦ, в городе:
  * Town (Region))", "Попытка доставки (Доставлено, получил: Name)". The wording
- * keeps the event and the state; the town is the scan's place. Who took the
- * parcel and any other clause are dropped.
+ * keeps the event, the state and who took the parcel; the town is the scan's
+ * place. Any other clause is dropped.
  */
-export function foursidesWording(status: string): { description: string; location: string } {
+export function foursidesWording(status: string): FoursidesWording {
   const value = clean(status);
   const open = value.indexOf('(');
   const head = open < 0 ? value : value.slice(0, open);
   const receiver = RECEIVER.exec(head);
-  const event = clean(receiver ? head.slice(0, receiver.index) : head).replace(/[\s,;:.–-]+$/, '');
+  if (receiver) {
+    // Who took the parcel follows the event; the rest of the wording is theirs.
+    const signer = clean(value.slice(receiver.index + receiver[0].length), 120);
+    const stated = clean(head.slice(0, receiver.index)).replace(TRAIL, '');
+    return { description: value, location: '', ...(signer ? { stated, signer } : {}) };
+  }
+  const event = clean(head).replace(TRAIL, '');
   let state = '';
   let location = '';
-  if (open >= 0 && !receiver) {
-    for (const clause of clauses(bracketed(value, open).inner)) {
+  let taker = '';
+  let signer = '';
+  if (open >= 0) {
+    const parts = clauses(bracketed(value, open).inner);
+    for (const [index, clause] of parts.entries()) {
+      const who = RECEIVER.exec(clause);
+      if (who?.index === 0) {
+        // Who took the parcel, and every clause after it, which can part their name.
+        taker = parts.slice(index).join(', ');
+        signer = clean(taker.slice(who[0].length), 120);
+        break;
+      }
       const labelled = /^([^:()]{1,40}):\s*([\s\S]*)$/.exec(clause);
       if (!labelled) {
-        // The first unlabelled clause is the state; who took the parcel comes after it.
+        // The first unlabelled clause is the state.
         state ||= clause;
         continue;
       }
       if (labelled[1]!.toLowerCase().replaceAll('ё', 'е').trim() === 'в городе') location ||= clean(labelled[2], 120);
     }
   }
-  if (RECEIVER.test(state)) state = '';
-  const description = event && state ? `${event} (${state})` : event || state;
-  return { description, location };
+  const worded = (inner: string) => (event && inner ? `${event} (${inner})` : event || inner);
+  const description = worded([state, taker].filter(Boolean).join(', '));
+  return { description, location, ...(signer ? { stated: worded(state), signer } : {}) };
 }
 
 // Country names as the tracker writes them, in Russian, by ISO code.
@@ -134,8 +155,9 @@ function weight(value: string): number | null {
  * tracking page makes. A waybill it does not know comes back with HTTP 200,
  * "Не найдено" and the number in place of the number, and nothing else. A
  * known one names its number and lists its events oldest first, each dated to
- * the day. The recipient, who signed for the parcel, the sender's and
- * recipient's towns, the contract and the kind of shipment are not kept.
+ * the day. Its summary names the recipient's town and, once delivered, who
+ * took the parcel. The sender's town, the contract and the kind of shipment
+ * are not kept.
  */
 export function parseFoursides(payload: unknown, raw: string): CarrierResult {
   const number = normalizeFoursidesNumber(raw);
@@ -153,18 +175,19 @@ export function parseFoursides(payload: unknown, raw: string): CarrierResult {
   if (payload.events.length > MAX_ROWS) throw new SchemaError(PROVIDER, '4Sides returned an oversized history');
 
   const seen = new Set<string>();
-  const scans: { index: number; event: CarrierEvent }[] = [];
+  const scans: { index: number; event: CarrierEvent; signer?: string }[] = [];
   payload.events.forEach((row, index) => {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, '4Sides returned an invalid event');
     const date = day(text(row, 'date', 16), 'event date');
-    const { description, location } = foursidesWording(text(row, 'status'));
+    const { description, location, stated, signer } = foursidesWording(text(row, 'status'));
     if (!date || !description) throw new SchemaError(PROVIDER, '4Sides returned an event without its date or wording');
     // Events are dated to the day: the same event twice on one day adds nothing.
     const key = JSON.stringify([date, description, location]);
     if (seen.has(key)) return;
     seen.add(key);
-    const staged = foursidesStage(description);
-    scans.push({ index, event: {
+    // Who took the parcel adds nothing to the stage the scan's wording gives.
+    const staged = foursidesStage(stated ?? description);
+    scans.push({ index, ...(signer ? { signer } : {}), event: {
       local_time: date,
       ...(location ? { location } : {}),
       description,
@@ -172,12 +195,14 @@ export function parseFoursides(payload: unknown, raw: string): CarrierResult {
     } });
   });
   // Newest first; the reply's order settles events of one day.
-  const events = scans.sort((left, right) => (right.event.local_time as string).localeCompare(left.event.local_time as string)
-    || right.index - left.index).map((scan) => scan.event);
+  scans.sort((left, right) => (right.event.local_time as string).localeCompare(left.event.local_time as string)
+    || right.index - left.index);
+  const events = scans.map((scan) => scan.event);
 
   const delivered = day(text(payload, 'deliveredDate', 16), 'delivery date');
   if (!events.length && !delivered) throw new NoHistoryError(PROVIDER);
-  const scanned = events.find((event) => event.stage);
+  const scannedScan = scans.find((scan) => scan.event.stage);
+  const scanned = scannedScan?.event;
   // The tracker reads a delivery day as delivered, whatever the last event; a
   // return the parcel made is delivered back to the sender.
   const summary: Stage | undefined = delivered && scanned?.stage !== 'delivered' && scanned?.stage !== 'returned' ? 'delivered' : undefined;
@@ -187,6 +212,10 @@ export function parseFoursides(payload: unknown, raw: string): CarrierResult {
   const kilograms = weight(text(payload, 'weight', 16));
   const country = text(payload, 'receiverCountry', 80);
   const code = country ? destinationCountry(country) : null;
+  const town = text(payload, 'receiverCity', 120);
+  // The summary names who took the parcel once it is delivered, as the delivering scan does.
+  const signedBy = stage !== 'delivered' ? ''
+    : (scanned?.stage === 'delivered' ? scannedScan!.signer : undefined) || text(payload, 'recipient', 120);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: summary ? 'carrier_map' : scanned?.stage_source ?? 'carrier_map' } : {}),
@@ -194,6 +223,8 @@ export function parseFoursides(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: updated,
     expected_delivery: null,
+    ...(town ? { receiver_address: town } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     ...(kilograms !== null ? { weight_kg: kilograms } : {}),
     ...(code ? { destination_country: code } : country ? { destination_country_name: country } : {}),
     ...(events.length ? {} : { summary_only: true }),

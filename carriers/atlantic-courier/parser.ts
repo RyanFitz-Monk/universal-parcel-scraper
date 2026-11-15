@@ -39,10 +39,10 @@ const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 
 // Delhi and Hyderabad alone are left out: Canada and the United States have a Delhi, Pakistan a Hyderabad.
 const INDIA = /^(?:MUMBAI|NAVI MUMBAI|THANE|PUNE|NASHIK|SURAT|AHMEDABAD|NEW DELHI|BANGALORE|BENGALURU|CHENNAI|TIRUPUR|KOLKATA)$|(?:^|[\s,(])INDIA\)?$|\(IN\)$/i;
 // A partner's wording that names who signed or took the parcel after it.
-const SIGNED_BY = /\b(?:signed\s+(?:for\s+)?by|received\s+by)\b.*$/i;
+const SIGNED_BY = /\b(?:signed\s+(?:for\s+)?by|received\s+by)\b\s*:?\s*(.*)$/i;
 // Firewall and bot check pages, which could stand in for the reply.
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|\/cdn-cgi\/challenge-platform\/|_Incapsula_Resource|errors\.edgesuite\.net|requested URL was rejected|captcha|<title>\s*(?:Just a moment|Attention Required|Access Denied|Request Rejected)/i;
-// Separators a scrubbed name leaves at the end of a wording: "Delivered -".
+// Separators a name leaves at the end of a wording without it: "Delivered -".
 const TRAILING = /[\s,;:\-–—(]+$/;
 const MAX_ROWS = 300;
 
@@ -116,7 +116,7 @@ function namePatterns(names: readonly string[]): RegExp[] {
     .map((name) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(name)}(?![\\p{L}\\p{N}])`, 'giu'));
 }
 
-/** Text without the shipment's own names, nor whoever a partner says signed for it. */
+/** Text without the shipment's own names, nor whoever a partner says signed for it: what a scan is staged by. */
 function scrub(value: string, names: readonly RegExp[]): string {
   return clean(names.reduce((text, name) => text.replace(name, ' '), value).replace(SIGNED_BY, '')).replace(TRAILING, '');
 }
@@ -135,7 +135,12 @@ function destinationOf(text: string): Pick<CarrierResult, 'destination_country' 
   return code ? { destination_country: code } : { destination_country_name: name };
 }
 
-interface Row { key: string; wall: string; description: string; location: string }
+/**
+ * A scan as the page shows it, with its wording and place without the
+ * shipment's names, which stage and date it, and whoever a partner says
+ * signed for it.
+ */
+interface Row { key: string; wall: string; description: string; stated: string; location: string; place: string; signer?: string }
 
 /** The scans under the summary, newest first and once each. */
 function history($: CheerioAPI, table: Cheerio<AnyNode>, names: readonly RegExp[]): Row[] {
@@ -151,13 +156,15 @@ function history($: CheerioAPI, table: Cheerio<AnyNode>, names: readonly RegExp[
     if (cells.length !== 3) invalid('Atlantic changed its activity table');
     const wall = scanClock(clean(cells.eq(0).text(), 40));
     if (!wall) invalid('Atlantic returned an invalid scan time');
-    const description = scrub(clean(cells.eq(1).text(), 300), names);
+    const description = clean(cells.eq(1).text(), 300);
     if (!description) invalid('Atlantic returned a scan without its activity');
-    const location = scrub(clean(cells.eq(2).text(), 120), names);
+    const location = clean(cells.eq(2).text(), 120);
     const key = JSON.stringify([wall, description, location]);
     if (seen.has(key)) continue;
     seen.add(key);
-    rows.push({ key, wall, description, location });
+    const signer = clean(SIGNED_BY.exec(description)?.[1], 120).replace(/[\s,;:.\-–—(]+$/, '');
+    rows.push({ key, wall, description, stated: scrub(description, names), location, place: scrub(location, names),
+      ...(signer ? { signer } : {}) });
   }
   // The tracker lists the newest first; a list the other way round is turned round.
   return rows.length > 1 && rows[0]!.wall < rows.at(-1)!.wall ? rows.reverse() : rows;
@@ -168,13 +175,13 @@ function history($: CheerioAPI, table: Cheerio<AnyNode>, names: readonly RegExp[
  * every later one is a hub's, on the way.
  */
 function events(rows: readonly Row[]): CarrierEvent[] {
-  const first = rows.reduce((oldest, row, index) => (isAtlanticCourierReceipt(row.description) ? index : oldest), -1);
+  const first = rows.reduce((oldest, row, index) => (isAtlanticCourierReceipt(row.stated) ? index : oldest), -1);
   return rows.map((row, index) => {
-    const staged: ClassifiedWording | null = isAtlanticCourierReceipt(row.description)
+    const staged: ClassifiedWording | null = isAtlanticCourierReceipt(row.stated)
       ? { stage: index === first ? 'accepted' : 'in_transit', source: 'carrier_map' }
-      : atlanticCourierStage(row.description);
+      : atlanticCourierStage(row.stated);
     return {
-      ...clockAt(row.wall, row.location),
+      ...clockAt(row.wall, row.place),
       ...(row.location ? { location: row.location } : {}),
       description: row.description,
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
@@ -196,8 +203,9 @@ function labelled($: CheerioAPI, table: Cheerio<AnyNode>, label: string): Cheeri
  * summary headed by the number, then a table with the consignee's name, the
  * destination, the delivery's day and time, who signed for it and the
  * partner's forwarding number, and the scans newest first. A number without a
- * shipment gets a notice that names no number. The names and the forwarding
- * number, which comes without its partner, are never kept.
+ * shipment gets a notice that names no number. The consignee is the
+ * recipient's name; the forwarding number, which comes without its partner, is
+ * not kept.
  */
 export function parseAtlanticCourier(html: string, rawNumber: string): CarrierResult {
   const number = normalizeAtlanticCourierNumber(rawNumber);
@@ -222,13 +230,16 @@ export function parseAtlanticCourier(html: string, rawNumber: string): CarrierRe
   const consignee = labelled($, tables, 'Consignee Name');
   const delivery = labelled($, tables, 'Delivery Date');
   if (delivery.length !== 3) invalid('Atlantic changed its delivery details');
-  // The consignee's and the signer's names are only scrubbed from the scans.
-  const signer = lines(delivery.eq(2)).map((line) => SIGNING.exec(line)?.[1] ?? '').find(Boolean) ?? '';
-  const names = namePatterns([clean(consignee.eq(1).text(), 120), ...(NOT_A_NAME.test(signer) ? [] : [signer])]);
+  const recipient = clean(consignee.eq(1).text(), 120);
+  const line = lines(delivery.eq(2)).map((text) => SIGNING.exec(text)?.[1] ?? '').find(Boolean) ?? '';
+  const signer = NOT_A_NAME.test(line) ? '' : clean(line, 120);
+  // A scan is staged without the consignee's and the signer's names.
+  const names = namePatterns([recipient, signer]);
   const deliveryText = clean(delivery.eq(1).text(), 80);
   const delivered = deliveryText ? { wall: deliveryClock(deliveryText) } : null;
 
-  const scanned = events(history($, scans, names));
+  const rows = history($, scans, names);
+  const scanned = events(rows);
   const deliveredRow = scanned.some((event) => event.stage === 'delivered');
   // A delivery the summary dates before its scan comes in is the newest event; its place is not shown.
   const all = [
@@ -241,6 +252,8 @@ export function parseAtlanticCourier(html: string, rawNumber: string): CarrierRe
   const decided: ClassifiedWording | null = delivered ? atlanticCourierStage('Delivered')
     : staged ? { stage: staged.stage as Stage, source: staged.stage_source! } : null;
   const newest = all[0];
+  // Who signed: the summary's name, else the one a partner's delivery scan gives.
+  const taker = signer || rows[scanned.findIndex((event) => event.stage === 'delivered')]?.signer;
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -248,6 +261,8 @@ export function parseAtlanticCourier(html: string, rawNumber: string): CarrierRe
     last_update: newest?.time ?? null,
     ...(newest?.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(decided?.stage === 'delivered' && taker ? { signed_by: taker } : {}),
     ...destinationOf(clean(consignee.eq(2).text(), 120)),
     ...(scanned.length ? {} : { summary_only: true }),
     events: all,

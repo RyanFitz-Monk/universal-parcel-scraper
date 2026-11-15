@@ -16,7 +16,7 @@ describe('AIT Worldwide Logistics live retrieval', () => {
     // Every event has its code, its wording and a wall clock, never an invented offset or a place.
     expect(answer.result.events.every((event) => event.description && event.provider_code && event.time === undefined
       && event.location === undefined && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(String(event.local_time)))).toBe(true);
-    // Appointments are estimates, and nobody is named.
+    // Appointments are estimates, and the page names no recipient or sender.
     expect(answer.result.events.some((event) => /APPOINTMENT/i.test(event.description ?? ''))).toBe(false);
     expect(answer.result.receiver_name ?? null).toBeNull();
     expect(answer.result.sender_name ?? null).toBeNull();

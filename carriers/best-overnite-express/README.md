@@ -34,17 +34,17 @@ lookup its tracking page's widget makes.
   letters and spaces that names nobody the reply names.
 - A delivery settles the shipment whatever is recorded after it.
 - The page shows the status line only for a shipment without scans. A delivery's line gives the
-  day and time and who signed; the adapter keeps the delivery as a summary without the signer.
+  day and time and who signed; the adapter keeps the delivery as a summary.
 - The reply gives an estimated delivery day, which the page does not show. It is kept until the
   delivery.
-- The reply also names the shipper and the consignee with their addresses and ZIP codes, who
-  signed, the bill of lading, purchase order and pickup numbers, the pallet count and the ship and
-  delivery days. Only the parties' states are read, to settle the clocks' zone; none of them is
-  kept.
+- The reply names the consignee with its address and who signed, which the adapter reads. It also
+  names the shipper, the bill of lading, purchase order and pickup numbers, the pallet count and
+  the ship and delivery days; of these only the shipper's state is read, to settle the clocks'
+  zone.
 
 ## Limitations
 
-- No sender, recipient, signature, weight or service.
+- No sender, weight or service.
 - PRO numbers run densely without a check digit, so a mistyped number can open another
   shipment, and the adapter cannot tell.
 - The widget also finds shipments by bill of lading, purchase order or pickup number, and the

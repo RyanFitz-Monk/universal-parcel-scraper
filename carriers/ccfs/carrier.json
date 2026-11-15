@@ -60,15 +60,16 @@
       "history",
       "location",
       "eta",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "destination",
+      "postcodes",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "departure_date",
       "delivered_at",
       "origin",
-      "destination",
-      "postcodes",
-      "signatory",
       "office_contact_details",
       "proof_of_delivery"
     ],
@@ -78,8 +79,7 @@
       "service_name",
       "weight",
       "sender_name",
-      "recipient_name",
-      "recipient_address"
+      "recipient_name"
     ]
   },
   "links": [

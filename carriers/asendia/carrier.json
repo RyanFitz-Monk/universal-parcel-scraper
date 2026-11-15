@@ -71,7 +71,9 @@
       "status",
       "history",
       "location",
-      "weight"
+      "weight",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [],
     "unavailable": [

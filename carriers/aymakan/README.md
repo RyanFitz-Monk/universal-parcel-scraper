@@ -29,8 +29,9 @@ Tracked through its tracking page.
   scan with a stage decides only a status the map does not know. The tracker has no codes;
   [`status.ts`](status.ts) stages both the statuses and the timeline's wordings from AyMakan's
   list of statuses.
-- A delivery's wording loses the clause naming who took the parcel, and every wording loses
-  phone numbers. The progress rail, the route and the masked sender and recipient are not kept.
+- A delivery's wording names who took the parcel, which is read as the signatory, and the
+  route's last town is read as the recipient's. Wordings lose phone numbers. The progress rail
+  and the masked sender and recipient are not kept.
 - AyMakan's app tracks a shipment for a guest only after the recipient's mobile number and a code
   sent to it, so the adapter does not use it.
 

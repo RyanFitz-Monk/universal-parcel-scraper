@@ -113,12 +113,26 @@ function wordingOf(code: string, details: string): string {
   return details || code.toLowerCase().split('_').join(' ').replace(/^\w/, (letter) => letter.toUpperCase());
 }
 
+/** The recipient's town, state and ZIP code, as `address_to` gives them. */
+function destinationOf(payload: Record<string, unknown>): string {
+  const address = record(payload, 'address_to');
+  const town = [text(address, 'city', 80), text(address, 'state', 40)].filter(Boolean).join(', ');
+  return [town, text(address, 'zip', 12)].filter(Boolean).join(' ');
+}
+
+/** Who took the parcel, which a delivery's `event_details` names as `ConsigneeName`. */
+function takerOf(row: Record<string, unknown>): string {
+  const details = row.event_details;
+  const name = isRecord(details) ? details.ConsigneeName : undefined;
+  return typeof name === 'string' ? clean(name, 120) : '';
+}
+
 /**
- * One history row: its `status` code, `status_details`, clock and place. Its
- * `event_details` (who took the parcel, where it was left, why a delivery
- * failed), `images` (delivery photos) and `location_info` are not read. Only a
- * hub scan keeps its coordinates: the others can be the shipper's or the
- * recipient's door.
+ * One history row: its `status` code, `status_details`, clock and place. Of
+ * its `event_details` only who took the parcel is read, not where it was left
+ * or why a delivery failed; its `images` (delivery photos) and `location_info`
+ * are not read. Only a hub scan keeps its coordinates: the others can be the
+ * shipper's or the recipient's door.
  */
 function projectRow(row: Record<string, unknown>): CarrierEvent | null {
   const code = text(row, 'status', 80).toUpperCase();
@@ -172,6 +186,7 @@ export function parseBetterTrucks(payload: unknown, raw: string): CarrierResult 
 
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const takers = new Map<CarrierEvent, string>();
   for (const row of rows) {
     if (!isRecord(row)) invalid('Better Trucks returned an invalid scan');
     const event = projectRow(row);
@@ -180,6 +195,7 @@ export function parseBetterTrucks(payload: unknown, raw: string): CarrierResult 
     if (seen.has(key)) continue;
     seen.add(key);
     events.push(event);
+    takers.set(event, takerOf(row));
   }
   if (!events.length) throw new NoHistoryError(PROVIDER);
   // Every scan is an instant; newest first by the clock, the order stays stable.
@@ -189,6 +205,8 @@ export function parseBetterTrucks(payload: unknown, raw: string): CarrierResult 
   const scan = statusScan(events);
   const stage = scan?.stage as Stage | undefined;
   const country = text(record(payload, 'address_to'), 'country', 8).toUpperCase();
+  const destination = destinationOf(payload);
+  const taker = stage === 'delivered' ? takers.get(scan!) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scan!.stage_source } : {}),
@@ -196,6 +214,8 @@ export function parseBetterTrucks(payload: unknown, raw: string): CarrierResult 
     last_update: newest.time!,
     ...(stage === 'delivered' ? { delivered_at: scan!.time } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
+    ...(destination ? { receiver_address: destination } : {}),
+    ...(taker ? { signed_by: taker } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

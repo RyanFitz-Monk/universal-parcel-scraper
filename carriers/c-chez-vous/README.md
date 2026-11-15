@@ -49,11 +49,11 @@ Accepted references, uppercased with spaces removed:
   parcel on that day without a window it can read leaves the day alone.
 - `history` is not declared: the page has no scan history and the single event restates the
   current step.
-- `pickupName` is the person receiving the order, not a parcel shop, so `pickup_point` is not
-  declared.
-- The record also carries shop, recipient name, address, phone, e-mail and ordered articles.
-  Only the delivery type, the step and the appointment date and window are read; a test
-  asserts none of the rest reaches the result.
+- `pickupName` is the person receiving the order, not a parcel shop, so it is read as the
+  recipient's name and `pickup_point` is not declared. The parcel's `address` is read as the
+  recipient's address.
+- The record also carries the shop, the recipient's phone and e-mail and the ordered articles,
+  which are not read; a test asserts none of them reaches the result.
 
 ## Limitations
 

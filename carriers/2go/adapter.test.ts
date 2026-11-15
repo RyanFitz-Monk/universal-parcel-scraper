@@ -150,16 +150,27 @@ describe('2GO Express HTTP adapter', () => {
     await expect(lookup(() => reply('', { status: 503 }))).rejects.toMatchObject({ kind: 'maintenance' });
   });
 
-  it('gives an instant only to a clock with an offset, and drops who took the parcel and phone numbers', () => {
+  it('gives an instant only to a clock with an offset, keeps who took the parcel and drops phone numbers', () => {
     const result = parseTwoGo({ history: [scan('Order is placed', '2026-04-02 09:14:05'), scan('Parcel has been delivered', '2026-04-04T06:22:31Z')] }, DELIVERED);
     expect(result).toMatchObject({ last_update: '2026-04-04T06:22:31Z', delivered_at: '2026-04-04T06:22:31Z' });
     expect(result).not.toHaveProperty('last_update_local');
     expect(result.events![0]).toEqual({ time: '2026-04-04T06:22:31Z', description: 'Parcel has been delivered', stage: 'delivered', stage_source: 'carrier_map' });
     expect(parseTwoGo({ history: [scan('Parcel has been delivered', '2026-04-04 14:22:31+08:00')] }, DELIVERED)).toMatchObject({ delivered_at: '2026-04-04T14:22:31+08:00' });
-    expect(twoGoWording('DELIVERED - Received by: SAMPLE PERSON')).toBe('DELIVERED');
-    expect(twoGoWording('Parcel has been delivered, received by Sample Person 0917 000 0000')).toBe('Parcel has been delivered');
+    expect(twoGoWording('DELIVERED - Received by: SAMPLE PERSON')).toBe('DELIVERED - Received by: SAMPLE PERSON');
+    expect(twoGoWording('Parcel has been delivered, received by Sample Person 0917 000 0000')).toBe('Parcel has been delivered, received by Sample Person');
     expect(twoGoWording('Shipment received by 2GO')).toBe('Shipment received by 2GO');
     expect(twoGoWording('Call your courier at +63 917 000 0000 today')).toBe('Call your courier at today');
+  });
+
+  it('reads who took a delivered parcel from its wording, on the stage the wording before them gives', () => {
+    const result = parseTwoGo({ history: [
+      scan('Parcel is out for delivery', '2026-04-04 08:30:00'),
+      scan('Parcel has been delivered, received by Sample Person 0917 000 0000', '2026-04-04 14:22:31'),
+    ] }, DELIVERED);
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', signed_by: 'Sample Person' });
+    expect(result.events![0]).toMatchObject({ description: 'Parcel has been delivered, received by Sample Person', stage: 'delivered', stage_source: 'carrier_map' });
+    expect(parseTwoGo({ history: [scan('DELIVERED - Received by: SAMPLE PERSON', '2026-04-04 14:22:31')] }, DELIVERED)).toMatchObject({ current_stage: 'delivered', signed_by: 'SAMPLE PERSON' });
+    expect(parseTwoGo(fixture('delivered'), DELIVERED)).not.toHaveProperty('signed_by');
   });
 
   it('asks once more when 2GO cannot be reached, inside the caller’s budget', async () => {

@@ -18,9 +18,13 @@ const ZONE = 'Europe/Dublin';
  */
 const ABROAD = new Set([5, 40, 49, 67, 68]);
 
-/** The item's identity and current status from GetItemSummary or GetCustItemSummary. Names and references are never kept. */
+/** The item's identity and current status from GetItemSummary or GetCustItemSummary. The sender's reference is never kept. */
 export interface AnPostSummary {
   number: string;
+  /** The recipient's name, `receiverName`. */
+  receiver?: string;
+  /** Who signed for the item, `geisDeliveryName`. */
+  signer?: string;
   /** The sender's reference the item was found by, when it was not asked by its own number. */
   reference?: string;
   /** The current status as the website shows it: the summary's own, else a delivery attempt worded from its reason. */
@@ -127,12 +131,13 @@ export function parseAnPostReference(payload: unknown, raw: string): AnPostSumma
 }
 
 function summaryOf(item: Record<string, unknown>, number: string): AnPostSummary {
-  // receiverName and geisDeliveryName name people; senderNo is the sender's
-  // reference, read only to bind a lookup by it. None of them is kept.
+  // senderNo is the sender's reference, read only to bind a lookup by it.
   const date = text(item.date, 32);
   const reported = text(item.status, 300);
   const status = reported || attemptOutcome(text(item.reason, 300)) || '';
-  return { number, status, reported, date: date ? wallClock(date) : null };
+  const receiver = text(item.receiverName, 120);
+  const signer = text(item.geisDeliveryName, 120);
+  return { number, ...(receiver ? { receiver } : {}), ...(signer ? { signer } : {}), status, reported, date: date ? wallClock(date) : null };
 }
 
 interface Current {
@@ -233,5 +238,8 @@ export function parseAnPostEvents(payload: unknown, summary: AnPostSummary): Car
     ...(current.stage ? { current_stage: current.stage.stage, current_stage_source: current.stage.source } : {}),
     last_status_text: current.text, last_update: time ?? null, last_update_local: current.local,
     ...(pickup ? { pickup_point: pickup } : {}), expected_delivery: null,
+    ...(summary.receiver ? { receiver_name: summary.receiver } : {}),
+    // The summary names who signed for the item; it is read once the item is delivered.
+    ...(summary.signer && current.stage?.stage === 'delivered' ? { signed_by: summary.signer } : {}),
     ...(summary.reference ? { canonical_tracking_number: summary.number } : {}), events: scans.slice(0, 100).map(({ event }) => event) };
 }

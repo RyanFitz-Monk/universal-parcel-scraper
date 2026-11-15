@@ -64,13 +64,24 @@ function stepOf(value: unknown): Step | null {
   return { event: { local_time: wall, description: title, ...(stage ? { stage: stage.stage, stage_source: stage.source } : {}) } };
 }
 
+/** A text field of the reply, empty when it is missing or not text. */
+function field(payload: Record<string, unknown>, key: string, maxLength: number): string {
+  return typeof payload[key] === 'string' ? clean(payload[key], maxLength) : '';
+}
+
+/** The recipient's address as the page shows it: the street, then the suburb, state and postcode. */
+function addressOf(payload: Record<string, unknown>): string {
+  const town = ['suburb', 'state', 'postCode'].map((key) => field(payload, key, 60)).filter(Boolean).join(' ');
+  return [field(payload, 'streetAddress', 200), town].filter(Boolean).join('\n');
+}
+
 /**
  * The open service's answer, `GET /deliveries/{number}`: the delivery's steps
  * in their order, each with its title and, once reached, a wall-clock stamp
  * without a zone, and the job's status. It does not repeat the number. The
  * steps' longer texts name the driver, the delivered step carries the
  * delivery's photos and signature, and the reply also holds the recipient's
- * address and contacts; none of them is read.
+ * address and contacts. The address is read; the rest is not.
  */
 export function parseAnc(payload: unknown, raw: string): CarrierResult {
   normalizeAncNumber(raw);
@@ -86,6 +97,7 @@ export function parseAnc(payload: unknown, raw: string): CarrierResult {
   const current = events.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const job = typeof payload.jobStatus === 'string' ? payload.jobStatus.trim().toLowerCase() : '';
+  const address = addressOf(payload);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -94,6 +106,7 @@ export function parseAnc(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time!,
     expected_delivery: null,
+    ...(address ? { receiver_address: address } : {}),
     events,
   };
 }

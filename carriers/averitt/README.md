@@ -38,9 +38,10 @@ needs the carrier named.
   result is marked `summary_only`.
 - The page gives the weight without a unit; Averitt weighs freight in pounds, as its rate quote
   API guide states, so it is converted to kilograms.
-- The shipper, consignee, who took the delivery, the BOL and PO numbers, the delivering service
-  center, the piece count, the hazmat flag and the appointment are not read. Billing, charges,
-  documents and invoices need an account.
+- The consignee and its town are read as the recipient, and once delivered, the delivery name
+  as `signed_by`. The shipper, the BOL and PO numbers, the delivering service center, the piece
+  count, the hazmat flag and the appointment are not read. Billing, charges, documents and
+  invoices need an account.
 
 ## Limitations
 

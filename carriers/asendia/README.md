@@ -92,8 +92,10 @@ a summary through universal providers (see [routing](https://github.com/plhery/d
   International Shipping's `EEUS`, nine digits, the destination's country code and a digit are
   the same suggestion: A1 answers some and DHL eCommerce's tracker others. Recognition
   asks Asendia first: A1, as the lookup does, but never the global portal's browser. Asendia's other layouts are selected outright and need no recognition.
-- Events keep time, wording, code and city/province/country only. Address lines, postal codes,
-  service name and order reference are never read.
+- A1 events keep time, wording, code and city/province/country only. Address lines, postal
+  codes, service name and order reference are never read.
+- The global portal's parcel names the recipient and their address, read as `receiver_name` and
+  `receiver_address`. Its order reference and the recipient's e-mail are not read.
 
 ## Rejected approaches
 

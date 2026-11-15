@@ -42,18 +42,21 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
 // between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 const squash = (value: string) => value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+// Who took the parcel, as the newer system's delivery note names them.
+const RECEIVED_BY = /^received by\s+(.+)$/i;
+const trim = (value: string) => value.replace(/^[\s,;:.\-–]+|[\s,;:.\-–]+$/g, '');
 
 /**
  * A scan's wording: its `status`, as the page shows it. The newer system's
  * `note` says more than its status for holds and delays ("Trip Exception:
- * Load to destination - LH-Delay"), so it follows the status unless it only
- * repeats it. A delivery's note is left out, since it could name who took the
- * parcel. The older system's notes restate the status.
+ * Load to destination - LH-Delay"), and can name who took a delivery, so it
+ * follows the status unless it only repeats it. The older system's notes
+ * restate the status.
  */
-export function ajexWording(status: string, note: string, newer: boolean, stage?: Stage): string {
+export function ajexWording(status: string, note: string, newer: boolean): string {
   const own = clean(status.replace(PHONE, ''));
-  const extra = clean(note.replace(PHONE, '')).replace(/^[\s,;:.\-–]+|[\s,;:.\-–]+$/g, '');
-  if (!newer || !extra || stage === 'delivered') return own;
+  const extra = trim(clean(note.replace(PHONE, '')));
+  if (!newer || !extra) return own;
   const [a, b] = [squash(own), squash(extra)];
   return a.includes(b) || b.includes(a) ? own : `${own}: ${extra}`;
 }
@@ -86,6 +89,8 @@ interface Scan {
   readonly key: string;
   readonly millis: number;
   readonly event: CarrierEvent;
+  /** Who took a delivery, as its note names them. */
+  readonly signer?: string;
 }
 
 function projectRow(row: Record<string, unknown>): Scan | null {
@@ -99,8 +104,10 @@ function projectRow(row: Record<string, unknown>): Scan | null {
   // The page takes "AJEX" out of a city's name.
   const location = clean(text(row, 'cityName', 120).replace(/\bAJEX\b/gi, ''));
   const staged = ajexStage(code, status);
-  const description = ajexWording(status, note, newer, staged?.stage);
+  const description = ajexWording(status, note, newer);
   if (!description) throw new SchemaError(PROVIDER, 'AJEX returned a scan without wording');
+  const taker = newer && staged?.stage === 'delivered' ? RECEIVED_BY.exec(trim(clean(note.replace(PHONE, ''))))?.[1] : undefined;
+  const signer = taker ? trim(clean(taker, 120)) : '';
   const event: CarrierEvent = {
     time: iso,
     ...(location ? { location } : {}),
@@ -108,17 +115,33 @@ function projectRow(row: Record<string, unknown>): Scan | null {
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([iso, code, description, location]), millis, event };
+  return { key: JSON.stringify([iso, code, description, location]), millis, event, ...(signer ? { signer } : {}) };
 }
 
-/** The destination country, from the city line the page shows; the rest of the address is not read. */
-function destination(shipment: Record<string, unknown>): Pick<CarrierResult, 'destination_country' | 'destination_country_name'> {
+/** The shipment's receiver details, empty when the reply has none. */
+function receiverOf(shipment: Record<string, unknown>): Record<string, unknown> {
   const details = isRecord(shipment.orderTackingDetails) ? shipment.orderTackingDetails : {};
-  const receiver = isRecord(details.receiverDetails) ? details.receiverDetails : {};
+  return isRecord(details.receiverDetails) ? details.receiverDetails : {};
+}
+
+/** The destination country, from the city line the page shows. */
+function destination(receiver: Record<string, unknown>): Pick<CarrierResult, 'destination_country' | 'destination_country_name'> {
   const country = typeof receiver.country === 'string' ? clean(receiver.country, 60) : '';
   if (!country) return {};
   const code = countryCode(country);
   return code ? { destination_country: code } : { destination_country_name: country };
+}
+
+/**
+ * The receiver's name and address: the full address as the reply writes it, then the postcode
+ * and town unless the full address already ends with them. Phone numbers are not read.
+ */
+function recipient(receiver: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = text(receiver, 'name', 120);
+  const street = text(receiver, 'fullAddress', 200);
+  const town = [text(receiver, 'postalCode', 16), text(receiver, 'city', 80)].filter(Boolean).join(' ');
+  const lines = [street, town && !squash(street).endsWith(squash(town)) ? town : ''].filter(Boolean);
+  return { ...(name ? { receiver_name: name } : {}), ...(lines.length ? { receiver_address: lines.join('\n') } : {}) };
 }
 
 /**
@@ -167,13 +190,17 @@ export function parseAjex(payload: unknown, raw: string): CarrierResult {
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? scanned!.time : undefined;
+  const signer = stage === 'delivered' ? scans.find((scan) => scan.event === scanned)?.signer : undefined;
+  const receiver = receiverOf(shipment);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
     last_status_text: newest.description!,
     last_update: newest.time!,
     ...(delivered ? { delivered_at: delivered } : {}),
-    ...destination(shipment),
+    ...(signer ? { signed_by: signer } : {}),
+    ...recipient(receiver),
+    ...destination(receiver),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

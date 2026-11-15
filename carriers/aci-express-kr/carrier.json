@@ -53,12 +53,12 @@
       "history",
       "location",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
-      "recipient_name",
-      "driver_name",
-      "signatory"
+      "driver_name"
     ],
     "unavailable": [
       "eta",

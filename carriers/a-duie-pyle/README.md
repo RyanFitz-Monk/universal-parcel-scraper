@@ -37,13 +37,13 @@ status page makes.
 - The weight is in pounds without a unit.
 - A shipment handed to Dayton Freight, Southeastern Freight Lines or Oak Harbor, the partners
   the page links, names that partner and its PRO.
-- The reply names the shipper, the consignee and the paying customer with their addresses, and
-  holds the bill of lading, the purchase order, a delivery comment and the piece count. None of
-  them is read.
+- The consignee's name and address are read as the recipient's. The reply also names the
+  shipper and the paying customer with their addresses, and holds the bill of lading, the
+  purchase order, a delivery comment and the piece count, which are not read.
 
 ## Limitations
 
-- No service, sender, recipient, signature or delivery receipt.
+- No service, sender, signature or delivery receipt.
 - A PRO reaches the adapter when it is filed under A. Duie Pyle or opened from an A. Duie Pyle
   link: eight and nine digits are shared by many carriers, so no rule claims them and preflight
   does not ask it.

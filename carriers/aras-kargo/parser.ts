@@ -112,12 +112,19 @@ function bind($: CheerioAPI, selector: string, number: string, what: string): vo
 
 interface Scan { event: CarrierEvent; local: string; order: number }
 
+/** A field the summary shows, empty when the page leaves it out. */
+function shown($: CheerioAPI, selector: string, maxLength: number): string {
+  const found = $(selector);
+  return found.length === 1 ? clean(found.text(), maxLength) : '';
+}
+
 /**
  * The tracker's two frames for one parcel: the summary, with the current
  * status, the delivery, the estimate and the days a delivery was not made,
- * and the vehicle movements with any redirection. Names, the signatory, the
- * delivery code, invoice and payment details and every free-text note are
- * never read.
+ * and the vehicle movements with any redirection. The recipient's name and
+ * who took the parcel are read as the summary shows them, masked. The
+ * sender's name, the delivery code, invoice and payment details and every
+ * free-text note are never read.
  */
 export function parseAras(waybillHtml: string, movementsHtml: string, raw: string): CarrierResult {
   const number = normalizeArasNumber(raw);
@@ -130,6 +137,9 @@ export function parseAras(waybillHtml: string, movementsHtml: string, raw: strin
   const deliveredText = clean(only(summary, 'span#Teslim_Tarihi', 'shipment summary').text(), 40);
   const branch = clean(only(summary, 'span#varis_subesi', 'shipment summary').text(), 80);
   const plannedText = clean(only(summary, 'span#planlanan_teslim_tarihi', 'shipment summary').text(), 40);
+  const recipient = shown(summary, 'span#alici_adi_soyadi', 120);
+  // "Teslim Alan", who took the parcel; the page keeps an unmasked copy hidden, which is not read.
+  const taker = shown(summary, 'span#LabelTeslimAlan2', 120);
 
   const scans: Scan[] = [];
   const seen = new Set<string>();
@@ -198,6 +208,8 @@ export function parseAras(waybillHtml: string, movementsHtml: string, raw: strin
     last_update: null,
     ...(scans[0] ? { last_update_local: scans[0].local } : {}),
     expected_delivery: expected,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(stage === 'delivered' && taker ? { signed_by: taker } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
   };

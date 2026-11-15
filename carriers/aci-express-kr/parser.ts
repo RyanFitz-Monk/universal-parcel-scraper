@@ -26,6 +26,10 @@ const PARTNERS: Readonly<Record<string, string>> = { 우체국: 'korea-post', CJ
 const ACI_DATE = /^(\d{4})년\s*(\d{2})월\s*(\d{2})일$/;
 const DOMESTIC_DATE = /^(\d{4})[.-](\d{2})[.-](\d{2})$/;
 const CLOCK = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
+// The line under the delivering carrier's table naming who took the parcel: "수령인 : 홍*동 님 - 본인".
+const TAKER = /^수령인\s*:\s*(.*?)[\s-]*$/;
+// A name the page masks whole, as it shows one before anyone took the parcel.
+const MASKED_WHOLE = /^[*\s]*(?:님)?$/;
 // Bot checks a CDN or firewall could put in place of the page, and the
 // refusal ACI's newer tracking popup gives a visit it does not accept.
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|<title>\s*Just a moment|g-recaptcha|h-captcha|AwsWafIntegration|awswaf\.com|차단되었습니다/i;
@@ -97,6 +101,11 @@ function aciRow($: CheerioAPI, row: Element): Scan {
   return scan(wall, description, clean(cells.eq(2).text(), 120));
 }
 
+/** A name the page shows, or nothing for one it masks whole. */
+function shownName(value: string): string {
+  return MASKED_WHOLE.test(value) ? '' : value;
+}
+
 /**
  * One of the delivering carrier's rows, or null for a row that names only a
  * place. Its last column, which can name the postman, is not kept, nor the
@@ -117,8 +126,8 @@ function domesticRow($: CheerioAPI, row: Element, partner: string | undefined): 
  * the number over a table of ACI's own milestones, oldest first, then the
  * delivering carrier's table under a heading that names it, oldest first. A
  * number the tracker does not know gets the same page with no number and no
- * scans. The recipient's masked name and the line under a delivery naming who
- * took the parcel are not kept.
+ * scans. The header names the recipient, masked, and a line under the
+ * delivering carrier's table who took the parcel.
  */
 export function parseAciExpressKr(html: string, raw: string): CarrierResult {
   const number = normalizeAciExpressKrNumber(raw);
@@ -147,6 +156,10 @@ export function parseAciExpressKr(html: string, raw: string): CarrierResult {
   const aciRows = aci.length ? rowsOf(aci).slice(1) : [];
   // Korea Post's table ends with a line naming who took the parcel, even before a delivery.
   const domesticRows = domestic.length ? rowsOf(domestic).slice(1).filter((row) => cellsOf($, row).length !== 1) : [];
+  const takers = domestic.length ? rowsOf(domestic).slice(1).filter((row) => cellsOf($, row).length === 1)
+    .map((row) => shownName(TAKER.exec(clean(cellsOf($, row).text(), 120))?.[1] ?? '')).filter(Boolean) : [];
+  const recipientRow = rowsOf(header).find((row) => clean(cellsOf($, row).first().text(), 40) === '받는 사람');
+  const recipient = recipientRow ? shownName(clean(cellsOf($, recipientRow).eq(1).text(), 120)) : '';
   if (aciRows.length + domesticRows.length > MAX_ROWS) invalid('ACI Express returned an oversized history');
 
   const seen = new Set<string>();
@@ -175,6 +188,8 @@ export function parseAciExpressKr(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(stage === 'delivered' && takers.length ? { signed_by: takers.at(-1)! } : {}),
     ...handoff,
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

@@ -42,8 +42,9 @@ page link. PRO numbers are not issued in order: neighbouring numbers can be ship
   the rail's furthest step and the pickup.
 - The page shows a projected or appointment day until the delivery; it is kept as the expected
   delivery.
-- The status details name who signed for a delivery. They, the parties, appointment contacts,
-  references, documents and the service centers' addresses and contacts are never read.
+- The status details name who signed for a delivery, read as `signed_by`. The parties,
+  appointment contacts, references, documents and the service centers' addresses and contacts
+  are never read.
 
 ## Limitations
 

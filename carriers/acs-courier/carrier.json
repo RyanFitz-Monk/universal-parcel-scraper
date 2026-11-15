@@ -60,13 +60,14 @@
       "location",
       "provider_code",
       "eta",
-      "pickup_point"
+      "pickup_point",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "delivered_at",
       "progress_rail",
-      "recipient_name",
-      "signatory",
       "sender_name",
       "delivery_comments",
       "office_contact_details"

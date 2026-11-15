@@ -45,13 +45,13 @@
     ],
     "scraped": [
       "status",
-      "history"
+      "history",
+      "destination",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
-      "origin",
-      "destination",
-      "signatory"
+      "origin"
     ],
     "unavailable": [
       "location",

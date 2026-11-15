@@ -88,6 +88,14 @@ function estimate(entry: Record<string, unknown>): string | null {
   return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 
+/** The receiver's locality: its suburb, state and postcode. */
+function receiverOf(entry: Record<string, unknown>): string {
+  const place = entry.receiverLocation;
+  if (place === null || place === undefined) return '';
+  if (!isRecord(place)) throw new SchemaError(PROVIDER, 'Border Express returned an invalid receiverLocation');
+  return [text(place, 'suburb', 80), text(place, 'state', 8), text(place, 'postcode', 8)].filter(Boolean).join(' ');
+}
+
 /**
  * The reply of the tracker's `quickTrackpublic` lookup for one consignment:
  * a list of consignments, each with its current status, its estimate and
@@ -96,8 +104,9 @@ function estimate(entry: Record<string, unknown>): string | null {
  * a unit barcode was asked, the units the rows list must include one of that
  * consignment's labels, if they list Border Express labels at all.
  *
- * The localities, postcodes, unit counts, unit barcodes and their scans, the
- * despatch day and the signatory are not read.
+ * The receiver's locality and, once delivered, the signatory are kept. The
+ * sender's locality, unit counts, unit barcodes and their scans and the
+ * despatch day are not read.
  */
 export function parseBorderExpress(payload: unknown, raw: string): CarrierResult {
   const { consignment, barcode } = borderExpressNumber(raw);
@@ -136,6 +145,8 @@ export function parseBorderExpress(payload: unknown, raw: string): CarrierResult
   const delivered = stage === 'delivered'
     ? explicitOffsetTime(entry.deliveredDate)?.iso ?? events.find((event) => event.stage === 'delivered')?.time ?? null
     : null;
+  const receiver = receiverOf(entry);
+  const signer = stage === 'delivered' ? text(entry, 'signedBy', 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -143,6 +154,8 @@ export function parseBorderExpress(payload: unknown, raw: string): CarrierResult
     last_update: newest.time!,
     expected_delivery: stage === 'delivered' ? null : estimate(entry),
     delivered_at: delivered,
+    ...(receiver ? { receiver_address: receiver } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(barcode ? { canonical_tracking_number: consignment } : {}),
     events,
   };

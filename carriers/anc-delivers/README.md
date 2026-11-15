@@ -28,9 +28,10 @@ Australia. Tracked through the open service its tracking page on ancdelivers.com
   and Australia spans several.
 - The steps keep the page's order: a schedule's stamp drops the seconds of the booking it shares a
   minute with.
-- Each step's longer text names the driver, the delivered step carries the delivery's photos and
-  signature inline, and the reply holds the recipient's address and contacts and the retailer's
-  reference. The adapter reads none of them, nor the scheduled delivery date. The photos make a
+- The recipient's address is read as the page shows it: the street, then the suburb, state and
+  postcode. Each step's longer text names the driver, the delivered step carries the delivery's
+  photos and signature inline, and the reply holds the recipient's contacts and the retailer's
+  reference. The adapter reads none of those, nor the scheduled delivery date. The photos make a
   delivered booking's reply about a megabyte, so the read allows a few.
 
 ## Limitations

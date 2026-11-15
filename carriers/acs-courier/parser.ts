@@ -42,6 +42,8 @@ interface Scan {
   event: CarrierEvent;
   local: string;
   notice: boolean;
+  /** The row's information: on a delivery, who signed for the parcel. */
+  info: string;
 }
 
 /**
@@ -50,7 +52,7 @@ interface Scan {
  * milestone wording in `controlPoint` with a `controlPid` and no description,
  * and lists the milestones still to come without a date; those are skipped.
  * `info` holds a signatory's or sender's name on some rows, so it is read only
- * as the reason on a failed delivery.
+ * as the reason on a failed delivery and as the signatory on a delivery.
  */
 /**
  * Why a delivery failed, as ACS words it on the scan ("DIFFICULT TO ACCESS AREA").
@@ -82,7 +84,8 @@ function scansOf(rows: readonly unknown[]): Scan[] {
     const key = JSON.stringify(event);
     if (seen.has(key)) continue;
     seen.add(key);
-    scans.push({ event, local, notice: isAcsNotice(wording) });
+    const info = clean(row.info, 120);
+    scans.push({ event, local, notice: isAcsNotice(wording), info: info === '-' ? '' : info });
   }
   // Oldest first, as listed: a notice keeps the stage of the scan before it.
   let previous: Stage | undefined;
@@ -137,6 +140,10 @@ export function parseAcs(payload: unknown, raw: string): CarrierResult {
     ? events.slice(Math.max(0, delivered)).find(event => event.stage === 'ready_for_pickup' && event.stage_source === 'carrier_map')
     : undefined;
   const pickup = waiting?.location;
+  // The delivery's row names who signed for the parcel, masked.
+  const signer = stage === 'delivered' ? scans.find(({ event, info }) => event.stage === 'delivered' && info)?.info : undefined;
+  const recipient = clean(item.recipientName, 120);
+  const address = clean(item.recipientAddress, 200);
 
   // The estimate is a day; it stops once the parcel waits, arrives or turns back.
   const latestDay = scans[0]?.local.slice(0, 10);
@@ -152,6 +159,9 @@ export function parseAcs(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: scans[0]?.local ?? null,
     expected_delivery: expected,
+    ...(recipient ? { receiver_name: recipient } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(pickup ? { pickup_point: pickup } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

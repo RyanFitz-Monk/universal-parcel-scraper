@@ -23,7 +23,8 @@ atshealthcare.ca.
 - The page has no history: a status with a wall clock to the second and no zone, and a
   progress bar from `On file` (0) to `Delivered` (6). The bar's step is the provider code and
   gives the stage; the status gives the text and the time, which stays `local_time`.
-- The signatory is not read. The page's `Select` link reloads the same page.
+- The signatory is read as `signed_by` once the shipment is delivered. The page's `Select` link
+  reloads the same page.
 
 ## Limitations
 

@@ -56,14 +56,14 @@
       "history",
       "location",
       "weight",
-      "destination_country"
+      "destination_country",
+      "signatory",
+      "destination"
     ],
     "discarded": [
       "item_category",
       "origin",
-      "destination",
-      "contract_number",
-      "signatory"
+      "contract_number"
     ],
     "unavailable": [
       "scan_times",

@@ -32,6 +32,8 @@ function wording(value: string): string {
   }
   return text;
 }
+// The delivery's remarks: "RECEIVED BY: NAME", then the delivery's own clock on the next line.
+const RECEIVED_BY = /^\s*RECEIVED BY:[ \t]*(.+?)[ \t]*$/im;
 const LABELS = ['TRACKING NUMBER:', 'BOOKING DATE:', 'REFERENCE ID:', 'DESTINATION:', 'CURRENT SCANNING DATE/TIME:', 'CURRENT STATUS:'];
 
 export function parseAirspeed(html: string, raw: string): CarrierResult {
@@ -58,13 +60,17 @@ export function parseAirspeed(html: string, raw: string): CarrierResult {
   const scans = tables.children('tbody').children('tr'), header = scans.first().children('th').toArray().map(el => clean($(el).text()));
   if (header.join('|') !== 'DATE/TIME|STATUS|LOCATION/REMARKS' || scans.length > 501) throw new SchemaError(PROVIDER, 'Airspeed changed its history columns or exceeded the row limit');
   const events: CarrierEvent[] = [];
+  const signers = new Map<CarrierEvent, string>();
   for (const row of scans.slice(1).toArray()) {
     const cells = $(row).children('td');
     if (cells.length !== 3) throw new SchemaError(PROVIDER, 'Airspeed changed a history row');
     const local_time = clock(clean(cells.eq(0).text(), 80)), description = wording(cells.eq(1).text());
     const stage = airspeedStage(null, description);
     // LOCATION/REMARKS mixes places with receiver/POD details; it is not a location field.
-    events.push({ local_time, description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) });
+    const event: CarrierEvent = { local_time, description, ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
+    const signer = stage === 'delivered' ? clean(RECEIVED_BY.exec(cells.eq(2).text().slice(0, 1000))?.[1], 120) : '';
+    if (signer) signers.set(event, signer);
+    events.push(event);
   }
   if (!events.length) throw new NoHistoryError(PROVIDER, 'Airspeed returned no dated history', { reason: 'parcel_found' });
   const current = wording(fact('CURRENT STATUS:')), updated = clock(fact('CURRENT SCANNING DATE/TIME:'));
@@ -73,7 +79,11 @@ export function parseAirspeed(html: string, raw: string): CarrierResult {
   else if (!matches(events[0]!)) throw new SchemaError(PROVIDER, 'Airspeed summary and history disagree');
   const seen = new Set<string>(), distinct = events.filter(event => { const key = JSON.stringify(event); if (seen.has(key)) return false; seen.add(key); return true; });
   const stage = airspeedStage(null, current) ?? (isAirspeedAdministrative(current) ? distinct.find(event => event.stage)?.stage as Stage | undefined : undefined);
+  // The destination is the area the waybill is addressed to, as the summary names it.
+  const destination = fact('DESTINATION:').slice(0, 200);
+  const signer = stage === 'delivered' ? signers.get(distinct.find(event => event.stage === 'delivered')!) : undefined;
   return { status: stage ? languageStageStatus(stage) : 'unknown', ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
     last_status_text: current, last_update: null, last_update_local: updated, expected_delivery: null,
+    ...(destination ? { receiver_address: destination } : {}), ...(signer ? { signed_by: signer } : {}),
     ...(distinct.length > 100 ? { history_truncated: true } : {}), events: distinct.slice(0, 100) };
 }

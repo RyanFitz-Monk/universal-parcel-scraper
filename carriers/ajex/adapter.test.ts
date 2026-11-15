@@ -104,7 +104,8 @@ describe('AJEX HTTP adapter', () => {
     const result = parseAjex(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Shipment delivered', last_update: '2026-03-04T13:25:00Z', delivered_at: '2026-03-04T13:25:00Z',
-      destination_country: 'SA' });
+      destination_country: 'SA', receiver_address: 'SAMPLE TOWN' });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location, event.description])).toEqual([
       ['2026-03-04T13:25:00Z', '80', 'delivered', 'Sample Town', 'Shipment delivered'],
       ['2026-03-04T09:10:00Z', '204', 'out_for_delivery', 'Sample Town', 'Shipment assigned to driver'],
@@ -124,11 +125,13 @@ describe('AJEX HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(/Sample goods|AJEX0000|SMPHUB|ARRIVED AT ADDRESS/);
   });
 
-  it('adds the newer system’s notes to its statuses, without the row the page hides or anyone’s details', () => {
+  it('adds the newer system’s notes to its statuses, and reads the recipient without the row the page hides or the sender', () => {
     const result = parseAjex(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'In Transit: Arrived At Destination', last_update: '2026-05-12T07:10:00Z', destination_country: 'SA' });
+      last_status_text: 'In Transit: Arrived At Destination', last_update: '2026-05-12T07:10:00Z', destination_country: 'SA',
+      receiver_name: 'Sample Recipient', receiver_address: '1 Sample Street, Sample Town' });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.provider_code, event.stage, event.location ?? null, event.description])).toEqual([
       ['AJ0016', 'in_transit', 'Sample Town', 'In Transit: Arrived At Destination'],
       ['AJ0031', 'in_transit', 'Sample Town', 'Trip Exception: Load to destination - LH-Delay'],
@@ -141,10 +144,10 @@ describe('AJEX HTTP adapter', () => {
       ['AJ0002', 'registered', 'Sample City', 'Booking Confirmed: Booking Approved'],
       ['AJ0001', 'registered', null, 'Booking Placed: Booking created'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Recipient|Shop|Street|Road|goods)|0000000000|Pickup Driver/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Shop|Road|goods)|0000000000|Pickup Driver/);
   });
 
-  it('leaves a delivery’s note out, and keeps a holding scan and the delivery of the newer system', () => {
+  it('keeps a delivery’s note and reads who took the parcel from it, with a holding scan of the newer system', () => {
     const result = parseAjex(changed('in-transit', (shipment) => {
       const row = (actionTime: number, eventCode: string, status: string, note: string) => ({ ...shipment.orderTrackingHistory.at(-1),
         actionTime, eventCode, status, note });
@@ -155,14 +158,15 @@ describe('AJEX HTTP adapter', () => {
         row(Date.UTC(2026, 4, 13, 10), 'AJ0011', 'Delivered', 'Received by Sample Person, 000 000 0000'),
       );
     }), IN_TRANSIT);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivered_at: '2026-05-13T10:00:00Z' });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivered_at: '2026-05-13T10:00:00Z',
+      last_status_text: 'Delivered: Received by Sample Person', signed_by: 'Sample Person' });
     expect(result.events!.slice(0, 4).map((event) => [event.provider_code, event.stage, event.description])).toEqual([
-      ['AJ0011', 'delivered', 'Delivered'],
+      ['AJ0011', 'delivered', 'Delivered: Received by Sample Person'],
       ['AJ0019', 'out_for_delivery', 'Out For Delivery'],
       ['AJ0015', 'in_transit', 'DeliverySheet Created'],
       ['AJ0026', 'exception', 'Hold at Terminal: Customer Appointment Required'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample Person/);
+    expect(JSON.stringify(result)).not.toMatch(/000 000 0000/);
   });
 
   it('orders the scans by their instants, newest first, whatever order the reply lists them in', () => {
@@ -195,7 +199,7 @@ describe('AJEX HTTP adapter', () => {
 
   it('takes phone numbers out of the wording', () => {
     expect(ajexWording('Shipment Not Picked', 'Call 000 000 0000 first', true)).toBe('Shipment Not Picked: Call first');
-    expect(ajexWording('Delivered', 'Received by Sample Person', true, 'delivered')).toBe('Delivered');
+    expect(ajexWording('Delivered', 'Received by Sample Person, 000 000 0000', true)).toBe('Delivered: Received by Sample Person');
     expect(ajexWording('Shipment picked up', 'Shipment has been collected successfully.', false)).toBe('Shipment picked up');
     expect(ajexWording('Received at Hub', 'received at hub', true)).toBe('Received at Hub');
     expect(ajexWording('Booking Placed', '', true)).toBe('Booking Placed');

@@ -49,14 +49,14 @@
     "scraped": [
       "status",
       "history",
-      "provider_code"
+      "provider_code",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
       "eta_window",
       "sender_name",
       "customer_reference",
-      "recipient_address",
       "service_name",
       "remarks"
     ],

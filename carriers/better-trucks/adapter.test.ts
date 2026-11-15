@@ -58,12 +58,14 @@ describe('Better Trucks HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history as instants in the scans’ own offsets, without who took it, where it was left or the photos', () => {
+  it('reads a delivered history as instants in the scans’ own offsets, with who took it but not where it was left or the photos', () => {
     const result = parseBetterTrucks(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map', last_status_text: 'Delivered',
       last_update: '2026-07-08T14:42:05-05:00', delivered_at: '2026-07-08T14:42:05-05:00', destination_country: 'US',
+      receiver_address: 'Sampleton, TX 77999', signed_by: 'Jordan Sample',
     });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(events(result)).toEqual([
       ['2026-07-08T14:42:05-05:00', 'Delivered', 'delivered', 'Sampleton, TX', 'DELIVERED'],
       ['2026-07-08T09:05:31-05:00', 'Out For Delivery', 'out_for_delivery', 'Sampleton, TX', 'OUT_FOR_DELIVERY'],
@@ -78,15 +80,19 @@ describe('Better Trucks HTTP adapter', () => {
     // Only the hub scan with a town keeps its point; the door and the shipper's site do not.
     expect(result.events!.filter((event) => event.point)).toEqual([expect.objectContaining({
       provider_code: 'SCANNED_AT_HUB_SMP', point: { latitude: 29.9001, longitude: -95.2002 } })]);
-    expect(JSON.stringify(result)).not.toMatch(/Jordan|Front Door|Recipient not available|sample-photo|storage\.googleapis|77999|75999|29\.9876|33\.0101|00000000-/);
+    expect(JSON.stringify(result)).not.toMatch(/Front Door|Recipient not available|sample-photo|storage\.googleapis|75999|29\.9876|33\.0101|00000000-/);
+    // A delivery that names nobody has no signatory.
+    const unnamed = parseBetterTrucks(changed('delivered', (body) => { body.tracking_history.forEach((row) => { row.event_details = null; }); }), DELIVERED);
+    expect(unnamed).not.toHaveProperty('signed_by');
     expect(result).not.toHaveProperty('expected_delivery');
   });
 
   it('reads an in-transit underscore number in winter time, and a scan without a local reading in UTC', () => {
     const result = parseBetterTrucks(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Received at SMP hub',
-      last_update: '2026-01-21T05:47:26-06:00' });
+      last_update: '2026-01-21T05:47:26-06:00', receiver_address: 'Sampleton, TX 77999' });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('signed_by');
     expect(events(result)).toEqual([
       ['2026-01-21T05:47:26-06:00', 'Received at SMP hub', 'in_transit', 'Sampleton, TX', 'SCANNED_AT_HUB_SMP'],
       ['2026-01-20T20:33:58-06:00', 'Scanned at BT facility', 'in_transit', null, 'SCANNED_AT_HUB'],

@@ -61,12 +61,12 @@
       "history",
       "location",
       "provider_code",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "destination",
-      "recipient_name",
-      "recipient_address",
       "pickup_point",
       "pickup_point_address",
       "office_contact_details",

@@ -62,7 +62,8 @@ function currentStep($: CheerioAPI, detail: Selection): { code: string; name: st
  * from on file (0) to delivered (6). The row's number must be the one asked. A
  * number the tracker does not hold gets a placeholder row, "Shipping label
  * created for ATS Healthcare", and "No detail for shipment" in place of the
- * progress. The signatory is not kept; the page has no history.
+ * progress. The signatory is read once the shipment is delivered; the page
+ * has no history.
  */
 export function parseAts(html: string, raw: string): CarrierResult {
   const number = normalizeAtsNumber(raw);
@@ -91,6 +92,7 @@ export function parseAts(html: string, raw: string): CarrierResult {
   const clocked = STATUS.exec(status);
   const wording = clocked ? clocked[1]!.trim() : status;
   const stage = atsMappedStage(step.code);
+  const signer = stage === 'delivered' ? clean(cells.eq(4).text(), 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
@@ -99,6 +101,7 @@ export function parseAts(html: string, raw: string): CarrierResult {
     last_update: null,
     last_update_local: clocked ? statusClock(clocked) : null,
     expected_delivery: null,
+    ...(signer ? { signed_by: signer } : {}),
     summary_only: true,
     events: [],
   };

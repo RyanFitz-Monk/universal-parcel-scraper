@@ -29,14 +29,15 @@ Philippines. Tracked through the lookup its tracker on `track.2go.com.ph` makes.
   zone, so it stays `local_time`.
 - The adapter sends only 2GO's own number shapes, and binds a redirect to the shipment's
   attachment list rather than trusting it. The attached references are not kept.
-- A delivery's wording loses who took the parcel, and every wording loses phone numbers.
+- A delivery's wording keeps who took the parcel, read as `signed_by`. Every wording loses
+  phone numbers.
 
 ## Limitations
 
 - No estimate, weight, service or delivery time as an instant.
 - The tracker holds recent shipments only, and answers older ones as not found. The API behind
   2GO's earlier tracking page, `expresscap.2go.com.ph/api/ttrace`, still answers some of them,
-  with the receiver's name; the adapter does not read it.
+  with the receiver's name; the adapter does not ask it.
 
 ## Numbers
 

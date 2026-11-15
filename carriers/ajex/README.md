@@ -31,12 +31,13 @@ the UAE and Bahrain. Tracked through the lookup its shipment-status page makes.
   statuses (`80`) and names the hub in the wording. The newer one, behind `A` numbers, has
   `AJ00…` event codes and a status code of 0. The code stages a scan.
 - The newer system's note follows its status when it says more, as in `Trip Exception: Load to
-  destination - LH-Delay`. A delivery's note is left out, since it can name who took the parcel.
+  destination - LH-Delay`. A delivery's note names who took the parcel, read as `signed_by`.
   Phone numbers are taken out of every line.
 - Rows without a status, such as a pickup driver being assigned, are left out, as the page
   does. The page also takes "AJEX" out of a city's name.
-- The reply carries the recipient's and sender's names, phones and addresses, the goods and the
-  weight. None of them are kept. The older system's weights are placeholders such as 0.001.
+- The recipient's name and address are read from the reply, the full address followed by the
+  postcode and town when it does not already end with them. The phones, the sender, the goods
+  and the weight are not kept; the older system's weights are placeholders such as 0.001.
 - The reply's `estimatedDate`, which the page does not show, is sometimes the time of the
   lookup itself, so it is not kept.
 

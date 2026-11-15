@@ -71,7 +71,9 @@
       "weight",
       "offset_timestamps",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "parcel_count",
@@ -86,8 +88,6 @@
       "provider_code",
       "service_name",
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "signature",
       "proof_of_delivery"
     ]

@@ -32,7 +32,7 @@ export function bypostJson(body: string): unknown {
 const same = (left: unknown, right: string): boolean => typeof left === 'string' && left.replace(/\s+/g, '').toUpperCase() === right.toUpperCase();
 const CODE = /^[A-Z][A-Z0-9_]{0,63}$/;
 
-interface Scan { event: CarrierEvent; at: number; index: number }
+interface Scan { event: CarrierEvent; at: number; index: number; signer: string }
 
 function weightOf(packages: readonly Record<string, unknown>[]): number | null {
   const weights = packages.map(item => item.weight_kg);
@@ -54,7 +54,7 @@ function packageScans(item: Record<string, unknown>, offset: number): { scans: S
     const at = explicitOffsetTime(row.occurred_at);
     if (!at || !(label || code)) throw new SchemaError(PROVIDER, 'Bypost returned an event without a name or clock');
     const location = clean(row.city, 120);
-    scans.push({ at: at.timestamp, index: offset + index, event: {
+    scans.push({ at: at.timestamp, index: offset + index, signer: clean(row.signature, 120), event: {
       time: at.iso, description: [label || code.replaceAll('_', ' ').toLowerCase(), detail].filter(Boolean).join(': '),
       ...(code ? { provider_code: code } : {}), ...(location ? { location } : {}),
       ...(known?.stage ? { stage: known.stage, stage_source: 'carrier_map' } : {}),
@@ -100,15 +100,24 @@ export function parseBypost(payload: unknown, rawNumber: string): CarrierResult 
   const stage = stopped ? 'exception' : scanned ?? declared;
   const delivered = stage === 'delivered' ? events.find(event => event.stage === 'delivered') : undefined;
   const destination = isRecord(payload.destination) ? clean(payload.destination.country_code, 8).toUpperCase() : '';
+  // The recipient's postcode and town, as the page shows them.
+  const address = isRecord(payload.destination)
+    ? [clean(payload.destination.postal_code, 16), clean(payload.destination.city, 120)].filter(Boolean).join(' ') : '';
   const weight = weightOf(packages);
   const detail = packages.length === 1 && isRecord(packages[0]!.detail) ? packages[0]!.detail : undefined;
   const pickupPoint = detail ? clean(detail.pickup_point_name, 160) : '';
+  // Who signed: the newest delivery's signature, else the single package's.
+  const signer = stage !== 'delivered' ? ''
+    : read.flatMap(({ scans }) => scans).sort((left, right) => right.at - left.at).find(({ event }) => event.stage === 'delivered')?.signer
+      || (detail ? clean(detail.signature_name, 120) : '');
   const note = (detail ? textFromHtml(detail.status_description, 300) : '') || (status ? SHIPMENT_NOTES[status] ?? bypostCode(status)?.wording ?? '' : '');
   const extras = {
     expected_delivery: null,
     ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}),
     ...(weight ? { weight_kg: weight } : {}),
     ...(pickupPoint ? { pickup_point: pickupPoint } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signer ? { signed_by: signer } : {}),
   };
 
   if (!events.length) {

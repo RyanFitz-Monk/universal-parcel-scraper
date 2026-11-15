@@ -9,8 +9,8 @@
       "parcel_number": "PRIVATE INTERNAL PARCEL",
       "mail": "private@example.test",
       "mobile": "+33 PRIVATE PHONE",
-      "pickupName": "PRIVATE RECIPIENT",
-      "address": "10 PRIVATE STREET",
+      "pickupName": "SYNTHETIC RECIPIENT",
+      "address": "10 SYNTHETIC STREET",
       "reference": "PRIVATE ARTICLE",
       "articles": [{ "name": "PRIVATE ARTICLE" }]
     }

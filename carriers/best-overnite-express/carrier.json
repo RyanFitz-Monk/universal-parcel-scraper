@@ -54,14 +54,14 @@
       "location",
       "delivered_at",
       "eta",
-      "offset_timestamps"
+      "offset_timestamps",
+      "signatory",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
-      "signatory",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "postcodes"
     ],
     "unavailable": [

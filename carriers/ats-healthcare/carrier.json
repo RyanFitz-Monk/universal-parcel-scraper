@@ -43,11 +43,10 @@
     ],
     "scraped": [
       "status",
-      "progress_rail"
-    ],
-    "discarded": [
+      "progress_rail",
       "signatory"
     ],
+    "discarded": [],
     "unavailable": [
       "history",
       "location",

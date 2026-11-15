@@ -77,9 +77,10 @@ guest tracking client. It is included with the maintainer's approval.
   current status itself, beside the full history; any other summary leaves the first
   listed scan current. Exact duplicate scans are removed; provider order is kept, and at
   most the first 100 scans are returned.
-- The summary's recipient name, signatory, delivery office (`geisDeliveryOffice`), sender
-  reference and origin country, and every scan's reason, are never projected. The sender
-  reference is read only to bind a lookup by it.
+- The summary's recipient name is read as `receiver_name`, and its signatory
+  (`geisDeliveryName`) as `signed_by` once the item is delivered. Its delivery office
+  (`geisDeliveryOffice`), sender reference and origin country, and every scan's reason, are
+  not projected. The sender reference is read only to bind a lookup by it.
 - A refused key is a JSON 401 and the gateway firewall answers an HTML 403; both are
   challenges, as is any web page in place of JSON. API Management answers a spent call
   quota with a JSON 403 and `Retry-After`, which is a rate limit with that window. A 404 or

@@ -17,10 +17,10 @@
  * interactive browser flow and inject it into this module. The checksum hashes
  * the comma-joined ids, which is the plain number for the single id sent here.
  *
- * Privacy: the parcel payload carries the order reference and the recipient's
- * name, address and e-mail. `parseAsendiaTrackingResponse()` rebuilds every
- * event from an explicit allowlist (time, harmonized wording, scanning
- * location, harmonized code) and copies nothing else.
+ * The parcel payload carries the order reference and the recipient's name,
+ * address and e-mail. `parseAsendiaTrackingResponse()` reads the recipient's
+ * name and address, and rebuilds every event from an explicit allowlist (time,
+ * harmonized wording, scanning location, harmonized code).
  */
 import { returnedTrackingNumber } from '../../core/detection/returned.js';
 import { createHash } from 'node:crypto';
@@ -82,6 +82,13 @@ interface AsendiaTenantConfig {
 function plainText(value: unknown, maxLength = 500): string {
   const raw = cleanScalar(value, Math.max(5_000, maxLength * 10));
   return raw ? cleanScalar(load(raw).text(), maxLength) : '';
+}
+
+/** The recipient's name and address as the global portal's parcel gives them. */
+export function asendiaRecipient(parcel: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const name = plainText(parcel.recipient_name, 120);
+  const address = plainText(parcel.recipient_address, 300);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
 }
 
 export function normalizeAsendiaTrackingNumber(raw: string): string {
@@ -287,6 +294,7 @@ export function parseAsendiaTrackingResponse(
     expected_delivery: ['delivered', 'exception'].includes(status)
       ? null
       : expectedDelivery(parcel),
+    ...asendiaRecipient(parcel),
     timezone: ZONE,
     events,
   };

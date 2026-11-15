@@ -34,7 +34,7 @@ const GRID_DATA = '"data":{"Data":';
 const GRID_ID = /jQuery\("#EventHistoryGrid_(\d{1,3})"\)\.kendoGrid\(/;
 const GRID_NUMBER = /function GetShipmentInfo_(\d{1,3})\(\)\s*\{\s*return\s*\{\s*TrackingNumber:\s*'([^']{0,64})'\s*\};?\s*\}/;
 // Who took the freight, after the verb that names them.
-const TAKER = /\b(signed|received)(\s+for)?\s+by\b.*$/i;
+const TAKER = /\b(signed|received)(\s+for)?\s+by\b\s*:?\s*(.*)$/i;
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 // Bot checks a CDN or firewall could put in place of the page.
@@ -104,6 +104,8 @@ interface Row {
   event: CarrierEvent;
   /** The day of a delivery appointment, with its window when the wording gives it; an estimate and not a scan. */
   appointment: string | null;
+  /** Who took the freight, when the row's wording names them. */
+  signer?: string;
 }
 
 /** A twelve-hour clock, "4:00 PM", as `HH:MM`, or null when it is not one. */
@@ -128,16 +130,20 @@ function rowOf(row: unknown): Row {
   if (!isRecord(row)) invalid('FasTrak returned an invalid history row');
   const local_time = clockOf(row);
   const code = text(row, 'Code', 16).toUpperCase();
-  // Whoever signed for the freight is left out of the wording.
-  const description = clean(text(row, 'Description', 200).replace(TAKER, '$1$2').replace(/[\s,;:-]+$/, ''), 160);
+  const description = clean(text(row, 'Description', 200), 160);
   if (!description) invalid('FasTrak returned a history row without its status');
+  // Whoever signed for the freight adds nothing to the stage the wording gives.
+  const taker = TAKER.exec(description);
+  const stated = taker ? clean(description.replace(TAKER, '$1$2').replace(/[\s,;:-]+$/, '')) : description;
+  const signer = clean(taker?.[3], 120);
   const booked = APPOINTMENT.exec(paddedDate(description));
   if (code === APPOINTMENT_CODE || booked) {
     const day = booked ? calendarDay(Number(booked[3]), Number(booked[1]), Number(booked[2])) : null;
     return { event: { local_time, description }, appointment: day ? appointmentOf(day, booked?.[4], booked?.[5]) : local_time.slice(0, 10) };
   }
-  const staged = aitStage(code || null, description);
+  const staged = aitStage(code || null, stated);
   return {
+    ...(signer ? { signer } : {}),
     event: {
       local_time,
       description,
@@ -157,6 +163,10 @@ interface Shipment {
   /** The history's rows newest first, or null when the page lists none. */
   rows: Row[] | null;
   truncated: boolean;
+  /** The town under "Delivering To". */
+  town: string;
+  /** The name under "Signed for by" in the delivery panel. */
+  signer: string;
 }
 
 /** The panel of a shipment headed by `title`. */
@@ -173,6 +183,12 @@ function deliverByOf($: CheerioAPI, body: Cheerio<Element>): Shipment['deliverBy
   const month = MONTHS.indexOf(lines.filter((line) => line.tag === 'h4')[1]?.text ?? '') + 1;
   const day = Number(/^\d{1,2}$/.exec(lines.find((line) => line.tag === 'h2')?.text ?? '')?.[0] ?? Number.NaN);
   return weekday && month && day >= 1 && day <= 31 ? { month, day, weekday } : null;
+}
+
+/** The name the delivery panel gives under "Signed for by". */
+function signerOf($: CheerioAPI, body: Cheerio<Element>): string {
+  const label = body.children('h4').filter((_, node) => clean($(node).text(), 40).toLowerCase() === 'signed for by').first();
+  return label.length ? clean(label.nextAll('h3').first().text(), 120) : '';
 }
 
 /** The history grid of a shipment, bound to the number its page script names. */
@@ -210,6 +226,8 @@ function shipmentOf($: CheerioAPI, node: Element, asked: string): Shipment | { n
     progress: clean(progress.find('h3').first().text(), 80),
     deliverBy: deliverByOf($, delivery),
     ...historyOf($, block, number),
+    town: clean(block.find('[id="lblDeliveryTo"]').closest('h3').text(), 120),
+    signer: signerOf($, delivery),
   };
 }
 
@@ -252,9 +270,9 @@ function distinct(events: readonly CarrierEvent[]): CarrierEvent[] {
  * with its bill number, the town it is delivered to, its progress, its
  * delivery panel and its history newest first, as data in the history grid's
  * settings. A number it does not know is a warning naming it. Only a shipment
- * whose bill number is the number asked is read; the town, the signer, the
- * office's phone number, the rows' explanations and the delivery scheduling
- * are not.
+ * whose bill number is the number asked is read, with the town it is delivered
+ * to and who signed for it; the office's phone number, the rows' explanations
+ * and the delivery scheduling are not.
  */
 export function parseAit(html: string, raw: string): CarrierResult {
   const asked = normalizeAitNumber(raw);
@@ -293,6 +311,7 @@ export function parseAit(html: string, raw: string): CarrierResult {
   const current = fromMeter ? undefined : events[0];
   const settled = decided?.stage === 'delivered' || decided?.stage === 'returned';
   const newest = typeof events[0]?.local_time === 'string' ? events[0].local_time.slice(0, 10) : null;
+  const signer = decided?.stage === 'delivered' ? shipment.signer || rows.find((one) => one.event === delivery)?.signer : undefined;
   return {
     status: decided ? languageStageStatus(decided.stage) : 'unknown',
     ...(decided ? { current_stage: decided.stage, current_stage_source: decided.source } : {}),
@@ -301,6 +320,8 @@ export function parseAit(html: string, raw: string): CarrierResult {
     ...(current?.local_time ? { last_update_local: current.local_time } : {}),
     // Until the delivery, the newest appointment's day and window, else the day the page says to deliver by.
     expected_delivery: settled ? null : appointment ?? deliverByDay(shipment.deliverBy, newest),
+    ...(shipment.town ? { receiver_address: shipment.town } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(events.length ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(shipment.truncated || events.length > MAX_EVENTS ? { history_truncated: true } : {}),

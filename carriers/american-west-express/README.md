@@ -41,13 +41,14 @@ page the tracker's search opens.
   customer. A day before the newest milestone's is stale. The ETA to the final mile agent is the
   hub's arrival, not a delivery estimate, and is not read.
 - The pickup's and the delivery's places are kept as a town and its state; anything else in
-  those fields is not kept.
+  those fields is not kept. The delivery town is also read as the recipient's address, whatever
+  it holds.
 - The bill of lading and purchase order numbers, the pieces, the weight, which has no unit, the
   last town and the office's contact details are not kept.
 
 ## Limitations
 
-- No scan time as an instant, no sender, recipient, signer or proof of delivery.
+- No scan time as an instant, no sender, recipient name, street, signer or proof of delivery.
 - Shipments picked up more than 90 days ago are not found.
 - A pro number reaches the adapter when it is filed under American West or opened from an I-Trek
   link: other carriers print two letters and seven digits too, so no rule claims them and

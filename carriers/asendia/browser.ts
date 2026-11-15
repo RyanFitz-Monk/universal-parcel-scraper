@@ -7,7 +7,7 @@ import type { TrawlClient } from '../../core/transport/trawl.js';
 
 type TrawlPage = Awaited<ReturnType<TrawlClient['scrape']>>;
 import { isRecord } from '../../core/types.js';
-import { asendiaTrackingApiUrl, asendiaTrackingUrl, normalizeAsendiaTrackingNumber } from './probe.js';
+import { asendiaRecipient, asendiaTrackingApiUrl, asendiaTrackingUrl, normalizeAsendiaTrackingNumber } from './probe.js';
 import { classifyAsendiaStatus } from './status.js';
 
 const PROVIDER = 'Asendia';
@@ -59,6 +59,7 @@ export function parseAsendiaGlobalResponse(payload: unknown, raw: string): Carri
     last_status_text: wording, last_update: events[0]?.time ?? null,
     ...(events[0]?.local_time ? { last_update_local: events[0].local_time } : {}),
     ...(country ? { destination_country_name: country } : {}),
+    ...asendiaRecipient(parcel),
     ...(!events.length ? { summary_only: true } : {}),
     ...(events.length > 100 ? { history_truncated: true } : {}),
     events: events.slice(0, 100), tracking_url: asendiaTrackingUrl(number), tracking_source: 'structured-web-response',

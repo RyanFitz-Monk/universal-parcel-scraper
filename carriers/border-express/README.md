@@ -37,15 +37,16 @@ Tracked through the lookup BEX Online's Quick Track makes.
   digits long when shorter. When the reply lists Border Express labels for its units, one of them
   must share the barcode's stem. A 404 for that reading is inconclusive, because the range could
   have another length. The consignment becomes the canonical number.
-- The localities, postcodes, unit counts, unit labels and their scans, the despatch day and the
-  signatory are not kept.
+- The receiver's suburb, state and postcode are read as the recipient's address, and the
+  signatory once the consignment is delivered. The sender's locality, unit counts, unit labels and
+  their scans and the despatch day are not kept.
 - There is no recognition. The consignment shapes are shared with other carriers, and no rule
   claims them. The unit barcode is Border Express's own, but the tracker only answers the
   consignment read from it, and a 404 there does not show the barcode unknown.
 
 ## Limitations
 
-- No weight, service, sender, recipient or proof of delivery.
+- No weight, service, sender, recipient name or proof of delivery.
 - A range longer than six digits that starts with zeros cannot be read from a barcode.
 
 ## Numbers

@@ -41,13 +41,14 @@ describe('4Sides HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the delivery and its days without who took the parcel, the contract or the towns of the parties', () => {
+  it('keeps the delivery and its days with who took the parcel and the recipient’s town, without the contract or the sender’s town', () => {
     const result = parseFoursides(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Попытка доставки (Доставлено)', last_update: null, last_update_local: '2026-03-05', expected_delivery: null,
-      weight_kg: 0.5, destination_country: 'RU' });
+      last_status_text: 'Попытка доставки (Доставлено, получил: Образцов)', last_update: null, last_update_local: '2026-03-05',
+      expected_delivery: null, weight_kg: 0.5, destination_country: 'RU',
+      receiver_address: 'Образцово (Образцовая область)', signed_by: 'Образцов' });
     expect(result.events!.map((event) => [event.local_time, event.description, event.stage ?? null, event.location ?? null])).toEqual([
-      ['2026-03-05', 'Попытка доставки (Доставлено)', 'delivered', null],
+      ['2026-03-05', 'Попытка доставки (Доставлено, получил: Образцов)', 'delivered', null],
       // The attempt that did not deliver, then the hand-over to the courier, as the reply lists that day.
       ['2026-03-04', 'Попытка доставки (В доставке)', 'failed_attempt', null],
       ['2026-03-04', 'Передано в доставку (В доставке)', 'out_for_delivery', null],
@@ -58,7 +59,7 @@ describe('4Sides HTTP adapter', () => {
       ['2026-03-02', 'Сбор (В СЦ)', 'accepted', null],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Образцов(?!о|ая)|получил|000000|документы|Пробный/);
+    expect(JSON.stringify(result)).not.toMatch(/000000|документы|Пробный/);
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('summary_only');
   });
@@ -76,6 +77,8 @@ describe('4Sides HTTP adapter', () => {
       ['Накладная создана', 'registered'],
     ]);
     expect(result.events![0]).toMatchObject({ location: 'Примерск (Примерный край)' });
+    expect(result).toMatchObject({ receiver_address: 'Примерск (Примерный край)' });
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('takes the delivery day as the tracker does, unless the parcel went back', () => {
@@ -90,7 +93,8 @@ describe('4Sides HTTP adapter', () => {
     expect(returned).toMatchObject({ status: 'exception', current_stage: 'returned', last_update_local: '2026-03-06' });
     const summary = parseFoursides(changed('delivered', (body) => { body.events = []; }), DELIVERED);
     expect(summary).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: 'Доставлено',
-      last_update_local: '2026-03-05', summary_only: true, events: [] });
+      last_update_local: '2026-03-05', summary_only: true, events: [], signed_by: 'Образцов' });
+    expect(returned).not.toHaveProperty('signed_by');
   });
 
   it('reads the destination country the reply names in Russian, and keeps a name it cannot read', () => {
@@ -104,17 +108,20 @@ describe('4Sides HTTP adapter', () => {
     expect(parseFoursides(changed('in-transit', (body) => { body.weight = '0'; }), IN_TRANSIT)).not.toHaveProperty('weight_kg');
   });
 
-  it('keeps an event and its state, puts its town in its place and drops who took the parcel', () => {
-    expect(foursidesWording('Попытка доставки (Доставлено, получил: Образцов)')).toEqual({ description: 'Попытка доставки (Доставлено)', location: '' });
-    expect(foursidesWording('Попытка доставки (Доставлено, получатель: Образцов, Пример Примерович)'))
-      .toEqual({ description: 'Попытка доставки (Доставлено)', location: '' });
+  it('keeps an event, its state and who took the parcel, and puts its town in its place', () => {
+    expect(foursidesWording('Попытка доставки (Доставлено, получил: Образцов)')).toEqual({ description: 'Попытка доставки (Доставлено, получил: Образцов)',
+      location: '', stated: 'Попытка доставки (Доставлено)', signer: 'Образцов' });
+    expect(foursidesWording('Попытка доставки (Доставлено, получатель: Образцов, Пример Примерович)')).toEqual({
+      description: 'Попытка доставки (Доставлено, получатель: Образцов, Пример Примерович)', location: '',
+      stated: 'Попытка доставки (Доставлено)', signer: 'Образцов, Пример Примерович' });
     expect(foursidesWording('Приём (В СЦ, в городе: Образцово (Образцовая область))'))
       .toEqual({ description: 'Приём (В СЦ)', location: 'Образцово (Образцовая область)' });
     expect(foursidesWording('Прибытие (в городе: Образцово)')).toEqual({ description: 'Прибытие', location: 'Образцово' });
     expect(foursidesWording('Накладная создана')).toEqual({ description: 'Накладная создана', location: '' });
     // A clause the tracker does not label as the state or a town is not kept.
     expect(foursidesWording('Доставлено (Доставлено: Образцов, курьер: Пример)')).toEqual({ description: 'Доставлено', location: '' });
-    expect(foursidesWording('Доставлено, получил: Образцов')).toEqual({ description: 'Доставлено', location: '' });
+    expect(foursidesWording('Доставлено, получил: Образцов'))
+      .toEqual({ description: 'Доставлено, получил: Образцов', location: '', stated: 'Доставлено', signer: 'Образцов' });
     expect(foursidesWording('Сбор (В СЦ')).toEqual({ description: 'Сбор (В СЦ)', location: '' });
     expect(foursidesWording('  ')).toEqual({ description: '', location: '' });
   });

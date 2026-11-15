@@ -26,8 +26,6 @@ const PRIVATE_PLACEHOLDERS = [
   'PRIVATE INTERNAL PARCEL',
   'private@example.test',
   'PRIVATE PHONE',
-  'PRIVATE RECIPIENT',
-  'PRIVATE STREET',
   'PRIVATE ARTICLE',
   'PRIVATE DEALER ADDRESS',
 ];
@@ -99,7 +97,7 @@ describe('C Chez Vous step map', () => {
 });
 
 describe('C Chez Vous response normalization', () => {
-  it('parses a provider-shaped fixture and excludes all recipient and merchant fields', () => {
+  it('parses a provider-shaped fixture with the recipient\'s name and address, and excludes their contact and the merchant fields', () => {
     const result = parseCChezVousTrackingHtml(trackingPage(), OFFICIAL_EXAMPLE_NUMBER);
 
     expect(result).toEqual({
@@ -108,6 +106,8 @@ describe('C Chez Vous response normalization', () => {
       last_status_text: 'Commande en route vers la plateforme régionale',
       last_update: null,
       expected_delivery: '2024-01-02 08:00–13:00',
+      receiver_name: 'SYNTHETIC RECIPIENT',
+      receiver_address: '10 SYNTHETIC STREET',
       timezone: 'Europe/Paris',
       events: [{ description: 'Commande en route vers la plateforme régionale', stage: 'in_transit' }],
     });
@@ -117,6 +117,11 @@ describe('C Chez Vous response normalization', () => {
     }
     // The booked window keeps its hours on the Paris clock, not the page's wording.
     expect(serialized).not.toContain('08h00');
+    // A parcel without them leaves them to the order's other parcels.
+    const later = parseCChezVousTrackingHtml(trackingPage({ parcels: [{ parcelStep: 4 }, { parcelStep: 4, pickupName: 'SYNTHETIC RECIPIENT' }] }),
+      OFFICIAL_EXAMPLE_NUMBER);
+    expect(later.receiver_name).toBe('SYNTHETIC RECIPIENT');
+    expect(later).not.toHaveProperty('receiver_address');
   });
 
   it('reads the booked window on the appointment day, else the day alone', () => {

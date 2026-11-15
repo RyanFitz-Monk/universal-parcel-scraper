@@ -43,8 +43,10 @@ those prefixes and recognition asks it first when the number is looked up from T
 - Clocks carry no offset and stay local wall times, read in the catalog zone.
 - The planned delivery day is the estimate while the parcel moves and the day is not behind its
   latest scan.
-- Names, the signatory, the delivery code, the identity check, invoice and payment details,
-  every free-text note and the SMS tab are never read.
+- The recipient's name and, once delivered, who took the parcel (`Teslim Alan`) are read as the
+  summary shows them, masked. The unmasked copy the page hides, the sender's name, the delivery
+  code, the identity check, invoice and payment details, every free-text note and the SMS tab
+  are never read.
 - Recognition runs the whole lookup.
 
 ## Links

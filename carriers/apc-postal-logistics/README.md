@@ -44,14 +44,14 @@ post. Tracked through the lookup its tracker page makes.
   address, so their places are never kept, nor those of unknown codes worded that way.
 - The estimate window is kept as calendar days in UTC, as the page shows it, until the parcel
   arrives.
-- The destination country is read from the code that ends the recipient's address. The rest of
-  the address, the merchant's reference, the partner's free text on scans, the links and the
-  service code are not kept.
+- The reply's recipient address ends with a country code, read as the destination country;
+  what comes before it, the postcode, is `receiver_address`. The merchant's reference, the partner's free
+  text on scans, the links and the service code are not kept.
 
 ## Limitations
 
 - No delivery time: partner deliveries have no instant.
-- No weight, sender or recipient.
+- No weight, sender, recipient name or signer.
 
 ## Numbers
 

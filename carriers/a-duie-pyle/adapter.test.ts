@@ -56,11 +56,12 @@ describe('A. Duie Pyle HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history newest first, with the offsets its places keep, without parties or references', () => {
+  it('reads a delivered history newest first, with the offsets its places keep and the consignee, without the other parties or references', () => {
     const result = parsePyle(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'DELIVERED', last_update: '2026-01-23T11:20:00-05:00', expected_delivery: null,
-      delivered_at: '2026-01-23T11:42:00-05:00', weight_kg: 226.796 });
+      delivered_at: '2026-01-23T11:42:00-05:00', weight_kg: 226.796,
+      receiver_name: 'SAMPLE RECEIVING CO', receiver_address: '1 SAMPLE AVE\nSAMPLETOWN, NJ 09999' });
     expect(result.events!.map((event) => [event.time ?? null, event.local_time ?? null, event.stage ?? null, event.location ?? null,
       event.description])).toEqual([
       // The page dates the delivery with the end of its row; the scan keeps its start.
@@ -77,7 +78,7 @@ describe('A. Duie Pyle HTTP adapter', () => {
     ]);
     // The windows are not scans, and the billing status moves nothing.
     expect(JSON.stringify(result)).not.toMatch(/WINDOW|INVOICED/);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE (?:RECEIVING|MILLS|LOGISTICS)|SAMPLE AVE|EXAMPLE RD|INVENTED|MADEUP CITY|0999|6999|SAMPLEBOL|PO-SAMPLE|DOOR|J SAMPLE/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE (?:MILLS|LOGISTICS)|EXAMPLE RD|INVENTED|MADEUP CITY|6999|SAMPLEBOL|PO-SAMPLE|DOOR|J SAMPLE/);
   });
 
   it('reads a midnight pickup as its day, a repeated hour by the offset the reply gives, and a hand-off to a partner', () => {
@@ -85,7 +86,8 @@ describe('A. Duie Pyle HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'ARRIVED AT TERMINAL', last_update: '2026-11-02T03:15:00-05:00',
       expected_delivery_from: '2026-11-04T08:00:00-05:00', expected_delivery: '2026-11-04T12:00:00-05:00',
-      delivery_carrier: 'southeastern-freight-lines', delivery_tracking_number: '1234567890', weight_kg: 544.311 });
+      delivery_carrier: 'southeastern-freight-lines', delivery_tracking_number: '1234567890', weight_kg: 544.311,
+      receiver_name: 'EXAMPLE STORES LLC', receiver_address: '4 MADEUP BLVD\nSAMPLE CITY, NC 29999' });
     expect(result).not.toHaveProperty('delivered_at');
     expect(result).not.toHaveProperty('last_update_local');
     expect(result.events!.map((event) => [event.time ?? null, event.local_time ?? null, event.stage])).toEqual([

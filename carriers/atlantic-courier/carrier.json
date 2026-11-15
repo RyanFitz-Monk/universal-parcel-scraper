@@ -48,11 +48,11 @@
       "history",
       "location",
       "delivered_at",
-      "destination_country"
+      "destination_country",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
-      "recipient_name",
-      "signatory",
       "delivery_tracking_number",
       "progress_rail"
     ],

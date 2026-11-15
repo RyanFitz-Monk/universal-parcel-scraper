@@ -62,12 +62,12 @@ describe('Border Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivery from the status rows with their offsets, without the draft, the undated pickup step or the people', () => {
+  it('reads a delivery from the status rows with their offsets, the receiver\'s locality and the signatory, without the draft or the undated pickup step', () => {
     const result = parseBorderExpress(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-03-12T14:05:10+11:00', expected_delivery: null,
-      delivered_at: '2026-03-12T14:05:10+11:00',
+      delivered_at: '2026-03-12T14:05:10+11:00', receiver_address: 'Sampleton NSW 0000', signed_by: 'Sample Person',
       events: [
         { time: '2026-03-12T14:05:10+11:00', location: 'Sampleton, NSW', description: 'Delivered', provider_code: 'DEL',
           stage: 'delivered', stage_source: 'carrier_map' },
@@ -79,13 +79,17 @@ describe('Border Express HTTP adapter', () => {
           stage: 'registered', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/Sample Person|Unsaved|0000"|00000000000000000000|10\/03\/2026/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Creek VIC|Unsaved|00000000000000000000|10\/03\/2026/);
   });
 
   it('keeps each state’s offset, and the estimate, while the consignment is on its way', () => {
     const result = parseBorderExpress(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'In Transit', last_update: '2026-01-20T05:31:07+11:00', expected_delivery: '2026-01-21', delivered_at: null });
+      last_status_text: 'In Transit', last_update: '2026-01-20T05:31:07+11:00', expected_delivery: '2026-01-21', delivered_at: null,
+      receiver_address: 'Sampleton NSW 0000' });
+    // The signatory is blank until a delivery, and not kept before one.
+    expect(result).not.toHaveProperty('signed_by');
+    expect(parseBorderExpress(changed('in-transit', (entry) => { entry.signedBy = 'Sample Person'; }), IN_TRANSIT)).not.toHaveProperty('signed_by');
     // Queensland keeps standard time in summer.
     expect(result.events!.map((event) => [event.time, event.location])).toEqual([
       ['2026-01-20T05:31:07+11:00', 'Sample Hub, NSW'],

@@ -23,7 +23,11 @@ const CALENDAR_CYCLE_YEARS = 28;
 const TRACKING = /^Tracking #:\s*(\S+)$/;
 const NOT_FOUND = 'No shipment found';
 // Who took the parcel, after a delivery's wording: "… - Received by {name}".
-const RECEIVER = /\s*-\s*(?:received|collected|signed|retrieved) by\b[\s\S]*$/i;
+const RECEIVER = /\s*-\s*(?:received|collected|signed|retrieved) by\b\s*([\s\S]*)$/i;
+// The route under "Shipment Details": "{origin town} → {destination town}".
+const ROUTE = /^(.+?)\s*→\s*(.+)$/;
+// A value the page masks whole.
+const MASKED = /^[*\s]*$/;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 const MAX_ROWS = 300;
@@ -68,22 +72,33 @@ export function aymakanDay(label: string, latest: string): string {
   throw new SchemaError(PROVIDER, 'AyMakan returned an invalid scan date');
 }
 
-/** A timeline entry's wording, without who took the parcel or a phone number. */
+const TRAIL = /[\s,;:\-–]+$/;
+
+/** A timeline entry's wording, without a phone number. */
 export function aymakanWording(text: string): string {
-  return clean(clean(text, 500).replace(RECEIVER, '').replace(PHONE, ''), 300).replace(/[\s,;:\-–]+$/, '');
+  return clean(clean(text, 500).replace(PHONE, ''), 300).replace(TRAIL, '');
+}
+
+/** A wording's part before who took the parcel, which carries the stage, and who took it. */
+export function aymakanTaker(wording: string): { stated: string; signer: string } {
+  const taker = RECEIVER.exec(wording);
+  if (!taker) return { stated: wording, signer: '' };
+  return { stated: wording.slice(0, taker.index).replace(TRAIL, ''), signer: clean(taker[1], 120).replace(TRAIL, '') };
 }
 
 type Selection = ReturnType<CheerioAPI>;
 
+interface Scan { event: CarrierEvent; signer: string }
+
 /** The timeline's entries, newest first as the page lists them: a heading with the wording and the day under it. */
-function eventsOf($: CheerioAPI, main: Selection, latest: string): CarrierEvent[] {
+function scansOf($: CheerioAPI, main: Selection, latest: string): Scan[] {
   const titles = main.find('h3').filter((_, heading) => clean($(heading).text(), 40) === 'Timeline');
   const timeline = titles.closest('aside');
   if (titles.length !== 1 || timeline.length !== 1) throw new SchemaError(PROVIDER, 'AyMakan returned a page without its timeline');
   const headings = timeline.find('h4').toArray();
   if (headings.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'AyMakan returned an oversized timeline');
   const seen = new Set<string>();
-  const events: CarrierEvent[] = [];
+  const scans: Scan[] = [];
   for (const heading of headings) {
     const days = $(heading).siblings('p');
     const description = aymakanWording($(heading).text());
@@ -93,10 +108,21 @@ function eventsOf($: CheerioAPI, main: Selection, latest: string): CarrierEvent[
     const key = `${day} ${description}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = aymakanStage(description);
-    events.push({ local_time: day, description, ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) });
+    // Who took the parcel adds nothing to the stage the wording gives.
+    const { stated, signer } = aymakanTaker(description);
+    const staged = aymakanStage(stated);
+    scans.push({ signer, event: { local_time: day, description, ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}) } });
   }
-  return events;
+  return scans;
+}
+
+/** The town the route under "Shipment Details" ends in, or '' without one. */
+function destinationOf($: CheerioAPI, main: Selection): string {
+  const titles = main.find('section h3').filter((_, heading) => clean($(heading).text(), 40) === 'Shipment Details');
+  if (titles.length !== 1) return '';
+  const route = ROUTE.exec(clean(titles.siblings('p').text(), 200));
+  const town = route ? clean(route[2], 120) : '';
+  return MASKED.test(town) ? '' : town;
 }
 
 /**
@@ -104,8 +130,10 @@ function eventsOf($: CheerioAPI, main: Selection, latest: string): CarrierEvent[
  * the site renders on its server: the shipment's status over "Tracking #:" and
  * the number, a progress rail, the route, masked parties and the timeline. A
  * number it does not know gets "No shipment found" under its search form,
- * which keeps the number. The route, the rail and who took the parcel are not
- * kept. `now` is the lookup's time, which sets the years of the scans' days.
+ * which keeps the number. The route's last town is the recipient's, and a
+ * delivery's wording names who took the parcel; the rail and the masked
+ * parties are not kept. `now` is the lookup's time, which sets the years of
+ * the scans' days.
  */
 export function parseAymakan(html: string, raw: string, now = Date.now()): CarrierResult {
   const number = normalizeAymakanNumber(raw);
@@ -127,16 +155,20 @@ export function parseAymakan(html: string, raw: string, now = Date.now()): Carri
   const summary = clean(labels.siblings('h3').text(), 120);
   if (!summary) throw new SchemaError(PROVIDER, 'AyMakan returned a shipment without its status');
 
-  const events = eventsOf($, main, latestScanDay(now));
+  const scans = scansOf($, main, latestScanDay(now));
+  const events = scans.map((scan) => scan.event);
   const newest = events[0];
   // The status over the shipment is the carrier's current one; the newest scan
   // with a stage decides only a status the list does not know.
   const listed = aymakanMappedStage(summary);
-  const scanned = events.find((event) => event.stage);
+  const scannedScan = scans.find((scan) => scan.event.stage);
+  const scanned = scannedScan?.event;
   const worded = listed || scanned ? null : aymakanStage(summary);
   const stage = (listed ?? scanned?.stage ?? worded?.stage) as Stage | undefined;
   const source = listed ? 'carrier_map' : scanned ? scanned.stage_source : worded?.source;
   if (!newest && !stage) throw new NoHistoryError(PROVIDER);
+  const town = destinationOf($, main);
+  const signer = stage === 'delivered' && scanned?.stage === 'delivered' ? scannedScan!.signer : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -144,6 +176,8 @@ export function parseAymakan(html: string, raw: string, now = Date.now()): Carri
     last_update: null,
     last_update_local: typeof newest?.local_time === 'string' ? newest.local_time : null,
     expected_delivery: null,
+    ...(town ? { receiver_address: town } : {}),
+    ...(signer ? { signed_by: signer } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
