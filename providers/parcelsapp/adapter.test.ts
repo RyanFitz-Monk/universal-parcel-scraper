@@ -2566,6 +2566,34 @@ describe('ParcelsApp result parsing', () => {
     ]);
   });
 
+  it("reads DHLink's relays of SwiftX's scans on SwiftX's own number at SwiftX's clocks", () => {
+    // Live shape: on SwiftX's number the reply holds DHLink's rows alone, at SwiftX's digits under the town and
+    // state; DHLink recorded each within four hours of its US reading, and 14 to 20 hours after China's.
+    const swx = 'SWX000000000000000001';
+    const state = (date: string, status: string, location = 'EXAMPLE TOWN, California, United States') => ({ date, status, carrier: 0, location });
+    const states = [
+      state('2026-11-15T11:26:41Z', 'Delivered'), state('2026-11-14T08:08:52Z', 'Out for Delivery'),
+      state('2026-11-09T23:07:41Z', 'Departed Destination Hub'),
+      state('2026-11-06T03:53:36Z', 'Departed Origin Hub', 'EXAMPLE TOWN, New Jersey, United States'),
+      state('2026-11-05T19:47:18Z', 'Arrived at Origin Hub', 'EXAMPLE TOWN, New Jersey, United States'),
+      state('2026-10-29T07:49:01Z', 'Shipping Label Created', 'SYSTEM, United States'),
+    ];
+    const times = (number: string, rows = states, destinationCode = 'US') => parseParcelsAppResponse({ carriers: ['DHLink'], originCode: 'CN',
+      destinationCode, states: rows }, number, identity(number), 'Asia/Shanghai').events?.map(({ time }) => time);
+    expect(times(swx)).toEqual([
+      '2026-11-15T19:26:41.000Z', '2026-11-14T16:08:52.000Z', '2026-11-10T07:07:41.000Z',
+      '2026-11-06T08:53:36.000Z', '2026-11-06T00:47:18.000Z', '2026-10-29T14:49:01.000Z',
+    ]);
+    // On DHLink's own number, or a parcel to another country, they keep China's clock.
+    const china = ['2026-11-15T03:26:41.000Z', '2026-11-14T00:08:52.000Z', '2026-11-09T15:07:41.000Z',
+      '2026-11-05T19:53:36.000Z', '2026-11-05T11:47:18.000Z', '2026-10-28T23:49:01.000Z'];
+    expect(times('KTDWE0000000000')).toEqual(china);
+    expect(times(swx, states, 'MX')).toEqual(china);
+    // Beside DHLink's own label row on China's clock, SwiftX's copy goes and DHLink's row keeps China's.
+    const own = state('2026-10-29T22:49:01Z', 'Shipping Label Created', 'SYSTEM, United States');
+    expect(times(swx, [own, ...states.slice(-1)])).toEqual(['2026-10-29T14:49:01.000Z']);
+  });
+
   it('reads SwiftX\'s listed sites in their zone, its labels on GMT-07:00 in every season and its other scans on Pacific time', () => {
     const swx = 'SWX000000000000000001';
     const times = (states: Record<string, unknown>[]) =>

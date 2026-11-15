@@ -245,7 +245,10 @@ step exists for future protocol changes.
   DHLink, and read on China's clock, a copy of SwiftX's label came 15 hours early. A DHLink
   scan whose US reading is the instant of another DHLink scan with the same wording is that
   copy and is dropped. So is a DHLink scan with the wording and digits of the partner's own
-  row: the reply can hold SwiftX's copies of its hub scans without DHLink's rows.
+  row: the reply can hold SwiftX's copies of its hub scans without DHLink's rows. On SwiftX's
+  own number DHLink relays SwiftX's scans at SwiftX's digits, recording them hours after their
+  US reading and half a day after China's: a DHLink row under a US town and state takes that
+  state's clock, and DHLink's only label row SwiftX's label clock. Its other rows keep China's.
 - 4PX's page relays GOFO's US scans in Spanish ("Llegó al centro regional de gofo") at GOFO's
   digits to the second, with another scan's place or none. A 4PX state at the second of a
   GOFO state is that copy and is not read as a scan: it came twice, on another clock than

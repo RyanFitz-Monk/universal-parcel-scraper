@@ -644,6 +644,28 @@ function swiftxSiteZone(payload: Record<string, unknown>, state: Record<string, 
   }
   return newest?.zone ?? null;
 }
+/**
+ * On SwiftX's own number and a parcel to the US, DHLink's feed relays SwiftX's scans at
+ * SwiftX's digits: under the town and state ("EXAMPLE TOWN, California, United States") they
+ * have the second of SwiftX's own hub rows, and DHLink records them hours after a US reading
+ * of their clocks, half a day after China's. Such a row takes its state's clock (`siteZone`),
+ * and DHLink's only label row SwiftX's label clock. Its other rows keep China's.
+ */
+function swiftxRelayed(number: string, destination: string | null): boolean {
+  return destination === 'US' && (detectCarrierMatch(number).candidates as readonly string[]).includes('swiftx');
+}
+/** The clock of a US town and state, as DHLink's relays of SwiftX's scans name them. */
+function usStateClock(location: string): string | null {
+  const region = countryCode(lastPlace(location)) === 'US' ? regionClock(location) : null;
+  return region?.certain ? region.zone : null;
+}
+/** Whether DHLink's feed holds one label row: beside DHLink's own, SwiftX's copy goes (`dropDhlinkCopies`). */
+function soleDhlinkLabel(payload: Record<string, unknown>): boolean {
+  return (Array.isArray(payload.states) ? payload.states : []).filter((raw: unknown) => {
+    const name = isRecord(raw) ? stateCarrierName(payload, raw) : undefined;
+    return isRecord(raw) && typeof name === 'string' && carrierIdFromName(name) === 'dhlink' && SWIFTX_LABEL.test(relayedLabel(raw.status).trim());
+  }).length === 1;
+}
 // A UPU office of exchange in Portugal leading a CTT location: "PTLISB - (OUTRO) LISBON PROV".
 const CTT_HOME_OFFICE = /^PT[A-Z0-9]{4}\s+-\s/;
 /**
@@ -1372,7 +1394,11 @@ function carrierClock(payload: Record<string, unknown>, state: Record<string, un
   if (carrier === 'china-post' && chinaPostAbroad(scanLocation(name, state.location), status, destination)) return countryTimeZone(destination);
   // Cainiao's copies of Speedaf's scans keep Speedaf's digits, its arrival at the linehaul office too.
   if (carrier === 'speedaf' || (key === 'cainiao' && speedafDeparture(payload))) return speedafZone(payload, state.date, destination);
-  // A SwiftX label keeps its own clock, and a listed SwiftX site dates its scans (`siteZone`).
+  // A SwiftX label keeps its own clock, and a listed SwiftX site dates its scans (`siteZone`), as do DHLink's relays of them.
+  if (carrier === 'dhlink' && swiftxRelayed(number, destination)) {
+    if (usStateClock(scanLocation(name, state.location))) return undefined;
+    if (SWIFTX_LABEL.test(status.trim()) && soleDhlinkLabel(payload)) return SWIFTX_LABEL_CLOCK;
+  }
   if (carrier === 'swiftx' && SWIFTX_LABEL.test(status.trim())) return SWIFTX_LABEL_CLOCK;
   if (carrier === 'swiftx' && swiftxSiteZone(payload, state, scanLocation(name, state.location))) return undefined;
   if (ROYAL_MAIL_NAMES.has(key) && royalMailRelay(scanLocation(name, state.location), status, destination)) return ROYAL_MAIL_RELAY_CLOCK;
@@ -1466,6 +1492,8 @@ function siteZone(payload: Record<string, unknown>, state: Record<string, unknow
   if (russianPostCopy(carrier, status)) return russianPostCopyZone(location, status);
   if (carrier === 'ctt') return cttZone(payload, location, state.date, number, destination);
   if (carrier === 'swiftx') return swiftxSiteZone(payload, state, location) ?? undefined;
+  const relayed = carrier === 'dhlink' && swiftxRelayed(number, destination) ? usStateClock(location) : null;
+  if (relayed) return relayed;
   // A facility's clock, whatever the label: no other step applies to it.
   if (relaysFacilityClock(name)) return facilityZone(location);
   if (carrier === 'china-post' && inChina(location)) return CHINA_POST_ZONE;
