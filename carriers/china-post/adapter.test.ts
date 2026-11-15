@@ -292,4 +292,9 @@ describe('China Post adapter', () => {
       expect(statusMap.stage(null, normalizeStatusWording(entry.english!)), entry.english).toBe(entry.stage);
     }
   });
+
+  it("shows ParcelsApp's half-translated departure from the office of posting in English", () => {
+    expect(chinaPostEnglish('Departed from 收寄点【示例】')).toBe('Departed from the office of posting');
+    expect(chinaPostEnglish('离开收寄点【示例】')).toBe('Departed from the office of posting');
+  });
 });

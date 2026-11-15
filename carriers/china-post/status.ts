@@ -124,8 +124,10 @@ const LABELS: ReadonlyArray<readonly [label: string, english: string]> = [
   ['航空公司启运', 'Airline departure'],
   ['出口海关/放行', 'Export customs release'],
   ['到达寄达地', 'Arrive at the place of destination'],
-  // ParcelsApp keeps 收寄点 (the office of posting) in Chinese: "Departed from 收寄点【…】".
+  // The departure from the office of posting, and ParcelsApp's rendering of it that keeps 收寄点 in Chinese:
+  // "Departed from 收寄点【…】".
   ['离开收寄点…', 'Departed from the office of posting'],
+  ['Departed from 收寄点…', 'Departed from the office of posting'],
   // Plain renderings of the scan texts.
   ['邮件到达…', 'Arrival'],
   ['邮件离开…', 'Departure'],
