@@ -41,7 +41,9 @@ sent within Brazil. Tracked through the lookups its two tracking pages make.
 - Anjun Express spells its codes apart (`statusCode`, as `transfer_in_storage`); the same map
   reads them. Its `collected` is the collection from the sender, the first scan of a parcel sent
   within Brazil. Its place is kept only as the town and state it gives (`Town / UF`); the note it
-  shows under a collection, its sites, couriers, coordinates and photos are not read.
+  shows under a collection, its sites, couriers, coordinates and photos are not read. A
+  collection names the sender's street before the town and state: that place is not kept, but
+  the scan is dated on its state's clock, Rondônia's an hour behind São Paulo's.
 - The `stateCode` stages each scan. The tracker spells codes with stray spaces and mixed case,
   as `LM _has _collected`, so the map reads them in lower case without spaces. A code the map
   does not know falls to the shared wording rules. The codes the page's script sorts parcels by

@@ -301,7 +301,8 @@ describe('Anjun HTTP adapter', () => {
       ['2026-05-10T01:10:31', 'transfer_in_storage', 'in_transit', 'Sample Origin / SP'],
       ['2026-05-09T15:31:26', 'collected', 'accepted', null],
     ]);
-    expect(result.events!.every((event) => event.time === undefined)).toBe(true);
+    // Only the collection, whose place after the sender's street is not kept, is dated: on its state's clock.
+    expect(result.events!.map((event) => event.time ?? null)).toEqual([null, null, null, '2026-05-09T15:31:26-03:00']);
     expect(JSON.stringify(result)).not.toMatch(/Sample (?:sender|Courier)|Rua|SP-01|-23\.0|Sample City/);
     expect(result.destination_country).toBe('BR');
     for (const change of [
@@ -318,13 +319,27 @@ describe('Anjun HTTP adapter', () => {
   });
 
   it('dates an Anjun Express scan without a place on Brazil\'s clock, not on Anjun\'s in China', () => {
-    // A parcel collected from its sender, with no other scan yet: the collection names the sender's street, which is not kept.
-    const collected = parseAnjunExpress(changed('express-in-transit', (rows) => {
-      rows[0]!.nodeDataList = (rows[0]!.nodeDataList as Row[]).slice(-1);
+    // A parcel collected from its sender, with no other scan yet: the collection names the sender's street, which is not kept,
+    // and after it the town and state, whose clock dates the scan.
+    const collectedIn = (address: string) => parseAnjunExpress(changed('express-in-transit', (rows) => {
+      rows[0]!.nodeDataList = (rows[0]!.nodeDataList as Row[]).slice(-1).map((row) => ({ ...row, address }));
     }), DOMESTIC);
+    const collected = collectedIn('Rua Sample 100, Sample Origin / SP');
+    expect(collected).toMatchObject({ last_update: '2026-05-09T15:31:26-03:00' });
     expect(dateLocalClocks('anjun', collected).events).toMatchObject([
-      { local_time: '2026-05-09T15:31:26', time: '2026-05-09T15:31:26-03:00', time_zone: 'America/Sao_Paulo', time_zone_basis: 'destination' },
+      { local_time: '2026-05-09T15:31:26', time: '2026-05-09T15:31:26-03:00', time_zone: 'America/Sao_Paulo', time_zone_basis: 'place' },
     ]);
+    // A collection in Rondônia is on its clock, an hour behind São Paulo's.
+    expect(collectedIn('Rua Sample 100, Example Town / RO').events).toMatchObject([
+      { local_time: '2026-05-09T15:31:26', time: '2026-05-09T15:31:26-04:00', time_zone: 'America/Porto_Velho', time_zone_basis: 'place' },
+    ]);
+    // With no state after the street, it takes the destination's clock.
+    const unplaced = collectedIn('Rua Sample 100');
+    expect(unplaced.events![0]).not.toHaveProperty('time');
+    expect(dateLocalClocks('anjun', unplaced).events).toMatchObject([
+      { time: '2026-05-09T15:31:26-03:00', time_zone: 'America/Sao_Paulo', time_zone_basis: 'destination' },
+    ]);
+    expect(JSON.stringify(collectedIn('Rua Sample 100, Example Town / RO'))).not.toMatch(/Rua|Example Town/);
   });
 
   it('routes a number filed under Anjun, or detected as one of its numbers, to the adapter', async () => {

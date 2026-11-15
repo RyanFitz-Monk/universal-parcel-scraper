@@ -4,8 +4,10 @@ import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, S
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { paddedDate } from '../../core/time/fields.js';
+import { isoTime } from '../../core/time/index.js';
 import { clean, cleanScalar, textFromHtml } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
+import { regionZone } from '../../places/zones.js';
 import { anjunStage } from './status.js';
 
 export const PROVIDER = 'Anjun';
@@ -18,6 +20,8 @@ const WALL_CLOCK = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 const DAY_FIRST = /^(\d{2})-(\d{2})-(\d{4}) (\d{2}:\d{2}:\d{2})$/;
 // A scan's place in Anjun Express's replies: the town and the state's two letters.
 const TOWN_STATE = /^[^\d,;]{1,80} \/ [A-Z]{2}$/;
+// The same after a street, as a collection names the sender's place: "Street 100, Town / UF".
+const STREET_TOWN_STATE = /,\s*[^\d,;]{1,80} \/ ([A-Z]{2})$/;
 // The tracker's message for a number it does not know: "tracking number not found".
 const NOT_FOUND = '未找到单号';
 // Its message for a number it knows with no scans yet: "no tracking information for this number".
@@ -115,12 +119,17 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
 /**
  * A scan of Anjun Express's lookup in Brazil. Its place is kept only as a town and a state; the
  * sender's note (`content`), coordinates, the site, the courier, signatures and photos are never read.
+ * A place after a street, the sender's at a collection, is not kept, but its state's clock dates the scan.
  */
 function projectNode(row: Record<string, unknown>): { key: string; event: CarrierEvent } {
   const place = text(row, 'address', 120);
-  return projectScan({ code: cleanScalar(row.statusCode, 80), status: text(row, 'status', 500),
+  const local = nodeClock(row);
+  const scan = projectScan({ code: cleanScalar(row.statusCode, 80), status: text(row, 'status', 500),
     details: [text(row, 'problemType', 120), text(row, 'statusDetail', 200)],
-    remark: '', local: nodeClock(row), location: TOWN_STATE.test(place) ? place : '' });
+    remark: '', local, location: TOWN_STATE.test(place) ? place : '' });
+  const zone = TOWN_STATE.test(place) ? null : regionZone('BR', STREET_TOWN_STATE.exec(place)?.[1] ?? '');
+  const time = zone ? isoTime(local, zone)?.iso : undefined;
+  return time ? { ...scan, event: { ...scan.event, time, time_zone: zone!, time_zone_basis: 'place' } } : scan;
 }
 
 function projectScan({ code, status, details, remark, local, location }: Scan): { key: string; event: CarrierEvent } {
@@ -215,8 +224,8 @@ function history(scans: readonly { key: string; event: CarrierEvent }[], country
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned?.stage_source ?? 'carrier_map' } : {}),
     last_status_text: newest.description!,
-    last_update: null,
-    last_update_local: newest.local_time,
+    last_update: newest.time ?? null,
+    ...(newest.time ? {} : { last_update_local: newest.local_time }),
     expected_delivery: null,
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
