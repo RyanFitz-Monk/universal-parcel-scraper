@@ -4,8 +4,8 @@
 
 Report vulnerabilities privately through
 [GitHub security advisories](https://github.com/plhery/universal-parcel-scraper/security/advisories/new).
-Include a synthetic reproduction and the affected version. Do not put parcel credentials,
-tracking links, recipient details or secrets in a public issue.
+Include a public or synthetic reproduction and the affected version. Keep your own parcels'
+links, postcodes and recipient details out of a public issue, and every secret.
 
 ## Running it
 

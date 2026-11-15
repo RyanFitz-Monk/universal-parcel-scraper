@@ -33,7 +33,7 @@ the machine, so several checkouts can test side by side. `--maxWorkers` changes 
 ## Fix a carrier
 
 Start with the carrier's README in `carriers/<id>/`. It says how the site is read and which
-choices were deliberate. Then reproduce the problem offline: add or adjust a synthetic fixture,
+choices were deliberate. Then reproduce the problem offline: add or adjust a fixture,
 make the parser test fail, and fix it.
 
 Live tests contact the carrier, so run them only when you mean to:
@@ -70,7 +70,7 @@ The script writes the folder. From there:
 4. Record the status codes and wordings you saw in `statuses.json`. A `status.ts` that
    declares a `statusMap`, with the codes it leaves unmapped on purpose, is registered in
    [statusMaps.ts](core/catalog/statusMaps.ts).
-5. Add synthetic fixtures with offline tests.
+5. Add fixtures with offline tests: a public sample's reply or a synthetic one.
 6. Write the README.
 7. Add a case for the tracking link to `testing/trackingLinkCases.ts`, with the address the
    page ends on and wording only the carrier's tracker shows, both read from the rendered
@@ -111,12 +111,12 @@ Leave the version alone; it is raised after the merge. [Peek](https://github.com
 the app built on this package, needs a database migration for a release that adds a carrier
 id or input. The maintainers write it when they merge, so a carrier needs no pull request there.
 
-## Keep parcels private
+## Public and private data
 
-This repository is public. Keep recipient details, capability links, private tracking
-numbers and private postcodes out of Git, issues and logs. A public sample number keeps a
-postcode it embeds or one published online with it. Fixtures are synthetic, and so are the
-numbers in bug reports.
+This repository is public. What a public page shows can go in, cited by that page's URL: a
+number, its postcode, a tracking link, the carrier's reply. Numbers, postcodes, links and
+recipient details from your own parcels or from a deployment stay out of Git and issues, and
+so do credentials. A bug report uses a public or synthetic number.
 
 ## Docs
 

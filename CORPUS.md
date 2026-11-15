@@ -88,13 +88,12 @@ Some adapter tests replay these entries against the carrier's status map. Wordin
 map covers falls to the shared classifier in [core/status](core/status/wording.ts), which
 has its own tests against audited histories.
 
-## What never goes in
+## Public and private data
 
-Private live-test numbers do not belong in the corpus. Provider and parser fixtures bind to
-synthetic identities, and leave out recipient details and access credentials. Opaque tracking
-page keys and capability URLs stay outside Git even when a search engine indexes them.
+A public sample brings what its source shows: a postcode it embeds, as a USPS 420 routing
+barcode or a Russian Post domestic number does, a postcode or tracking link published with it,
+an opaque page key a search engine indexes, and the carrier's reply, which a provider or parser
+fixture can replay. Its source is the page that gives them.
 
-A public number keeps a postcode it embeds, such as a USPS 420 routing barcode or a Russian
-Post domestic number. It may also keep a postcode published online with it, such as a
-tracking link's postcode parameter, when its source is the page that gives both. A postcode
-from a private lookup stays out.
+Private live-test numbers, anything from a private lookup or a deployment, and access
+credentials stay out.

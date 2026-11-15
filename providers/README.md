@@ -175,7 +175,7 @@ and [the benchmark](../benchmark/README.md) holds what was measured.
 
 ## Adding or changing a provider
 
-- Keep the adapter, parser tests, synthetic fixtures and one README in its folder.
+- Keep the adapter, parser tests, fixtures and one README in its folder.
 - Add the name to `UniversalSource` in `types.ts` and `shared/result.ts` and to
   `COVERAGE_SOURCES` in `coverage.ts`. Register the factory in `universal.ts`, and add the
   name to `BROWSER_SOURCES` in `plan.ts` when it needs the browser service. A new name is a

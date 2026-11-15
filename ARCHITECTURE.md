@@ -45,7 +45,7 @@ minor, and breaking changes are major. Before 1.0.0, breaking changes raise the 
 ## Carrier folders
 
 Each carrier owns its catalog document, retrieval, pure parsers, status evidence and
-synthetic fixtures, next to a README on how its site is read. Nothing about a carrier lives
+fixtures, next to a README on how its site is read. Nothing about a carrier lives
 outside its folder except the files `npm run generate` derives from it.
 
 Scope follows the service and country, not the brand alone. Separate national services keep

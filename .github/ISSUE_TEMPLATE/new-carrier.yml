@@ -11,11 +11,11 @@ body:
     id: url
     attributes:
       label: Public tracking website
-      description: Do not include a real parcel number, postcode or access token.
+      description: Leave out your own parcels' numbers, postcodes and access tokens.
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
       label: Tracking formats and requirements
-      description: Synthetic number shapes, required inputs and public documentation.
+      description: Number shapes, public sample numbers with the pages that give them, required inputs and public documentation.
