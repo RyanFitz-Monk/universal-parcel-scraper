@@ -97,6 +97,18 @@ function pageHttpError(provider: string, status: number, headers: unknown): Upst
 }
 
 /**
+ * Whether TRAWL gave a read up for lack of time. Its HTTP 500 reply then says the scrape's deadline
+ * passed, or that the page step ran out of its budget or was aborted at that deadline.
+ */
+export function trawlOutOfTime(error: unknown): boolean {
+  if (!(error instanceof UpstreamHttpError) || error.status !== 500) return false;
+  const reply = error.diagnostics?.body_excerpt ?? '';
+  return /"error"\s*:\s*"Scrape deadline exceeded"/.test(reply)
+    || (/"error"\s*:\s*"Max tier reached without success"/.test(reply)
+      && /"reason"\s*:\s*"[^"]*(?:budget exhausted|operation was aborted)/.test(reply));
+}
+
+/**
  * End the call when its signal has aborted. A cancellation is rethrown as the
  * caller gave it. A deadline is a browser service that did not answer in
  * time: the request's own failure when there is one, typed either way.

@@ -15,6 +15,7 @@ import { canadaProvinceTimeZone, countryCode, countryTimeZone, explicitOffsetTim
 import { clean, fetchBounded, TRAWL_TRANSPORT_ALLOWANCE_MS, TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
+import { trawlOutOfTime } from '../../core/transport/trawl.js';
 import { australiaPostCode, australiaPostCodeParts, australiaPostStatus } from './status.js';
 
 const PROVIDER = 'Australia Post';
@@ -343,7 +344,9 @@ export class AustraliaPostTracker {
       const apiUrl = australiaPostApiUrl(number);
       const page = await trawl!.scrape({ url: australiaPostTrackingUrl(number), skipHttp: true, maxTier: 3,
         maxTimeout: timeoutMs, captureResponses: [apiUrl], ...(proxy ? { proxy } : {}), settleTimeout: Math.min(timeoutMs, 10_000),
-      }, { provider: 'TRAWL while fetching Australia Post', timeoutMs, signal, maxBytes: 6_000_000, requireSolved: false });
+      }, { provider: 'TRAWL while fetching Australia Post', timeoutMs, signal, maxBytes: 6_000_000, requireSolved: false })
+        // A read that ran out of time says nothing about the page.
+        .catch((error: unknown) => { throw trawlOutOfTime(error) ? new BudgetExceededError(PROVIDER, budgetMs, { cause: error }) : error; });
       signal.throwIfAborted();
       if (![2, 3].includes(page.tier) || ![200, 304].includes(page.statusCode)) {
         throw new TransportError(PROVIDER, 'The browser service did not load Australia Post tracking');

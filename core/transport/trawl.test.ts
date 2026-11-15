@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { UpstreamHttpError } from '../errors/index.js';
-import { TrawlClient, TrawlError, trawlBody, trawlEndpoint } from './trawl.js';
+import { TrawlClient, TrawlError, trawlBody, trawlEndpoint, trawlOutOfTime } from './trawl.js';
 
 function jsonFetcher(payload: unknown, status = 200): typeof fetch {
   return vi.fn(async () => new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json' } }));
@@ -132,6 +132,26 @@ describe('TrawlClient.scrape', () => {
       .rejects.toMatchObject({ kind: 'indeterminate', status: 500, message: 'TRAWL while fetching UPS through the configured proxy returned HTTP 500' });
     await expect(new TrawlClient('http://trawl:8191', jsonFetcher(gaveUp, 500)).scrape(request, options))
       .rejects.toMatchObject({ status: 500, message: 'TRAWL while fetching UPS returned HTTP 500' });
+  });
+
+  it.each([
+    [{ error: 'Scrape deadline exceeded', timings: [{ tier: 3, status: 'timeout', durationMs: 22_000, reason: 'Scrape deadline exceeded' }] }, true],
+    [{ error: 'Max tier reached without success', timings: [{ tier: 3, status: 'error', reason: 'evaluate: Example lookup budget exhausted\nframe@page:1:2' }] }, true],
+    [{ error: 'Max tier reached without success', timings: [{ tier: 3, status: 'error', reason: 'evaluate: The operation was aborted. ' }] }, true],
+    [{ error: 'Max tier reached without success', timings: [{ tier: 3, status: 'error', reason: 'proxy-connection-failed' }] }, false],
+    [{ error: 'Max tier reached without success', timings: [{ tier: 3, status: 'error', reason: 'Target page, context or browser has been closed' }] }, false],
+    [{ error: 'Other failure', timings: [{ tier: 3, status: 'error', reason: 'Example lookup budget exhausted' }] }, false],
+  ])('tells a read TRAWL gave up for lack of time from its other failures', async (payload, outOfTime) => {
+    const request = { url: 'https://e.test', skipHttp: true, maxTier: 3 as const };
+    const error: unknown = await new TrawlClient('http://trawl:8191', jsonFetcher(payload, 500)).scrape(request, options).catch(caught => caught);
+    expect(error).toMatchObject({ status: 500 });
+    expect(trawlOutOfTime(error)).toBe(outOfTime);
+  });
+
+  it('reads only a TRAWL HTTP 500 as a read out of time', () => {
+    expect(trawlOutOfTime(new UpstreamHttpError('TRAWL', 503))).toBe(false);
+    expect(trawlOutOfTime(new Error('{"error":"Scrape deadline exceeded"}'))).toBe(false);
+    expect(trawlOutOfTime(undefined)).toBe(false);
   });
 
   it('solves through the legacy command API', async () => {

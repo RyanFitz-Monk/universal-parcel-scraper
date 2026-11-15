@@ -738,6 +738,26 @@ describe('Australia Post opt-in browser proxy recovery', () => {
     });
   });
 
+  it('reports a browser read TRAWL gave up for lack of time as the budget running out, and its other failures as before', async () => {
+    const reply = (reason: string, error = 'Max tier reached without success') => new Response(JSON.stringify({ error,
+      timings: [{ tier: 3, status: 'error', durationMs: 20_000, reason }] }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    for (const [answer, kind] of [
+      [() => reply('Scrape deadline exceeded', 'Scrape deadline exceeded'), 'budget'],
+      [() => reply('evaluate: Australia Post lookup budget exhausted\nframe@page:1:2'), 'budget'],
+      [() => reply('evaluate: The operation was aborted. '), 'budget'],
+      [() => reply('proxy-connection-failed'), 'indeterminate'],
+    ] as const) {
+      const recorder = { step: vi.fn(), lookup: vi.fn() };
+      const browser = vi.fn<typeof fetch>().mockImplementation(async () => answer());
+      const client = new AustraliaPostTracker({ trawl: browserService(browser), fetcher: refused(), recorder });
+      const error: unknown = await client.fetch(NUMBER).catch(caught => caught);
+      expect(error).toMatchObject({ kind });
+      expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'trawl', outcome: kind === 'budget' ? 'budget' : expect.anything() }));
+      if (kind === 'budget') expect((error as Error).cause).toMatchObject({ status: 500 });
+      expect(browser).toHaveBeenCalledTimes(1);
+    }
+  });
+
   it('starts no proxy request after cancellation', async () => {
     const controller = new AbortController();
     const browser = vi.fn<typeof fetch>().mockImplementation(async () => { controller.abort(new Error('stopped')); return Response.json(service([capture({}, 403)])); });

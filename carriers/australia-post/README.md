@@ -41,7 +41,8 @@ a spell the original route answers sooner and needs no proxy request. The window
 tracker instance. Without a proxy the setting changes nothing.
 
 Budget: 45 s by default (max 60 s). `trawl` keeps a 15 s transport allowance and fails when less
-remains. Either reply is capped at 1 MB. On the capture, 401/403 is a challenge and 429 is rate
+remains. A browser read TRAWL gives up for lack of time (its deadline passed, or the page step ran
+out of budget or was aborted at it) fails as `budget`, not as the service's HTTP 500. Either reply is capped at 1 MB. On the capture, 401/403 is a challenge and 429 is rate
 limited; a missing capture or changed schema is an error for normal provider fallback.
 
 ## Mobile app
