@@ -90,6 +90,7 @@
       "matchesDomain",
       "mislabeledLocalTime",
       "mislabeledWallTime",
+      "noHistoryHandoff",
       "normalizeCarrierInputs",
       "normalizeCarrierResult",
       "normalizeDeliveryPostcode",

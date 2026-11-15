@@ -183,7 +183,9 @@ A carrier that keeps other rows names those clocks in the result's `written_ahea
 An answer without history can name the hand-over in the error's `deliveryCarrier` and
 `deliveryTrackingNumber`, as a result's `delivery_carrier` and `delivery_tracking_number` would:
 a record can name the delivery carrier's number before any scan, or after it drops its own rows
-for that carrier's.
+for that carrier's. The tracker asks that partner, and when no source has a history its answer
+is the result, with the partner as `source` and in `handoff`. Hosts that route lookups
+themselves read the proposal with `noHistoryHandoff`.
 An adapter that knows a reply field can hold a delivery estimate or slot it does not read yet
 names the field in the result's `unread_estimates` (`core/result/unread.ts`) whenever a reply
 fills it, so a host can keep the number for a capture that teaches the adapter its shape.
@@ -229,8 +231,8 @@ a number another carrier's high-confidence rule claims hints that carrier, not E
 A sixteen-character label of three letters around one of Poste Italiane's parcel codes, as
 Vinted Go and AliExpress give for parcels to Italy, proposes Poste Italiane with the code
 alone, unless the answer names another partner.
-When a partial carrier answer names the partner, the fallbacks leave that
-lookup a third of the budget, at most 30 seconds. A fallback that runs out its share ends the
+When a partial carrier answer, or one without history, names the partner, the fallbacks leave
+that lookup a third of the budget, at most 30 seconds. A fallback that runs out its share ends the
 fallbacks, whatever the clock then reads.
 
 A result's `service_name` is the carrier's own name for the shipping service the parcel

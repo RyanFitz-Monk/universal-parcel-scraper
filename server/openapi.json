@@ -696,7 +696,8 @@
             "type": "string"
           },
           "source": {
-            "type": "string"
+            "type": "string",
+            "description": "Where `result` comes from: the carrier's adapter, a provider, or the partner `handoff` names."
           },
           "result": {
             "$ref": "#/components/schemas/CarrierResult"
@@ -712,7 +713,8 @@
             "description": "The carrier's own partial answer as it came, when a provider's fuller history became `result`."
           },
           "handoff": {
-            "type": "object"
+            "type": "object",
+            "description": "A partner's independently bound answer; callers decide whether to adopt it. When the carrier's answer named the partner without any history, and no provider had one, it is also `result`."
           }
         }
       },

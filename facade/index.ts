@@ -3,7 +3,7 @@ import { AdapterRegistry, type AdapterEnvironment, type CarrierAdapter, type Tra
 import { runAdapter } from '../core/adapter/run.js';
 import { carrierDefinition, carrierTimezone } from '../core/catalog/index.js';
 import { carrierTakesPhoneDigits, carrierTakesPostcode, MissingCarrierInputError, normalizeCarrierInputs, normalizeDeliveryPostcode } from '../core/catalog/inputs.js';
-import { deliveryHandoff, type DeliveryHandoff } from '../core/catalog/handoff.js';
+import { deliveryHandoff, noHistoryHandoff, type DeliveryHandoff } from '../core/catalog/handoff.js';
 import { detectCarrierMatch, normalizeTrackingNumber, parseTrackingInput, validTrackingNumber } from '../core/detection/index.js';
 import { BudgetExceededError, IndeterminateError, InputRequiredError, NoHistoryError, writtenAheadClocks, type CarrierErrorKind } from '../core/errors/index.js';
 import { failureHint, type FailureHint } from '../core/errors/hint.js';
@@ -65,12 +65,16 @@ export interface TrackingAttempt {
 
 export interface TrackingResponse {
   carrier: string;
+  /** Where `result` comes from: the carrier's adapter, a provider, or the partner `handoff` names. */
   source: string;
   result: ResolvedResult;
   attempts: TrackingAttempt[];
   /** The carrier's own partial answer as it came, when a provider's fuller history became `result`. */
   direct?: ResolvedResult;
-  /** A partner's independently bound answer; callers decide whether to adopt it. */
+  /**
+   * A partner's independently bound answer; callers decide whether to adopt it. When the carrier's answer
+   * named the partner without any history, and no provider had one, it is also `result`.
+   */
   handoff?: DeliveryHandoff & { confirmed: boolean; result?: ResolvedResult };
 }
 
@@ -320,6 +324,8 @@ export function createTracker(options: TrackerOptions = {}) {
     };
     let result = adapter ? await attempt(carrier, () => lookUp(carrier, adapter, directInput, context.knownEstimate)) : null;
     let source: string = carrier;
+    // A carrier's answer without history can name the partner that delivers the parcel, as a result would.
+    const handedOver = result || !adapter ? null : noHistoryHandoff(carrier, number, lastError);
     // While the issuer shows only the label, a carrier that follows the parcel under its number
     // from an earlier leg holds the history: Cainiao under GOFO's GFUS waybills. Its movement
     // files the parcel under it, and the hand-off below proposes the issuer.
@@ -347,7 +353,8 @@ export function createTracker(options: TrackerOptions = {}) {
     const partial = result && isPartialAnswer(result) ? result : null;
     // The carrier's own evidence of a partner comes first, and the providers leave its lookup time to run.
     const named = partial && deliveryHandoff(carrier, number, partial);
-    const reserve = named && registry.has(named.carrier) ? Math.min(HANDOFF_RESERVE_MS, Math.floor(ms / 3)) : 0;
+    const ownPartner = named || handedOver;
+    const reserve = ownPartner && registry.has(ownPartner.carrier) ? Math.min(HANDOFF_RESERVE_MS, Math.floor(ms / 3)) : 0;
     let relayed: ResolvedResult | null = null;
     if (!result || partial) {
       const plan = universalPlan({ carriers: [carrier], trackingNumber: number, enablePostalNinja: enabled.includes('Postal Ninja'), enableTrack123: enabled.includes('Track123') });
@@ -372,10 +379,23 @@ export function createTracker(options: TrackerOptions = {}) {
         if (timer?.aborted) break;
       }
     }
-    if (!result) throw new TrackingError(attempts, lookupFailure(failures, signal.aborted));
+    if (!result) {
+      // With no history from any source, the partner the carrier's answer names is asked. Its answer, bound
+      // to its own number, is the result, from that partner as `source` and `handoff` say, and the carrier's
+      // failure stays in the attempts. A partner that cannot answer adds its attempt, not its failure.
+      const failed = [...failures];
+      const partner = handedOver && !signal.aborted ? registry.for(handedOver.carrier) : undefined;
+      if (handedOver && partner) {
+        const confirmed = await attempt(handedOver.carrier, () => lookUp(handedOver.carrier, partner, { number: handedOver.number, ...language }));
+        if (confirmed) {
+          return { carrier, source: handedOver.carrier, result: confirmed, attempts, handoff: { ...handedOver, confirmed: true, result: confirmed } };
+        }
+      }
+      throw new TrackingError(attempts, lookupFailure(failed, signal.aborted));
+    }
     const direct = partial && relayed ? partial : null;
     const response: TrackingResponse = { carrier, source, result, attempts, ...(direct ? { direct } : {}) };
-    const proposal = input.source ? null : named || deliveryHandoff(carrier, number, relayed ?? result);
+    const proposal = input.source ? null : named || deliveryHandoff(carrier, number, relayed ?? result) || handedOver;
     if (proposal && !signal.aborted) {
       const partner = registry.for(proposal.carrier);
       if (partner) {

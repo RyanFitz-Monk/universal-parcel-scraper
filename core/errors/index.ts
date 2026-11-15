@@ -101,6 +101,7 @@ export class NoHistoryError extends IndeterminateError {
    * The carrier the record hands the parcel to, by catalog id, and the number that carrier tracks it
    * under, as a result's `delivery_carrier` and `delivery_tracking_number`: a record can name the
    * hand-over before it holds a scan, or after it set its own scans aside for the delivery carrier's.
+   * `noHistoryHandoff` proposes it as `deliveryHandoff` proposes a result's.
    */
   readonly deliveryCarrier?: string;
   readonly deliveryTrackingNumber?: string;

@@ -1,4 +1,5 @@
 import type { CarrierResult } from '../result/index.js';
+import { NoHistoryError } from '../errors/index.js';
 import type { CarrierId } from '../../generated/catalog.js';
 import { activeRequirements, AUTOMATIC_CARRIER_IDS, carrierAdapter, requiredRequirements } from './index.js';
 import { CARRIER_DEFINITIONS } from './definitions.js';
@@ -205,4 +206,23 @@ export function deliveryHandoff(carrier: string, number: string, result: Carrier
   if (!target || target === carrier || !/^[A-Z0-9]{4,40}$/.test(reference)
     || !hasDirectHandoffAdapter(target, reference)) return null;
   return { carrier: target, number: reference, basis };
+}
+
+/**
+ * The hand-over an answer without history names, proposed as `deliveryHandoff` proposes a result's:
+ * the first `NoHistoryError` in the error's `cause` chain that names the delivery carrier or its
+ * number (`deliveryCarrier`, `deliveryTrackingNumber`). Null when none does.
+ */
+export function noHistoryHandoff(carrier: string, number: string, error: unknown, countryHint?: string | null): DeliveryHandoff | null {
+  const seen = new Set<unknown>();
+  for (let current = error; current instanceof Error && !seen.has(current) && seen.size < 8; current = current.cause) {
+    seen.add(current);
+    if (!(current instanceof NoHistoryError) || (!current.deliveryCarrier && !current.deliveryTrackingNumber)) continue;
+    const { deliveryCarrier, deliveryTrackingNumber } = current;
+    return deliveryHandoff(carrier, number, {
+      ...(deliveryCarrier ? { delivery_carrier: deliveryCarrier } : {}),
+      ...(deliveryTrackingNumber ? { delivery_tracking_number: deliveryTrackingNumber } : {}),
+    }, countryHint);
+  }
+  return null;
 }

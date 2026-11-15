@@ -940,6 +940,62 @@ describe('standalone tracker', () => {
     });
   });
 
+  describe('after an answer without history that names the delivery partner', () => {
+    const handedOver = new NoHistoryError('ups', undefined, { reason: 'listed', deliveryCarrier: 'posti', deliveryTrackingNumber: 'LOCAL12345' });
+    const delivered: CarrierResult = { status: 'delivered', events: [{ time: '2026-01-04T09:00:00Z', description: 'Delivered', stage: 'delivered' }] };
+    const partnered = (partner: CarrierAdapter['track']) => new AdapterRegistry({ factories: {
+      ups: () => ({ id: 'ups', steps: ['direct'], track: vi.fn().mockRejectedValue(handedOver) }),
+      posti: () => ({ id: 'posti', steps: ['direct'], track: partner }),
+    }, carriers: { ups: 'ups', posti: 'posti' } }, environment);
+    /** Ship24 answers with these scans, or fails without any. */
+    const ship24 = (scans: [time: string, status: string][] = []) => vi.fn<typeof fetch>().mockImplementation(async () => scans.length
+      ? new Response(JSON.stringify({ data: { tracking_number: number, events: scans.map(([timestamp, status]) => ({ timestamp, status })) } }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } })
+      : new Response('', { status: 503 }));
+
+    it('answers with the partner\'s history, from the partner, and keeps the carrier\'s failure', async () => {
+      const partner = vi.fn().mockResolvedValue(delivered);
+      const answer = await createTracker({ registry: partnered(partner), fetcher: ship24(), providers: ['Ship24'] }).track({ number });
+      expect(answer).toMatchObject({ carrier: 'ups', source: 'posti', result: { current_stage: 'delivered' },
+        handoff: { carrier: 'posti', number: 'LOCAL12345', basis: 'partner', confirmed: true } });
+      expect(answer.handoff!.result).toEqual(answer.result);
+      expect(answer.attempts.map(attempt => [attempt.source, attempt.kind])).toEqual([['ups', 'indeterminate'], ['Ship24', 'maintenance'], ['posti', 'ok']]);
+      expect(partner.mock.calls[0]![0]).toEqual({ number: 'LOCAL12345' });
+    });
+
+    it('fails as it did when the partner cannot answer either, listing its attempt', async () => {
+      const failure = await createTracker({ registry: partnered(vi.fn().mockRejectedValue(new RateLimitedError('Posti', 60_000))), providers: [] })
+        .track({ number }).catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(TrackingError);
+      // The partner's wait is its own: the lookup's failure is the carrier's.
+      expect(failure).toMatchObject({ hint: { kind: 'indeterminate' }, attempts: [{ source: 'ups', kind: 'indeterminate' }, { source: 'posti', kind: 'rate_limited' }] });
+      expect((failure as TrackingError).hint).not.toHaveProperty('retryAfterMs');
+    });
+
+    it('proposes the partner beside a provider\'s history that names none', async () => {
+      const answer = await createTracker({ registry: partnered(vi.fn().mockResolvedValue(delivered)),
+        fetcher: ship24([['2026-01-02T09:00:00Z', 'In transit']]), providers: ['Ship24'] }).track({ number });
+      expect(answer).toMatchObject({ carrier: 'ups', source: 'Ship24', result: { current_stage: 'in_transit' },
+        handoff: { carrier: 'posti', number: 'LOCAL12345', confirmed: true, result: { current_stage: 'delivered' } } });
+    });
+
+    it('keeps time for the partner when the providers stall', async () => {
+      // As for a partial answer naming the partner: Date.now lags 100 ms once the provider is cut.
+      const now = Date.now.bind(Date);
+      let clock: { mockRestore: () => void } | undefined;
+      const fetcher = vi.fn<typeof fetch>().mockImplementation((_url, init) => new Promise((_, reject) => {
+        init!.signal!.addEventListener('abort', () => {
+          clock ??= vi.spyOn(Date, 'now').mockImplementation(() => now() - 100);
+          reject(init!.signal!.reason);
+        }, { once: true });
+      }));
+      const answer = await createTracker({ registry: partnered(vi.fn().mockResolvedValue(delivered)), fetcher, providers: ['ParcelsApp', 'Ship24'] })
+        .track({ number }, { budgetMs: 1_500 }).finally(() => clock?.mockRestore());
+      expect(answer).toMatchObject({ source: 'posti', handoff: { carrier: 'posti', confirmed: true } });
+      expect(answer.attempts.map(attempt => [attempt.source, attempt.kind])).toEqual([['ups', 'indeterminate'], ['ParcelsApp', 'budget'], ['posti', 'ok']]);
+    });
+  });
+
   it('exposes a safe aggregate error without adapter diagnostics', async () => {
     const lookup = vi.fn().mockRejectedValue(new SchemaError('UPS', 'private payload'));
     try { await createTracker({ registry: registry(lookup), providers: [] }).track({ number }); }

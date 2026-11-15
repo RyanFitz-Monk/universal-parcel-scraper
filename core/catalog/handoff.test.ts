@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { deliveryHandoff, hasDirectHandoffAdapter } from './handoff.js';
+import { deliveryHandoff, hasDirectHandoffAdapter, noHistoryHandoff } from './handoff.js';
 import { followsPartnerNumbers, partnerNumberOwner } from './partners.js';
 import { requiredRequirements } from './definitions.js';
 import { recognitionAskedCarriers } from './recognition.js';
 import { AdapterRegistry } from '../adapter/index.js';
 import { detectCarrierMatch } from '../detection/index.js';
-import { carrierErrorKind } from '../errors/index.js';
+import { carrierErrorKind, IndeterminateError, NoHistoryError } from '../errors/index.js';
 import { normalizeCarrierResult, type CarrierResult } from '../result/index.js';
 import { NOOP_RECORDER } from '../telemetry/index.js';
 import { REGISTRY } from '../../generated/registry.js';
@@ -452,6 +452,42 @@ describe('partner link handoff candidates', () => {
   });
 });
 
+describe('the hand-over an answer without history names', () => {
+  const named = (options: { deliveryCarrier?: string; deliveryTrackingNumber?: string }) =>
+    new NoHistoryError('JRT', undefined, { reason: 'listed', ...options });
+
+  it('proposes the partner and number the error names, however deeply it is wrapped', () => {
+    const error = named({ deliveryCarrier: 'posti', deliveryTrackingNumber: 'LOCAL12345' });
+    const expected = { carrier: 'posti', number: 'LOCAL12345', basis: 'partner' };
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', error)).toEqual(expected);
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', new Error('Lookup failed', { cause: new Error('Step failed', { cause: error }) }))).toEqual(expected);
+    // A partner named without a number of its own is asked about the carrier's.
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', named({ deliveryCarrier: 'usps' }))).toEqual({ carrier: 'usps', number: 'JRT0000000002ZZ', basis: 'partner' });
+  });
+
+  it('proposes the one carrier whose high-confidence rule claims a number named without its carrier', () => {
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', named({ deliveryTrackingNumber: '1Z999AA10123456784' })))
+      .toEqual({ carrier: 'ups', number: '1Z999AA10123456784', basis: 'reference' });
+  });
+
+  it('applies the checks a result\'s hand-over gets', () => {
+    for (const options of [
+      { deliveryCarrier: 'unregistered-carrier', deliveryTrackingNumber: 'LOCAL12345' },
+      { deliveryCarrier: 'posti', deliveryTrackingNumber: 'bad?number' },
+      // Blue Dart looks up only its own eleven-digit waybills.
+      { deliveryCarrier: 'blue-dart', deliveryTrackingNumber: 'LOCAL12345' },
+      { deliveryCarrier: 'jrt', deliveryTrackingNumber: 'LOCAL12345' },
+    ]) expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', named(options))).toBeNull();
+  });
+
+  it('proposes nobody when no answer without history names a hand-over', () => {
+    // A postal item's destination post is a guess about a result, not a hand-over an error names.
+    expect(noHistoryHandoff('la-poste', 'CW123456785FR', named({}), 'FI')).toBeNull();
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', new IndeterminateError('JRT'))).toBeNull();
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', undefined)).toBeNull();
+    expect(noHistoryHandoff('jrt', 'JRT0000000002ZZ', { deliveryCarrier: 'posti', deliveryTrackingNumber: 'LOCAL12345' })).toBeNull();
+  });
+});
 
 describe('new guest adapter handoff eligibility', () => {
   it('offers Aeropost only for its supported Costa Rican shipper references', () => {
