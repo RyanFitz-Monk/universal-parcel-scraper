@@ -17,6 +17,11 @@ The tracker opens one item at `posta.md/{language}/track-trace/mailing/` followe
 number, as archived lookups show. The former tracker took the number from `id` on
 `posta.md/{language}/tracking`.
 
+## Why there is no adapter
+
+The tracker asks for a Cloudflare Turnstile confirmation before it shows an item's history; its
+settings carry the Turnstile site key and its wording says the history needs the confirmation.
+
 ## Testing
 
 Provider live-test inputs and commands are in the

@@ -17,6 +17,11 @@ The header form on `www.overseas.hr` sends the number as `trackingid` to
 `www.overseas.hr/Tracking/Package/{number}`. The newer pages fill the form by script, and no
 address was seen to open a history, so the catalog has no parcel link.
 
+## Why there is no adapter
+
+The tracker hosts `is.overseas.hr` and `inet.overseas.hr` answer HTTP 403 from an Azure
+application gateway before any page loads.
+
 ## Testing
 
 Provider live-test inputs and commands are in the

@@ -9,9 +9,12 @@ history for two months after collection.
 ## Retrieval
 
 `https://www.saqura-web.com/SBS_LTRC/KF_5020.aspx?IraNo={number}` returns the detail page as
-HTML without a browser bootstrap. Shipment details and scan rows are input values. The
-not-found page repeats the requested number while leaving the scan fields empty. An expired
-history produces that same page, so it does not prove the parcel never existed.
+HTML without a browser bootstrap. Shipment details and scan rows are input values: the status in
+`txtNewtype`, then collection (`txtShu…`), arrival (`txtArr…`), out for delivery
+(`txtMotidasi`, `txtChi…`) and delivery (`txtHai…`), each with a date and an office. The
+not-found page repeats the requested number, leaves the scan fields empty and reads
+該当する番号が見つかりません in the status. An expired history produces that same page, so it
+does not prove the parcel never existed.
 
 Archived lookups establish the former positive layout. The current positive flow needs a
 number within the retention window before a native adapter can be enabled.

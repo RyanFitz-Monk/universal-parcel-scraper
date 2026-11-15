@@ -16,6 +16,12 @@ Russian, and the home page's search form builds that address. The former tracker
 parcel at `/az/tracking/{number}` or `/en/tracking/{number}`; those addresses now return an
 error.
 
+## Why there is no adapter
+
+The tracking page's script asks reCAPTCHA v3 for a token, takes a CSRF token from `/api/get-csrf`,
+and posts the number with both to `/api/get-package/{language}`, which answers the item's events
+as JSON. A lookup without a browser's reCAPTCHA token is not possible.
+
 ## Testing
 
 Provider live-test inputs and commands are in the
