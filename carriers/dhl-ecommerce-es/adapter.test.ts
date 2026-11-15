@@ -266,6 +266,33 @@ describe('DHL eCommerce Iberia adapter', () => {
     await expect(broken.track({ number: NUMBER })).rejects.toMatchObject({ kind: 'schema' });
   });
 
+  it('reads the empty 204 as maintenance only while the banner fails as the gateway does', async () => {
+    const OUTAGE = '{"Messages":["An error occur.Try it again."]}';
+    const gateway = (banner: () => Promise<Response>, asked: string[] = []): typeof fetch => async (url) => {
+      const request = new URL(String(url));
+      asked.push(request.pathname + request.search);
+      return request.pathname.endsWith('/api/banner') ? banner() : new Response(null, { status: 204 });
+    };
+    const asked: string[] = [];
+    const down = adapter(environment(gateway(async () => new Response(OUTAGE, { status: 500, headers: { 'content-type': 'application/json' } }), asked)));
+    await expect(down.track({ number: NUMBER })).rejects.toMatchObject({ kind: 'maintenance' });
+    await expect(down.recognize?.(NUMBER)).rejects.toMatchObject({ kind: 'maintenance' });
+    expect(asked.slice(0, 2)).toEqual([`/LiveTracking.GTW/api/shipment-detail?number=${NUMBER}`, '/LiveTracking.GTW/api/banner']);
+    for (const banner of [
+      async () => Response.json('Aviso'),
+      async () => new Response(null, { status: 204 }),
+      async () => new Response('', { status: 404 }),
+      async () => { throw new TypeError('fetch failed'); },
+    ]) {
+      const unknown = adapter(environment(gateway(banner)));
+      await expect(unknown.track({ number: NUMBER })).rejects.toMatchObject({ kind: 'not_found' });
+    }
+    const late: string[] = [];
+    const hurried = adapter(environment(gateway(async () => new Response(OUTAGE, { status: 500 }), late)));
+    await expect(hurried.track({ number: NUMBER }, { budgetMs: 500 })).rejects.toMatchObject({ kind: 'not_found' });
+    expect(late).toHaveLength(1);
+  });
+
   it('recognizes a known parcel without an instant and leaves other answers inconclusive', async () => {
     const known = adapter(environment(async () => Response.json(clone())));
     await expect(known.recognize?.(NUMBER)).resolves.toEqual({ known: true, lastActivityAt: null, lastActivityLocal: '2026-03-12T10:15:00' });

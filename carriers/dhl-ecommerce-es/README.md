@@ -11,6 +11,10 @@ the gateway behind its customer tracking page. German DHL Paket is
    the request the tracking page makes for a shipment opened without a
    postcode. It returns one shipment with a newest-first scan feed. An unknown
    number is an empty 204, which is the only answer read as a missing parcel.
+   During maintenance the gateway gives every number that empty 204 while its
+   other endpoints fail, so after one the adapter asks the number-free
+   `api/banner` endpoint the page shows notices from: a 5xx there makes the
+   lookup a maintenance error instead.
 
 ## Notes
 
