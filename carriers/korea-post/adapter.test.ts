@@ -12,14 +12,30 @@ const fixture = (name = 'delivered') => readFileSync(new URL(`./fixtures/${name}
 describe('Korea Post international history', () => {
   it('binds the requested table, reverses portal order and retains unresolved wall clocks', () => {
     const result = normalizeCarrierResult(parse(fixture(), NUMBER));
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: null });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: null, receiver_name: 'PRIVATE_RECIPIENT' });
     expect(result.events).toHaveLength(5);
     expect(result.events?.[0]).toMatchObject({ local_time: '2026-03-05T11:30:00', description: 'Delivery complete' });
     expect(result.events?.map((event) => event.stage)).toEqual(['delivered', 'failed_attempt', 'customs', 'in_transit', 'accepted']);
     expect(result.events?.every((event) => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(JSON.stringify({ ...result, receiver_name: undefined })).not.toContain('PRIVATE');
+    expect(result.signed_by).toBeUndefined();
     expect(result.delivered_at).toBeUndefined();
     expect(result.timezone).toBeUndefined();
+  });
+
+  it('reads the addressee above its date and who took a delivered parcel from its details', () => {
+    const $ = load(fixture());
+    $('table').first().find('tbody td').eq(2).html(' SAMPLE A*****E <br/> 05-Mar-2026 ');
+    const details = $('table').last().find('tbody tr').last().find('td').last();
+    details.html('<p>Recipient : SAMPLE SIGNER (SELF)</p><p>Result : <span>Delivery complete</span></p>');
+    expect(parse($.html(), NUMBER)).toMatchObject({ receiver_name: 'SAMPLE A*****E', signed_by: 'SAMPLE SIGNER (SELF)' });
+    // The page leaves the recipient's brackets empty when the delivering post names nobody.
+    details.html('<p>Recipient : ()</p><p>Result : <span>Delivery complete</span></p>');
+    expect(parse($.html(), NUMBER).signed_by).toBeUndefined();
+    // A recipient counts only on the delivery.
+    details.html('<p>Recipient : SAMPLE SIGNER</p>');
+    $('table').last().find('tbody tr').last().remove();
+    expect(parse($.html(), NUMBER).signed_by).toBeUndefined();
   });
 
   it('requires an exact unique identity in the result table rather than the form', () => {
@@ -76,22 +92,26 @@ describe('Korea Post international history', () => {
 });
 
 describe('Korea Post domestic history', () => {
-  it('reads the status label and office of each scan in Korean time', () => {
+  it('reads the status label and office of each scan in Korean time, with the delivery’s wording', () => {
     const result = normalizeCarrierResult(parse(fixture('domestic'), DOMESTIC));
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: '배달완료',
-      last_update: '2026-09-30T01:08:00Z', delivered_at: '2026-09-30T01:08:00Z' });
-    expect(result.events?.[0]).toMatchObject({ time: '2026-09-30T01:08:00Z', local_time: '2026-09-30T10:08:00', description: '배달완료', location: 'EXAMPLE DELIVERY' });
+    const delivery = '배달완료(PRIVATE_DELIVERY_NOTE) (수령인:PRIVATE_RECEIVER - PRIVATE_RELATION)';
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_status_text: delivery,
+      last_update: '2026-09-30T01:08:00Z', delivered_at: '2026-09-30T01:08:00Z', receiver_name: 'PRIVATE_RECIPIENT', signed_by: 'PRIVATE_RECEIVER' });
+    expect(result.events?.[0]).toMatchObject({ time: '2026-09-30T01:08:00Z', local_time: '2026-09-30T10:08:00', description: delivery, location: 'EXAMPLE DELIVERY' });
     expect(result.events?.map((event) => event.stage)).toEqual(['delivered', 'out_for_delivery', 'in_transit', 'in_transit', 'accepted', 'registered']);
     expect(result.events?.at(-1)).toMatchObject({ time: '2026-09-28T09:05:00Z', description: '운송장출력', location: 'EXAMPLE ORIGIN' });
-    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    // The sender, the courier, the offices' phones and the acceptance photo stay out.
+    const json = JSON.stringify(result);
+    for (const excluded of ['PRIVATE_SENDER', 'PRIVATE_COURIER', 'PRIVATE_OFFICE_PHONE', 'PRIVATE_PHOTO']) expect(json).not.toContain(excluded);
   });
 
   it('keeps the latest scan in transit until delivery', () => {
     const $ = load(fixture('domestic'));
     $('table').last().find('tbody > tr').slice(-2).remove();
     const result = parse($.html(), DOMESTIC);
-    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: '도착' });
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: '도착', receiver_name: 'PRIVATE_RECIPIENT' });
     expect(result.delivered_at).toBeUndefined();
+    expect(result.signed_by).toBeUndefined();
   });
 
   it('only accepts the exact identity-bound missing-item notice', () => {

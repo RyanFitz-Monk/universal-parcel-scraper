@@ -61,7 +61,8 @@
       "office_addresses",
       "event_details",
       "tracking_alias",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -72,7 +73,8 @@
       "weight",
       "destination_country",
       "tracking_alias",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_address"
     ],
     "discarded": [
       "eta",

@@ -63,11 +63,11 @@ describe('KEX Express HTTP adapter', () => {
       ['f'.repeat(32), 'f'.repeat(32), DELIVERED, 'f'.repeat(32), 'f'.repeat(32)].join('fHx8')))}`);
   });
 
-  it("reads a delivered parcel on Bangkok's clock, without the people, the call, the signature or the photos", () => {
+  it("reads a delivered parcel on Bangkok's clock with the recipient as the page masks them, without the sender, the call, the signature or the photos", () => {
     const result = parseKex(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Successfully delivered', last_update: '2026-03-06T14:21:04+07:00', expected_delivery: null,
-      delivered_at: '2026-03-06T14:21:04+07:00' });
+      delivered_at: '2026-03-06T14:21:04+07:00', receiver_name: 'Sample R*****', receiver_address: '10000 SAMPLE PROVINCE' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage ?? null, event.location ?? null, event.description]))
       .toEqual([
         ['2026-03-06T14:21:04+07:00', 'POD', 'delivered', 'Sample District, Sample Province', 'Successfully delivered'],
@@ -83,7 +83,8 @@ describe('KEX Express HTTP adapter', () => {
     // Only station and distribution-centre scans keep their coordinates; a delivery round's are the courier's or the recipient's.
     expect(result.events!.map((event) => event.point ?? null)).toEqual([null, null, null, { latitude: 13.7123, longitude: 100.5123 },
       { latitude: 13.6, longitude: 100.7 }, { latitude: 13.6, longitude: 100.7 }, null, null, null]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample [RSC]|099|SAMPLE-REF|BK0|example\.invalid|c3ludGhldGlj|PROVINCE|10000/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Recipient|S|C)|099|SAMPLE-REF|BK0|example\.invalid|c3ludGhldGlj|ORIGIN PROVINCE/);
+    expect(result).not.toHaveProperty('signed_by');
   });
 
   it('reads a parcel on its way with its due date, and lower-case echoes of the number', () => {

@@ -51,14 +51,16 @@
       "eta",
       "provider_code",
       "offset_timestamps",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "signatory"
     ],
     "scraped": [
       "history",
       "location",
       "destination_country",
       "delivery_tracking_number",
-      "eta"
+      "eta",
+      "signatory"
     ],
     "discarded": [
       "provider_code",

@@ -6,7 +6,7 @@ import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status
  * after their opening: "Delivered at:" names the recipient and their address,
  * "Picked Up" the shipper, "At SMARTSpot for pickup" the point, "Delivery
  * Attempt:" the driver's reason, and branch rows name the branch. The parser
- * keeps the opening of the first three; the map reads either form.
+ * stages the first three by their opening; the map reads either form.
  */
 const RULES: readonly (readonly [RegExp, Stage])[] = [
   // A pre-advice from the shipper's label, before ICS has the parcel.

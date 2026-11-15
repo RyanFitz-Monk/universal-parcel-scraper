@@ -63,19 +63,24 @@ describe('HepsiJET HTTP adapter', () => {
     expect(result).not.toHaveProperty('delivered_at');
   });
 
-  it('keeps the delivery without the recipient, their address, who took the parcel or the repeated scan', () => {
+  it('keeps the delivery with the masked recipient, their address and who took the parcel, without the repeated scan', () => {
     const result = parseHepsijet(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Teslim edildi', last_update: '2026-03-12T16:41:05+03:00', delivered_at: '2026-03-12T16:41:05+03:00',
-      expected_delivery: null, service_name: 'Standart Teslimat' });
+      last_status_text: 'Teslim edildi - Sample P***** (Kendi)', last_update: '2026-03-12T16:41:05+03:00',
+      delivered_at: '2026-03-12T16:41:05+03:00', expected_delivery: null, service_name: 'Standart Teslimat',
+      receiver_name: 'S***** P*****', receiver_address: 'S*** M*** 1*** S*** N*** 0***\nÖRNEKKÖY / Örnekşehir',
+      signed_by: 'S***** P***** (Kendi)' });
     expect(result.events).toHaveLength(6);
     expect(result.events!.slice(0, 3).map((event) => [event.provider_code, event.stage, event.location ?? null, event.description])).toEqual([
       // "With the recipient" is no place.
-      ['DELIVERED', 'delivered', null, 'Teslim edildi'],
+      ['DELIVERED', 'delivered', null, 'Teslim edildi - Sample P***** (Kendi)'],
       ['DELIVERING', 'out_for_delivery', 'Örnekköy Dağıtım Merkezi', 'Kurye Dağıtıma Çıktı'],
       ['DISPATCHING', 'in_transit', 'Örnekköy Dağıtım Merkezi', 'Teslimat Şubesinde'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:P|Shop)|S\*\*\*\*\*|Kendi|ÖRNEKKÖY|Örnekşehir|SAMPLE|1000001|Alıcıda/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Shop|SAMPLE|1000001|Alıcıda/);
+    // Without the scan's own name, the shipment's is the one who took the parcel.
+    expect(parseHepsijet(changed('delivered', (shipment) => { delete shipment.transactions.at(-1)!.deliveredPerson; }), DELIVERED))
+      .toMatchObject({ signed_by: 'S***** P*****' });
   });
 
   it('reads a parcel sent back to its sender as returned, with the reason it was not delivered', () => {
@@ -95,19 +100,19 @@ describe('HepsiJET HTTP adapter', () => {
     ]);
   });
 
-  it('reads a customer’s return from its booking to the branch, without the customer or an estimate', () => {
+  it('reads a customer’s return from its booking to the branch, addressed to the merchant, without an estimate', () => {
     const result = parseHepsijet(fixture('return-pickup'), PICKUP);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'accepted', last_status_text: 'Dağıtım Merkezine Ulaştı',
-      expected_delivery: null });
+      expected_delivery: null, receiver_name: 'SAMPLE_MERCHANT', receiver_address: 'ÖRNEKKÖY / Örnekşehir' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.map((event) => [event.provider_code, event.stage, event.location ?? null, event.description])).toEqual([
       ['COLLECTED', 'accepted', 'Tepeköy Dağıtım Merkezi', 'Dağıtım Merkezine Ulaştı'],
-      // "In the delivery van" is no place, and the person who handed the return over is dropped.
-      ['COLLECTED', 'accepted', null, 'Teslim Alındı'],
+      // "In the delivery van" is no place; the wording names the person who handed the return over.
+      ['COLLECTED', 'accepted', null, 'Teslim Alındı - Sample Kişi Örnek (Kendi)'],
       ['COLLECTING', 'registered', null, 'Teslim Almaya Çıktı'],
       ['WAITING_FOR_DISPATCH', 'registered', null, 'Teslim Alma Randevusu Oluşturuldu'],
       ['WAITING_FOR_DISPATCH', 'registered', null, 'İade Siparişi Alındı'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample Kişi|Örnek \(|S\*\*\*\*\*|SAMPLE_MERCHANT/);
     const failed = parseHepsijet(changed('return-pickup', (shipment) => {
       shipment.transactions = shipment.transactions.slice(0, 3);
       shipment.transactions.push({ deliveryStatus: 'UNABLE_TO_COLLECT', operationStatus: 'IN_CUSTOMER', transactionType: 'COLLECT_ATTEMPT',
@@ -128,9 +133,9 @@ describe('HepsiJET HTTP adapter', () => {
       .toMatchObject({ expected_delivery: '2026-04-04' });
   });
 
-  it('takes the person who took the parcel out of the wording', () => {
-    expect(hepsijetWording('Teslim edildi - Sample P***** (Kendi)')).toBe('Teslim edildi');
-    expect(hepsijetWording('Teslim Alındı - Evden Alındı (Yakını)')).toBe('Teslim Alındı');
+  it('keeps the person who took the parcel in the wording', () => {
+    expect(hepsijetWording('Teslim edildi - Sample P***** (Kendi)')).toBe('Teslim edildi - Sample P***** (Kendi)');
+    expect(hepsijetWording('Teslim Alındı - Evden Alındı (Yakını)')).toBe('Teslim Alındı - Evden Alındı (Yakını)');
     expect(hepsijetWording('Teslim Edilemedi', 'Yetersiz Adres')).toBe('Teslim Edilemedi: Yetersiz Adres');
     expect(hepsijetWording('  Kurye  Dağıtıma Çıktı ')).toBe('Kurye Dağıtıma Çıktı');
     expect(hepsijetWording('', 'Hasarlı')).toBe('');

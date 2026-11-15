@@ -36,7 +36,8 @@ reaches by IP address.
   `(Inb)` in the destination and `(EDI-received)` for a scan the sending post reported as data.
   The adapter maps the names without their leg. An inward scan gives the destination country.
 - The extra information's reason, measure and retention reason follow the event name after a
-  colon. The signatory, the next office, the mail category and office postcodes are dropped.
+  colon. Its signatory, like the domestic table's, is who signed for a delivered item. The next
+  office, the mail category and office postcodes are dropped.
 
 ## Limitations
 

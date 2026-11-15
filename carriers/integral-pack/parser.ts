@@ -112,8 +112,8 @@ function weight(shipment: Record<string, unknown>): number | undefined {
  * The reply of the tracking page's `/api/seguimiento/buscar` for one guide: the
  * current state, the guide's identity and parcels, and its events oldest
  * first. It answers HTTP 200 with an empty list for a guide it does not know.
- * The guide must be the one asked. The sender, the recipient, the delivery
- * address, the payment and the page's own progress step are never read.
+ * The guide must be the one asked. The recipient's name and delivery address
+ * are read; the sender, the payment and the page's own progress step are not.
  */
 export function parseIntegralPack(payload: unknown, raw: string): CarrierResult {
   const guide = normalizeIntegralPackGuide(raw);
@@ -158,6 +158,8 @@ export function parseIntegralPack(payload: unknown, raw: string): CarrierResult 
   const source = state && state.stage !== scanned?.stage ? state.source : scanned?.stage_source;
   const pickup = pickupPoint(shipment);
   const kg = weight(shipment);
+  const receiver = text(shipment, 'Destinatario', 160);
+  const address = text(shipment, 'DireccionEntrega', 300);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: source ?? 'carrier_map' } : {}),
@@ -165,6 +167,8 @@ export function parseIntegralPack(payload: unknown, raw: string): CarrierResult 
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
     ...(pickup ? { pickup_point: pickup } : {}),
     ...(kg !== undefined ? { weight_kg: kg } : {}),
     events: events.slice(0, MAX_EVENTS),

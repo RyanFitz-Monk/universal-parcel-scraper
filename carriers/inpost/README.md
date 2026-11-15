@@ -62,7 +62,8 @@ GB). Tracked through the keyless `inposteasy.com` hub API; no postcode or link n
   InPost UK's page, where Yodel's former tracker now forwards them.
 - Each event keeps its place, a town or hub with its country. A delivered parcel keeps
   its delivery time, and the destination country is kept; the origin country is not.
-- Recipient name, address, phone and signature fields are never read; a test asserts it.
+- The hub's recipient name and address are read, and on a delivered parcel the name given as its
+  signature is the signatory. The recipient's phone is not kept.
 - The separate keyless ShipX route is `GET https://api-shipx-pl.easypack24.net/v1/tracking/{number}`.
   Its [official schema](https://dokumentacja-inpost.atlassian.net/wiki/spaces/PL/pages/11731050)
   includes locker names and addresses in `custom_attributes.target_machine_detail`.

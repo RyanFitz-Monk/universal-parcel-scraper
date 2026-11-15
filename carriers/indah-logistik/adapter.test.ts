@@ -53,15 +53,16 @@ describe('Indah Logistik HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history newest first, with towns and without anyone’s details', () => {
+  it('reads a delivered history newest first, with towns, the recipient and who took the parcel', () => {
     const result = parseIndahLogistik(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Paket telah diterima', last_update: null, last_update_local: '2026-03-06T15:42:08',
-      service_name: 'Indah Logistic Cargo (Darat)', weight_kg: 10 });
+      last_status_text: 'Paket telah diterima - Sample Recipient ( YANG BERSANGKUTAN )', last_update: null,
+      last_update_local: '2026-03-06T15:42:08', service_name: 'Indah Logistic Cargo (Darat)', weight_kg: 10,
+      receiver_name: 'S***** R*******T', receiver_address: 'J* S****E N* 0*', signed_by: 'Sample Recipient ( YANG BERSANGKUTAN )' });
     expect(rows(result)).toEqual([
-      ['2026-03-06T15:42:08', 'delivered', null, 'Paket telah diterima'],
+      ['2026-03-06T15:42:08', 'delivered', null, 'Paket telah diterima - Sample Recipient ( YANG BERSANGKUTAN )'],
       // The repeated attempt is one row.
-      ['2026-03-06T11:30:15', 'failed_attempt', null, 'Alamat Tidak Ditemukan / Penerima Tidak Dapat Di Hubungi'],
+      ['2026-03-06T11:30:15', 'failed_attempt', null, 'Alamat Tidak Ditemukan / Penerima Tidak Dapat Di Hubungi - Sample Recipient ( YANG BERSANGKUTAN )'],
       ['2026-03-06T09:00:00', 'out_for_delivery', null, 'Paket sedang diantar oleh kurir'],
       // A delivery booked for a later run, without its note.
       ['2026-03-04T08:21:40', 'in_transit', null, 'PENGANTARAN TERJADWAL'],
@@ -75,13 +76,22 @@ describe('Indah Logistik HTTP adapter', () => {
       ['2026-03-02T09:15:20', 'accepted', 'SAMPLE CITY', 'Transaksi'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !event.time && !event.provider_code)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample Recipient|SAMPLE (?:COURIER|DRIVER|GOODS)|SAMPLE\.|YANG BERSANGKUTAN|LINTAS|0800|B 000|RGZZ|ATZZ|\*\*/);
+    expect(JSON.stringify({ ...result, receiver_name: null, receiver_address: null }))
+      .not.toMatch(/S\*{5} S\*{4}R|SAMPLE (?:COURIER|DRIVER|GOODS)|SAMPLE\.|LINTAS|0800|B 000|RGZZ|ATZZ/);
   });
 
   it('reads an in-transit history by sea', () => {
     const result = parseIndahLogistik(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Paket telah sampai di gudang transit',
-      last_update_local: '2026-04-13T06:05:45', service_name: 'Indah Logistic Cargo (Laut)', weight_kg: 12.5 });
+      last_update_local: '2026-04-13T06:05:45', service_name: 'Indah Logistic Cargo (Laut)', weight_kg: 12.5,
+      receiver_name: 'S***** R*******T', receiver_address: 'J* S****E N* 0*' });
+    expect(result).not.toHaveProperty('signed_by');
+    // A waybill without the recipient's details fills them with a dash.
+    const unnamed = parseIndahLogistik(changed('in-transit', (reply) => {
+      Object.assign(reply.result[0]!.data_resi, { NM_PENERIMA: '-', ALT_PENERIMA: null });
+    }), IN_TRANSIT);
+    expect(unnamed).not.toHaveProperty('receiver_name');
+    expect(unnamed).not.toHaveProperty('receiver_address');
     expect(rows(result).map(([, stage, location]) => [stage, location])).toEqual([
       ['in_transit', 'SAMPLE HARBOUR'], ['in_transit', 'SAMPLE PORT'], ['accepted', 'SAMPLE PORT'], ['accepted', 'SAMPLE PORT'],
     ]);
@@ -269,6 +279,9 @@ describe('Indah Logistik status vocabulary', () => {
       expect(indahLogistikStage(entry.wording)?.stage, entry.wording).toBe(entry.stage);
     }
     expect(statusMapAnswer({ carrier: 'indah-logistik', providerCode: null, description: 'Paket telah diterima' }))
+      .toEqual({ kind: 'mapped', stage: 'delivered' });
+    // A stored delivery keeps the receiver after its dash.
+    expect(statusMapAnswer({ carrier: 'indah-logistik', providerCode: null, description: 'Paket telah diterima - Sample Recipient ( YANG BERSANGKUTAN )' }))
       .toEqual({ kind: 'mapped', stage: 'delivered' });
     expect(statusMapAnswer({ carrier: 'indah-logistik', providerCode: null, description: 'Synthetic wording' })).toEqual({ kind: 'unknown' });
   });

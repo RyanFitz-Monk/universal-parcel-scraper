@@ -104,7 +104,7 @@ function shipmentOf($: CheerioAPI): Shipment {
  * The page INTEX's tracker at intex-paketdienst.de/sendungsstatus renders for
  * one shipment number. A shipment must be the only one on the page and name
  * the whole number asked; the not-found notice must name it too. The
- * recipient's postcode and town are never read.
+ * destination is the recipient's postcode and town, as the page shows it.
  */
 export function parseIntex(html: string, raw: string): CarrierResult {
   const number = normalizeIntexNumber(raw);
@@ -139,7 +139,8 @@ export function parseIntex(html: string, raw: string): CarrierResult {
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? scanned!.time : undefined;
-  const germany = GERMANY.test(fields.get(DESTINATION_LABEL) ?? '');
+  const destination = fields.get(DESTINATION_LABEL) ?? '';
+  const germany = GERMANY.test(destination);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
@@ -148,6 +149,7 @@ export function parseIntex(html: string, raw: string): CarrierResult {
     expected_delivery: null,
     ...(delivered ? { delivered_at: delivered } : {}),
     ...(germany ? { destination_country: 'DE' } : {}),
+    ...(destination ? { receiver_address: destination } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

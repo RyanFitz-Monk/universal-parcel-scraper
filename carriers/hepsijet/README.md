@@ -31,14 +31,15 @@ returns. Tracked through the lookup its tracking page makes.
   status of a parcel handed back to its sender, which its wording says (`İade Edildi`), so that
   wording reads as returned.
 - The wording of a delivery or a collection names the person who took or handed over the parcel
-  after a dash, unmasked at times; the adapter drops it. A failed delivery or collection gets the
+  after a dash, unmasked at times, and is kept whole. A failed delivery or collection gets the
   reply's reason after a colon, as in `Teslim Edilemedi: Hasarlı`.
 - Scans placed with the recipient, with the sender or in the delivery van have no location.
 - The estimate is the promised delivery day. A customer's return has a collection day instead,
   which is not kept.
-- The recipient's masked name and address, the sender, the person who took the parcel and the
-  merchant account in the reply are not kept. The page's courier map comes from a second
-  request that the adapter does not make.
+- The recipient's name and address are read masked, as the reply gives them, and a delivery's
+  scan names who took the parcel. A customer's return is addressed to the merchant. The sender
+  and the merchant account are not kept. The page's courier map comes from a second request that
+  the adapter does not make.
 
 ## Limitations
 

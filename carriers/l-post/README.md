@@ -44,8 +44,8 @@ lookups its tracking page makes.
   wall clock, such as `2026-06-02 10:00–18:00`.
 - The seller is `sender_name`. The pickup point's address and directions are `pickup_point`
   once the parcel waits there or was collected there. A courier order's address is the
-  recipient's and is not kept, nor are the shop's order number, the storage deadline, the
-  point's phone, coordinates and metro station, or the payment options.
+  recipient's and becomes `receiver_address`. The shop's order number, the storage deadline, the
+  point's phone, coordinates and metro station, and the payment options are not kept.
 - The reply names no partner, so there is no hand-off.
 
 ## Limitations

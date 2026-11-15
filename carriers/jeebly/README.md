@@ -36,10 +36,10 @@ Scheduled or Moveo. The number does not show its service, so the adapter asks ea
   the page converts them to the UAE's clock, so the clocks stay `local_time`.
 - The tracker does not strip spaces: a number sent after a space is not found. The adapter sends
   the number without them.
-- A line loses phone numbers. The pickup and drop-off cards, which hold the sender's and the
-  recipient's names and addresses, are not read, nor are the payment type, the item type, the
-  piece count and the weight, which has no unit. The package card's `Delivery`, such as "next
-  day", is the service name.
+- A line loses phone numbers. The drop-off card gives the recipient's name and address, whose
+  empty parts are left out. The pickup card, which is the sender's, is not read, nor are the
+  payment type, the item type, the piece count and the weight, which has no unit. The package
+  card's `Delivery`, such as "next day", is the service name.
 
 ## Limitations
 

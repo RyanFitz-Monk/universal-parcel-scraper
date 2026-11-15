@@ -20,8 +20,8 @@ description, and its place. A name the page does not list is kept without a stag
 Event clocks are read only with the offset the service states; a clock without one is
 rejected instead of being given a zone.
 
-The destination country and the weight are read from the order. Its delivery address and
-dimensions are left out: for a door delivery the address is the recipient's.
+The destination country, the weight and the delivery address are read from the order: the
+recipient's door, or the locker or point the parcel goes to. Its dimensions are left out.
 
 ## Numbers
 

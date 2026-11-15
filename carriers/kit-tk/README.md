@@ -41,8 +41,10 @@ or a pickup point at the end. Tracked through its tracking page's own lookup.
   issue takes the receiving city on a route collected at the terminal. The new order and a
   cancellation name no place.
 - On a route collected at the terminal, the receiving terminal's address is the pickup point.
-- Only the number, the steps, the route's cities, the gross weight and the receiving terminal's
-  address are kept; the reply's other details are not.
+- Only the number, the steps, the route's cities, the gross weight, the receiving terminal's
+  address and, on a route to the door, the consignee's address from the delivery details are
+  kept; the reply's other details are not. On other routes that address names the terminal or
+  the pickup point.
 
 ## Limitations
 

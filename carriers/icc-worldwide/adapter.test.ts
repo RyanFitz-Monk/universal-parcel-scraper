@@ -17,8 +17,8 @@ const reply = (body: string, status = 200) => new Response(body, { status, heade
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 const rows = (result: ReturnType<typeof parseIccWorldwide>) =>
   result.events!.map(event => [event.time ?? event.local_time, event.location ?? null, event.description, event.stage ?? null]);
-// The receiver, the customer, the consignee, the origin and destination cells and the print link.
-const PRIVATE = /SAMPLE RECEIVER|SAMPLE STORE|SAMPLE CONSIGNEE|SAMPLE SHOPPER|printview|nodecoration/;
+// The origin and destination cells and the print link.
+const UNREAD = /printview|nodecoration/;
 const ROW = (date: string, time: string, place: string, details: string) =>
   `<tr><td class="text-left">${date}</td><td class="text-left">${time}</td><td class="text-left">${place}</td><td class="text-left">${details}</td></tr>`;
 const TBODY = /<tbody class="table-hover">[\s\S]*?<\/tbody>/;
@@ -46,24 +46,25 @@ describe('ICC Worldwide tracking adapter', () => {
     const result = parseIccWorldwide(page('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Shipment Delivered', last_update: '2026-10-09T15:40:00+05:30', expected_delivery: null,
-      delivered_at: '2026-10-09T15:40:00+05:30', delivery_carrier: 'blue-dart', delivery_tracking_number: '69000000011' });
+      delivered_at: '2026-10-09T15:40:00+05:30', delivery_carrier: 'blue-dart', delivery_tracking_number: '69000000011',
+      receiver_name: 'SAMPLE CONSIGNEE', receiver_address: 'MUMBAI', signed_by: 'SAMPLE RECEIVER' });
     expect(rows(result)).toEqual([
-      // The receiver's name after the wording is dropped.
-      ['2026-10-09T15:40:00+05:30', 'MUMBAI', 'SHIPMENT DELIVERED', 'delivered'],
+      // The receiver's name after the wording is kept.
+      ['2026-10-09T15:40:00+05:30', 'MUMBAI', 'SHIPMENT DELIVERED - SAMPLE RECEIVER', 'delivered'],
       ['2026-10-09T09:15:00+05:30', 'MUMBAI', 'OUT FOR DELIVERY', 'out_for_delivery'],
       ['2026-10-08T18:20:00+05:30', 'MUMBAI', 'HANDED OVER TO BLUE DART', 'accepted'],
       ['2026-10-08T11:05:00+05:30', 'MUMBAI', 'CUSTOMS CLEARED', 'in_transit'],
       ['2026-10-07T22:30:00+05:30', 'MUMBAI', 'ARRIVED AT DESTINATION FACILITY', 'in_transit'],
       ['2026-10-06T20:10:00', 'NEW YORK', 'DEPARTED FROM ORIGIN FACILITY', 'in_transit'],
-      // The customer's name after the wording is dropped.
-      ['2026-10-05T14:30:00', 'NEW YORK', 'SHIPMENT PICKED UP', 'accepted'],
+      // So is the customer's.
+      ['2026-10-05T14:30:00', 'NEW YORK', 'SHIPMENT PICKED UP - SAMPLE STORE INC', 'accepted'],
     ]);
     expect(result.events!.filter(event => event.location === 'NEW YORK').every(event => event.local_time && !event.time)).toBe(true);
     expect(result.events!.filter(event => event.location === 'MUMBAI').every(event => event.time && !event.local_time)).toBe(true);
     expect(result).not.toHaveProperty('summary_only');
     expect(result).not.toHaveProperty('last_update_local');
     for (const [name, number] of [['delivered', DELIVERED], ['in-transit', IN_TRANSIT]] as const) {
-      expect(JSON.stringify(parseIccWorldwide(page(name), number)), name).not.toMatch(PRIVATE);
+      expect(JSON.stringify(parseIccWorldwide(page(name), number)), name).not.toMatch(UNREAD);
     }
   });
 
@@ -71,7 +72,9 @@ describe('ICC Worldwide tracking adapter', () => {
     const result = parseIccWorldwide(page('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', current_stage_source: 'wording:language',
       last_status_text: 'SHIPMENT ON HOLD AT CUSTOMS', last_update: '2026-10-14T10:20:00+05:30',
-      delivery_carrier: 'dhl-express', delivery_tracking_number: '5000000011' });
+      delivery_carrier: 'dhl-express', delivery_tracking_number: '5000000011', receiver_name: 'SAMPLE SHOPPER',
+      receiver_address: 'NEW DELHI' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(rows(result)).toEqual([
       ['2026-10-14T10:20:00+05:30', 'NEW DELHI', 'SHIPMENT ON HOLD AT CUSTOMS', 'customs'],
       ['2026-10-13T23:45:00+05:30', 'NEW DELHI', 'ARRIVED AT DESTINATION FACILITY', 'in_transit'],
@@ -117,10 +120,10 @@ describe('ICC Worldwide tracking adapter', () => {
   it('lets the summary’s delivery settle the shipment, dated as a wall clock when no row has it yet', () => {
     const ahead = parseIccWorldwide(delivered(page('in-transit'), 'Shipment Delivered at October 15, 2026 12:10'), IN_TRANSIT);
     expect(ahead).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Shipment Delivered', last_update: null, last_update_local: '2026-10-15T12:10:00' });
+      last_status_text: 'Shipment Delivered', last_update: null, last_update_local: '2026-10-15T12:10:00', signed_by: 'SAMPLE RECEIVER' });
     expect(ahead.events![0]).toEqual({ local_time: '2026-10-15T12:10:00', description: 'Shipment Delivered', stage: 'delivered', stage_source: 'carrier_map' });
     expect(ahead).not.toHaveProperty('delivered_at');
-    expect(JSON.stringify(ahead)).not.toMatch(PRIVATE);
+    expect(JSON.stringify(ahead)).not.toMatch(UNREAD);
     // A delivery without its time keeps its day; one the parser cannot date still settles the shipment.
     const day = parseIccWorldwide(delivered(page('in-transit'), 'Shipment Delivered at October 15, 2026'), IN_TRANSIT);
     expect(day.events![0]).toMatchObject({ local_time: '2026-10-15', description: 'Shipment Delivered' });
@@ -131,9 +134,10 @@ describe('ICC Worldwide tracking adapter', () => {
     const alone = parseIccWorldwide(withRows(delivered(page('in-transit'), 'Shipment Delivered at October 15, 2026 12:10'), ''), IN_TRANSIT);
     expect(alone).toMatchObject({ status: 'delivered', summary_only: true, events: [{ local_time: '2026-10-15T12:10:00', stage: 'delivered' }] });
     expect(() => parseIccWorldwide(withRows(page('in-transit'), ''), IN_TRANSIT)).toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
-    // A receiver's name alone is no delivery, and it is never kept.
+    // A receiver's name alone is no delivery, and names no signatory.
     const named = parseIccWorldwide(page('in-transit').replace(EMPTY_STATUS, '<span class="delivered">SAMPLE RECEIVER</span>'), IN_TRANSIT);
     expect(named).toMatchObject({ current_stage: 'customs' });
+    expect(named).not.toHaveProperty('signed_by');
     // Two deliveries in the summary are a changed page.
     expect(() => parseIccWorldwide(page('delivered').replace('15:40\n', '15:40<br/>Shipment Delivered at October 10, 2026 10:00\n'), DELIVERED))
       .toThrow(expect.objectContaining({ kind: 'schema' }));

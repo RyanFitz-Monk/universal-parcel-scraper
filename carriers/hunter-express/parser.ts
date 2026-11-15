@@ -146,9 +146,10 @@ function isAfter(later: Clock, earlier: Clock): boolean {
  * no consignment for gets the empty form with "Missing or incorrect tracking
  * number".
  *
- * The details must name the whole number asked. The suburb, the item counts,
- * the driver's reading and queue, the receiver, the map's points and the
- * authority-to-leave note are not read.
+ * The details must name the whole number asked. The receiver's suburb and
+ * postcode and who received the delivery are read; the item counts, the
+ * driver's reading and queue, the map's points and the authority-to-leave
+ * note are not.
  */
 export function parseHunterExpress(html: string, raw: string): CarrierResult {
   const number = normalizeHunterExpressNumber(raw);
@@ -215,6 +216,9 @@ export function parseHunterExpress(html: string, raw: string): CarrierResult {
   const finished = stage === 'delivered' || stage === 'returned';
   const expected = finished ? null : estimate(field($, 'TransitText'));
   const weight = weightOf(field($, 'TotalWeight'));
+  const suburb = field($, 'ReceiverSuburb');
+  // "SAMPLE (15/04/2026 1:15 PM AEST)": who received the delivery, then its clock.
+  const receivedBy = field($, 'DeliveryReceivedBy').replace(/\s*\([^()]*\d[^()]*\)$/, '');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source! } : {}),
@@ -225,6 +229,8 @@ export function parseHunterExpress(html: string, raw: string): CarrierResult {
     ...(expected?.from ? { expected_delivery_from: expected.from } : {}),
     delivered_at: delivered,
     ...(weight ? { weight_kg: weight } : {}),
+    ...(suburb ? { receiver_address: suburb } : {}),
+    ...(receivedBy ? { signed_by: receivedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -46,7 +46,7 @@ describe('La Poste du Sénégal tracking adapter', () => {
     const result = parseLaPosteSenegal(payload('inbound-delivered'), INBOUND);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Distribuer envoi (Ent)', last_update: null, last_update_local: '2026-08-11T11:02:41', expected_delivery: null,
-      destination_country: 'SN' });
+      destination_country: 'SN', signed_by: 'SAMPLE PERSON' });
     // A wall clock without an offset gives the delivery no instant.
     expect(result).not.toHaveProperty('delivered_at');
     // The repeated scan is kept once.
@@ -62,8 +62,8 @@ describe('La Poste du Sénégal tracking adapter', () => {
       ['2026-08-03T10:12:00', 'SAMPLE PPDC, France', 'Recevoir envoi du client (Srt)', 'accepted', '1'],
     ]);
     expect(result.events!.every(event => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    // The signatory, the signature, the next office and the office's postcode are not read.
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE PERSON|AAAAAAAA|NextOffice|OFFICE 0000|Missing documents/);
+    // The signature, the next office and the office's postcode are not read.
+    expect(JSON.stringify({ ...result, signed_by: undefined })).not.toMatch(/SAMPLE PERSON|AAAAAAAA|NextOffice|OFFICE 0000|Missing documents/);
   });
 
   it('reads an item posted in Senegal that has not left the country, without a destination', async () => {
@@ -120,6 +120,18 @@ describe('La Poste du Sénégal tracking adapter', () => {
         LocalDate: '2026-10-09T08:00:00', Country: { Code: 'FR', Name: 'France', LocalName: 'France' }, Location: 'SAMPLE CTI' });
     }), IN_TRANSIT);
     expect(abroad).toMatchObject({ destination_country: 'FR', last_update_local: '2026-10-09T08:00:00' });
+  });
+
+  it('reads the signatory of a delivery only', () => {
+    // A name on a scan that is not the delivery, or a delivery the tracker leaves unsigned, gives none.
+    const kept = parseLaPosteSenegal(edited('inbound-delivered', (_reply, rows) => {
+      rows.at(-2)!.SignatoryName = 'SAMPLE CLERK';
+      rows.at(-1)!.SignatoryName = '';
+    }), INBOUND);
+    expect(kept).toMatchObject({ current_stage: 'delivered' });
+    expect(kept).not.toHaveProperty('signed_by');
+    const undelivered = parseLaPosteSenegal(edited('inbound-delivered', (_reply, rows) => { rows.pop(); }), INBOUND);
+    expect(undelivered).not.toHaveProperty('signed_by');
   });
 
   it('reads the tracker’s answer for a code without a match as missing, and anything else short of a history as no answer', async () => {

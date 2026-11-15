@@ -41,7 +41,8 @@
     "canaryUrl": "https://www.laposte.sn/",
     "shows": [
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -49,7 +50,8 @@
       "location",
       "provider_code",
       "destination_country",
-      "event_details"
+      "event_details",
+      "signatory"
     ],
     "discarded": [],
     "unavailable": [

@@ -45,10 +45,10 @@
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "discarded": [
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

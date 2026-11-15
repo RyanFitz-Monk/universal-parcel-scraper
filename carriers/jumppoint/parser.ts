@@ -52,39 +52,50 @@ function instant(value: unknown): { iso: string; timestamp: number } | null {
   return local ? { iso: local, timestamp: parsed.timestamp } : null;
 }
 
-function projectRow(row: Record<string, unknown>): { key: string; timestamp: number; event: CarrierEvent } {
+// A delivery's free-text remark naming who took the parcel: "signed by Sample Person".
+const SIGNED = /^signed\s+(?:for\s+)?by\s+(\S.*)$/i;
+
+function projectRow(row: Record<string, unknown>): { key: string; timestamp: number; event: CarrierEvent; receiver: string } {
   const code = state(row, 'status');
   if (!code) throw new SchemaError(PROVIDER, 'Jumppoint returned a status log row without its status');
   const time = instant(row.createdAt);
   if (!time) throw new SchemaError(PROVIDER, 'Jumppoint returned an invalid status log time');
-  // Only the reasons the page words itself: free-text remarks can say who signed.
-  const remark = jumppointRemark(text(row, 'remarks', 80));
-  const description = remark ? `${jumppointLabel(code)}: ${remark}` : jumppointLabel(code);
-  const staged = jumppointStage(code, description);
+  // A coded reason in the page's words, else the free-text remark as written. Only the label
+  // and a coded reason stage the row.
+  const raw = text(row, 'remarks', 80);
+  const coded = jumppointRemark(raw);
+  const label = jumppointLabel(code);
+  const staging = coded ? `${label}: ${coded}` : label;
+  const description = coded || !raw ? staging : `${label}: ${raw}`;
+  const staged = jumppointStage(code, staging);
   const event: CarrierEvent = {
     time: time.iso,
     description,
     provider_code: code,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([time.timestamp, code, description]), timestamp: time.timestamp, event };
+  const receiver = staged?.stage === 'delivered' && !coded ? clean(SIGNED.exec(raw)?.[1], 120) : '';
+  return { key: JSON.stringify([time.timestamp, code, description]), timestamp: time.timestamp, event, receiver };
 }
 
-function history(rows: unknown): CarrierEvent[] {
+function history(rows: unknown): { events: CarrierEvent[]; receivers: Map<CarrierEvent, string> } {
   if (!Array.isArray(rows)) throw new SchemaError(PROVIDER, 'Jumppoint returned a shipment with an invalid status log');
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Jumppoint returned an oversized status log');
   const seen = new Set<string>();
   const scans: { timestamp: number; event: CarrierEvent }[] = [];
+  const receivers = new Map<CarrierEvent, string>();
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Jumppoint returned an invalid status log row');
     const scan = projectRow(row);
     if (seen.has(scan.key)) continue;
     seen.add(scan.key);
+    if (scan.receiver) receivers.set(scan.event, scan.receiver);
     scans.push(scan);
   }
   // The log runs oldest first; the result lists the newest first. Rows of one second keep their order.
-  return scans.map((scan, index) => ({ ...scan, index }))
+  const events = scans.map((scan, index) => ({ ...scan, index }))
     .sort((left, right) => right.timestamp - left.timestamp || right.index - left.index).map(({ event }) => event);
+  return { events, receivers };
 }
 
 /** The delivery estimate, a calendar day: the reply gives Hong Kong's midnight in UTC. */
@@ -131,7 +142,7 @@ export function parseJumppoint(payload: unknown, raw: string): CarrierResult {
   if (!shipment) throw new IndeterminateError(PROVIDER, 'Jumppoint answered for another shipment');
 
   const current = state(shipment, 'shipmentState');
-  const events = history(shipment.statusLogs ?? []);
+  const { events, receivers } = history(shipment.statusLogs ?? []);
   if (!current) {
     if (events.length) throw new SchemaError(PROVIDER, 'Jumppoint returned a status log without a shipment state');
     throw new NotFoundError(PROVIDER);
@@ -157,6 +168,7 @@ export function parseJumppoint(payload: unknown, raw: string): CarrierResult {
     last_update: updated ?? null,
     expected_delivery: stage === 'delivered' || stage === 'returned' ? null : estimate(shipment.deliveryDate),
     ...(delivery?.time ? { delivered_at: delivery.time } : {}),
+    ...(delivery && receivers.get(delivery) ? { signed_by: receivers.get(delivery) } : {}),
     ...(point ? { pickup_point: point } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

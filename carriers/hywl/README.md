@@ -41,14 +41,15 @@ sellers. Tracked through the lookup its tracking page makes.
 - The status code stages each row. `Customs` rows reporting the export clearance completed put
   the parcel back in transit.
 - Destination rows name the recipient's town and postcode, and the first row a town and an
-  office code, in the place and inside the wording. Both keep the town only. Wording from a
-  signatory on is cut.
+  office code, in the place and inside the wording. The location keeps the town only, and the
+  wording stays as written. The newest destination row's town and postcode are read as the
+  delivery address, and a delivered row's signatory as who signed.
 - The reply names no delivering carrier or its number, so there is no hand-off. The page's
   17TRACK button opens 17TRACK with the same number.
 
 ## Limitations
 
-- No delivery estimate, delivery time, weight, service, partner, sender or recipient.
+- No delivery estimate, delivery time, weight, service, partner, sender or recipient name.
 - Rows outside China have no established zone; consumers read them in the catalog zone.
 
 ## Numbers

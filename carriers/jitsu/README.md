@@ -41,10 +41,11 @@ names the carrier. Anything but four to forty letters and digits is invalid with
 - The delivery window is shown while the parcel is on its way and the window has not ended
   before the newest scan. As on the tracker, a late round moves it to the same hours on the next
   service day, and a shipper can hide it until Jitsu has the parcel.
-- The reply also carries the recipient's masked contact details, town and postcode, the stops'
-  remarks, the driver's remarks and vehicle, access codes, the merchant and the linehaul
-  carrier's ids. None of them is read, nor are the photos and signatures the recipient app shows
-  after a check of the recipient's details.
+- The recipient's town and state and the reply's postcode block give the receiver's address.
+  The postcode is a number in the reply, so one that has lost a leading zero is left out. The
+  recipient's masked contact details, the stops' remarks, the driver's remarks and vehicle,
+  access codes, the merchant and the linehaul carrier's ids are not read, nor are the photos and
+  signatures the recipient app shows after a check of the recipient's details.
 
 ## Links
 

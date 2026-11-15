@@ -12,7 +12,7 @@
     {"code": "COLLECTING", "wording": "Kurye iade gönderisini almaya çıktı", "stage": "registered", "language": "tr", "confirmedBy": "live", "note": "The courier is on the way to collect a return."},
     {"code": "UNABLE_TO_COLLECT", "wording": "Teslim alınamadı: Alıcı İade'den vazgeçmiş", "stage": "exception", "language": "tr", "confirmedBy": "live", "note": "The courier could not collect the return; the reply's reason follows the colon, here that the customer gave the return up."},
     {"code": "COLLECTED", "wording": "Gönderi Alındı", "stage": "accepted", "language": "tr", "confirmedBy": "live", "note": "Collected from the merchant."},
-    {"code": "COLLECTED", "wording": "Teslim Alındı", "stage": "accepted", "language": "tr", "confirmedBy": "live", "note": "A return collected from the customer. The reply names the person who handed it over after a dash; the adapter drops it."},
+    {"code": "COLLECTED", "wording": "Teslim Alındı", "stage": "accepted", "language": "tr", "confirmedBy": "live", "note": "A return collected from the customer. The reply names the person who handed it over after a dash."},
     {"code": "COLLECTED", "wording": "Dağıtım Merkezine Ulaştı", "stage": "accepted", "language": "tr", "confirmedBy": "live", "note": "A collected return reached the branch."},
     {"code": "TRANSFERRING_COLLECT", "wording": "Transfer Sürecinde", "stage": "in_transit", "language": "tr", "confirmedBy": "live", "note": "Arrived at the first transfer centre."},
     {"code": "TRANSFERRING_TRANSFER", "wording": "Transfer Sürecinde", "stage": "in_transit", "language": "tr", "confirmedBy": "live"},
@@ -23,7 +23,7 @@
     {"code": "UNDELIVERED", "wording": "Teslim Edilemedi: Hasarlı", "stage": "failed_attempt", "language": "tr", "confirmedBy": "live", "note": "Not delivered; the reply's reason follows the colon, here a damaged parcel, which then went back to the sender."},
     {"code": "TRANSFERRING_RETURN", "wording": "Transfer Merkezine Ulaştı", "stage": "returned", "language": "tr", "confirmedBy": "live", "note": "On the way back to the sender after a failed delivery."},
     {"code": "DELIVERED", "wording": "Teslim Edildi", "stage": "delivered", "language": "tr", "confirmedBy": "live"},
-    {"code": "DELIVERED", "wording": "Teslim edildi", "stage": "delivered", "language": "tr", "confirmedBy": "live", "note": "The reply names the person who took the parcel after a dash; the adapter drops it."},
+    {"code": "DELIVERED", "wording": "Teslim edildi", "stage": "delivered", "language": "tr", "confirmedBy": "live", "note": "The reply names the person who took the parcel after a dash."},
     {"code": "DELIVERED", "wording": "İade Edildi", "stage": "returned", "language": "tr", "confirmedBy": "live", "note": "Handed back to the sender; the same delivered status as a delivery, told apart by its wording."},
     {"code": "DELIVERED", "wording": "Satıcıya iade edildi", "stage": "returned", "language": "tr", "confirmedBy": "live", "note": "Handed back to the merchant, at the same clock as İade Edildi."}
   ]

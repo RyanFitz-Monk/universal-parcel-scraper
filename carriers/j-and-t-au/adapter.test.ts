@@ -6,6 +6,7 @@ import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, J_AND_T_AU_API, J_AND_T_AU_APP_ID, J_AND_T_AU_SIGNING_KEY, J_AND_T_AU_ZONE, JAndTAuTracker } from './adapter.js';
+import { jAndTReceiver, jAndTWording } from './official.js';
 import { jAndTAuWording, normalizeJAndTAuNumber, parseJAndTAu } from './parser.js';
 import { jAndTAuStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
@@ -74,18 +75,34 @@ describe('J&T Express Australia HTTP adapter', () => {
     expect(result).not.toHaveProperty('last_update_local');
   });
 
-  it('keeps the delivery without the recipient, the courier, the depot or a phone', () => {
+  it('keeps the delivery and who signed for it, without the courier, the depot or a phone', () => {
     const result = parseJAndTAu(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
-      last_status_text: 'The parcel has been delivered and signed for.', last_update: '2026-05-14T04:22:31Z',
-      delivered_at: '2026-05-14T04:22:31Z' });
+      last_status_text: 'The parcel has been delivered and signed for by Sample Recipient.', last_update: '2026-05-14T04:22:31Z',
+      delivered_at: '2026-05-14T04:22:31Z', signed_by: 'Sample Recipient' });
     expect(result.events!.slice(0, 3).map((event) => [event.stage, event.description])).toEqual([
-      ['delivered', 'The parcel has been delivered and signed for.'],
+      ['delivered', 'The parcel has been delivered and signed for by Sample Recipient.'],
       ['out_for_delivery', 'The parcel is out for delivery.'],
       ['in_transit', 'The parcel arrives at the distribution center and is prepared for transport to the next destination.'],
     ]);
     expect(result.events).toHaveLength(6);
-    expect(JSON.stringify(result)).not.toMatch(/Sample|0400|130000|Customer service/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Courier|Sample Depot|0400|130000|Customer service/);
+    // Before the delivery nobody has signed.
+    const moving = parseJAndTAu(changed('delivered', (answer) => { answer.details.shift(); }), DELIVERED);
+    expect(moving).toMatchObject({ current_stage: 'out_for_delivery' });
+    expect(moving).not.toHaveProperty('signed_by');
+  });
+
+  it('keeps who signed for, received or collected the parcel, in brackets or not', () => {
+    expect(jAndTWording('Your parcel was signed for by Sample Recipient. Courier [Sample Courier] [0400 000 000]', { receiver: true }))
+      .toBe('Your parcel was signed for by Sample Recipient.');
+    expect(jAndTWording('The parcel has been delivered and signed for by [Sample Recipient]. Courier [Sample Courier]', { receiver: true }))
+      .toBe('The parcel has been delivered and signed for by Sample Recipient.');
+    expect(jAndTWording('Received by 【Sample Person】; awaiting collection', { receiver: true })).toBe('Received by Sample Person; awaiting collection');
+    expect(jAndTReceiver('The parcel has been delivered and signed for by [Sample Recipient]. Courier [Sample Courier] [0400 000 000]'))
+      .toBe('Sample Recipient');
+    expect(jAndTReceiver('Collected by Sample Person 0400 000 000. If you have any questions, please call')).toBe('Sample Person');
+    expect(jAndTReceiver('The parcel is out for delivery. Courier [Sample Courier]')).toBe('');
   });
 
   it('sorts scans newest first, as the page does, whatever order the reply lists them in', () => {

@@ -28,8 +28,8 @@ through its own tracker on intex-paketdienst.de.
 - Scan times are wall clocks without a zone, read in Europe/Berlin.
 - The rows carry wording only, which stages them. A delivery row has not been seen; its wording
   falls to the shared rules.
-- The destination's `D-` prefix gives Germany as the destination country. Its postcode and town
-  are the recipient's and are not kept.
+- The destination is the recipient's postcode and town, read as the page shows it. Its `D-`
+  prefix gives Germany as the destination country.
 - An archived page holds a hidden link to the tracker of [DER KURIER](../der-kurier/README.md)
   with another parcel number. The reader never sees it, so that number is not kept and no
   partner is named.
@@ -38,7 +38,7 @@ through its own tracker on intex-paketdienst.de.
 
 ## Limitations
 
-- No scan locations, delivery estimate, sender, recipient or service name.
+- No scan locations, delivery estimate, sender, recipient name or service name.
 - INTEX drops old shipments, which are then not found.
 
 ## Numbers

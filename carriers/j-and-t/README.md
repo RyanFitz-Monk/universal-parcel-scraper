@@ -35,17 +35,18 @@ approval.
   Any other code, such as `500`, is inconclusive.
 - Scan codes map through `status.ts`, which declares its `statusMap`; unknown codes are left
   to the shared classifier.
-- The customer sentence is kept only in the forms the router is known to write. The courier
-  or recipient name at the end of a pick-up, out-for-delivery or delivered sentence is
-  dropped. An arrival, departure or pick-up sentence is kept only when it names the scan's
-  own town and a facility type, which is how the router writes it; any other wording gives
-  way to the scan's English label. A hold reason is repeated only when it is one read live,
-  since the router picks them from a fixed list; any other is dropped from its sentence.
+- The customer sentence is kept only in the forms the router is known to write. A delivered
+  sentence keeps the name of who took the parcel, which is the signatory. The courier's name at
+  the end of a pick-up or out-for-delivery sentence is dropped. An arrival, departure or pick-up
+  sentence is kept only when it names the scan's own town and a facility type, which is how the
+  router writes it; any other wording gives way to the scan's English label. A hold reason is
+  repeated only when it is one read live, since the router picks them from a fixed list; any
+  other is dropped from its sentence.
 - A scan's location is its town and province. A departure's town fields name the next stop,
   so departures keep only their sentence. Scans from the router's own system network
   (`SISTEM` codes, `_AUTO` names) carry its registered town, not the parcel's, so they keep
   no place.
-- The name, phone, remark, coordinate and picture fields are never read.
+- The name, phone, remark, coordinate and picture fields are not read.
 - Times: `scanTime` is a wall clock without a zone, and Indonesia has three. The scans read
   live were all made at facilities on Western Indonesian Time, which does not show whether
   facilities elsewhere keep their own clock. The clock stays in `local_time`; no offset or

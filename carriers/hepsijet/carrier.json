@@ -63,13 +63,13 @@
       "eta",
       "delivered_at",
       "service_name",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
-      "recipient_name",
-      "recipient_address",
-      "signatory",
       "sender_name",
       "pickup_point",
       "delivery_controls"

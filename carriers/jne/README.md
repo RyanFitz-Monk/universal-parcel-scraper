@@ -26,9 +26,13 @@ asks for the recipient's phone number before it shows a parcel.
   spans three zones (WIB, WITA, WIT) and one history crosses them, so the clocks stay
   `local_time`.
 - A scan's description is the leg's English phrase; the station it names travels in brackets and
-  becomes the scan's location. A delivery scan's bracket is `recipient | date | city`, so only
-  the city is kept. The recipient, the shipper, both addresses, the proof of delivery, the
-  signature, the goods description and the price are dropped.
+  becomes the scan's location. A delivery scan's bracket is `recipient | date | city`: the city
+  is its location and the recipient follows the phrase, as "DELIVERED TO" and the name, while
+  the scan is staged by the phrase alone.
+- The recipient's name, first address line and town are read. The summary's
+  `cnote_pod_receiver` is who signed, else the recipient the delivery scan names, without the
+  `:}` JNE leaves after it. The shipper, the proof of delivery's images, the goods description
+  and the price are not read.
 - The summary's `pod_status` of `DELIVERED` decides a delivery; otherwise the newest scan's
   stage stands.
 - The reply gives a shipment weight but no delivery estimate, no offset on any clock and no

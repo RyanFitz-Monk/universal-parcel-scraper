@@ -32,7 +32,8 @@ lookup the tracking box on its home page makes.
   so its offices' clocks read the same in the catalog zone.
 - An office loses a postcode written in its name and is followed by its country's English name,
   without IPS's "(the)". The reason an item was kept or not delivered, and what happens next,
-  follow the event's name. The next office, mail category, signatory and signature are not read.
+  follow the event's name. A delivery's signatory becomes `signed_by`. The next office, mail
+  category and signature are not read.
 - The country of an inward scan becomes the destination.
 
 ## Limitations

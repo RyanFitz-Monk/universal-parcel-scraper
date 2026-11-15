@@ -45,6 +45,8 @@ function text(row: Record<string, unknown>, key: string, maxLength = 500): strin
  * A place without its postcode. Destination rows name the recipient's town and
  * postcode, and the first row a town and an office code: each comma-separated
  * part ends before its first digit, and a part that starts with one is dropped.
+ * The wording keeps them, and the recipient's town and postcode are read as the
+ * delivery address.
  */
 export function hywlPlace(raw: string): string {
   return raw.split(/[,，]/).map((part) => {
@@ -56,23 +58,12 @@ export function hywlPlace(raw: string): string {
   }).filter(Boolean).join(', ');
 }
 
-/**
- * A row's wording without the postcodes it repeats: the row's place, as
- * written, is replaced by the place kept, and every bracketed place loses its
- * postcode too. Wording from a signatory on is cut, and any other run of four
- * or more digits is dropped.
- */
-export function hywlWording(description: string, location: string, place: string): string {
-  const placed = location ? description.split(location).join(place) : description;
-  return clean(placed
-    .replace(/【([^】]*)】/g, (_, inner: string) => `【${hywlPlace(inner)}】`)
-    .replace(/\[([^\]]*)\]/g, (_, inner: string) => `[${hywlPlace(inner)}]`)
-    .replace(/(?:签收人|signed (?:for )?by|signatory)[\s\S]*$/i, '')
-    .replace(/\s*\d{4,}/g, '')
-    .replace(/【\s*】|\[\s*\]/g, '')
-    .replace(/\s+([,，])/g, '$1')
-    .replace(/([,，])(?:\s*[,，])+/g, '$1'))
-    .replace(/^[,，\s]+|[,，\s]+$/g, '');
+// Who signed for a delivered row, at its end: "签收人：样本", "signed by Sample Person".
+const SIGNATORY = /(?:签收人|signed (?:for )?by|signatory)\s*[:：]?\s*([^,，;；]+?)\s*$/i;
+
+/** Who a delivered row's wording says signed for the parcel. */
+export function hywlSignedBy(wording: string): string {
+  return clean(SIGNATORY.exec(wording)?.[1] ?? '', 120);
 }
 
 /**
@@ -103,13 +94,13 @@ function wallClock(stamp: string): string {
   return local;
 }
 
-function projectRow(row: unknown, readAt: number): { key: string; clock: string; event: CarrierEvent } | null {
+function projectRow(row: unknown, readAt: number): { key: string; clock: string; event: CarrierEvent; addressed: string } | null {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Huiyi Logistics returned an invalid scan');
   const stamp = text(row, 'time', 64);
   const code = text(row, 'status_code', 64);
   const location = text(row, 'location', 200);
   const place = hywlPlace(location);
-  const description = hywlEnglishHalf(hywlWording(text(row, 'description'), location, place)) || code;
+  const description = hywlEnglishHalf(text(row, 'description')) || code;
   if (!stamp || !description) throw new SchemaError(PROVIDER, 'Huiyi Logistics returned a scan without a time or wording');
   const local = wallClock(stamp);
   // A row in China is on Beijing's clock; any other keeps its wall clock.
@@ -124,7 +115,9 @@ function projectRow(row: unknown, readAt: number): { key: string; clock: string;
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local, code, description, place]), clock: local, event };
+  // A destination row's place is the recipient's town and postcode; the pickup's town and office code are not.
+  const addressed = /\d/.test(location) && !hywlInChina(place) && staged?.stage !== 'accepted' ? location : '';
+  return { key: JSON.stringify([local, code, description, place]), clock: local, event, addressed };
 }
 
 /**
@@ -148,7 +141,7 @@ export function parseHywl(payload: unknown, raw: string, readAt = Date.now()): C
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'Huiyi Logistics returned an oversized history');
 
   const seen = new Set<string>();
-  const events: { clock: string; event: CarrierEvent }[] = [];
+  const events: { clock: string; event: CarrierEvent; addressed: string }[] = [];
   for (const row of rows) {
     const scan = projectRow(row, readAt);
     if (!scan || seen.has(scan.key)) continue;
@@ -158,14 +151,16 @@ export function parseHywl(payload: unknown, raw: string, readAt = Date.now()): C
   // The page reads an empty list as "found, no scans yet".
   if (!events.length) throw new IndeterminateError(PROVIDER, 'Huiyi Logistics has no scans for the shipment yet');
   // Oldest first in the reply; a stable sort keeps the order of rows on one clock.
-  const newestFirst = events.map(({ clock, event }, index) => ({ clock, event, index }))
-    .sort((a, b) => (a.clock === b.clock ? b.index - a.index : a.clock < b.clock ? 1 : -1))
-    .map(({ event }) => event);
+  const sorted = events.map((scan, index) => ({ ...scan, index }))
+    .sort((a, b) => (a.clock === b.clock ? b.index - a.index : a.clock < b.clock ? 1 : -1));
+  const newestFirst = sorted.map(({ event }) => event);
+  const address = sorted.find(({ addressed }) => addressed)?.addressed;
 
   const newest = newestFirst[0]!;
   const current = newestFirst.find((event) => event.stage);
   const stage = current?.stage as Stage | undefined;
   const destination = text(payload, 'destination_country', 8).toUpperCase();
+  const signedBy = stage === 'delivered' ? hywlSignedBy(current!.description!) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -174,6 +169,8 @@ export function parseHywl(payload: unknown, raw: string, readAt = Date.now()): C
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(/^[A-Z]{2}$/.test(destination) ? { destination_country: destination } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

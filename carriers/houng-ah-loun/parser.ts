@@ -91,7 +91,7 @@ function readRow(row: unknown, order: number): Row {
 /**
  * The reply of the tracking page's `/v1/orders/tracking/{number}`: the bill's
  * summary and its scans, oldest first. The bill must be the number asked. The
- * summary's names, phone numbers, charges and parcel details are not kept.
+ * summary's recipient is read; its sender, phone numbers, charges and parcel details are not.
  */
 export function parseHal(payload: unknown, raw: string): CarrierResult {
   const number = normalizeHalNumber(raw);
@@ -131,6 +131,7 @@ export function parseHal(payload: unknown, raw: string): CarrierResult {
   const newest = newestFirst[0]!;
   const scanned = newestFirst.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  const receiver = text(info, 'receiver_name', 160);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source! } : {}),
@@ -138,6 +139,7 @@ export function parseHal(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(receiver ? { receiver_name: receiver } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

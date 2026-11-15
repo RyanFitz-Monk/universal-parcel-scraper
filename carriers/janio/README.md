@@ -28,9 +28,10 @@ lookup its tracking page makes.
 - A status code names the leg: the order, the pickup, the origin country, the flight, the
   destination country and the delivery. `DELIVERY_IN_PROGRESS` comes when the partner's
   courier has the parcel, hours before the delivery, so it is out for delivery.
-- An update's location is its `country`. Its `address` is left out: on pickup and delivery
-  updates it holds part of the recipient's address. The recipient's masked email, the origin
-  country and the partners' own status codes are not kept either.
+- An update's location is its `country`. A delivery update's `address` is the recipient's
+  address as the tracker shortens it, and is read as the receiver's address without the
+  tracker's notice. A pickup update's address is the sender's and is not read, nor are the
+  recipient's masked email, the origin country and the partners' own status codes.
 - `external_tracking_nos` maps Janio's key for each partner to that partner's reference. The
   references can repeat Janio's own number or belong to Janio's first-mile legs, so a
   partner is named only when exactly one entry gives a catalog carrier whose rules offer the
@@ -43,7 +44,7 @@ lookup its tracking page makes.
 
 - The page shows a delivery estimate for some parcels to Singapore and Malaysia. The adapter
   does not read it, since no reply seen had one.
-- No weight, service, sender or recipient.
+- No weight, service or sender, and no recipient name.
 - The tracker forgets some older parcels: they come back as an unknown number.
 - The page shows an SPX parcel's updates in SPX's words from `partner_data`. The adapter keeps
   Janio's own wording.

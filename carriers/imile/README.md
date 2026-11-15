@@ -82,12 +82,12 @@ makes, with the China leg Cainiao's global tracker holds under the same number.
   booked for the parcel, with its planned clocks, is still to come: a row that only books one is
   left out, and a scan it follows keeps its own words. Some scans come without a code. "Traffic, Strike, Bad weather" is a failed attempt on a
   delivery run and a delay under In Transit, before the parcel reaches its delivery office.
-- Delivery runs lose the driver's phone, deliveries lose who took the parcel, and Brazilian
-  deliveries and returns lose iMile's support contacts. A receiver type that names where the
-  parcel was left rather than a person ("Mail box", "Parcel locker", "Reception") stays; the
-  others ("Self", "Family", a name) go. A delivery has no location: its station is the depot the
-  courier set out from, not the place the parcel reached. The proof-of-delivery photos some
-  countries link are not kept.
+- Delivery runs lose the driver's phone, and Brazilian deliveries and returns lose iMile's
+  support contacts. A delivery keeps who took the parcel in its wording, and the delivery scan's
+  receiver ("Self", "Family", a name) is the signatory. A receiver type naming where the parcel
+  was left ("Mail box", "Parcel locker", "Reception") is not one. A delivery has no location:
+  its station is the depot the courier set out from, not the place the parcel reached. The
+  proof-of-delivery photos some countries link are not kept.
 - `country` is iMile's own three-letter code, mostly ISO's, though `KSA`, `UAE`, `RSA` and `BIH`
   (Bahrain) are its own. It becomes `destination_country`.
 - The page shows `lmWaybillNo` as the last-mile number of US parcels. The reply names no courier

@@ -103,12 +103,23 @@ function dueDate(shipment: Record<string, unknown>): string | null {
 }
 
 /**
+ * The recipient as the page shows them: the masked name, and the
+ * destination's postcode and province.
+ */
+function recipient(shipment: Record<string, unknown>): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const optional = (key: string, maxLength: number) => typeof shipment[key] === 'string' ? clean(shipment[key], maxLength) : '';
+  const name = optional('r_name', 160) || optional('cnee', 160);
+  const address = [optional('dest_postcode', 16), optional('dest_province', 80)].filter(Boolean).join(' ');
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/**
  * The tracking page's reply for one number: an array with an entry per
  * number asked, each echoing the number and holding the shipment and its
  * scans newest first. A number the tracker has no shipment for comes back
- * with a null shipment, which the page shows as not found. The sender's and
- * recipient's details, the signature and the delivery photos in the reply
- * are not read.
+ * with a null shipment, which the page shows as not found. The recipient's
+ * masked name, postcode and province are read. The sender, the phone numbers,
+ * the unmasked names, the signature and the delivery photos are not.
  */
 export function parseKex(payload: unknown, raw: string): CarrierResult {
   const number = normalizeKexNumber(raw);
@@ -164,6 +175,7 @@ export function parseKex(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: ended ? null : dueDate(shipment),
     ...(delivered ? { delivered_at: delivered.time } : {}),
+    ...recipient(shipment),
     events,
   };
 }

@@ -13,6 +13,7 @@ export const J_AND_T_AU: JAndTNetwork = {
   // The waybill J&T Express Australia prints: JTAU and twelve digits.
   number: /^JTAU\d{12}$/,
   layout: 'J&T Express Australia waybills are JTAU and twelve digits',
+  signatory: true,
   stage: jAndTAuStage,
 };
 

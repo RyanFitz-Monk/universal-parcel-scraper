@@ -52,11 +52,11 @@ describe('Jeebly HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history as wall clocks, staged by the status names, without the people or the package card', () => {
+  it('reads a delivered history as wall clocks, staged by the status names, with the drop-off card and without the pickup card', () => {
     const result = parseJeebly(text('delivered.html'), DELIVERED, 'Scheduled');
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Consignment is delivered', last_update: null, last_update_local: '2026-05-14T16:42:00', expected_delivery: null,
-      service_name: 'next day' });
+      service_name: 'next day', receiver_name: 'Jane Example', receiver_address: 'Villa 0, Example Road, Sampleville' });
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage ?? null, event.description])).toEqual([
       ['2026-05-14T16:42:00', 'Delivered', 'delivered', 'Consignment is delivered'],
       ['2026-05-14T09:05:00', 'Out For Delivery', 'out_for_delivery', 'Consignment is out for delivery'],
@@ -74,18 +74,18 @@ describe('Jeebly HTTP adapter', () => {
       ['2026-05-11T10:15:00', 'Pickup Scheduled', 'registered', 'Consignment Softdata Uploaded'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.location === undefined && event.stage_source !== 'none')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample Merchant|Jane Example|Example Street|Villa|Sampleville|Prepaid|NON-DOCUMENT|FORWARD|\+971|000 000/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Merchant|Example Street|Sampletown|Prepaid|NON-DOCUMENT|FORWARD|\+971|000 000/);
   });
 
   it('reads an in-transit history of a JBP number, its newest scan first', () => {
     const result = parseJeebly(text('in-transit.html'), IN_TRANSIT, 'Scheduled');
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', last_status_text: 'Consignment is out for delivery',
-      last_update_local: '2026-03-01T07:40:00', service_name: 'next day' });
+      last_update_local: '2026-03-01T07:40:00', service_name: 'next day', receiver_name: 'John Sample', receiver_address: 'Flat 0, Example Tower, Sampleville' });
     expect(result.events!.map((event) => [event.local_time, event.stage])).toEqual([
       ['2026-03-01T07:40:00', 'out_for_delivery'], ['2026-02-28T20:12:00', 'in_transit'],
       ['2026-02-28T17:05:00', 'accepted'], ['2026-02-27T11:00:00', 'registered'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Example Store|John Sample|COD|Example Tower/);
+    expect(JSON.stringify(result)).not.toMatch(/Example Store|Warehouse|COD/);
     // An oldest-first page is turned round.
     const steps = text('in-transit.html').match(STEP)!;
     expect(steps).toHaveLength(4);

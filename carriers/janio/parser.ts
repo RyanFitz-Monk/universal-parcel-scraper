@@ -20,6 +20,10 @@ const CODE = /^[A-Z][A-Z0-9_]{1,63}$/;
 // `updated_on` is an ISO instant, in UTC with or without microseconds.
 const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
 const DELIVERED = 'DELIVERY_COMPLETED';
+// The delivery updates, whose `address` is the recipient's.
+const DELIVERY = new Set([DELIVERED, 'DELIVERY_IN_PROGRESS']);
+// The notice the tracker puts before an address it shortens.
+const SHORTENED = /^\(address shortened for privacy\)\s*/i;
 const MAX_ENTRIES = 50;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
@@ -65,11 +69,13 @@ interface Scan {
   readonly event: CarrierEvent;
   readonly timestamp: number;
   readonly code: string;
+  readonly address: string;
 }
 
 /**
- * One status update. Its `country` is where it happened; its `address` is left
- * out, since on pickup and delivery updates it is the recipient's.
+ * One status update. Its `country` is where it happened. A delivery update's
+ * `address` is the recipient's, as the tracker shortens it, and is kept apart
+ * from the event; a pickup update's is the sender's and is not read.
  */
 function scan(row: unknown): { key: string; scan: Scan } {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Janio returned an invalid status update');
@@ -81,6 +87,7 @@ function scan(row: unknown): { key: string; scan: Scan } {
   const time = INSTANT.test(raw) ? explicitOffsetTime(raw) : null;
   if (!time) throw new SchemaError(PROVIDER, 'Janio returned an invalid update time');
   const location = text(row, 'country', 80);
+  const address = DELIVERY.has(code) ? text(row, 'address', 300).replace(SHORTENED, '') : '';
   const staged = janioStage(code, description);
   const event: CarrierEvent = {
     time: time.iso,
@@ -89,7 +96,7 @@ function scan(row: unknown): { key: string; scan: Scan } {
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([time.iso, code, description.toLowerCase(), location]), scan: { event, timestamp: time.timestamp, code } };
+  return { key: JSON.stringify([time.iso, code, description.toLowerCase(), location]), scan: { event, timestamp: time.timestamp, code, address } };
 }
 
 /**
@@ -166,6 +173,7 @@ export function parseJanio(payload: unknown, raw: string): CarrierResult {
   const scanned = events.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
   const delivery = stage === 'delivered' ? scans.find((item) => item.code === DELIVERED)?.event.time : undefined;
+  const address = scans.find((item) => item.address)?.address;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned?.stage_source ?? 'carrier_map' } : {}),
@@ -173,6 +181,7 @@ export function parseJanio(payload: unknown, raw: string): CarrierResult {
     last_update: newest.time!,
     expected_delivery: null,
     ...(delivery ? { delivered_at: delivery } : {}),
+    ...(address ? { receiver_address: address } : {}),
     ...destination(shipment),
     ...partner(shipment, [number, own]),
     // A parcel found by its partner's reference has Janio's own number, as the page shows it.

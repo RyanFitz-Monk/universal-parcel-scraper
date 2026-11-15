@@ -39,13 +39,15 @@
     "shows": [
       "status",
       "history",
-      "office_contact_details"
+      "office_contact_details",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "offset_timestamps",
-      "delivered_at"
+      "delivered_at",
+      "signatory"
     ],
     "discarded": [
       "office_contact_details"

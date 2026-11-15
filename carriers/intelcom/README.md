@@ -15,7 +15,7 @@ The delivery estimate is the one the tracking page shows: a time window once a d
 ## Limitations
 
 Merchant references can identify Intelcom shipments without an Intelcom prefix. `INTLCM` numbers, including the lettered series such as `INTLCMD` and `INTLCMJ`, are
-Intelcom identifiers; the adapter sends the complete value. Detection suggests Intelcom for the `CRIN` family; shipper and merchant references need an explicit carrier or an Intelcom tracking link. Recipient addresses, driver names and proof images are discarded. Local scan clocks stay unresolved because Canada spans several timezones.
+Intelcom identifiers; the adapter sends the complete value. Detection suggests Intelcom for the `CRIN` family; shipper and merchant references need an explicit carrier or an Intelcom tracking link. The recipient's name is read, except on a collected return. Recipient addresses, driver names and proof images are not kept. Local scan clocks stay unresolved because Canada spans several timezones.
 
 ## Testing
 

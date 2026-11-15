@@ -131,6 +131,13 @@ export function parseInpostTrackingResponse(payload: unknown, trackingNumber: st
   // Of the destination only the country code is sent; the origin country feeds no field.
   const country = isRecord(payload.destination) ? payload.destination.countryCode : undefined;
   const destination = typeof country === 'string' && /^[A-Z]{2}$/.test(country) ? { destination_country: country } : {};
+  // The recipient as the hub names them. The phone is not kept.
+  const receiverName = clean(payload.receiverName, 160);
+  const receiverAddress = clean(payload.receiverAddress, 300);
+  const recipient = {
+    ...(receiverName ? { receiver_name: receiverName } : {}),
+    ...(receiverAddress ? { receiver_address: receiverAddress } : {}),
+  };
   if (!current) {
     return {
       status: 'unknown',
@@ -138,10 +145,15 @@ export function parseInpostTrackingResponse(payload: unknown, trackingNumber: st
       last_update: events[0]?.time ?? null,
       expected_delivery: null,
       ...destination,
+      ...recipient,
       events,
     };
   }
   const delivery = current.status === 'delivered' ? events.find((event) => event.stage === 'delivered') : undefined;
+  // The name the hub gives for a delivery's signature; an image or a link is not one.
+  const signature = clean(payload.signature, 121);
+  const signedBy = current.status === 'delivered' && signature.length <= 120 && /\p{L}/u.test(signature)
+    && !/^(?:data:|https?:)/i.test(signature) ? signature : '';
   return {
     status: current.status,
     current_stage: current.stage,
@@ -150,6 +162,8 @@ export function parseInpostTrackingResponse(payload: unknown, trackingNumber: st
     expected_delivery: null,
     ...(delivery ? { delivered_at: delivery.time } : {}),
     ...destination,
+    ...recipient,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events,
   };
 }

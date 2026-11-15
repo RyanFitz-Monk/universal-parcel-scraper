@@ -135,7 +135,8 @@ function weightKg(goods: Record<string, unknown>): number | undefined {
 /**
  * The reply of the tracker's lookup for one number. It repeats the number
  * sent as `track_code` and names the consignment's forwarding receipt, which
- * must end in that number, and lists its steps oldest first.
+ * must end in that number, and lists its steps oldest first. On a route to
+ * the door, the receiver block's address is the consignee's.
  */
 export function parseKit(payload: unknown, raw: string): CarrierResult {
   const number = normalizeKitNumber(raw);
@@ -198,6 +199,11 @@ export function parseKit(payload: unknown, raw: string): CarrierResult {
   // The page names the terminal in the consignee's city by its address; a
   // consignment collected there waits for the consignee at that terminal.
   const terminal = atTerminal ? text(payload, 'address') : '';
+  // The delivery details' receiver block is the consignee's address on a route to the door; on
+  // others it names the terminal or the pickup point.
+  const receiver = details.EReci;
+  const address = !atTerminal && deliveryType !== 'PVZ' && isRecord(receiver) && typeof receiver.Address === 'string'
+    ? clean(receiver.Address, 300) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
@@ -206,6 +212,7 @@ export function parseKit(payload: unknown, raw: string): CarrierResult {
     last_update_local: scans[0]!.order,
     expected_delivery: null,
     ...(terminal ? { pickup_point: terminal } : {}),
+    ...(address ? { receiver_address: address } : {}),
     ...(weight !== undefined ? { weight_kg: weight } : {}),
     events,
   };

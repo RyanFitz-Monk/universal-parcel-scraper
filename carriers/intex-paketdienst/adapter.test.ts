@@ -38,7 +38,7 @@ describe('INTEX Paketdienst tracking adapter', () => {
     const result = normalizeCarrierResult(parseIntex(delivered, DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'wording:language',
       last_status_text: 'Zugestellt', last_update: '2026-01-13T11:05:00+01:00', expected_delivery: null,
-      delivered_at: '2026-01-13T11:05:00+01:00', destination_country: 'DE' });
+      delivered_at: '2026-01-13T11:05:00+01:00', destination_country: 'DE', receiver_address: 'D-12345 Musterstadt' });
     expect(result.events!.map((event) => [event.time, event.description, event.stage, event.stage_source])).toEqual([
       ['2026-01-13T11:05:00+01:00', 'Zugestellt', 'delivered', 'wording:language'],
       ['2026-01-13T05:31:00+01:00', 'Eingang Auslieferstation', 'in_transit', 'carrier_map'],
@@ -48,8 +48,8 @@ describe('INTEX Paketdienst tracking adapter', () => {
       ['2026-01-12T16:20:00+01:00', 'Dateneingang INTEX', 'registered', 'carrier_map'],
     ]);
     expect(result.events!.every((event) => event.local_time === undefined && event.location === undefined)).toBe(true);
-    // The recipient's postcode and town and the partner's parcel number stay out.
-    expect(JSON.stringify(result)).not.toMatch(/12345|Musterstadt|09900000001|derkurier/);
+    // The partner's parcel number stays out.
+    expect(JSON.stringify(result)).not.toMatch(/09900000001|derkurier/);
   });
 
   it('reads a shipment in transit on the summer offset, typed with or without its hyphen', async () => {
@@ -57,7 +57,7 @@ describe('INTEX Paketdienst tracking adapter', () => {
     for (const typed of [IN_TRANSIT, '40000021']) {
       const result = await carrier(fetcher).track({ number: typed });
       expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Eingang Auslieferstation',
-        last_update: '2026-06-11T05:56:00+02:00', destination_country: 'DE' });
+        last_update: '2026-06-11T05:56:00+02:00', destination_country: 'DE', receiver_address: 'D-54321 Beispielhausen' });
       expect(result).not.toHaveProperty('delivered_at');
       expect(result.events!.map((event) => [event.time, event.stage])).toEqual([
         ['2026-06-11T05:56:00+02:00', 'in_transit'],
@@ -79,6 +79,7 @@ describe('INTEX Paketdienst tracking adapter', () => {
   it('keeps a destination outside Germany unnamed', () => {
     const abroad = edit(($) => { $('table.shipment_data th').eq(3).text('L-1234 Beispieldorf'); });
     expect(parseIntex(abroad, DELIVERED)).not.toHaveProperty('destination_country');
+    expect(parseIntex(abroad, DELIVERED)).toMatchObject({ receiver_address: 'L-1234 Beispieldorf' });
   });
 
   it('binds the page to the whole number asked', () => {

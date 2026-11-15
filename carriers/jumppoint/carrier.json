@@ -45,7 +45,8 @@
       "driver_name",
       "contact_details",
       "customer_reference",
-      "remarks"
+      "remarks",
+      "signatory"
     ],
     "scraped": [
       "status",
@@ -54,22 +55,22 @@
       "eta",
       "delivered_at",
       "offset_timestamps",
-      "pickup_point"
+      "pickup_point",
+      "signatory",
+      "remarks"
     ],
     "discarded": [
       "office_contact_details",
       "office_opening_hours",
       "driver_name",
       "contact_details",
-      "customer_reference",
-      "remarks"
+      "customer_reference"
     ],
     "unavailable": [
       "location",
       "weight",
       "service_name",
       "proof_of_delivery",
-      "signatory",
       "sender_name",
       "recipient_name",
       "recipient_address",

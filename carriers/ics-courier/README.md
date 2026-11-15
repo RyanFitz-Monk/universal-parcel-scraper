@@ -34,10 +34,10 @@ points. Tracked through its tracking page's own lookup.
   is 01:00 on the label's day, not the time it was made.
 - Branch rows name the branch's town and province, which become the scan's location. Quebec
   branches use `PQ`.
-- The delivered row goes on to name the recipient and their address, and the picked-up row the
-  shipper or drop-off shop. Only their openings are kept. A delivery attempt keeps the driver's
-  reason unless it holds a digit. The signatory, the signature image and the recipient and
-  shipper details are not kept.
+- The delivered row goes on to name the recipient and their address in one run of text, and the
+  picked-up row the shipper or drop-off shop. Their wording is kept and they are staged by their
+  opening. A delivery attempt keeps the driver's reason. The summary's signatory is read; the
+  signature image is not.
 - A parcel left at a SMARTSpot shows the point's name, address, hours and position in a panel.
   The name and address become the `pickup_point`; the hours and coordinates are not kept.
 - The summary's estimated delivery day is kept while the parcel is on its way and the day has

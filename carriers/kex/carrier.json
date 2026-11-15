@@ -56,7 +56,8 @@
       "courier_name",
       "contact_details",
       "signature",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -65,14 +66,15 @@
       "provider_code",
       "eta",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
       "origin",
       "destination",
       "sender_name",
-      "recipient_name",
       "customer_reference",
       "courier_name",
       "contact_details",

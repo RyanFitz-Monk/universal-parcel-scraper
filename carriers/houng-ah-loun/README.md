@@ -31,9 +31,9 @@ the destination branch. Tracked through the lookup its parcel page makes.
   still reads as a delivery, so the adapter reads the history instead.
 - A message loses what follows ` - `, the staff member who scanned the parcel and a phone number,
   unless it names a branch, a branch's warehouse or a sorting centre. Other phone numbers go too.
-- The summary's sender and recipient names, the recipient's partly masked phone number, the
-  branches and their phone numbers, the parcel's category, size and weight, and the charges are
-  not kept. The page shows most of them only to the sender or recipient once logged in.
+- The summary's recipient name is read. Its sender, the recipient's partly masked phone number,
+  the branches and their phone numbers, the parcel's category, size and weight, and the charges
+  are not kept. The page shows most of them only to the sender or recipient once logged in.
 
 ## Limitations
 

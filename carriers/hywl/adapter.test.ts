@@ -4,7 +4,7 @@ import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, HYWL_API, HywlTracker } from './adapter.js';
-import { hywlEnglishHalf, hywlPlace, hywlWording, normalizeHywlNumber, parseHywl } from './parser.js';
+import { hywlEnglishHalf, hywlPlace, hywlSignedBy, normalizeHywlNumber, parseHywl } from './parser.js';
 import { hywlStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -45,7 +45,7 @@ describe('Huiyi Logistics HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('dates the rows in China on Beijing’s clock, keeps the others’ wall clocks, newest first, and drops the office code', () => {
+  it('dates the rows in China on Beijing’s clock, keeps the others’ wall clocks, newest first, and places the pickup in its town', () => {
     const result = parseHywl(fixture('in-transit'), IN_TRANSIT, LATER);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Arrival at Transit Hub [Sample Transit Hub]', last_update: null, last_update_local: '2026-03-11T08:21:00',
@@ -63,37 +63,47 @@ describe('Huiyi Logistics HTTP adapter', () => {
       ['2026-02-26T15:40:00+08:00', 'In Transit', 'in_transit', 'Dongguan'],
       ['2026-02-24T10:12:00+08:00', 'Picked Up', 'accepted', 'Dongguan'],
     ]);
-    expect(result.events!.at(-1)!.description).toBe('Shipment accepted [Dongguan], received by SZHYWL');
+    // The wording keeps the office code; the pickup's place is not the recipient's.
+    expect(result.events!.at(-1)!.description).toBe('Shipment accepted [Dongguan 00000017], received by SZHYWL');
+    expect(result).not.toHaveProperty('receiver_address');
     expect(result.events!.every((event) => !(event.time && event.local_time))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/\d{4,}(?![-:T\d])|UTC|\+00:00/);
+    expect(JSON.stringify(result)).not.toMatch(/UTC|\+00:00/);
   });
 
-  it('reads the bilingual rows in English without the destination’s postcode and drops a repeated row', () => {
+  it('reads the bilingual rows in English, the destination’s postcode as the delivery address, and drops a repeated row', () => {
     const result = parseHywl(fixture('delivered'), DELIVERED, LATER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered [Villefixe]', last_update_local: '2026-01-29T14:17:09', destination_country: 'FR' });
+      last_status_text: 'Delivered [Villefixe, 00000]', last_update_local: '2026-01-29T14:17:09', destination_country: 'FR',
+      receiver_address: 'Villefixe, 00000' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events).toHaveLength(14);
     expect(result.events!.map((event) => [event.stage, event.location])).toEqual([
       ['delivered', 'Villefixe'], ['out_for_delivery', 'Villefixe'], ['in_transit', 'Villefixe'], ['in_transit', 'Villefixe'],
       ['in_transit', 'FR'], ['in_transit', 'FR'], ['in_transit', '惠州'], ['in_transit', '惠州'], ['in_transit', '惠州'], ['in_transit', '惠州'],
       ['in_transit', '东莞'], ['in_transit', '东莞'], ['in_transit', '东莞'], ['accepted', '东莞市'],
     ]);
-    expect(result.events!.at(-1)!.description).toBe('东莞市, SZHYWL已收取邮件');
+    expect(result.events!.at(-1)!.description).toBe('东莞市 00000011, SZHYWL已收取邮件');
     expect(result.events!.slice(3, 10).map((event) => event.description)).toEqual([
-      'Arrival at Processing Center [Villefixe]', 'In Transit [FR]', 'Arrival at [FR]', 'Customs Clearance Completed [惠州]',
+      'Arrival at Processing Center [Villefixe, 00000]', 'In Transit [FR]', 'Arrival at [FR]', 'Customs Clearance Completed [惠州]',
       'In Transit [惠州]', 'Departure from [惠州]', 'Received by Carrier [惠州]',
     ]);
     expect(result.events![10]!.description).toBe('东莞, 邮件离开处理中心【东莞】');
-    expect(JSON.stringify(result)).not.toMatch(/00000|UTC/);
+    expect(JSON.stringify(result)).not.toMatch(/UTC/);
   });
 
-  it('takes a place apart from its postcode and keeps wording without one', () => {
+  it('keeps a delivered row’s signatory in its wording and reads it', () => {
+    const reply = fixture('delivered') as { events: { description: string; status_code: string }[] };
+    reply.events.at(-1)!.description = 'Delivered [Villefixe, 00000], signed by Sample Person';
+    expect(parseHywl(reply, DELIVERED, LATER)).toMatchObject({ current_stage: 'delivered',
+      last_status_text: 'Delivered [Villefixe, 00000], signed by Sample Person', signed_by: 'Sample Person' });
+  });
+
+  it('takes a place apart from its postcode and reads who signed', () => {
     expect(['Villefixe, 00000', '00000 Villefixe', 'Sampletown 00000017', '样本市00000011', 'Exampleton, AB1 2CD', 'Sample Hub', 'FR', '']
       .map(hywlPlace)).toEqual(['Villefixe', '', 'Sampletown', '样本市', 'Exampleton', 'Sample Hub', 'FR', '']);
-    expect(hywlWording('Arrival【00000 Villefixe】, 抵达【00000 Villefixe】', '00000 Villefixe', '')).toBe('Arrival, 抵达');
-    expect(hywlWording('Delivered [Villefixe], signed by Sample Person', 'Villefixe', 'Villefixe')).toBe('Delivered [Villefixe]');
-    expect(hywlWording('已妥投【样本市】，签收人：样本', '样本市', '样本市')).toBe('已妥投【样本市】');
-    expect(hywlWording('Arrived at the hub serving 00000', '', '')).toBe('Arrived at the hub serving');
+    expect(hywlSignedBy('Delivered [Villefixe], signed by Sample Person')).toBe('Sample Person');
+    expect(hywlSignedBy('已妥投【样本市】，签收人：样本')).toBe('样本');
+    expect(hywlSignedBy('Delivered [Villefixe]')).toBe('');
   });
 
   it('keeps the English half of a bilingual row only when the Chinese half adds no place or Latin text', () => {

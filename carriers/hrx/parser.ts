@@ -73,6 +73,8 @@ export function parseHrx(payload: unknown, rawNumber: string): CarrierResult {
   const delivered = stage === 'delivered' ? events.find(event => event.stage === 'delivered') : undefined;
   const country = clean(payload.delivery_location_country, 8).toUpperCase();
   const weight = weightOf(payload.weight_kg);
+  // The order's delivery address: the recipient's door, or the locker or point it goes to.
+  const address = [clean(payload.delivery_location_address, 200), clean(payload.delivery_location_city, 100)].filter(Boolean).join('\n');
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
@@ -83,6 +85,7 @@ export function parseHrx(payload: unknown, rawNumber: string): CarrierResult {
     ...(delivered ? { delivered_at: delivered.time } : {}),
     ...(/^[A-Z]{2}$/.test(country) ? { destination_country: country } : {}),
     ...(weight ? { weight_kg: weight } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, 100),
     ...(events.length > 100 ? { history_truncated: true } : {}),
   };

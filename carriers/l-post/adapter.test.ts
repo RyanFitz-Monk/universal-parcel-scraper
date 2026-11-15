@@ -60,6 +60,8 @@ describe('L-POST HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Выполнено', last_update: null, last_update_local: '2026-05-12T15:58:00', expected_delivery: null,
       sender_name: 'Sample Shop', pickup_point: 'ул. Вымышленная, д. 0\nSample Mall, floor 0' });
+    // A pickup point's address is the point's, not the recipient's.
+    expect(result).not.toHaveProperty('receiver_address');
     expect(result.events!.map((event) => [event.local_time, event.provider_code, event.stage ?? null])).toEqual([
       ['2026-05-12T15:58:00', 'R2', null],
       ['2026-05-12T15:40:00', 'R1', null],
@@ -80,7 +82,7 @@ describe('L-POST HTTP adapter', () => {
     expect(normalizeCarrierResult(result).pickup_point).toBe(result.pickup_point);
   });
 
-  it('reads a courier order waiting for its courier as in transit, with its window and without the recipient’s address', () => {
+  it('reads a courier order waiting for its courier as in transit, with its window and the recipient’s address', () => {
     const result = parse(order('order-courier-in-transit'), history('history-in-transit'));
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'Размещено в пункте доставки', last_update_local: '2026-06-01T07:12:00', expected_delivery: '2026-06-02 10:00–18:00' });
@@ -91,7 +93,8 @@ describe('L-POST HTTP adapter', () => {
     ]);
     expect(result).not.toHaveProperty('pickup_point');
     expect(result).not.toHaveProperty('sender_name');
-    expect(JSON.stringify(result)).not.toMatch(/Образцов|Вымышленная|кв\./);
+    expect(result.receiver_address).toBe('г. Образцов, ул. Вымышленная, д. 0, кв. 0');
+    expect(JSON.stringify(result.events)).not.toMatch(/Образцов|Вымышленная|кв\./);
     // A window of single-digit hours reads on the clock; one missing an hour, or not ending after it starts, leaves the day.
     const window = (TimeFrom: unknown, TimeTo: unknown) => parse(order('order-courier-in-transit', (details) => {
       Object.assign(details, { TimeFrom, TimeTo });

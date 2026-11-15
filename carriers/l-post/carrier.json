@@ -61,11 +61,11 @@
       "eta",
       "eta_window",
       "pickup_point",
-      "sender_name"
+      "sender_name",
+      "recipient_address"
     ],
     "discarded": [
       "pickup_deadline",
-      "recipient_address",
       "payment_details",
       "office_contact_details",
       "delivery_method",

@@ -44,10 +44,11 @@ describe('Jersey Post HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the delivered history with its places and wall clocks, without the proof of delivery or the repeated scan', () => {
+  it('keeps the delivered history with its places and wall clocks, who signed and not the repeated scan', () => {
     const result = parseJerseyPost(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Item delivered to customer', last_update: null, last_update_local: '2026-03-12T10:41:00' });
+      last_status_text: 'Item delivered to customer', last_update: null, last_update_local: '2026-03-12T10:41:00',
+      signed_by: 'SAMPLE SIGNER' });
     expect(result.events!.map((event) => [event.local_time, event.stage ?? null, event.location ?? null])).toEqual([
       ['2026-03-12T10:41:00', 'delivered', 'Sampleland'],
       ['2026-03-11T09:05:00', 'ready_for_pickup', 'Sampleland'],
@@ -66,7 +67,7 @@ describe('Jersey Post HTTP adapter', () => {
     expect(result.events![2]).toMatchObject({ description: 'Unsuccessful Delivery Attempt - Incorrect/illegible/incomplete address' });
     // The reply names no zone, so no clock becomes an instant.
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE SIGNER|pod|carrierLogo|base64/i);
+    expect(JSON.stringify(result)).not.toMatch(/podDate|carrierLogo|base64/i);
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivery_tracking_number');
   });
@@ -76,6 +77,9 @@ describe('Jersey Post HTTP adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: 'Item Held By Customs',
       last_update_local: '2026-05-19T06:14:00' });
     expect(result.events!.map((event) => event.description)).toEqual(['Item Held By Customs', 'Item Received', 'Item being sent to customer']);
+    expect(result).not.toHaveProperty('signed_by');
+    // A proof of delivery counts only once the item is delivered.
+    expect(parseJerseyPost(changed('in-transit', (item) => { item.pod = { podName: 'SAMPLE SIGNER' }; }), IN_TRANSIT)).not.toHaveProperty('signed_by');
   });
 
   it('reads a history listed oldest first newest first, as the page shows it', () => {

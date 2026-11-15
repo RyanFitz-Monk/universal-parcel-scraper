@@ -41,18 +41,20 @@
       "service_name",
       "sender_name",
       "recipient_name",
-      "office_contact_details"
+      "office_contact_details",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
-      "delivered_at"
+      "delivered_at",
+      "recipient_name",
+      "signatory"
     ],
     "discarded": [
       "service_name",
       "sender_name",
-      "recipient_name",
       "office_contact_details"
     ],
     "unavailable": []

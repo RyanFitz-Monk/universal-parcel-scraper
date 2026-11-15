@@ -51,12 +51,12 @@
       "location",
       "event_details",
       "delivered_at",
-      "destination_country"
+      "destination_country",
+      "signatory"
     ],
     "discarded": [
       "next_office",
-      "item_category",
-      "signatory"
+      "item_category"
     ],
     "unavailable": [
       "eta",

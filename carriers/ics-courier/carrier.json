@@ -52,7 +52,8 @@
       "history",
       "location",
       "eta",
-      "pickup_point"
+      "pickup_point",
+      "signatory"
     ],
     "discarded": [
       "office_opening_hours",
@@ -60,7 +61,6 @@
       "recipient_name",
       "recipient_address",
       "sender_details",
-      "signatory",
       "signature_images"
     ],
     "unavailable": [

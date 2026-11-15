@@ -99,12 +99,15 @@ export function parseIntelcom(payload: unknown, rawNumber: string): CarrierResul
   // null drops the client an earlier check named.
   const collected = [latestRaw, ...(history as unknown[])].some(row => isRecord(row) && row.task_type === 'last_mile_pickup');
   const client = typeof result.client_code === 'string' && Object.hasOwn(SHOWN_CLIENTS, result.client_code) ? SHOWN_CLIENTS[result.client_code] : undefined;
+  // The recipient the service names, unless the parcel is a return collected from them.
+  const receiver = collected ? '' : clean(result.recipient_name, 160);
   const output: CarrierResult = { status: latest.stage ? languageStageStatus(latest.stage as Stage) : 'unknown',
     last_status_text: latest.description!, last_update: latest.time ?? null,
     ...(latest.stage ? { current_stage: latest.stage, current_stage_source: latest.stage_source } : {}),
     ...(latest.stage === 'delivered' && latest.time ? { delivered_at: latest.time } : {}),
     ...estimate(result, latestRaw, latest.time ? Date.parse(latest.time) : null),
     ...(collected ? { sender_name: null } : client ? { sender_name: client } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
     ...(events.length ? { events: events.slice(0, 100) } : { summary_only: true, events: [] }) };
   return output;
 }

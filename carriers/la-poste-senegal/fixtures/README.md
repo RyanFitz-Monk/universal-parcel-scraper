@@ -7,7 +7,7 @@ clock, the country, the office, a mail category, the next office, the reasons an
 not delivered, and the signatory with the signature.
 
 `inbound-delivered.json` is mail from France held by customs and delivered in Senegal, with a
-repeated scan, an office written with a postcode and a signature. `in-transit.json` is an item
+repeated scan, an office written with a postcode and a delivery's signatory and signature. `in-transit.json` is an item
 posted in Senegal, bagged at the office of exchange. `not-found.json` is the reply for a code
 without a match.
 

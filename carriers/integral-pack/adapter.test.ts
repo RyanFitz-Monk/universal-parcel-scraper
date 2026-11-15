@@ -53,11 +53,12 @@ describe('Integral Pack HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a parcel collected at the destination agency with its wall clocks, the agency and the weight, without the people or the address', () => {
+  it('reads a parcel collected at the destination agency with its wall clocks, the agency, the weight and the recipient', () => {
     const result = parseIntegralPack(fixture('delivered'), DELIVERED);
     expect(result).toEqual({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Entregada', last_update: null, last_update_local: '2026-05-12T11:40:05', expected_delivery: null,
+      receiver_name: 'Sample r. P.', receiver_address: 'calle falsa, 123, X',
       pickup_point: 'VILLA EJEMPLO CENTRO\nAvenida Muestra 100', weight_kg: 3.5,
       events: [
         { local_time: '2026-05-12T11:40:05', location: 'VILLA EJEMPLO', description: 'Entregada', stage: 'delivered', stage_source: 'carrier_map' },
@@ -66,13 +67,14 @@ describe('Integral Pack HTTP adapter', () => {
         { local_time: '2026-05-08T18:25:44', location: 'PUEBLO MUESTRA', description: 'Creada', stage: 'accepted', stage_source: 'carrier_map' },
       ],
     });
-    expect(JSON.stringify(result)).not.toMatch(/Sample|calle falsa|Telefono|-30\.12|-60\.76|Tu paquete|00000001-1/);
+    expect(JSON.stringify(result)).not.toMatch(/0000 -\. S\. S\.|Telefono|-30\.12|-60\.76|Tu paquete|00000001-1/);
   });
 
   it('reads a parcel at the destination branch for the door without a pickup point or a weight', () => {
     const result = parseIntegralPack(fixture('in-transit'), MOVING);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_status_text: 'En destino', last_update: null, last_update_local: '2026-06-03T09:02:10' });
+    expect(result).toMatchObject({ receiver_name: 'Persona d. P.', receiver_address: 'calle de muestra, 456, Y' });
     expect(result).not.toHaveProperty('pickup_point');
     expect(result).not.toHaveProperty('weight_kg');
     expect(result.events!.map((event) => [event.local_time, event.location, event.stage])).toEqual([
@@ -80,7 +82,7 @@ describe('Integral Pack HTTP adapter', () => {
       ['2026-06-01T10:15:00', 'PUEBLO MUESTRA', 'accepted'],
     ]);
     expect(result.events!.every((event) => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Sample Shop|Persona|calle de muestra|Calle Ejemplo|000-0000000/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Shop|Calle Ejemplo|000-0000000/);
   });
 
   it('lets the current state settle the status, orders events by wall clock and leaves out an event without a name', () => {

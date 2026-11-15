@@ -64,21 +64,39 @@ const PLACE_RECEIVER = /^(?:mail ?box|letter ?box|post ?box|parcel (?:box|locker
 // between them, as phone numbers are written; a date stays.
 const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().\-/]{0,2}\d){8,}(?![A-Z\d])/gi;
 
+function tidy(text: string): string {
+  return clean(text.replace(/\s+([,，;；.。])/g, '$1')).replace(/^[\s,，;；]+|[\s,，;；]+$/g, '');
+}
+
+/** A receiver type that names where the courier left the parcel, such as a mail box. */
+function placeReceiver(clause: string, receiver: string): boolean {
+  return /^[\s,，;；]*Receiver Type/i.test(clause) && PLACE_RECEIVER.test(receiver.trim());
+}
+
 /**
- * A scan's wording without the people it names: the driver's phone, who
- * took the parcel, the proof-of-delivery link and the support footer go. A
- * receiver type that names a place, such as a mail box, stays. The centre
- * names in 【】 stay for the stage rules to read past.
+ * A scan's wording without the driver's phone, the proof-of-delivery link
+ * and the support footer. Who took the parcel stays, and so do the centre
+ * names in 【】 for the stage rules to read past.
  */
 export function imileWording(raw: string): string {
-  return clean(raw
+  return tidy(raw
     .replace(PROOF, ' ')
     .replace(SUPPORT, '')
     .replace(CONTACT, '')
-    .replace(RECEIVER, (clause: string, receiver: string) => /^[\s,，;；]*Receiver Type/i.test(clause) && PLACE_RECEIVER.test(receiver.trim()) ? clause : '')
-    .replace(PHONE, '')
-    .replace(/\s+([,，;；.。])/g, '$1'))
-    .replace(/^[\s,，;；]+|[\s,，;；]+$/g, '');
+    .replace(PHONE, ''));
+}
+
+/** The wording a scan is staged by: without who took the parcel, unless the receiver type names a place. */
+function stagingWording(wording: string): string {
+  return tidy(wording.replace(RECEIVER, (clause: string, receiver: string) => placeReceiver(clause, receiver) ? clause : ''));
+}
+
+/** Who took the parcel, as a scan names them in 【】: "Self", "Family" or a name. A place is not one. */
+export function imileReceiver(wording: string): string {
+  for (const match of wording.matchAll(RECEIVER)) {
+    if (!PLACE_RECEIVER.test(match[1]!.trim())) return clean(match[1], 120);
+  }
+  return '';
 }
 
 /**
@@ -107,13 +125,13 @@ function stageCode(row: Record<string, unknown>): string {
   return code;
 }
 
-function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent } | null {
+function projectRow(row: Record<string, unknown>): { key: string; event: CarrierEvent; receiver: string } | null {
   const code = stageCode(row);
   const written = imileWording(text(row, 'content', 2_000)) || text(row, 'trackStageTx', 120);
   if (!written) throw new SchemaError(PROVIDER, 'iMile returned a scan without wording');
   const local = scanClock(row);
   const location = text(row, 'operateStationName', 120);
-  const staged = imileStage(code, written);
+  const staged = imileStage(code, stagingWording(written));
   const description = imileDisplayWording(written, location);
   // A row that only books a flight is still to come: no scan.
   if (!description) return null;
@@ -125,7 +143,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local, code, description, location]), event };
+  return { key: JSON.stringify([local, code, description, location]), event, receiver: staged?.stage === 'delivered' ? imileReceiver(written) : '' };
 }
 
 /**
@@ -151,12 +169,14 @@ export function parseImile(payload: unknown, raw: string): CarrierResult {
 
   const seen = new Set<string>();
   const events: CarrierEvent[] = [];
+  const receivers = new Map<CarrierEvent, string>();
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'iMile returned an invalid scan');
     const scan = projectRow(row);
     if (!scan || seen.has(scan.key)) continue;
     seen.add(scan.key);
     events.push(scan.event);
+    if (scan.receiver) receivers.set(scan.event, scan.receiver);
   }
   if (!events.length) throw new NoHistoryError(PROVIDER);
   // Newest first, as the page lists them; an oldest-first reply is turned round.
@@ -172,8 +192,12 @@ export function parseImile(payload: unknown, raw: string): CarrierResult {
     return time ? { time, ...event } : { local_time, ...event };
   }) : newestFirst;
   const summary = imileSummary(placed);
+  const delivered = summary.current_stage === 'delivered'
+    ? newestFirst.find((event) => event.stage === 'delivered' && event.stage_source !== 'none') : undefined;
+  const signedBy = delivered ? receivers.get(delivered) ?? '' : '';
   return {
     ...summary,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     expected_delivery: summary.current_stage === 'delivered' || summary.current_stage === 'returned' ? null : scheduledDay(placed),
     ...(country ? { destination_country: country } : {}),
     events: placed.slice(0, MAX_EVENTS),

@@ -31,13 +31,14 @@ describe('Canadian Intelcom / Dragonfly response', () => {
     expect(parseIntelcom(payload, NUMBER)).toMatchObject({ status: 'delivered', current_stage_source: 'carrier_map' });
   });
 
-  it('projects English milestone labels and explicit scan clocks without recipient or driver details', () => {
+  it('projects English milestone labels, explicit scan clocks and the recipient, without the driver or the address', () => {
     const result = parseIntelcom(fixture(), NUMBER);
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivered_at: '2026-01-03T17:00:00Z' });
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivered_at: '2026-01-03T17:00:00Z',
+      receiver_name: 'Synthetic recipient' });
     expect(result.events).toHaveLength(3);
     expect(result.events?.[1]).toMatchObject({ description: 'Out for delivery', stage: 'out_for_delivery', provider_code: 'OFD' });
     expect(result.events?.[0]?.stage_source).toMatch(/^wording:/);
-    expect(JSON.stringify(result)).not.toMatch(/Synthetic driver|Synthetic recipient|Private details|street/);
+    expect(JSON.stringify(result)).not.toMatch(/Synthetic driver|Private details|street/);
   });
 
   it('rejects wrong identity, malformed rows and excessive history', () => {
@@ -157,10 +158,12 @@ describe('Intelcom estimates, returns and senders', () => {
       step, timestamp, isDelivered, task_type: 'last_mile_pickup', showEta: false, etaType: 'none', labels: { shortLabel: { en: label } } });
     const rows = [row(850, 4, 'Mission accomplished!', 1767459600000), row(602, 3, 'We got it!', 1767456000000, true),
       row(200, 2, 'We\'re on our way!', 1767448800000), row(0, 1, 'Pickup requested by merchant.', 1767362400000)];
-    const payload = { success: true, data: { code: 'found', result: { tracking_id: NUMBER, client_code: 'AMAZON', last_status: rows[0]!, status_list: rows } } };
+    const payload = { success: true, data: { code: 'found', result: { tracking_id: NUMBER, client_code: 'AMAZON', recipient_name: 'Synthetic customer',
+      last_status: rows[0]!, status_list: rows } } };
     const result = parseIntelcom(payload, NUMBER);
-    // The client the return goes to is not its sender.
+    // The client the return goes to is not its sender, and the customer it was collected from is not its recipient.
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', sender_name: null });
+    expect(result).not.toHaveProperty('receiver_name');
     expect(result.events?.map(event => event.stage)).toEqual(['in_transit', 'accepted', 'registered', 'registered']);
     expect(result).not.toHaveProperty('delivered_at');
     payload.data.result.last_status = rows[1]!;

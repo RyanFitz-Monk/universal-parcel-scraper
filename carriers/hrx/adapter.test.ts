@@ -30,11 +30,11 @@ describe('HRX guest adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'hrx', step: 'direct', outcome: 'ok' }));
   });
 
-  it('reads events newest first with their stated offsets, places, country and weight', () => {
+  it('reads events newest first with their stated offsets, places, country, weight and delivery address', () => {
     const result = parseHrx(fixture(), NUMBER);
     expect(result).toMatchObject({ status: languageStageStatus('ready_for_pickup'), current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map',
       last_status_text: 'Ready for pickup - customer notified', last_update: '2026-03-04T10:20:00+02:00',
-      expected_delivery: null, destination_country: 'LV', weight_kg: 1.25 });
+      expected_delivery: null, destination_country: 'LV', weight_kg: 1.25, receiver_address: 'PRIVATE-ADDRESS 1\nPRIVATE-CITY' });
     expect(result.delivered_at).toBeUndefined();
     expect(result.events!.map(event => event.provider_code)).toEqual(['notified', 'moved', 'delivered_to_partner', 'hrx_terminal_out',
       'hrx_terminal_in', 'hrx_picked_up', 'ready', 'created']);
@@ -44,7 +44,7 @@ describe('HRX guest adapter', () => {
       provider_code: 'notified', location: 'Synthetic Locker 12', stage: 'ready_for_pickup', stage_source: 'carrier_map' });
     expect(result.events![1]!.location).toBeUndefined();
     expect(result.events!.at(-1)!.location).toBeUndefined();
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|30\.0|20\.0|10\.0|length|width|height/);
+    expect(JSON.stringify(result)).not.toMatch(/30\.0|20\.0|10\.0|length|width|height/);
   });
 
   it('dates a delivery from its event and keeps a later unread event from hiding it', () => {

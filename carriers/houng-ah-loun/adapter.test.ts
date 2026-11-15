@@ -63,8 +63,9 @@ describe('HAL Express HTTP adapter', () => {
       ['2026-03-02T09:15:20', '2', 'accepted', 'ສາຂາ ທົດລອງໜຶ່ງ', 'ຮັບພັດສະດຸແລ້ວ'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map' && !event.provider_leg)).toBe(true);
-    // The staff, phone numbers, sender, recipient, branches' details, charges and parcel details are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/ສົມມຸດ|ຕົວຢ່າງ ທົດລອງ|ເບີໂທ|00000000|ຜູ້ສົ່ງ|Sample Receiver|\*\*\*\*|ເຄື່ອງທົດລອງ|HC1-2-3|20000|weight/);
+    // The recipient is read; the staff, phone numbers, sender, branches' details, charges and parcel details are not.
+    expect(result.receiver_name).toBe('Sample Receiver');
+    expect(JSON.stringify(result)).not.toMatch(/ສົມມຸດ|ຕົວຢ່າງ ທົດລອງ|ເບີໂທ|00000000|ຜູ້ສົ່ງ|\*\*\*\*|ເຄື່ອງທົດລອງ|HC1-2-3|20000|weight/);
   });
 
   it('reads a parcel on its way, a booking by the reply’s own name for it', () => {

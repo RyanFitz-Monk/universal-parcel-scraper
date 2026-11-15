@@ -80,7 +80,7 @@ describe('Intel-Valley HTTP adapter', () => {
     for (const excluded of ['SAMPLEORDER0001', '900000', '800000', '518000', '英国']) expect(json).not.toContain(excluded);
   });
 
-  it('stages new wording through the shared rules, drops who took a delivery, and keeps the onward number', () => {
+  it('stages new wording through the shared rules, reads the signatory, and keeps the onward number', () => {
     const worded = parseIntelValley(changed((item) => {
       item.channel_hawbcode = 'SAMPLE0000000001';
       item.details = [scan('2026-07-08 08:00:00', 'Delivered, signed by SAMPLE RECIPIENT', 'SAMPLE TOWN'), scan('2026-07-08 07:00:00', 'Out for delivery'),
@@ -90,6 +90,14 @@ describe('Intel-Valley HTTP adapter', () => {
       ['Delivered', 'delivered', 'wording:language'], ['Out for delivery', 'out_for_delivery', 'wording:language'],
       ['Sample Status Note', undefined, undefined]]);
     expect(worded).toMatchObject({ status: 'delivered', current_stage: 'delivered', delivery_tracking_number: 'SAMPLE0000000001' });
+    expect(worded).not.toHaveProperty('signed_by');
+    // The reply's signatory is who took the delivered parcel; before the delivery nobody has.
+    const signed = parseIntelValley(changed((item) => {
+      item.signatory_name = 'SAMPLE RECIPIENT';
+      item.details = [scan('2026-07-08 08:00:00', 'Delivered', 'SAMPLE TOWN'), scan('2026-07-08 07:00:00', 'Out for delivery')];
+    }), PARCEL);
+    expect(signed).toMatchObject({ current_stage: 'delivered', signed_by: 'SAMPLE RECIPIENT' });
+    expect(parseIntelValley(changed((item) => { item.signatory_name = 'SAMPLE RECIPIENT'; }), PARCEL)).not.toHaveProperty('signed_by');
     // A shipment order recorded after the parcel left keeps it where it was.
     const ordered = parseIntelValley(changed((item) => {
       item.details = [scan('2026-07-02 08:00:00', 'Shipment information received'), scan('2026-07-01 10:50:31', 'During transportation')];

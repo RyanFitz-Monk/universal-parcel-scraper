@@ -37,11 +37,11 @@ describe('Hunter Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered history, newest first, with the instants the page gives and the weight', () => {
+  it('reads a delivered history, newest first, with the instants the page gives, the weight, the suburb and who received it', () => {
     const result = parseHunterExpress(text('delivered.html'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered', last_update: '2026-04-15T13:15:00+10:00', delivered_at: '2026-04-15T13:15:00+10:00',
-      expected_delivery: null, weight_kg: 12 });
+      expected_delivery: null, weight_kg: 12, receiver_address: 'Sampletown VIC, 0000', signed_by: 'SAMPLE' });
     expect(result.events).toEqual([
       { time: '2026-04-15T13:15:00+10:00', description: 'Delivered', stage: 'delivered', stage_source: 'carrier_map' },
       { time: '2026-04-14T21:40:12Z', location: 'SAMPLEVILLE', description: 'On Delivery', stage: 'out_for_delivery', stage_source: 'carrier_map' },
@@ -50,7 +50,7 @@ describe('Hunter Express HTTP adapter', () => {
       { time: '2026-04-14T09:12:00+10:00', description: 'Pickup Completed', stage: 'accepted', stage_source: 'carrier_map' },
     ]);
     expect(result).not.toHaveProperty('expected_delivery_from');
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE \(|Sampletown|VIC|199999980|17\/04|-10\.0|mydel/);
+    expect(JSON.stringify(result)).not.toMatch(/SAMPLE \(|199999980|17\/04|-10\.0|mydel/);
   });
 
   it('adds the newer dated status above the history and reads the estimate window', () => {
@@ -64,7 +64,9 @@ describe('Hunter Express HTTP adapter', () => {
       ['2026-02-03T07:50:00Z', 'Depot In', 'in_transit'],
       ['2026-02-03T14:05:00+11:00', 'Pickup Completed', 'accepted'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Sample note|Sample Name|Approx|Sampletown|8:03|08:03/);
+    expect(result).toMatchObject({ receiver_address: 'Sampletown VIC, 0000' });
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(/Sample note|Sample Name|Approx|8:03|08:03/);
   });
 
   it('leaves out a dated status that the history already reaches', () => {

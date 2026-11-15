@@ -33,6 +33,8 @@ export interface JAndTNetwork {
   readonly layout: string;
   /** The network's own cleaning of a scan's sentence, before the shared one. */
   readonly wording?: (sentence: string) => string;
+  /** Whether a sentence keeps who signed for, received or collected the parcel, the delivery's being its signatory. */
+  readonly signatory?: boolean;
   readonly stage: (wording: string) => ClassifiedWording | null;
 }
 
@@ -92,6 +94,8 @@ const BRACKETED = /【[^】]{0,200}】|\[[^\]]{0,200}\]/gu;
 const HOTLINE = /\s*(?:customer\s+service(?:\s+(?:hotline|number))?|(?:官网)?客服(?:热线|电话)?)\s*[:：]?\s*\+?\d[\d\s-]*\d/giu;
 // Who signed for, received or collected the parcel, to the end of the sentence: "signed for by Sample Person".
 const RECEIVER = /\b((?:signed(?:\s+for)?|received|collected)\s+)by\b[^.。;；]*/giu;
+// The same person, in brackets or to the end of the sentence: "signed for by [Sample Person]".
+const RECEIVER_NAME = /\b((?:signed(?:\s+for)?|received|collected)\s+by\s+)(?:\[([^\]]{1,120})\]|【([^】]{1,120})】|([^.。;；[【]{1,120}))/iu;
 const ROLES = 'courier|driver|rider|recipient|receiver|consignee|signer|signatory|sender|contact';
 // A role followed by its person, after a colon or in brackets: "Courier: Sample Person", "driver (Sample Person)".
 const PERSON = String.raw`(?:\s*[:：][^.。;；,，]*|(?:\s*(?:\([^)]{0,200}\)|（[^）]{0,200}）))+)`;
@@ -105,12 +109,23 @@ const PHONE = /(?<![A-Z\d])(?!\d{4}-\d{2}-\d{2}(?!\d))\+?\d(?:[\s().-]{0,2}\d){7
 /**
  * A scan's sentence without the people and phones it can name: anything in
  * brackets, the customer service line and the courtesy that offers it, who
- * signed for the parcel, a person after their role, and phone numbers.
+ * signed for the parcel, a person after their role, and phone numbers. With
+ * `receiver`, who signed for, received or collected the parcel stays.
  */
-export function jAndTWording(sentence: string): string {
-  return clean(withoutCourtesy(sentence).replace(BRACKETED, ' ').replace(HOTLINE, '').replace(RECEIVER, '$1').replace(NAMED, '$1')
+export function jAndTWording(sentence: string, { receiver = false }: { receiver?: boolean } = {}): string {
+  const kept = receiver
+    ? sentence.replace(RECEIVER_NAME, (_, by: string, square?: string, corner?: string, bare?: string) => `${by}${square ?? corner ?? bare}`)
+    : sentence;
+  const text = withoutCourtesy(kept).replace(BRACKETED, ' ').replace(HOTLINE, '');
+  return clean((receiver ? text : text.replace(RECEIVER, '$1')).replace(NAMED, '$1')
     .replace(NAMED_ZH, '$1').replace(PHONE, '').replace(/\(\s*\)|（\s*）/gu, '').replace(/\s+([,.;:!?，。；：])/gu, '$1'))
     .replace(/([,;:，；：])(?=[.。])/gu, '').replace(BARE_ROLE, '').replace(/^[\s,;:，；：\-–]+|[\s,;:，；：\-–]+$/gu, '');
+}
+
+/** Who a sentence says signed for, received or collected the parcel, without a phone. */
+export function jAndTReceiver(sentence: string): string {
+  const match = RECEIVER_NAME.exec(withoutCourtesy(sentence));
+  return match ? clean((match[2] ?? match[3] ?? match[4] ?? '').replace(PHONE, ''), 120) : '';
 }
 
 /** Any waybill a record names must be the one asked. */
@@ -138,23 +153,30 @@ function scanTime(network: JAndTNetwork, row: Record<string, unknown>): string {
   return parsed.toISO({ suppressMilliseconds: true });
 }
 
-/** One scan: its instant and its sentence. A sentence that named only people or phones is no scan. */
-function projectRow(network: JAndTNetwork, row: Record<string, unknown>, number: string): { key: string; event: CarrierEvent } | null {
+/**
+ * One scan: its instant and its sentence, and who took the parcel when the
+ * network keeps them. A sentence that named only people or phones is no scan.
+ * The scan is staged by its sentence without them.
+ */
+function projectRow(network: JAndTNetwork, row: Record<string, unknown>, number: string): { key: string; event: CarrierEvent; receiver: string } | null {
   checkIdentity(network, row, number);
   if (typeof row.customerTracking !== 'string' || !clean(row.customerTracking)) {
     throw new SchemaError(network.provider, `${network.provider} returned a scan without wording`);
   }
   const time = scanTime(network, row);
   const sentence = clean(row.customerTracking, 1000);
-  const description = jAndTWording(network.wording ? network.wording(sentence) : sentence).slice(0, 300);
-  if (!description) return null;
-  const staged = network.stage(description);
+  const prepared = network.wording ? network.wording(sentence) : sentence;
+  const scrubbed = jAndTWording(prepared).slice(0, 300);
+  if (!scrubbed) return null;
+  const receiver = network.signatory ? jAndTReceiver(prepared) : '';
+  const description = receiver ? jAndTWording(prepared, { receiver: true }).slice(0, 300) : scrubbed;
+  const staged = network.stage(scrubbed);
   const event: CarrierEvent = {
     time,
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([time, description]), event };
+  return { key: JSON.stringify([time, description]), event, receiver };
 }
 
 /** The refusal or failure a reply that is not an answer stands for. */
@@ -195,12 +217,14 @@ export function parseJAndT(network: JAndTNetwork, payload: unknown, raw: string)
 
   const seen = new Set<string>();
   const scans: { index: number; event: CarrierEvent }[] = [];
+  const receivers = new Map<CarrierEvent, string>();
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(provider, `${provider} returned an invalid scan`);
     const scan = projectRow(network, row, number);
     if (!scan || seen.has(scan.key)) continue;
     seen.add(scan.key);
     scans.push({ index: scans.length, event: scan.event });
+    if (scan.receiver) receivers.set(scan.event, scan.receiver);
   }
   // A waybill the tracker knows without a scan has no history.
   if (!scans.length) throw new NoHistoryError(provider);
@@ -211,6 +235,7 @@ export function parseJAndT(network: JAndTNetwork, payload: unknown, raw: string)
   const newest = newestFirst[0]!;
   const staged = newestFirst.find((event) => event.stage);
   const stage = staged?.stage as Stage | undefined;
+  const signedBy = stage === 'delivered' ? receivers.get(staged!) ?? '' : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source! } : {}),
@@ -218,6 +243,7 @@ export function parseJAndT(network: JAndTNetwork, payload: unknown, raw: string)
     last_update: newest.time!,
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: staged!.time! } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

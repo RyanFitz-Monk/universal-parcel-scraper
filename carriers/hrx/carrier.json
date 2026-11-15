@@ -64,10 +64,10 @@
       "delivered_at",
       "destination_country",
       "offset_timestamps",
-      "weight"
+      "weight",
+      "destination"
     ],
     "discarded": [
-      "destination",
       "dimensions"
     ],
     "unavailable": [

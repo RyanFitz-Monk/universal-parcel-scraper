@@ -46,13 +46,15 @@
       "driver_name",
       "contact_details",
       "proof_of_delivery",
-      "coordinates"
+      "coordinates",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "signatory"
     ],
     "discarded": [
       "recipient_name",

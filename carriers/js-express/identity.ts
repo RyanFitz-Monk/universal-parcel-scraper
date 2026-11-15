@@ -3,8 +3,21 @@ import { matchesDroppedLocation } from '../../core/catalog/locationIdentity.js';
 import { translatedScanPolicy } from '../../core/status/english.js';
 import { jsExpressEnglish } from './status.js';
 
-/** Who took a parcel iMile delivered, in 【】 after its delivery: ", Receiver Type:【Family】". The parser cuts it. */
+/** Who took a parcel iMile delivered, in 【】 after its delivery: ", Receiver Type:【Family】". Rows are staged without it. */
 export const IMILE_RECEIVER = /\s*[,，;；]?\s*\bReceiver Type\s*[:：]?\s*【[^】]*】/gi;
+/** Who took a delivered parcel, as a courier's delivery line can name them. Rows are staged without it. */
+export const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:(?:signed|received|collected|accepted)(?:\s+for)?\s+by|signed|signatory|signature)\b.*$/i;
+
+/** A row's wording without the clause naming who took the parcel, as it is staged. */
+export function withoutReceiver(wording: string): string {
+  const cut = wording.replace(IMILE_RECEIVER, '');
+  return (/^delivered\b/i.test(cut) ? cut.replace(RECEIVER, '') : cut).replace(/[\s,，;；:：-]+$/, '').trim();
+}
+
+/** Whether a row's wording names who took the parcel. */
+function namesReceiver(wording: string): boolean {
+  return wording.replace(IMILE_RECEIVER, '') !== wording || (/^delivered\b/i.test(wording) && RECEIVER.test(wording));
+}
 /** What the tracker prints for a partner's place it holds as a list. The parser drops it. */
 export const LIST_PLACE = 'Array';
 
@@ -19,8 +32,9 @@ export const sameInstantIdentityPolicy: SameInstantIdentityPolicy = {
   ...translated,
   // A row stored with a label that names no place, without a letter as the parser reads it, is
   // taken over by the row without it. So is one stored at the tracker's "Array", whatever stage
-  // the map has given its wording since, an iMile delivery stored with its receiver type, and
-  // China Post's scan from the feed that keeps minutes, less than a minute from the other's.
+  // the map has given its wording since, a delivery stored without the clause naming who took it
+  // or with it, and China Post's scan from the feed that keeps minutes, less than a minute from
+  // the other's.
   matches: (incoming, stored) => translated.matches!(incoming, stored)
     || matchesDroppedLocation(incoming, stored, (location) => !/\p{L}/u.test(location))
     || listPlace(incoming, stored) || receiverCut(incoming, stored) || officeCoded(incoming, stored),
@@ -49,7 +63,7 @@ function listPlace(incoming: SameInstantScan, stored: SameInstantScan): boolean 
 }
 
 function receiverCut(incoming: SameInstantScan, stored: SameInstantScan): boolean {
-  const cut = stored.description.replace(IMILE_RECEIVER, '');
-  return cut !== stored.description && normalized(incoming.location) === normalized(stored.location)
-    && incoming.stage === stored.stage && sameWording(incoming.description, cut);
+  return (namesReceiver(incoming.description) || namesReceiver(stored.description))
+    && normalized(incoming.location) === normalized(stored.location) && incoming.stage === stored.stage
+    && sameWording(withoutReceiver(incoming.description), withoutReceiver(stored.description));
 }

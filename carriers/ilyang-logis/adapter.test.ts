@@ -66,9 +66,16 @@ describe('Ilyang Logis HTTP adapter', () => {
     expect(result).not.toHaveProperty('delivery_carrier');
   });
 
-  it('keeps no sender, recipient, address, phone number, goods, order number or staff', () => {
-    const text = JSON.stringify(parseIlyang(fixture('delivered'), DELIVERED));
-    expect(text).not.toMatch(/홍길동|샘플|가상시|예시로|010-|02-000|031-|ORDER|AB01|GA01|DA99|고객님/);
+  it('reads the recipient, their address and who took the parcel, but no sender, phone number, goods, order number or staff', () => {
+    const result = parseIlyang(fixture('delivered'), DELIVERED);
+    expect(result).toMatchObject({ receiver_name: '홍길동', receiver_address: '가상시 나상구 예시로 9 101동 1001호\n00001',
+      signed_by: '홍길동-본인' });
+    const rest = { ...result, receiver_name: undefined, receiver_address: undefined, signed_by: undefined };
+    expect(JSON.stringify(rest)).not.toMatch(/홍길동|샘플|가상시|예시로|010-|02-000|031-|ORDER|AB01|GA01|DA99|고객님/);
+    // Before the delivery nobody has taken the parcel.
+    const onItsWay = parseIlyang(fixture('in-transit'), IN_TRANSIT);
+    expect(onItsWay).toMatchObject({ receiver_name: '홍길동', receiver_address: '가상시 나상구 예시로 9 101동 1001호\n00001' });
+    expect(onItsWay).not.toHaveProperty('signed_by');
   });
 
   it('reads a parcel that has reached its delivering branch', () => {

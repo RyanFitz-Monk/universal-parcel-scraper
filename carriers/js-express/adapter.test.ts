@@ -8,7 +8,7 @@ import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, JS_EXPRESS_PAGE, JS_EXPRESS_TRACKER, JsExpressTracker } from './adapter.js';
-import { jsExpressReply, jsExpressScan, normalizeJsExpressNumber, parseJsExpress } from './parser.js';
+import { jsExpressReceiver, jsExpressReply, jsExpressScan, normalizeJsExpressNumber, parseJsExpress } from './parser.js';
 import { jsExpressMappedStage, jsExpressStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -212,11 +212,16 @@ describe('JS Express tracking adapter', () => {
     expect(read(row('2026-05-10 17:30:00', 'Sample Town', 'Delivered (Sample Town, ON)'), ...straightship))
       .toEqual({ current_stage: 'delivered', last_update: '2026-05-10T17:30:00Z', last_update_local: undefined, delivered_at: '2026-05-10T17:30:00Z' });
     // Another courier's delivery keeps its wall clock, and gives no delivery time.
-    expect(read(row('2026-05-10 15:40:00', 'Sample01', '【Sample01】Delivered, Receiver Type:【Self】.'), row('2026-05-08 19:00:00', 'LGG', 'Delivery to local courier'), china[1]!))
+    const imile = [row('2026-05-10 15:40:00', 'Sample01', '【Sample01】Delivered, Receiver Type:【Self】.'), row('2026-05-08 19:00:00', 'LGG', 'Delivery to local courier'), china[1]!];
+    expect(read(...imile))
       .toEqual({ current_stage: 'delivered', last_update: null, last_update_local: '2026-05-10T15:40:00', delivered_at: undefined });
+    // It keeps iMile's receiver type in its wording and gives it as who took the parcel.
+    const kept = parseJsExpress(withList(imile), DELIVERED);
+    expect(kept).toMatchObject({ signed_by: 'Self', last_status_text: '【Sample01】Delivered, Receiver Type:【Self】.' });
+    expect(kept.events![0]).toMatchObject({ description: '【Sample01】Delivered, Receiver Type:【Self】.', stage: 'delivered' });
   });
 
-  it('moves a courier\'s place into the location and drops who took a delivery and phone numbers', () => {
+  it('moves a courier\'s place into the location, stages a delivery without who took it and drops phone numbers', () => {
     expect(jsExpressScan('Delivered (Sample Town, ON)', 'Sample Town')).toEqual({ description: 'Delivered', location: 'Sample Town, ON' });
     // A place the label does not name stays in the wording.
     expect(jsExpressScan('Held at depot (weekend)', 'Sample Town')).toEqual({ description: 'Held at depot (weekend)', location: 'Sample Town' });
@@ -224,6 +229,18 @@ describe('JS Express tracking adapter', () => {
     expect(jsExpressScan('Delivered, signed by A SAMPLE PERSON', 'Sample Town').description).toBe('Delivered');
     expect(jsExpressScan('Delivered - received by A SAMPLE PERSON (Sample Town, ON)', 'Sample Town').description).toBe('Delivered');
     expect(jsExpressScan('Delivered Signature: SAMPLE', 'Sample Town').description).toBe('Delivered');
+    // The wording shown keeps who took the parcel, and the name is read from it.
+    const kept = jsExpressScan('Delivered - received by A SAMPLE PERSON (Sample Town, ON)', 'Sample Town', { receiver: true });
+    expect(kept).toEqual({ description: 'Delivered - received by A SAMPLE PERSON', location: 'Sample Town, ON' });
+    expect(jsExpressReceiver(kept.description)).toBe('A SAMPLE PERSON');
+    expect(jsExpressReceiver('Delivered Signature: SAMPLE')).toBe('SAMPLE');
+    expect(jsExpressReceiver('Delivered, signed')).toBe('');
+    expect(jsExpressReceiver('【Sample DS】Delivered, Receiver Type:【Mailbox】.')).toBe('');
+    expect(jsExpressReceiver('Package received by Sample Station')).toBe('');
+    const signed = parseJsExpress(withList([row('2026-05-10 17:30:00', 'Sample Town', 'Delivered, signed by A SAMPLE PERSON'),
+      row('2026-05-08 19:00:00', 'YYZ', 'Delivery to local courier')]), DELIVERED);
+    expect(signed).toMatchObject({ current_stage: 'delivered', signed_by: 'A SAMPLE PERSON',
+      events: [{ description: 'Delivered, signed by A SAMPLE PERSON', stage: 'delivered' }, {}] });
     expect(jsExpressScan('Delivery attempted, call +1 555 000 0000', 'Sample Town').description).toBe('Delivery attempted, call');
     // JS Express's own notice loses the label of the local office's number with it.
     expect(jsExpressScan('收件人地址不详或有误，派送失败，麻烦让收件人联系下当地，当地电话：555 0000 0000', 'US').description)
@@ -259,6 +276,11 @@ describe('JS Express tracking adapter', () => {
     expect(policy?.matches?.(delivered, { ...delivered, description: '【Sample DS】Delivered, Receiver Type:【Self or family】.' })).toBe(true);
     expect(policy?.matches?.(delivered, { ...delivered, description: '【Other DS】Delivered, Receiver Type:【Self or family】.' })).toBe(false);
     expect(policy?.matches?.(delivered, { ...delivered, description: '【Sample DS】Delivered.', location: 'Other DS' })).toBe(false);
+    // A delivery stored without the clause is taken over by the row that now keeps it.
+    expect(policy?.matches?.({ ...delivered, description: '【Sample DS】Delivered, Receiver Type:【Self or family】.' }, delivered)).toBe(true);
+    const courier = { stage: 'delivered', description: 'Delivered, signed by A SAMPLE PERSON', location: 'Sample Town, ON', providerCode: '' };
+    expect(policy?.matches?.(courier, { ...courier, description: 'Delivered' })).toBe(true);
+    expect(policy?.matches?.(courier, { ...courier, description: 'Delivered to neighbour' })).toBe(false);
     // China Post's scan from the feed that keeps seconds and the office's code takes over, less than a minute away,
     // the row from the feed that keeps minutes and the town, in the same words or China Post's two for one arrival,
     // and the other way round.
@@ -378,7 +400,7 @@ describe('JS Express tracking adapter', () => {
       expect(jsExpressMappedStage(wording), wording).toBe(stage);
       expect(statusMapAnswer({ carrier: 'js-express', description: wording }), wording).toEqual({ kind: 'mapped', stage });
     }
-    // iMile's delivery loses who took the parcel.
+    // iMile's delivery is staged without who took the parcel.
     expect(jsExpressScan('【Sample DS】Delivered, Receiver Type:【Self or family】.', 'Sample DS').description).toBe('【Sample DS】Delivered.');
     // Only a wording that opens with a centre's name in 【】 is iMile's; a scan that moves nothing has no stage.
     expect(jsExpressMappedStage('Parcel shipped to【Sample01】.')).toBeUndefined();

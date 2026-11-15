@@ -27,11 +27,11 @@ agencies. Tracked through the lookup its tracking page makes.
   current state's name settles the status; the page's progress step, derived from it, is not
   read.
 - A parcel the recipient collects at the destination agency keeps that agency's name and
-  address as its pickup point. For a parcel brought to the door, the address is the
-  recipient's and is not kept.
+  address as its pickup point.
 - The weight is the reply's total for the guide's parcels, kept when it is positive.
-- The sender's and recipient's names, the delivery address, the payment, the parcels'
-  dimensions and the agency's coordinates and phone are not kept.
+- The recipient's name and the delivery address are read as the guide gives them. The sender's
+  name, the payment, the parcels' dimensions and the agency's coordinates and phone are not
+  kept.
 
 ## Limitations
 

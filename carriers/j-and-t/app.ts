@@ -4,7 +4,8 @@
  * One signed form request asks for one waybill. The reply binds every scan to
  * the waybill it was asked about; anything else is refused as a schema error.
  * Only the scan code, its English label, the scan clock, the scanning town and
- * a whitelisted part of the customer sentence are projected: names, phone
+ * a whitelisted part of the customer sentence are projected, with the name a
+ * delivery sentence gives who took the parcel. Couriers' names, phone
  * numbers, remarks, coordinates and proof-of-delivery links are not. The scan
  * network's code and name are read only to recognize the router's own system
  * network, whose scans name no place.
@@ -46,6 +47,8 @@ const DEPARTURE = '50';
  */
 const SYSTEM_NETWORK_CODE = /^SISTEM/i;
 const SYSTEM_NETWORK_NAME = /_AUTO$/i;
+/** A delivery sentence and who took the parcel. */
+const DELIVERED_TO = /^Package has been delivered to (\S.*)$/;
 /** A town followed by one of the facility types the router names. */
 const FACILITY = /^(.+) (?:Drop Point|Drop Center|Transit Center)$/;
 /** Hold reasons read live. The router picks them from a fixed list; any other is not repeated. */
@@ -100,9 +103,9 @@ function scanClock(value: unknown): string {
 /**
  * The customer sentence, kept only in the forms the router is known to write.
  * A facility must be the scan's own town and a facility type, as the router
- * writes it, and a hold reason one read live. The forms that end in a
- * courier's or recipient's name lose that name; any other wording gives way to
- * the scan's English label.
+ * writes it, and a hold reason one read live. A delivery keeps the name of
+ * who took the parcel. The forms that end in a courier's name lose it; any
+ * other wording gives way to the scan's English label.
  */
 function describe(sentence: string, label: string, town: string): string {
   const text = sentence.replace(/[,.\s]+$/, '');
@@ -112,6 +115,7 @@ function describe(sentence: string, label: string, town: string): string {
   const moved = /^Package (?:will be departed to|has been arrived at) (.+)$/.exec(text);
   if (moved) return facility(moved[1]!) ? text : label;
   if (/^Package will be delivered to\b/.test(text)) return 'Package will be delivered';
+  if (DELIVERED_TO.test(text)) return text;
   if (/^Package has been delivered to\b/.test(text)) return 'Package has been delivered';
   const delayed = /^Shipment process is being delayed for the reason: (.+)$/.exec(text);
   if (delayed) return HOLD_REASONS.has(delayed[1]!) ? text : 'Shipment process is being delayed';
@@ -180,10 +184,12 @@ export function parseJnt(payload: unknown, raw: string): CarrierResult {
   if (String(events[0]!.local_time) < String(events.at(-1)!.local_time)) events.reverse();
   const current = events[0]!;
   const mapped = jntCodeStatus(current.provider_code!);
+  const signedBy = mapped?.stage === 'delivered' ? clean(DELIVERED_TO.exec(current.description ?? '')?.[1], 120) : '';
   return {
     status: mapped?.status ?? 'unknown',
     ...(mapped ? { current_stage: mapped.stage, current_stage_source: 'carrier_map' } : {}),
     last_status_text: current.description, last_update: null, last_update_local: current.local_time,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, 100),
   };
 }

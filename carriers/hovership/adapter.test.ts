@@ -9,7 +9,7 @@ import { delayedFetcher } from '../../core/testing/hang.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, HOVERSHIP_TRACK, hovershipTrackUrl, HovershipTracker } from './adapter.js';
-import { hovershipWording, normalizeHovershipNumber, parseHovership } from './parser.js';
+import { hovershipSignedBy, hovershipWording, normalizeHovershipNumber, parseHovership } from './parser.js';
 import { hovershipHeadlineStage, hovershipStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -55,9 +55,9 @@ describe('Hovership HTTP adapter', () => {
     expect(result).toMatchObject({
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered to Front Door', last_update: '2026-07-14T15:42:00-07:00', expected_delivery: null,
-      delivered_at: '2026-07-14T15:42:00-07:00',
+      delivered_at: '2026-07-14T15:42:00-07:00', receiver_address: 'Exampleville, CA',
     });
-    for (const field of ['summary_only', 'history_truncated', 'last_update_local', 'receiver_name', 'sender_name', 'destination_country']) {
+    for (const field of ['summary_only', 'history_truncated', 'last_update_local', 'receiver_name', 'signed_by', 'sender_name', 'destination_country']) {
       expect(result).not.toHaveProperty(field);
     }
     expect(events(result)).toEqual([
@@ -68,7 +68,7 @@ describe('Hovership HTTP adapter', () => {
       ['2026-07-13T16:20:00-07:00', 'Label Created', 'Shipment label created', 'registered'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('local_time' in event) && !('location' in event))).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/Exampleville|Sampletown|ZIP|Unlock/);
+    expect(JSON.stringify(result)).not.toMatch(/Sampletown|ZIP|Unlock/);
   });
 
   it('reads an in-transit history with its latest delivery time, in winter time', () => {
@@ -121,14 +121,19 @@ describe('Hovership HTTP adapter', () => {
       IN_TRANSIT).events).toHaveLength(2);
   });
 
-  it('drops phone numbers from every line and who took a delivered parcel', () => {
-    expect(hovershipWording('Delivered, signed by Sample Person', true)).toBe('Delivered');
-    expect(hovershipWording('Left with Sample Person at the front desk', true)).toBe('');
-    expect(hovershipWording('Call (555) 010-0000 to reschedule', false)).toBe('Call to reschedule');
-    expect(hovershipWording('Received by facility staff', false)).toBe('Received by facility staff');
+  it('drops phone numbers from every line and keeps who took a delivered parcel', () => {
+    expect(hovershipWording('Delivered, signed by Sample Person')).toBe('Delivered, signed by Sample Person');
+    expect(hovershipWording('Call (555) 010-0000 to reschedule')).toBe('Call to reschedule');
+    expect(hovershipSignedBy('Delivered, signed by Sample Person')).toBe('Sample Person');
+    expect(hovershipSignedBy('Left with Sample Person at the front desk')).toBe('Sample Person');
+    expect(hovershipSignedBy('Delivered to Front Door')).toBe('');
     const delivered = parseHovership(fixture('delivered').replace('Delivered to Front Door', 'Delivered to Front Door, signed by Sample Person'), DELIVERED);
-    expect(delivered.events![0]).toMatchObject({ description: 'Delivered to Front Door', stage: 'delivered' });
-    expect(JSON.stringify(delivered)).not.toContain('Sample Person');
+    expect(delivered.events![0]).toMatchObject({ description: 'Delivered to Front Door, signed by Sample Person', stage: 'delivered' });
+    expect(delivered).toMatchObject({ last_status_text: 'Delivered to Front Door, signed by Sample Person', signed_by: 'Sample Person' });
+    // A line before the delivery names no one who took it.
+    const received = parseHovership(fixture('in-transit').replace('Arrived at Example Sort Facility', 'Received by facility staff'), IN_TRANSIT);
+    expect(received.events![0]!.description).toBe('Received by facility staff');
+    expect(received).not.toHaveProperty('signed_by');
   });
 
   it('turns an oldest-first history round, and stands the headline in for a history it lacks', () => {

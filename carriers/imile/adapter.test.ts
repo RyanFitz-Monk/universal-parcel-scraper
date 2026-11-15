@@ -8,7 +8,7 @@ import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, IMILE_API, IMILE_PAGE, IMILE_SIGNING, ImileTracker, imileSignature, scriptSigning, type ImileSigning } from './adapter.js';
 import { cainiaoScans, withCainiaoLeg } from './cainiao.js';
-import { imileSummary, imileWording, normalizeImileNumber, parseImile } from './parser.js';
+import { imileReceiver, imileSummary, imileWording, normalizeImileNumber, parseImile } from './parser.js';
 import { imileStage, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
@@ -170,14 +170,14 @@ describe('iMile HTTP adapter', () => {
     expect(upTo('Delivery attempt finished').expected_delivery).toBeNull();
   });
 
-  it('keeps the delivery without the driver’s phone, who took it, its proof or the repeated scan', () => {
+  it('keeps the delivery and who took it, without the driver’s phone, its proof or the repeated scan', () => {
     const result = parseImile(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Your order has been delivered successfully.', last_update: '2026-05-20T15:42:10+03:00',
-      destination_country: 'SA' });
+      last_status_text: 'Your order has been delivered successfully, Receiver Type: Self.', last_update: '2026-05-20T15:42:10+03:00',
+      destination_country: 'SA', signed_by: 'Self' });
     expect(result.events).toHaveLength(15);
     expect(result.events!.slice(0, 8).map((event) => [event.provider_code, event.stage ?? null, event.description])).toEqual([
-      ['2060', 'delivered', 'Your order has been delivered successfully.'],
+      ['2060', 'delivered', 'Your order has been delivered successfully, Receiver Type: Self.'],
       ['1003', 'out_for_delivery', 'Our delivery associate is out for delivery.'],
       // A delivery day booked moves nothing.
       ['1003', null, 'Shipment is scheduled to [2026-05-20].'],
@@ -199,7 +199,7 @@ describe('iMile HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(/Flight Schedule/);
     expect(result.events!.find((event) => event.description === 'Clearance Processing')).toMatchObject({ stage: 'customs' });
     expect(result.events!.find((event) => event.description === 'Clearance Processing')).not.toHaveProperty('provider_code');
-    expect(JSON.stringify(result)).not.toMatch(/Self|Receiver|viewPic|example\.invalid|contact him|\+000|0500000001/);
+    expect(JSON.stringify(result)).not.toMatch(/viewPic|example\.invalid|contact him|\+000|0500000001/);
     // The delivery's station is the depot the courier set out from; the delivery run keeps it.
     expect(result.events![0]).not.toHaveProperty('location');
     expect(result.events![1]).toMatchObject({ location: 'SMP DS01' });
@@ -208,12 +208,20 @@ describe('iMile HTTP adapter', () => {
       shipment.trackInfos[0]!.content = 'Your order has been delivered successfully, Receiver Type:【Mail box】.';
     }), DELIVERED);
     expect(mailbox).toMatchObject({ current_stage: 'delivered', last_status_text: 'Your order has been delivered successfully, Receiver Type: Mail box.' });
+    expect(mailbox).not.toHaveProperty('signed_by');
     expect(mailbox.events![0]).not.toHaveProperty('location');
     // Without a code, the sentence still reads as the delivery.
     const uncoded = parseImile(changed('delivered', (shipment) => {
       Object.assign(shipment.trackInfos[0]!, { content: 'Your order has been delivered successfully, Receiver Type:【Mail box】.', trackStage: null, trackStageTx: null });
     }), DELIVERED);
     expect(uncoded.events![0]).toMatchObject({ stage: 'delivered', description: 'Your order has been delivered successfully, Receiver Type: Mail box.' });
+    // The Brazilian wording names who took the parcel; the sentence still reads as the delivery without its code.
+    const named = parseImile(changed('delivered', (shipment) => {
+      Object.assign(shipment.trackInfos[0]!, { content: '【DS SMP】Your package was received by 【Sample Person】. If you have any questions, please contact us.',
+        trackStage: null, trackStageTx: null });
+    }), DELIVERED);
+    expect(named).toMatchObject({ current_stage: 'delivered', signed_by: 'Sample Person',
+      last_status_text: 'DS SMP: Your package was received by Sample Person.' });
   });
 
   it('reads return handling as a return under way, until the sender has the parcel back', () => {
@@ -281,19 +289,23 @@ describe('iMile HTTP adapter', () => {
     }
   });
 
-  it('takes people, phones, proof links and support contacts out of the wording', () => {
+  it('takes phones, proof links and support contacts out of the wording and keeps who took the parcel', () => {
     expect(imileWording('【DS SMP】Your package was received by 【Sample Person】. If you have any questions, please contact us so we can assist you.'
       + '📞 WhatsApp: +00 00 0000-0000📧 Email: support@example.invalid🌐 Official website: https://example.invalid/'))
-      .toBe('【DS SMP】Your package was received.');
-    expect(imileWording('Your order has been delivered successfully, Receiver Type:【Family】.')).toBe('Your order has been delivered successfully.');
-    expect(imileWording('【Sample01】Delivered, receiver type:【Self or Family】.')).toBe('【Sample01】Delivered.');
-    // A receiver type naming where the parcel was left stays; a name in its place goes.
+      .toBe('【DS SMP】Your package was received by 【Sample Person】.');
+    expect(imileWording('Your order has been delivered successfully, Receiver Type:【Family】.'))
+      .toBe('Your order has been delivered successfully, Receiver Type:【Family】.');
+    expect(imileReceiver('【DS SMP】Your package was received by 【Sample Person】.')).toBe('Sample Person');
+    expect(imileReceiver('Your order has been delivered successfully, Receiver Type:【Family】.')).toBe('Family');
+    expect(imileReceiver('【Sample01】Delivered, receiver type:【Self or Family】.')).toBe('Self or Family');
+    // A receiver type naming where the parcel was left is not who took it.
     for (const place of ['Mail box', 'Parcel locker', 'Reception']) {
       expect(imileWording(`Your order has been delivered successfully, Receiver Type:【${place}】.`))
         .toBe(`Your order has been delivered successfully, Receiver Type:【${place}】.`);
+      expect(imileReceiver(`Your order has been delivered successfully, Receiver Type:【${place}】.`)).toBe('');
     }
-    expect(imileWording('Your order has been delivered successfully, Receiver Type:【Sample Person】.')).toBe('Your order has been delivered successfully.');
-    expect(imileWording('Your package was received by 【Mail box】.')).toBe('Your package was received.');
+    expect(imileReceiver('Your package was received by 【Mail box】.')).toBe('');
+    expect(imileReceiver('【DS SMP】Your order has arrived at 【DS SMP】')).toBe('');
     expect(imileWording('Our delivery associate is out for delivery.You can contact him by clicking +000 0500000000.'))
       .toBe('Our delivery associate is out for delivery.');
     expect(imileWording('Our delivery associate is out for delivery. Customer service hotline: 0000000000'))

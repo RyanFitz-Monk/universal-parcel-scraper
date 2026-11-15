@@ -54,7 +54,8 @@
       "customer_reference",
       "order_contents",
       "office_contact_details",
-      "staff_details"
+      "staff_details",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -64,12 +65,13 @@
       "delivered_at",
       "delivery_partner",
       "delivery_tracking_number",
-      "remarks"
+      "remarks",
+      "recipient_name",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
-      "recipient_name",
-      "signatory",
       "customer_reference",
       "order_contents",
       "office_contact_details",

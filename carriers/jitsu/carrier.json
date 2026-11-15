@@ -50,7 +50,9 @@
       "proof_of_delivery",
       "signature",
       "driver_name",
-      "delivery_instructions"
+      "delivery_instructions",
+      "recipient_address",
+      "postcodes"
     ],
     "scraped": [
       "status",
@@ -60,7 +62,9 @@
       "eta_window",
       "delivered_at",
       "provider_code",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_address",
+      "postcodes"
     ],
     "discarded": [
       "progress_rail",
@@ -70,8 +74,6 @@
       "signature",
       "driver_name",
       "delivery_instructions",
-      "recipient_address",
-      "postcodes",
       "contact_details",
       "remarks",
       "customer_reference",

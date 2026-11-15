@@ -29,7 +29,8 @@ qhzhigu.com. The adapter reads its tracker's own lookup for numbers of IV and tw
   then the shared rules. "Estimated", a month and a day, and "flights" is a flight booked
   for that day, still to come, so it is left out.
 - `channel_hawbcode`, the onward network's number, becomes `delivery_tracking_number`.
-- The merchant's order reference, the signatory and the proof-of-delivery link are not read.
+- The signatory is read once the parcel is delivered. The merchant's order reference and the
+  proof-of-delivery link are not read.
 
 ## Limitations
 

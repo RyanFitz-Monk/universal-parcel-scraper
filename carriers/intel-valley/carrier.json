@@ -44,18 +44,19 @@
       "history",
       "location",
       "destination_country",
-      "customer_reference"
+      "customer_reference",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
       "location",
       "destination_country",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "signatory"
     ],
     "discarded": [
       "customer_reference",
-      "signatory",
       "proof_of_delivery"
     ],
     "unavailable": [

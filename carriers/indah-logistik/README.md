@@ -29,20 +29,20 @@ Android app makes.
 - `tanggal_status` is a wall clock to the second with no zone. Indonesia has three zones and
   the reply does not say which one a row uses, so rows keep `local_time`. Rows at the same
   second keep the lookup's order.
-- A row's `status` is a wording, a dash and a detail. The description is the wording. Movement
-  wordings, and `Transaksi`, name a town after the dash, which becomes the location. Other
-  wordings are followed by the courier's name, the receiver's name and relation, or a
-  scheduled delivery's note; those are left out, as is the detail of a wording the adapter does
-  not know.
+- A row's `status` is a wording, a dash and a detail. Movement wordings, and `Transaksi`, name
+  a town after the dash, which becomes the location. The delivery and a failed attempt name the
+  receiver and their relation, which their description keeps; the delivery's is the signatory.
+  The courier's name, a scheduled delivery's note and the detail of a wording the adapter does
+  not know are left out.
 - `Transaksi` is the booking at the counter of a branch or drop point, which weighs and prices
   the parcel, so it reads as accepted. `PENGANTARAN TERJADWAL` books the delivery on a later
   run without an attempt, so it reads as in transit.
 - The service name is the waybill's `NAMA_JASA` and its `VIA`, as in
   `Indah Logistic Cargo (Darat)`. The weight is `BERAT`, the kilograms the price is charged on.
-- The reply carries the sender's and recipient's masked names, addresses and phones, prices,
-  staff and driver names, plates, manifests and the courier's phone. None of them are kept. The
-  app can show a receiver's photo from a row's `foto_penerima`, which the adapter would not keep
-  either.
+- The recipient's masked name and street are read from `NM_PENERIMA` and `ALT_PENERIMA`. The
+  sender's details, the phones, prices, staff and driver names, plates, manifests and the
+  courier's phone are not kept. The app can show a receiver's photo from a row's
+  `foto_penerima`, which the adapter would not keep either.
 
 ## Limitations
 

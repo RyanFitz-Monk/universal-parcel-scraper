@@ -65,17 +65,17 @@
       "eta",
       "eta_window",
       "weight",
-      "delivered_at"
+      "delivered_at",
+      "destination",
+      "postcodes",
+      "signatory"
     ],
     "discarded": [
       "progress_rail",
       "parcel_count",
       "parcel_scans",
-      "destination",
-      "postcodes",
       "coordinates",
       "delivery_queue",
-      "signatory",
       "delivery_instructions",
       "recipient_name"
     ],

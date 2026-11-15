@@ -31,8 +31,8 @@ const page = (body: string, init: ResponseInit = {}) => new Response(body,
   { ...init, headers: { 'Content-Type': 'text/html; charset=utf-8', ...init.headers } });
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 const CHECK = '<!DOCTYPE html><html><head><title>Just a moment...</title></head><body><script>window._cf_chl_opt={}</script></body></html>';
-// The recipient, the signatory, the signature, the shipper and the pickup point's hours and coordinates.
-const PRIVATE = /SAMPLE RECIPIENT|EXAMPLE ST|A1A 1A1|"SAMPLE"|U1lOVEhF|base64|PUDO0000|Example Shop|Sample Sender|Rue Exemple|MON-FRI|12\.34567/;
+// The signature and the pickup point's hours and coordinates.
+const UNREAD = /U1lOVEhF|base64|MON-FRI|12\.34567/;
 
 describe('ICS Courier HTTP adapter', () => {
   it('asks the tracking page for the whole number once, through the supplied transport', async () => {
@@ -50,12 +50,13 @@ describe('ICS Courier HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads a delivered parcel as wall clocks in clock order, with branches but not the recipient or the signature', () => {
+  it('reads a delivered parcel as wall clocks in clock order, with branches, the recipient’s row and the signatory', () => {
     const result = normalizeCarrierResult(parseIcsCourier(fixture('delivered'), DELIVERED));
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Delivered', last_update: null, last_update_local: '2026-09-18T13:12:43', expected_delivery: null });
+      last_status_text: 'Delivered at: SAMPLE RECIPIENT 1 EXAMPLE ST SPRINGFIELD ON A1A 1A1', last_update: null,
+      last_update_local: '2026-09-18T13:12:43', expected_delivery: null, signed_by: 'SAMPLE' });
     expect(result.events!.map((event) => [event.local_time, event.description, event.location, event.stage])).toEqual([
-      ['2026-09-18T13:12:43', 'Delivered', undefined, 'delivered'],
+      ['2026-09-18T13:12:43', 'Delivered at: SAMPLE RECIPIENT 1 EXAMPLE ST SPRINGFIELD ON A1A 1A1', undefined, 'delivered'],
       ['2026-09-18T07:22:23', 'Out for Delivery', undefined, 'out_for_delivery'],
       ['2026-09-18T04:16:07', 'In Sort Process', undefined, 'in_transit'],
       ['2026-09-18T04:16:05', 'At ICS Branch SPRINGFIELD, ON for processing', 'SPRINGFIELD, ON', 'in_transit'],
@@ -65,19 +66,21 @@ describe('ICS Courier HTTP adapter', () => {
       ['2026-09-17T16:21:59', 'At ICS Branch SHELBYVILLE, ON for processing', 'SHELBYVILLE, ON', 'in_transit'],
       ['2026-09-15T18:09:00', 'In Transit', undefined, 'in_transit'],
       ['2026-09-15T18:04:00', 'At ICS Branch OGDENVILLE, AB for processing', 'OGDENVILLE, AB', 'in_transit'],
-      ['2026-09-15T17:15:32', 'Picked Up', undefined, 'accepted'],
+      ['2026-09-15T17:15:32', 'Picked Up PUDO0000 Example Shop Inc. 100 Sample Road Ogdenville AB A0A0A0', undefined, 'accepted'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
     expect(result).not.toHaveProperty('pickup_point');
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(JSON.stringify(result)).not.toMatch(UNREAD);
   });
 
   it('reads a parcel on its way with its estimated delivery day', () => {
     const result = parseIcsCourier(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'In Transit',
       last_update_local: '2026-10-05T17:34:00', expected_delivery: '2026-10-07' });
-    expect(result.events!.map((event) => event.location ?? event.description)).toEqual(['In Transit', 'SHELBYVILLE, PQ', 'Picked Up']);
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(result.events!.map((event) => event.location ?? event.description)).toEqual(['In Transit', 'SHELBYVILLE, PQ',
+      'Picked Up Example Shop Inc.,Sample Sender 1 Rue Exemple SHELBYVILLE PQ A0A0A0']);
+    expect(result).not.toHaveProperty('signed_by');
+    expect(JSON.stringify(result)).not.toMatch(UNREAD);
     // The estimate is stale once a later day's scan is in, and is no day at all when malformed.
     for (const estimate of ['2026-10-04', '2026-02-30', 'Pending', '']) {
       const stale = changed('in-transit', ($) => { $(`${ID}gvresult td`).eq(4).text(estimate); });
@@ -87,14 +90,15 @@ describe('ICS Courier HTTP adapter', () => {
 
   it('reads a parcel left at a SMARTSpot with the point’s name and address, but not its hours or coordinates', () => {
     const result = normalizeCarrierResult(parseIcsCourier(fixture('smartspot'), SMARTSPOT));
-    expect(result).toMatchObject({ current_stage: 'ready_for_pickup', last_status_text: 'At SMARTSpot for pickup',
+    expect(result).toMatchObject({ current_stage: 'ready_for_pickup',
+      last_status_text: 'At SMARTSpot for pickup EXAMPLE CORNER STORE 1 SAMPLE AVE EXAMPLE SPRINGFIELD, BC, A0A 0A0',
       last_update_local: '2026-09-24T17:15:17', expected_delivery: null,
       pickup_point: 'EXAMPLE CORNER STORE\n1 SAMPLE AVE\nSPRINGFIELD, BC\nA0A0A0' });
     expect(result.events!.slice(0, 2).map((event) => [event.description, event.stage])).toEqual([
-      ['At SMARTSpot for pickup', 'ready_for_pickup'],
+      ['At SMARTSpot for pickup EXAMPLE CORNER STORE 1 SAMPLE AVE EXAMPLE SPRINGFIELD, BC, A0A 0A0', 'ready_for_pickup'],
       ['Delivery Attempt: Consignee Not Available', 'failed_attempt'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/MON-FRI|12\.34567|EXAMPLE SPRINGFIELD|A0A 0A0/);
+    expect(JSON.stringify(result)).not.toMatch(/MON-FRI|12\.34567/);
     // Without the SMARTSpot's row, or with a panel of another shape, there is no pickup point.
     const left = changed('smartspot', ($) => { $(`${ID}gvTracingDetail tr`).eq(1).remove(); });
     expect(parseIcsCourier(left, SMARTSPOT)).not.toHaveProperty('pickup_point');
@@ -107,7 +111,7 @@ describe('ICS Courier HTTP adapter', () => {
       last_status_text: 'Shipping label created', last_update_local: '2026-10-04T01:00:00', events: [{ stage: 'registered' }] });
   });
 
-  it('keeps a driver’s reason without an address, drops repeated rows and reads unknown wording by the shared rules', () => {
+  it('keeps a driver’s reason, drops repeated rows and reads unknown wording by the shared rules', () => {
     const result = parseIcsCourier(withScans('in-transit',
       scan('2026-10-06 12:00:00', 'Synthetic note'),
       scan('2026-10-06 11:00:00', 'Return: Incomplete Address'),
@@ -118,7 +122,7 @@ describe('ICS Courier HTTP adapter', () => {
     expect(result.events!.slice(0, 5)).toEqual([
       { local_time: '2026-10-06T12:00:00', description: 'Synthetic note' },
       { local_time: '2026-10-06T11:00:00', description: 'Return: Incomplete Address', stage: 'exception', stage_source: expect.stringMatching(/^wording/) },
-      { local_time: '2026-10-06T10:00:00', description: 'Delivery Attempt', stage: 'failed_attempt', stage_source: 'carrier_map' },
+      { local_time: '2026-10-06T10:00:00', description: 'Delivery Attempt: 1 Example St', stage: 'failed_attempt', stage_source: 'carrier_map' },
       { local_time: '2026-10-06T09:00:00', description: 'Delivery Attempt', stage: 'failed_attempt', stage_source: 'carrier_map' },
       { local_time: '2026-10-05T17:34:00', description: 'In Transit', stage: 'in_transit', stage_source: 'carrier_map' },
     ]);

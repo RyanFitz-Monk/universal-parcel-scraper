@@ -53,11 +53,11 @@ describe('Komon Express HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads its scans on their wall clocks with their codes, the delivering network’s wording without its place or sentence, and none of the merchant’s details', () => {
+  it('reads its scans on their wall clocks with their codes, the delivering network’s wording without its place or sentence, the signatory and none of the merchant’s details', () => {
     const result = parseKomon(fixture('delivered'), PARCEL);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Delivered, In/At Mailbox', last_update: null, last_update_local: '2026-06-24T10:50:00', expected_delivery: null,
-      destination_country: 'US', delivery_tracking_number: 'SAMPLE0000000000000001' });
+      destination_country: 'US', delivery_tracking_number: 'SAMPLE0000000000000001', signed_by: 'SAMPLE RECIPIENT' });
     expect(result.events!.map((event) => [event.local_time, event.location, event.description, event.provider_code, event.stage])).toEqual([
       // The postcode in the place is dropped, and the wording no longer repeats either.
       ['2026-06-24T10:50:00', 'SAMPLE CITY, NY', 'Delivered, In/At Mailbox', 'KM12', 'delivered'],
@@ -73,7 +73,8 @@ describe('Komon Express HTTP adapter', () => {
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map' && !('time' in event))).toBe(true);
     const json = JSON.stringify(result);
-    for (const excluded of ['SAMPLEORDER0001', 'SAMPLE RECIPIENT', '09999', '900001', '800000', '美国', '->']) expect(json).not.toContain(excluded);
+    for (const excluded of ['SAMPLEORDER0001', '09999', '900001', '800000', '美国', '->']) expect(json).not.toContain(excluded);
+    expect(JSON.stringify(result.events)).not.toContain('SAMPLE RECIPIENT');
   });
 
   it('stages an unmapped code by its wording, and drops who took a delivery', () => {
@@ -91,6 +92,8 @@ describe('Komon Express HTTP adapter', () => {
     const unstaged = parseKomon(changed((item) => { item.details = [scan('2026-07-07 07:00:00', 'Sample Status Note', 'KM98')]; }), PARCEL);
     expect(unstaged).toMatchObject({ status: 'unknown' });
     expect(unstaged).not.toHaveProperty('current_stage');
+    // The signatory counts only once the parcel is delivered.
+    expect(unstaged).not.toHaveProperty('signed_by');
   });
 
   it('reads only the tracker’s unknown-number answer as not found, a parcel without scans as no history, and rejects a changed reply', () => {

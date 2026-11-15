@@ -58,13 +58,13 @@ describe('JNE HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps each scan’s wall clock, stages it by its phrase and drops the recipient', () => {
+  it('keeps each scan’s wall clock, stages it by its phrase and reads the recipient and signatory', () => {
     const result = parseJne(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'DELIVERED TO', last_update: null, last_update_local: '2026-02-12T14:03:00', expected_delivery: null,
-      weight_kg: 2.5 });
+      last_status_text: 'DELIVERED TO BUDI PRIVATE', last_update: null, last_update_local: '2026-02-12T14:03:00', expected_delivery: null,
+      weight_kg: 2.5, receiver_name: 'BUDI PRIVATE', receiver_address: 'JL SAMPLE NO 2\nDENPASAR', signed_by: 'BUDI PRIVATE' });
     expect(result.events!.map((event) => [event.local_time, event.stage ?? null, event.location ?? null, event.description])).toEqual([
-      ['2026-02-12T14:03:00', 'delivered', 'DENPASAR', 'DELIVERED TO'],
+      ['2026-02-12T14:03:00', 'delivered', 'DENPASAR', 'DELIVERED TO BUDI PRIVATE'],
       ['2026-02-12T08:10:00', 'out_for_delivery', 'DENPASAR, DROP POINT SAMPLE', 'WITH DELIVERY COURIER'],
       // The repeated warehouse scan is kept once.
       ['2026-02-11T06:20:00', 'in_transit', 'DENPASAR, HUB BALI', 'RECEIVED AT WAREHOUSE'],
@@ -73,27 +73,32 @@ describe('JNE HTTP adapter', () => {
       ['2026-02-10T09:15:00', 'accepted', 'SURABAYA, AGEN SAMPLE', 'SHIPMENT RECEIVED AT'],
     ]);
     expect(result.events!.every((event) => event.time === undefined && event.stage_source)).toBe(true);
-    // No recipient, shipper, proof of delivery, goods or price survives.
-    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|32000|sig\.jpg|pod\.jpg|BERSANGKUTAN|SAMPLE GOODS/i);
+    // No shipper, proof of delivery image, goods or price survives.
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE SHIPPER|NO 1|32000|sig\.jpg|pod\.jpg|BERSANGKUTAN|SAMPLE GOODS|:\}/i);
+    // Without the summary's signatory, the delivery scan names who took the parcel.
+    const scanned = parseJne(changed('delivered', (body) => { body.cnote.cnote_pod_receiver = ''; }), DELIVERED);
+    expect(scanned.signed_by).toBe('BUDI PRIVATE');
   });
 
   it('reads an in-transit history under a fifteen-digit resi', () => {
     const result = parseJne(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
-      last_status_text: 'RECEIVED AT WAREHOUSE', last_update: null, last_update_local: '2026-03-02T20:45:00', weight_kg: 1.2 });
+      last_status_text: 'RECEIVED AT WAREHOUSE', last_update: null, last_update_local: '2026-03-02T20:45:00', weight_kg: 1.2,
+      receiver_name: 'SITI SAMPLE', receiver_address: 'MAKASSAR' });
+    expect(result).not.toHaveProperty('signed_by');
     expect(result.events!.at(-1)).toMatchObject({ stage: 'accepted', description: 'SHIPMENT RECEIVED BY JNE COUNTER OFFICER AT' });
     expect(result.events).toHaveLength(4);
   });
 
-  it('splits a scan into its phrase and its station, dropping the delivery recipient', () => {
+  it('splits a scan into its phrase, its station and a delivery’s recipient', () => {
     expect(jneScan('WITH DELIVERY COURIER [BOGOR, DROP POINT SAMPLE] [BOGOR, DROP POINT SAMPLE]'))
-      .toEqual({ wording: 'WITH DELIVERY COURIER', location: 'BOGOR, DROP POINT SAMPLE' });
+      .toEqual({ wording: 'WITH DELIVERY COURIER', location: 'BOGOR, DROP POINT SAMPLE', receiver: '' });
     // The second bracket can be empty; the last non-empty station is kept.
     expect(jneScan('SHIPMENT PICKED UP BY JNE COURIER [TANGERANG] []'))
-      .toEqual({ wording: 'SHIPMENT PICKED UP BY JNE COURIER', location: 'TANGERANG' });
-    // A delivery bracket is recipient, date and city; only the city stays.
+      .toEqual({ wording: 'SHIPMENT PICKED UP BY JNE COURIER', location: 'TANGERANG', receiver: '' });
+    // A delivery bracket is recipient, date and city.
     expect(jneScan('DELIVERED TO [BUDI SAMPLE:} | 12-02-2026 14:03 | DENPASAR ]'))
-      .toEqual({ wording: 'DELIVERED TO', location: 'DENPASAR' });
+      .toEqual({ wording: 'DELIVERED TO', location: 'DENPASAR', receiver: 'BUDI SAMPLE' });
   });
 
   it('keeps scans of one instant in the carrier’s order', () => {

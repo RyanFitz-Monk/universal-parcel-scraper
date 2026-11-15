@@ -27,10 +27,11 @@ parcels, run with its own drivers and partner carriers. Tracked through its trac
   is its description. The API documents more statuses, for pickups, failed deliveries, holds and
   returns, whose titles the page has not shown yet. They fall to the shared wording rules.
 - The estimate is the headline's "Arriving no later than" time.
-- Phone numbers are dropped from every line, and a delivery's line loses who took the parcel. The
-  origin and destination towns and the progress bar are not read. The ZIP code form unlocks the
-  delivery address, the proof of delivery and, on some routes, a live ETA with the driver's
-  first name and photo; the adapter does not use it.
+- Phone numbers are dropped from every line. A delivery's line keeps who took the parcel, which
+  is also read as the signatory. The destination town is read as the delivery address; the origin
+  town and the progress bar are not. The ZIP code form unlocks the full delivery address, the
+  proof of delivery and, on some routes, a live ETA with the driver's first name and photo; the
+  adapter does not use it.
 
 ## Limitations
 

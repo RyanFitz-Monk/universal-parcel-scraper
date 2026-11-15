@@ -79,10 +79,10 @@ describe('TK KIT HTTP adapter', () => {
     expect(JSON.stringify(result)).not.toMatch(/0000000000|0000000099|Пн-Пт|0\.500|ОБРПРМ|Синтетическая|Терминал Пример|EStPay|addressId/);
   });
 
-  it('reads a consignment going on to the door as in transit at the terminal, without the estimate or a pickup point', () => {
+  it('reads a consignment going on to the door as in transit at the terminal, with its address and without the estimate or a pickup point', () => {
     const result = parseKit(fixture('in-transit'), IN_TRANSIT);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Груз прибыл на терминал',
-      last_update_local: '2026-04-13T06:55:09', expected_delivery: null, weight_kg: 35.5 });
+      last_update_local: '2026-04-13T06:55:09', expected_delivery: null, weight_kg: 35.5, receiver_address: 'ул. Получателя, 5, кв. 7' });
     expect(result).not.toHaveProperty('pickup_point');
     // The steps come as an object, the estimate (F2) is no step, and a short day is padded.
     expect(result.events!.map((event) => [event.provider_code, event.stage, event.location ?? null, event.local_time])).toEqual([
@@ -91,7 +91,7 @@ describe('TK KIT HTTP adapter', () => {
       ['01', 'accepted', 'Образцовск', '2026-04-07T12:40:00'],
       ['00', 'registered', null, '2026-04-06T09:05:12'],
     ]);
-    expect(JSON.stringify(result)).not.toMatch(/Получателя|кв\. 7|Опытный|Плановая/);
+    expect(JSON.stringify(result)).not.toMatch(/Опытный|Плановая/);
 
     // The handover to the driver happens at the terminal; the delivery itself names no place.
     const delivered = parseKit(changed('in-transit', (body) => {
@@ -113,6 +113,10 @@ describe('TK KIT HTTP adapter', () => {
     expect(atTerminal((body) => { body.stepCount = 6; })).toBe('in_transit');
     expect(atTerminal((body) => { body.isDeliveryRequest = true; })).toBe('in_transit');
     expect(parseKit(changed('delivered', (body) => { body.deliveryType = 'PVZ'; }), DELIVERED)).not.toHaveProperty('pickup_point');
+    // The receiver block names the terminal or the pickup point unless the route goes to the door.
+    expect(parseKit(fixture('delivered'), DELIVERED)).not.toHaveProperty('receiver_address');
+    expect(parseKit(changed('delivered', (body) => { body.deliveryType = 'PVZ'; }), DELIVERED)).not.toHaveProperty('receiver_address');
+    expect(parseKit(changed('delivered', (body) => { body.deliveryType = 'delivery'; }), DELIVERED).receiver_address).toBe('ул. Складская, 1');
   });
 
   it('reads a cancelled order, steps sharing a clock and steps without the reply’s own wording', () => {

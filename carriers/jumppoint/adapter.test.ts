@@ -46,13 +46,14 @@ describe('Jumppoint HTTP adapter', () => {
     expect(jumppointLookupUrl('jp000000000101')).toBe(`${JUMPPOINT_API}?trackingNumbers%5B%5D=${DELIVERED}`);
   });
 
-  it('reads the delivery on Hong Kong’s clock without the courier, the merchant’s reference or who signed', () => {
+  it('reads the delivery on Hong Kong’s clock with who signed, without the courier or the merchant’s reference', () => {
     const result = parseJumppoint(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Completed', last_update: '2026-05-06T14:48:09+08:00', delivered_at: '2026-05-06T14:48:09+08:00',
-      expected_delivery: null });
+      last_status_text: 'Completed: signed by Sample Person', last_update: '2026-05-06T14:48:09+08:00', delivered_at: '2026-05-06T14:48:09+08:00',
+      expected_delivery: null, signed_by: 'Sample Person' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage ?? null, event.description])).toEqual([
-      ['2026-05-06T14:48:09+08:00', 'COMPLETED', 'delivered', 'Completed'],
+      // A free-text remark stays, and the state alone stages the row.
+      ['2026-05-06T14:48:09+08:00', 'COMPLETED', 'delivered', 'Completed: signed by Sample Person'],
       ['2026-05-06T10:05:44+08:00', 'ON_THE_WAY_TO_CUSTOMER', 'out_for_delivery', 'On the Way To Customer'],
       ['2026-05-05T18:20:00+08:00', 'SCHEDULED_FOR_REDELIVER', 'failed_attempt', 'Scheduled for Redelivery'],
       ['2026-05-05T17:55:31+08:00', 'UNDELIVERED', 'failed_attempt', 'Undelivered: Nobody answer the door'],
@@ -66,7 +67,10 @@ describe('Jumppoint HTTP adapter', () => {
     ]);
     expect(result).not.toHaveProperty('summary_only');
     expect(result).not.toHaveProperty('pickup_point');
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:Courier|Person)|0000 ?0000|SAMPLEORDER|signed|請致電/);
+    expect(JSON.stringify(result)).not.toMatch(/Sample Courier|0000 ?0000|SAMPLEORDER|請致電/);
+    // A remark on a row that is no delivery names no signatory.
+    const attempted = changed('delivered', (shipment) => { shipment.statusLogs.at(-1)!.status = 'UNDELIVERED'; });
+    expect(parseJumppoint(attempted, DELIVERED)).not.toHaveProperty('signed_by');
   });
 
   it('reads a parcel on its way to a pick-up point and names the point once it waits there', () => {

@@ -34,8 +34,8 @@ post abroad.
   exchange, not an acceptance, which the shared wording rules would read.
 - "Awaiting Item from sender" can come twice, days apart, before the item is despatched, so it
   stays registered.
-- The proof of delivery (`pod`) names who signed and is not read. The reply names the country
-  abroad but not the destination post's own number, so there is no hand-off.
+- The proof of delivery (`pod`) gives who signed for a delivered item. The reply names the
+  country abroad but not the destination post's own number, so there is no hand-off.
 
 ## Limitations
 

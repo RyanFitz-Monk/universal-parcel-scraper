@@ -142,15 +142,35 @@ function scheduled(payload: Record<string, unknown>, shipment: Record<string, un
   return { expected_delivery: shown(to.toMillis(), zone), expected_delivery_from: shown(from.toMillis(), zone) };
 }
 
+/** A string field, or nothing when it is absent or of another type. */
+function optional(row: unknown, key: string, maxLength: number): string {
+  const value = isRecord(row) ? row[key] : undefined;
+  return typeof value === 'string' || typeof value === 'number' ? clean(String(value), maxLength) : '';
+}
+
+/**
+ * The recipient's town and state from the shipment's drop-off address, and
+ * the postcode from the reply's postcode block, as "Town, ST 12345". A
+ * postcode that is not five digits, or five and four, is left out.
+ */
+function receiverAddress(payload: Record<string, unknown>, shipment: Record<string, unknown>): string {
+  const town = optional(shipment.dropoff_address, 'city', 80);
+  const state = optional(shipment.dropoff_address, 'state', 40);
+  const zip = optional(payload.zip, 'zipcode', 16);
+  const postcode = /^\d{5}(?:-\d{4})?$/.test(zip) ? zip : '';
+  const region = [state, postcode].filter(Boolean).join(' ');
+  return [town, region].filter(Boolean).join(', ');
+}
+
 /**
  * The reply of `GET /delivery/{code}` on Jitsu's recipient service: the
  * shipment, its events newest first, and the tracker's settings. The shipment's
  * tracking code must be the one requested, in any case. Events are read as
  * the tracker lists them: by clock, newest first, without the address updates
  * the recipient made, and without a facility's first scan that repeats its
- * receipt. The recipient's contact details, address, postcode and position,
- * the driver, delivery remarks, photos, signatures and access codes are never
- * read.
+ * receipt. The recipient's town, state and postcode are the receiver's address.
+ * Their contact details and position, the driver, delivery remarks, photos,
+ * signatures and access codes are never read.
  */
 export function parseJitsu(payload: unknown, raw: string): CarrierResult {
   const number = normalizeJitsuNumber(raw);
@@ -200,6 +220,7 @@ export function parseJitsu(payload: unknown, raw: string): CarrierResult {
   const stage = decider?.event.stage as Stage | undefined;
   const window = scheduled(payload, shipment, rows, stage, newest, zone, declared);
   const events = scans.map((row) => row.event);
+  const address = receiverAddress(payload, shipment);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: decider!.event.stage_source } : {}),
@@ -208,6 +229,7 @@ export function parseJitsu(payload: unknown, raw: string): CarrierResult {
     expected_delivery: window?.expected_delivery ?? null,
     ...(window ? { expected_delivery_from: window.expected_delivery_from } : {}),
     ...(stage === 'delivered' && decider?.code === 'OUTBOUND.DROPOFF_SUCCEEDED' ? { delivered_at: decider.event.time } : {}),
+    ...(address ? { receiver_address: address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

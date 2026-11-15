@@ -29,17 +29,18 @@ const instance = (fetcher: typeof fetch) => adapter({
 const replying = (body: string, init?: ResponseInit) => vi.fn<typeof fetch>(async () => new Response(body, init));
 
 describe('J&T Indonesia router reply', () => {
-  it('binds the waybill, keeps newest-first local clocks and projects no personal or internal data', () => {
+  it('binds the waybill, keeps newest-first local clocks and who took the parcel, and projects no other personal or internal data', () => {
     const result = parseJnt(JSON.parse(wire()), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
-      last_status_text: 'Package has been delivered', last_update: null, last_update_local: '2026-01-04T10:15:00' });
+      last_status_text: 'Package has been delivered to PRIVATE RECIPIENT', last_update: null, last_update_local: '2026-01-04T10:15:00',
+      signed_by: 'PRIVATE RECIPIENT' });
     expect(result.timezone).toBeUndefined();
     expect(result.events?.map((event) => [event.provider_code, event.stage])).toEqual([
       ['100', 'delivered'], ['94', 'out_for_delivery'], ['110', 'exception'], ['92', 'in_transit'],
       ['50', 'in_transit'], ['92', 'in_transit'], ['10', 'accepted'], ['210', 'accepted'],
     ]);
     expect(result.events?.map((event) => event.description)).toEqual([
-      'Package has been delivered',
+      'Package has been delivered to PRIVATE RECIPIENT',
       'Package will be delivered',
       'Shipment process is being delayed for the reason: Telepon tidak diangkat atau non-aktif',
       'Package has been arrived at KOTA TUJUAN Drop Point',
@@ -48,13 +49,13 @@ describe('J&T Indonesia router reply', () => {
       'Package has been processed at KOTA ASAL Drop Point',
       'Pick-Up',
     ]);
-    expect(result.events?.[0]).toEqual({ local_time: '2026-01-04T10:15:00', description: 'Package has been delivered',
+    expect(result.events?.[0]).toEqual({ local_time: '2026-01-04T10:15:00', description: 'Package has been delivered to PRIVATE RECIPIENT',
       location: 'KOTA TUJUAN, PROVINSI TUJUAN', provider_code: '100', stage: 'delivered', stage_source: 'carrier_map' });
     // A departure's scan fields name the next stop, not the place it leaves.
     expect(result.events?.[4]).not.toHaveProperty('location');
     expect(result.events?.[5]?.location).toBe('KOTA ASAL, PROVINSI ASAL');
     expect(result.events?.every((event) => event.time === undefined && event.point === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+    expect(JSON.stringify(result).replaceAll('PRIVATE RECIPIENT', '')).not.toMatch(PRIVATE);
   });
 
   it('reads data sent as an object as well as inside a string', () => {
@@ -97,7 +98,7 @@ describe('J&T Indonesia router reply', () => {
         rows(payload)[2]!.customerTracking = `Shipment process is being delayed for the reason: ${reason}`;
       }), NUMBER);
       expect(result.events?.[2]?.description).toBe('Shipment process is being delayed');
-      expect(JSON.stringify(result)).not.toMatch(PRIVATE);
+      expect(JSON.stringify(result.events?.slice(1))).not.toMatch(PRIVATE);
     }
   });
 
@@ -114,7 +115,7 @@ describe('J&T Indonesia router reply', () => {
       rows(payload)[6]!.customerTracking = 'Package has been processed at KOTA ASAL Sorting Desk by PRIVATE COURIER';
     }), NUMBER);
     expect([elsewhere.events?.[3]?.description, elsewhere.events?.[6]?.description]).toEqual(['On Shipping', 'Pick-Up']);
-    expect(JSON.stringify([result, elsewhere])).not.toMatch(PRIVATE);
+    expect(JSON.stringify([result.events?.slice(1), elsewhere.events?.slice(1)])).not.toMatch(PRIVATE);
   });
 
   it("gives a scan from the router's own system network no place", () => {

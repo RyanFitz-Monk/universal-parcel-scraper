@@ -70,12 +70,12 @@
       "destination_country",
       "delivery_partner",
       "delivery_tracking_number",
-      "canonical_tracking_number"
+      "canonical_tracking_number",
+      "recipient_address"
     ],
     "discarded": [
       "eta",
       "origin_country",
-      "recipient_address",
       "contact_details",
       "proof_of_delivery"
     ],

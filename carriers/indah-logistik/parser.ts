@@ -5,7 +5,7 @@ import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { indahLogistikStage, namesPlace } from './status.js';
+import { DASH, detailOf, indahLogistikStage } from './status.js';
 
 export const PROVIDER = 'Indah Logistik';
 // A long history with its waybill is a few kilobytes.
@@ -14,8 +14,6 @@ export const INDAH_LOGISTIK_MAX_BYTES = 512 * 1024;
 // as in 1CS and eight or twelve digits, or 1CSPL and twelve.
 const NUMBER = /^[A-Z]{3}[A-Z\d]{3,15}\d{6}$/;
 const CLOCK = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/;
-// The wording, then what the row names after its dash.
-const DASH = /\s+-\s+/;
 const MAX_ROWS = 500;
 const MAX_EVENTS = 100;
 // A run of nine or more digits, with spaces, brackets, dots or hyphens
@@ -49,29 +47,41 @@ interface Scan {
   readonly key: string;
   readonly index: number;
   readonly event: CarrierEvent;
+  // Who the row names after its dash as the receiver, with their relation.
+  readonly receiver: string;
 }
 
 /**
  * A row's wording before its dash, with the town after it when the wording is
- * a movement. The courier's name, the receiver's name and relation, and a
- * scheduled delivery's note after other wordings are left out.
+ * a movement. The delivery and an attempt keep the receiver's name and
+ * relation after the dash. The courier's name, a scheduled delivery's note
+ * and the detail of a wording the adapter does not know are left out.
  */
 function projectRow(row: Record<string, unknown>, index: number): Scan {
   const status = clean(row.status, 300);
   const [head = '', ...rest] = status.split(DASH);
-  const description = clean(head.replace(PHONE, '')).replace(/[\s,;:.\-–]+$/, '');
-  if (!description) throw new SchemaError(PROVIDER, 'Indah Logistik returned a scan without wording');
-  const town = namesPlace(description) ? clean(rest.join(' - ').replace(PHONE, ''), 120) : '';
-  const location = /^[\s\-–.]*$/.test(town) ? '' : town;
+  const wording = clean(head.replace(PHONE, '')).replace(/[\s,;:.\-–]+$/, '');
+  if (!wording) throw new SchemaError(PROVIDER, 'Indah Logistik returned a scan without wording');
+  const detail = clean(rest.join(' - ').replace(PHONE, ''), 120);
+  const named = /^[\s\-–.]*$/.test(detail) ? '' : detail;
+  const location = detailOf(wording) === 'place' ? named : '';
+  const receiver = detailOf(wording) === 'receiver' ? named : '';
+  const description = receiver ? `${wording} - ${receiver}` : wording;
   const local = scanClock(row);
-  const staged = indahLogistikStage(description);
+  const staged = indahLogistikStage(wording);
   const event: CarrierEvent = {
     local_time: local,
     ...(location ? { location } : {}),
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([local, description, location]), index, event };
+  return { key: JSON.stringify([local, description, location]), index, event, receiver };
+}
+
+/** A waybill text the lookup fills with a dash when it has none. */
+function field(waybill: Record<string, unknown>, key: string, maxLength = 160): string {
+  const value = clean(waybill[key], maxLength);
+  return /^[\s\-–.]*$/.test(value) ? '' : value;
 }
 
 /** The service, with the way it travels as the tracker labels it: `Indah Logistic Cargo (Darat)`. */
@@ -120,6 +130,7 @@ export function parseIndahLogistik(payload: unknown, raw: string): CarrierResult
 
   const seen = new Set<string>();
   const scans: Scan[] = [];
+  const receivers = new Map<CarrierEvent, string>();
   let foreign = 0;
   rows.forEach((row, index) => {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'Indah Logistik returned an invalid scan');
@@ -133,6 +144,7 @@ export function parseIndahLogistik(payload: unknown, raw: string): CarrierResult
     if (seen.has(scan.key)) return;
     seen.add(scan.key);
     scans.push(scan);
+    if (scan.receiver) receivers.set(scan.event, scan.receiver);
   });
   if (!scans.length) {
     if (foreign) throw new IndeterminateError(PROVIDER, 'Indah Logistik answered for another shipment');
@@ -147,6 +159,10 @@ export function parseIndahLogistik(payload: unknown, raw: string): CarrierResult
   const stage = scanned?.stage as Stage | undefined;
   const service = serviceOf(waybill);
   const weight = weightOf(waybill);
+  // The recipient's name and street as the waybill gives them, masked.
+  const receiver = field(waybill, 'NM_PENERIMA');
+  const address = field(waybill, 'ALT_PENERIMA', 300);
+  const signedBy = stage === 'delivered' ? receivers.get(scanned!) ?? '' : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
@@ -155,6 +171,9 @@ export function parseIndahLogistik(payload: unknown, raw: string): CarrierResult
     last_update_local: newest.local_time,
     ...(service ? { service_name: service } : {}),
     ...(weight ? { weight_kg: weight } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

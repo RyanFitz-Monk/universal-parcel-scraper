@@ -36,16 +36,13 @@ function text(row: Record<string, unknown>, key: string, maxLength = 300): strin
   return clean(value, maxLength);
 }
 
-// What follows a handover's wording: the person who took the parcel and how
-// they relate to the recipient, "Teslim edildi - Sample P***** (Kendi)".
-const HANDED_TO = /\s+[-–]\s+[\s\S]*$/;
-
 /**
- * A scan's wording, without the person who took the parcel, and with the
- * reason a delivery or a pickup failed: "Teslim Edilemedi: Hasarlı".
+ * A scan's wording, with the person who took or handed over the parcel as it names them,
+ * "Teslim edildi - Sample P***** (Kendi)", and the reason a delivery or a pickup failed:
+ * "Teslim Edilemedi: Hasarlı".
  */
 export function hepsijetWording(transaction: string, reason = ''): string {
-  const own = clean(transaction).replace(HANDED_TO, '').replace(/[\s:;,.-]+$/, '');
+  const own = clean(transaction).replace(/[\s:;,.-]+$/, '');
   const why = clean(reason, 120);
   return own && why ? `${own}: ${why}` : own;
 }
@@ -54,7 +51,7 @@ export function hepsijetWording(transaction: string, reason = ''): string {
 // the recipient, with the sender, in the delivery van. None is a place.
 const NO_PLACE = new Set(['alıcıda', 'satıcıda', 'dağıtım aracında']);
 
-function projectRow(row: unknown): { key: string; event: CarrierEvent; at: number } {
+function projectRow(row: unknown): { key: string; event: CarrierEvent; at: number; takenBy: string } {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'HepsiJET returned an invalid scan');
   const stamp = text(row, 'transactionDateTime', 40);
   // HepsiJET scans in Turkey, whose clocks keep one offset; a clock without it is read there.
@@ -75,7 +72,14 @@ function projectRow(row: unknown): { key: string; event: CarrierEvent; at: numbe
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { key: JSON.stringify([at.iso, code, description, location]), event, at: at.timestamp };
+  return { key: JSON.stringify([at.iso, code, description, location]), event, at: at.timestamp,
+    takenBy: text(row, 'deliveredPerson', 160) };
+}
+
+/** Where the parcel is addressed: the street, then the district and the province. */
+function addressed(shipment: Record<string, unknown>): string {
+  const town = [text(shipment, 'receiverTown', 80), text(shipment, 'receiverCity', 80)].filter(Boolean).join(' / ');
+  return [text(shipment, 'receiverAddressLine', 300), town].filter(Boolean).join('\n');
 }
 
 /** The promised day the page shows, in Istanbul, while the parcel is still on its way. */
@@ -124,11 +128,13 @@ export function parseHepsijet(payload: unknown, raw: string): CarrierResult {
 
   const seen = new Set<string>();
   const scans: { event: CarrierEvent; at: number; index: number }[] = [];
+  const takenBy = new Map<CarrierEvent, string>();
   for (const row of rows) {
     const scan = projectRow(row);
     if (seen.has(scan.key)) continue;
     seen.add(scan.key);
     scans.push({ event: scan.event, at: scan.at, index: scans.length });
+    if (scan.takenBy) takenBy.set(scan.event, scan.takenBy);
   }
   if (!scans.length) throw new NoHistoryError(PROVIDER);
   // The reply lists scans oldest first; scans at one clock keep their order, reversed.
@@ -139,6 +145,10 @@ export function parseHepsijet(payload: unknown, raw: string): CarrierResult {
   const stage = current?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? current : undefined;
   const service = text(shipment, 'productName', 80);
+  // A customer's return is addressed to the merchant, whom `receiver` names.
+  const receiver = text(shipment, 'receiver', 160) || text(shipment, 'recipientName', 160);
+  const address = addressed(shipment);
+  const signedBy = delivered ? takenBy.get(delivered) || text(shipment, 'deliveredPerson', 160) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source ?? 'carrier_map' } : {}),
@@ -147,6 +157,9 @@ export function parseHepsijet(payload: unknown, raw: string): CarrierResult {
     expected_delivery: promised(shipment, stage),
     ...(delivered?.time ? { delivered_at: delivered.time } : {}),
     ...(service ? { service_name: service } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

@@ -79,7 +79,7 @@ describe('Kuehne+Nagel tracking adapter', () => {
     const result = await carrier(tracker()).track({ number: DELIVERED });
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Proof of delivery available', last_update: '2026-03-12T10:15:00+01:00', expected_delivery: null,
-      delivered_at: '2026-03-12T09:40:00+01:00', weight_kg: 120.5, destination_country: 'FR' });
+      delivered_at: '2026-03-12T09:40:00+01:00', weight_kg: 120.5, destination_country: 'FR', receiver_address: 'Villefictive' });
     expect(rows(result)).toEqual([
       ['2026-03-12T10:15:00+01:00', 'pod-available', 'delivered', null],
       ['2026-03-12T09:40:00+01:00', 'destination.cargo-delivered.road', 'delivered', 'Villefictive, FR'],
@@ -115,7 +115,9 @@ describe('Kuehne+Nagel tracking adapter', () => {
       ['2026-02-03T09:00:00Z', 'booking-submission', 'registered', null],
     ]);
     expect(result.events!.filter(event => event.local_time).every(event => event.time === undefined)).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/import-customs|Mythopoli|Paradeigma|T00000/);
+    // The consignee's town is the route's last stop, not yet reached.
+    expect(result.receiver_address).toBe('Mythopoli');
+    expect(JSON.stringify({ ...result, receiver_address: undefined })).not.toMatch(/import-customs|Mythopoli|Paradeigma|T00000/);
   });
 
   it('reads a road exception beside its milestone, at the date it was reported', () => {
@@ -181,7 +183,7 @@ describe('Kuehne+Nagel tracking adapter', () => {
     expect(notice.current_stage).toBeUndefined();
   });
 
-  it('keeps a stop’s town only without digits and its country, and a date without a clock as a local date', () => {
+  it('keeps a stop’s town only without digits and its country, the consignee’s as written, and a date without a clock as a local date', () => {
     const result = delivered((stops) => {
       stops[3]!.location.freeTextLocation = '12 Rue Fictive';
       stops[1]!.location = { locationCode: 'DEBSF', countryCode: 'DE', countryName: 'Germany', freeTextLocation: 'Beispielfeld Hbf' };
@@ -190,7 +192,8 @@ describe('Kuehne+Nagel tracking adapter', () => {
     });
     expect(rows(result)).toContainEqual(['2026-03-12T09:40:00+01:00', 'destination.cargo-delivered.road', 'delivered', 'France']);
     expect(rows(result)).toContainEqual(['2026-03-10', 'departure.vehicle-arrived.road', 'in_transit', 'Beispielfeld Hbf, DE']);
-    expect(JSON.stringify(result)).not.toContain('Rue Fictive');
+    expect(result.receiver_address).toBe('12 Rue Fictive');
+    expect(JSON.stringify(result.events)).not.toContain('Rue Fictive');
   });
 
   it('rejects malformed routes and notices', () => {

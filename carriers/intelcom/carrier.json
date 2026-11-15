@@ -39,13 +39,15 @@
       "eta",
       "sender_name",
       "driver_name",
-      "recipient_details"
+      "recipient_details",
+      "recipient_name"
     ],
     "scraped": [
       "status",
       "history",
       "eta",
-      "sender_name"
+      "sender_name",
+      "recipient_name"
     ],
     "discarded": [
       "driver_name",

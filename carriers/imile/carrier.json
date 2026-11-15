@@ -65,12 +65,12 @@
       "provider_code",
       "location",
       "destination_country",
-      "eta"
+      "eta",
+      "signatory"
     ],
     "discarded": [
       "delivery_tracking_number",
       "proof_of_delivery",
-      "signatory",
       "contact_details",
       "payment_details"
     ],

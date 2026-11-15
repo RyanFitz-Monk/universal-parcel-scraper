@@ -87,12 +87,15 @@ function history(item: Record<string, unknown>): CarrierResult {
   const newest = newestFirst[0]!;
   const scanned = newestFirst.find((event) => event.stage);
   const stage = scanned?.stage as Stage | undefined;
+  // The proof of delivery names who signed.
+  const signedBy = stage === 'delivered' && isRecord(item.pod) && typeof item.pod.podName === 'string' ? clean(item.pod.podName, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: scanned!.stage_source ?? 'carrier_map' } : {}),
     last_status_text: newest.description!,
     last_update: null,
     last_update_local: newest.local_time,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };
@@ -105,7 +108,7 @@ function history(item: Record<string, unknown>): CarrierResult {
  * available", 2 and 4 a number the tracker does not take, 5 another carrier's
  * number, 6 a question whether the item was posted in Jersey and -1 a refused
  * request. The item must name the number asked and Jersey Post as its carrier.
- * The proof of delivery (`pod`), which names who signed, is not read.
+ * The proof of delivery (`pod`) gives who signed for a delivered item.
  */
 export function parseJerseyPost(payload: unknown, raw: string): CarrierResult {
   const number = normalizeJerseyPostNumber(raw);

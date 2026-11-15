@@ -64,14 +64,14 @@ function wallClock(value: string): string {
   return digits;
 }
 
-interface Scan { event: CarrierEvent; clock: string; inward: boolean; country: string; index: number }
+interface Scan { event: CarrierEvent; clock: string; inward: boolean; country: string; signatory: string; index: number }
 
 /**
  * One IPS scan. `LocalDate` is the scanning office's wall clock; nothing in the
  * reply gives its offset, so it stays local. The page shows the event's French
  * name; the office's name drops a postcode and is followed by its country. The
  * reason an item was kept or not delivered, and what happens next, follow the
- * event. The signatory and the signature are not read.
+ * event. A delivery's signatory is read; the signature is not.
  */
 function scanOf(row: unknown, index: number): Scan {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'La Poste du Sénégal returned an invalid scan');
@@ -103,7 +103,8 @@ function scanOf(row: unknown, index: number): Scan {
     ...(code ? { provider_code: code } : {}),
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { event, clock, inward: INWARD.test(english || wording), country: COUNTRY.test(countryCode) ? countryCode : '', index };
+  const signatory = staged?.stage === 'delivered' && typeof row.SignatoryName === 'string' ? clean(row.SignatoryName, 120) : '';
+  return { event, clock, inward: INWARD.test(english || wording), country: COUNTRY.test(countryCode) ? countryCode : '', signatory, index };
 }
 
 /**
@@ -147,7 +148,8 @@ export function parseLaPosteSenegal(payload: unknown, rawNumber: string): Carrie
   const events = scans.map(({ event }) => event);
 
   const latest = events[0]!;
-  const current = events.find(event => event.stage);
+  const scanned = scans.find(scan => scan.event.stage);
+  const current = scanned?.event;
   const stage = current?.stage as Stage | undefined;
   // An inward scan is recorded in the country the item was sent to.
   const destination = scans.find(scan => scan.inward && scan.country)?.country;
@@ -159,6 +161,7 @@ export function parseLaPosteSenegal(payload: unknown, rawNumber: string): Carrie
     last_update_local: latest.local_time,
     expected_delivery: null,
     ...(destination ? { destination_country: destination } : {}),
+    ...(stage === 'delivered' && scanned!.signatory ? { signed_by: scanned!.signatory } : {}),
     events,
   };
 }

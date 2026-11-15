@@ -55,12 +55,11 @@
       "provider_code",
       "destination_country",
       "delivery_partner",
-      "delivery_tracking_number"
-    ],
-    "discarded": [
+      "delivery_tracking_number",
       "recipient_name",
       "recipient_address"
     ],
+    "discarded": [],
     "unavailable": [
       "eta",
       "weight",

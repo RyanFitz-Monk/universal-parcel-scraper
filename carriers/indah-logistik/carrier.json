@@ -66,7 +66,10 @@
       "history",
       "location",
       "service_name",
-      "weight"
+      "weight",
+      "recipient_name",
+      "recipient_address",
+      "signatory"
     ],
     "discarded": [
       "origin",
@@ -77,12 +80,9 @@
       "payment_details",
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "phone_numbers",
       "staff_details",
-      "driver_name",
-      "signatory"
+      "driver_name"
     ],
     "unavailable": [
       "eta",

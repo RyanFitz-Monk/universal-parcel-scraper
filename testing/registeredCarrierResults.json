@@ -575,6 +575,7 @@
       "current_stage": "delivered",
       "last_status_text": "Delivery complete",
       "last_update": null,
+      "receiver_name": "PRIVATE_RECIPIENT",
       "events": [
         {
           "local_time": "2026-03-05T11:30:00",

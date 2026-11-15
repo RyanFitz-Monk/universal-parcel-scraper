@@ -34,8 +34,9 @@ Tracked through the lookup its tracking page makes.
   a same-day waybill is confirmed and again at the warehouse before delivery; it moves nothing.
   `PASSED_TO_COURIER` comes a second before `ON_THE_WAY_TO_CUSTOMER` and counts as out for
   delivery.
-- A row keeps its reason only when it is one of the coded reasons the page words itself, such as
-  nobody answering the door. Free-text remarks can name who signed, so they are not kept.
+- A coded reason, such as nobody answering the door, is shown in the page's words. Any other
+  remark stays as written and does not stage the row. A delivery's "signed by" remark gives who
+  signed.
 - The courier's phone numbers, the merchant's order number and the pick-up point's phone and
   opening hours are not kept. The pick-up point's name and address are kept while the parcel
   waits there and after it is collected.

@@ -39,7 +39,9 @@ const LEAVING = /\bFROM\s+(.+)$/i;
 const CITY = /^[A-Za-z][A-Za-z .()&-]{0,59}$/;
 // A run of ten or more digits, as a phone number is written, and a signatory after a delivery.
 const PHONE = /(?<!\d)\+?\d(?:[\s-]?\d){9,}(?!\d)/g;
-const SIGNATORY = /\s+SIGN\b[\s\S]*$/i;
+const SIGNATORY = /\s+SIGN\b\s*([\s\S]*)$/i;
+// The summary's status for a delivered parcel, which can name who signed after "SIGN".
+const SIGNED_STATUS = /^DELIVERED\s+SIGN\b\s*(.*)$/i;
 // Firewall and bot check pages, which could stand in for the tracker.
 const CHALLENGE = /_cf_chl_opt|cf-turnstile|\/cdn-cgi\/challenge-platform\/|_Incapsula_Resource|errors\.edgesuite\.net|requested URL was rejected|g-recaptcha|h-captcha|<title>\s*(?:Just a moment|Attention Required|Access Denied|Request Rejected)/i;
 const MAX_ROWS = 300;
@@ -106,12 +108,12 @@ export function jetlineAnswerUrl(location: string | null): string {
   return target.href;
 }
 
-interface Summary { target: string }
+interface Summary { target: string; status: string }
 
 /**
  * The summary's one row for the number. The rows carry the AWB number, so the
  * answer is bound to it: one row, for the whole number, or the answer is
- * inconclusive. Its status, which can name a signatory, is not read.
+ * inconclusive. Its status can name a signatory.
  */
 function summaryOf($: CheerioAPI, grid: Cheerio<Element>, number: string): Summary {
   const rows = grid.find('tr').toArray();
@@ -128,9 +130,10 @@ function summaryOf($: CheerioAPI, grid: Cheerio<Element>, number: string): Summa
   });
   if (numbers.some((value) => value !== number)) throw new IndeterminateError(PROVIDER, 'Jetline answered for another number');
   if (body.length > 1) throw new IndeterminateError(PROVIDER, 'Jetline listed several bookings under the number');
-  const link = $(body[0]).children('td').last().find('a');
+  const cells = $(body[0]).children('td');
+  const link = cells.last().find('a');
   const target = link.length === 1 ? POSTBACK.exec(link.attr('href') ?? '')?.[1] : undefined;
-  return { target: target ?? invalid('Jetline returned a summary without its history link') };
+  return { target: target ?? invalid('Jetline returned a summary without its history link'), status: clean(cells.eq(4).text(), 200) };
 }
 
 /** The answer page's summary grid, after the tracker's form. */
@@ -183,12 +186,20 @@ function badgeCity(badge: string): string | undefined {
   return CITY.test(city) ? city : undefined;
 }
 
-/** A row's wording without phones or a signatory. */
-function wordingOf(remark: string): string {
-  return clean(remark.replace(PHONE, ' ').replace(SIGNATORY, ''), 300);
+/**
+ * A row's wording without phones, the wording it is staged by, without the
+ * signatory a delivery can name after "SIGN", and that signatory.
+ */
+function wordingOf(remark: string): { description: string; staging: string; signatory: string } {
+  const text = remark.replace(PHONE, ' ');
+  return {
+    description: clean(text, 300),
+    staging: clean(text.replace(SIGNATORY, ''), 300),
+    signatory: clean(SIGNATORY.exec(text)?.[1], 120),
+  };
 }
 
-interface Row { day: string; event: CarrierEvent }
+interface Row { day: string; event: CarrierEvent; signatory: string }
 
 /** The history's rows, in the tracker's order, newest first. */
 function rowsOf($: CheerioAPI, panel: Cheerio<Element>): Row[] {
@@ -196,29 +207,30 @@ function rowsOf($: CheerioAPI, panel: Cheerio<Element>): Row[] {
   if (items.length > MAX_ROWS) invalid('Jetline returned an oversized history');
   return items.map((item) => {
     const day = dayOf(clean($(item).find('.timeline-date').text(), 60));
-    const description = wordingOf(clean($(item).find('.timeline-remarks').text(), 1000));
-    if (!description) invalid('Jetline returned a history row without its wording');
+    const { description, staging, signatory } = wordingOf(clean($(item).find('.timeline-remarks').text(), 1000));
+    if (!staging) invalid('Jetline returned a history row without its wording');
     // A dispatch row's badge is the next branch's, so the branch it leaves comes from the wording.
-    const leaving = DISPATCH.test(description) ? LEAVING.exec(description)?.[1] ?? '' : null;
+    const leaving = DISPATCH.test(staging) ? LEAVING.exec(staging)?.[1] ?? '' : null;
     const city = leaving === null ? badgeCity(clean($(item).find('.timeline-location-badge').text(), 400))
       : CITY.test(leaving) ? leaving : undefined;
-    const staged = jetlineStage(description);
+    const staged = jetlineStage(staging);
     const event: CarrierEvent = {
       local_time: day,
       ...(city ? { location: city } : {}),
       description,
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
     };
-    return { day, event };
+    return { day, event, signatory };
   });
 }
 
 /**
  * The page the tracker returns when the answer page posts its history link
  * back: the summary again, the parcel's history and, once delivered, the proof
- * of delivery. The summary binds it to the number like the answer page. The
- * branches' addresses and phones, the summary's status and the proof of
- * delivery are not read.
+ * of delivery. The summary binds it to the number like the answer page. A
+ * delivered parcel's signatory comes from its delivery row, else from the
+ * summary's status. The branches' addresses and phones and the proof of
+ * delivery's photo are not read.
  */
 export function parseJetlineCouriers(html: string, rawNumber: string): CarrierResult {
   const number = normalizeJetlineNumber(rawNumber);
@@ -226,7 +238,7 @@ export function parseJetlineCouriers(html: string, rawNumber: string): CarrierRe
   const form = formOf($, html);
   const grid = gridOf(form);
   if (!grid) invalid('Jetline returned its history without the summary');
-  summaryOf($, grid, number);
+  const summary = summaryOf($, grid, number);
   const panels = form.find('div#Panel1');
   if (panels.length !== 1) invalid('Jetline returned its summary without the history');
   const rows = rowsOf($, panels.first());
@@ -234,13 +246,19 @@ export function parseJetlineCouriers(html: string, rawNumber: string): CarrierRe
 
   // Newest first: the tracker lists the rows newest first, which the days keep.
   const seen = new Set<string>();
-  const events = rows.sort((a, b) => b.day.localeCompare(a.day)).map(({ event }) => event).filter((event) => {
+  const signatories = new Map<CarrierEvent, string>();
+  const events = rows.sort((a, b) => b.day.localeCompare(a.day)).filter(({ event }) => {
     const key = JSON.stringify([event.local_time, event.location, event.description]);
     return seen.has(key) ? false : (seen.add(key), true);
+  }).map(({ event, signatory }) => {
+    if (signatory) signatories.set(event, signatory);
+    return event;
   });
   // A delivery settles the parcel; otherwise the newest row with a known stage decides.
   const decisive = events.find((event) => event.stage === 'delivered') ?? events.find((event) => event.stage);
   const newest = events[0]!;
+  const signedBy = decisive?.stage === 'delivered'
+    ? signatories.get(decisive) || clean(SIGNED_STATUS.exec(summary.status)?.[1]?.replace(PHONE, ' '), 120) : '';
   return {
     status: decisive ? languageStageStatus(decisive.stage as Stage) : 'unknown',
     ...(decisive ? { current_stage: decisive.stage, current_stage_source: decisive.stage_source } : {}),
@@ -248,6 +266,7 @@ export function parseJetlineCouriers(html: string, rawNumber: string): CarrierRe
     last_update: null,
     last_update_local: newest.local_time,
     expected_delivery: null,
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events,
   };
 }

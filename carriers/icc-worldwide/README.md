@@ -35,8 +35,9 @@ through the page its tracking form opens.
   older tracker printed for DHL, UPS, FedEx, Aramex, Blue Dart, TNT, USPS or DPEX, and only when
   one partner is shown. Other labels, such as `CITY-LINK`, the UK courier rather than the
   catalog's Malaysian one, are not kept.
-- The customer's, consignee's and receiver's names are dropped from the rows. The origin, the
-  destination and the names themselves are not kept.
+- The rows keep the names they carry, but are staged without them. The consignee's name and the
+  town under it are read as the recipient and the delivery address, and the summary's receiver as
+  who took the delivery. The customer, the origin and the destination are not kept.
 
 ## Limitations
 

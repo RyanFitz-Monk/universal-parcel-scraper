@@ -14,10 +14,13 @@ own "no delivery information" notice is the only not-found answer.
 The international portal uses destination-local scan times after handover. The adapter
 retains those wall clocks as `local_time` and reverses the portal's oldest-first
 sequence without inventing offsets. `last_update` stays empty so providers can
-supply dated history. The details column mixes routing notes and recipient data;
-the adapter reads only the dedicated status and facility columns. On the
-domestic page the status cell goes on with the courier's name and phone or the
-recipient, and the basic table names sender and recipient; none of them is read.
+supply dated history. The basic-information table's addressee becomes
+`receiver_name`. The details column mixes routing notes with the delivery's
+result; the adapter reads the status and facility columns, and from a delivery's
+details only who took the parcel, as `signed_by`. On the domestic page the
+basic table's addressee and receiver are read and its sender is not. The status
+cell goes on with the courier's name and phone before a delivery, which stay
+out, and with who took the parcel on the delivery, which stays in its wording.
 
 Run `npm run test:carriers:live -- carriers/korea-post`.
 Set `KOREA_POST_TRACKING_NUMBER` outside the repository for a real international

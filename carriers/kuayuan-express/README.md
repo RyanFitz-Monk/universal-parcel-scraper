@@ -31,7 +31,8 @@ kuayuanexpress.com.cn. Tracked through the tracking form on its home page.
   can come before China Post's first scan. They are kept as Kuayuan writes them.
 - The reply does not name the line. The line's number names it when one carrier's high-confidence
   rule claims it, such as China Post's `ZS` numbers.
-- The recipient's name and town and the customer's reference are not kept.
+- The recipient's name and town become `receiver_name` and `receiver_address`. The customer's
+  reference is not kept.
 - 17TRACK names the carrier "KUAYUAN SUPPLY CHAIN".
 
 ## Numbers

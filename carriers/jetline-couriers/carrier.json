@@ -43,12 +43,14 @@
       "progress_rail",
       "office_addresses",
       "office_contact_details",
-      "proof_of_delivery"
+      "proof_of_delivery",
+      "signatory"
     ],
     "scraped": [
       "status",
       "history",
-      "location"
+      "location",
+      "signatory"
     ],
     "discarded": [
       "origin",

@@ -73,8 +73,15 @@ describe('Kuayuan Express HTTP adapter', () => {
     expect(result.events![5]).toMatchObject({ description: 'Submitted to the airline', location: '中国香港' });
     expect(result.events!.at(-1)).toMatchObject({ location: 'SHENZHEN' });
     expect(result.events!.every((event) => event.time === undefined && event.stage_source === 'carrier_map')).toBe(true);
-    // The recipient's name and town and the customer's reference are not kept.
-    expect(JSON.stringify(result)).not.toMatch(/Sample Recipient|Sample Town|000000000000001/);
+    // The recipient's name and town are kept, the customer's reference is not.
+    expect(result).toMatchObject({ receiver_name: 'Sample Recipient', receiver_address: 'Sample Town' });
+    expect(JSON.stringify(result)).not.toContain('000000000000001');
+  });
+
+  it('leaves out a recipient field the reply leaves empty or changes', () => {
+    const result = parseKuayuan(changed((shipment) => { shipment.consignee_name = null; shipment.shipp_to_location = 1; }), IN_TRANSIT);
+    expect(result).not.toHaveProperty('receiver_name');
+    expect(result).not.toHaveProperty('receiver_address');
   });
 
   it('keeps a scan listed twice once, and sorts scans listed oldest first', () => {

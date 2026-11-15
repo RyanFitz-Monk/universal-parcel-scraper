@@ -37,7 +37,7 @@ const CHALLENGE = /_cf_chl_opt|cf-turnstile|challenge-platform|<title>\s*(?:Just
 // A run of nine or more digits, with spaces, brackets, dots or hyphens between them, as phone numbers are written.
 const PHONE = /(?<![A-Z\d])\+?\(?\d(?:[\s().-]{0,2}\d){8,}(?![A-Z\d])/gi;
 // Who took a delivered parcel, after the scan's line ("Delivered, signed by …").
-const RECEIVER = /\s*[,;:.\-–]?\s*\b(?:signed(?: for)? by|received by|accepted by|left with)\b[\s\S]*$/i;
+const RECEIVER = /\b(?:signed(?: for)? by|received by|accepted by|left with)\s+(.+?)(?=\s+at\b|[,;.]|$)/i;
 const MAX_ROWS = 300;
 const MAX_EVENTS = 100;
 
@@ -87,10 +87,14 @@ function scanClock(text: string): Pick<CarrierEvent, 'time'> & { local_time?: st
   return stamp.offset ? { time: `${stamp.wall}${stamp.offset}` } : { local_time: stamp.wall };
 }
 
-/** A scan's line without phone numbers, and a delivery's without who took the parcel. */
-export function hovershipWording(detail: string, delivered: boolean): string {
-  const line = delivered ? detail.replace(RECEIVER, '') : detail;
-  return clean(line.replace(PHONE, ' ').replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+/** A scan's line without phone numbers. */
+export function hovershipWording(detail: string): string {
+  return clean(detail.replace(PHONE, ' ').replace(/\s+([,;:.])/g, '$1'), 300).replace(/^[\s,;:.\-–]+|[\s,;:\-–]+$/g, '');
+}
+
+/** Who a delivery's line says took the parcel: "Delivered, signed by …". */
+export function hovershipSignedBy(line: string): string {
+  return clean(RECEIVER.exec(line)?.[1] ?? '', 120);
 }
 
 /** The history's rows, newest first as the page lists them; none when the page has no history. */
@@ -103,6 +107,12 @@ function historyRows($: CheerioAPI): Element[] {
   return lists.children('li').toArray();
 }
 
+/** The town and state of the "Delivering to" card, where the parcel is addressed. */
+function destinationTown($: CheerioAPI): string {
+  const label = $('main p.stat-card-label').filter((_, item) => clean($(item).text()) === 'Delivering to').first();
+  return clean(label.nextAll('p').first().text(), 120);
+}
+
 function projectRow($: CheerioAPI, row: Element): CarrierEvent {
   const times = $(row).find('time');
   if (times.length !== 1) invalid('Hovership returned an incomplete scan');
@@ -112,7 +122,7 @@ function projectRow($: CheerioAPI, row: Element): CarrierEvent {
   const clock = scanClock(clean(times.text(), 60));
   const detail = clean(header.nextAll('p').first().text(), 400);
   const staged = hovershipStage(label, detail);
-  const description = hovershipWording(detail, staged?.stage === 'delivered') || label;
+  const description = hovershipWording(detail) || label;
   return {
     ...clock,
     description,
@@ -137,9 +147,9 @@ export function isHovershipNotFound(html: string): boolean {
  * The page `www.hovership.com/track/{number}/` answers. The server renders the
  * parcel under its number, a headline status with its latest delivery time or
  * its delivery, and the history newest first, each scan a title, a clock and a
- * line. The progress rail, the origin and destination towns and the form that
- * unlocks the address and proof of delivery for the delivery ZIP code are not
- * read.
+ * line. The destination town is where the parcel is addressed. The progress
+ * rail, the origin town and the form that unlocks the address and proof of
+ * delivery for the delivery ZIP code are not read.
  */
 export function parseHovership(html: string, raw: string): CarrierResult {
   const number = normalizeHovershipNumber(raw);
@@ -183,6 +193,8 @@ export function parseHovership(html: string, raw: string): CarrierResult {
   const delivered = stage === 'delivered' ? current?.time ?? noteClock(note, DELIVERED)?.time : undefined;
   const newest = events[0];
   if (!newest && !summary) throw new NoHistoryError(PROVIDER);
+  const signedBy = stage === 'delivered' && current ? hovershipSignedBy(current.description!) : '';
+  const destination = destinationTown($);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current?.stage_source ?? 'carrier_map' } : {}),
@@ -191,6 +203,8 @@ export function parseHovership(html: string, raw: string): CarrierResult {
     ...(typeof newest?.local_time === 'string' ? { last_update_local: newest.local_time } : {}),
     expected_delivery: estimate ? estimate.time ?? estimate.day : null,
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...(destination ? { receiver_address: destination } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     ...(newest ? {} : { summary_only: true }),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

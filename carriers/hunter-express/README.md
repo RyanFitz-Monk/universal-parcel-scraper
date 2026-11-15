@@ -32,8 +32,9 @@ tracks on the same tracker, so its name is an alias. Tracked through its public 
 - A dated status above the history that is newer than every row, such as "OnDelivery, Left
   Depot" once the van has left, becomes the newest scan.
 - The estimate is a day or a window of two days, until a delivery.
-- The receiver's suburb and postcode, the item counts, the driver's position and queue, the
-  receiver's name, the map's points and the authority-to-leave note are not kept.
+- The receiver's suburb and postcode are read as the delivery address, and the name the delivery
+  was received by as its signatory. The item counts, the driver's position and queue, the map's
+  points and the authority-to-leave note are not kept.
 - No recognition: the tracker's only answer for a number it has no consignment for is the
   inconclusive one, and other Australian carriers on the same consignment software print the
   same layout.

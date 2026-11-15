@@ -58,6 +58,8 @@ export interface LPostOrder {
   seller: string;
   /** The pickup point's address and directions; empty for a courier delivery, whose address is the recipient's. */
   point: string;
+  /** The recipient's address, as a courier delivery gives it; empty for a pickup point delivery. */
+  address: string;
 }
 
 /**
@@ -89,11 +91,13 @@ export function parseLPostOrder(payload: unknown, raw: string): LPostOrder {
   const written = PLANNED.exec(text(order, 'DeliveryDatePlan', 32))?.[1];
   const planned = written && DateTime.fromISO(written, { zone: 'UTC' }).isValid ? written : null;
   const point = courier ? '' : [text(order, 'AdressDelivery'), text(order, 'PickupDopInfo', 200)].filter(Boolean).join('\n');
+  const address = courier && typeof order.AdressDelivery === 'string' ? clean(order.AdressDelivery, 300) : '';
   return {
     number, code, id, wording, courier,
     planned: planned && courier ? courierWindow(planned, order) : planned,
     seller: text(order, 'SellerName', 120),
     point,
+    address,
   };
 }
 
@@ -181,6 +185,7 @@ export function lPostResult(order: LPostOrder, historyPayload: unknown): Carrier
     expected_delivery: done ? null : order.planned,
     ...(order.seller ? { sender_name: order.seller } : {}),
     ...(point ? { pickup_point: point } : {}),
+    ...(order.address ? { receiver_address: order.address } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

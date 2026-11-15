@@ -66,8 +66,9 @@ and a customs notice can be filed after the delivery. Neither moves a shipment b
 
 A stop's town comes from the tracker: a station, port or airport by its name, and a shipper's or
 consignee's town as the tracker writes it. A town written with digits is replaced by its
-country, since such text can hold a postcode or a street. The destination country, the weight in
-kilograms and the delivery time are read. Agent addresses, the search's own origin and
+country, since such text can hold a postcode or a street. The consignee's town, as the last
+stop writes it, becomes `receiver_address`. The destination country, the weight in kilograms and
+the delivery time are read. Agent addresses, the search's own origin and
 destination, volumes, vehicles and remarks are not read.
 
 ## Limitations

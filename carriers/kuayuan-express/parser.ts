@@ -39,6 +39,12 @@ function text(row: Record<string, unknown>, key: string, maxLength = 200): strin
   return clean(value, maxLength);
 }
 
+/** A text field the result can do without: anything but a string is left out. */
+function optional(row: Record<string, unknown>, key: string, maxLength = 120): string {
+  const value = row[key];
+  return typeof value === 'string' ? clean(value, maxLength) : '';
+}
+
 /** A scan's date and second as one wall time. The reply gives no zone. */
 function wallClock(raw: string): string {
   const match = CLOCK.exec(raw);
@@ -69,8 +75,8 @@ function handoff(shipment: Record<string, unknown>, number: string): Pick<Carrie
  * shipment: Kuayuan's number (`shipper_hawbcode`), the line's (`server_hawbcode`),
  * the destination's code and the scans, newest first, each a wall clock, a
  * place, a wording and a code. One it has nothing for is `ask: 0`. The shipment
- * must be the number asked. The recipient's name and town and the customer's
- * reference are not kept.
+ * must be the number asked. The recipient's name and town are read; the
+ * customer's reference is not.
  */
 export function parseKuayuan(payload: unknown, raw: string): CarrierResult {
   const number = normalizeKuayuanNumber(raw);
@@ -131,6 +137,8 @@ export function parseKuayuan(payload: unknown, raw: string): CarrierResult {
   const current = leadingScan(events, statusMap);
   const stage = current?.stage as Stage | undefined;
   const country = countryCode(text(shipment, 'country_code', 8));
+  const name = optional(shipment, 'consignee_name');
+  const town = optional(shipment, 'shipp_to_location');
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -138,6 +146,8 @@ export function parseKuayuan(payload: unknown, raw: string): CarrierResult {
     last_update: null,
     last_update_local: scans[0]!.local,
     ...(country ? { destination_country: country } : {}),
+    ...(name ? { receiver_name: name } : {}),
+    ...(town ? { receiver_address: town } : {}),
     ...handoff(shipment, number),
     events,
   };

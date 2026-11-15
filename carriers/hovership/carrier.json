@@ -58,13 +58,13 @@
       "provider_code",
       "eta",
       "delivered_at",
-      "offset_timestamps"
+      "offset_timestamps",
+      "recipient_address",
+      "destination"
     ],
     "discarded": [
       "progress_rail",
       "origin",
-      "destination",
-      "recipient_address",
       "proof_of_delivery",
       "driver_name",
       "coordinates"

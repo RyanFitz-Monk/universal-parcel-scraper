@@ -56,6 +56,12 @@ function text(row: Row, key: string, maxLength = 120): string {
   return clean(value, maxLength);
 }
 
+/** A text field the result can do without: anything but a string is left out. */
+function optional(row: Row, key: string, maxLength = 120): string {
+  const value = row[key];
+  return typeof value === 'string' ? clean(value, maxLength) : '';
+}
+
 /** A scan's clock: every scan is at an Ilyang Logis branch, office or terminal in Korea, which keeps UTC+9 all year. */
 function scanClock(row: Row): string {
   const date = text(row, 'actDate', 16);
@@ -85,7 +91,7 @@ export function ilyangWording(label: string, remark: string): string {
   return kept ? `${label}: ${kept}` : label;
 }
 
-interface Scan { event: CarrierEvent; handover: string | null }
+interface Scan { event: CarrierEvent; handover: string | null; consignee: string }
 
 function projectScan(row: Row): Scan {
   const raw = row.chkPointCd;
@@ -111,7 +117,15 @@ function projectScan(row: Row): Scan {
       ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
     },
     handover: remark ? ilyangHandover(remark) : null,
+    // Who took the parcel at a delivery and how they relate to the recipient: "홍길동-본인".
+    consignee: optional(row, 'consignee'),
   };
+}
+
+/** Where the parcel is addressed: the street and unit, then the postcode. */
+function addressed(parcel: Row): string {
+  const street = [optional(parcel, 'rcvAddr1', 200), optional(parcel, 'rcvAddr2')].filter(Boolean).join(' ');
+  return [street, optional(parcel, 'rcvZipCode', 16)].filter(Boolean).join('\n');
 }
 
 /**
@@ -119,10 +133,9 @@ function projectScan(row: Row): Scan {
  * tracking result page makes. `res` is true with the parcel as the one entry of
  * `rows`, its checkpoints oldest first in `tracking`. A number the tracker
  * holds no parcel for comes back without checkpoints and with its "not taken
- * in" notice. The parcel must name the number asked. The sender's and
- * recipient's names, addresses and phone numbers, the goods, the order number,
- * the person who took the parcel, the staff and the branches' phone numbers are
- * never read.
+ * in" notice. The parcel must name the number asked. The recipient's name and
+ * address and the person who took the parcel are read. The sender, phone
+ * numbers, the goods, the order number and the staff are not.
  */
 export function parseIlyang(payload: unknown, raw: string): CarrierResult {
   const number = normalizeIlyangNumber(raw);
@@ -169,6 +182,10 @@ export function parseIlyang(payload: unknown, raw: string): CarrierResult {
     && !(event.stage === 'accepted' && events.slice(index + 1).some((older) => older.stage && older.stage !== 'accepted')));
   const stage = current?.stage as Stage | undefined;
   const handover = newestFirst.find((scan) => scan.handover)?.handover;
+  const receiver = optional(parcel, 'rcvName') || optional(parcel, 'rcvCoName');
+  const address = addressed(parcel);
+  const signedBy = stage === 'delivered'
+    ? newestFirst.find((scan) => scan.event === current)?.consignee || optional(parcel, 'lastConsigneeName') : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source! } : {}),
@@ -177,6 +194,9 @@ export function parseIlyang(payload: unknown, raw: string): CarrierResult {
     expected_delivery: null,
     ...(stage === 'delivered' ? { delivered_at: current!.time! } : {}),
     ...(handover ? { delivery_carrier: 'cj-logistics', delivery_tracking_number: handover } : {}),
+    ...(receiver ? { receiver_name: receiver } : {}),
+    ...(address ? { receiver_address: address } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

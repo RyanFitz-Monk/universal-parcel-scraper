@@ -34,8 +34,10 @@ tracking form on its home page.
 - A delivery settles the parcel. Otherwise the newest row with a known stage decides. Bookings,
   dispatches and receipts are staged by their opening words; a delivery run's outcome after
   "SHIPMENT CURRENT STATUS IS" by its wording.
-- The branches' addresses and phones, the summary's route, booking day and status, and the proof
-  of delivery are not read. Phones and anything after "SIGN" are dropped from the wording.
+- A delivery row can name who signed after "SIGN". The row keeps it, is staged by the wording
+  before it, and gives the signatory; otherwise the summary's status, "DELIVERED SIGN" and a
+  name, gives it. Phones are dropped from the wording. The branches' addresses and phones, the
+  summary's route and booking day, and the proof of delivery's photo are not read.
 
 ## Limitations
 

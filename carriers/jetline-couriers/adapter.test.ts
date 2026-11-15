@@ -107,7 +107,7 @@ describe('Jetline Couriers tracking adapter', () => {
     expect(unknown.events![0]).not.toHaveProperty('stage');
   });
 
-  it('keeps a delivery run’s other outcomes to the shared rules, without phones or a signatory', () => {
+  it('keeps a delivery run’s other outcomes to the shared rules, without phones, and reads the signatory', () => {
     const delivered = page('delivered');
     const outcome = (wording: string) => parseJetlineCouriers(delivered.replace('SHIPMENT CURRENT STATUS IS DELIVERED', wording), DELIVERED);
     const out = outcome('SHIPMENT CURRENT STATUS IS OUT FOR DELIVERY 0000000000');
@@ -116,10 +116,17 @@ describe('Jetline Couriers tracking adapter', () => {
     const missed = outcome('SHIPMENT CURRENT STATUS IS UNDELIVERED');
     expect(missed.events![0]!.stage).not.toBe('delivered');
     expect(missed.current_stage).not.toBe('delivered');
-    const signed = outcome('SHIPMENT CURRENT STATUS IS DELIVERED SIGN SAMPLE RECEIVER');
-    expect(signed).toMatchObject({ status: 'delivered', last_status_text: 'SHIPMENT CURRENT STATUS IS DELIVERED' });
-    expect(JSON.stringify([out, missed, signed])).not.toMatch(PRIVATE);
-    expect(JSON.stringify(signed)).not.toMatch(/RECEIVER/);
+    expect(JSON.stringify([out, missed])).not.toMatch(PRIVATE);
+    // A delivery row keeps the signatory it names and is staged by the wording before it.
+    const signed = outcome('SHIPMENT CURRENT STATUS IS DELIVERED SIGN SAMPLE RECEIVER 0000000000');
+    expect(signed).toMatchObject({ status: 'delivered', current_stage_source: 'carrier_map',
+      last_status_text: 'SHIPMENT CURRENT STATUS IS DELIVERED SIGN SAMPLE RECEIVER', signed_by: 'SAMPLE RECEIVER' });
+    expect(JSON.stringify(signed)).not.toMatch(/0000000000/);
+    // Else the summary's status names who signed; the fixture's names nobody.
+    expect(parseJetlineCouriers(delivered, DELIVERED)).not.toHaveProperty('signed_by');
+    const summarySigned = delivered.replace('DELIVERED SIGN </span>', 'DELIVERED SIGN SAMPLE SIGNER </span>');
+    expect(parseJetlineCouriers(summarySigned, DELIVERED)).toMatchObject({ signed_by: 'SAMPLE SIGNER' });
+    expect(parseJetlineCouriers(page('in-transit'), IN_TRANSIT)).not.toHaveProperty('signed_by');
   });
 
   it('leaves a row without a city it can read unplaced', () => {
@@ -320,7 +327,7 @@ describe('Jetline Couriers status vocabulary', () => {
       const wording = entry.wording.replace(/<[a-z]+>/g, 'SAMPLEPUR');
       expect(jetlineStage(wording)?.stage, entry.wording).toBe(entry.stage);
     }
-    // The history's wording is the map's; the summary's status, which the adapter does not read, is left to the shared rules.
+    // The history's wording is the map's; the summary's status, which stages nothing, is left to the shared rules.
     for (const entry of statuses.entries.filter(({ wording }) => wording !== 'DELIVERED SIGN')) {
       const wording = entry.wording.replace(/<[a-z]+>/g, 'SAMPLEPUR');
       expect(jetlineMappedStage(wording), entry.wording).toBe(entry.stage);

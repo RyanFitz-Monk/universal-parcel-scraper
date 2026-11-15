@@ -52,7 +52,8 @@
       "recipient_name",
       "signatory",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -60,14 +61,15 @@
       "location",
       "delivered_at",
       "delivery_partner",
-      "delivery_tracking_number"
+      "delivery_tracking_number",
+      "recipient_name",
+      "signatory",
+      "recipient_address"
     ],
     "discarded": [
       "origin",
       "destination",
-      "sender_name",
-      "recipient_name",
-      "signatory"
+      "sender_name"
     ],
     "unavailable": [
       "offset_timestamps",

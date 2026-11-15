@@ -45,17 +45,19 @@
       "status",
       "history",
       "location",
-      "postcodes"
+      "postcodes",
+      "recipient_address"
     ],
     "scraped": [
       "status",
       "history",
       "location",
       "provider_code",
-      "destination_country"
+      "destination_country",
+      "postcodes",
+      "recipient_address"
     ],
     "discarded": [
-      "postcodes",
       "origin_country",
       "offset_timestamps"
     ],
@@ -67,7 +69,6 @@
       "delivery_tracking_number",
       "sender_name",
       "recipient_name",
-      "recipient_address",
       "proof_of_delivery"
     ]
   },

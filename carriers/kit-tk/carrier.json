@@ -56,7 +56,8 @@
       "pickup_point",
       "office_contact_details",
       "office_opening_hours",
-      "payment_details"
+      "payment_details",
+      "recipient_address"
     ],
     "scraped": [
       "status",
@@ -64,7 +65,8 @@
       "location",
       "provider_code",
       "weight",
-      "pickup_point"
+      "pickup_point",
+      "recipient_address"
     ],
     "discarded": [
       "eta",

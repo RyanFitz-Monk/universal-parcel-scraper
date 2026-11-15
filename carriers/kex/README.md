@@ -43,10 +43,11 @@ lookup its tracking page makes.
   time of the lookup. The adapter drops it, so such a number has no history.
 - Station and distribution-centre scans keep the facility's coordinates as their point. The
   coordinates on delivery-round scans are the courier's or the recipient's and are not kept.
-- The sender's and recipient's names and phone numbers, the reference, the booking, the
-  postcode, the courier, the call, the signature, the delivery photos and the cash-on-delivery
-  details in the reply are not kept, nor are the origin and destination provinces or the parcel
-  type. Phone numbers are taken out of wording.
+- The recipient's name as the page masks it and the destination's postcode and province are
+  read. The reply's unmasked names, the sender, the phone numbers, the reference, the booking,
+  the courier, the call, the signature, the delivery photos and the cash-on-delivery details are
+  not kept, nor are the origin province and the parcel type. Phone numbers are taken out of
+  wording.
 
 ## Limitations
 

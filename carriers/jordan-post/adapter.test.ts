@@ -53,9 +53,9 @@ describe('Jordan Post tracking adapter', () => {
     const result = parseJordanPostItem(page('inbound-delivered'), INBOUND)!;
     expect(result).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Deliver item (Inb)', last_update: '2026-03-09T12:31:07+03:00', expected_delivery: null,
-      delivered_at: '2026-03-09T12:31:07+03:00', destination_country: 'JO', events: expect.any(Array) });
+      delivered_at: '2026-03-09T12:31:07+03:00', signed_by: 'SAMPLE PERSON', destination_country: 'JO', events: expect.any(Array) });
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.location, event.description, event.stage])).toEqual([
-      // Who signed is dropped from the extra information.
+      // Who signed comes from the extra information, apart from the wording.
       ['2026-03-09T12:31:07+03:00', 'SAMPLE OFFICE, Jordan', 'Deliver item (Inb)', 'delivered'],
       ['2026-03-09T08:15:00+03:00', 'SAMPLE OFFICE, Jordan', 'Handover item to delivery agent (Inb)', 'out_for_delivery'],
       ['2026-03-08T12:50:00+03:00', 'SAMPLE OFFICE, Jordan',
@@ -72,7 +72,8 @@ describe('Jordan Post tracking adapter', () => {
       ['2026-03-02T21:05:00', 'SAMPLE SORTING CENTRE, Netherlands', 'Send item abroad (EDI-received)', 'in_transit'],
     ]);
     expect(result.events!.every((event) => event.stage_source === 'carrier_map')).toBe(true);
-    expect(JSON.stringify(result)).not.toMatch(/SAMPLE PERSON|showImagePopup|11000/);
+    expect(JSON.stringify(result.events)).not.toMatch(/SAMPLE PERSON/);
+    expect(JSON.stringify(result)).not.toMatch(/showImagePopup|11000/);
   });
 
   it('reads an item posted in Jordan up to its bagging for abroad, without a destination', async () => {
@@ -135,14 +136,14 @@ describe('Jordan Post tracking adapter', () => {
     const result = await carrier(searched(reply(page('search-domestic')))).track({ number: DOMESTIC });
     expect(result).toEqual({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Deliver item', last_update: '2026-04-07T11:48:19+03:00', expected_delivery: null,
-      delivered_at: '2026-04-07T11:48:19+03:00', events: [
+      delivered_at: '2026-04-07T11:48:19+03:00', signed_by: 'SAMPLE PERSON', events: [
         { time: '2026-04-07T11:48:19+03:00', location: 'SAMPLE TOWN, Jordan', description: 'Deliver item', stage: 'delivered', stage_source: 'carrier_map' },
         { time: '2026-04-06T14:05:00+03:00', location: 'SAMPLE OFFICE, Jordan', description: 'Insert item into domestic bag', stage: 'in_transit',
           stage_source: 'carrier_map' },
         { time: '2026-04-06T09:12:41+03:00', location: 'SAMPLE OFFICE, Jordan', description: 'Receive item from customer', stage: 'accepted',
           stage_source: 'carrier_map' },
       ] });
-    expect(JSON.stringify(result)).not.toContain('SAMPLE PERSON');
+    expect(JSON.stringify(result.events)).not.toContain('SAMPLE PERSON');
   });
 
   it('leaves a form that sends the code to the IPS page, after that page had nothing, inconclusive', async () => {

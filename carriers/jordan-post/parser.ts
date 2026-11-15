@@ -31,6 +31,8 @@ const CLOCK = /^(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{2}):(\d{2}) ([AP]M)$
 // The details of the extra information that are kept: why an item was not
 // delivered, what happens next, and why it is held.
 const DETAIL = /^(?:Reason|Measure|Retention reason)\s*:\s*(.+)$/i;
+// Who signed for a delivered item, in its extra information.
+const SIGNATORY = /^Signatory\s*:\s*(.+)$/i;
 // An inward scan, in the country the item was sent to.
 const INWARD = /\(inb\)$/i;
 // A run of four or more digits, as an office's postcode is written.
@@ -129,9 +131,9 @@ function officeOf(text: string): string {
   return /[A-Za-z؀-ۿ]/.test(office) ? office : '';
 }
 
-interface Scan { event: CarrierEvent; country: string | null; wording: string }
+interface Scan { event: CarrierEvent; country: string | null; wording: string; signatory: string }
 
-function scanOf(clock: string, wording: string, details: readonly string[], office: string, countryName: string): Scan {
+function scanOf(clock: string, wording: string, details: readonly string[], office: string, countryName: string, signatory = ''): Scan {
   if (!wording) throw new SchemaError(PROVIDER, 'Jordan Post returned a scan without wording');
   const country = countryName ? countryCode(countryName) : null;
   const place = officeOf(office);
@@ -145,15 +147,18 @@ function scanOf(clock: string, wording: string, details: readonly string[], offi
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
   };
-  return { event, country, wording };
+  return { event, country, wording, signatory };
 }
 
-/** The extra information's kept details, one a line; anything else, such as who signed, is dropped. */
-function detailsOf(cell: Cheerio<AnyNode>): string[] {
+/** The extra information's kept details, one a line, and who signed; anything else is dropped. */
+function detailsOf(cell: Cheerio<AnyNode>): { details: string[]; signatory: string } {
   const copy = cell.clone();
   copy.find('br').replaceWith('\n');
-  return copy.text().split('\n').map((line) => DETAIL.exec(clean(line, 200))?.[1]).filter((detail): detail is string => Boolean(detail))
+  const lines = copy.text().split('\n').map((line) => clean(line, 200));
+  const details = lines.map((line) => DETAIL.exec(line)?.[1]).filter((detail): detail is string => Boolean(detail))
     .map((detail) => clean(detail, 120));
+  const signatory = clean(lines.map((line) => SIGNATORY.exec(line)?.[1]).find(Boolean), 120);
+  return { details, signatory };
 }
 
 /** The result for an item's scans, oldest first as both pages list them. */
@@ -169,8 +174,10 @@ function resultOf(scans: Scan[]): CarrierResult {
   if (!unique.length) throw new NoHistoryError(PROVIDER);
   const events = unique.map(({ event }) => event);
   const latest = events[0]!;
-  const current = events.find((event) => event.stage);
+  const currentScan = unique.find(({ event }) => event.stage);
+  const current = currentScan?.event;
   const stage = current?.stage as Stage | undefined;
+  const signedBy = stage === 'delivered' ? currentScan!.signatory : '';
   const delivered = stage === 'delivered' ? current!.time ?? null : null;
   // An inward scan is recorded in the country the item was sent to.
   const destination = unique.find((scan) => scan.country && INWARD.test(scan.wording))?.country;
@@ -182,6 +189,7 @@ function resultOf(scans: Scan[]): CarrierResult {
     ...(latest.time ? {} : { last_update_local: latest.local_time }),
     expected_delivery: null,
     ...(delivered ? { delivered_at: delivered } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     ...(destination ? { destination_country: destination } : {}),
     events,
   };
@@ -191,7 +199,8 @@ function resultOf(scans: Scan[]): CarrierResult {
  * The IPS Web Tracking page for one item: a heading naming it, then its
  * scans, oldest first. A code the IPS system holds nothing for gets the page's
  * notice instead, which this returns as null. The next office is a plan, not a
- * scan, and the mail category and the second extra-information cell are not read.
+ * scan. The extra information's signatory is who signed for a delivered item;
+ * the mail category and the second extra-information cell are not read.
  */
 export function parseJordanPostItem(html: string, rawNumber: string): CarrierResult | null {
   const number = normalizeJordanPostNumber(rawNumber);
@@ -212,7 +221,8 @@ export function parseJordanPostItem(html: string, rawNumber: string): CarrierRes
     const cells = $(row).children('td');
     if (cells.length !== CELLS) throw new SchemaError(PROVIDER, 'Jordan Post returned an invalid history row');
     const text = (index: number, length: number) => clean(cells.eq(index).text(), length);
-    return scanOf(text(0, 40), text(3, 200), detailsOf(cells.eq(6)), text(2, 120), text(1, 80).replace(/\s*\(the\)$/i, ''));
+    const { details, signatory } = detailsOf(cells.eq(6));
+    return scanOf(text(0, 40), text(3, 200), details, text(2, 120), text(1, 80).replace(/\s*\(the\)$/i, ''), signatory);
   });
   return resultOf(scans);
 }
@@ -220,8 +230,8 @@ export function parseJordanPostItem(html: string, rawNumber: string): CarrierRes
 /**
  * The form's answer when it did not send the item to the IPS page: the form
  * again, the code in its field, and the domestic records it found in its own
- * table. A code with none gets no table, which is not found. Who signed is
- * never read.
+ * table. A code with none gets no table, which is not found. Its signatory
+ * column is who signed for a delivered item.
  */
 export function parseJordanPostSearch(html: string, rawNumber: string): CarrierResult {
   const number = normalizeJordanPostNumber(rawNumber);
@@ -241,7 +251,7 @@ export function parseJordanPostSearch(html: string, rawNumber: string): CarrierR
     const text = (index: number, length: number) => clean(cells.eq(index).text(), length);
     if (normalizeTrackingNumber(text(0, 64)) !== number) throw new SchemaError(PROVIDER, 'Jordan Post answered for a different item');
     // Domestic records are Jordanian offices' scans.
-    return scanOf(text(1, 40), text(2, 200), [], text(3, 120), 'Jordan');
+    return scanOf(text(1, 40), text(2, 200), [], text(3, 120), 'Jordan', text(4, 120));
   });
   return resultOf(scans);
 }

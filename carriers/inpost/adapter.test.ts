@@ -232,14 +232,22 @@ describe('InPost response parsing', () => {
     expect(result.events?.map((event) => event.description)).toEqual(['Delivered', 'EOL.1001']);
   });
 
-  it('never retains recipient identity, address or signature data', () => {
-    const serialized = JSON.stringify(parseInpostTrackingResponse(parcel(), TRACKING_NUMBER));
-    for (const secret of [
-      'Example Recipient', 'Musterstrasse 1', '+490000000000', 'Example Signature',
-      'receiverName', 'receiverAddress', 'receiverPhone', 'signature', 'countryCode',
-    ]) {
+  it('reads the recipient and the signatory the hub names, without the phone', () => {
+    const result = parseInpostTrackingResponse(parcel(), TRACKING_NUMBER);
+    expect(result).toMatchObject({ receiver_name: 'Example Recipient', receiver_address: 'Musterstrasse 1, 10115 Berlin',
+      signed_by: 'Example Signature' });
+    const serialized = JSON.stringify(result);
+    for (const secret of ['+490000000000', 'receiverPhone', 'countryCode']) {
       expect(serialized).not.toContain(secret);
     }
+    // A signature that is an image or a link names no one.
+    for (const signature of ['data:image/png;base64,AAAA', 'https://example.invalid/signature.png', '', 'x'.repeat(121)]) {
+      expect(parseInpostTrackingResponse({ ...parcel(), signature }, TRACKING_NUMBER)).not.toHaveProperty('signed_by');
+    }
+    // Before the delivery nobody has signed.
+    const waiting = parseInpostTrackingResponse({ ...parcel(), status: 'LMD.1004', statusTitle: 'Ready for pickup' }, TRACKING_NUMBER);
+    expect(waiting).toMatchObject({ current_stage: 'ready_for_pickup', receiver_name: 'Example Recipient' });
+    expect(waiting).not.toHaveProperty('signed_by');
   });
 
   it('produces every capability carrier.json declares', () => {

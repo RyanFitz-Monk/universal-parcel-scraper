@@ -45,11 +45,12 @@ describe('Janio HTTP adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps each update as an instant, stages it by its code and keeps the delivery without the recipient', () => {
+  it('keeps each update as an instant, stages it by its code and reads the delivery address as the tracker shortens it', () => {
     const result = parseJanio(fixture('delivered'), DELIVERED);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'The parcel has been successfully delivered to the recipient.', last_update: '2026-05-14T06:12:40Z',
-      delivered_at: '2026-05-14T06:12:40Z', expected_delivery: null, destination_country: 'TH' });
+      delivered_at: '2026-05-14T06:12:40Z', expected_delivery: null, destination_country: 'TH',
+      receiver_address: 'Thailand Sample Province Sample District' });
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null])).toEqual([
       ['2026-05-14T06:12:40Z', 'DELIVERY_COMPLETED', 'delivered', null],
       ['2026-05-14T01:30:05Z', 'DELIVERY_IN_PROGRESS', 'out_for_delivery', null],
@@ -66,7 +67,9 @@ describe('Janio HTTP adapter', () => {
     expect(result).not.toHaveProperty('delivery_carrier');
     expect(result).not.toHaveProperty('delivery_tracking_number');
     expect(result).not.toHaveProperty('canonical_tracking_number');
-    expect(JSON.stringify(result)).not.toMatch(/Sample (?:District|Province)|shortened|ex\*|scg|jtms|DRIVER_ASSIGNED|0{15}|Thailand/);
+    // The pickup address is the sender's, and the masked email is not read.
+    expect(JSON.stringify({ ...result, receiver_address: undefined })).not.toMatch(/Sample (?:District|Province)|shortened|ex\*|scg|jtms|DRIVER_ASSIGNED|0{15}|Thailand/);
+    expect(JSON.stringify(result)).not.toMatch(/shortened/);
   });
 
   it('picks the parcel asked out of its related orders and names a partner whose reference has its shape', () => {
@@ -75,6 +78,7 @@ describe('Janio HTTP adapter', () => {
       last_status_text: 'The parcel has arrived at a warehouse and is awaiting processing.', last_update: '2026-06-04T09:41:27Z',
       expected_delivery: null, destination_country: 'SG', delivery_carrier: 'spx-sg', delivery_tracking_number: PARTNER });
     expect(result).not.toHaveProperty('delivered_at');
+    expect(result).not.toHaveProperty('receiver_address');
     expect(result.events!.map((event) => [event.time, event.provider_code, event.stage, event.location ?? null])).toEqual([
       ['2026-06-04T09:41:27Z', 'IN_TRANSIT_WITHIN_DESTINATION_COUNTRY', 'in_transit', 'Singapore'],
       ['2026-06-03T00:00:00Z', 'CROSS_BORDER_TRANSIT', 'in_transit', null],

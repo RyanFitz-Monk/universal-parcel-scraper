@@ -32,7 +32,8 @@ digits and YQ.
   after an arrow that repeats both. Only the wording between them is kept.
 - `channel_hawbcode`, the delivering network's number, becomes `delivery_tracking_number`.
   Nothing in the reply names that network.
-- The merchant's order reference, the signatory and the proof-of-delivery link are not read.
+- The signatory is read once the parcel is delivered. The merchant's order reference and the
+  proof-of-delivery link are not read.
 
 ## Limitations
 

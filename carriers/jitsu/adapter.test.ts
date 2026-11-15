@@ -54,6 +54,8 @@ describe('Jitsu tracking adapter', () => {
       status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Your order was successfully delivered.', last_update: '2031-03-11T18:20:15-07:00',
       expected_delivery: null, delivered_at: '2031-03-11T18:20:15-07:00',
+      // The drop-off town and state, and the postcode block.
+      receiver_address: 'Recipient Town, ZZ 99999',
       events: [
         { time: '2031-03-11T18:20:15-07:00', description: 'Your order was successfully delivered.',
           provider_code: 'OUTBOUND.DROPOFF_SUCCEEDED', stage: 'delivered', stage_source: 'carrier_map' },
@@ -69,12 +71,21 @@ describe('Jitsu tracking adapter', () => {
       ],
     });
     // The address change, the first scan that repeats the receipt and the row without a clock are left out.
-    // Contact details, the address, postcode and position, remarks, the merchant and the driver stay behind.
-    const text = JSON.stringify(result);
+    // Contact details, the position, remarks, the merchant and the driver stay behind.
+    const text = JSON.stringify({ ...result, receiver_address: undefined });
     for (const value of ['UPDATE_DROPOFF', 'FIRST_SCAN', 'GEOCODED', 'Example Shop', '***-***-0000', 'e*****@example.com', 'Recipient Town',
       'EX*****01', '99999', 'Synthetic', 'blue door', 'Van', 'NEXT_DAY', 'EXA', '0.5']) {
       expect(text, value).not.toContain(value);
     }
+    // A postcode that lost its leading zero is left out, and the town stays without its state when the reply has none.
+    const partial = fixture('delivered');
+    partial.zip.zipcode = 2134;
+    delete partial.shipment.dropoff_address.state;
+    expect(parseJitsu(partial, DELIVERED).receiver_address).toBe('Recipient Town');
+    const none = fixture('delivered');
+    none.shipment.dropoff_address = null;
+    none.zip = null;
+    expect(parseJitsu(none, DELIVERED)).not.toHaveProperty('receiver_address');
   });
 
   it('keeps an unknown clock zone in UTC, the reply’s order for equal clocks and each row once', () => {
@@ -149,7 +160,8 @@ describe('Jitsu tracking adapter', () => {
     expect(linehaul).not.toHaveProperty('expected_delivery_from');
     // A partner carrier's scans carry the town and state the tracker prints; the postcode and its ids stay behind.
     expect(linehaul.events!.map((row) => row.location ?? null)).toEqual([null, 'Sample City, OK', 'Example Town, OH', null]);
-    for (const value of ['99999', 'synthetic-', 'flexport', 'Carrier.TrackingUpdated']) expect(JSON.stringify(linehaul), value).not.toContain(value);
+    expect(linehaul.receiver_address).toBe('Recipient Town, ZZ 99999');
+    for (const value of ['99999', 'synthetic-', 'flexport', 'Carrier.TrackingUpdated']) expect(JSON.stringify(linehaul.events), value).not.toContain(value);
     const future = (shipment: Reply) => Object.assign(shipment.shipment, { dropoff_earliest_ts: '2031-07-09T12:00:00Z', dropoff_latest_ts: '2031-07-10T00:00:00Z' });
     // Hidden while the parcel is with the partner carrier.
     const hidden = fixture('linehaul');

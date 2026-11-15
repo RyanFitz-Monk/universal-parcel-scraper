@@ -86,6 +86,20 @@ function packageField($: CheerioAPI, label: string): string {
 }
 
 /**
+ * The drop-off card: the recipient's name, then the address's parts, which the
+ * page joins with commas and leaves empty when the order lacks one.
+ */
+function dropOff($: CheerioAPI): Pick<CarrierResult, 'receiver_name' | 'receiver_address'> {
+  const card = $('.card-body').filter((_, element) => clean($(element).children('.card-title').text(), 40) === 'Drop-off Location');
+  const item = card.find('li');
+  if (card.length !== 1 || item.length !== 1) return {};
+  const copy = item.clone();
+  const name = clean(copy.children('span').first().remove().text(), 160);
+  const address = clean(copy.text().split(',').map((part) => clean(part, 120)).filter(Boolean).join(', '), 300);
+  return { ...(name ? { receiver_name: name } : {}), ...(address ? { receiver_address: address } : {}) };
+}
+
+/**
  * The tracker's page for one number and delivery service,
  * `/shipment-tracking/?uae=uae&service_type={service}&awb={number}`. The page
  * puts the number back in its search field and checks the service it was asked
@@ -94,9 +108,10 @@ function packageField($: CheerioAPI, label: string): string {
  * cards with the pickup and drop-off names and addresses and the package's
  * details. A number the service does not know gets "No Shipment Found".
  *
- * The reference must be the whole number asked. The pickup and drop-off cards,
- * the payment type, the item type, the weight without a unit and the piece
- * count are not read; the service the page names under `Delivery` is.
+ * The reference must be the whole number asked. The drop-off card gives the
+ * recipient's name and address, and the package card's `Delivery` the service.
+ * The pickup card, which is the sender's, the payment type, the item type, the
+ * weight without a unit and the piece count are not read.
  */
 export function parseJeebly(html: string, raw: string, service: JeeblyService): CarrierResult {
   const number = normalizeJeeblyNumber(raw);
@@ -148,6 +163,7 @@ export function parseJeebly(html: string, raw: string, service: JeeblyService): 
     last_update_local: newest.local_time,
     expected_delivery: null,
     ...(serviceName ? { service_name: serviceName } : {}),
+    ...dropOff($),
     events: newestFirst.slice(0, MAX_EVENTS),
     ...(newestFirst.length > MAX_EVENTS ? { history_truncated: true } : {}),
   };

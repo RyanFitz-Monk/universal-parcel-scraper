@@ -215,13 +215,15 @@ export function parseKuehneNagel(routing: unknown, information: unknown, match: 
     scans.push({ event, order, index: scans.length });
   };
   let destination: string | undefined;
+  let consignee = '';
   for (const stop of routing.routeLocations) {
     if (!isRecord(stop)) throw new SchemaError(PROVIDER, 'Kuehne+Nagel returned an invalid route stop');
     const location = place(stop.location);
-    if (DESTINATION.test(clean(stop.labelIdentifier, 120)) && isRecord(stop.location)
-      && typeof stop.location.countryCode === 'string' && /^[A-Z]{2}$/.test(stop.location.countryCode)) {
-      destination = stop.location.countryCode;
-    }
+    const last = DESTINATION.test(clean(stop.labelIdentifier, 120)) && isRecord(stop.location) ? stop.location : null;
+    if (last && typeof last.countryCode === 'string' && /^[A-Z]{2}$/.test(last.countryCode)) destination = last.countryCode;
+    // An uncoded last stop is the consignee's town as the tracker writes it,
+    // postcode or street included.
+    if (last && last.locationCode == null) consignee = clean(last.freeTextLocation, 200) || consignee;
     const milestones = stop.locationMilestones ?? [];
     if (!Array.isArray(milestones) || milestones.length > MAX_MILESTONES) {
       throw new SchemaError(PROVIDER, 'Kuehne+Nagel returned invalid route milestones');
@@ -285,6 +287,7 @@ export function parseKuehneNagel(routing: unknown, information: unknown, match: 
     delivered_at: delivered?.time ?? null,
     ...(match.weightKg ? { weight_kg: match.weightKg } : {}),
     ...(destination ? { destination_country: destination } : {}),
+    ...(consignee ? { receiver_address: consignee } : {}),
     ...(match.trackingNumber !== number ? { canonical_tracking_number: match.trackingNumber } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

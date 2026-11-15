@@ -36,16 +36,18 @@
       "status",
       "history",
       "delivered_at",
-      "destination"
+      "destination",
+      "recipient_address"
     ],
     "scraped": [
       "status",
       "history",
       "delivered_at",
-      "destination_country"
+      "destination_country",
+      "destination",
+      "recipient_address"
     ],
     "discarded": [
-      "destination",
       "delivery_tracking_number"
     ],
     "unavailable": [
@@ -57,7 +59,6 @@
       "weight",
       "sender_name",
       "recipient_name",
-      "recipient_address",
       "pickup_point",
       "signatory"
     ]

@@ -50,13 +50,13 @@
       "status",
       "history",
       "provider_code",
-      "service_name"
+      "service_name",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "sender_name",
       "sender_address",
-      "recipient_name",
-      "recipient_address",
       "payment_details",
       "item_category",
       "unlabelled_weight",

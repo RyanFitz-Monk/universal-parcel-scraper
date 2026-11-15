@@ -61,7 +61,8 @@
       "status",
       "history",
       "location",
-      "provider_code"
+      "provider_code",
+      "recipient_name"
     ],
     "discarded": [
       "progress_rail",
@@ -74,7 +75,6 @@
       "parcel_count",
       "payment_details",
       "sender_name",
-      "recipient_name",
       "recipient_contact",
       "staff_details",
       "office_contact_details"

@@ -107,9 +107,11 @@ list names it "JS" (the js-exp.com entry), so that name is an alias.
   map reads it.
 - A courier's announced return, such as Colissimo's "Il va être retourné à l'expéditeur", is an
   exception: the parcel is returned only once a scan has it back with its sender.
-- A delivery loses a clause naming who took the parcel, as iMile's receiver type, and every row
-  loses phone numbers and the label left before them, as JS Express's "当地电话：" (local phone)
-  or "Local phone number:/".
+- A delivery keeps a clause naming who took the parcel, as iMile's receiver type or a courier's
+  "signed by", and is staged without it. The name in it is the signatory, except iMile's types
+  that name a place, such as a mailbox. A row stored without the clause is taken over by the
+  row with it. Every row loses phone numbers and the label left before them, as JS Express's
+  "当地电话：" (local phone) or "Local phone number:/".
 
 ## Limitations
 

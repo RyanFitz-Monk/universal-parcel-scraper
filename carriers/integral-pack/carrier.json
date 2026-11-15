@@ -59,15 +59,15 @@
       "history",
       "location",
       "pickup_point",
-      "weight"
+      "weight",
+      "recipient_name",
+      "recipient_address"
     ],
     "discarded": [
       "progress_rail",
       "origin",
       "destination",
       "sender_name",
-      "recipient_name",
-      "recipient_address",
       "payment_details",
       "delivery_method",
       "parcel_count",

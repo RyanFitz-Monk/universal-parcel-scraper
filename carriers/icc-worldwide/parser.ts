@@ -134,20 +134,22 @@ function lines(element: Cheerio<AnyNode>): string[] {
   return (element.html() ?? '').split(/<br\s*\/?>/i).map((part) => clean(load(`<p>${part}</p>`)('p').text(), 300)).filter(Boolean);
 }
 
-interface Delivery { description: string; wall: string | null }
+interface Delivery { description: string; wall: string | null; receiver: string }
 
 /**
  * The summary's delivery: the receiver's name, then the delivery line with its
- * day and time. The name is never kept; it is returned to be scrubbed from the rows.
+ * day and time. The name is also scrubbed from the rows' wording before they are staged.
  */
 function deliveryOf(status: Cheerio<AnyNode>, names: string[]): Delivery | null {
   const spans = status.find('span.delivered');
   if (spans.length > 1) invalid('ICC Worldwide repeated the delivery of the shipment');
-  let delivery: Delivery | null = null;
+  let delivery: Omit<Delivery, 'receiver'> | null = null;
+  const receivers: string[] = [];
   for (const line of lines(spans)) {
     const match = DELIVERY.exec(line);
     if (!match) {
       names.push(line);
+      receivers.push(line);
       continue;
     }
     if (delivery) invalid('ICC Worldwide repeated the delivery of the shipment');
@@ -155,7 +157,16 @@ function deliveryOf(status: Cheerio<AnyNode>, names: string[]): Delivery | null 
     const timed = DELIVERY_CLOCK.exec(match[2]!);
     delivery = { description: match[1]!, wall: timed ? wallClock(timed[1]!, timed[2]!) : wallClock(match[2]!, '') };
   }
-  return delivery;
+  return delivery && { ...delivery, receiver: clean(receivers.join(' '), 120) };
+}
+
+/** The consignee the detailed report names, and the town under the name. */
+function consigneeOf($: CheerioAPI, report: Cheerio<AnyNode>): { name: string; town: string } {
+  const box = report.find('.cust-info-row .info-box').filter((_, item) => clean($(item).find('p').first().text(), 40) === 'Consignee').first();
+  const span = box.find('span').first().clone();
+  const name = clean(span.find('strong').first().text(), 120);
+  span.find('p, strong').remove();
+  return { name, town: clean(span.text(), 120) };
 }
 
 /**
@@ -176,18 +187,22 @@ function partnerOf($: CheerioAPI, status: Cheerio<AnyNode>, number: string): Pic
 
 interface Row { key: string; wall: string; event: CarrierEvent }
 
-/** One row of the detailed report: its date, its time, the service area and the details. */
+/**
+ * One row of the detailed report: its date, its time, the service area and the
+ * details, as written. Its stage and clock are read without the shipment's names.
+ */
 function row($: CheerioAPI, node: AnyNode, names: readonly RegExp[]): Row {
   const cells = $(node).children('td');
   if (cells.length !== 4) invalid('ICC Worldwide changed its detailed report');
   const wall = wallClock(clean(cells.eq(0).text(), 40), clean(cells.eq(1).text(), 20));
   if (!wall) invalid('ICC Worldwide returned an invalid scan time');
-  const location = scrub(clean(cells.eq(2).text(), 120), names);
-  const description = scrub(clean(cells.eq(3).text(), 300), names);
-  if (!description) invalid('ICC Worldwide returned a scan without its details');
-  const staged = iccWorldwideStage(description);
+  const location = clean(cells.eq(2).text(), 120).replace(TRAILING, '');
+  const description = clean(cells.eq(3).text(), 300).replace(TRAILING, '');
+  const unnamed = scrub(description, names);
+  if (!description || !unnamed) invalid('ICC Worldwide returned a scan without its details');
+  const staged = iccWorldwideStage(unnamed);
   const event: CarrierEvent = {
-    ...clockAt(wall, location),
+    ...clockAt(wall, scrub(location, names)),
     ...(location ? { location } : {}),
     description,
     ...(staged ? { stage: staged.stage, stage_source: staged.source } : {}),
@@ -226,8 +241,9 @@ function shownNumber(block: Cheerio<AnyNode>): string {
  * destination and, once delivered, the receiver's name and the delivery's day
  * and time, then a detailed report with the customer, the consignee and a row
  * per checkpoint, newest first. A number without a shipment gets the
- * summary's "Record not found" with no number. Names, origin and destination
- * are never kept.
+ * summary's "Record not found" with no number. The consignee's name and town
+ * and the receiver's name are read; the customer, origin and destination are
+ * not.
  */
 export function parseIccWorldwide(html: string, rawNumber: string): CarrierResult {
   const number = normalizeIccWorldwideNumber(rawNumber);
@@ -259,8 +275,9 @@ export function parseIccWorldwide(html: string, rawNumber: string): CarrierResul
     throw new IndeterminateError(PROVIDER, 'ICC Worldwide reported on another shipment');
   }
 
-  // The customer's and the consignee's names, and the receiver's on a delivery, are only scrubbed.
+  // The customer's and the consignee's names, and the receiver's on a delivery, are left out of the wording that stages a row.
   const names = reports.find('.cust-info-row strong').toArray().map((name) => clean($(name).text(), 120));
+  const consignee = consigneeOf($, reports);
   const delivery = deliveryOf(statuses, names);
   const scanned = history($, reports, namePatterns(names));
   const deliveredRow = scanned.some(({ event }) => event.stage === 'delivered');
@@ -285,6 +302,9 @@ export function parseIccWorldwide(html: string, rawNumber: string): CarrierResul
     expected_delivery: null,
     ...(delivered?.time ? { delivered_at: delivered.time } : {}),
     ...partnerOf($, statuses, number),
+    ...(consignee.name ? { receiver_name: consignee.name } : {}),
+    ...(consignee.town ? { receiver_address: consignee.town } : {}),
+    ...(decided?.stage === 'delivered' && delivery?.receiver ? { signed_by: delivery.receiver } : {}),
     ...(scanned.length ? {} : { summary_only: true }),
     events,
   };

@@ -25,9 +25,10 @@ export function normalizeIntelValleyNumber(raw: string): string {
  * The reply of the tracker's `Service.ashx` lookup for one number: `data`
  * holds an entry per number, with the scans newest first, each a wall clock,
  * a place and English and Chinese wording. Only the entry whose
- * `server_hawbcode` is the whole number asked is read; the merchant's order
- * reference, the signatory and the proof of delivery are never read. A
- * flight booked for a day is left out: it is still to come.
+ * `server_hawbcode` is the whole number asked is read. The signatory is read
+ * once the parcel is delivered; the merchant's order reference and the proof
+ * of delivery are not. A flight booked for a day is left out: it is still to
+ * come.
  */
 export function parseIntelValley(payload: unknown, raw: string): CarrierResult {
   const number = normalizeIntelValleyNumber(raw);
@@ -40,6 +41,7 @@ export function parseIntelValley(payload: unknown, raw: string): CarrierResult {
   const stage = staged?.stage as Stage | undefined;
   const country = countryCode(rtb56Text(item, 'destination_country', PROVIDER, 8));
   const channel = normalizeTrackingNumber(rtb56Text(item, 'channel_hawbcode', PROVIDER, 64));
+  const signedBy = stage === 'delivered' ? rtb56Text(item, 'signatory_name', PROVIDER, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: staged!.stage_source } : {}),
@@ -48,6 +50,7 @@ export function parseIntelValley(payload: unknown, raw: string): CarrierResult {
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: null,
     ...(country ? { destination_country: country } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     // The number of the network that carries the parcel on; the hand-off decides who that is.
     ...(REFERENCE.test(channel) && channel !== number ? { delivery_tracking_number: channel } : {}),
     events: events.slice(0, MAX_EVENTS),

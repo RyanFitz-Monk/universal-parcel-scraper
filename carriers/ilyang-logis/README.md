@@ -37,10 +37,10 @@ branches and hub terminals. Tracked through the lookup its tracking page makes.
   delivery partner. Ilyang's branch still records the delivery afterwards.
 - The sending office can record taking the parcel in (`10`) after the parcel has left it. That
   scan does not take the parcel's stage back.
-- The reply also carries the sender's and recipient's names, addresses and phone numbers, the
-  person who took the parcel, the goods, the order number, the staff's codes and phones and the
-  branches' phones. The page masks the names and shows no address or personal phone. None of
-  them is kept.
+- The recipient's name and address, and the person who took a delivered parcel with how they
+  relate to the recipient, are read from the reply, unmasked. The page masks the names and shows
+  no address. The sender, the phone numbers, the goods, the order number and the staff's codes
+  are not kept.
 
 ## Limitations
 

@@ -29,7 +29,7 @@ const BLOCKED = /_cf_chl_opt|cf-turnstile|g-recaptcha|h-captcha|_Incapsula_Resou
 const BRANCH = /^At ICS Branch (\S.*?)\s*,\s*([A-Z]{2}) for processing$/i;
 const ATTEMPT = /^Delivery Attempt\s*:\s*(.*)$/i;
 // Openings after which the tracker names the recipient, the shipper or the
-// pickup point and its address: only the opening is kept.
+// pickup point and its address: the row is staged by its opening alone.
 const OPENINGS = [/^Delivered\b/i, /^Picked Up\b/i, /^At SMARTSpot for pickup\b/i];
 const FINAL = new Set<Stage>(['delivered', 'returned']);
 
@@ -57,21 +57,24 @@ function visible(element: Cheerio<Element>): boolean {
   return !/display\s*:\s*none/i.test(element.attr('style') ?? '');
 }
 
-/** A row's wording without the person or address some rows go on to name, and the branch it was scanned at. */
-function wording(text: string): { description: string; location?: string } {
+/**
+ * A row's wording, the branch it was scanned at, and the wording it is staged
+ * by: the opening of a row that goes on to name a person or an address.
+ */
+function wording(text: string): { description: string; location?: string; staging: string } {
   const branch = BRANCH.exec(text);
   if (branch) {
     const location = `${clean(branch[1], 80)}, ${branch[2]!.toUpperCase()}`;
-    return { description: `At ICS Branch ${location} for processing`, location };
+    const description = `At ICS Branch ${location} for processing`;
+    return { description, location, staging: description };
   }
   for (const opening of OPENINGS) {
     const match = opening.exec(text);
-    if (match) return { description: match[0] };
+    if (match) return { description: text, staging: match[0] };
   }
-  // The driver's reason is kept unless it looks like an address.
   const attempt = ATTEMPT.exec(text);
-  if (attempt) return { description: attempt[1] && !/\d/.test(attempt[1]) ? `Delivery Attempt: ${attempt[1]}` : 'Delivery Attempt' };
-  return { description: text };
+  if (attempt) return { description: attempt[1] ? `Delivery Attempt: ${attempt[1]}` : 'Delivery Attempt', staging: 'Delivery Attempt' };
+  return { description: text, staging: text };
 }
 
 /**
@@ -121,8 +124,9 @@ function noResult($: CheerioAPI, html: string): never {
  * then the first parcel's history, each row a wall clock and a wording. A
  * number the tracker does not have gets a summary row saying "Not Found" and
  * no history. The summary and the history must both name the number asked.
- * The signatory, the signature image, the recipient and shipper details some
- * rows carry, and the pickup point's hours and coordinates are not read.
+ * The signatory is read. Rows that name the recipient, the shipper or the
+ * pickup point keep their wording. The signature image and the pickup point's
+ * hours and coordinates are not read.
  */
 export function parseIcsCourier(html: string, raw: string): CarrierResult {
   const number = normalizeIcsCourierNumber(raw);
@@ -158,11 +162,11 @@ export function parseIcsCourier(html: string, raw: string): CarrierResult {
     const local = wallClock(clean(columns.eq(0).text(), 32));
     const raw = clean(columns.eq(1).text(), 300);
     if (!raw) throw new SchemaError(PROVIDER, 'ICS Courier returned a row without wording');
-    const { description, location } = wording(raw);
+    const { description, location, staging } = wording(raw);
     const key = JSON.stringify([local, description]);
     if (seen.has(key)) continue;
     seen.add(key);
-    const staged = icsCourierStage(description);
+    const staged = icsCourierStage(staging);
     events.push({ index, local, event: {
       local_time: local, description,
       ...(location ? { location } : {}),
@@ -184,6 +188,7 @@ export function parseIcsCourier(html: string, raw: string): CarrierResult {
   const eta = DAY.test(estimate) && DateTime.fromISO(estimate, { zone: 'UTC' }).isValid
     && !(stage && FINAL.has(stage)) && estimate >= newest.local.slice(0, 10) ? estimate : null;
   const point = newestFirst.some((event) => event.stage === 'ready_for_pickup') ? pickupPoint($) : '';
+  const signedBy = stage === 'delivered' ? text(3, 120) : '';
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
     ...(stage ? { current_stage: stage, current_stage_source: current!.stage_source } : {}),
@@ -192,6 +197,7 @@ export function parseIcsCourier(html: string, raw: string): CarrierResult {
     last_update_local: newest.local,
     expected_delivery: eta,
     ...(point ? { pickup_point: point } : {}),
+    ...(signedBy ? { signed_by: signedBy } : {}),
     events: newestFirst,
   };
 }
