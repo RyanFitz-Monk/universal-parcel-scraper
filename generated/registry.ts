@@ -747,6 +747,7 @@ import { adapter as xgs } from '../carriers/xgs/adapter.js';
 import { adapter as xingheFreight } from '../carriers/xinghe-freight/adapter.js';
 import { adapter as xlcourier } from '../carriers/xlcourier/adapter.js';
 import { adapter as xpoLtl } from '../carriers/xpo-ltl/adapter.js';
+import { adapter as xpressLogisticsLu } from '../carriers/xpress-logistics-lu/adapter.js';
 import { adapter as xpressbees } from '../carriers/xpressbees/adapter.js';
 import { adapter as yalidine } from '../carriers/yalidine/adapter.js';
 import { adapter as yamato } from '../carriers/yamato/adapter.js';
@@ -1519,6 +1520,7 @@ export const REGISTRY: RegistryDefinition = {
     "xinghe-freight": xingheFreight,
     "xlcourier": xlcourier,
     "xpo-ltl": xpoLtl,
+    "xpress-logistics-lu": xpressLogisticsLu,
     "xpressbees": xpressbees,
     "yalidine": yalidine,
     "yamato": yamato,
@@ -3042,7 +3044,7 @@ export const REGISTRY: RegistryDefinition = {
     "xpo-ltl": "xpo-ltl",
     "xpress-courier-link": "universal",
     "xpress-freight-management": "universal",
-    "xpress-logistics-lu": "universal",
+    "xpress-logistics-lu": "xpress-logistics-lu",
     "xpressbees": "xpressbees",
     "xpressen": "universal",
     "xuchuan-logistics": "universal",

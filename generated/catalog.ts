@@ -55182,7 +55182,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Luxembourg",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "xpress-logistics-lu"
     },
     "canaryUrl": "https://www.xpress-logistics.lu/suivi-colis/",
     "trackingSearchUrl": "https://www.xpress-logistics.lu/suivi-colis/",

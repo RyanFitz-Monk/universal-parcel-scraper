@@ -1,4 +1,57 @@
 {
   "carrier": "xpress-logistics-lu",
-  "entries": []
+  "entries": [
+    {
+      "code": "waiting",
+      "wording": "Colis déclaré et prêt pour expédition",
+      "stage": "registered",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The sender declared the parcel, which waits to be collected."
+    },
+    {
+      "code": "picked up",
+      "wording": "Expédition",
+      "stage": "accepted",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The courier collected the parcel from its sender; the page words it as shipping."
+    },
+    {
+      "code": "warehouse",
+      "wording": "A l'entrepôt Xpress Logistics",
+      "stage": "in_transit",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "delivering",
+      "wording": "En cours de livraison",
+      "stage": "out_for_delivery",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "delivered",
+      "wording": "Livré",
+      "stage": "delivered",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "attempt delivery",
+      "wording": "Destinataire absent ou destination non trouvée",
+      "stage": "failed_attempt",
+      "language": "fr",
+      "confirmedBy": "bundle",
+      "note": "The recipient was absent or the address was not found."
+    },
+    {
+      "code": "canceled",
+      "wording": "Livraison annulée",
+      "stage": "exception",
+      "language": "fr",
+      "confirmedBy": "bundle"
+    }
+  ]
 }

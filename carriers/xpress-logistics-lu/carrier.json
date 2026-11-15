@@ -14,17 +14,39 @@
   "timezone": "Europe/Luxembourg",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "xpress-logistics-lu",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps"
+  ],
   "portal": {
     "searchUrl": "https://www.xpress-logistics.lu/suivi-colis/",
     "canaryUrl": "https://www.xpress-logistics.lu/suivi-colis/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "sender_name"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps"
+    ],
+    "discarded": [
+      "sender_name"
+    ],
+    "unavailable": [
+      "eta",
+      "location"
+    ]
   },
   "links": [],
   "detection": []

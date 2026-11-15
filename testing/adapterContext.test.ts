@@ -94,6 +94,7 @@ const UNSAMPLED: Readonly<Record<string, readonly string[]>> = {
   'qt-express': ['QTX0000000001'],
   swissconnect: ['0000S00001'],
   'time-matters': ['S0000001'],
+  'xpress-logistics-lu': ['000000001'],
   'dpd-hu': ['16400000000001'],
   homexpress: ['TMS00000000000'],
   'mongol-infinity-post': ['1000000'],

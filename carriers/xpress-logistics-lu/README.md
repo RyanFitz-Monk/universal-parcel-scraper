@@ -1,25 +1,41 @@
 # Xpress Logistics
 
-Xpress Logistics parcels use enabled universal providers. There is no dedicated adapter.
+Tracks Xpress Logistics parcels by parcel number.
 
 Xpress Logistics, of Dudelange, is a Luxembourg courier for next-day express parcels across the
 country, with drop-off depots by canton and industrial zone, storage and urgent freight. Its
 tracker is a white-label page of the Conselio platform.
 
+## How it works
+
+`direct` reads the parcel from the service behind the tracking page,
+`xpresslogistics.conselio.com/search/<number>`: no session, key or browser.
+
+The reply's fields and statuses are taken from the tracking page's own script and template. A
+parcel is a list of dated statuses. The status is the `provider_code` and the page's French
+wording for it the description, in every language: the page has no other. A status the page
+does not name is kept without a stage, and the stage is the newest named one.
+
+Status clocks are read only with the offset the service states; a clock without one is rejected
+instead of being given a zone.
+
+The service is asked by the parcel's own address, and its reply names no number.
+
 ## Numbers
 
-Its tracking page says a parcel number has nine digits. Many carriers use nine-digit numbers, and
-no public page shows a whole one, so there is no rule.
+Its tracking page says a parcel number has nine digits, and asks for nothing shorter or longer.
+Many carriers use nine-digit numbers, and no public page shows a whole one, so there is no rule:
+Xpress Logistics is asked when it is selected.
 
-## Why there is no adapter
+## Limitations
 
-A script on the tracking page checks the number's length and asks Conselio's service for the
-parcel's dated statuses and its sender's name. With no public number to check its replies against,
-there is no adapter.
+The page does not say how the service writes a clock. A reply whose clocks carry no offset fails
+as a changed service and the lookup goes on to the enabled universal providers.
 
-## Leads
+The sender's name, which the page shows above the statuses, is not read.
 
-The page calls `GET https://xpresslogistics.conselio.com/search/{number}`, without a key or token.
+A missing parcel is the service's empty HTTP 204. A 404 is read as a moved service, never as a
+missing parcel.
 
 ## Links
 
@@ -27,5 +43,4 @@ Its tracker takes numbers only through its form, so no address opens one parcel.
 
 ## Testing
 
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+`npm run test:carriers:live -- carriers/xpress-logistics-lu`
