@@ -69,6 +69,10 @@ describe('Memphis Courier guest adapter', () => {
       { local_time: '2026-03-13T10:00:00', description: 'Synthetic wording', provider_code: 'SYN' }]);
     expect(plain).toMatchObject({ current_stage: 'in_transit', last_status_text: 'Synthetic wording', last_update_local: '2026-03-13T11:00:00' });
     expect(parseMemphis(changed(h => { h.events = [scan({})]; }), NUMBER)).toMatchObject({ status: 'unknown', last_status_text: 'Synthetic wording' });
+    // A delivery under a newer code the map does not know may have been undone, so the shipment takes no stage from it.
+    const undone = parseMemphis(changed(h => { h.events.unshift(scan({ date: '2026-03-14T09:00:00' }), scan({ code: 'DLV', date: '2026-03-13T10:00:00' })); }), NUMBER);
+    expect(undone).toMatchObject({ status: 'unknown', last_update_local: '2026-03-14T09:00:00' });
+    expect(undone.current_stage).toBeUndefined();
     expect(parseMemphis(changed(h => { h.events = []; }), NUMBER)).toEqual({ status: 'unknown', last_status_text: '', expected_delivery: null, weight_kg: 0.75,
       last_update: null, summary_only: true, events: [] });
     // A repeated row is listed once.

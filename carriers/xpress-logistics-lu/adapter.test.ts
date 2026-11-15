@@ -80,6 +80,11 @@ describe('Xpress Logistics guest adapter', () => {
     const alone = parseXpress({ status: [{ status: 'synthetic new step', created_at: '2026-03-04T08:30:00Z' }] }, NUMBER);
     expect(alone).toMatchObject({ status: 'unknown', last_status_text: 'Synthetic new step', events: expect.objectContaining({ length: 1 }) });
     expect(alone.current_stage).toBeUndefined();
+    // A delivery under a newer status the page does not name may have been undone, so the parcel takes no stage from it.
+    const undone = parseXpress(changed(d => { d.status.push({ status: 'delivered', created_at: '2026-03-04T08:30:00.000000Z' }, { status: 'synthetic new step', created_at: '2026-03-05T07:30:00.000000Z' }); }), NUMBER);
+    expect(undone).toMatchObject({ status: 'unknown', last_status_text: 'Synthetic new step' });
+    expect(undone.current_stage).toBeUndefined();
+    expect(undone.delivered_at).toBeUndefined();
     const long = changed(d => { d.status = Array.from({ length: 120 }, (_, index) => ({ status: 'warehouse', created_at: `2026-03-02T${String(index % 24).padStart(2, '0')}:${String(index % 60).padStart(2, '0')}:00Z` })); });
     expect(parseXpress(long, NUMBER)).toMatchObject({ history_truncated: true, events: expect.objectContaining({ length: 100 }) });
   });

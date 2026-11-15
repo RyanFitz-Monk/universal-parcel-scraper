@@ -111,6 +111,11 @@ describe('QT Express guest adapter', () => {
     const alone = parseQt({ trackingNumber: NUMBER, events: [{ title: 'Synthetic new step', date: '2026-03-04T08:30:00Z' }] }, NUMBER);
     expect(alone).toMatchObject({ status: 'unknown', last_status_text: 'Synthetic new step', events: expect.objectContaining({ length: 1 }) });
     expect(alone.current_stage).toBeUndefined();
+    // A delivery under a newer status the script does not list may have been undone, so the parcel takes no stage from it.
+    const undone = parseQt(changed(d => { d.events.unshift({ title: 'Synthetic new step', date: '2026-03-05T08:30:00+01:00' }, { title: 'Delivered', date: '2026-03-04T08:30:00+01:00' }); }), NUMBER);
+    expect(undone).toMatchObject({ status: 'unknown', last_status_text: 'Synthetic new step' });
+    expect(undone.current_stage).toBeUndefined();
+    expect(undone.delivered_at).toBeUndefined();
     const long = changed(d => { d.events = Array.from({ length: 120 }, (_, index) => ({ title: 'Arrived to final depot', date: `2026-03-02T${String(index % 24).padStart(2, '0')}:${String(index % 60).padStart(2, '0')}:00Z` })); });
     expect(parseQt(long, NUMBER)).toMatchObject({ history_truncated: true, events: expect.objectContaining({ length: 100 }) });
   });

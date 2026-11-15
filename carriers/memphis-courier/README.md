@@ -17,7 +17,7 @@ The reply lists the shipments the code finds, each under its own code, and must 
 requested one. Each scan has a code, a Portuguese wording, a comment and a place column. The code
 sets the stage: the page moves its step bar on FLT (created), BRP (customs), CLA (released) and
 DLV (delivered). A code the map does not know gives no stage, and the parcel keeps its newest
-known one.
+known one, except a delivery, which a newer unknown code may have undone.
 
 Scans carry a wall clock without an offset, so they are local clocks; a clock that ends with an
 offset is read as an instant.

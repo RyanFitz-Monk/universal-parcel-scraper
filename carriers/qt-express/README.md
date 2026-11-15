@@ -16,7 +16,8 @@ and its Hungarian translations. A parcel is a list of events, each with a status
 for a failed delivery, a reason. The status is the `provider_code`; the description is the
 page's wording for it, in Hungarian for a Hungarian reader and in English for everyone else.
 A status the script does not list is kept without a stage, and the stage is the newest listed
-one, as the page keeps to the steps it knows.
+one, as the page keeps to the steps it knows; a delivery under a newer unlisted status may have
+been undone, so it no longer sets the stage.
 
 A failed delivery is worded with its reason as the page words it: by the event's reason code,
 else by the service's English text for one, else the text as written. A reason the courier

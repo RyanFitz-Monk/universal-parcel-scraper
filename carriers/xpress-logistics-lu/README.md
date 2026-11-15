@@ -14,7 +14,8 @@ tracker is a white-label page of the Conselio platform.
 The reply's fields and statuses are taken from the tracking page's own script and template. A
 parcel is a list of dated statuses. The status is the `provider_code` and the page's French
 wording for it the description, in every language: the page has no other. A status the page
-does not name is kept without a stage, and the stage is the newest named one.
+does not name is kept without a stage, and the stage is the newest named one; a delivery under
+a newer unnamed status may have been undone, so it no longer sets the stage.
 
 Status clocks are read only with the offset the service states; a clock without one is rejected
 instead of being given a zone.

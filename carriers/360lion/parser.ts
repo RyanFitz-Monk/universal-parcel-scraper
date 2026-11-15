@@ -1,11 +1,12 @@
 import { ChallengeError, InvalidInputError, NotFoundError, RateLimitedError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { leadingScan } from '../../core/result/unstaged.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
 import { countryName } from '../../places/trackingLocation.js';
-import { lionGroup, lionRail, lionScan } from './status.js';
+import { lionGroup, lionRail, lionScan, statusMap } from './status.js';
 
 export const PROVIDER = '360Lion';
 export const LION_MAX_BYTES = 1024 * 1024;
@@ -106,18 +107,20 @@ export function parseLion(data: unknown, rawNumber: string): CarrierResult {
   scans.sort((left, right) => right.at - left.at || right.index - left.index);
   const events = scans.map(({ event }) => event);
 
-  // The group says where the parcel stands; one still moving takes its newest scan's later stage.
-  const newest = events.find(event => event.stage)?.stage as Stage | undefined;
+  // The group says where the parcel stands; one still moving takes its newest scan's later stage. A
+  // delivery stands only while no newer scan may have undone it (`leadingScan`).
+  const newest = leadingScan(events, statusMap)?.stage as Stage | undefined;
   const moving = new Set<Stage>(['customs', 'out_for_delivery', 'failed_attempt', 'ready_for_pickup', 'exception']);
   const stage = group === 'IN_TRANSIT' ? (newest && moving.has(newest) ? newest : 'in_transit')
     : group === 'PRECESSING' ? (newest ?? 'registered')
       : group === 'WARNING' ? newest : filed.stage;
-  if (!stage) throw new SchemaError(PROVIDER, '360Lion filed a parcel under "Pre-alert" without a scan that says where it stands');
+  if (!stage && !events.some(event => event.stage)) throw new SchemaError(PROVIDER, '360Lion filed a parcel under "Pre-alert" without a scan that says where it stands');
   const stated = clean(parcel.lastTrackStatusEn, 120);
   const delivered = stage === 'delivered' ? events.find(event => event.stage === 'delivered')?.time : undefined;
   // The page names the destination country in English ("ARGENTINA").
   const destination = countryCode(clean(parcel.destinationCountryEn, 60));
-  const summary = { status: languageStageStatus(stage), current_stage: stage, current_stage_source: 'carrier_map',
+  const summary = { status: stage ? languageStageStatus(stage) : 'unknown' as const,
+    ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
     last_status_text: stated && !/^未知$/.test(stated) ? stated : filed.en, provider_code: group,
     ...(destination ? { destination_country: destination } : {}) };
   if (!events.length) return { ...summary, last_update: null, expected_delivery: null, summary_only: true, events: [] };

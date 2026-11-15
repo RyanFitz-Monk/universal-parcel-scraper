@@ -97,6 +97,11 @@ describe('360Lion guest adapter', () => {
     expect(filed('WARNING')).toMatchObject({ current_stage: 'in_transit', provider_code: 'WARNING' });
     expect(() => filed('WARNING', p => { p.trackItemList = []; })).toThrowError(expect.objectContaining({ kind: 'schema' }));
     expect(() => filed('WARNING', p => { p.trackItemList = [scan({})]; })).toThrowError(expect.objectContaining({ kind: 'schema' }));
+    // A delivery under a newer scan nothing stages may have been undone, so the parcel takes no stage from it.
+    const undone = filed('WARNING', p => { p.trackItemList.unshift(scan({ occurDate: '2026-03-16 09:00:00' }), scan({ occurDate: '2026-03-14 12:00:00', icon: 'DELIVERED' })); });
+    expect(undone).toMatchObject({ status: 'unknown', provider_code: 'WARNING', last_update: '2026-03-16T09:00:00-03:00' });
+    expect(undone.current_stage).toBeUndefined();
+    expect(undone.delivered_at).toBeUndefined();
     for (const unread of ['ALL', 'LOST', 'in_transit', '', 5]) expect(() => filed(unread as string)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     // The status the card shows, else the group's own wording.
     expect(filed('IN_TRANSIT', p => { p.lastTrackStatusEn = '未知'; }).last_status_text).toBe('In transit.');

@@ -1,10 +1,11 @@
 import { ChallengeError, InvalidInputError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { leadingScan } from '../../core/result/unstaged.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
-import { memphisStage } from './status.js';
+import { memphisStage, statusMap } from './status.js';
 
 export const CARRIER = 'memphis-courier';
 export const PROVIDER = 'Memphis Courier';
@@ -92,7 +93,8 @@ export function parseMemphis(payload: unknown, rawNumber: string): CarrierResult
   const events = scans.map(({ event }) => event);
 
   const newest = events[0];
-  const stage = events.find((event) => event.stage)?.stage as Stage | undefined;
+  // A delivery stands only while no newer scan may have undone it (`leadingScan`).
+  const stage = leadingScan(events, statusMap)?.stage as Stage | undefined;
   const weight = typeof house.totalWeight === 'number' && Number.isFinite(house.totalWeight) && house.totalWeight > 0 && house.totalWeight < 10_000
     ? house.totalWeight : undefined;
   const summary: CarrierResult = { status: stage ? languageStageStatus(stage) : 'unknown',

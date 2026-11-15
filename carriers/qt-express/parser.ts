@@ -1,10 +1,11 @@
 import { ChallengeError, InvalidInputError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
+import { leadingScan } from '../../core/result/unstaged.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
-import { qtFailureReason, qtStatus } from './status.js';
+import { qtFailureReason, qtStatus, statusMap } from './status.js';
 
 export const PROVIDER = 'QT Express';
 export const QT_EXPRESS_MAX_BYTES = 1024 * 1024;
@@ -72,7 +73,8 @@ export function parseQt(payload: unknown, rawNumber: string, language: QtLanguag
   // The service lists the newest event first.
   scans.sort((left, right) => right.at - left.at || left.index - right.index);
   const events = scans.map(({ event }) => event);
-  const stage = events.find(event => event.stage)?.stage as Stage | undefined;
+  // A delivery stands only while no newer status may have undone it (`leadingScan`).
+  const stage = leadingScan(events, statusMap)?.stage as Stage | undefined;
   const delivered = stage === 'delivered' ? events.find(event => event.stage === 'delivered') : undefined;
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
