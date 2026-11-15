@@ -1669,6 +1669,33 @@ function chinaPostTwinZones(items: readonly { name: unknown; date: unknown; loca
 }
 
 /**
+ * The zone of a postal feed's scan on the origin post's leg (`POSTAL_ORIGIN_LEG`) that no step
+ * places, from the scans at its minute that one does: a copy of it in the same words, else those
+ * in the reply's origin country, when they share one zone. Their dates are the origin office's wall
+ * clock. UPU's "Posting/Collection" of an item posted in Russia, which has several clocks, came at
+ * the minute of Russian Post's own acceptance on Moscow's clock and, read on ParcelsApp's UTC label,
+ * three hours after it. The destination post's copy of that acceptance at the same minute is placed
+ * on its own clock, so scans outside the origin are not counted.
+ */
+function postalTwinZones(items: readonly { name: unknown; date: unknown; location: string; offset: unknown; raw: Record<string, unknown> }[],
+  zones: readonly { zone: string | null; step: ZoneStep }[], origin: string | null): (string | null)[] {
+  const minute = (date: unknown) => mislabeledWallTime(date)?.slice(0, 16) ?? '';
+  const words = (raw: Record<string, unknown>) => relayedLabel(raw.status).trim().toLowerCase();
+  const shared = (found: readonly string[]) => (new Set(found).size === 1 ? found[0]! : null);
+  return items.map((item, index) => {
+    const key = minute(item.date);
+    if (zones[index]!.zone || item.offset || !key || !POSTAL_FEEDS.has(nameKey(item.name)) || !POSTAL_ORIGIN_LEG.test(relayedLabel(item.raw.status).trim())) return null;
+    const twins = items.flatMap((other, at) => {
+      const { zone, step } = zones[at]!;
+      return at !== index && zone && step !== 'labeled' && minute(other.date) === key ? [{ zone, same: words(other.raw) === words(item.raw) }] : [];
+    });
+    const copied = shared(twins.filter(({ same }) => same).map(({ zone }) => zone));
+    const local = origin ? shared(twins.filter(({ zone }) => keepsZone(origin, zone)).map(({ zone }) => zone)) : null;
+    return fitsPlace(copied ?? local, item.location, true);
+  });
+}
+
+/**
  * The zone of YunExpress's copy of its last-mile partner's scan, which its feed relays in its own
  * words with no place, at the partner's digits to the second. YunExpress's "In Transit" came at
  * the second of GOFO's "In Transit to Next Facility", Central time digits under ParcelsApp's UTC
@@ -2179,6 +2206,7 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
   chinaPostTwinZones(entries, zones.map(({ zone }) => zone), destination)
     .forEach((zone, index) => { if (zone) zones[index] = { zone, step: 'copy' }; });
   relayTwinZones(entries, zones).forEach((zone, index) => { if (zone) zones[index] = { zone, step: 'copy' }; });
+  postalTwinZones(entries, zones, origin).forEach((zone, index) => { if (zone) zones[index] = { zone, step: 'copy' }; });
   yunExpressDestinationZones(entries, zones, destination).forEach((zone, index) => { if (zone) zones[index] = { zone, step: 'borrowed' }; });
   yunExpressOriginZones(entries, zones).forEach((zone, index) => { if (zone) zones[index] = { zone, step: 'borrowed' }; });
   const relayed = relayCopies(entries);

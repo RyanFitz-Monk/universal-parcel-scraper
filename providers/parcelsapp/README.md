@@ -539,7 +539,12 @@ step exists for future protocol changes.
   ("CURITIBA, Brazil") is read on the clock most of that country's people live on: Correos
   Chile dates a posting UPU names in Santiago, and Correios Brazil an arrival in Curitiba,
   at the same digits on their own clocks. The US, Canada and Australia are left to their
-  states, and a state's code ("EXAMPLE CITY, MN") names no country.
+  states, and a state's code ("EXAMPLE CITY, MN") names no country. A scan of that leg that
+  nothing else places takes the clock of a copy of it in the same words at its minute, else
+  of the scans at its minute in the origin country when they share one: UPU's posting of an
+  item posted in Russia, at a postcode, had the minute of Russian Post's acceptance on
+  Moscow's clock, and read as UTC came three hours late. The destination post's copy at that
+  minute is on its own clock and is not counted.
 - CTT's copies ("Portugal Post - Portugal CTT") have the digits of CTT's own tracker, the
   clock where each scan happened, under a UTC label. An office of exchange or a CTT site
   names its own clock ("GBLALA - …" London's, "PTLISE - …" Lisbon's). ParcelsApp drops

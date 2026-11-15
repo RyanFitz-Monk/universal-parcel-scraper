@@ -3200,6 +3200,26 @@ describe('ParcelsApp result parsing', () => {
       .toEqual(['2026-09-29T08:06:00.000Z']);
   });
 
+  it("reads a postal feed's origin scan that nothing places on the clock of its copy, else of the origin post's scans at its minute", () => {
+    // Live shape: an item posted in Russia, which has several clocks, for Armenia. UPU's posting has the minute of
+    // Russian Post's own acceptance on Moscow's clock and of Armenia Post's copy of it; read as labeled, it came three hours late.
+    const clocks = (states: Record<string, unknown>[], codes: Record<string, string> = { originCode: 'RU', destinationCode: 'AM' }) => parseParcelsAppResponse(
+      { carriers: ['Universal Postal Union', 'Russian Post', 'Armenia Post'], ...codes, states }, number, identity()).events
+      ?.map(({ description, time, time_zone, time_zone_basis }) => [description, time, time_zone, time_zone_basis]);
+    const posting = { date: '2026-11-14T16:18:00Z', status: 'Posting/Collection', carrier: 0, location: '100000' };
+    const copy = { date: '2026-11-14T16:18:00Z', status: 'Receive item from customer (Otb)', carrier: 2, location: 'EXAMPLE' };
+    expect(clocks([{ date: '2026-11-14T16:18:24Z', status: 'Receiving: Simplified pre-filled', carrier: 1, location: 'EXAMPLE POST OFFICE' }, posting, copy])
+      ?.find(([description]) => description === 'Posting/Collection')).toEqual(['Posting/Collection', '2026-11-14T13:18:00.000Z', 'Europe/Moscow', 'neighbour']);
+    // A scan at its minute outside the origin places nothing: it keeps the label.
+    expect(clocks([posting, copy])?.find(([description]) => description === 'Posting/Collection'))
+      .toEqual(['Posting/Collection', '2026-11-14T16:18:00.000Z', 'UTC', 'label']);
+    // A copy in the same words gives its clock, wherever the reply says the item came from, and the two stay one scan.
+    expect(clocks([
+      { date: '2026-11-11T22:03:00Z', status: 'Item returned from export Customs/Security', carrier: 0, location: 'EXAMPLE, United Arab Emirates' },
+      { date: '2026-11-11T22:03:00Z', status: 'Item returned from export Customs/Security', carrier: 0, location: 'EXAMPLE EXCHANGE OFFICE' },
+    ], { destinationCode: 'DZ' })?.map(([, time, zone]) => [time, zone])).toEqual([['2026-11-11T18:03:00.000Z', 'Asia/Dubai']]);
+  });
+
   it('reads an Australian posting its office\'s capital names on its feed\'s clock first', () => {
     // Live shape: UPU names the office "BRISBANE" and EMS gives its code for the posting
     // Australia Post received in New South Wales at +11:00, Sydney's summer clock.
