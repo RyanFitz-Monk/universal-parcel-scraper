@@ -8,6 +8,7 @@ import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { countryCode, countryTimeZone, firstOccurrence, usStateTimeZone, type ParsedTime } from '../../core/time/index.js';
 import { cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
+import { otherRegionZones } from '../../places/zones.js';
 import { jcexStage } from './status.js';
 
 export const PROVIDER = 'JCEX';
@@ -100,15 +101,18 @@ function keptTime(local: string, label: string | undefined, zone: string | null)
 }
 
 /**
- * A wall clock's instant under the offset written after its place, else the
- * row's `timeZone`, when that is the offset the row's place keeps at that
- * time. Other rows keep their wall clocks: an offset the place does not have
- * is someone else's clock, and a place without one clock does not say which
- * offset is its own.
+ * A wall clock's instant under the offset written after its place, when the
+ * state keeps it at that time on its main clock or another of its own (East
+ * Tennessee's Eastern time), else under the row's `timeZone`, when that is the
+ * offset the row's place keeps at that time. Other rows keep their wall
+ * clocks: an offset the place does not have is someone else's clock, and a
+ * place without one clock does not say which offset is its own.
  */
 function placedTime(local: string, label: string, location: string, country: string): ParsedTime | null {
   const zone = placeZone(location, country);
-  return keptTime(local, OFFSET_PLACE.exec(location)?.[3], zone) ?? keptTime(local, label, zone);
+  const written = OFFSET_PLACE.exec(location);
+  const stated = written ? [zone, ...otherRegionZones('US', written[2]!)].map((own) => keptTime(local, written[3], own)).find(Boolean) : null;
+  return stated ?? keptTime(local, label, zone);
 }
 
 /** A row as JCEX lists it, before its clock is settled. */

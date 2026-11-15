@@ -54,8 +54,9 @@ Tracked through the lookup its tracking page makes.
   writes the delivering partner's scans: the state and the country alone ("ST, US"), or the town,
   state and postcode with the offset of the place's clock after them ("TOWN;ST;POSTCODE;-05:00").
   JCEX lists such a scan again to the minute in the second form, and the offset written there
-  dates the copy where the state keeps it then, whatever offset the row carries, so a partner's
-  label created after JCEX's receipt in China is not read on China's clock. That place keeps its
+  dates the copy where the state keeps it then, on its main clock or another of its own (East
+  Tennessee's Eastern time), whatever offset the row carries, so a partner's label created after
+  JCEX's receipt in China is not read on China's clock. That place keeps its
   form without the postcode. A row whose place is a bare country code keeps that country's
   clock: JCEX files its Hong Kong hub's rows under the destination with the destination's
   offset. An offset the place does not keep at that time, and a place without one clock, keep

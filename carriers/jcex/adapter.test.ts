@@ -174,6 +174,16 @@ describe('JCEX HTTP adapter', () => {
         { eventTime: '2026-04-10 15:30:00', timeZone: '+08:00', location }), NUMBER, READ).events!).at(-1), location)
         .toEqual([null, '2026-04-10T15:30:00', null, location]);
     }
+    // In a state of two clocks, an offset either keeps dates the copy: East Tennessee's Eastern time, northwest Indiana's
+    // Central, as well as each state's main clock. Mountain time is neither's.
+    for (const [location, time] of [[';TN;;-04:00', '2026-04-10T15:30:00-04:00'], ['Example Town;TN;;-04:00', '2026-04-10T15:30:00-04:00'],
+      [';TN;;-05:00', '2026-04-10T15:30:00-05:00'], [';IN;;-05:00', '2026-04-10T15:30:00-05:00'], [';IN;;-04:00', '2026-04-10T15:30:00-04:00'],
+      [';TN;;-06:00', null]]) {
+      const state = location!.split(';')[1];
+      expect(labels(parseJcex(withLabel({ eventTime: '2026-04-10 15:30:47', timeZone: '+08:00', location: `${state},US` },
+        { eventTime: '2026-04-10 15:30:00', timeZone: '+08:00', location: location! }), NUMBER, READ).events!)
+        .find((label) => label[3] === location)?.[0], location!).toBe(time);
+    }
   });
 
   it('drops the copies JCEX dates on Beijing\'s clock and keeps the offsets of the scans it relays', () => {
