@@ -1,0 +1,108 @@
+[
+  {
+    "guideNumber": "0000000001700017",
+    "isReturn": false,
+    "isExportacion": false,
+    "clientReference": {
+      "code": "SYNTHETIC-REF",
+      "description": "Synthetic reference"
+    },
+    "idOrgDeliver": {
+      "code": "SYN"
+    },
+    "idUsr": {
+      "nacional": true
+    },
+    "realReceiverPerson": {
+      "givenName": "SYNTHETIC RECEIVER"
+    },
+    "currentStatus": {
+      "latitud": "19.4326",
+      "longitud": "-99.1332"
+    },
+    "resultDetails": [
+      {
+        "dateTime": "2026-01-05 09:15:00",
+        "location": "Ciudad de Mexico",
+        "latitud": "19.4326",
+        "longitud": "-99.1332",
+        "observations": "Synthetic note",
+        "statusObj": {
+          "id": 1,
+          "code": "DOC",
+          "description": "DOCUMENTADO SINTETICO",
+          "description_en": "SYNTHETIC DOCUMENTED",
+          "long_description": "Descripción sintética",
+          "long_description_en": "Synthetic long description"
+        },
+        "aux": [
+          {
+            "description": ""
+          }
+        ]
+      },
+      {
+        "dateTime": "2026-01-05 18:40:00",
+        "location": "Ciudad de Mexico",
+        "latitud": "19.4326",
+        "longitud": "-99.1332",
+        "observations": "Synthetic note",
+        "statusObj": {
+          "id": 43,
+          "code": "SYNCOL",
+          "description": "RECOLECTADO SINTETICO",
+          "description_en": "SYNTHETIC COLLECTED",
+          "long_description": "Descripción sintética",
+          "long_description_en": "Synthetic long description"
+        },
+        "aux": [
+          {
+            "description": ""
+          }
+        ]
+      },
+      {
+        "dateTime": "2026-01-06 07:05:00",
+        "location": "Monterrey",
+        "latitud": "19.4326",
+        "longitud": "-99.1332",
+        "observations": "Synthetic note",
+        "statusObj": {
+          "id": 39,
+          "code": "SYNSUC",
+          "description": "EN SUCURSAL DESTINO SINTETICA",
+          "description_en": "SYNTHETIC AT DESTINATION BRANCH",
+          "long_description": "Descripción sintética",
+          "long_description_en": "Synthetic long description"
+        },
+        "aux": [
+          {
+            "description": ""
+          }
+        ]
+      },
+      {
+        "dateTime": "2026-01-06 09:30:00",
+        "location": "Monterrey",
+        "latitud": "19.4326",
+        "longitud": "-99.1332",
+        "observations": "Synthetic note",
+        "statusObj": {
+          "id": 3,
+          "code": "SYNRUT",
+          "description": "EN RUTA SINTETICA",
+          "description_en": "SYNTHETIC ON ROUTE",
+          "long_description": "Descripción sintética",
+          "long_description_en": "Synthetic long description"
+        },
+        "aux": [
+          {
+            "description": ""
+          }
+        ],
+        "dateTimeISO": "2026-01-06T09:30:00-06:00"
+      }
+    ],
+    "wsWarnings": []
+  }
+]

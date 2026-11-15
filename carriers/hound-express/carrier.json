@@ -17,17 +17,49 @@
   "timezone": "America/Mexico_City",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "hound-express",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps",
+    "location"
+  ],
   "portal": {
     "searchUrl": "https://www.hound-express.com/tracking.html",
     "canaryUrl": "https://www.hound-express.com/tracking.html",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "signatory",
+      "customer_reference",
+      "remarks",
+      "coordinates",
+      "progress_rail"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps"
+    ],
+    "discarded": [
+      "signatory",
+      "customer_reference",
+      "remarks",
+      "coordinates",
+      "progress_rail"
+    ],
+    "unavailable": [
+      "eta"
+    ]
   },
   "links": [],
   "detection": []

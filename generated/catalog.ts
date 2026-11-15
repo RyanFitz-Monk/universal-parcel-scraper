@@ -26929,7 +26929,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/Mexico_City",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "hound-express"
     },
     "canaryUrl": "https://www.hound-express.com/tracking.html",
     "trackingSearchUrl": "https://www.hound-express.com/tracking.html",
