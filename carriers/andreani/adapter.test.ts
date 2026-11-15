@@ -249,6 +249,15 @@ describe('Andreani HTTP adapter', () => {
     expect(slow.mock.calls.every(([, init]) => init?.signal?.aborted)).toBe(true);
   });
 
+  it('waits for a reply slower than half of a short budget instead of sending it again', async () => {
+    const late = vi.fn<typeof fetch>((_input, init) => new Promise<Response>((resolve, reject) => {
+      const timer = setTimeout(() => resolve(reply(fixture('delivered'))), 250);
+      init?.signal?.addEventListener('abort', () => { clearTimeout(timer); reject(init.signal!.reason); }, { once: true });
+    }));
+    await expect(carrier(late).track({ number: DELIVERED }, { budgetMs: 400 })).resolves.toMatchObject({ status: 'delivered' });
+    expect(late).toHaveBeenCalledTimes(1);
+  });
+
   it('routes a number filed under Andreani to the adapter, and leaves its plain digit run unclaimed', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => reply(fixture('delivered')));
     const tracker = createTracker({ fetcher, providers: [], env: {} });

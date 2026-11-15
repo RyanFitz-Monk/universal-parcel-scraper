@@ -41,6 +41,9 @@ function json(body: string): unknown {
   }
 }
 
+/** Andreani answers in about a second, but a lookup it has not served lately can take six. */
+const FIRST_TRY_MS = 9_000;
+
 export class AndreaniTracker {
   constructor(private readonly options: { fetcher?: typeof fetch; recorder?: StepRecorder; userAgent?: string } = {}) {}
 
@@ -61,12 +64,12 @@ export class AndreaniTracker {
       }
       return parseAndreani(json(body), number);
     };
-    // A request that fails to reach Andreani, or hangs, gets one more try:
-    // the first gets half of the budget, so the retry fits in the rest. An
-    // HTTP status, a rate limit included, is never sent again.
+    // A request that fails to reach Andreani, or hangs, gets one more try in
+    // the rest of the budget. The first waits for half of it, and at least for
+    // FIRST_TRY_MS. An HTTP status, a rate limit included, is never sent again.
     return runSteps({ carrier: 'andreani', budgetMs: context.budgetMs ?? 15_000, signal: context.signal,
       recorder: this.options.recorder ?? NOOP_RECORDER }, [
-      { id: 'direct', run: ({ signal, remainingMs }) => read(signal, firstAttemptMs(remainingMs)) },
+      { id: 'direct', run: ({ signal, remainingMs }) => read(signal, Math.min(remainingMs, Math.max(firstAttemptMs(remainingMs), FIRST_TRY_MS))) },
       networkRetryStep(({ signal, remainingMs }) => read(signal, remainingMs)),
     ]);
   }

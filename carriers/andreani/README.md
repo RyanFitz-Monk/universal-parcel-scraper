@@ -13,8 +13,10 @@ lookup its tracking page makes.
    visitor. The request carries the static token the script sends as `Authorization`. It needs
    no cookie, session or browser. The JSON reply has the parcel's current milestone and every
    milestone with the scans the page lists under it.
-2. `retry`: the same request once more after a network failure or timeout. The first try gets
-   half of the budget.
+2. `retry`: the same request once more after a network failure or timeout, in the rest of the
+   budget. The first try gets half of the budget, and at least nine seconds when the budget
+   allows: Andreani usually answers in a second, but a lookup it has not served lately can take
+   six.
 
 - An unknown number is HTTP 206 with `null`, which the page reports as "No se encontraron
   resultados". A 404 or a redirect is a moved route.
