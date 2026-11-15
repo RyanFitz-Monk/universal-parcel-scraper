@@ -1,6 +1,6 @@
 import { BudgetExceededError, carrierErrorKind, SchemaError, TransportError } from '../errors/index.js';
 import type { StepSpec } from '../runner/index.js';
-import { TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from './trawl.js';
+import { budgetWhenOutOfTime, TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from './trawl.js';
 
 /** Browser recovery for a read-only page whose address contains the whole lookup. */
 export function trawlPageStep<T>(options: {
@@ -28,7 +28,7 @@ export function trawlPageStep<T>(options: {
         provider: options.provider, signal, timeoutMs, fetcher: options.fetcher,
         // JSON can escape each source character; the decoded page has its own cap.
         maxBytes: options.maxBytes * 6 + 65_536,
-      });
+      }).catch(budgetWhenOutOfTime(options.provider, remainingMs));
       signal.throwIfAborted();
       if (new TextEncoder().encode(page.html).byteLength > options.maxBytes) {
         throw new SchemaError(options.provider, 'The browser returned an oversized tracking page');

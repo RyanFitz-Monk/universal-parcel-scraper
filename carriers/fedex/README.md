@@ -217,7 +217,8 @@ whether dated history came back. A retry over IPv6 alone recovered fewer histori
 the original route, so no such route is offered.
 
 With the residential worker alone, `FEDEX_RESIDENTIAL_RETRY_PERCENT` selects its share of
-those attempts, defaulting to half; the rest keep the original retry route. Once the
+those attempts, defaulting to half, which a value that is no number from 0 to 100 also gets,
+with one warning; the rest keep the original retry route. Once the
 datacenter worker is configured, the original route takes no retry. Every retry goes to
 the datacenter worker, unless the host keeps a trial: `FEDEX_RETRY_TRIAL` names it and
 `environment.retryTrialStores["fedex-retry"]` keeps it, so its limits hold across restarts and

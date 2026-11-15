@@ -826,6 +826,27 @@ describe('FedEx lookup steps', () => {
     expect(records[1]).toMatchObject({ networkRoute: 'residential', networkAttempt: 'retry', networkFamily: 'unknown', networkBytes: 1234, historyAvailable: true });
   });
 
+  it('reads a residential retry share that is no percentage as half, with one warning', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const denied = () => Response.json({ tier: 3, statusCode: 200, html: '', capturedResponses: [{ url: TRACK_API, status: 403, body: null }] });
+    const delivered = (route: string) => Response.json({ tier: 3, statusCode: 200, html: '',
+      ...(route === 'residential' ? { fedexEgress: { route, family: 'unknown', pageConnections: 1, apiConnections: 1, bytes: 1 } } : {}),
+      capturedResponses: [{ url: TRACK_API, status: 200, body: JSON.stringify(deliveredFixture()) }] });
+    const routes: string[][] = [];
+    for (const [value, draw] of [['150', 0.49], ['50%', 0.51]] as const) {
+      vi.spyOn(Math, 'random').mockReturnValue(draw);
+      const fetcher = vi.spyOn(globalThis, 'fetch').mockReset()
+        .mockResolvedValueOnce(denied()).mockImplementationOnce(async input => delivered(String(input).startsWith('http://residential.test') ? 'residential' : 'default'));
+      const tracker = adapter({ trawl: new TrawlClient(TRAWL_URL), browserExecutablePath: null,
+        trawlRoutes: { 'fedex-residential': new TrawlClient('http://residential.test') }, env: { FEDEX_RESIDENTIAL_RETRY_PERCENT: value },
+        recorder: { step() {}, lookup() {} } });
+      await expect(tracker.track({ number: DELIVERED_NUMBER })).resolves.toMatchObject({ status: 'delivered' });
+      routes.push(fetcher.mock.calls.map(c => String(c[0])));
+    }
+    expect(routes).toEqual([[`${TRAWL_URL}/scrape`, 'http://residential.test/scrape'], [`${TRAWL_URL}/scrape`, `${TRAWL_URL}/scrape`]]);
+    expect(warn.mock.calls).toEqual([['FEDEX_RESIDENTIAL_RETRY_PERCENT must be a number from 0 to 100; using 50']]);
+  });
+
   it('rejects a residential result without proxy proof and does not add an attempt', async () => {
     const fetcher = vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(Response.json({ tier: 3, statusCode: 200, html: '', capturedResponses: [{ url: TRACK_API, status: 403, body: null }] }))

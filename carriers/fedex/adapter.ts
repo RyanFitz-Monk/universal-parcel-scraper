@@ -1,4 +1,4 @@
-import { envChoice } from '../../core/adapter/envChoice.js';
+import { envChoice, envPercent } from '../../core/adapter/envChoice.js';
 import { BrowserRouteTrial, retryShare } from '../../core/transport/browserRouteTrial.js';
 import { RetryRouteTrial, type RetryRouteLease, type RetryRouteTrialStore, type TrialRoute } from '../../core/transport/retryRouteTrial.js';
 
@@ -919,7 +919,7 @@ export const adapter: AdapterFactory = (environment) => {
     fetcher: environment.fetcher,
     trawl: environment.trawl,
     residentialTrawl: environment.trawlRoutes?.['fedex-residential'] ?? null,
-    residentialRetryShare: environment.env.FEDEX_RESIDENTIAL_RETRY_PERCENT === undefined ? 0.5 : Number(environment.env.FEDEX_RESIDENTIAL_RETRY_PERCENT) / 100,
+    residentialRetryShare: envPercent(environment.env, 'FEDEX_RESIDENTIAL_RETRY_PERCENT', 50) / 100,
     datacenterTrawl: environment.trawlRoutes?.['fedex-datacenter'] ?? null,
     retryTrial: fedexRetryTrial(environment.env, environment.retryTrialStores?.['fedex-retry']),
     firstRoute: envChoice(environment.env, 'FEDEX_FIRST_ROUTE', ['default', 'datacenter'], 'default'),
