@@ -21,6 +21,10 @@ it stays inconclusive. Delivery documents, contact details, vehicle positions an
 account operations are excluded. Shared numeric shapes do not establish TCI ownership;
 explicit selection or a named handoff is required.
 
+No scan wording for a delivery is known: the public sample's scans end with the arrival at
+the delivering branch, while the summary's `DLY_DATE` is still empty. That field, and the
+proof-of-delivery image the reply names beside it, are the leads for reading a delivery.
+
 The official customer app links a customer dashboard; it supplies no separate guest
 history protocol needed by this adapter.
 
