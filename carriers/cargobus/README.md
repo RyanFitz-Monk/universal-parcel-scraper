@@ -12,9 +12,13 @@ rule.
 
 ## Why there is no adapter
 
-Its tracker is an Opter track-and-trace site that answers an open JSON lookup, but no public
-number has been found to check a found reply with, and a found reply carries the sender's and
-recipient's names and addresses, which an adapter would have to leave out.
+Its tracker is an Opter track-and-trace site. The page's script reads a shipment with
+`GET /tt/api/internal/<number>` on the tracker's host, which answers JSON without a session; for
+a number it does not know, `SearchResults` is empty. A found reply carries the courier's own
+status names, which the script holds no list of, a delivery progress of five values (editable,
+in progress, delivered, missed, unknown), and the sender's and recipient's names and addresses,
+which an adapter would have to leave out. No public number has been found to check a found reply
+with, so the status names and the layout of the clocks are not known.
 
 ## Links
 
