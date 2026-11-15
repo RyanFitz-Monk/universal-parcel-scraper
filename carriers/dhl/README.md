@@ -49,7 +49,8 @@ how a consumer learns that DHL holds one behind a postcode.
   [DHL eCommerce Netherlands](../dhl-ecommerce-nl/README.md), `000061`,
   `000268`, `000269` or `000368` and fourteen more to
   [DHL eCommerce Iberia](../dhl-ecommerce-es/README.md). This endpoint holds no
-  record of those. Every other plate is DHL Paket's. Plates that cross
+  record of those, so a parcel filed under DHL with one is handed to the issuer's
+  tracker (`deliveryHandoff`). Every other plate is DHL Paket's. Plates that cross
   networks, such as `149` and `000030` ones, also appear on the Polish, Dutch
   and Iberian trackers, whose adapters read them when their carrier is named.
   A plate of `JJD` and sixteen digits is the length Yodel, now InPost's UK

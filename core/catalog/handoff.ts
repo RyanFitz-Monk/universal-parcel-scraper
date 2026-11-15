@@ -102,6 +102,10 @@ const DHL_PARCEL_PARTNERS: Readonly<Record<string, CarrierId | null>> = {
 // code, and M-ONE delivers them itself.
 const OWN_S10_LAYOUTS: Readonly<Record<string, RegExp>> = { 'morning-global': /^BR\d{9}MG$/, 'm-one': /^[A-Z]{2}\d{9}RS$/ };
 
+// The DHL networks whose JJD plates DHL Paket's tracker holds no record of (carriers/dhl/README.md).
+// DHL Express pieces are left out: DHL Paket shows the last-mile scans it adds to them.
+const PLATES_UNKNOWN_TO_DHL_PAKET: ReadonlySet<string> = new Set(['dhl-ecommerce-es', 'dhl-ecommerce-nl']);
+
 export function hasDirectHandoffAdapter(carrier: string, number: string): boolean {
   if (!AUTOMATIC_CARRIER_IDS.has(carrier) || carrierAdapter(carrier) === 'universal') return false;
   if (REFERENCES_LOOKED_UP[carrier]?.(number) === false) return false;
@@ -135,6 +139,15 @@ export function deliveryHandoff(carrier: string, number: string, result: Carrier
     if (!target) basis = 'reference';
     target = 'poste-italiane';
     reference = labelled;
+  }
+  // A JJD plate another DHL network issued names that network by its digits, and DHL Paket's
+  // tracker holds no record of it: a parcel filed under DHL with one asks the issuer's tracker.
+  if (!target && carrier === 'dhl' && !result.delivery_tracking_number && /^JJD\d/.test(number)) {
+    const detected = detectCarrierMatch(number);
+    if (detected.confidence === 'high' && PLATES_UNKNOWN_TO_DHL_PAKET.has(detected.carrier)) {
+      target = detected.carrier;
+      basis = 'reference';
+    }
   }
   const destination = typeof result.destination_country === 'string' ? result.destination_country
     : typeof result.destination_country_name === 'string' ? result.destination_country_name : undefined;

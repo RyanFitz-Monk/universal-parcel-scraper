@@ -334,6 +334,27 @@ describe('delivery partners that look up only their own references', () => {
     expect(fetcher).toHaveBeenCalled();
   });
 
+  it('asks the network that issued a JJD plate DHL Paket holds no record of, for a parcel filed under DHL', () => {
+    const plates = { 'dhl-ecommerce-es': ['JJD00006112345678901234', 'JJD00026812345678901234', 'JJD00026912345678901234',
+      'JJD00036812345678901234'], 'dhl-ecommerce-nl': ['JJD00009005912345678901', 'JJD0000900601234567890123'] } as const;
+    for (const [carrier, numbers] of Object.entries(plates)) {
+      for (const number of numbers) {
+        for (const result of [{}, { status: 'in_transit', destination_country: 'ES' }] as CarrierResult[]) {
+          expect(deliveryHandoff('dhl', number, result)).toEqual({ carrier, number, basis: 'reference' });
+        }
+        expect(hasDirectHandoffAdapter(carrier, number)).toBe(true);
+        // Only DHL Paket lacks their record; a partner or a second reference DHL names still wins.
+        expect(deliveryHandoff('dhl', number, { delivery_carrier: 'poste-italiane' })).toBeNull();
+        expect(deliveryHandoff('dhl', number, { delivery_tracking_number: '1Z1234567890123454' }))
+          .toEqual({ carrier: 'ups', number: '1Z1234567890123454', basis: 'reference' });
+        expect(deliveryHandoff('dhl-express', number, {})).toBeNull();
+      }
+    }
+    // DHL Paket's own plates, other networks' look-alikes and DHL Express pieces, whose last-mile scans DHL Paket shows, stay.
+    for (const number of ['JJD149150012345678901', 'JJD000390012345678901', 'JJD00026712345678901234', 'JJD000268123456789012345',
+      'JJD014600012345678901']) expect(deliveryHandoff('dhl', number, {})).toBeNull();
+  });
+
   it('asks DHL Express only about its waybills and pieces, never about DHL Paket’s postal number', async () => {
     expect(deliveryHandoff('dhl', 'CX123456785DE', { delivery_carrier: 'dhl-express' })).toBeNull();
     expect(deliveryHandoff('dhl', 'CX123456785DE', { delivery_carrier: 'dhl-express', delivery_tracking_number: '1234567891' }))
