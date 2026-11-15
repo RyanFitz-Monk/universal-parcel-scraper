@@ -1,4 +1,167 @@
 {
   "carrier": "night-star-express",
-  "entries": []
+  "entries": [
+    {
+      "code": "ORDER_REGISTERED",
+      "wording": "Registered",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "ORDER_REGISTERED",
+      "wording": "Erfasst",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_PICKUP",
+      "wording": "Pickup pending",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The carrier is due to collect the package from its sender."
+    },
+    {
+      "code": "IN_PICKUP",
+      "wording": "Abholung bevorstehend",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The carrier is due to collect the package from its sender."
+    },
+    {
+      "code": "IN_PICKUP_DELAYED",
+      "wording": "Pickup delayed",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The collection is late; the package is still with its sender."
+    },
+    {
+      "code": "IN_PICKUP_DELAYED",
+      "wording": "Abholung verzögert",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The collection is late; the package is still with its sender."
+    },
+    {
+      "code": "UNSUCCESSFUL_PICKUP",
+      "wording": "Pickup failed",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The carrier could not collect the package; it is still with its sender."
+    },
+    {
+      "code": "UNSUCCESSFUL_PICKUP",
+      "wording": "Abholung fehlgeschlagen",
+      "stage": "registered",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The carrier could not collect the package; it is still with its sender."
+    },
+    {
+      "code": "PICKED_UP",
+      "wording": "Goods picked up",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "PICKED_UP",
+      "wording": "Ware übernommen",
+      "stage": "accepted",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_TRANSIT",
+      "wording": "In transit",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_TRANSIT",
+      "wording": "In Transit",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_DELIVERY",
+      "wording": "Out for delivery",
+      "stage": "out_for_delivery",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_DELIVERY",
+      "wording": "In Auslieferung",
+      "stage": "out_for_delivery",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "IN_DELIVERY_DELAYED",
+      "wording": "Delivery delayed",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "The delivery is late; a delay is not an exception."
+    },
+    {
+      "code": "IN_DELIVERY_DELAYED",
+      "wording": "Zustellung verzögert",
+      "stage": "in_transit",
+      "language": "de",
+      "confirmedBy": "bundle",
+      "note": "The delivery is late; a delay is not an exception."
+    },
+    {
+      "code": "UNSUCCESSFUL_DELIVERY",
+      "wording": "Delivery failed",
+      "stage": "failed_attempt",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "UNSUCCESSFUL_DELIVERY",
+      "wording": "Zustellung fehlgeschlagen",
+      "stage": "failed_attempt",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Zugestellt",
+      "stage": "delivered",
+      "language": "de",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Canceled",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle"
+    },
+    {
+      "code": "CANCELLED",
+      "wording": "Storniert",
+      "stage": "exception",
+      "language": "de",
+      "confirmedBy": "bundle"
+    }
+  ]
 }

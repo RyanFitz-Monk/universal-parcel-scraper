@@ -17,18 +17,55 @@
   "timezone": "Europe/Berlin",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "night-star-express",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps",
+    "service_name"
+  ],
   "portal": {
     "url": "https://customer.night-star-express.de/tracking/{trackingNumber}",
     "searchUrl": "https://customer.night-star-express.de/",
     "canaryUrl": "https://customer.night-star-express.de/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "service_name",
+      "origin",
+      "recipient_address",
+      "weight",
+      "dimensions",
+      "signatory",
+      "proof_of_delivery",
+      "postcodes"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps",
+      "service_name"
+    ],
+    "discarded": [
+      "origin",
+      "recipient_address",
+      "weight",
+      "dimensions",
+      "signatory",
+      "proof_of_delivery",
+      "postcodes"
+    ],
+    "unavailable": [
+      "eta",
+      "location"
+    ]
   },
   "links": [
     {

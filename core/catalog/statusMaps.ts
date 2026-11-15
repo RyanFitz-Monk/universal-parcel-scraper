@@ -14,6 +14,7 @@ import { statusMap as aneLogistics } from '../../carriers/ane-logistics/status.j
 import { statusMap as tciFreight } from '../../carriers/tci-freight/status.js';
 import { statusMap as hrx } from '../../carriers/hrx/status.js';
 import { statusMap as bypost } from '../../carriers/bypost/status.js';
+import { statusMap as nightStarExpress } from '../../carriers/night-star-express/status.js';
 import { statusMap as aeropost } from '../../carriers/aeropost/status.js';
 import { statusMap as westernBid } from '../../carriers/western-bid/status.js';
 import { statusMap as libanpost } from '../../carriers/libanpost/status.js';
@@ -789,6 +790,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'tci-freight': tciFreight,
   hrx,
   bypost,
+  'night-star-express': nightStarExpress,
   'zes-express': zesExpress,
   'j-and-t-br': jAndTBr,
   zheldor,

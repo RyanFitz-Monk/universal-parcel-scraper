@@ -1,0 +1,28 @@
+[
+  {
+    "id": "NSE0000000001",
+    "canSubscribe": false,
+    "subscription": null,
+    "colis": [
+      {
+        "barcode": "NSEKOLLI0000001",
+        "alternateBarcode": "ALT0000000001",
+        "verified": false,
+        "liveTrackingAvailable": false,
+        "status": "IN_DELIVERY",
+        "sla": { "name": "Synthetic Night", "description": "Synthetic service level" },
+        "steps": [
+          { "title": "Synthetic registered", "status": "OK" },
+          { "title": "Synthetic transit", "status": "OK" },
+          { "title": "Synthetic delivery", "status": "IN_PROGRESS" }
+        ],
+        "events": [
+          { "id": "e1", "status": "ORDER_REGISTERED", "description": "Synthetic order registered", "remarkDescription": null, "timestamp": "2026-03-02T15:05:00.000000Z" },
+          { "id": "e2", "status": "PICKED_UP", "description": "Synthetic goods picked up", "remarkDescription": null, "timestamp": "2026-03-02T17:40:00.000000Z" },
+          { "id": "e3", "status": "IN_TRANSIT", "description": "Synthetic hub scan", "remarkDescription": "Synthetic remark", "timestamp": "2026-03-02T22:10:00+01:00" },
+          { "id": "e4", "status": "IN_DELIVERY", "description": "", "remarkDescription": null, "timestamp": "2026-03-03T04:30:00+01:00" }
+        ]
+      }
+    ]
+  }
+]

@@ -36129,7 +36129,7 @@
     "timezone": "Europe/Berlin",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "night-star-express"
     },
     "canaryUrl": "https://customer.night-star-express.de/",
     "trackingUrlTemplate": "https://customer.night-star-express.de/tracking/{trackingNumber}",

@@ -36133,7 +36133,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Berlin",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "night-star-express"
     },
     "canaryUrl": "https://customer.night-star-express.de/",
     "trackingUrlTemplate": "https://customer.night-star-express.de/tracking/{trackingNumber}",

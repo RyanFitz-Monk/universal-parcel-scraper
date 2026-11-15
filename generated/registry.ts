@@ -457,6 +457,7 @@ import { adapter as naqel } from '../carriers/naqel/adapter.js';
 import { adapter as nationex } from '../carriers/nationex/adapter.js';
 import { adapter as nepalPost } from '../carriers/nepal-post/adapter.js';
 import { adapter as nextLevelDelivery } from '../carriers/next-level-delivery/adapter.js';
+import { adapter as nightStarExpress } from '../carriers/night-star-express/adapter.js';
 import { adapter as nimExpress } from '../carriers/nim-express/adapter.js';
 import { adapter as ninjaVan } from '../carriers/ninja-van/adapter.js';
 import { adapter as nipost } from '../carriers/nipost/adapter.js';
@@ -1225,6 +1226,7 @@ export const REGISTRY: RegistryDefinition = {
     "nationex": nationex,
     "nepal-post": nepalPost,
     "next-level-delivery": nextLevelDelivery,
+    "night-star-express": nightStarExpress,
     "nim-express": nimExpress,
     "ninja-van": ninjaVan,
     "nipost": nipost,
@@ -2461,7 +2463,7 @@ export const REGISTRY: RegistryDefinition = {
     "netpost-vn": "universal",
     "next-level-delivery": "next-level-delivery",
     "nhat-tin": "universal",
-    "night-star-express": "universal",
+    "night-star-express": "night-star-express",
     "nim-express": "nim-express",
     "ninja-van": "ninja-van",
     "nipost": "nipost",
