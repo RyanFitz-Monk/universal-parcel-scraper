@@ -11,6 +11,14 @@ followed by ten digits. `starlinks-1` suggests Starlinks for the `SL` layout at 
 since rules for Aramex Australia and New Zealand accept any two letters and ten digits. The `S`
 layout matches GLS Italy's depot numbers, so no rule claims it.
 
+## Retrieval lead
+
+`consignee.starlinks-me.com` is a single-page app. Its script asks its API for
+`/starlink/shipments/{number}/` followed by `details`, `tracking`, `history` or `delivery-date`, signs
+each request with an HMAC of the method, path and time, and sends a one-time-code token when it
+holds one. An HTTP 401 sends the reader to a page that asks for that code. No reply from the API
+has been seen, so there is no adapter.
+
 ## Links
 
 The tracking form opens `consignee.starlinks-me.com/tracking/{number}`; older pages used
