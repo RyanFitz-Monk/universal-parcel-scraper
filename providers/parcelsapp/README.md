@@ -589,6 +589,14 @@ step exists for future protocol changes.
   ("Russian Federation"): read on Yerevan's clock, its copy of Russian Post's acceptance came an
   hour before Russian Post's own row of it. Such a copy from a country of several clocks takes
   the zone of the origin post's scans at its minute, when the origin keeps that zone.
+- Russian Post's own scans have Moscow time's digits wherever they were, but the US post's copies
+  that ParcelsApp files under Russian Post, the country after USPS's words ("Acceptance, RUSSIAN
+  FEDERATION"), have the scanning office's. Those at a town in Moscow's or Kaliningrad's zone take
+  its clock. The others take that of a scan in Russia at their minute, else keep their wall clock:
+  the gazetteer gives a Russian town the zone of the nearest zone city, which puts Kazan on
+  Ulyanovsk's clock. Russian Post's export
+  ("International processing: Transferred to carrier") at a whole minute is its copy on UTC's wall
+  clock ([Russian Post](../../carriers/russian-post/README.md)) and is read as UTC.
 - Speedaf's dates are its sites' wall clocks under a UTC label. Its own feed dates the
   scans up to the departing flight ("Cargo flight departured") on China time and the rest
   on the destination's, and Cainiao's copies of the same scans agree once read that way.

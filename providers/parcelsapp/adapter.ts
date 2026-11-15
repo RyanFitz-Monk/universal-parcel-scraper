@@ -30,7 +30,7 @@ import {
 import type { TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { carrierHomeZone } from '../../places/clocks.js';
-import { airportTimeZone, splitRegionTownZone } from '../../places/index.js';
+import { airportTimeZone, locatePlace, placeTimeZone, splitRegionTownZone } from '../../places/index.js';
 import { countryName, militaryPostOffice } from '../../places/trackingLocation.js';
 import { countryZones, hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
 import { captureFailure, capturedBodies, loadCapture, type CaptureSpec } from '../shared/capture.js';
@@ -54,7 +54,7 @@ import { YUNEXPRESS_ORIGIN_ZONE, yunExpressOriginLeg } from '../../carriers/yune
 import { facilityZone, LatestScan, relaysFacilityClock } from '../shared/facilityClock.js';
 import { CHINESE_CITIES, CHINESE_PROVINCES } from '../shared/china.js';
 import { brandCarrierForNumber, universalCarrierHints } from '../shared/hints.js';
-import { event, eventStage, isNotice, localEvent, numberOf, place as reportedPlace, result, type UniversalSource } from '../shared/result.js';
+import { event, eventStage, foreignEvent, isNotice, localEvent, numberOf, place as reportedPlace, result, type UniversalSource } from '../shared/result.js';
 import { carrierScan, dropStepNotices, markLaterReceipts, markReturnLeg, type CarrierScan } from '../shared/scans.js';
 import { PARCELSAPP_API, ParcelsAppHttpClient } from './http.js';
 
@@ -1286,6 +1286,45 @@ function relayedCountry(carrier: string | undefined, location: string): string |
 }
 
 /**
+ * Whether a Russian Post row is the US post's copy of a scan in Russia, in USPS's words with the
+ * country after them (`foreignEvent`): "Acceptance, RUSSIAN FEDERATION" at the accepting town,
+ * "Processed Through Facility, MOSKVA EXAMPLE, RUSSIAN FEDERATION". Russian Post's own rows have
+ * Moscow time's digits wherever they were (`RUSSIAN_POST_SUMMARY`), but these copies have the
+ * scanning office's: an acceptance in a town on UTC+5 came at Russian Post's own minute there, and
+ * read on Moscow's clock two hours late.
+ */
+function russianPostCopy(carrier: string | undefined, status: string): boolean {
+  return carrier === 'russian-post' && foreignEvent(status)?.country === 'RU';
+}
+
+/**
+ * The clock of the US post's copy of a scan in Russia (`russianPostCopy`), which keeps several: that
+ * of a town its place names in Moscow's or Kaliningrad's zone, else null for its wall clock. The
+ * gazetteer gives other Russian towns the zone of the nearest zone city, which puts Kazan on
+ * Ulyanovsk's clock and Surgut on Omsk's. Its place is its location, or the words between USPS's and
+ * the country.
+ */
+const RUSSIAN_PLACED_ZONES = new Set(['Europe/Moscow', 'Europe/Kaliningrad']);
+function russianPostCopyZone(location: string, status: string): string | null {
+  const place = location || status.split(',').slice(1).join(',').trim();
+  const found = place ? locatePlace(place, { countries: ['RU'], carriers: ['russian-post'] }) : null;
+  const zone = found?.country === 'RU' && found.precision === 'city' ? placeTimeZone(found) : null;
+  return zone && RUSSIAN_PLACED_ZONES.has(zone) ? zone : null;
+}
+
+/**
+ * Russian Post's export (operation 33, "International processing" in ParcelsApp's English), which
+ * Russian Post lists a second time rounded to the minute on UTC's wall clock (carriers/russian-post).
+ * ParcelsApp's "International processing: Transferred to carrier" has that copy's digits: read on
+ * Moscow's clock it came three hours before Russian Post's own row of the export.
+ */
+const RUSSIAN_POST_EXPORT = /^(?:international processing:\s*\S.*|released from russia)$/i;
+function russianPostExportCopy(carrier: string | undefined, status: string, date: unknown): boolean {
+  return carrier === 'russian-post' && RUSSIAN_POST_EXPORT.test(status.trim())
+    && /T\d{2}:\d{2}(?::00(?:\.0+)?)?$/.test(mislabeledWallTime(date) ?? '');
+}
+
+/**
  * The zone a scan's carrier gives it wherever it was: null for a date that is
  * its instant, and undefined for a scan its place dates (`siteZone`) or only a
  * guess does (`guessedZone`).
@@ -1360,6 +1399,10 @@ function carrierClock(payload: Record<string, unknown>, state: Record<string, un
   // hours ahead of the foreign post's own clock by an amount that differs between countries: they
   // keep their wall clock, as Posta Shqiptare's own tracker leaves them.
   if (carrier === 'posta-shqiptare' && (countryCode(lastPlace(scanLocation(name, state.location))) ?? 'AL') !== 'AL') return null;
+  // Russian Post's export copy is UTC's wall clock, its instant, and the US post's copy of a scan in Russia is
+  // on its office's clock (`siteZone`). Its own rows keep Moscow's, the catalog's.
+  if (russianPostExportCopy(carrier, status, state.date)) return null;
+  if (russianPostCopy(carrier, status)) return undefined;
   if (Object.hasOwn(HOME_CLOCKS, key)) return HOME_CLOCKS[key]!;
   if (carrier === 'correios-br') return CORREIOS_BRAZIL_CLOCK;
   if (carrier === 'spx-br') return SHOPEE_BRAZIL_CLOCK;
@@ -1407,8 +1450,9 @@ function destinationOffice(name: unknown, location: string, destination: string 
 }
 
 /**
- * The zone a scan's place gives it: null for a DHL Express facility the rule
- * cannot place, and undefined for a scan only a guess can place (`guessedZone`).
+ * The zone a scan's place gives it: null for a wall clock no rule can place (a DHL
+ * Express facility the rule cannot place, the US post's copy of a scan in Russia at a
+ * place outside Moscow's and Kaliningrad's zones), and undefined for a scan only a guess can place (`guessedZone`).
  * China Post's scans that no place dates, with none or one the steps cannot tell
  * ("Example Town ENG GB AB1"), are on its own clock, Beijing's: 17TRACK's
  * "+08:00" copies of its airline handovers and of such scans have their digits.
@@ -1419,6 +1463,7 @@ function siteZone(payload: Record<string, unknown>, state: Record<string, unknow
   const key = nameKey(name);
   const carrier = typeof name === 'string' ? carrierIdFromName(name) : undefined;
   const location = scanLocation(name, state.location);
+  if (russianPostCopy(carrier, status)) return russianPostCopyZone(location, status);
   if (carrier === 'ctt') return cttZone(payload, location, state.date, number, destination);
   if (carrier === 'swiftx') return swiftxSiteZone(payload, state, location) ?? undefined;
   // A facility's clock, whatever the label: no other step applies to it.
@@ -1560,8 +1605,8 @@ function readState(payload: Record<string, unknown>, raw: Record<string, unknown
     basis: own === undefined && sited !== undefined ? 'place' as const : 'carrier' as const, instant: own === null,
     local: zone !== null && zone === regionScanZone(name, location, inNorthAmerica, distrusted)?.zone,
     fallback: wallClock || office ? fitsPlace(fallback, location) : null, known: known?.zone ?? null, arrival: known?.country ?? null,
-    // With no zone, a scan whose label nothing vouches for keeps its wall clock.
-    wallOnly: unplacedWall || destinationCode || unknownNetwork(name) || localClockBrand(name) || militaryPostOffice(location) };
+    // With no zone, a scan whose label nothing vouches for keeps its wall clock, as does one on a clock its place cannot tell (`siteZone`).
+    wallOnly: unplacedWall || sited === null || destinationCode || unknownNetwork(name) || localClockBrand(name) || militaryPostOffice(location) };
 }
 
 type ZoneStep = 'carrier' | 'place' | 'copy' | 'borrowed' | 'routing' | 'known' | 'labeled';
@@ -1717,7 +1762,8 @@ function chinaPostTwinZones(items: readonly { name: unknown; date: unknown; loca
  * clock. UPU's "Posting/Collection" of an item posted in Russia, which has several clocks, came at
  * the minute of Russian Post's own acceptance on Moscow's clock and, read on ParcelsApp's UTC label,
  * three hours after it. So is a relaying post's copy of a scan in the origin country that keeps its
- * wall clock (`relayedPostZone`): HayPost's of that acceptance, in the words of IPS. Only a zone the
+ * wall clock (`relayedPostZone`): HayPost's of that acceptance, in the words of IPS. So is the US
+ * post's copy of a scan in Russia that its place does not date (`russianPostCopy`). Only a zone the
  * origin keeps places it, and a scan placed outside the origin is not counted.
  */
 function postalTwinZones(items: readonly { name: unknown; date: unknown; location: string; offset: unknown; raw: Record<string, unknown> }[],
@@ -1728,7 +1774,8 @@ function postalTwinZones(items: readonly { name: unknown; date: unknown; locatio
   return items.map((item, index) => {
     const key = minute(item.date);
     const carrier = typeof item.name === 'string' ? carrierIdFromName(item.name) : undefined;
-    const relayed = !POSTAL_FEEDS.has(nameKey(item.name)) && origin !== null && countryCode(relayedCountry(carrier, item.location)) === origin;
+    const relayed = !POSTAL_FEEDS.has(nameKey(item.name)) && origin !== null && (countryCode(relayedCountry(carrier, item.location)) === origin
+      || (origin === 'RU' && russianPostCopy(carrier, relayedLabel(item.raw.status))));
     if (zones[index]!.zone || item.offset || !key || !(relayed || (POSTAL_FEEDS.has(nameKey(item.name))
       && POSTAL_ORIGIN_LEG.test(relayedLabel(item.raw.status).trim())))) return null;
     const twins = items.flatMap((other, at) => {

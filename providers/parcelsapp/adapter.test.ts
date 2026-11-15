@@ -3247,6 +3247,41 @@ describe('ParcelsApp result parsing', () => {
       .toEqual([['Receive item at office of exchange (Inb)', '2026-11-16T06:00:00.000Z', 'Asia/Yerevan', 'carrier']]);
   });
 
+  it("reads the US post's copies of Russian Post's scans on their office's clock and Russian Post's export copy as UTC", () => {
+    // Live shape: ParcelsApp files the US post's copies of scans in Russia under Russian Post, the country after USPS's
+    // words. Read on Moscow's clock, the acceptance in a town on UTC+5 came two hours after Russian Post's own row of it
+    // (it keeps its wall clock), and Russian Post's export copy, rounded to the minute on UTC's wall clock, three hours
+    // before its own row.
+    const clocks = (states: Record<string, unknown>[]) => parseParcelsAppResponse(
+      { carriers: ['Russian Post'], originCode: 'RU', destinationCode: 'US', states }, number, identity()).events
+      ?.map(({ description, time, local_time, time_zone, time_zone_basis, stage }) => [description, time ?? local_time, time_zone, time_zone_basis, stage]);
+    const acceptance = (location: string) => ({ date: '2026-11-10T20:47:00Z', status: 'Acceptance, RUSSIAN FEDERATION', carrier: 0, location });
+    expect(clocks([
+      { date: '2026-11-12T04:01:00Z', status: 'International processing: Transferred to carrier', carrier: 0 },
+      { date: '2026-11-11T22:30:00Z', status: 'Processed Through Facility, MOSKVA EXAMPLE, RUSSIAN FEDERATION', carrier: 0, location: 'MOSKVA EXAMPLE' },
+      { date: '2026-11-11T05:10:20Z', status: 'Processing: Left sorting center', carrier: 0, location: 'Moscow Example Sorting Center' },
+      { date: '2026-11-11T01:10:20Z', status: 'Processing: Arrived at sorting center', carrier: 0, location: 'Moscow Example Sorting Center' },
+      acceptance('YEKATERINBURG'),
+    ])).toEqual([
+      ['International processing: Transferred to carrier', '2026-11-12T04:01:00.000Z', undefined, undefined, 'in_transit'],
+      ['Processed Through Facility, MOSKVA EXAMPLE, RUSSIAN FEDERATION', '2026-11-11T19:30:00.000Z', 'Europe/Moscow', 'place', 'in_transit'],
+      ['Processing: Left sorting center', '2026-11-11T02:10:20.000Z', 'Europe/Moscow', 'carrier', 'in_transit'],
+      ['Processing: Arrived at sorting center', '2026-11-10T22:10:20.000Z', 'Europe/Moscow', 'carrier', 'in_transit'],
+      ['Acceptance, RUSSIAN FEDERATION', '2026-11-10T20:47:00.000', undefined, undefined, 'accepted'],
+    ]);
+    // Outside Moscow's and Kaliningrad's zones, or at a place the gazetteer does not find, the copy keeps its wall clock,
+    // or takes that of Russian Post's own row at its minute: the gazetteer puts Kazan, on Moscow time, on Ulyanovsk's clock.
+    expect(clocks([acceptance('KAZAN')])).toEqual([['Acceptance, RUSSIAN FEDERATION', '2026-11-10T20:47:00.000', undefined, undefined, 'accepted']]);
+    expect(clocks([acceptance('KALININGRAD')])).toEqual([['Acceptance, RUSSIAN FEDERATION', '2026-11-10T18:47:00.000Z', 'Europe/Kaliningrad', 'place', 'accepted']]);
+    expect(clocks([acceptance('EXAMPLE TOWN')])).toEqual([['Acceptance, RUSSIAN FEDERATION', '2026-11-10T20:47:00.000', undefined, undefined, 'accepted']]);
+    expect(clocks([{ date: '2026-11-10T20:47:24Z', status: 'Receiving: Simplified pre-filled', carrier: 0, location: 'EXAMPLE POST OFFICE' }, acceptance('EXAMPLE TOWN')])
+      ?.find(([description]) => description === 'Acceptance, RUSSIAN FEDERATION'))
+      .toEqual(['Acceptance, RUSSIAN FEDERATION', '2026-11-10T17:47:00.000Z', 'Europe/Moscow', 'neighbour', 'accepted']);
+    // Russian Post's own row of the export, to the second, stays on Moscow's clock.
+    expect(clocks([{ date: '2026-11-12T07:01:15Z', status: 'International processing: Transferred to carrier', carrier: 0 }]))
+      .toEqual([['International processing: Transferred to carrier', '2026-11-12T04:01:15.000Z', 'Europe/Moscow', 'carrier', 'in_transit']]);
+  });
+
   it("reads Emirates Post's scans on Dubai's clock, placed where they name a UAE city", () => {
     // Live shape: "Emirates Post Group" gives Emirates Post's own scans at its tracker's digits, which it dates on Dubai's
     // clock where it names a UAE city; read as labeled they came four hours late, after the UPU's copies of them.
