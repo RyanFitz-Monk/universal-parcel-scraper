@@ -14,7 +14,9 @@ parcel. No public page shows one or states its layout, so there is no rule.
 ## Why there is no adapter
 
 The tracking page asks an open JSON service without a session, which answers an unknown ID with not
-found. No public ID has shown a known parcel's reply yet. An adapter can follow.
+found. A shipment's states are a dated title in Czech, without a code the page reads, so a
+status map needs the wording of real replies, and no public ID has shown a known parcel's
+reply yet.
 
 ## Links
 

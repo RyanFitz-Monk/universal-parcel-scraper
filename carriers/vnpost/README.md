@@ -23,6 +23,13 @@ four-character `mews` JPEG. The service checks the answer before it looks the nu
 without one it replies HTTP 422 "Vui lòng nhập captcha", and a wrong one gets "Captcha không
 đúng hoặc đã hết hạn".
 
+The answer is case-sensitive, and the image mixes capitals, small letters and digits that look
+alike. The library's shared text reader does not tell capitals from small letters, so the
+service refuses most of its answers. With an accepted answer, the service refuses the archived
+numbers as wrong (`Mã bưu gửi không đúng!`), so there is no found reply to read. The page's
+template names the reply's parts: `info` for the item, `locate` for dated scans with their
+place, and `delivery` for delivery attempts.
+
 The international tracker on `ipostal.vnpost.vn` posts the numbers to `/api/v1/tra-cuu-buu-gui`
 with a reCAPTCHA v2 checkbox token and, without one, answers "Vui lòng xác nhận captcha."
 

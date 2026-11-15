@@ -23,6 +23,11 @@ number to check its replies against, there is no adapter.
 The tracker's script posts the references to `/api/orders` as `searches`, each with an optional
 recipient postcode as `verifyingZip`.
 
+The service needs no session and answers an unknown reference with HTTP 404 and `Not found`. A
+found order lists its packages as `colis`, each with a status name and its steps, and shows
+the recipient's address only once the postcode verifies the package. The script translates the
+status names and comes without a source map.
+
 ## Links
 
 `https://customer.night-star-express.de/tracking/{trackingNumber}` opens the tracker on the

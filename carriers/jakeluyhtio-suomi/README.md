@@ -18,6 +18,13 @@ The tracking page reads the number from its address and asks a JSON service for 
 history, which can hold several shipments for one number. With no public number to check its
 replies against, there is no adapter.
 
+## Leads
+
+The page calls `GET https://pyz9okhc67.execute-api.eu-west-1.amazonaws.com/default/JYS-ack-history-PROD?document_id={number}`,
+without a key or token. Each shipment in the reply has its `ackHistory`: dated steps described
+in Finnish, English and Swedish. The steps carry no code the page reads, so a status map needs
+the wording of real replies.
+
 ## Links
 
 `https://seuranta.jakeluyhtio.fi/seuranta/{trackingNumber}` opens the tracker on the number, as
