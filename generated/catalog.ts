@@ -5955,6 +5955,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "4a-express": {
+    "displayName": "4A Express",
+    "color": "#c20e0f",
+    "aliases": [
+      "4A Express Ltd",
+      "4A Express WorldWide"
+    ],
+    "countries": [
+      "CY",
+      "GR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cms.4aexpress.com/Query/TrackAwbNoQuery.aspx",
+    "trackingSearchUrl": "https://cms.4aexpress.com/Query/TrackAwbNoQuery.aspx",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "4sides": {
     "displayName": "4Sides",
     "color": "#d4534d",
@@ -6633,7 +6655,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "ACS",
       "ACS Courier S.A.",
-      "ACS Ταχυδρομικές Υπηρεσίες"
+      "ACS Ταχυδρομικές Υπηρεσίες",
+      "ACS Air Courier Services (Cyprus)"
     ],
     "countries": [
       "GR",
@@ -7183,6 +7206,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/track/TrackingSearch\\.aspx$",
         "params": [
           "waybill"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "airtrans": {
+    "displayName": "Airtrans",
+    "color": "#1b2a4b",
+    "aliases": [
+      "Airtrans Group",
+      "Airtrans Group Ltd"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.airtransgroup.com/results/",
+    "trackingUrlTemplate": "https://www.airtransgroup.com/results/?param={trackingNumber}",
+    "trackingSearchUrl": "https://www.airtransgroup.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.airtransgroup.com",
+          "airtransgroup.com"
+        ],
+        "pathPattern": "^/results/?$",
+        "params": [
+          "param"
         ]
       }
     ],
@@ -11191,7 +11247,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "color": "#44d62c",
     "aliases": [
       "BoxNow",
-      "Box Now"
+      "Box Now",
+      "BOX NOW Cyprus"
     ],
     "countries": [
       "GR",
@@ -14989,6 +15046,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "courier-express-malta": {
+    "displayName": "Courier Express Malta",
+    "color": "#b5e505",
+    "aliases": [
+      "Courier Express Malta Ltd"
+    ],
+    "countries": [
+      "MT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Malta",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://track.courierexpressmalta.com/",
+    "trackingUrlTemplate": "https://track.courierexpressmalta.com/{trackingNumber}",
+    "trackingSearchUrl": "https://track.courierexpressmalta.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "track.courierexpressmalta.com"
+        ],
+        "path": "^/(?:d/)?([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "courier-it": {
     "displayName": "Courier IT",
     "color": "#eb2227",
@@ -15720,7 +15805,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "color": "#e4a50e",
     "aliases": [
       "Κυπριακά Ταχυδρομεία",
-      "Kypriaka Tachydromeia"
+      "Kypriaka Tachydromeia",
+      "Τμήμα Ταχυδρομικών Υπηρεσιών"
     ],
     "countries": [
       "CY"
@@ -18940,7 +19026,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "DX Delivery",
       "DX Freight",
       "DX Express",
-      "DX Secure"
+      "DX Secure",
+      "DX Ireland"
     ],
     "countries": [
       "GB",
@@ -19213,6 +19300,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/(?:index\\.php/)?web-tracking/?$",
         "params": [
           "tracking_number"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "easycourier": {
+    "displayName": "easyCourier",
+    "color": "#ff6600",
+    "aliases": [
+      "Svelta Courier",
+      "Svelta Courier (Cyprus) Ltd"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.easycourier.com.cy/",
+    "trackingUrlTemplate": "https://www.easycourier.com.cy/Home/LiveTracking?TrackingId={trackingNumber}",
+    "trackingSearchUrl": "https://www.easycourier.com.cy/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.easycourier.com.cy",
+          "easycourier.com.cy"
+        ],
+        "pathPattern": "^/Home/LiveTracking/?$",
+        "params": [
+          "TrackingId"
         ]
       }
     ],
@@ -21986,7 +22106,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "color": "#5dbbd1",
     "aliases": [
       "FastDrop",
-      "eCabs Fastdrop"
+      "eCabs Fastdrop",
+      "Fastdrop International"
     ],
     "countries": [
       "MT"
@@ -35159,6 +35280,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "miles-express": {
+    "displayName": "Miles Express",
+    "color": "#2a394b",
+    "aliases": [
+      "Miles Express Cargo Systems",
+      "Miles Express Cargo Systems Ltd"
+    ],
+    "countries": [
+      "MT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Malta",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://booking.milesxp.com/tracking",
+    "trackingUrlTemplate": "https://booking.milesxp.com/tracking?tracking_no={trackingNumber}",
+    "trackingSearchUrl": "https://booking.milesxp.com/tracking",
+    "linkRules": [
+      {
+        "domains": [
+          "booking.milesxp.com",
+          "milesbooking.bizhandle.com"
+        ],
+        "pathPattern": "^/tracking/?$",
+        "params": [
+          "tracking_no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "miller-deliveries": {
     "displayName": "Miller Deliveries",
     "color": "#7a12f9",
@@ -37680,6 +37834,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://www.ontaskd2d.com/",
     "trackingSearchUrl": "https://logistics.ontaskksad2d.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "oohpod": {
+    "displayName": "OOHPod",
+    "color": "#564b51",
+    "aliases": [
+      "OOHPod Ltd",
+      "Oohpod"
+    ],
+    "countries": [
+      "IE",
+      "GB"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Dublin",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://shipping.oohpod.com/tracking",
+    "trackingSearchUrl": "https://shipping.oohpod.com/tracking",
     "linkRules": [],
     "detectionRules": []
   },
@@ -41566,6 +41742,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://premierdeliveries.co.uk/",
     "trackingSearchUrl": "https://premierdeliveries.co.uk/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "primewell": {
+    "displayName": "Primewell",
+    "color": "#ff5d15",
+    "aliases": [
+      "Primewell Courier",
+      "Primewell Management Ltd"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://primewell.cy/",
+    "trackingSearchUrl": "https://tracking.primewell.cy/OD_WEB_APP_EX/Track.aspx",
     "linkRules": [],
     "detectionRules": []
   },
@@ -45478,6 +45675,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "shiplowcost": {
+    "displayName": "ShipLowCost",
+    "color": "#ff440d",
+    "aliases": [
+      "Ship Low Cost",
+      "Express Trailers",
+      "Express Trailers Ltd"
+    ],
+    "countries": [
+      "MT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Malta",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.shiplowcost.com/",
+    "trackingSearchUrl": "https://www.shiplowcost.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "shippify": {
     "displayName": "Shippify",
     "color": "#ef414c",
@@ -46116,7 +46335,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "Skroutz",
       "SLM",
       "SendX",
-      "Skroutz Last Mile Cargo"
+      "Skroutz Last Mile Cargo",
+      "Skroutz Delivery Services"
     ],
     "countries": [
       "GR",
@@ -46350,10 +46570,12 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "Deltec International Courier",
       "Deltec Courier",
       "SkyNet UAE",
-      "SkyNet Worldwide Express UAE"
+      "SkyNet Worldwide Express UAE",
+      "Skynet Cyprus"
     ],
     "countries": [
-      "GB"
+      "GB",
+      "CY"
     ],
     "selectable": true,
     "timezone": "Europe/London",
@@ -51462,6 +51684,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/(?:bg|en)/prosledjavane/?$",
         "params": [
           "track-number"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "travel-express": {
+    "displayName": "Travel & Express",
+    "color": "#2e3192",
+    "aliases": [
+      "Travel Express",
+      "Pangypria Etaireia Metaforon Dematon Ltd",
+      "Παγκύπρια Εταιρεία Μεταφορών Δεμάτων Λτδ"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://portal.travelexpress.com.cy/system/",
+    "trackingUrlTemplate": "https://portal.travelexpress.com.cy/system/?page=track&awb={trackingNumber}",
+    "trackingSearchUrl": "https://portal.travelexpress.com.cy/system/",
+    "linkRules": [
+      {
+        "domains": [
+          "portal.travelexpress.com.cy"
+        ],
+        "pathPattern": "^/system/?$",
+        "params": [
+          "awb"
         ]
       }
     ],
@@ -56945,6 +57200,7 @@ export const CARRIER_IDS = [
   "360zebra",
   "3pe-express",
   "4-72",
+  "4a-express",
   "4sides",
   "5post",
   "66post",
@@ -56980,6 +57236,7 @@ export const CARRIER_IDS = [
   "airpak-express",
   "airroad",
   "airspeed",
+  "airtrans",
   "airwings-india",
   "ait-home-delivery",
   "ait-worldwide",
@@ -57201,6 +57458,7 @@ export const CARRIER_IDS = [
   "costco-logistics",
   "coupang-logistics",
   "courier-center",
+  "courier-express-malta",
   "courier-it",
   "courier-plus-ng",
   "couriersplease",
@@ -57313,6 +57571,7 @@ export const CARRIER_IDS = [
   "eac-cn",
   "early-bird",
   "easy-mail",
+  "easycourier",
   "ecms-express",
   "eco-express-ae",
   "ecohai",
@@ -57769,6 +58028,7 @@ export const CARRIER_IDS = [
   "micro-express",
   "midland-transport",
   "mikropakket",
+  "miles-express",
   "miller-deliveries",
   "mixpakk",
   "mng-kargo",
@@ -57842,6 +58102,7 @@ export const CARRIER_IDS = [
   "onex",
   "online-worldwide-logistics",
   "ontask-express",
+  "oohpod",
   "opt-nc",
   "optima-overnight",
   "optimus-courier",
@@ -57943,6 +58204,7 @@ export const CARRIER_IDS = [
   "ppl",
   "precision-deliveries",
   "premier-deliveries-uk",
+  "primewell",
   "prisma-courier",
   "pro-carrier",
   "product-care-group",
@@ -58058,6 +58320,7 @@ export const CARRIER_IDS = [
   "shipgce",
   "shipglobal-in",
   "shipglobal-us",
+  "shiplowcost",
   "shippify",
   "shiprocket",
   "shipter",
@@ -58226,6 +58489,7 @@ export const CARRIER_IDS = [
   "transport-rdl",
   "transportes-rapex",
   "transpress",
+  "travel-express",
   "trendyol-express",
   "trexity",
   "tribex-courier",
@@ -58505,6 +58769,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "360zebra": [],
   "3pe-express": [],
   "4-72": ["4-72-s10"],
+  "4a-express": [],
   "4sides": [],
   "5post": [],
   "66post": [],
@@ -58540,6 +58805,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "airpak-express": [],
   "airroad": [],
   "airspeed": [],
+  "airtrans": [],
   "airwings-india": [],
   "ait-home-delivery": [],
   "ait-worldwide": [],
@@ -58761,6 +59027,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "costco-logistics": ["costco-logistics-1"],
   "coupang-logistics": [],
   "courier-center": [],
+  "courier-express-malta": [],
   "courier-it": [],
   "courier-plus-ng": [],
   "couriersplease": ["couriersplease-1"],
@@ -58873,6 +59140,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "eac-cn": [],
   "early-bird": ["early-bird-1"],
   "easy-mail": [],
+  "easycourier": [],
   "ecms-express": ["ecms-express-1"],
   "eco-express-ae": [],
   "ecohai": [],
@@ -59329,6 +59597,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "micro-express": ["micro-express-1"],
   "midland-transport": [],
   "mikropakket": [],
+  "miles-express": [],
   "miller-deliveries": [],
   "mixpakk": [],
   "mng-kargo": [],
@@ -59402,6 +59671,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "onex": [],
   "online-worldwide-logistics": [],
   "ontask-express": [],
+  "oohpod": [],
   "opt-nc": [],
   "optima-overnight": ["optima-overnight-1"],
   "optimus-courier": [],
@@ -59503,6 +59773,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ppl": ["ppl-1"],
   "precision-deliveries": ["precision-deliveries-1"],
   "premier-deliveries-uk": [],
+  "primewell": [],
   "prisma-courier": [],
   "pro-carrier": ["pro-carrier-1"],
   "product-care-group": [],
@@ -59618,6 +59889,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "shipgce": [],
   "shipglobal-in": ["shipglobal-in-1"],
   "shipglobal-us": ["shipglobal-us-1"],
+  "shiplowcost": [],
   "shippify": [],
   "shiprocket": ["shiprocket-1"],
   "shipter": ["shipter-1"],
@@ -59786,6 +60058,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "transport-rdl": [],
   "transportes-rapex": [],
   "transpress": [],
+  "travel-express": [],
   "trendyol-express": [],
   "trexity": [],
   "tribex-courier": [],

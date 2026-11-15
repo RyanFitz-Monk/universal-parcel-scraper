@@ -1,0 +1,46 @@
+{
+  "id": "travel-express",
+  "displayName": "Travel & Express",
+  "aliases": [
+    "Travel Express",
+    "Pangypria Etaireia Metaforon Dematon Ltd",
+    "Παγκύπρια Εταιρεία Μεταφορών Δεμάτων Λτδ"
+  ],
+  "region": {
+    "countries": [
+      "CY"
+    ]
+  },
+  "brand": {
+    "color": "#2e3192"
+  },
+  "selectable": true,
+  "timezone": "Asia/Nicosia",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://portal.travelexpress.com.cy/system/?page=track&awb={trackingNumber}",
+    "searchUrl": "https://portal.travelexpress.com.cy/system/",
+    "canaryUrl": "https://portal.travelexpress.com.cy/system/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "portal.travelexpress.com.cy"
+      ],
+      "pathPattern": "^/system/?$",
+      "params": [
+        "awb"
+      ]
+    }
+  ],
+  "detection": []
+}

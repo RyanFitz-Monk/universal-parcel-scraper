@@ -1,0 +1,35 @@
+{
+  "id": "shiplowcost",
+  "displayName": "ShipLowCost",
+  "aliases": [
+    "Ship Low Cost",
+    "Express Trailers",
+    "Express Trailers Ltd"
+  ],
+  "region": {
+    "countries": [
+      "MT"
+    ]
+  },
+  "brand": {
+    "color": "#ff440d"
+  },
+  "selectable": true,
+  "timezone": "Europe/Malta",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.shiplowcost.com/",
+    "canaryUrl": "https://www.shiplowcost.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

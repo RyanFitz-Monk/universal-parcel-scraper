@@ -1,0 +1,35 @@
+{
+  "id": "oohpod",
+  "displayName": "OOHPod",
+  "aliases": [
+    "OOHPod Ltd",
+    "Oohpod"
+  ],
+  "region": {
+    "countries": [
+      "IE",
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#564b51"
+  },
+  "selectable": true,
+  "timezone": "Europe/Dublin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://shipping.oohpod.com/tracking",
+    "canaryUrl": "https://shipping.oohpod.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

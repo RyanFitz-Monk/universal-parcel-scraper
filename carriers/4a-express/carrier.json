@@ -1,0 +1,35 @@
+{
+  "id": "4a-express",
+  "displayName": "4A Express",
+  "aliases": [
+    "4A Express Ltd",
+    "4A Express WorldWide"
+  ],
+  "region": {
+    "countries": [
+      "CY",
+      "GR"
+    ]
+  },
+  "brand": {
+    "color": "#c20e0f"
+  },
+  "selectable": true,
+  "timezone": "Asia/Nicosia",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cms.4aexpress.com/Query/TrackAwbNoQuery.aspx",
+    "canaryUrl": "https://cms.4aexpress.com/Query/TrackAwbNoQuery.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,46 @@
+{
+  "id": "easycourier",
+  "displayName": "easyCourier",
+  "aliases": [
+    "Svelta Courier",
+    "Svelta Courier (Cyprus) Ltd"
+  ],
+  "region": {
+    "countries": [
+      "CY"
+    ]
+  },
+  "brand": {
+    "color": "#ff6600"
+  },
+  "selectable": true,
+  "timezone": "Asia/Nicosia",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.easycourier.com.cy/Home/LiveTracking?TrackingId={trackingNumber}",
+    "searchUrl": "https://www.easycourier.com.cy/",
+    "canaryUrl": "https://www.easycourier.com.cy/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.easycourier.com.cy",
+        "easycourier.com.cy"
+      ],
+      "pathPattern": "^/Home/LiveTracking/?$",
+      "params": [
+        "TrackingId"
+      ]
+    }
+  ],
+  "detection": []
+}

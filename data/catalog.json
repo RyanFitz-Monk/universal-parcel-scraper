@@ -5951,6 +5951,28 @@
       }
     ]
   },
+  "4a-express": {
+    "displayName": "4A Express",
+    "color": "#c20e0f",
+    "aliases": [
+      "4A Express Ltd",
+      "4A Express WorldWide"
+    ],
+    "countries": [
+      "CY",
+      "GR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cms.4aexpress.com/Query/TrackAwbNoQuery.aspx",
+    "trackingSearchUrl": "https://cms.4aexpress.com/Query/TrackAwbNoQuery.aspx",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "4sides": {
     "displayName": "4Sides",
     "color": "#d4534d",
@@ -6629,7 +6651,8 @@
     "aliases": [
       "ACS",
       "ACS Courier S.A.",
-      "ACS Ταχυδρομικές Υπηρεσίες"
+      "ACS Ταχυδρομικές Υπηρεσίες",
+      "ACS Air Courier Services (Cyprus)"
     ],
     "countries": [
       "GR",
@@ -7179,6 +7202,39 @@
         "pathPattern": "^/track/TrackingSearch\\.aspx$",
         "params": [
           "waybill"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "airtrans": {
+    "displayName": "Airtrans",
+    "color": "#1b2a4b",
+    "aliases": [
+      "Airtrans Group",
+      "Airtrans Group Ltd"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.airtransgroup.com/results/",
+    "trackingUrlTemplate": "https://www.airtransgroup.com/results/?param={trackingNumber}",
+    "trackingSearchUrl": "https://www.airtransgroup.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.airtransgroup.com",
+          "airtransgroup.com"
+        ],
+        "pathPattern": "^/results/?$",
+        "params": [
+          "param"
         ]
       }
     ],
@@ -11187,7 +11243,8 @@
     "color": "#44d62c",
     "aliases": [
       "BoxNow",
-      "Box Now"
+      "Box Now",
+      "BOX NOW Cyprus"
     ],
     "countries": [
       "GR",
@@ -14985,6 +15042,34 @@
     ],
     "detectionRules": []
   },
+  "courier-express-malta": {
+    "displayName": "Courier Express Malta",
+    "color": "#b5e505",
+    "aliases": [
+      "Courier Express Malta Ltd"
+    ],
+    "countries": [
+      "MT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Malta",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://track.courierexpressmalta.com/",
+    "trackingUrlTemplate": "https://track.courierexpressmalta.com/{trackingNumber}",
+    "trackingSearchUrl": "https://track.courierexpressmalta.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "track.courierexpressmalta.com"
+        ],
+        "path": "^/(?:d/)?([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "courier-it": {
     "displayName": "Courier IT",
     "color": "#eb2227",
@@ -15716,7 +15801,8 @@
     "color": "#e4a50e",
     "aliases": [
       "Κυπριακά Ταχυδρομεία",
-      "Kypriaka Tachydromeia"
+      "Kypriaka Tachydromeia",
+      "Τμήμα Ταχυδρομικών Υπηρεσιών"
     ],
     "countries": [
       "CY"
@@ -18936,7 +19022,8 @@
       "DX Delivery",
       "DX Freight",
       "DX Express",
-      "DX Secure"
+      "DX Secure",
+      "DX Ireland"
     ],
     "countries": [
       "GB",
@@ -19209,6 +19296,39 @@
         "pathPattern": "^/(?:index\\.php/)?web-tracking/?$",
         "params": [
           "tracking_number"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "easycourier": {
+    "displayName": "easyCourier",
+    "color": "#ff6600",
+    "aliases": [
+      "Svelta Courier",
+      "Svelta Courier (Cyprus) Ltd"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.easycourier.com.cy/",
+    "trackingUrlTemplate": "https://www.easycourier.com.cy/Home/LiveTracking?TrackingId={trackingNumber}",
+    "trackingSearchUrl": "https://www.easycourier.com.cy/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.easycourier.com.cy",
+          "easycourier.com.cy"
+        ],
+        "pathPattern": "^/Home/LiveTracking/?$",
+        "params": [
+          "TrackingId"
         ]
       }
     ],
@@ -21982,7 +22102,8 @@
     "color": "#5dbbd1",
     "aliases": [
       "FastDrop",
-      "eCabs Fastdrop"
+      "eCabs Fastdrop",
+      "Fastdrop International"
     ],
     "countries": [
       "MT"
@@ -35155,6 +35276,39 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "miles-express": {
+    "displayName": "Miles Express",
+    "color": "#2a394b",
+    "aliases": [
+      "Miles Express Cargo Systems",
+      "Miles Express Cargo Systems Ltd"
+    ],
+    "countries": [
+      "MT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Malta",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://booking.milesxp.com/tracking",
+    "trackingUrlTemplate": "https://booking.milesxp.com/tracking?tracking_no={trackingNumber}",
+    "trackingSearchUrl": "https://booking.milesxp.com/tracking",
+    "linkRules": [
+      {
+        "domains": [
+          "booking.milesxp.com",
+          "milesbooking.bizhandle.com"
+        ],
+        "pathPattern": "^/tracking/?$",
+        "params": [
+          "tracking_no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "miller-deliveries": {
     "displayName": "Miller Deliveries",
     "color": "#7a12f9",
@@ -37676,6 +37830,28 @@
     },
     "canaryUrl": "https://www.ontaskd2d.com/",
     "trackingSearchUrl": "https://logistics.ontaskksad2d.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "oohpod": {
+    "displayName": "OOHPod",
+    "color": "#564b51",
+    "aliases": [
+      "OOHPod Ltd",
+      "Oohpod"
+    ],
+    "countries": [
+      "IE",
+      "GB"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Dublin",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://shipping.oohpod.com/tracking",
+    "trackingSearchUrl": "https://shipping.oohpod.com/tracking",
     "linkRules": [],
     "detectionRules": []
   },
@@ -41562,6 +41738,27 @@
     },
     "canaryUrl": "https://premierdeliveries.co.uk/",
     "trackingSearchUrl": "https://premierdeliveries.co.uk/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "primewell": {
+    "displayName": "Primewell",
+    "color": "#ff5d15",
+    "aliases": [
+      "Primewell Courier",
+      "Primewell Management Ltd"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://primewell.cy/",
+    "trackingSearchUrl": "https://tracking.primewell.cy/OD_WEB_APP_EX/Track.aspx",
     "linkRules": [],
     "detectionRules": []
   },
@@ -45474,6 +45671,28 @@
       }
     ]
   },
+  "shiplowcost": {
+    "displayName": "ShipLowCost",
+    "color": "#ff440d",
+    "aliases": [
+      "Ship Low Cost",
+      "Express Trailers",
+      "Express Trailers Ltd"
+    ],
+    "countries": [
+      "MT"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Malta",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.shiplowcost.com/",
+    "trackingSearchUrl": "https://www.shiplowcost.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "shippify": {
     "displayName": "Shippify",
     "color": "#ef414c",
@@ -46112,7 +46331,8 @@
       "Skroutz",
       "SLM",
       "SendX",
-      "Skroutz Last Mile Cargo"
+      "Skroutz Last Mile Cargo",
+      "Skroutz Delivery Services"
     ],
     "countries": [
       "GR",
@@ -46346,10 +46566,12 @@
       "Deltec International Courier",
       "Deltec Courier",
       "SkyNet UAE",
-      "SkyNet Worldwide Express UAE"
+      "SkyNet Worldwide Express UAE",
+      "Skynet Cyprus"
     ],
     "countries": [
-      "GB"
+      "GB",
+      "CY"
     ],
     "selectable": true,
     "timezone": "Europe/London",
@@ -51458,6 +51680,39 @@
         "pathPattern": "^/(?:bg|en)/prosledjavane/?$",
         "params": [
           "track-number"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "travel-express": {
+    "displayName": "Travel & Express",
+    "color": "#2e3192",
+    "aliases": [
+      "Travel Express",
+      "Pangypria Etaireia Metaforon Dematon Ltd",
+      "Παγκύπρια Εταιρεία Μεταφορών Δεμάτων Λτδ"
+    ],
+    "countries": [
+      "CY"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Nicosia",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://portal.travelexpress.com.cy/system/",
+    "trackingUrlTemplate": "https://portal.travelexpress.com.cy/system/?page=track&awb={trackingNumber}",
+    "trackingSearchUrl": "https://portal.travelexpress.com.cy/system/",
+    "linkRules": [
+      {
+        "domains": [
+          "portal.travelexpress.com.cy"
+        ],
+        "pathPattern": "^/system/?$",
+        "params": [
+          "awb"
         ]
       }
     ],

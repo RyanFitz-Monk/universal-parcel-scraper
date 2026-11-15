@@ -1,0 +1,46 @@
+{
+  "id": "miles-express",
+  "displayName": "Miles Express",
+  "aliases": [
+    "Miles Express Cargo Systems",
+    "Miles Express Cargo Systems Ltd"
+  ],
+  "region": {
+    "countries": [
+      "MT"
+    ]
+  },
+  "brand": {
+    "color": "#2a394b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Malta",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://booking.milesxp.com/tracking?tracking_no={trackingNumber}",
+    "searchUrl": "https://booking.milesxp.com/tracking",
+    "canaryUrl": "https://booking.milesxp.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "booking.milesxp.com",
+        "milesbooking.bizhandle.com"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "tracking_no"
+      ]
+    }
+  ],
+  "detection": []
+}

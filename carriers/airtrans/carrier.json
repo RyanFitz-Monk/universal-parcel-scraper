@@ -1,0 +1,46 @@
+{
+  "id": "airtrans",
+  "displayName": "Airtrans",
+  "aliases": [
+    "Airtrans Group",
+    "Airtrans Group Ltd"
+  ],
+  "region": {
+    "countries": [
+      "CY"
+    ]
+  },
+  "brand": {
+    "color": "#1b2a4b"
+  },
+  "selectable": true,
+  "timezone": "Asia/Nicosia",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.airtransgroup.com/results/?param={trackingNumber}",
+    "searchUrl": "https://www.airtransgroup.com/",
+    "canaryUrl": "https://www.airtransgroup.com/results/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.airtransgroup.com",
+        "airtransgroup.com"
+      ],
+      "pathPattern": "^/results/?$",
+      "params": [
+        "param"
+      ]
+    }
+  ],
+  "detection": []
+}
