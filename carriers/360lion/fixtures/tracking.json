@@ -1,0 +1,41 @@
+{
+  "msg": "operation successful",
+  "code": 200,
+  "data": {
+    "groupList": [
+      { "groupCode": "ALL", "quantity": "1" },
+      { "groupCode": "NOT_FOUNT", "quantity": "0" },
+      { "groupCode": "PRECESSING", "quantity": "0" },
+      { "groupCode": "WARNING", "quantity": "0" },
+      { "groupCode": "IN_TRANSIT", "quantity": "1" },
+      { "groupCode": "RETURNED_BACK", "quantity": "0" },
+      { "groupCode": "DELIVERED", "quantity": "0" }
+    ],
+    "trackList": [
+      {
+        "hawbCode": "WSHAR0000000001YQ",
+        "lastOriDescription": "Salida(El paquete ya está cargado al vehículo a la próxima estación.)",
+        "lastDescription": "package on the way to delivery office",
+        "lastTrackCode": "WSD050",
+        "lastTrackDate": "2026-03-12 14:37:28",
+        "lastTrackStatus": "8",
+        "lastTrackStatusCn": "目的国转运",
+        "lastTrackStatusEn": "Transit in Destination Country",
+        "deliveredDay": "11",
+        "destinationCountry": "阿根廷",
+        "destinationCountryEn": "ARGENTINA",
+        "departureCountry": "中国",
+        "departureCountryEn": "China",
+        "groupCode": "IN_TRANSIT",
+        "trackItemList": [
+          { "occurDate": "2026-03-12 14:37:28", "timeZone": "-3", "location": "AR", "oriDescription": "Salida(El paquete ya está cargado al vehículo a la próxima estación.)", "description": "package on the way to delivery office", "trackCode": "WSD050", "icon": "DISPATCH" },
+          { "occurDate": "2026-03-12 11:30:24", "timeZone": "-3", "location": "AR", "oriDescription": "Arribado DC(El paquete ha llegado a la estación.)", "description": "Arrived at sorting center", "trackCode": "WSD051" },
+          { "occurDate": "2026-03-12 11:30:23", "timeZone": "-3", "location": "AR", "oriDescription": "Recibido(Ya recibió el paquete.)", "description": "handover to lastmile", "trackCode": "WSD02", "icon": "DISPATCH" },
+          { "occurDate": "2026-03-04 09:35:00", "timeZone": "-3", "location": "EZE", "oriDescription": "arrived at airport", "description": "arrived at airport", "trackCode": "WSD00", "icon": "AIRPORT" },
+          { "occurDate": "2026-03-01 03:05:00", "timeZone": "+8", "location": "PVG", "oriDescription": "departed from airport", "description": "departed from airport", "trackCode": "WSO04", "icon": "AIRPORT" }
+        ],
+        "trackSub": { "subRage": ["HUB", "TRANSPORT", "AIRPORT", "CUSTOMS", "DISPATCH", "DELIVERED"], "sub": "DISPATCH", "subDesc": "package on the way to delivery office", "subDate": "2026-03-12 14:37:28", "toCountry": "AR", "transmitType": "air", "icon": "DISPATCH" }
+      }
+    ]
+  }
+}

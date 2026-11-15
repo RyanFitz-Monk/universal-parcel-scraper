@@ -1,4 +1,82 @@
 {
   "carrier": "360lion",
-  "entries": []
+  "entries": [
+    {
+      "code": "WSO04",
+      "wording": "departed from airport",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The flight's take-off from China, at the airport's code."
+    },
+    {
+      "code": "WSD00",
+      "wording": "arrived at airport",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The flight's landing in the destination country, at the airport's code."
+    },
+    {
+      "code": "WSD02",
+      "wording": "handover to lastmile",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The hand-over to the destination country's last-mile carrier, whose own wording the scan keeps."
+    },
+    {
+      "code": "WSD051",
+      "wording": "Arrived at sorting center",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The last-mile carrier's sorting centre, a second after the hand-over."
+    },
+    {
+      "code": "WSD050",
+      "wording": "package on the way to delivery office",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-14",
+      "note": "The last-mile carrier's transfer from its sorting centre to the delivery office."
+    },
+    {
+      "code": "PRECESSING",
+      "wording": "Processing",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A group the tracking page files a number under."
+    },
+    {
+      "code": "IN_TRANSIT",
+      "wording": "In transit.",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A group the tracking page files a number under."
+    },
+    {
+      "code": "RETURNED_BACK",
+      "wording": "Returned",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A group the tracking page files a number under."
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Delivered",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A group the tracking page files a number under."
+    }
+  ]
 }

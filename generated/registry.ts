@@ -3,6 +3,7 @@
 import type { RegistryDefinition } from '../core/adapter/index.js';
 import { adapter as carrier17feia } from '../carriers/17feia/adapter.js';
 import { adapter as carrier2go } from '../carriers/2go/adapter.js';
+import { adapter as carrier360lion } from '../carriers/360lion/adapter.js';
 import { adapter as carrier472 } from '../carriers/4-72/adapter.js';
 import { adapter as carrier4sides } from '../carriers/4sides/adapter.js';
 import { adapter as carrier5post } from '../carriers/5post/adapter.js';
@@ -778,6 +779,7 @@ export const REGISTRY: RegistryDefinition = {
   factories: {
     "17feia": carrier17feia,
     "2go": carrier2go,
+    "360lion": carrier360lion,
     "4-72": carrier472,
     "4sides": carrier4sides,
     "5post": carrier5post,
@@ -1556,7 +1558,7 @@ export const REGISTRY: RegistryDefinition = {
     "24curier": "universal",
     "2ebox": "universal",
     "2go": "2go",
-    "360lion": "universal",
+    "360lion": "360lion",
     "360zebra": "universal",
     "3pe-express": "universal",
     "4-72": "4-72",

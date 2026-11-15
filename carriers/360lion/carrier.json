@@ -39,18 +39,53 @@
   "timezone": "Asia/Shanghai",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "360lion",
+    "steps": [
+      "direct"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code",
+    "delivered_at",
+    "offset_timestamps",
+    "destination_country"
+  ],
   "portal": {
     "url": "https://toms.360lion.com/track?trackNumber={trackingNumber}",
     "searchUrl": "https://www.360lion.com/",
     "canaryUrl": "https://www.360lion.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "origin_country",
+      "destination_country",
+      "progress_rail",
+      "transit_time",
+      "proof_of_delivery"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code",
+      "delivered_at",
+      "offset_timestamps",
+      "destination_country"
+    ],
+    "discarded": [
+      "origin_country",
+      "progress_rail",
+      "transit_time",
+      "proof_of_delivery"
+    ],
+    "unavailable": [
+      "eta",
+      "service_name",
+      "weight"
+    ]
   },
   "links": [
     {

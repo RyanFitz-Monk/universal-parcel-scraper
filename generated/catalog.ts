@@ -5823,7 +5823,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "360lion"
     },
     "canaryUrl": "https://www.360lion.com/",
     "trackingUrlTemplate": "https://toms.360lion.com/track?trackNumber={trackingNumber}",
