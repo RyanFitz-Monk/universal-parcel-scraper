@@ -146,6 +146,14 @@
       "note": "Relayed without a code: SpeedX's scan 57112 on its way to the delivering facility, at the same second as its coded line."
     },
     {
+      "wording": "Arrival at destination facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "Relayed without a code: SpeedX's scan 57101 at the delivering facility, at the same second as its coded line."
+    },
+    {
       "wording": "In Transit, Arriving Late",
       "language": "en",
       "stage": "in_transit",

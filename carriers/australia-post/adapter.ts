@@ -12,7 +12,7 @@ import { recoverableByDefault, runSteps } from '../../core/runner/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
 import { canadaProvinceTimeZone, countryCode, countryTimeZone, explicitOffsetTime, epochMillisTime, isoTime,
   mislabeledLocalTime, mislabeledWallTime, usStateTimeZone } from '../../core/time/index.js';
-import { clean, fetchBounded, TrawlClient } from '../../core/transport/index.js';
+import { clean, fetchBounded, TRAWL_TRANSPORT_ALLOWANCE_MS, TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
 import { australiaPostCode, australiaPostCodeParts, australiaPostStatus } from './status.js';
@@ -22,7 +22,6 @@ const DETAIL = 'https://auspost.com.au/mypost/track/details/';
 const ENDED = new Set(['delivered', 'returned', 'ready_for_pickup']);
 const API = 'https://digitalapi.auspost.com.au/shipments-gateway/v1/watchlist/shipments';
 const MAX_BYTES = 1_000_000;
-const TRANSPORT_ALLOWANCE_MS = 15_000;
 const DIRECT_TIMEOUT_MS = 10_000;
 const RETRY_MIN_BROWSER_MS = 8_000;
 // Match the official Android app's HTTP client and channel. DataDome can still
@@ -315,7 +314,7 @@ export class AustraliaPostTracker {
       lookup: record => recorder.lookup(record),
     } : recorder;
     const browser = async (signal: AbortSignal, remainingMs: number, proxy: string | null): Promise<CarrierResult> => {
-      const timeoutMs = Math.floor(remainingMs - TRANSPORT_ALLOWANCE_MS);
+      const timeoutMs = Math.floor(remainingMs - TRAWL_TRANSPORT_ALLOWANCE_MS);
       if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, budgetMs);
       route = proxy ? 'residential' : 'default'; reads++; history = false;
       const apiUrl = australiaPostApiUrl(number);
@@ -372,7 +371,7 @@ export class AustraliaPostTracker {
     }, {
       id: 'trawl', enabled: trawl !== null && this.fallbackProxy !== null,
       recovers: error => error instanceof ChallengeError
-        && deadline - performance.now() >= TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
+        && deadline - performance.now() >= TRAWL_TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
       run: ({ signal, remainingMs }) => browser(signal, remainingMs, this.fallbackProxy),
     }]);
   }

@@ -4,14 +4,13 @@ import { BudgetExceededError, ChallengeError, RateLimitedError, SchemaError, Tra
 import type { CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
-import { TrawlClient } from '../../core/transport/index.js';
+import { TRAWL_TRANSPORT_ALLOWANCE_MS, TrawlClient } from '../../core/transport/index.js';
 import { normalizeSfExpressNumber, parse } from './parser.js';
 
 export { normalizeSfExpressNumber, parse } from './parser.js';
 
 const PROVIDER = 'SF Express';
 const ORIGIN = 'https://htm.sf-express.com';
-const TRANSPORT_ALLOWANCE_MS = 15_000;
 
 export function sfExpressTrackingUrl(raw: string): string {
   return `${ORIGIN}/tw/en/dynamic_function/waybill/#search/bill-number/${normalizeSfExpressNumber(raw)}`;
@@ -38,12 +37,12 @@ export class SfExpressTracker {
     const budgetMs = context.budgetMs ?? this.options.timeoutMs ?? 45_000;
     if (!Number.isFinite(budgetMs) || budgetMs <= 0 || budgetMs > 60_000) throw new TypeError('SF Express budget must be between 1 and 60000 ms');
     context.signal?.throwIfAborted();
-    if (budgetMs <= TRANSPORT_ALLOWANCE_MS) throw new BudgetExceededError(PROVIDER, budgetMs);
+    if (budgetMs <= TRAWL_TRANSPORT_ALLOWANCE_MS) throw new BudgetExceededError(PROVIDER, budgetMs);
     const trawl = this.options.trawl;
     if (!trawl) throw new ChallengeError(PROVIDER, 'SF Express requires the browser tracking service');
     return runSteps({ carrier: 'sf-express', budgetMs, signal: context.signal, recorder: this.options.recorder }, [{
       id: 'trawl', run: async ({ signal, remainingMs }) => {
-        const timeoutMs = Math.floor(remainingMs - TRANSPORT_ALLOWANCE_MS);
+        const timeoutMs = Math.floor(remainingMs - TRAWL_TRANSPORT_ALLOWANCE_MS);
         if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, budgetMs);
         const page = await trawl.scrape({ url: sfExpressTrackingUrl(number), skipHttp: true, maxTier: 3, maxTimeout: timeoutMs,
           captureResponses: [sfExpressApiUrl(number)], settleTimeout: Math.min(timeoutMs, 10_000),
