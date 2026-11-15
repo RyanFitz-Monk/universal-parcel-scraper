@@ -238,7 +238,10 @@ export class TrawlClient {
     }
   }
 
-  private async scrapeOnce(request: TrawlScrapeRequest, options: TrawlCallOptions): Promise<TrawlScrapeResponse> {
+  private async scrapeOnce(request: TrawlScrapeRequest, call: TrawlCallOptions): Promise<TrawlScrapeResponse> {
+    // A read through the request's proxy names it in every failure, so a carrier's proxy retry that gives up
+    // ("Max tier reached without success") reads as that retry and not as the service's own browser.
+    const options = request.proxy ? { ...call, provider: `${call.provider} through the configured proxy` } : call;
     throwIfEnded(options);
     const { bytes, response } = await fetchBounded(this.scrapeUrl(), {
       method: 'POST',

@@ -125,6 +125,15 @@ describe('TrawlClient.scrape', () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
+  it('names the configured proxy in the failures of a read through it', async () => {
+    const gaveUp = { error: 'Max tier reached without success', timings: [{ tier: 3, status: 'timeout', reason: 'Scrape deadline exceeded' }] };
+    const request = { url: 'https://e.test', skipHttp: true, maxTier: 3 as const };
+    await expect(new TrawlClient('http://trawl:8191', jsonFetcher(gaveUp, 500)).scrape({ ...request, proxy: 'http://proxy.test:8080' }, options))
+      .rejects.toMatchObject({ kind: 'indeterminate', status: 500, message: 'TRAWL while fetching UPS through the configured proxy returned HTTP 500' });
+    await expect(new TrawlClient('http://trawl:8191', jsonFetcher(gaveUp, 500)).scrape(request, options))
+      .rejects.toMatchObject({ status: 500, message: 'TRAWL while fetching UPS returned HTTP 500' });
+  });
+
   it('solves through the legacy command API', async () => {
     const fetcher = jsonFetcher({ status: 'ok', solution: { status: 200, response: '<html>solved</html>' } });
     const client = new TrawlClient('http://trawl:8191', fetcher);
