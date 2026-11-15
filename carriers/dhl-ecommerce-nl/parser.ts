@@ -19,8 +19,8 @@ function isShipperSscc(number: string): boolean {
 }
 
 /**
- * The Benelux label families: JVGL and 3S barcodes, the MDP code, the JJD licence plate of
- * DHL's European road network, and a shipper's SSCC.
+ * The Benelux label families: JVGL and 3S barcodes, the MDP code, the JJD
+ * licence plate of DHL's European road network, and a shipper's SSCC.
  */
 export function normalizeDhlEcommerceNlNumber(raw: string): string {
   const number = raw.trim().toUpperCase().replace(/[\s.-]/g, '');
