@@ -1,55 +1,92 @@
 /* global Bun */
 // Run with Bun inside the same pinned image as the primary TRAWL service.
 import { BrowserPool } from '../../../browser/src/pool.ts';
-import { FedExSessions, fedexSessionNumber } from './fedex-session.mjs';
-import { LeaseKeeper, createFedExResidentialProxy, retryGateways, retryRoute } from './fedex-residential-proxy.mjs';
+import { fedexSessionNumber, fedexSessions } from './fedex-session.mjs';
+import { GatewayRotation, LeaseKeeper, WaitHistogram, containerMemory, createFedExResidentialProxy, retryGateways, retryPoolSize,
+  retryRoute } from './fedex-residential-proxy.mjs';
 
-// One route per worker. Each browser context draws one of the gateways and keeps it for its life.
+// One route per worker. Each browser context takes the gateway fewest live contexts use and keeps it for its life.
 const route = retryRoute(process.env.FEDEX_RETRY_ROUTE);
 const gateways = retryGateways(process.env.FEDEX_RETRY_PROXY_URL);
+// The browsers kept warm, each serving one lookup at a time.
+const poolSize = retryPoolSize(process.env.FEDEX_RETRY_POOL_SIZE);
+const rotation = new GatewayRotation(gateways);
 let proxyBytes = 0;
-// Tunnels open only under the running lookup's lease, so every byte belongs to one lookup and none flows between replies.
-// A lease id is used once: a repeated request cannot carry a second allowance for the same reservation.
-const leases = new LeaseKeeper();
+// Tunnels open only under the lease of the lookup running on their browser, so every byte belongs to one lookup and
+// none flows between replies. A lease id is used once: a repeated request cannot carry a second allowance.
+const leases = new LeaseKeeper({ capacity: poolSize });
 let unleasedTunnels = 0;
-// The worker serves one lookup at a time, so the change in these counts over a lookup is that lookup's.
-const refused = { tunnels: 0, page: 0, api: 0, status: null, reason: null };
-const onRefusal = ({ target, status, reason }) => {
-  refused.tunnels++; if (target === 'page' || target === 'api') refused[target]++;
-  refused.status = status; refused.reason = reason;
-};
+let active = 0;
+// Requests taken, and those answered 503 because every browser was busy.
+const requests = { accepted: 0, busy: 0 };
+const browserWait = new WaitHistogram();
+
 // A gateway refusing tunnels, as when a pinned exit goes offline, otherwise shows only as a failed lookup.
-function reportRefusals(before) {
-  if (refused.tunnels === before.tunnels) return;
-  console.warn(JSON.stringify({ level: 'warn', event: 'fedex.gateway-refusal', tunnels: refused.tunnels - before.tunnels,
-    pageTunnels: refused.page - before.page, apiTunnels: refused.api - before.api, status: refused.status, reason: refused.reason }));
+function reportRefusals(refused) {
+  if (!refused?.tunnels) return;
+  console.warn(JSON.stringify({ level: 'warn', event: 'fedex.gateway-refusal', tunnels: refused.tunnels,
+    pageTunnels: refused.page, apiTunnels: refused.api, status: refused.status, reason: refused.reason }));
 }
 
-const pool = new BrowserPool({ poolSize: 1, recycleAfterTemporaryContexts: 0, contentProcesses: 2,
-  label: `fedex-${route}`, blockAds: true });
-const sessions = new FedExSessions();
+const pool = new BrowserPool({ poolSize, recycleAfterTemporaryContexts: 0, contentProcesses: 2,
+  label: `fedex-${route}`, blockAds: true, memoryUsage: () => containerMemory() });
+// The image's pool is patched to send a lookup to a browser whose FedEx session is verified, else to the one least
+// recently used, so each warm browser keeps its session (fedexBrowserPool); it consults this shared instance.
+const sessions = fedexSessions;
 const proxies = new Set();
 const bindings = new WeakMap();
-let active = false, stopping = false;
+let stopping = false;
 await pool.init();
 
+// Each browser's binding holds the lookup running on it: its lease, its gateway refusals and the bytes its proxies carried.
 async function bind(browser) {
   if (bindings.has(browser)) return bindings.get(browser);
   const original = browser.newContext.bind(browser);
-  const binding = { current: null };
+  const binding = { lease: null, refused: null, bytes: 0 };
   browser.newContext = async options => {
-    const gateway = gateways[Math.floor(Math.random() * gateways.length)];
-    const proxy = await createFedExResidentialProxy(gateway, { route, onBytes: n => { proxyBytes += n; }, onRefusal,
-      lease: () => leases.current, onUnleased: () => { unleasedTunnels++; } }); proxies.add(proxy);
+    const { gateway, release } = rotation.take();
+    let proxy;
+    try {
+      proxy = await createFedExResidentialProxy(gateway, { route,
+        onBytes: n => { proxyBytes += n; binding.bytes += n; },
+        onRefusal: ({ target, status, reason }) => {
+          const refused = binding.refused;
+          if (!refused) return;
+          refused.tunnels++; if (target === 'page' || target === 'api') refused[target]++;
+          refused.status = status; refused.reason = reason;
+        },
+        lease: () => binding.lease, onUnleased: () => { unleasedTunnels++; } });
+    } catch (error) { release(); throw error; }
+    proxies.add(proxy);
     try {
       const context = await original({ ...options, proxy: { server: proxy.url } });
-      binding.current = proxy;
-      context.once('close', () => { proxies.delete(proxy); void proxy.close(); });
+      context.once('close', () => { proxies.delete(proxy); release(); void proxy.close(); });
       return context;
-    } catch (error) { proxies.delete(proxy); await proxy.close(); throw error; }
+    } catch (error) { proxies.delete(proxy); release(); await proxy.close(); throw error; }
   };
   bindings.set(browser, binding);
   return binding;
+}
+
+function metrics() {
+  const labels = `route="${route}"`;
+  const stats = pool.getStats();
+  const memory = containerMemory();
+  return [
+    '# TYPE fedex_retry_proxy_bytes_total counter', `fedex_retry_proxy_bytes_total{${labels}} ${proxyBytes}`,
+    '# TYPE fedex_retry_proxy_leases_total counter',
+    ...Object.entries(leases.ends).map(([end, count]) => `fedex_retry_proxy_leases_total{${labels},end="${end}"} ${count}`),
+    '# TYPE fedex_retry_proxy_unleased_tunnels_total counter', `fedex_retry_proxy_unleased_tunnels_total{${labels}} ${unleasedTunnels}`,
+    '# TYPE fedex_retry_requests_total counter',
+    ...Object.entries(requests).map(([outcome, count]) => `fedex_retry_requests_total{${labels},outcome="${outcome}"} ${count}`),
+    '# TYPE fedex_retry_pool_browsers gauge', `fedex_retry_pool_browsers{${labels}} ${poolSize}`,
+    '# TYPE fedex_retry_pool_live gauge', `fedex_retry_pool_live{${labels}} ${stats.live}`,
+    '# TYPE fedex_retry_active_lookups gauge', `fedex_retry_active_lookups{${labels}} ${active}`,
+    ...browserWait.lines('fedex_retry_browser_wait_seconds', labels),
+    ...(memory ? ['# TYPE fedex_retry_memory_working_set_bytes gauge',
+      `fedex_retry_memory_working_set_bytes{${labels}} ${memory.workingSetBytes ?? memory.currentBytes}`,
+      ...(memory.limitBytes === null ? [] : ['# TYPE fedex_retry_memory_limit_bytes gauge', `fedex_retry_memory_limit_bytes{${labels}} ${memory.limitBytes}`])] : []),
+    ''].join('\n');
 }
 
 const server = Bun.serve({
@@ -58,54 +95,57 @@ const server = Bun.serve({
   async fetch(request) {
     const path = new URL(request.url).pathname;
     if (path === '/health' && request.method === 'GET') return Response.json({ status: stopping ? 'stopping' : 'ok', mode: `fedex-${route}`,
-      route, gateways: gateways.length }, { status: stopping ? 503 : 200 });
-    if (path === '/metrics' && request.method === 'GET') return new Response([
-      '# TYPE fedex_retry_proxy_bytes_total counter', `fedex_retry_proxy_bytes_total{route="${route}"} ${proxyBytes}`,
-      '# TYPE fedex_retry_proxy_leases_total counter',
-      ...Object.entries(leases.ends).map(([end, count]) => `fedex_retry_proxy_leases_total{route="${route}",end="${end}"} ${count}`),
-      '# TYPE fedex_retry_proxy_unleased_tunnels_total counter', `fedex_retry_proxy_unleased_tunnels_total{route="${route}"} ${unleasedTunnels}`,
-      ''].join('\n'), { headers: { 'content-type': 'text/plain; version=0.0.4' } });
+      route, gateways: gateways.length, browsers: poolSize }, { status: stopping ? 503 : 200 });
+    if (path === '/metrics' && request.method === 'GET') return new Response(metrics(), { headers: { 'content-type': 'text/plain; version=0.0.4' } });
     if (path !== '/scrape' || request.method !== 'POST') return new Response(null, { status: 404 });
     let body;
     try { body = await request.json(); } catch { return new Response(null, { status: 400 }); }
     if (!fedexSessionNumber(body?.url, body) || body.skipHttp !== true || body.maxTier !== 3
       || !Number.isFinite(body.maxTimeout) || body.maxTimeout < 1) return new Response(null, { status: 400 });
-    if (stopping || active) return new Response(null, { status: 503, headers: { 'Retry-After': '1' } });
+    // Every browser is serving a lookup: the caller waits out Retry-After or takes another route.
+    if (stopping || active >= poolSize) {
+      if (!stopping) requests.busy++;
+      return new Response(null, { status: 503, headers: { 'Retry-After': '1' } });
+    }
     const issued = leases.issue(body);
     if (!issued.lease) return new Response(null, { status: issued.status });
-    active = true;
+    active++; requests.accepted++;
     const started = Date.now(); let handle;
-    const before = proxyBytes;
     const budget = Math.min(40_000, body.maxTimeout);
     try {
       return await leases.run(issued.lease, budget, async lease => {
         handle = await pool.acquire('www.fedex.com', budget);
-        await bind(handle.browser);
+        browserWait.observe((Date.now() - started) / 1000);
+        const binding = await bind(handle.browser);
         const remaining = budget - (Date.now() - started);
         if (remaining <= 0 || request.signal.aborted) return new Response(null, { status: 504 });
         const cancel = () => { lease.close(); handle.requestBrowserReplacement?.('FedEx retry request cancelled'); };
         request.signal.addEventListener('abort', cancel, { once: true });
-        const refusedBefore = { ...refused };
+        binding.lease = lease; binding.refused = { tunnels: 0, page: 0, api: 0, status: null, reason: null };
+        const before = binding.bytes;
         let result;
         try {
           result = await sessions.run({ url: body.url, handle, tier: 3, maxTimeout: remaining,
             capture: { captureResponses: body.captureResponses, settleTimeout: 250 } });
-        } finally { request.signal.removeEventListener('abort', cancel); reportRefusals(refusedBefore); lease.close(); }
-        // Bytes outside this lease since it began: none, as no tunnel opens without one.
+        } finally {
+          request.signal.removeEventListener('abort', cancel); reportRefusals(binding.refused); lease.close();
+          binding.lease = null; binding.refused = null;
+        }
+        // Bytes on this browser's tunnels outside this lease since it began: none, as no tunnel opens without one.
         const proof = { route, family: 'unknown', pageConnections: lease.page, apiConnections: lease.api,
-          connectionFailures: lease.failures, bytes: lease.bytes, idleBytes: Math.max(0, proxyBytes - before - lease.bytes),
+          connectionFailures: lease.failures, bytes: lease.bytes, idleBytes: Math.max(0, binding.bytes - before - lease.bytes),
           lease: lease.id, allowance: lease.allowance, limited: lease.limited };
         // No rendered page, cookies, proxy address or destination addresses leave this endpoint.
         return Response.json({ ...result, html: '', body: '', cookies: [], fedexEgress: proof });
       });
     } catch { return new Response(null, { status: 502 }); }
-    finally { if (handle) pool.release(handle.id, handle.lease); active = false; }
+    finally { if (handle) pool.release(handle.id, handle.lease); active--; }
   },
 });
 
 async function shutdown() {
   if (stopping) return;
-  stopping = true; leases.current?.close(); server.stop(true);
+  stopping = true; leases.closeAll(); server.stop(true);
   await pool.shutdown();
   await Promise.allSettled([...proxies].map(proxy => proxy.close()));
 }

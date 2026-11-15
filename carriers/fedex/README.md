@@ -206,8 +206,8 @@ attempt; the first attempt keeps the original route unless `FEDEX_FIRST_ROUTE=da
 `default`, with one warning. FedEx challenges
 an address in spells that follow neither its request rate nor the hour, so a deployment
 whose own address is often challenged can keep it out of FedEx lookups. A worker serves
-one lookup at a time and answers 503 with `Retry-After` while busy; the lookup waits for
-it while at least 15 seconds of its budget would remain. Custom adapter hosts supply them
+one lookup per browser it keeps warm and answers 503 with `Retry-After` while every one is
+busy; the lookup waits for one while at least 15 seconds of its budget would remain. Custom adapter hosts supply them
 as `environment.trawlRoutes["fedex-residential"]` and `["fedex-datacenter"]`; the facade
 constructs them from `FEDEX_RESIDENTIAL_TRAWL_URL` and `FEDEX_DATACENTER_TRAWL_URL`, and
 the carrier never constructs a browser service itself. A worker never adds an attempt: the

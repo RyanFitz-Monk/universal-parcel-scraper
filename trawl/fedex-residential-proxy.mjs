@@ -2,6 +2,7 @@ import { createServer, request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { lookup } from 'node:dns/promises';
 import { BlockList, isIP } from 'node:net';
+import { readFileSync } from 'node:fs';
 
 const private4 = new BlockList();
 for (const [ip, prefix] of [['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
@@ -103,23 +104,31 @@ export class TunnelLease {
 }
 
 /**
- * The worker's leases: at most one open, each id used once, and each closed when its
- * lookup ends or, whatever the lookup does, `graceMs` after its budget.
+ * The worker's leases: at most `capacity` running, one per browser, each id used once, and
+ * each closed when its lookup ends or, whatever the lookup does, `graceMs` after its budget.
  */
 export class LeaseKeeper {
   #used = new Set();
-  constructor({ graceMs = 2_000, remember = 10_000 } = {}) {
-    this.graceMs = graceMs; this.remember = remember;
+  #running = new Set();
+  constructor({ graceMs = 2_000, remember = 10_000, capacity = 1 } = {}) {
+    if (!Number.isSafeInteger(capacity) || capacity < 1) throw new Error('Invalid lease capacity');
+    this.graceMs = graceMs; this.remember = remember; this.capacity = capacity;
     this.current = null;
     this.ends = { replied: 0, limited: 0, failed: 0 };
   }
+
+  /** The leases whose lookups are running. */
+  get running() { return this.#running.size; }
+
+  /** Closes every running lease, as the worker stops. */
+  closeAll() { for (const lease of this.#running) lease.close(); }
 
   /** A new lease for a request, or the HTTP status that refuses it. */
   issue({ lease, byteAllowance } = {}) {
     let next;
     try { next = new TunnelLease({ id: lease ?? crypto.randomUUID(), allowance: byteAllowance ?? MAX_LEASE_BYTES }); }
     catch { return { status: 400 }; }
-    if (this.current?.open) return { status: 503 };
+    if (this.#running.size >= this.capacity) return { status: 503 };
     if (this.#used.has(next.id)) return { status: 409 };
     this.#used.add(next.id);
     if (this.#used.size > this.remember) this.#used.delete(this.#used.values().next().value);
@@ -128,7 +137,7 @@ export class LeaseKeeper {
 
   /** Runs a lookup under its lease; its tunnels are closed before the lookup's answer is used. */
   async run(lease, budgetMs, work) {
-    this.current = lease;
+    this.#running.add(lease); this.current = lease;
     const expiry = setTimeout(() => lease.close(), Math.max(0, budgetMs) + this.graceMs);
     try {
       const result = await work(lease);
@@ -136,8 +145,84 @@ export class LeaseKeeper {
       this.ends[lease.limited ? 'limited' : 'replied']++;
       return result;
     } catch (error) { lease.close(); this.ends.failed++; throw error; }
-    finally { clearTimeout(expiry); lease.close(); if (this.current === lease) this.current = null; }
+    finally { clearTimeout(expiry); lease.close(); this.#running.delete(lease); if (this.current === lease) this.current = null; }
   }
+}
+
+/** How many browsers the worker keeps warm, one lookup each: `FEDEX_RETRY_POOL_SIZE`, one unless set, at most eight. */
+export function retryPoolSize(value) {
+  const raw = value?.trim();
+  if (!raw) return 1;
+  const size = Number(raw);
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(size) || size < 1 || size > 8) {
+    throw new Error('FEDEX_RETRY_POOL_SIZE must be a whole number from 1 to 8');
+  }
+  return size;
+}
+
+/**
+ * Hands each new browser context the gateway fewest live contexts use, in turn from a random
+ * start: lookups running at once leave from different addresses, and each address takes its share.
+ */
+export class GatewayRotation {
+  #uses; #next;
+  constructor(gateways, { start = Math.floor(Math.random() * gateways.length) } = {}) {
+    if (!gateways.length) throw new Error('Set FEDEX_RETRY_PROXY_URL to the proxy gateway');
+    this.gateways = gateways;
+    this.#uses = gateways.map(() => 0);
+    this.#next = ((start % gateways.length) + gateways.length) % gateways.length;
+  }
+
+  /** The live contexts on each gateway, by position. */
+  get uses() { return [...this.#uses]; }
+
+  /** A gateway for a new context, and the release its context calls once, when it closes. */
+  take() {
+    const count = this.gateways.length;
+    let best = this.#next;
+    for (let step = 1; step < count; step++) {
+      const index = (this.#next + step) % count;
+      if (this.#uses[index] < this.#uses[best]) best = index;
+    }
+    this.#uses[best]++;
+    this.#next = (best + 1) % count;
+    let released = false;
+    return { gateway: this.gateways[best], release: () => { if (!released) { released = true; this.#uses[best]--; } } };
+  }
+}
+
+/** Seconds a request waited for its browser, as a Prometheus histogram. */
+export class WaitHistogram {
+  constructor(bounds = [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20]) {
+    this.bounds = bounds; this.counts = bounds.map(() => 0); this.count = 0; this.sum = 0;
+  }
+
+  observe(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return;
+    this.count++; this.sum += seconds;
+    this.bounds.forEach((bound, index) => { if (seconds <= bound) this.counts[index]++; });
+  }
+
+  lines(name, labels) {
+    return [`# TYPE ${name} histogram`,
+      ...this.bounds.map((bound, index) => `${name}_bucket{${labels},le="${bound}"} ${this.counts[index]}`),
+      `${name}_bucket{${labels},le="+Inf"} ${this.count}`, `${name}_sum{${labels}} ${this.sum}`, `${name}_count{${labels}} ${this.count}`];
+  }
+}
+
+/**
+ * The container's memory as TRAWL's pool reads it from cgroup v2: the current use, its limit
+ * and the working set without reclaimable inactive file cache. Undefined where it cannot be read.
+ */
+export function containerMemory(read = path => readFileSync(path, 'utf8').trim()) {
+  const number = value => (/^\d+$/.test(value ?? '') && Number.isSafeInteger(Number(value)) ? Number(value) : null);
+  try {
+    const currentBytes = number(read('/sys/fs/cgroup/memory.current'));
+    const limitBytes = number(read('/sys/fs/cgroup/memory.max'));
+    if (currentBytes === null) return undefined;
+    const inactive = number(read('/sys/fs/cgroup/memory.stat').match(/^inactive_file (\d+)$/m)?.[1]);
+    return { currentBytes, limitBytes, ...(inactive === null ? {} : { workingSetBytes: Math.max(0, currentBytes - inactive) }) };
+  } catch { return undefined; }
 }
 
 /**

@@ -14,7 +14,8 @@ const payload = gzipSync(JSON.stringify(Object.fromEntries(files.map(name => [na
 console.log(`FROM ${image}
 LABEL org.opencontainers.image.revision="${revision}" org.opencontainers.image.source="https://github.com/plhery/universal-parcel-scraper" org.opencontainers.image.licenses="AGPL-3.0-only"
 ENV HOST=0.0.0.0 PORT=8192 LOG_LEVEL=warn
-RUN bun -e 'import{writeFileSync}from"node:fs";import{gunzipSync}from"node:zlib";for(const[name,source]of Object.entries(JSON.parse(gunzipSync(Buffer.from("${payload}","base64")).toString())))writeFileSync("/app/packages/tiers/src/utils/"+name,source)'
+RUN bun -e 'import{writeFileSync}from"node:fs";import{gunzipSync}from"node:zlib";for(const[name,source]of Object.entries(JSON.parse(gunzipSync(Buffer.from("${payload}","base64")).toString())))writeFileSync("/app/packages/tiers/src/utils/"+name,source)' \\
+ && bun -e 'import{readFileSync,writeFileSync}from"node:fs";import{fedexBrowserPool}from"/app/packages/tiers/src/utils/fedex-session.mjs";const pool="/app/packages/browser/src/pool.ts";writeFileSync(pool,fedexBrowserPool(readFileSync(pool,"utf8")))'
 WORKDIR /app
 EXPOSE 8192
 CMD ["bun", "/app/packages/tiers/src/utils/fedex-retry-server.mjs"]`);

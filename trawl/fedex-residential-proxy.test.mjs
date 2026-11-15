@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer, request } from 'node:http';
 import { connect } from 'node:net';
-import { LeaseKeeper, MAX_LEASE_BYTES, TunnelLease, createFedExResidentialProxy, fedexDestination, publicAddress, retryGateways, retryRoute } from './fedex-residential-proxy.mjs';
+import { GatewayRotation, LeaseKeeper, MAX_LEASE_BYTES, TunnelLease, WaitHistogram, containerMemory, createFedExResidentialProxy, fedexDestination, publicAddress,
+  retryGateways, retryPoolSize, retryRoute } from './fedex-residential-proxy.mjs';
 
 const resolve = async () => [{ address: '8.8.8.8', family: 4 }];
 async function tunnel(proxy, authority, body = '') {
@@ -223,4 +224,62 @@ test('the worker opens one lease at a time, uses each id once and closes it with
   await keeper.run(slow, 5, async () => { await new Promise(done => setTimeout(done, 60)); openAtExpiry = slow.open; });
   assert.equal(openAtExpiry, false);
   assert.deepEqual(keeper.ends, { replied: 2, limited: 0, failed: 1 });
+});
+
+test('a worker with several browsers runs one lease per browser and refuses the next while all are running', async () => {
+  assert.throws(() => new LeaseKeeper({ capacity: 0 }), /capacity/);
+  const keeper = new LeaseKeeper({ graceMs: 10, capacity: 2 });
+  const first = keeper.issue({ lease: 'a' }).lease, second = keeper.issue({ lease: 'b' }).lease;
+  let release;
+  const held = new Promise(done => { release = done; });
+  const running = [keeper.run(first, 1_000, () => held), keeper.run(second, 1_000, () => held)];
+  assert.equal(keeper.running, 2);
+  assert.equal(keeper.issue({ lease: 'c' }).status, 503);
+  // Each lookup's lease stays its own: closing one leaves the other's tunnels open.
+  first.close();
+  assert.equal(second.open, true);
+  release(); await Promise.all(running);
+  assert.equal(keeper.running, 0);
+  assert.ok(keeper.issue({ lease: 'c' }).lease);
+  const third = keeper.issue({ lease: 'd' }).lease;
+  const stopped = keeper.run(third, 1_000, () => new Promise(done => setTimeout(done, 20)));
+  keeper.closeAll();
+  assert.equal(third.open, false);
+  await stopped;
+});
+
+test('the pool size is one unless set, a whole number up to eight', () => {
+  assert.equal(retryPoolSize(undefined), 1);
+  assert.equal(retryPoolSize(' '), 1);
+  assert.equal(retryPoolSize('4'), 4);
+  for (const value of ['0', '9', '2.5', '-1', 'four', '1e1']) assert.throws(() => retryPoolSize(value), /FEDEX_RETRY_POOL_SIZE/);
+});
+
+test('new contexts take the gateway fewest live contexts use, in turn, and give it back once when they close', () => {
+  assert.throws(() => new GatewayRotation([]), /FEDEX_RETRY_PROXY_URL/);
+  const rotation = new GatewayRotation(['g0', 'g1', 'g2'], { start: 1 });
+  const taken = [rotation.take(), rotation.take(), rotation.take()];
+  assert.deepEqual(taken.map(item => item.gateway), ['g1', 'g2', 'g0']);
+  assert.deepEqual(rotation.uses, [1, 1, 1]);
+  taken[0].release(); taken[0].release();
+  assert.deepEqual(rotation.uses, [1, 0, 1]);
+  // The free gateway comes first, then the turn goes on after it.
+  assert.equal(rotation.take().gateway, 'g1');
+  assert.equal(rotation.take().gateway, 'g2');
+  assert.deepEqual(rotation.uses, [1, 1, 2]);
+});
+
+test('browser waits are counted in cumulative buckets', () => {
+  const histogram = new WaitHistogram([0.1, 1]);
+  for (const seconds of [0.05, 0.5, 3, -1, Number.NaN]) histogram.observe(seconds);
+  assert.deepEqual(histogram.lines('wait', 'route="datacenter"'), ['# TYPE wait histogram', 'wait_bucket{route="datacenter",le="0.1"} 1',
+    'wait_bucket{route="datacenter",le="1"} 2', 'wait_bucket{route="datacenter",le="+Inf"} 3', 'wait_sum{route="datacenter"} 3.55',
+    'wait_count{route="datacenter"} 3']);
+});
+
+test("the container's memory leaves out reclaimable file cache, and is unknown where cgroup v2 cannot be read", () => {
+  const files = { '/sys/fs/cgroup/memory.current': '1000', '/sys/fs/cgroup/memory.max': '4000', '/sys/fs/cgroup/memory.stat': 'anon 600\ninactive_file 300\n' };
+  assert.deepEqual(containerMemory(path => files[path]), { currentBytes: 1000, limitBytes: 4000, workingSetBytes: 700 });
+  assert.deepEqual(containerMemory(path => ({ ...files, '/sys/fs/cgroup/memory.max': 'max' })[path]), { currentBytes: 1000, limitBytes: null, workingSetBytes: 700 });
+  assert.equal(containerMemory(() => { throw new Error('missing'); }), undefined);
 });

@@ -245,27 +245,35 @@ without account or recipient fields. Other Track718 carrier selections use no he
 `node trawl/render-fedex-retry.mjs` prints a Dockerfile for a separate container on the
 same pinned image, running `fedex-retry-server.mjs` with its own browser pool. `HOST`
 defaults to loopback and `PORT` to 8192. Keep its endpoint private and the primary
-service's deployment settings. It serves only the exact FedEx capture flow, one lookup at
-a time, with no shared browser profile or session cache.
+service's deployment settings. It serves only the exact FedEx capture flow, one lookup per
+browser, sharing no browser profile or session with the primary service.
+`FEDEX_RETRY_POOL_SIZE` (one unless set, at most eight) is how many browsers it keeps warm;
+while every one is serving a lookup it answers 503 with `Retry-After`. The image patches
+TRAWL's pool as the primary service's install step does, so a lookup goes to a browser
+holding a verified FedEx session, else to the one used least recently.
 
 `FEDEX_RETRY_ROUTE` names the worker's route, `residential` (the default) or `datacenter`,
 in its proof, health, metrics and browser pool. `FEDEX_RETRY_PROXY_URL` names one
 authenticated gateway, or several separated by white space or commas, such as a list of
-datacenter addresses. Each browser context draws one gateway and keeps it for its life; a
-denial never moves a context to another. Each context gets a loopback CONNECT proxy that
-sends every tunnel through its gateway, to checked public addresses, without a direct
-fallback. A tunnel opens only under the running lookup's lease: the request's `lease` id,
+datacenter addresses. Each browser context takes the gateway that the fewest live contexts
+use, in turn, and keeps it for its life, so lookups running at once leave from different
+addresses; a denial never moves a context to another. Each context gets a loopback CONNECT
+proxy that sends every tunnel through its gateway, to checked public addresses, without a
+direct fallback. A tunnel opens only under the running lookup's lease: the request's `lease` id,
 used once, and its `byteAllowance` (at most, and by default, 64 MiB). Each chunk is counted
 against the allowance before it is relayed; the one that would pass it is dropped with every
 tunnel of the lease. The lease closes when the lookup ends, or two seconds after its budget,
 and between lookups the proxy refuses every tunnel, so a retained session carries nothing
 while idle. The response reports the lease's page and API tunnel counts, tunnel bytes,
 allowance and whether it was cut; DNS answers, URLs, cookies, gateways and the rendered page
-never leave the worker. `/metrics` counts the tunnel bytes, leases by how they ended and
-refused tunnels outside a lease. Failed contexts and their proxies are closed
-together. `/health` gives the route and the number of gateways. Run one worker per route
-and use `FEDEX_RESIDENTIAL_TRAWL_URL` and `FEDEX_DATACENTER_TRAWL_URL` in the consumer, as
-the [FedEx adapter](../carriers/fedex/README.md) describes.
+never leave the worker. Each browser's tunnels open only under the lease of the lookup it
+is serving. `/metrics` counts the tunnel bytes, leases by how they ended, refused tunnels
+outside a lease, requests taken and those refused while every browser was busy, and gives
+the browsers kept and live, the lookups running, the wait for a browser and the container's
+memory. Failed contexts and their proxies are closed together. `/health` gives the route,
+the number of gateways and the browsers kept. Run one worker per route and use
+`FEDEX_RESIDENTIAL_TRAWL_URL` and `FEDEX_DATACENTER_TRAWL_URL` in the consumer, as the
+[FedEx adapter](../carriers/fedex/README.md) describes.
 
 A gateway that refuses tunnels, as when its pinned exit goes offline, makes every lookup
 fail after its deadline. The `fedex.gateway-refusal` warning counts a lookup's refused

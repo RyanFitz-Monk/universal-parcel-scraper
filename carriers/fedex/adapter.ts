@@ -69,7 +69,7 @@ const API_TIMEOUT_MS = 15_000;
 const MAX_EVENTS_TO_INSPECT = 500;
 const MAX_EVENTS_TO_RETURN = 100;
 const HOUR_MS = 3_600_000;
-// A route worker serves one lookup at a time. While it is busy, the lookup waits for it only as long as this much
+// A route worker serves one lookup per browser. While every one is busy, the lookup waits only as long as this much
 // of its budget would remain for the browser afterwards.
 const WORKER_BROWSER_MIN_MS = 15_000;
 const WORKER_BUSY_WAIT_MAX_MS = 2_000;
