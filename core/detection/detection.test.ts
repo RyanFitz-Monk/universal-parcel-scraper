@@ -681,6 +681,17 @@ describe('the detection engine', () => {
     expect(keywordNumberInText('Tracking: 20261112')).toBe('20261112');
   });
 
+  it('reads no year a month and day follow, and goes on to a later label', () => {
+    // Chinese text prints the date right after its label, with no space.
+    for (const text of ['您的运单2026年11月12日已发货', '运单2026/11/12发货', '运单 2026 年 11 月 12 日']) {
+      expect(keywordNumberInText(text), text).toBeUndefined();
+    }
+    // Synthetic numbers.
+    expect(parseTrackingInput('运单2026年11月12日发出 运单号：781234567890123').trackingNumber).toBe('781234567890123');
+    expect(keywordNumberInText('Tracking: 2026-11-12, tracking number: 1234567899')).toBe('1234567899');
+    expect(keywordNumberInText('运单号：20261112')).toBe('20261112');
+  });
+
   it('takes no word of a message or a link for a number, though its shape fits a carrier', () => {
     expect(detectCarrierMatch('ADDITIONAL').confidence).toBe('high');
     for (const text of [

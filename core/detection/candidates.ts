@@ -115,13 +115,16 @@ const LABELLED_NUMBER = new RegExp(
   // printed apart may follow it: "1Z 999 AA1 01 2345 6784".
   + String.raw`((?=[A-Z0-9.-]{0,39}\d)(?:[A-Z0-9][A-Z0-9.-]{3,39}|[A-Z0-9][A-Z0-9.-]{1,2}(?=\s[A-Z0-9]*\d))`
   + String.raw`(?:\s[A-Z0-9]{2,6}(?![\p{L}0-9]))*)`,
-  'iu',
+  'giu',
 );
 // A word that offers a second number: "tracking 1234567899 or 9987654321".
 export const ALTERNATIVE_WORDS = 'or|oder|ou|o|of|lub';
 const ALTERNATIVE_NUMBER = new RegExp(String.raw`^\s+(?:${ALTERNATIVE_WORDS})\s+[A-Z0-9.-]*\d`, 'i');
 // A date, day or year first: "12.11.2026", "2026-11-12".
 const DATE = /^(?:\d{1,2}([./-])\d{1,2}\1\d{2,4}|\d{4}([./-])\d{1,2}\2\d{1,2})$/;
+// A year that a month and day follow, which Chinese and Japanese text prints with no space
+// after it: "2026年11月12日", "2026/11/12发货".
+const YEAR_OF_DATE = /^\d{4}(?:([./-])\d{1,2}\1\d{1,2}(?!\d)|\s*年)/;
 // A phone number in the French and Belgian layout: a 0, then two-digit groups printed apart.
 const PHONE = /^0\d(?:[ .-]\d{2}){4}$/;
 
@@ -132,34 +135,37 @@ export function isDateToken(token: string): boolean {
 
 /**
  * Last resort: a number introduced by a "tracking number:" style label. A
- * label that offers two numbers names neither, and a date is no number. A
- * number printed in groups is read whole when a carrier claims it or when
- * its groups are short and make eight characters or more: "0034 0434 1234 5678".
+ * label that offers two numbers names neither, and a date is no number, though
+ * a later label may still introduce one. A number printed in groups is read
+ * whole when a carrier claims it or when its groups are short and make eight
+ * characters or more: "0034 0434 1234 5678".
  */
 export function keywordNumberInText(raw: string): string | undefined {
-  const match = LABELLED_NUMBER.exec(raw);
-  if (!match) return undefined;
-  // Each later group holds a digit, but for the two capitals that close an S10 code: "RR 123 456 789 FR".
-  const [first, ...rest] = match[1]!.split(/\s/);
-  const groups = [first!];
-  for (const group of rest) {
-    const digits = /\d/.test(group);
-    if (!digits && !/^[A-Z]{2}$/.test(group)) break;
-    groups.push(group);
-    if (!digits) break;
+  for (const match of raw.matchAll(LABELLED_NUMBER)) {
+    // Each later group holds a digit, but for the two capitals that close an S10 code: "RR 123 456 789 FR".
+    const [first, ...rest] = match[1]!.split(/\s/);
+    const groups = [first!];
+    for (const group of rest) {
+      const digits = /\d/.test(group);
+      if (!digits && !/^[A-Z]{2}$/.test(group)) break;
+      groups.push(group);
+      if (!digits) break;
+    }
+    const start = match.index + match[0].length - match[1]!.length;
+    const end = start + groups.join(' ').length;
+    if (ALTERNATIVE_NUMBER.test(raw.slice(end))) return undefined;
+    // A sentence can end right after its number.
+    const joins = groups.map((_, count) => groups.slice(0, count + 1).join('').replace(/[.-]+$/, ''));
+    const claimed = joins.slice(1).reverse().find((joined) => detectCarrierMatch(joined).confidence === 'high');
+    // A date printed in groups or with slashes, which end the token, or a year a month and day follow is no number either.
+    const after = raw.slice(start);
+    if (!claimed && (isDateToken(groups.join('.')) || isDateToken(/^\S*/.exec(after)![0]) || YEAR_OF_DATE.test(after))) continue;
+    if (!claimed && PHONE.test(groups.join(' ').replace(/[.-]+$/, ''))) return undefined;
+    const grouped = groups.length > 1 && groups.every((group) => group.length <= 6) && joins.at(-1)!.length >= 8
+      ? joins.at(-1) : undefined;
+    const candidate = claimed ?? grouped ?? joins[0]!;
+    if (candidate.length < 4 || DATE.test(candidate)) return undefined;
+    return validTrackingNumberInText(candidate) ? candidate : undefined;
   }
-  const start = match.index + match[0].length - match[1]!.length;
-  const end = start + groups.join(' ').length;
-  if (ALTERNATIVE_NUMBER.test(raw.slice(end))) return undefined;
-  // A sentence can end right after its number.
-  const joins = groups.map((_, count) => groups.slice(0, count + 1).join('').replace(/[.-]+$/, ''));
-  const claimed = joins.slice(1).reverse().find((joined) => detectCarrierMatch(joined).confidence === 'high');
-  // A date printed in groups or with slashes, which end the token, is no number either.
-  if (!claimed && (isDateToken(groups.join('.')) || isDateToken(/^\S*/.exec(raw.slice(start))![0]))) return undefined;
-  if (!claimed && PHONE.test(groups.join(' ').replace(/[.-]+$/, ''))) return undefined;
-  const grouped = groups.length > 1 && groups.every((group) => group.length <= 6) && joins.at(-1)!.length >= 8
-    ? joins.at(-1) : undefined;
-  const candidate = claimed ?? grouped ?? joins[0]!;
-  if (candidate.length < 4 || DATE.test(candidate)) return undefined;
-  return validTrackingNumberInText(candidate) ? candidate : undefined;
+  return undefined;
 }
