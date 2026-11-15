@@ -1,0 +1,33 @@
+{
+  "id": "hartmann-international",
+  "displayName": "Hartmann International",
+  "aliases": [
+    "HARTMANN INTERNATIONAL GmbH & Co. KG"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#e30613"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cp.hartmann-international.de/Track",
+    "canaryUrl": "https://cp.hartmann-international.de/Track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -11822,6 +11822,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "buho-logistics": {
+    "displayName": "Búho Logistics",
+    "color": "#fe7e33",
+    "countries": [
+      "MX"
+    ],
+    "selectable": true,
+    "timezone": "America/Mexico_City",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.buhologistics.com/",
+    "trackingUrlTemplate": "https://tracking.buhologistics.com/?id={trackingNumber}",
+    "trackingSearchUrl": "https://tracking.buhologistics.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.buhologistics.com"
+        ],
+        "pathPattern": "^/?$",
+        "params": [
+          "id"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "bulgarian-posts": {
     "displayName": "Bulgarian Posts",
     "color": "#ffd100",
@@ -16887,7 +16915,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "displayName": "DER KURIER",
     "color": "#193a67",
     "aliases": [
-      "DER KURIER GmbH & Co. KG"
+      "DER KURIER GmbH & Co. KG",
+      "OverNight Express & Logistics",
+      "OverNight Express & Logistics GmbH"
     ],
     "countries": [
       "DE"
@@ -19073,6 +19103,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "params": [
           "tracking"
         ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "duxiuexp": {
+    "displayName": "DuXiuExp",
+    "color": "#2077d9",
+    "aliases": [
+      "独秀国际",
+      "DuXiu International",
+      "上海独秀国际货运代理有限公司",
+      "上海独秀国际货物运输代理有限公司"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.duxiuexp.com/track/",
+    "trackingUrlTemplate": "https://www.duxiuexp.com/S/{trackingNumber}",
+    "trackingSearchUrl": "https://www.duxiuexp.com/track/",
+    "linkRules": [
+      {
+        "domains": [
+          "duxiuexp.com"
+        ],
+        "path": "^/S/([A-Za-z0-9]+)/?$"
       }
     ],
     "detectionRules": []
@@ -26532,6 +26593,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "hartmann-international": {
+    "displayName": "Hartmann International",
+    "color": "#e30613",
+    "aliases": [
+      "HARTMANN INTERNATIONAL GmbH & Co. KG"
+    ],
+    "countries": [
+      "DE"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Berlin",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cp.hartmann-international.de/Track",
+    "trackingSearchUrl": "https://cp.hartmann-international.de/Track",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "haypost": {
     "displayName": "HayPost",
     "color": "#fa4616",
@@ -33309,7 +33390,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "零界限",
       "零界限国际物流",
       "义乌市零界限云仓科技有限公司",
-      "Lingjiexian"
+      "Lingjiexian",
+      "LJX"
     ],
     "countries": [
       "CN",
@@ -37587,7 +37669,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "color": "#d7000f",
     "aliases": [
       "触达物流",
-      "触达物流科技（深圳）有限公司"
+      "触达物流科技（深圳）有限公司",
+      "ONE CLICK"
     ],
     "countries": [
       "CN"
@@ -56211,6 +56294,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "xwwt": {
+    "displayName": "XWWT",
+    "color": "#3389c2",
+    "aliases": [
+      "兴伟万通",
+      "深圳市兴伟万通供应链有限公司",
+      "Xingwei Wantong"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://hnkh.rtb56.com/track_query.aspx",
+    "trackingUrlTemplate": "https://hnkh.rtb56.com/track_query.aspx?track_number={trackingNumber}",
+    "trackingSearchUrl": "https://hnkh.rtb56.com/track_query.aspx",
+    "linkRules": [
+      {
+        "domains": [
+          "hnkh.rtb56.com"
+        ],
+        "pathPattern": "^/track_query\\.aspx$",
+        "params": [
+          "track_number"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "xyl": {
     "displayName": "XYL",
     "color": "#d0b692",
@@ -57794,6 +57910,7 @@ export const CARRIER_IDS = [
   "bts-uz",
   "budbee",
   "buffalo-ex",
+  "buho-logistics",
   "bulgarian-posts",
   "burd-delivery",
   "burundi-post",
@@ -57992,6 +58109,7 @@ export const CARRIER_IDS = [
   "dropp",
   "dsv",
   "dtd-pk",
+  "duxiuexp",
   "dx",
   "dylo-express",
   "dynalogic",
@@ -58201,6 +58319,7 @@ export const CARRIER_IDS = [
   "happy-courier-gr",
   "happy-post",
   "hart2hart-express",
+  "hartmann-international",
   "haypost",
   "hct-logistics",
   "hecny-ecom",
@@ -59055,6 +59174,7 @@ export const CARRIER_IDS = [
   "xpressbees",
   "xpressen",
   "xuchuan-logistics",
+  "xwwt",
   "xyl",
   "xyl-ships",
   "yalidine",
@@ -59381,6 +59501,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "bts-uz": [],
   "budbee": [],
   "buffalo-ex": ["buffalo-ex-1"],
+  "buho-logistics": [],
   "bulgarian-posts": ["bulgarian-posts-1","bulgarian-posts-s10"],
   "burd-delivery": [],
   "burundi-post": [],
@@ -59579,6 +59700,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "dropp": [],
   "dsv": ["dsv-stt"],
   "dtd-pk": [],
+  "duxiuexp": [],
   "dx": ["dx-1"],
   "dylo-express": [],
   "dynalogic": [],
@@ -59788,6 +59910,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "happy-courier-gr": [],
   "happy-post": [],
   "hart2hart-express": [],
+  "hartmann-international": [],
   "haypost": ["haypost-s10"],
   "hct-logistics": [],
   "hecny-ecom": [],
@@ -60642,6 +60765,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "xpressbees": ["xpressbees-awb"],
   "xpressen": [],
   "xuchuan-logistics": ["xuchuan-logistics-1"],
+  "xwwt": [],
   "xyl": [],
   "xyl-ships": [],
   "yalidine": ["yalidine-1"],

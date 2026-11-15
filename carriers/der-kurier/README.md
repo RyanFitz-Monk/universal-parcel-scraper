@@ -5,7 +5,8 @@ DER KURIER parcels use enabled universal providers. There is no dedicated adapte
 DER KURIER, DER KURIER GmbH & Co. KG of Neuenstein (Hesse), is a German courier and express network
 of independent stations whose parent company is GLS. It delivers parcels across Germany, reaches
 several European countries through its partner network and sends to the rest through GLS. Its site
-is derkurier.de. [DER KURIER Slovakia](../der-kurier-sk/README.md) is a separate company.
+is derkurier.de. GLS's job offers name its Neuenstein company OverNight Express & Logistics GmbH.
+[DER KURIER Slovakia](../der-kurier-sk/README.md) is a separate company.
 
 ## Numbers
 

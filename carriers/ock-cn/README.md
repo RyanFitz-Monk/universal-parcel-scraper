@@ -2,7 +2,7 @@
 
 OCK parcels use enabled universal providers. There is no dedicated adapter.
 
-OCK (触达物流, 触达物流科技（深圳）有限公司) is a Shenzhen cross-border operator of small-parcel lines
+OCK (ONE CLICK, 触达物流, 触达物流科技（深圳）有限公司) is a Shenzhen cross-border operator of small-parcel lines
 for goods that other lines refuse (特货), to Canada, the United States, Europe and Australia.
 
 ## Numbers

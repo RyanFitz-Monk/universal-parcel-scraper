@@ -1,0 +1,44 @@
+{
+  "id": "duxiuexp",
+  "displayName": "DuXiuExp",
+  "aliases": [
+    "独秀国际",
+    "DuXiu International",
+    "上海独秀国际货运代理有限公司",
+    "上海独秀国际货物运输代理有限公司"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#2077d9"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.duxiuexp.com/S/{trackingNumber}",
+    "searchUrl": "https://www.duxiuexp.com/track/",
+    "canaryUrl": "https://www.duxiuexp.com/track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "duxiuexp.com"
+      ],
+      "path": "^/S/([A-Za-z0-9]+)/?$"
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,42 @@
+{
+  "id": "buho-logistics",
+  "displayName": "Búho Logistics",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#fe7e33"
+  },
+  "selectable": true,
+  "timezone": "America/Mexico_City",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.buhologistics.com/?id={trackingNumber}",
+    "searchUrl": "https://tracking.buhologistics.com/",
+    "canaryUrl": "https://tracking.buhologistics.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.buhologistics.com"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "id"
+      ]
+    }
+  ],
+  "detection": []
+}
