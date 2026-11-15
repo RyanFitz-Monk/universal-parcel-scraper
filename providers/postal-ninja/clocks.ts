@@ -16,7 +16,7 @@ import { carrierIdFromName } from '../../core/catalog/hints.js';
 import { isValidS10TrackingNumber } from '../../core/detection/s10.js';
 import { DateTime } from 'luxon';
 import {
-  canadaProvinceTimeZone, countryCode, countryTimeZone, postalOfficeZone, sharedClockZone, usStateTimeZone,
+  canadaProvinceTimeZone, countryCode, countryTimeZone, firstOccurrence, postalOfficeZone, sharedClockZone, usStateTimeZone,
 } from '../../core/time/index.js';
 import type { ZoneBasis } from '../../places/clocks.js';
 import { keepsZone } from '../../places/zones.js';
@@ -68,6 +68,19 @@ const UTC_SUFFIX = /(?:Z|[+-]00:?00)$/i;
 const BERLIN_UTC_COPIES = 'DHL Germany';
 const BERLIN = 'Europe/Berlin';
 
+/**
+ * Spring GDS's scans dated to the minute, which are PostNL's: PostNL's feed
+ * gives a scan's local time marked as UTC (carriers/spring-gds/adapter.ts),
+ * and Postal Ninja reads that as UTC and gives it on Amsterdam's clock. Three
+ * sorting scans at 14:18 and 14:19 Dutch time came at 15:18 and 15:19, an hour
+ * after PostNL's own. Written back in UTC, the `dt` is the scan's wall clock
+ * again. Stamps to the second are real UTC in that feed and keep Amsterdam's
+ * clock.
+ */
+const AMSTERDAM_UTC_READINGS = 'Spring GDS';
+const AMSTERDAM = 'Europe/Amsterdam';
+const TO_THE_MINUTE = /T\d{2}:\d{2}(?::00(?:\.0+)?)?$/;
+
 /** The zone of the European office a scan of DHL Germany's copies names. */
 function berlinCopyZone(service: string, location: string): string | null {
   const zone = service === BERLIN_UTC_COPIES ? postalOfficeZone(location) : null;
@@ -76,13 +89,18 @@ function berlinCopyZone(service: string, location: string): string | null {
 
 /**
  * A scan's `dt` as its service's wall clock: without the UTC suffix Postal
- * Ninja writes on some, and DHL Germany's copies at a European office back on
- * that office's clock; the `dt` itself otherwise.
+ * Ninja writes on some, DHL Germany's copies at a European office back on
+ * that office's clock, and PostNL's scans through Spring GDS back in UTC; the
+ * `dt` itself otherwise.
  */
 export function wallClock(service: string, dt: string, location = ''): string {
   if (berlinCopyZone(service, location)) {
     const written = DateTime.fromISO(dt, { zone: 'UTC' });
     if (written.isValid) return written.setZone(BERLIN).toFormat("yyyy-MM-dd'T'HH:mm:ss");
+  }
+  if (service === AMSTERDAM_UTC_READINGS && TO_THE_MINUTE.test(dt)) {
+    const shown = firstOccurrence(DateTime.fromISO(dt, { zone: AMSTERDAM }));
+    if (shown.isValid) return shown.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
   return SUFFIXED_WALL_CLOCKS.has(carrierIdFromName(service) ?? '') ? dt.replace(UTC_SUFFIX, '') : dt;
 }

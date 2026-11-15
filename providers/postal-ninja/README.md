@@ -101,6 +101,12 @@ capture failure.
   Belfast at 00:11 British summer time at 22:11, and Swiss Post's posting at 10:05 Zurich time at
   08:05. They are placed on the office's clock in any history. Read on a carrier's zone they
   borrowed, Royal Mail's London time, they came hours early and showed beside Royal Mail's own.
+  Spring GDS's scans dated to the minute are PostNL's, whose feed marks a scan's local time as
+  UTC ([Spring GDS](../../carriers/spring-gds/README.md)). Postal Ninja reads it as UTC and gives
+  it on Amsterdam's clock: three sorting scans at 14:18 and 14:19 Dutch time came at 15:18 and
+  15:19 and showed an hour after PostNL's own. Their `dt` is written back in UTC, which gives the
+  scan's wall clock again. Stamps to the second are real UTC in that feed and keep Amsterdam's
+  clock.
   Cainiao's scans keep its feed's wall clock, each at its site's, as Cainiao's own offsets
   showed on two parcels. Its steps in China, from the seller's to the departing flight, are
   read on China's clock by their wording ([shared with ParcelsApp](../../carriers/aliexpress/clock.ts)),
