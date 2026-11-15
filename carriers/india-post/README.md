@@ -118,8 +118,9 @@ Outcomes:
   names an airport abroad: the office of exchange there carries an Indian office's pincode. An
   office of exchange's UPU code (`Office - DEFRAA`, `Office - DEFRA`, or bare as `INMAAB`) opens
   with its country and is left out the same way, when the airport after the country keeps that
-  country's clock: a name of five or six letters ("KANPUR", "RODGAU") is kept. An office abroad
-  India Post names after "Office - " keeps its name alone.
+  country's clock, or when the code of a city of several airports and an office's letter follow
+  (`RUMOWA` is Moscow's): a name of five or six letters ("KANPUR", "RODGAU") is kept. An office
+  abroad India Post names after "Office - " keeps its name alone.
 - A row's `pincode_info` is MySpeedPost's directory entry for the pincode, not for the office:
   "KOLKATA FOREIGN LCAO 900056" comes back as an office in Delhi, and unverified entries can be
   hundreds of kilometres off. Its coordinates become the scan's `point` only when the entry is

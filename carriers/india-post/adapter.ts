@@ -199,9 +199,9 @@ function airportClockZone(providerCode: string, office: string, trackedAt: strin
  * airport abroad, as the office of exchange there carries an Indian office's
  * PIN. An office of exchange's UPU code ("Office - DEFRAA", "Office - DEFRA"),
  * which can also come bare ("INMAAB"), opens with its country and one of its
- * airports, and is left out the same way. An office it names after "Office - "
- * keeps its name without it, one word of five or six letters too ("KANPUR",
- * "PATNA"). A PIN starting with 9 is the Army Postal Service's, which India
+ * airports or cities ("RUMOWA"), and is left out the same way. An office it
+ * names after "Office - " keeps its name without it, one word of five or six
+ * letters too ("KANPUR", "PATNA"). A PIN starting with 9 is the Army Postal Service's, which India
  * Post also gives foreign mail, and places no office. `app.ts` reads a location
  * stored with "Office - " or a bare code as this one.
  */

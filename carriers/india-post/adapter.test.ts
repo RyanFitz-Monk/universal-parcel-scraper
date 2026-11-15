@@ -459,6 +459,8 @@ describe('India Post response normalization', () => {
     // An office of exchange's UPU code opens with its country; an office named abroad keeps its name.
     expect(location('Office - DEFRAA', '400099')).toBe('');
     expect(location('Office - USJFKA', '400099')).toBe('');
+    // A code can name a city whose airports each have their own code, as Moscow's and Tokyo's do.
+    for (const office of ['Office - RUMOWA', 'Office - JPTYOA', 'Office - CNBJSA', 'Office - KRSELA', 'RUMOWA']) expect(location(office, '400099'), office).toBe('');
     expect(location('Office - INBOMB', '400099')).toBe('400099');
     expect(location('Office - Example Mail Centre', '')).toBe('Example Mail Centre');
     // An office named in one word of five or six letters is no code: no airport of a country it opens with follows.
