@@ -22,8 +22,8 @@
     "mode": "automatic",
     "adapter": "jcex",
     "steps": [
-      "direct",
       "origin",
+      "direct",
       "retry"
     ],
     "localClocks": true

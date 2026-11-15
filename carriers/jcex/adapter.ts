@@ -1,5 +1,5 @@
 import type { AdapterFactory, TrackingContext } from '../../core/adapter/index.js';
-import { ChallengeError, SchemaError, TransportError } from '../../core/errors/index.js';
+import { carrierErrorKind, ChallengeError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import type { Dispatcher } from 'undici';
 import { runSteps } from '../../core/runner/index.js';
@@ -13,14 +13,6 @@ import { withJcexOrigin } from './origin.js';
 export const JCEX_API = 'https://track.jcex.com/api/track/tracking';
 const JCEX_ORIGIN = 'https://track.jcex.com';
 const REDIRECTS = [301, 302, 303, 307, 308];
-/**
- * How long lookups ask JCEX's origin first after its CDN failed to connect. The first lookup after
- * that asks the CDN first again, and a lookup the origin fails to answer still falls back to it.
- */
-export const CDN_REST_MS = 6 * 3_600_000;
-// When lookups through each transport may ask the CDN first again: a host's registries share their
-// transport, and every test its own. A restart forgets it.
-const cdnRestedUntil = new WeakMap<typeof fetch, number>();
 // Bot checks a CDN or firewall could put in place of the reply.
 const CHALLENGE = /acw_sc__v2|aliyun_waf|_____tmd_____|<title>\s*(?:Just a moment|Attention Required|Access Denied|滑动验证|验证码)|_cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i;
 
@@ -49,37 +41,38 @@ export class JcexTracker {
       }
       return parseJcex(payload, number);
     };
-    // A failed CDN connection first tries the origin with verified TLS, and
-    // later lookups start there for a while. A second failed connection can
-    // still use the existing ordinary retry.
-    const transport = this.options.fetcher ?? globalThis.fetch;
+    const atOrigin = (signal: AbortSignal, timeoutMs: number) => withJcexOrigin(signal, timeoutMs, dispatcher => read(signal, timeoutMs, dispatcher));
+    // JCEX's CDN can stay unreachable for days while its origin answers, so lookups start at the
+    // origin with verified TLS. Its address can change: an origin that cannot be reached, that
+    // redirects or lacks the route, or that this runtime cannot pin, leaves the lookup to the CDN.
+    // A failed CDN connection gets one more try, at the origin when the origin failed to connect.
+    let retryAtOrigin = false;
     return runSteps({ carrier: 'jcex', budgetMs: context.budgetMs ?? 30_000, signal: context.signal,
       recorder: this.options.recorder ?? NOOP_RECORDER }, [
-      { id: 'direct', enabled: (cdnRestedUntil.get(transport) ?? 0) <= Date.now(), run: async ({ signal, remainingMs }) => {
+      { id: 'origin', run: async ({ signal, remainingMs }) => {
         try {
-          return await read(signal, firstAttemptMs(Math.min(15_000, remainingMs)));
+          return await atOrigin(signal, firstAttemptMs(Math.min(15_000, remainingMs)));
         } catch (error) {
-          if (isNetworkFailure(error)) cdnRestedUntil.set(transport, Date.now() + CDN_REST_MS);
+          retryAtOrigin = isNetworkFailure(error);
           throw error;
         }
       } },
-      { id: 'origin', recovers: isNetworkFailure, run: ({ signal, remainingMs }) => {
-        const timeoutMs = Math.max(1, Math.min(10_000, Math.floor(remainingMs)));
-        return withJcexOrigin(signal, timeoutMs, dispatcher => read(signal, timeoutMs, dispatcher));
-      } },
-      networkRetryStep(async ({ signal, remainingMs }) => {
-        const result = await read(signal, remainingMs);
-        cdnRestedUntil.delete(transport);
-        return result;
-      }),
+      { id: 'direct', recovers: originRouteFailed, run: ({ signal, remainingMs }) => read(signal, firstAttemptMs(Math.min(15_000, remainingMs))) },
+      networkRetryStep(({ signal, remainingMs }) => (retryAtOrigin ? atOrigin(signal, remainingMs) : read(signal, remainingMs))),
     ]);
   }
+}
+
+/** Whether the CDN may answer after the origin failed: its route failed, not JCEX's service. */
+function originRouteFailed(error: unknown): boolean {
+  const kind = carrierErrorKind(error);
+  return kind === 'transport' || kind === null;
 }
 
 export const adapter: AdapterFactory = (environment) => {
   const tracker = new JcexTracker({ fetcher: environment.fetcher, recorder: environment.recorder, userAgent: environment.userAgent });
   return {
-    id: 'jcex', recordsSteps: true, steps: ['direct', 'origin', 'retry'],
+    id: 'jcex', recordsSteps: true, steps: ['origin', 'direct', 'retry'],
     track: (input, context) => tracker.fetch(input.number, context),
   };
 };

@@ -6,19 +6,19 @@ Tracked through the lookup its tracking page makes.
 
 ## How it works
 
-1. `direct`: one `POST https://track.jcex.com/api/track/tracking` with
-   `{"numberList":["<number>"]}`, as the tracking page's script sends it. It needs no cookie,
-   token, key, account or browser. The JSON reply holds one entry per number with JCEX's
-   waybill and order numbers, the shipment's status and its rows newest first, each in English
-   and Chinese with a place, a country and an offset.
-2. `origin`: after a connection failure, send the same request to JCEX's origin using a
+1. `origin`: one `POST https://track.jcex.com/api/track/tracking` with
+   `{"numberList":["<number>"]}`, as the tracking page's script sends it, to JCEX's origin using a
    request-scoped DNS override. The URL, HTTP host, TLS server name and certificate verification
    remain those of `track.jcex.com`. This uses the supplied Node fetch transport's Undici
-   dispatcher support; no global resolver or TLS setting changes. After a failed CDN connection,
-   lookups through the same transport start here for six hours, as the CDN can stay unreachable
-   for days.
-3. `retry`: one more ordinary connection attempt if the origin also fails to connect. When it
-   answers, lookups start at the CDN again.
+   dispatcher support; no global resolver or TLS setting changes. It starts every lookup because
+   JCEX's CDN can stay unreachable for days while the origin answers. The request needs no
+   cookie, token, key, account or browser. The JSON reply holds one entry per number with JCEX's
+   waybill and order numbers, the shipment's status and its rows newest first, each in English
+   and Chinese with a place, a country and an offset.
+2. `direct`: the same request through JCEX's CDN, when the origin fails to connect, redirects,
+   lacks the route or cannot be pinned in this runtime.
+3. `retry`: one more connection attempt if the CDN also fails to connect: at the origin when it
+   failed to connect too, otherwise at the CDN.
 
 - The shipment counts only when its waybill or order number is the one asked.
 - An unknown number comes back with neither number and the status `NotFound`. A waybill JCEX
@@ -80,9 +80,10 @@ Tracked through the lookup its tracking page makes.
   destination's on Beijing's wall clock. The app's scan-identity policy lets that scan take the
   copy's row over once JCEX lists it.
 - Other JCEX number layouts are not looked up until one is seen.
-- The origin address can change. A custom fetch transport must support the request's
-  `dispatcher` option to use the origin fallback. Definite replies, rate limits and browser
-  checks are not retried at the origin.
+- The origin address can change; the CDN answers then, when it connects. A custom fetch
+  transport must support the request's `dispatcher` option to reach the origin; one that ignores
+  it reaches the CDN at every step. Definite replies, rate limits and browser checks are not
+  asked again at the CDN.
 
 ## Numbers
 

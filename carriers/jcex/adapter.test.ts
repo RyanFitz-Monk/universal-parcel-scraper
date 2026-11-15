@@ -8,7 +8,7 @@ import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { dateLocalClocks } from '../../places/clocks.js';
-import { adapter, CDN_REST_MS, JCEX_API, JcexTracker } from './adapter.js';
+import { adapter, JCEX_API, JcexTracker } from './adapter.js';
 import { normalizeJcexNumber, parseJcex } from './parser.js';
 import { statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
@@ -57,10 +57,10 @@ describe('JCEX HTTP adapter', () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     const [url, init] = fetcher.mock.calls[0]!;
     expect(String(url)).toBe(JCEX_API);
-    expect(init).toMatchObject({ method: 'POST', redirect: 'manual', signal: expect.any(AbortSignal),
+    expect(init).toMatchObject({ method: 'POST', redirect: 'manual', signal: expect.any(AbortSignal), dispatcher: expect.anything(),
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', Origin: 'https://track.jcex.com', 'User-Agent': 'SyntheticHost/1.0' } });
     expect(JSON.parse(String(init!.body))).toEqual({ numberList: [NUMBER] });
-    expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'jcex', step: 'direct', outcome: 'ok' }));
+    expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'jcex', step: 'origin', outcome: 'ok' }));
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
@@ -395,70 +395,51 @@ describe('JCEX HTTP adapter', () => {
     expect(normalizeJcexNumber('jcz 9900.0000.01 dh')).toBe(NUMBER);
   });
 
-  it('recovers a failed CDN connection at the origin using the supplied transport and the original HTTPS request', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed')).mockResolvedValueOnce(reply(fixture('delivered')));
-    const recorder = { step: vi.fn(), lookup: vi.fn() };
-    await expect(new JcexTracker({ fetcher, recorder }).fetch(NUMBER, { budgetMs: 5000 })).resolves.toMatchObject({ current_stage: 'delivered' });
-    expect(fetcher).toHaveBeenCalledTimes(2);
-    expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual([JCEX_API, JCEX_API]);
-    expect(fetcher.mock.calls[0]![1]).not.toHaveProperty('dispatcher');
-    expect(fetcher.mock.calls[1]![1]).toHaveProperty('dispatcher');
-    expect(JSON.parse(String(fetcher.mock.calls[1]![1]?.body))).toEqual({ numberList: [NUMBER] });
-    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['direct', 'transport'], ['origin', 'ok']]);
-    expect(recorder.step.mock.calls[1]![0]).toMatchObject({ fallbackFrom: 'direct', fallbackReason: 'transport' });
-  });
-
-  it('starts at the origin for a while after the CDN failed to connect, through that transport only', async () => {
-    vi.useFakeTimers({ toFake: ['Date'], now: READ });
-    try {
-      const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed')).mockImplementation(async () => reply(fixture('delivered')));
-      const recorder = { step: vi.fn(), lookup: vi.fn() };
-      const tracker = new JcexTracker({ fetcher, recorder });
-      await tracker.fetch(NUMBER, { budgetMs: 5000 });
-      recorder.step.mockClear();
-      await expect(tracker.fetch(NUMBER, { budgetMs: 5000 })).resolves.toMatchObject({ current_stage: 'delivered' });
-      expect(fetcher).toHaveBeenCalledTimes(3);
-      expect(fetcher.mock.calls[2]![1]).toHaveProperty('dispatcher');
-      expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['origin', 'ok']]);
-      // Another transport, such as another host's, still asks the CDN first.
-      const other = vi.fn<typeof fetch>().mockImplementation(async () => reply(fixture('delivered')));
-      await new JcexTracker({ fetcher: other }).fetch(NUMBER, { budgetMs: 5000 });
-      expect(other.mock.calls[0]![1]).not.toHaveProperty('dispatcher');
-      // Once the rest is over, the CDN is asked first again.
-      vi.setSystemTime(READ + CDN_REST_MS + 1);
-      await tracker.fetch(NUMBER, { budgetMs: 5000 });
-      expect(fetcher).toHaveBeenCalledTimes(4);
-      expect(fetcher.mock.calls[3]![1]).not.toHaveProperty('dispatcher');
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('goes back to the CDN first once it answers a lookup the origin failed to reach', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed')).mockResolvedValueOnce(reply(fixture('delivered')))
-      .mockRejectedValueOnce(new TypeError('fetch failed')).mockImplementation(async () => reply(fixture('delivered')));
+  it('starts every lookup at the origin, through the supplied transport and the original HTTPS request', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => reply(fixture('delivered')));
     const recorder = { step: vi.fn(), lookup: vi.fn() };
     const tracker = new JcexTracker({ fetcher, recorder });
-    await tracker.fetch(NUMBER, { budgetMs: 5000 });
-    recorder.step.mockClear();
-    // Resting: the origin fails to connect, and the ordinary retry reaches the CDN.
-    await expect(tracker.fetch(NUMBER, { budgetMs: 5000 })).resolves.toMatchObject({ current_stage: 'delivered' });
-    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['origin', 'transport'], ['retry', 'ok']]);
-    recorder.step.mockClear();
-    await tracker.fetch(NUMBER, { budgetMs: 5000 });
-    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['direct', 'ok']]);
-    expect(fetcher.mock.calls.map(([, init]) => Boolean(init && 'dispatcher' in init))).toEqual([false, true, true, false, false]);
+    for (let lookup = 0; lookup < 2; lookup += 1) {
+      await expect(tracker.fetch(NUMBER, { budgetMs: 5000 })).resolves.toMatchObject({ current_stage: 'delivered' });
+    }
+    expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual([JCEX_API, JCEX_API]);
+    expect(fetcher.mock.calls.every(([, init]) => init !== undefined && 'dispatcher' in init)).toBe(true);
+    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['origin', 'ok'], ['origin', 'ok']]);
   });
 
-  it('retains the ordinary retry after both connections fail', async () => {
+  it('asks the CDN when the origin fails to connect, and starts the next lookup at the origin again', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed')).mockImplementation(async () => reply(fixture('delivered')));
+    const recorder = { step: vi.fn(), lookup: vi.fn() };
+    const tracker = new JcexTracker({ fetcher, recorder });
+    await expect(tracker.fetch(NUMBER, { budgetMs: 5000 })).resolves.toMatchObject({ current_stage: 'delivered' });
+    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['origin', 'transport'], ['direct', 'ok']]);
+    expect(recorder.step.mock.calls[1]![0]).toMatchObject({ fallbackFrom: 'origin', fallbackReason: 'transport' });
+    expect(JSON.parse(String(fetcher.mock.calls[1]![1]?.body))).toEqual({ numberList: [NUMBER] });
+    await tracker.fetch(NUMBER, { budgetMs: 5000 });
+    expect(fetcher.mock.calls.map(([, init]) => Boolean(init && 'dispatcher' in init))).toEqual([true, false, true]);
+  });
+
+  it.each([302, 404, 410])('asks the CDN when the origin answers HTTP %s, as a moved origin would', async (status) => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('', { status })).mockResolvedValueOnce(reply(fixture('delivered')));
+    await expect(carrier(fetcher).track({ number: NUMBER })).resolves.toMatchObject({ current_stage: 'delivered' });
+    expect(fetcher.mock.calls.map(([, init]) => Boolean(init && 'dispatcher' in init))).toEqual([true, false]);
+  });
+
+  it('tries the origin once more after both connections fail', async () => {
     const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed'))
       .mockRejectedValueOnce(new TypeError('fetch failed')).mockResolvedValueOnce(reply(fixture('delivered')));
     const recorder = { step: vi.fn(), lookup: vi.fn() };
     await expect(new JcexTracker({ fetcher, recorder }).fetch(NUMBER)).resolves.toMatchObject({ current_stage: 'delivered' });
-    expect(fetcher).toHaveBeenCalledTimes(3);
-    expect(fetcher.mock.calls[2]![1]).not.toHaveProperty('dispatcher');
-    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['direct', 'transport'], ['origin', 'transport'], ['retry', 'ok']]);
-    expect(recorder.step.mock.calls[2]![0]).toMatchObject({ fallbackFrom: 'origin', fallbackReason: 'transport' });
+    expect(fetcher.mock.calls.map(([, init]) => Boolean(init && 'dispatcher' in init))).toEqual([true, false, true]);
+    expect(recorder.step.mock.calls.map(([event]) => [event.step, event.outcome])).toEqual([['origin', 'transport'], ['direct', 'transport'], ['retry', 'ok']]);
+    expect(recorder.step.mock.calls[2]![0]).toMatchObject({ fallbackFrom: 'direct', fallbackReason: 'transport' });
+  });
+
+  it('tries the CDN once more when the origin moved and the CDN fails to connect', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockRejectedValueOnce(new TypeError('fetch failed')).mockResolvedValueOnce(reply(fixture('delivered')));
+    await expect(carrier(fetcher).track({ number: NUMBER })).resolves.toMatchObject({ current_stage: 'delivered' });
+    expect(fetcher.mock.calls.map(([, init]) => Boolean(init && 'dispatcher' in init))).toEqual([true, false, false]);
   });
 
   it.each([
@@ -467,22 +448,22 @@ describe('JCEX HTTP adapter', () => {
     [changed('delivered', content => { content.waybillNumber = UNKNOWN; content.orderNumber = UNKNOWN; }), 'indeterminate'],
     ['<html><title>Just a moment...</title></html>', 'challenge'],
     ['<html><title>JCEX</title></html>', 'schema'],
-  ])('keeps the origin’s definitive or inconclusive answer without another retry', async (body, kind) => {
-    const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed')).mockResolvedValueOnce(reply(body));
+  ])('keeps the origin’s definitive or inconclusive answer without asking the CDN', async (body, kind) => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(body));
     await expect(carrier(fetcher).track({ number: NUMBER })).rejects.toMatchObject({ kind });
-    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it('cancels an origin request without starting another retry', async () => {
+  it('cancels an origin request without asking the CDN', async () => {
     const controller = new AbortController();
-    const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('fetch failed')).mockImplementationOnce(async (_url, init) => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementationOnce(async (_url, init) => {
       controller.abort(new Error('cancelled'));
       expect(init?.signal?.aborted).toBe(true);
       init?.signal?.throwIfAborted();
       return reply(fixture('delivered'));
     });
     await expect(carrier(fetcher).track({ number: NUMBER }, { signal: controller.signal })).rejects.toThrow();
-    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it('ends a hanging read inside the caller’s budget', async () => {
