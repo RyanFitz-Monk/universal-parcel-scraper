@@ -1125,6 +1125,7 @@ describe('classifyWording', () => {
       ['INFORMATION. PARCEL IDENTIFIED AS BULKY GOOD (ESI)', 'in_transit'], ['Information. Parcel identified as bulky good', 'in_transit'],
       ['Tracking number changed, Carrier note: Package relabeled', 'in_transit'],
       ['The goods leave the operation center', 'in_transit'], ['Goods leaving the operation center', 'in_transit'],
+      ['Goods leave the operations center', 'in_transit'],
       ['Parcel was handed over to Pickup parcel shop', 'ready_for_pickup'], ['Takeover by Pickup parcel shop', 'ready_for_pickup'],
       ['Takeover by pickup parcel shop_shop', 'ready_for_pickup'], ['Parcel handed over to DPD at the Pickup parcel shop', 'accepted'],
       ['Has been put into storage', 'accepted'], ['Has left the warehouse', 'in_transit'],

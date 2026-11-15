@@ -458,8 +458,9 @@ function providerWordingStage(description: string): Stage | undefined {
   // and a line's scan leaving the named city's centre after import clearance.
   if (/^internationall?i?y package received at processing cent(?:er|re)[.!]?$|^leave the (?:e?mail|[a-z][a-z .'-]{1,30}?) processing cent(?:er|re)[.!]?$/i.test(value)
     && !/^leave the return\b/i.test(value)) return 'in_transit';
-  // Mayi Yinfu's parcel booked out of its operations centre, as its own map reads it.
-  if (/^已出库(?:[,，]货物离开操作中心)?$/u.test(value)) return 'in_transit';
+  // Mayi Yinfu's parcel booked out of its operations centre, as its own map reads it, and a line's goods leaving
+  // that centre, as DHLink's map reads it.
+  if (/^(?:已出库(?:[,，]货物离开操作中心)?|货物离开操作中心)$/u.test(value)) return 'in_transit';
   // Hermes Germany taking the parcel over at the depot it names (TAKEN_OVER_BY_HERMES), as ParcelsApp relays it after
   // Hermes's announcement and as Hermes's own map reads it.
   if (/^the shipment (?:has been|was) taken over by hermes in .{1,80}? and is (?:being )?prepared for (?:the )?further shipping[.!]?$/i.test(value)) return 'accepted';

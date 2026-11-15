@@ -665,9 +665,10 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   if (/^(?:(?:the |your )?(?:item|parcel|package|shipment) )?(?:(?:has been|was) )?received by (?:the |a |our )?partner carrier$|^(?:(?:the |your )?(?:item|parcel|package|shipment) )?received by in [a-z]{3}\d{2}\.?$/.test(text)) return 'in_transit';
   // MeiHoo Pegasus's scans at its operation centre, as 17TRACK relays them after the order: the centre handling
   // the package's data, which does not say it has the parcel, then the parcel about to leave the centre. The
-  // Hualei platform's lines word the departure "Goods leave the operation center".
+  // Hualei platform's lines word the departure "Goods leave the operation center", and DHLink's lines through
+  // Postal Ninja "Goods leave the operations center".
   if (/^operation cent(?:er|re) is processing (?:the )?(?:package|parcel|shipment) information$/.test(text)) return 'registered';
-  if (/^(?:preparing to leave|(?:the )?goods leav(?:e|ing)) (?:the )?(?:[a-z]+ ){0,3}operation cent(?:er|re)$/.test(text)) return 'in_transit';
+  if (/^(?:preparing to leave|(?:the )?goods leav(?:e|ing)) (?:the )?(?:[a-z]+ ){0,3}operations? cent(?:er|re)$/.test(text)) return 'in_transit';
   // PostNL's international scans as providers relay them without its categories, read as Spring GDS's map reads
   // them: the item prepared before its bulk handover, then PostNL's acceptance centre taking it in.
   if (/^(?:the )?item is ready for shipment$/.test(text)) return 'registered';
