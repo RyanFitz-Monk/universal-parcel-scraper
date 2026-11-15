@@ -68,6 +68,12 @@ describe('Russian Post anonymous tracking', () => {
       list[2] = { ...row(33, 1, 'Released from Russia', time), cityName: city };
       expect(parseRussianPost(body, NUMBER).events, `${time} ${city}`).toHaveLength(4);
     }
+    // Only the export is copied so: two sortings in one city, the first on a whole minute, are both scans.
+    const sortings = fixture(); Object.assign(sortings[0]!.trackingItem, { globalStatus: 'IN_PROGRESS', trackingHistoryItemList: [
+      row(8, 0, 'Sorting', '2026-03-10T12:01:30.000+03:00'), row(8, 2, 'Arrived at the sorting center', '2026-03-10T11:40:12.000+03:00'),
+      row(8, 0, 'Sorting', '2026-03-10T09:01:00.000+03:00')] });
+    expect(parseRussianPost(sortings, NUMBER).events!.map(event => event.time)).toEqual([
+      '2026-03-10T12:01:30.000+03:00', '2026-03-10T11:40:12.000+03:00', '2026-03-10T09:01:00.000+03:00']);
   });
 
   it('reads every acceptance attribute of operation type 1 as the acceptance', () => {

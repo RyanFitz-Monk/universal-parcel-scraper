@@ -23,14 +23,16 @@ function text(value: unknown, max = 320): string {
 }
 
 const COPY_TIME = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}):00(?:\.0{1,3})?([+-]\d{2}:\d{2})$/;
+/** The export operation (type 33), the only one seen copied on UTC's wall clock. */
+const COPIED_OPERATION = /^33\./;
 
 /**
- * A scan's second copy, rounded to the minute, that writes UTC's wall clock under the local offset: read as UTC,
- * its clock falls within two minutes of the same operation at the same place.
+ * An export scan's second copy, rounded to the minute, that writes UTC's wall clock under the local offset: read as
+ * UTC, its clock falls within two minutes of the same operation at the same place.
  */
 function utcCopy(event: CarrierEvent, events: readonly CarrierEvent[]): boolean {
   const match = COPY_TIME.exec(event.time ?? '');
-  if (!match || /^[+-]00:00$/.test(match[2]!)) return false;
+  if (!match || /^[+-]00:00$/.test(match[2]!) || !COPIED_OPERATION.test(event.provider_code ?? '')) return false;
   const read = Date.parse(`${match[1]}:00Z`);
   return events.some((other) => other !== event && other.provider_code === event.provider_code
     && other.description === event.description && other.location === event.location
