@@ -33,6 +33,7 @@ import {
 } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
+import { paused } from '../../core/runner/pause.js';
 import { classifyWording, languageStageStatus, type ClassifiedWording } from '../../core/status/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { countryTimeZone, explicitOffsetTime, firstOccurrence, mislabeledWallTime, settleGuessedClocks, type FeedClock, type ParsedTime } from '../../core/time/index.js';
@@ -323,22 +324,6 @@ function counting(fetcher: typeof fetch | undefined): { fetcher: typeof fetch; t
   };
 }
 
-/** Wait before the second replay. False when the lookup's signal ended the wait. */
-async function waited(delayMs: number, signal: AbortSignal): Promise<boolean> {
-  if (signal.aborted) return false;
-  return await new Promise<boolean>((resolve) => {
-    const abort = () => {
-      clearTimeout(timer);
-      resolve(false);
-    };
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', abort);
-      resolve(true);
-    }, delayMs);
-    signal.addEventListener('abort', abort, { once: true });
-  });
-}
-
 /**
  * The country and postcode the domestic tracker's key ends with: a Dutch postcode without its
  * space, or another country's without spaces or hyphens. Null for a postcode without a country
@@ -448,7 +433,7 @@ export class PostNLTracker {
       refusal = error;
     }
     const wait = Math.max(1_000, refusal.retryAfterMs ?? Infinity);
-    if (counted.tries() === 2 && wait <= SHORT_WAIT_MS && performance.now() + wait < deadline && await waited(wait, signal)) {
+    if (counted.tries() === 2 && wait <= SHORT_WAIT_MS && performance.now() + wait < deadline && await paused(wait, signal)) {
       try {
         return await request(false);
       } catch (error) {

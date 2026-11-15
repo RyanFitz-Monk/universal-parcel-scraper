@@ -6,6 +6,7 @@ import {
 import type { CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
 import { firstAttemptMs, isNetworkFailure } from '../../core/runner/networkRetry.js';
+import { paused } from '../../core/runner/pause.js';
 import { errorTypeOf, NOOP_RECORDER, outcomeOf, safeRecorder, type StepRecorder } from '../../core/telemetry/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { CainiaoTracker } from '../aliexpress/adapter.js';
@@ -55,22 +56,6 @@ const RESEND_MS = 2_000;
 /** The wait before a throttled read is sent again: iMile's own, when it names a longer one. Null for any other failure. */
 function throttleWaitMs(error: unknown): number | null {
   return carrierErrorKind(error) === 'rate_limited' ? Math.max(THROTTLE_WAIT_MS, retryAfterMsOf(error) ?? 0) : null;
-}
-
-/** Waits `ms`; false when the lookup's signal ended the wait first. */
-function paused(ms: number, signal: AbortSignal): Promise<boolean> {
-  if (signal.aborted) return Promise.resolve(false);
-  return new Promise((resolve) => {
-    const abort = () => {
-      clearTimeout(timer);
-      resolve(false);
-    };
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', abort);
-      resolve(true);
-    }, ms);
-    signal.addEventListener('abort', abort, { once: true });
-  });
 }
 
 function publicKey(key: string): KeyObject {

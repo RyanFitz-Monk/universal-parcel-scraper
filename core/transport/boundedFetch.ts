@@ -7,6 +7,7 @@
  */
 import { IndeterminateError, UpstreamHttpError, UpstreamNetworkError, type UpstreamRequestDiagnostics } from '../errors/index.js';
 import { defineHidden } from '../errors/redaction.js';
+import { paused } from '../runner/pause.js';
 import { readUpstreamHttpDiagnostics } from './upstreamHttpDiagnostics.js';
 
 const DEFAULT_MAX_BYTES = 2_000_000;
@@ -35,22 +36,6 @@ function retryDelay(header: string | null, status: number): number | null {
       : NaN;
   if (!Number.isFinite(delay) || delay > MAX_RETRY_DELAY_MS) return null;
   return Math.max(DEFAULT_RETRY_DELAY_MS, delay);
-}
-
-/** Wait before the one retry. False when the lookup's signal ended the wait: the first failure stands. */
-async function pausedBeforeRetry(delayMs: number, signal?: AbortSignal | null): Promise<boolean> {
-  if (signal?.aborted) return false;
-  return await new Promise<boolean>((resolve) => {
-    const abort = () => {
-      clearTimeout(timer);
-      resolve(false);
-    };
-    const timer = setTimeout(() => {
-      signal?.removeEventListener('abort', abort);
-      resolve(true);
-    }, delayMs);
-    signal?.addEventListener('abort', abort, { once: true });
-  });
 }
 
 /** A reply past the byte cap. The reason lets a tier that reads with a larger cap take over. */
@@ -118,7 +103,7 @@ export async function fetchBounded(
       });
     } catch (error) {
       if (options.retryTransient && attempt === 0 && fitsBeforeDeadline(DEFAULT_RETRY_DELAY_MS, options.deadline)
-        && await pausedBeforeRetry(DEFAULT_RETRY_DELAY_MS, init.signal)) continue;
+        && await paused(DEFAULT_RETRY_DELAY_MS, init.signal)) continue;
       throw new UpstreamNetworkError(options.provider, error, requestDiagnostics(url, init, options.timeoutMs ?? 15_000));
     }
     if (response.ok || options.allowHttpError || options.allowHttpStatuses?.includes(response.status)) break;
@@ -133,7 +118,7 @@ export async function fetchBounded(
       && TRANSIENT_HTTP_STATUSES.has(response.status) && delay !== null
       && fitsBeforeDeadline(delay, options.deadline)) {
       await cancelQuietly(response.body);
-      if (await pausedBeforeRetry(delay, init.signal)) continue;
+      if (await paused(delay, init.signal)) continue;
       // The body is gone, but the status the provider gave is still the answer.
       throw rejection();
     }

@@ -3,6 +3,7 @@ import { ChallengeError, IndeterminateError, RateLimitedError, SchemaError } fro
 import type { CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
 import { firstAttemptMs, isNetworkFailure } from '../../core/runner/networkRetry.js';
+import { paused } from '../../core/runner/pause.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { normalizeStallionNumber, parseStallion, PROVIDER, STALLION_MAX_BYTES } from './parser.js';
@@ -23,22 +24,6 @@ const RESEND_MS = 2_000;
 function throttleWaitMs(error: unknown): number | null {
   if (!(error instanceof RateLimitedError) || error.retryAfterMs === undefined) return null;
   return error.retryAfterMs <= MAX_THROTTLE_WAIT_MS ? error.retryAfterMs + THROTTLE_MARGIN_MS : null;
-}
-
-/** Waits `ms`; false when the lookup's signal ended the wait first. */
-function paused(ms: number, signal: AbortSignal): Promise<boolean> {
-  if (signal.aborted) return Promise.resolve(false);
-  return new Promise((resolve) => {
-    const abort = () => {
-      clearTimeout(timer);
-      resolve(false);
-    };
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', abort);
-      resolve(true);
-    }, ms);
-    signal.addEventListener('abort', abort, { once: true });
-  });
 }
 
 export class StallionTracker {
