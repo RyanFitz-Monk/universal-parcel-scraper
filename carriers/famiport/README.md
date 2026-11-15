@@ -16,7 +16,9 @@ number, so there is no fixed layout. No public page shows one, so there is no ru
 Its tracker asks for a picture code but checks it only in the page's script. The lookup behind it, a POST to
 `list.aspx/InquiryOrders` on ecfme.fme.com.tw with the numbers in `ListEC_ORDER_NO`, answers JSON without the
 code or a session and says when a number is not found. A number that matches several orders needs the
-recipient's name to pick one. No public number is known to see a found reply.
+recipient's name to pick one. A second POST, to `list.aspx/GetOrderDetail`, gives an order's history: the
+page's script reads a status wording, a date and a time from each row, and holds no list of statuses. No
+public number is known to see a found reply, so the wordings and the clock's layout are not known.
 
 ## Links
 
