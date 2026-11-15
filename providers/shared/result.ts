@@ -404,6 +404,8 @@ function providerWordingStage(description: string): Stage | undefined {
   // SPX's fleet feed, as ParcelsApp relays it in English: its first-mile and last-mile hubs taking the
   // parcel in, as SPX's own maps read FMHub_Received and LMHub_Received.
   if (/^your parcel has been received by (?:pickup|delivery) hub[.!]?$/i.test(value)) return 'in_transit';
+  // DHL Parcel's arrival at the depot that delivers it, as ParcelsApp relays it: the delivery is still ahead.
+  if (/^your package is at its distribution cent(?:er|re)\. we are getting it ready for delivery[.!]?$/i.test(value)) return 'in_transit';
   // BRT's arrival at the delivering branch ("Arrivata in filiale"), as ParcelsApp relays it for DPD's
   // parcels delivered in Italy.
   if (/^in filiale[.!]?$/i.test(value)) return 'in_transit';
