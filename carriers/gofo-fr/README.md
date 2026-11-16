@@ -24,7 +24,9 @@ no history.
 
 The latest summary must match the first scan. The client renders the list in
 its returned order; equal and unresolved clocks keep that order. Explicit
-offsets are preserved, and offset-free clocks remain local. A hub named by its
+offsets are preserved, and offset-free clocks remain local. Code 100, the sender
+preparing the parcel, is the order's creation: GOFO states it on `+02:00` all
+year, and the record's `createTime` gives the same instant on France's clock. A hub named by its
 code, the department's number and its own (`75-LED`) or `GOFO-` and its area's
 letters, is no town, nor is the country alone, so such a scan has no place. Some
 scans write the town in capitals; it takes the case the other scans use. A

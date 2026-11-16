@@ -25,7 +25,10 @@ browser is needed, and no portal link is published.
   delivery number, never the canonical one.
 - JRT's interface lists no row for an order without scans, under either number. The page shows
   the platform's own row, `货物电子信息已经收到`, on the order's creation time: the order is
-  registered.
+  registered. The platform writes that row again when the order's data goes on, as seconds after
+  the departure from JRT's centre, often days later in a batch, so a parcel can list it several
+  times at different clocks. Each is its own row. A later rewrite of the history can drop older
+  rows.
 - JRT's own rows mix Chinese and an English translation, and the map reads each one whole. The
   airport row books a flight on a day it names in both halves; [status.ts](status.ts) reads the
   day as an ellipsis, and the row shows its English without the flight, which is still to come.
