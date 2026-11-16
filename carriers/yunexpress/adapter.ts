@@ -17,7 +17,7 @@ import { airportTimeZone } from '../../places/index.js';
 import { hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
 import { chinaPostAirline, chinaPostDestinationScan } from '../china-post/status.js';
 import { jAndTAuRelayedStage, relaysJAndTAu } from '../j-and-t-au/status.js';
-import { YUNEXPRESS_ORIGIN_ZONE as ORIGIN_ZONE, yunExpressOriginLeg } from './clock.js';
+import { YUNEXPRESS_IMPORT_CUSTOMS, YUNEXPRESS_ORIGIN_ZONE as ORIGIN_ZONE, yunExpressOriginLeg } from './clock.js';
 import { chinaPostOffice, chinaPostRelayEnglish, isYunExpressNotice, withoutMarkup, withoutRepeatedParts, yunExpressCodeStatus, yunExpressStatus } from './status.js';
 
 const API = 'https://services.yuntrack.com/Track/Query';
@@ -50,8 +50,6 @@ const wording = (event: CarrierEvent) => (event.description ?? '').replace(/\s+/
 /** The offset the latest-scan record states for China Post's scans. */
 const CHINA_OFFSET = '+08:00';
 const ARRIVAL = 'international flight has arrived';
-// The destination's import customs, which clears the parcel where its flight lands.
-const IMPORT_CUSTOMS = /\s-\s?import$/;
 // A hand-over to the last-mile carrier, which relays what follows.
 const HANDOVER = /^shipment (?:is )?in transit to (?:carrier|dhl)$/;
 // GOFO names its own facilities on its scans after the flight in.
@@ -86,7 +84,9 @@ function dateOriginLeg(events: CarrierEvent[]): CarrierEvent[] {
  * the record says the flight lands at. The feed gives them that airport's wall
  * clock: it lists the import clearance after the flight out, which China's
  * clock would put before it, and a customs row that names its town keeps the
- * town's clock.
+ * town's clock. The clearance's start comes an hour before its completion on
+ * that clock; read on China's, a US clearance started while the flight was in
+ * the air came before the flight out.
  */
 function dateArrivalAirport(events: CarrierEvent[], airport: unknown, country: string): CarrierEvent[] {
   const code = clean(airport, 8).toUpperCase();
@@ -94,7 +94,7 @@ function dateArrivalAirport(events: CarrierEvent[], airport: unknown, country: s
   if (!zone || !keepsZone(country, zone)) return events;
   return events.map((event) => {
     const words = wording(event);
-    if (event.time || !event.local_time || (words !== ARRIVAL && !IMPORT_CUSTOMS.test(words))) return event;
+    if (event.time || !event.local_time || (words !== ARRIVAL && !YUNEXPRESS_IMPORT_CUSTOMS.test(words))) return event;
     if (event.location && countryCode(event.location) !== country) return event;
     const time = firstOccurrence(DateTime.fromISO(event.local_time, { zone })).toISO({ suppressMilliseconds: true });
     return time ? { ...event, time, time_zone: zone, time_zone_basis: 'destination' } : event;

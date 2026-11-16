@@ -92,8 +92,12 @@ Outcomes:
   read like any other row. The mail's hand-over to the airport (`HandedOverToAirportFacility`)
   comes the same way, to the minute: labelled as UTC, a hand-over at Delhi's office of exchange
   followed its flight's take-off there. It is read on its airport's clock when the office names
-  one, else on India's. The destination's hand-over, beside the flight's arrival, names no office
-  and keeps its label.
+  one, else on India's. The airline reports the bag's unloading ("Bag unloaded at destination
+  Airport") and receipt ("RECEIVED") with it, labelled at most a minute apart, at its office or an
+  airport on its clock. They take its clock, also once a flight's arrival in the destination
+  country has opened the destination's rows: read as UTC, an unloading came after its flight left
+  Delhi and before it could land. The destination's hand-over, beside the flight's arrival, names
+  no office and keeps its label.
 - Take-offs use one wording even when the source switches labels. A strictly formatted flight remark
   supplies its flight number and route; other remarks are discarded. Known departure airports are
   named with their country so maps can locate the scan. A departure's route does not prove arrival.

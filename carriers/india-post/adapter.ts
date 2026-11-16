@@ -192,6 +192,31 @@ function airportClockZone(providerCode: string, office: string, trackedAt: strin
   return providerCode === HAND_OVER_CODE && office ? INDIA_ZONE : null;
 }
 
+// The bag's rows the airline reports with a hand-over: its unloading and its receipt.
+const HAND_OVER_REPORT_CODES = new Set(['BagUnloaded', 'ItemReceived']);
+
+/**
+ * The clock of the rows the airline reports with a hand-over on a known clock: a bag's
+ * unloading or receipt labelled UTC to the minute, at most a minute from the hand-over, at its
+ * office or at an airport on its clock. They come on the hand-over's clock: beside Delhi's
+ * hand-over hours before the flight, an unloading "at destination Airport" read as UTC came
+ * after the flight left Delhi and before it could land. Null for every other row.
+ */
+function handOverReportZones(rows: readonly JsonObject[]): (string | null)[] {
+  const fields = rows.map((row) => ({ code: clean(row.event_type, 100), office: clean(row.office, 120),
+    trackedAt: clean(row.tracked_at, 100), at: isoTime(row.tracked_at, INDIA_ZONE, 100)?.timestamp ?? Number.NaN }));
+  const handOvers = fields.flatMap(({ code, office, trackedAt, at }) => {
+    const zone = code === HAND_OVER_CODE ? airportClockZone(code, office, trackedAt) : null;
+    return zone && Number.isFinite(at) ? [{ zone, office, at }] : [];
+  });
+  return fields.map(({ code, office, trackedAt, at }) => {
+    if (!HAND_OVER_REPORT_CODES.has(code) || !office || !UTC_LABEL.test(trackedAt) || !Number.isFinite(at) || at % 60_000) return null;
+    const airport = officeAirport(office);
+    return handOvers.find((handOver) => Math.abs(handOver.at - at) <= 60_000
+      && (airport ? AIRPORT_ZONES[airport] === handOver.zone : office === handOver.office))?.zone ?? null;
+  });
+}
+
 /**
  * An office and its PIN, as a scan's location. India Post writes "Office -" and
  * at most a code ("Office - 00000001", "Office - FRA") for an office it does
@@ -515,14 +540,17 @@ interface RowContext {
 function indiaPostResult(rows: readonly JsonObject[], { destination, service, syncedAt: synced, abroad, destinationZone }: RowContext): CarrierResult {
   const parsed: ParsedEvent[] = [];
   const seen = new Set<string>();
+  const reported = handOverReportZones(rows);
   rows.forEach((rawEvent, index) => {
     const office = clean(rawEvent.office, 120);
     const providerCode = clean(rawEvent.event_type, 100);
     // tracked_at is ISO; offset-less values are read as Asia/Kolkata, the zone
-    // every India Post office stamps. A take-off or hand-over is read on its
-    // airport's clock, and a scan abroad on the destination's.
-    const zone = airportClockZone(providerCode, office, clean(rawEvent.tracked_at, 100));
-    const foreign = abroad.has(index) ? foreignClock(rawEvent.tracked_at, destinationZone) : null;
+    // every India Post office stamps. A take-off or hand-over, and the rows the
+    // airline reports with the hand-over, are read on its airport's clock, even
+    // after a flight's arrival in the destination country; a scan abroad on the
+    // destination's.
+    const zone = airportClockZone(providerCode, office, clean(rawEvent.tracked_at, 100)) ?? reported[index]!;
+    const foreign = abroad.has(index) && !zone ? foreignClock(rawEvent.tracked_at, destinationZone) : null;
     const time = foreign ? ('time' in foreign ? foreign.time : null) : zone
       ? mislabeledLocalTime(rawEvent.tracked_at, zone, 100)
       : isoTime(rawEvent.tracked_at, INDIA_ZONE, 100);

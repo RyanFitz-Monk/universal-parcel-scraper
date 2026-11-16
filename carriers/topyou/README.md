@@ -37,7 +37,7 @@ it states. TopYou's hand-over and delivery rows on such a parcel had UTC wall cl
 are worded as on its other lines, so they keep their reading. TopYou's own end of the
 destination's clearance ("Shipment completed the customs clearance process at destination") and
 its post line's airline legs and clearances ("Airline arrived at destination country", "Export
-clearance success" and the like), which it states `+08:00` on other waybills, can come at times
+clearance success", "Import clearance success" and the like), which it states `+08:00` on other waybills, can come at times
 without an offset and are read on China's clock all the same, which the scan names: read on the
 destination's, the clearance fell after the hand-over TopYou scans next, or after the lookup that
 first found it, and the arrival in the destination country came after the lookup that found it,

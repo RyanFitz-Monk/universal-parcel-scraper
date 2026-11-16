@@ -1,5 +1,6 @@
 import type { CarrierResult } from '../../core/result/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
+import { dateHualeiGofoRows, isHualeiUsPartnerRow } from '../gzyl/gofo-rows.js';
 import { parseHualeiPage, parseHualeiTrack, type HualeiTenant } from '../gzyl/hualei.js';
 import { lingdongStage } from './status.js';
 
@@ -17,11 +18,15 @@ export function repeatsLingdongRow(wording: string, other: string): boolean {
   return fuller.startsWith(`${headline}, `) && stage !== undefined && lingdongStage(null, fuller) === stage;
 }
 
+// The line into the United States ends with GOFO, whose scans the tracker copies on GOFO's clocks, as JRT's does.
 export const LINGDONG: HualeiTenant = { carrier: 'lingdong', provider: PROVIDER, origin: LINGDONG_ORIGIN, stage: lingdongStage,
-  repeats: repeatsLingdongRow, ownNumber: /^SZLD\d{10}$/ };
+  repeats: repeatsLingdongRow, ownNumber: /^SZLD\d{10}$/,
+  clock: ({ content, location }) => (isHualeiUsPartnerRow(content, location) ? 'wall' : 'platform') };
 
 /** The track interface's reply, or null when it holds no row for the number. */
-export const parseLingdongTrack = (payload: unknown, number: string, readAt?: number): CarrierResult | null =>
-  parseHualeiTrack(payload, number, LINGDONG, readAt);
+export function parseLingdongTrack(payload: unknown, number: string, readAt?: number): CarrierResult | null {
+  const result = parseHualeiTrack(payload, number, LINGDONG, readAt);
+  return result && dateHualeiGofoRows(result);
+}
 export const parseLingdongPage = (html: string, number: string, readAt?: number): CarrierResult =>
-  parseHualeiPage(html, number, LINGDONG, readAt);
+  dateHualeiGofoRows(parseHualeiPage(html, number, LINGDONG, readAt));

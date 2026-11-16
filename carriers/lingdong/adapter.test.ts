@@ -97,6 +97,22 @@ describe('Lingdong International tracking adapter', () => {
     expect(scan).toMatchObject({ time: '2026-03-05T13:34:09+08:00', written_at: '2026-03-05T16:53:11+08:00', stage: 'in_transit' });
   });
 
+  it('reads GOFO’s scans on the line into the United States on GOFO’s clocks, as JRT’s tracker does', () => {
+    const payload = structuredClone(fixture('track')) as Array<{ data: Array<{ trackDetails: Array<Record<string, string>> }> }>;
+    const details = payload[0]!.data[0]!.trackDetails;
+    // GOFO's hub dates its scans on Chicago's clock and its label on Pacific time; read on Beijing time the hub scan comes 14 hours early.
+    details.unshift({ ...details[0]!, track_content: 'Arrived at GOFO Regional Hub', track_kind: '', track_location: 'Melrose Park,IL',
+      track_date: '2026-03-06 05:12:40', track_createdate: '2026-03-06 19:13:02' },
+    { ...details[0]!, track_content: 'Shipping Label Created', track_kind: '', track_location: '',
+      track_date: '2026-03-05 02:10:00', track_createdate: '2026-03-05 18:11:00' });
+    const result = parseLingdongTrack(payload, NUMBER, Date.parse('2026-03-07T00:00:00Z'))!;
+    const event = (description: string) => result.events?.find((row) => row.description === description);
+    expect(event('Arrived at GOFO Regional Hub')).toMatchObject({ time: '2026-03-06T05:12:40-06:00', time_zone: 'America/Chicago', time_zone_basis: 'place' });
+    expect(event('Shipping Label Created')).toMatchObject({ time: '2026-03-05T02:10:00-08:00', time_zone: 'America/Los_Angeles', time_zone_basis: 'carrier' });
+    expect(event('Shipment departed from facility')).toMatchObject({ time: '2026-03-04T21:58:03+08:00' });
+    expect(result.last_update).toBe('2026-03-06T05:12:40-06:00');
+  });
+
   it('reads the page’s unknown-number answer as not found', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json(fixture('no-track'))).mockResolvedValueOnce(html(page('page-unknown')));
     await expect(adapter(environment(fetcher)).track({ number: UNKNOWN })).rejects.toMatchObject({ kind: 'not_found' });

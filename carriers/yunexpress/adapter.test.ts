@@ -285,6 +285,21 @@ describe('YunExpress captured response projection', () => {
     expect(parse(payload, NUMBER).events?.[1]!.time).toBeUndefined();
   });
 
+  it("dates the import clearance's start on the clock of the airport the flight lands at, where China's would put it before the flight out", () => {
+    const payload = placing({ 0: '', 4: 'US', 5: '', 6: '', 7: 'Mainland China, CN' });
+    const rows = payload.ResultList[0].TrackData.ProcessGroupList.flatMap((group: { ProcessDetailList: { ProcessContent: string }[] }) => group.ProcessDetailList);
+    // A US clearance started while the flight is in the air, listed by its wall clock among China's rows.
+    rows[6]!.ProcessContent = 'Start Customs Clearence';
+    Object.assign(payload.ResultList[0].TrackInfo, { DestAirport: 'LAX' });
+    Object.assign(payload.ResultList[0].TrackInfo.LastTrackEvent, { ProcessLocation: '' });
+    const result = parse(payload, NUMBER);
+    expect(result.events?.[6]).toMatchObject({ time: '2026-03-14T13:39:00-07:00', time_zone: 'America/Los_Angeles', time_zone_basis: 'destination' });
+    expect(result.events?.[5]).toMatchObject({ time: '2026-03-15T13:39:00+08:00', time_zone: 'Asia/Shanghai', time_zone_basis: 'neighbour' });
+    // Without the airport it keeps its wall clock: import customs is not China's leg.
+    delete payload.ResultList[0].TrackInfo.DestAirport;
+    expect(parse(payload, NUMBER).events?.[6]!.time).toBeUndefined();
+  });
+
   it("dates the destination leg on the latest scan's stated offset when none of its rows names a place", () => {
     const payload = placing({ 0: '', 1: '', 2: '', 3: '' });
     const info = payload.ResultList[0].TrackInfo;

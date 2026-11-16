@@ -163,12 +163,13 @@ describe('TopYou HTTP adapter', () => {
     const posted = changed('in-transit', (track) => {
       const last = track.trackInfo!.at(-1)!;
       track.trackInfo!.push(...['Airline arrived at transit country or district.', 'Airline departed from transit or district country.',
-        'Export clearance success', 'Arrive at destination country'].map((record, index) =>
+        'Export clearance success', 'Arrive at destination country', 'Import clearance success'].map((record, index) =>
         ({ ...last, id: `90002${index}`, changeDate: `2026/04/${18 + index} 10:41:38`, timeZone: null, location: null, record, status: '15' })));
     });
-    expect(scans(parseTopyou(posted, IN_TRANSIT)).slice(0, 4).map(([time]) => time)).toEqual(
-      ['2026-04-21T10:41:38+08:00', '2026-04-20T10:41:38+08:00', '2026-04-19T10:41:38+08:00', '2026-04-18T10:41:38+08:00']);
-    expect(parseTopyou(posted, IN_TRANSIT).events!.slice(0, 4).every((event) => event.time_zone === 'Asia/Shanghai'
+    // The import clearance read on Oslo's clock came seven hours after 17TRACK's copy.
+    expect(scans(parseTopyou(posted, IN_TRANSIT)).slice(0, 5).map(([time]) => time)).toEqual(['2026-04-22T10:41:38+08:00',
+      '2026-04-21T10:41:38+08:00', '2026-04-20T10:41:38+08:00', '2026-04-19T10:41:38+08:00', '2026-04-18T10:41:38+08:00']);
+    expect(parseTopyou(posted, IN_TRANSIT).events!.slice(0, 5).every((event) => event.time_zone === 'Asia/Shanghai'
       && event.time_zone_basis === 'carrier')).toBe(true);
     // The delivery carrier's scans without an offset keep their wall clock.
     const relayed = changed('in-transit', (track) => {

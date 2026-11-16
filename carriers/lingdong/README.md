@@ -27,8 +27,14 @@ The tracker answers plain HTTP only. No account, key, cookie, CAPTCHA or browser
   stage, only the fuller row is kept.
 - Scan times are wall clocks without an offset on the platform's Beijing clock, as
   [GZYL's](../gzyl/README.md) are, and are read on it; a row dated after the lookup is held
-  back. The partner's relayed scans are on it too: the platform wrote a Poste Italiane scan
-  hours after its Beijing clock, and before the same clock read on Rome's.
+  back. Poste Italiane's relayed scans are on it too: the platform wrote one hours after its
+  Beijing clock, and before the same clock read on Rome's.
+- GOFO's scans are not. The tracker copies them in GOFO's English under the town and its state's
+  code ("EXAMPLE TOWN,IL"), and GOFO's label ("Shipping Label Created") without a place, on GOFO's
+  clocks, as [JRT's](../jrt/README.md) tracker does: a station GOFO dates on its zone takes that
+  zone and the label Pacific time ([GOFO](../gofo/README.md)). A row at another US town and state
+  keeps its wall clock, which the state dates. Read on Beijing time, an Illinois hub scan came 14
+  hours early.
 
 ## Limitations
 

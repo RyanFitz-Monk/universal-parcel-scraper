@@ -524,6 +524,32 @@ describe('India Post scans abroad', () => {
     expect(result).not.toHaveProperty('last_update_local');
   });
 
+  it("reads the bag's rows the airline reports with Delhi's hand-over on India's clock, though the flight is the destination's", () => {
+    const row = (trackedAt: string, eventType: string, event: string, office: string, remarks = '') =>
+      ({ tracked_at: trackedAt, event, event_type: eventType, office, pincode: '', remarks });
+    const events = [
+      row('2026-11-07T15:40:00.000000Z', 'BagUnloaded', 'Bag unloaded at destination Airport', 'Office - DEL', 'Flight No: AI0101 (From DEL To ICN)'),
+      row('2026-11-07T15:40:00.000000Z', 'ItemReceived', 'RECEIVED', 'EXAMPLE FOREIGN POST OFFICE'),
+      row('2026-11-07T15:41:00.000000Z', 'HandedOverToAirportFacility', 'Handed over to Airport facility by Airlines', 'EXAMPLE FOREIGN POST OFFICE',
+        'Flight No: AI0101 (From INDEL To KRICN)'),
+      row('2026-11-11T03:30:00.000000Z', 'ItemReceived', 'Item received at office of exchange (Inb)', 'EXAMPLE EXCHANGE OFFICE'),
+    ];
+    const times = (rows: typeof events, destination: string | undefined = 'South Korea') =>
+      Object.fromEntries((parse(destination, rows).events ?? []).map((event) => [event.description, event.time]));
+    // Labelled a minute apart: the hand-over at Delhi's office of exchange before the flight, with the bag's rows.
+    expect(times(events)).toEqual({
+      'Bag unloaded at destination Airport': '2026-11-07T15:40:00+05:30',
+      RECEIVED: '2026-11-07T15:40:00+05:30',
+      'Handed over to Airport facility by Airlines': '2026-11-07T15:41:00+05:30',
+      'Item received at office of exchange (Inb)': '2026-11-11T09:00:00+09:00',
+    });
+    // Without the destination, the rows are India's alike. A receipt at another office, or rows two minutes away, are not the airline's report.
+    expect(times(events, undefined)).toMatchObject({ RECEIVED: '2026-11-07T15:40:00+05:30', 'Handed over to Airport facility by Airlines': '2026-11-07T15:41:00+05:30' });
+    expect(times([{ ...events[1]!, office: 'ANOTHER POST OFFICE' }, events[2]!], undefined)).toMatchObject({ RECEIVED: '2026-11-07T15:40:00Z' });
+    expect(times([events[0]!, { ...events[2]!, tracked_at: '2026-11-07T15:42:00.000000Z' }], undefined))
+      .toMatchObject({ 'Bag unloaded at destination Airport': '2026-11-07T15:40:00Z' });
+  });
+
   it('proposes the destination\'s post for the same S10 number', () => {
     expect(deliveryHandoff('india-post', SAMPLE_NUMBER, parse('France')))
       .toEqual({ carrier: 'la-poste', number: SAMPLE_NUMBER, basis: 'destination' });
