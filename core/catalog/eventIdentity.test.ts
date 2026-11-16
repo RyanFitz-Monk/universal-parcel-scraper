@@ -900,13 +900,17 @@ describe('same-instant identity policies', () => {
     ['yto', 'accepted', '业务员收件', 'Picked up', '310'],
     ['china-post', 'out_for_delivery', '派送中', 'Out for delivery', 'O_014'],
     ['china-post', 'in_transit', '邮件到达【示例市揽投部】', 'Arrival', '713'],
+    ['sxw-express', 'accepted', '到达收货点', 'Arrived at the receiving point', ''],
+    // A row in Chinese and then in English, shown as its English half.
+    ['lingdong', 'in_transit', '航班抵达【Flight arrival】', 'Flight arrival', ''],
+    ['lingdong', 'in_transit', '预计11.9航班/Scheduled flight on November 9st', 'Scheduled flight on November 9st', ''],
   ])('lets a %s row shown in English take over the row stored in the carrier’s Chinese, by place and code', (source, stage, chinese, english, code) => {
     expect(sameInstantIdentityPolicy(source)).toBeUndefined();
     const policy = sameInstantIdentityPolicy(source, { supportsScanMatching: true });
     expect(policy).toEqual({
       sourceCarrierId: source, storedSources: [source], requireProviderCode: false, matchEachScan: true, matches: expect.any(Function),
-      // YTO, China Post, JRT, JS Express and Mayi Yinfu date local clocks, which adds the wall-clock pass.
-      ...(['yto', 'china-post', 'jrt', 'js-express', 'mayiyinfu'].includes(source) ? { matchWallClock: true } : {}),
+      // YTO, China Post, JRT, JS Express, Mayi Yinfu and Lingdong date local clocks, which adds the wall-clock pass.
+      ...(['yto', 'china-post', 'jrt', 'js-express', 'mayiyinfu', 'lingdong'].includes(source) ? { matchWallClock: true } : {}),
       // JS Express relays China Post's scans from a feed that keeps minutes and one that keeps seconds.
       ...(source === 'js-express' ? { matchWithinMinute: true } : {}),
     });

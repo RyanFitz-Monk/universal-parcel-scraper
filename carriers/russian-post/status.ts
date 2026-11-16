@@ -3,6 +3,12 @@ import { classifyWording, type ClassifiedWording, type Stage } from '../../core/
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
 import statuses from './statuses.json' with { type: 'json' };
 
+/** The place of a scan: a city the feed gives as a number alone, such as a sorting centre's "63", names none. */
+export const russianPostCity = (city: string): string => (/\p{L}/u.test(city) ? city : '');
+
+/** A location stored with such a city, read again without it: "63, Russia" is "Russia". */
+export const russianPostPlace = (location: string): string => location.replace(/^[^\p{L},]*\d[^\p{L},]*,\s*(?=\S)/u, '');
+
 const CODES: ReadonlyMap<string, Stage> = new Map([
   ['28.0', 'registered'],
   ['8.0', 'in_transit'], ['8.1', 'in_transit'], ['8.2', 'ready_for_pickup'], ['8.3', 'in_transit'],

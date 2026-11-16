@@ -44,12 +44,14 @@ import { sameInstantIdentityPolicy as jsExpress } from '../../carriers/js-expres
 import { sameInstantIdentityPolicy as laPoste } from '../../carriers/la-poste/identity.js';
 import { sameInstantIdentityPolicy as lbcExpress } from '../../carriers/lbc-express/identity.js';
 import { sameInstantIdentityPolicy as linhan } from '../../carriers/linhan/identity.js';
+import { sameInstantIdentityPolicy as lingdong } from '../../carriers/lingdong/identity.js';
 import { sameInstantIdentityPolicy as mayiyinfu } from '../../carriers/mayiyinfu/identity.js';
 import { sameInstantIdentityPolicy as mondialRelay } from '../../carriers/mondial-relay/identity.js';
 import { sameInstantIdentityPolicy as mrw } from '../../carriers/mrw/identity.js';
 import { sameInstantIdentityPolicy as nacex } from '../../carriers/nacex/identity.js';
 import { sameInstantIdentityPolicy as nzPost } from '../../carriers/nz-post/identity.js';
 import { sameInstantIdentityPolicy as packeta } from '../../carriers/packeta/identity.js';
+import { sameInstantIdentityPolicy as pengyou } from '../../carriers/pengyou/identity.js';
 import { sameInstantIdentityPolicy as pitneyBowes } from '../../carriers/pitney-bowes/identity.js';
 import { sameInstantIdentityPolicy as posMalaysia } from '../../carriers/pos-malaysia/identity.js';
 import { sameInstantIdentityPolicy as pocztaPolska } from '../../carriers/poczta-polska/identity.js';
@@ -66,7 +68,9 @@ import { sameInstantIdentityPolicy as speedpak } from '../../carriers/speedpak/i
 import { sameInstantIdentityPolicy as speedy } from '../../carriers/speedy/identity.js';
 import { sameInstantIdentityPolicy as spxBr } from '../../carriers/spx-br/identity.js';
 import { sameInstantIdentityPolicy as sunYou } from '../../carriers/sunyou/identity.js';
+import { sameInstantIdentityPolicy as sxwExpress } from '../../carriers/sxw-express/identity.js';
 import { sameInstantIdentityPolicy as thhy } from '../../carriers/thhy/identity.js';
+import { sameInstantIdentityPolicy as topyou } from '../../carriers/topyou/identity.js';
 import { sameInstantIdentityPolicy as ups } from '../../carriers/ups/app.js';
 import { sameInstantIdentityPolicy as usps } from '../../carriers/usps/identity.js';
 import { sameInstantIdentityPolicy as vintedGo } from '../../carriers/vinted-go/identity.js';
@@ -133,7 +137,7 @@ export interface SameInstantIdentityPolicy {
 }
 
 const policies: ReadonlyMap<string, SameInstantIdentityPolicy> = new Map(
-  [aliexpress, allegroOne, amazonShipping, australiaPost, austrianPost, brt, canadaPost, chinaPost, chronopost, ciblex, correiosBr, correosExpress, correosSpain, ctt, cttyex, delhivery, dhl, dhlEcommerce, dhlEcommercePl, dhlExpress, dhlink, dpd, dpdGermany, dpdFrance, dpdPoland, dpdRomania, dpdUk, fedex, firstLine, glsItaly, gofoFrance, gofoItaly, gzyl, hermesGermany, huayaExpress, imile, indiaPost, inpost, jAndTAu, jcex, jdLogistics, jrt, jsExpress, laPoste, lbcExpress, linhan, mayiyinfu, mondialRelay, mrw, nacex, nzPost, packeta, parcelforce, pitneyBowes, pocztaPolska, posMalaysia, postlogistics, postnord, postaSlovenije, posteItaliane, posti, royalMail, russianPost, sfExpress, shouwu, speedpak, speedy, spxBr, sunYou, thhy, ups, usps, swissPost, vintedGo, yanwen, yilongLogistics, yto, yunExpress, zto, ztoInternational, universal].map((policy) => [policy.sourceCarrierId, policy]),
+  [aliexpress, allegroOne, amazonShipping, australiaPost, austrianPost, brt, canadaPost, chinaPost, chronopost, ciblex, correiosBr, correosExpress, correosSpain, ctt, cttyex, delhivery, dhl, dhlEcommerce, dhlEcommercePl, dhlExpress, dhlink, dpd, dpdGermany, dpdFrance, dpdPoland, dpdRomania, dpdUk, fedex, firstLine, glsItaly, gofoFrance, gofoItaly, gzyl, hermesGermany, huayaExpress, imile, indiaPost, inpost, jAndTAu, jcex, jdLogistics, jrt, jsExpress, laPoste, lbcExpress, linhan, lingdong, mayiyinfu, mondialRelay, mrw, nacex, nzPost, packeta, parcelforce, pengyou, pitneyBowes, pocztaPolska, posMalaysia, postlogistics, postnord, postaSlovenije, posteItaliane, posti, royalMail, russianPost, sfExpress, shouwu, speedpak, speedy, spxBr, sunYou, sxwExpress, thhy, topyou, ups, usps, swissPost, vintedGo, yanwen, yilongLogistics, yto, yunExpress, zto, ztoInternational, universal].map((policy) => [policy.sourceCarrierId, policy]),
 );
 
 const wording = (scan: SameInstantScan) => scan.description.replace(/\s+/g, ' ').trim().toLowerCase();

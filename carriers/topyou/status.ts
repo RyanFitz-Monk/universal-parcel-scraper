@@ -56,6 +56,9 @@ const AT_PICKUP_POINT = /^arrived, the parcel has been delivered to 【[^】]*�
 // warehouse's outbound scan on a line a post delivers: "…, Lastmile Number:LM…CN".
 const LASTMILE = /\s*,\s*lastmile number\s*:\s*[a-z0-9]+$/i;
 
+/** A scan's wording without the delivery carrier's number after it, which the result gives as the hand-off. */
+export const withoutLastmile = (wording: string): string => wording.replace(LASTMILE, '');
+
 /** Whether TopYou relays the scan from iMile: iMile's step label and a sentence iMile's map knows. */
 export const isImileRelay = (wording: string): boolean => imileRelayStage(wording) !== undefined;
 

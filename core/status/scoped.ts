@@ -24,6 +24,11 @@ export const SCOPED_WORDINGS: readonly ScopedWordingRule[] = [
     note: "BUFFALO's parcel back at its depot after a round, as ParcelsApp relays it: each came the evening after a vehicle "
       + "departure, and the parcel left again the next morning. Elsewhere the bare word can name a return to the sender.",
   },
+  {
+    carrier: 'buffalo-ex', providers: ['ParcelsApp'], wording: 'scan vehicle departure', stage: 'out_for_delivery',
+    note: "The local courier's delivery round on a BUFFALO parcel, as ParcelsApp relays it: each departure came early in the "
+      + "morning, the parcel was back at the depot that evening, and no round ran on the Sunday. Elsewhere a vehicle can leave for another depot.",
+  },
 ];
 
 /** The carrier behind a scan and the provider that relayed it, when one did. */

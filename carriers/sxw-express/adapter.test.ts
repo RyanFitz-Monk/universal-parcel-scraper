@@ -9,7 +9,7 @@ import { parseHualeiTrack } from '../gzyl/hualei.js';
 import { adapter, SxwTracker } from './adapter.js';
 import carrier from './carrier.json' with { type: 'json' };
 import { SXW, SXW_ORIGIN } from './parser.js';
-import { statusMap } from './status.js';
+import { statusMap, sxwEnglish } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 
 const NUMBER = 'SXW999999999980';
@@ -89,6 +89,10 @@ describe('SXW Express tracking adapter', () => {
     expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Parcel is leaving Airport, Parcel Leaving Port' }))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Synthetic wording' })).toEqual({ kind: 'unknown' });
+    // The platform's Chinese rows show the English its other tenants give them, which the map reads too.
+    expect(sxwEnglish(null, normalizeStatusWording('到达收货点'))).toBe('Arrived at the receiving point');
+    expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Goods leave the operation center' }))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
   });
 
   it('links no plain-HTTP page', () => {

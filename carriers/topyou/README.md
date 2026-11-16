@@ -56,7 +56,8 @@ a comma and iMile's sentence ("Delivery, Our delivery associate is out for deliv
 own map stages the sentence. DPD's scans in Austria come in DPD Austria's English wording, up to
 its notice that a parcel left at a Pickup parcelshop was not collected, a problem before DPD sends
 it back. On a line a post delivers, the first-mile warehouse's outbound scan
-ends with ", Lastmile Number:" and the post's number, which the map leaves aside. The tracker's
+ends with ", Lastmile Number:" and the post's number, which the wording shown leaves aside: the
+result gives the number as the hand-off. The tracker's
 summary code settles a delivered or returned parcel.
 
 TopYou's own scans name the destination country even at the origin airport, so a place that is

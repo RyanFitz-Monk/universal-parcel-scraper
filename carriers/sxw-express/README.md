@@ -22,7 +22,8 @@ The site's tracking page is SXW's own tenant of the Hualei (华磊) platform at
   with it. A channel name does not change that unless it names another carrier. GOFO alone issues
   the shape, and its own tracker answers for the number, so the record's destination is not checked.
 - The tracker writes the line's English rows beside the platform's Chinese ones; the status map
-  reads both.
+  reads both. The platform's Chinese rows show the English the platform's other tenants give
+  them, such as "Arrived at the receiving point".
 - A not-found leaves the enabled universal providers to answer.
 
 ## Limitations

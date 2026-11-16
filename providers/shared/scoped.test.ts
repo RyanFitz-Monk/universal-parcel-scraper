@@ -28,6 +28,11 @@ describe('carrier-scoped wording', () => {
     expect(scopedWordingStage('RETURNS TO SENDER', { carrier: 'buffalo-ex', provider: 'ParcelsApp' })).toBeUndefined();
     // Elsewhere the bare word keeps the shared reading.
     expect(classifyEvent('RETURNS')).toMatchObject({ stage: 'pending' });
+    // The courier's morning departure on the round the parcel comes back from.
+    expect(scopedWordingStage('SCAN VEHICLE DEPARTURE', { carrier: 'buffalo-ex', provider: 'ParcelsApp' })).toBe('out_for_delivery');
+    expect(scopedWordingStage('SCAN VEHICLE DEPARTURE', { carrier: 'buffalo-ex', provider: 'Ship24' })).toBeUndefined();
+    expect(scopedWordingStage('SCAN VEHICLE DEPARTURE', { carrier: 'la-poste', provider: 'ParcelsApp' })).toBeUndefined();
+    expect(classifyEvent('SCAN VEHICLE DEPARTURE')).toMatchObject({ stage: 'in_transit' });
   });
 
   const answer = (overrides: Partial<CarrierResult> = {}): CarrierResult => ({
@@ -43,8 +48,12 @@ describe('carrier-scoped wording', () => {
   it('restages the scan and the headline it leads', () => {
     const read = withScopedWording(answer({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'wording:language' }), 'ParcelsApp');
     expect(read.events?.[0]).toMatchObject({ stage: 'in_transit', stage_source: 'wording:provider' });
-    expect(read.events?.[1]).toMatchObject({ stage: 'in_transit', stage_source: 'wording:language' });
+    expect(read.events?.[1]).toMatchObject({ stage: 'out_for_delivery', stage_source: 'wording:provider' });
     expect(read).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'wording:provider' });
+    // With the departure the newest scan, the headline follows it out for delivery.
+    const out = withScopedWording(answer({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'wording:language',
+      events: answer().events!.slice(1) }), 'ParcelsApp');
+    expect(out).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery', current_stage_source: 'wording:provider' });
   });
 
   it('leaves other providers, carriers, legs and carrier maps alone', () => {

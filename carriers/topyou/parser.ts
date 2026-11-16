@@ -6,7 +6,7 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, explicitOffsetTime } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { isImileRelay, topyouStage } from './status.js';
+import { isImileRelay, topyouStage, withoutLastmile } from './status.js';
 
 export const PROVIDER = 'TopYou';
 // A long history is a few kilobytes.
@@ -92,7 +92,7 @@ function place(row: Record<string, unknown>, own: boolean): string {
 const DANGLING = /\s+(?:of|to|in|at|from)$/i;
 
 function projectRow(row: Record<string, unknown>): { key: string; clock: string; event: CarrierEvent } {
-  const description = text(row, 'record').replace(DANGLING, '');
+  const description = withoutLastmile(text(row, 'record')).replace(DANGLING, '');
   if (!description) throw new SchemaError(PROVIDER, 'TopYou returned a scan without wording');
   const code = cleanScalar(row.status, 8);
   const imile = isImileRelay(description);

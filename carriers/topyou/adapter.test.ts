@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { sameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
@@ -101,7 +102,13 @@ describe('TopYou HTTP adapter', () => {
       ['5', 'accepted', 'carrier_map'],
       ['5', 'accepted', 'carrier_map'],
     ]);
-    expect(result.events!.at(-3)!.description).toBe('Outbound in sorting center , Lastmile Number:LM000000005CN');
+    // The post's number after the outbound scan is the hand-off, not part of the wording shown.
+    expect(result.events!.at(-3)!.description).toBe('Outbound in sorting center');
+    const policy = sameInstantIdentityPolicy('topyou', { supportsScanMatching: true })!;
+    const stored = { stage: 'in_transit', description: 'Outbound in sorting center , Lastmile Number:LM000000005CN', location: '', providerCode: '10' };
+    expect(policy.matches!({ ...stored, description: 'Outbound in sorting center' }, stored)).toBe(true);
+    expect(policy.matches!({ ...stored, description: 'Outbound in sorting center', providerCode: '15' }, stored)).toBe(false);
+    expect(policy.matches!({ ...stored, description: 'Outbound in sorting center' }, { ...stored, description: 'Outbound in sorting center' })).toBe(false);
     expect(topyouStage('10', 'Outbound in sorting center, Lastmile Number:LM000000006CN')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
   });
 

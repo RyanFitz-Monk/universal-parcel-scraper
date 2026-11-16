@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { sameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
 import { recognitionCandidates } from '../../core/catalog/recognition.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
@@ -87,13 +88,24 @@ describe('Pengyou tracking adapter', () => {
     expect(() => parsePengyouPage(page('page-unknown'), UNKNOWN, READ_AT)).toThrow('could not locate');
   });
 
-  it('stages a row by its wording without the place in brackets after it', () => {
-    const payload = structuredClone(fixture('track')) as [{ data: [{ trackDetails: { track_content: string }[] }] }];
+  it('stages a row by its wording without the place in brackets after it, which becomes the place it lacks', () => {
+    const payload = structuredClone(fixture('track')) as [{ data: [{ trackDetails: { track_content: string; track_location: string }[] }] }];
     const scan = 'Shenzhen Processing Center has received it [Shenzhen City]';
-    payload[0].data[0].trackDetails.find((row) => row.track_content === 'Shipment arrived at facility')!.track_content = scan;
-    expect(parsePengyouTrack(payload, NUMBER, READ_AT)).toMatchObject({
-      status: 'in_transit', current_stage: 'accepted', current_stage_source: 'carrier_map', last_status_text: scan,
+    const row = payload[0].data[0].trackDetails.find((detail) => detail.track_content === 'Shipment arrived at facility')!;
+    Object.assign(row, { track_content: scan, track_location: '' });
+    const placed = parsePengyouTrack(payload, NUMBER, READ_AT)!;
+    expect(placed).toMatchObject({
+      status: 'in_transit', current_stage: 'accepted', current_stage_source: 'carrier_map', last_status_text: 'Shenzhen Processing Center has received it',
     });
+    expect(placed.events!.find((event) => event.stage === 'accepted')).toMatchObject({ description: 'Shenzhen Processing Center has received it', location: 'Shenzhen City' });
+    // A row with a place keeps its wording as written.
+    row.track_location = 'SAMPLE HUB';
+    expect(parsePengyouTrack(payload, NUMBER, READ_AT)).toMatchObject({ current_stage: 'accepted', last_status_text: scan });
+    // The row stored with the city in its wording is that scan.
+    const policy = sameInstantIdentityPolicy('pengyou', { supportsScanMatching: true })!;
+    const stored = { stage: 'accepted', description: scan, location: '', providerCode: '' };
+    expect(policy.matches!({ ...stored, description: 'Shenzhen Processing Center has received it', location: 'Shenzhen City' }, stored)).toBe(true);
+    expect(policy.matches!({ ...stored, description: 'Shenzhen Processing Center has received it', location: 'Other City' }, stored)).toBe(false);
     expect(statusMapAnswer({ carrier: 'pengyou', providerCode: null, description: scan })).toEqual({ kind: 'mapped', stage: 'accepted' });
     expect(statusMapAnswer({ carrier: 'pengyou', providerCode: null, description: 'parcel has been sorted and is ready to be sent [Sample City]' }))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });

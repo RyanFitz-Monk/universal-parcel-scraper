@@ -43,9 +43,10 @@ export interface HualeiTenant {
   readonly stage: (code: string | null, wording: string) => Stage | undefined;
   /**
    * The English a row the tenant words only in Chinese is shown in, by the same
-   * code and wording. The stage still comes from the tenant's own wording.
+   * code and wording, or by the wording as the tracker writes it (`shown`).
+   * The stage still comes from the tenant's own wording.
    */
-  readonly english?: (code: string | null, wording: string) => string | undefined;
+  readonly english?: (code: string | null, wording: string, shown: string) => string | undefined;
   /** The wording and place of a row whose text carries both, before the shared cleaning. */
   readonly split?: (content: string, location: string) => { readonly content: string; readonly location: string };
   /** Rows keep their wall clocks: some rows the tracker copies from another carrier come on that carrier's clock. */
@@ -298,7 +299,7 @@ function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number,
     const wording = hualeiWording(parts.content, parts.location);
     const description = wording || place;
     const location = wording ? place : '';
-    const english = wording ? tenant.english?.(row.code || null, normalizeStatusWording(wording)) : undefined;
+    const english = wording ? tenant.english?.(row.code || null, normalizeStatusWording(wording), wording) : undefined;
     // A row held back is named by its clock as the tenant reads it, and listed as a step at that same clock,
     // in the words a scan would show.
     const hold = (staged = description ? stageOf(tenant, row.code, description) : undefined) => {

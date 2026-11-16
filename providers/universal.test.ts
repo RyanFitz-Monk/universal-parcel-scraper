@@ -334,7 +334,7 @@ describe('universal discovery chain', () => {
     await expect(lookup(delivered(['SEUR']))).resolves.toMatchObject({ discovered_carrier: 'seur', current_stage: 'delivered' });
   });
 
-  it('reads BUFFALO\'s "RETURNS" as ParcelsApp relays it, and no one else\'s', async () => {
+  it('reads BUFFALO\'s round and "RETURNS" as ParcelsApp relays them, and no one else\'s', async () => {
     const states = [
       { date: '2026-03-03T17:10:00Z', status: 'RETURNS', carrier: 0 },
       { date: '2026-03-03T06:40:00Z', status: 'SCAN VEHICLE DEPARTURE', carrier: 0 },
@@ -344,6 +344,8 @@ describe('universal discovery chain', () => {
     const buffalo = await lookup(['Buffalo Logistics']);
     expect(buffalo).toMatchObject({ discovered_carrier: 'buffalo-ex', current_stage: 'in_transit' });
     expect(buffalo.events?.find((event) => event.description === 'RETURNS')).toMatchObject({ stage: 'in_transit', stage_source: 'wording:provider' });
+    expect(buffalo.events?.find((event) => event.description === 'SCAN VEHICLE DEPARTURE'))
+      .toMatchObject({ stage: 'out_for_delivery', stage_source: 'wording:provider' });
     const other = await lookup(['Universal Postal Union']);
     expect(other.events?.find((event) => event.description === 'RETURNS')).toMatchObject({ stage: 'pending' });
   });

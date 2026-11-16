@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CHECKSUMS } from '../../core/detection/checksums.js';
+import { sameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, RUSSIAN_POST_ENDPOINT, RussianPostTracker } from './adapter.js';
 import { parseRussianPost, russianPostNumber } from './parser.js';
-import { russianPostEnglish } from './status.js';
+import { russianPostEnglish, russianPostPlace } from './status.js';
 
 const NUMBER = '8546073916204' + [...'0123456789'].find(digit => CHECKSUMS.gs1('8546073916204' + digit))!;
 const row = (operationType = 2, operationAttr = 6, humanStatus = 'Delivered to the addressee', date = '2026-03-12T16:58:40.000+07:00') => ({
@@ -75,6 +76,20 @@ describe('Russian Post anonymous tracking', () => {
       row(8, 0, 'Sorting', '2026-03-10T09:01:00.000+03:00')] });
     expect(parseRussianPost(sortings, NUMBER).events!.map(event => event.time)).toEqual([
       '2026-03-10T12:01:30.000+03:00', '2026-03-10T11:40:12.000+03:00', '2026-03-10T09:01:00.000+03:00']);
+  });
+
+  it('leaves out a city the feed gives as a number alone, and lets the scan take over the row stored with it', () => {
+    const body = fixture(); Object.assign(body[0]!.trackingItem, { globalStatus: 'IN_PROGRESS', trackingHistoryItemList: [
+      { ...row(8, 4, 'Departed from local distribution center', '2026-03-10T12:01:13.000+03:00'), cityName: '63' },
+      { ...row(8, 3, 'Arrived at the local distribution center', '2026-03-10T09:01:00.000+03:00'), cityName: 'Sample City 2' }] });
+    expect(parseRussianPost(body, NUMBER).events!.map(event => event.location)).toEqual(['Russia', 'Sample City 2, Russia']);
+    expect(russianPostPlace('63, Russia')).toBe('Russia');
+    for (const location of ['Sample City, Russia', 'Sample City 2, Russia', 'Russia', '63']) expect(russianPostPlace(location)).toBe(location);
+    const policy = sameInstantIdentityPolicy('russian-post', { supportsScanMatching: true })!;
+    const stored = { stage: 'in_transit', description: 'Departed from local distribution center', location: '63, Russia', providerCode: '8.4' };
+    expect(policy.matches!({ ...stored, location: 'Russia' }, stored)).toBe(true);
+    expect(policy.matches!({ ...stored, location: 'Russia' }, { ...stored, location: 'Sample City, Russia' })).toBe(false);
+    expect(policy.matches!({ ...stored, location: 'Russia', description: 'Sorting' }, stored)).toBe(false);
   });
 
   it('reads every acceptance attribute of operation type 1 as the acceptance', () => {

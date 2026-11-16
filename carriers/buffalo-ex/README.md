@@ -15,9 +15,11 @@ tracker shows next to the number is not a tracking number.
 
 ## Statuses
 
-ParcelsApp relays the scan of a parcel back at a BUFFALO depot after a round as a bare
-"RETURNS", and the parcel leaves again the next morning. A rule scoped to BUFFALO and ParcelsApp
-reads it as in transit; elsewhere the word can name a return to the sender.
+ParcelsApp relays the local courier's round as "SCAN VEHICLE DEPARTURE" early in the morning,
+and the parcel back at the depot that evening as a bare "RETURNS"; it leaves again on the next
+round. Rules scoped to BUFFALO and ParcelsApp read the departure as out for delivery and the return
+as in transit; elsewhere a vehicle can leave for another depot, and the word can name a return to
+the sender.
 
 ## Links
 

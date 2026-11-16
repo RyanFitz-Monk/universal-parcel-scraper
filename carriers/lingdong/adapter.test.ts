@@ -7,7 +7,7 @@ import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, LingdongTracker } from './adapter.js';
 import { LINGDONG_ORIGIN, parseLingdongPage, parseLingdongTrack, repeatsLingdongRow } from './parser.js';
-import { statusMap } from './status.js';
+import { lingdongEnglish, statusMap } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
 import carrier from './carrier.json' with { type: 'json' };
 
@@ -85,6 +85,28 @@ describe('Lingdong International tracking adapter', () => {
     // A headline whose fuller row gives another stage, or a headline the map does not know, stays its own row.
     expect(repeatsLingdongRow('In consegna', 'In consegna, la spedizione è stata consegnata')).toBe(false);
     expect(repeatsLingdongRow('Synthetic', 'Synthetic, the same')).toBe(false);
+  });
+
+  it('shows the English half of a row worded in Chinese and then in English, staged by the whole row', () => {
+    const payload = structuredClone(fixture('track')) as Array<{ data: Array<{ trackDetails: Array<Record<string, string>> }> }>;
+    const details = payload[0]!.data[0]!.trackDetails;
+    const row = (content: string, date: string) => ({ ...details[0]!, track_content: content, track_kind: '', track_location: '',
+      track_date: date, track_createdate: date });
+    details.unshift(row('航班抵达【Flight arrival】', '2026-03-05 10:00:00'), row('预计11.9航班/Scheduled flight on November 9st', '2026-03-05 09:00:00'));
+    const events = parseLingdongTrack(payload, NUMBER, Date.parse('2026-03-05T06:00:00Z'))!.events ?? [];
+    expect(events.slice(0, 2).map(({ description, stage, stage_source }) => [description, stage, stage_source])).toEqual([
+      ['Flight arrival', 'in_transit', 'carrier_map'],
+      ['Scheduled flight on November 9st', 'in_transit', 'carrier_map'],
+    ]);
+    // The app reads the English half shown alone by the same map.
+    for (const description of ['Flight arrival', 'Scheduled flight on November 9st', 'Flight scheduled for October 28th', 'Expect flight 30th.',
+      'Received by local delivery company']) {
+      expect(statusMapAnswer({ carrier: 'lingdong', providerCode: null, description }), description).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    }
+    // A row in one language, or whose halves are not Chinese and then English, is shown whole.
+    for (const wording of ['货物电子信息已经收到', 'Shipment arrived at facility', 'Example/Sample', '示例/示例', 'Example 示例/Sample', '示例【示例】']) {
+      expect(lingdongEnglish(wording), wording).toBeUndefined();
+    }
   });
 
   it('reads Poste Italiane’s relayed scans on Beijing time, the clock the platform writes them on', () => {

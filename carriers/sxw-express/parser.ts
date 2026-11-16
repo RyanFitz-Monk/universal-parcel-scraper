@@ -1,5 +1,5 @@
 import type { HualeiTenant } from '../gzyl/hualei.js';
-import { sxwStage } from './status.js';
+import { sxwEnglish, sxwStage } from './status.js';
 
 export const PROVIDER = 'SXW Express';
 export const SXW_ORIGIN = 'http://www.sxwexpress.cn:8082';
@@ -9,6 +9,6 @@ export const SXW_ORIGIN = 'http://www.sxwexpress.cn:8082';
  * the United States, which the tracker names no channel for.
  */
 export const SXW: HualeiTenant = {
-  carrier: 'sxw-express', provider: PROVIDER, origin: SXW_ORIGIN, stage: sxwStage,
+  carrier: 'sxw-express', provider: PROVIDER, origin: SXW_ORIGIN, stage: sxwStage, english: sxwEnglish,
   ownNumber: /^SXW\d{12}$/, unlabelledPartners: ['gofo'],
 };
