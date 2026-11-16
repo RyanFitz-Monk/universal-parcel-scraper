@@ -1,7 +1,7 @@
 # Project instructions
 
 - This is open source. Whatever a public source shows may go in the repository with the source's URL: a tracking number, its postcode, a tracking link, the carrier's reply. Everything from production and other private environments stays out of repository files, comments, commit messages and issues: users' numbers, postcodes and links, database rows, logs, internal hosts and secrets. Sentry, Loki and the other debugging tools may receive production data. Live tests read private inputs from outside Git.
-- After a requested change, validate, stage the relevant files, commit and push directly to `main`. Do not create a branch or pull request unless explicitly requested.
+- After a requested change, validate, stage the relevant files, commit and push directly to `main`. Do not create a branch or pull request unless explicitly requested. A commit made for a GitHub issue names it in its message, as `#20`, so the issue lists the commit.
 - Before pushing, confirm no secrets or unrelated generated artifacts are included.
 - Never import from an app or framework. Browser exports must remain free of Node runtime imports. Resolve assets against their module, not the consumer's working directory.
 - Public exports, result fields, error kinds, carrier ids, provider names and data schemas follow semver. Fixes are patches; additive changes are minor; removals, renames and new stages are major. Until 1.0.0 breaking changes raise the minor version. Do not rename ids or stages in place.
