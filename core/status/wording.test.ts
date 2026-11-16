@@ -1034,6 +1034,8 @@ describe('classifyWording', () => {
       ['Send item abroad (EDI-received)', 'in_transit'], ['Send item to destination country', 'in_transit'],
       ['Item received at office of exchange (Inb)', 'in_transit'], ['Receive item at office of exchange (Otb)', 'in_transit'],
       ['Send item to domestic location (Inb)', 'in_transit'],
+      // Russian Post's bagging as ParcelsApp relays it, and the despatch beside it.
+      ['Insert item into bag (Otb)', 'in_transit'], ['Insert item into bag (Otb) and Send item abroad ', 'in_transit'],
       // YunExpress's export declaration in China, as its own map reads it.
       ['The country of origin commences customs declaration.', 'in_transit'],
       // An export clearance started or under way is a routine step before the flight; a hold there is customs.
