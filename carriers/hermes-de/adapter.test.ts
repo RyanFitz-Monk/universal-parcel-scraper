@@ -106,11 +106,13 @@ describe('Hermes Germany', () => {
         { parcelStatus: 'INTERNATIONAL_ARRIVED_IN_COUNTRY', timestamp: at(7),
           historyText: 'Die Sendung ist im Zielland Spanien angekommen und wird für den weiteren Versand vorbereitet.' },
         { parcelStatus: 'INTERNATIONAL_SORTED', timestamp: at(8), historyText: 'Die Sendung wurde in EXEMPLEVILLE für den Weiterversand vorbereitet (Frankreich).' },
+        // A return on its way back is placed like the parcel was.
+        { parcelStatus: 'RETOURE_SORTED', timestamp: at(9), historyText: 'Die Retoure wurde in Beispielburg für den Weiterversand vorbereitet.' },
       ],
     }], NUMBER);
     expect(german.events?.map((event) => event.location ?? null).reverse()).toEqual([
       'Beispielburg, Germany', 'Musterhausen, Germany', null, 'Neu-Beispielburg, Germany', 'Musterstadt, Germany',
-      'Bad Beispiel am See, Germany', 'Spanien', 'EXEMPLEVILLE, Frankreich',
+      'Bad Beispiel am See, Germany', 'Spanien', 'EXEMPLEVILLE, Frankreich', 'Beispielburg, Germany',
     ]);
   });
 
@@ -161,6 +163,7 @@ describe('Hermes Germany', () => {
     ['RETURN_TO_SENDER', 'returned'],
     ['RETURN_DELIVERED_TO_SENDER', 'returned'],
     ['RETOURE_DELIVERED', 'returned'],
+    ['RETOURE_SORTED', 'returned'],
     ['DELIVERY_FAILED', 'failed_attempt'],
     ['READY_FOR_PICKUP', 'ready_for_pickup'],
   ])('does not confuse %s with delivery', (code, stage) => {

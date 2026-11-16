@@ -114,7 +114,7 @@ const DEPOT_PLACES = [
   /\bprepared in (.+?) for further shipping\b/i,
   /\barrived in the destination region (.+?)\.?$/i,
   /^Die Sendung wurde von Hermes in (.+?) übernommen\b/i,
-  /^Die Sendung wurde in (.+?) für den Weiterversand vorbereitet\b/i,
+  /^Die (?:Sendung|Retoure) wurde in (.+?) für den Weiterversand vorbereitet\b/i,
   /\bin der Zielregion (.+?) angekommen\b/i,
 ];
 const COUNTRY_PLACES = [

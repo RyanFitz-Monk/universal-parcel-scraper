@@ -309,6 +309,13 @@
       "note": "Returned to sender"
     },
     {
+      "code": "RETOURE_SORTED",
+      "stage": "returned",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The return prepared at a hub for its way back to the sender (Die Retoure wurde in … für den Weiterversand vorbereitet)."
+    },
+    {
       "code": "EDL_BOOKED_DROPOFF",
       "confirmedBy": "official-doc",
       "firstSeen": "2026-09-08",

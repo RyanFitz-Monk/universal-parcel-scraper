@@ -92,6 +92,8 @@ export const STATUSES: Record<string, Milestone> = {
   RETURN_DELIVERED_TO_SENDER: milestone('returned', 'exception', 'Returned to sender'),
   RETURN: milestone('returned', 'exception', 'Returning to sender'),
   RETOURE_DELIVERED: milestone('returned', 'exception', 'Returned to sender'),
+  // The return prepared at a hub for its way back, "Die Retoure wurde in … für den Weiterversand vorbereitet".
+  RETOURE_SORTED: milestone('returned', 'exception', 'Return sorted on its way to the sender'),
 };
 
 // Delivery preference bookings (a safe place, a ParcelShop, a delivery day) record the
