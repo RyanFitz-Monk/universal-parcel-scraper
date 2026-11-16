@@ -26,9 +26,12 @@ verification is not solved within a probe's budget, and most twelve-digit number
 be asked about belong to FedEx, which issues the same shape.
 
 The legacy image endpoint does not supply the page's plain-code challenge. Mobile
-H5 tracking requires a signed-in ZTO account, and the Android app
-(`cn.beekee.zhongtong`) protects its request implementation. The unauthenticated
-ZTO International route does not establish domestic shipment ownership.
+H5 tracking requires a signed-in ZTO account. The
+[Android app](https://www.zto.com/) (`cn.beekee.zhongtong`) also gates its native
+waybill-detail screen on saved login state. Its `getBill` history, order details
+and phone verification belong to that account flow; they are separate from the
+public PC tracker. The unauthenticated ZTO International route does not establish
+domestic shipment ownership.
 
 ## Testing
 
