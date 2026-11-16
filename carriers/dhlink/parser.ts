@@ -237,11 +237,17 @@ function roundDelivery(event: CarrierEvent): string | null {
   return typeof event.time === 'string' ? uspsRoundDelivery(event.description ?? '', event.time.slice(0, 10)) : null;
 }
 
-/** The last leg, when its number's whole layout is one the table maps. */
-function lastLeg(entry: Record<string, unknown>): { leg: (typeof DHLINK_LAST_LEGS)[number]; number: string } | null {
-  const number = normalizeTrackingNumber(text(entry, 'lastTurnNo', 64));
+type Leg = { leg: (typeof DHLINK_LAST_LEGS)[number]; number: string };
+
+/** The partner whose layout the whole number has. */
+function legOf(number: string): Leg | null {
   const leg = number ? DHLINK_LAST_LEGS.find((candidate) => candidate.number.test(number)) : undefined;
   return leg ? { leg, number } : null;
+}
+
+/** The last leg, when its number's whole layout is one the table maps. */
+function lastLeg(entry: Record<string, unknown>): Leg | null {
+  return legOf(normalizeTrackingNumber(text(entry, 'lastTurnNo', 64)));
 }
 
 /**
@@ -296,6 +302,10 @@ export function parseDhlink(payload: unknown, raw: string, readAt = Date.now()):
   // DHLink writes Britain's code as UK.
   const destination = code === 'UK' ? 'GB' : code;
   const last = lastLeg(entry);
+  // The partner delivers under the last leg's number, which can be the number asked. A parcel
+  // with none can carry the partner's own number as its tracking number, as SwiftX's do: DHLink
+  // relays them under it, and their scans keep the clock a parcel with no known last leg has.
+  const partner = text(entry, 'lastTurnNo', 64) ? last : legOf(tracking);
   // Newest first, as the tracking page lists them; the clocks sort as written.
   const dated = [...scans.values()].sort((left, right) => (left.stamp < right.stamp ? 1 : left.stamp > right.stamp ? -1 : 0))
     .map((scan) => {
@@ -368,7 +378,7 @@ export function parseDhlink(payload: unknown, raw: string, readAt = Date.now()):
     ...(newest.local_time ? { last_update_local: newest.local_time } : {}),
     expected_delivery: round,
     ...(stage === 'delivered' && newest.stage === 'delivered' && newest.time ? { delivered_at: newest.time } : {}),
-    ...(last && ![number, tracking, own].includes(last.number) ? { delivery_carrier: last.leg.carrier, delivery_tracking_number: last.number } : {}),
+    ...(partner ? { delivery_carrier: partner.leg.carrier, delivery_tracking_number: partner.number } : {}),
     ...(COUNTRY.test(destination) ? { destination_country: destination } : {}),
     events: events.slice(0, MAX_EVENTS),
     ...(events.length > MAX_EVENTS ? { history_truncated: true } : {}),

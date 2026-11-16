@@ -72,6 +72,22 @@ describe('DHLink HTTP adapter', () => {
     expect(deliveryHandoff('dhlink', WAREHOUSE, result)).toEqual({ carrier: 'swiftx', number: 'SWX990000000000000001', basis: 'partner' });
   });
 
+  it('names the partner under its own number when the parcel carries it, keeping the clocks of a parcel with no last leg', () => {
+    const swiftx = 'SWX990000000000000002';
+    const result = parseDhlink(changed('usps-relayed', (parcel) => { parcel.trackno = swiftx; }), swiftx, LATER);
+    expect(result).toMatchObject({ delivery_carrier: 'swiftx', delivery_tracking_number: swiftx });
+    expect(result.events).toEqual(parseDhlink(fixture('usps-relayed'), LINE, LATER).events);
+    // A host that filed the parcel under SwiftX reads DHLink's answer as an earlier leg of it, not as another carrier's.
+    expect(deliveryHandoff('dhlink', swiftx, result)).toEqual({ carrier: 'swiftx', number: swiftx, basis: 'partner' });
+    // The last leg's number asked names the leg too.
+    const lastAsked = parseDhlink(changed('swiftx-at-warehouse', (parcel) => { parcel.trackno = 'SWX990000000000000001'; }), 'SWX990000000000000001', LATER);
+    expect(lastAsked).toMatchObject({ delivery_carrier: 'swiftx', delivery_tracking_number: 'SWX990000000000000001' });
+    expect(lastAsked.events).toEqual(parseDhlink(fixture('swiftx-at-warehouse'), WAREHOUSE, LATER).events);
+    // A last leg in no layout is the partner, so the parcel's own number names no one.
+    const otherLeg = parseDhlink(changed('usps-relayed', (parcel) => { parcel.trackno = swiftx; parcel.lastTurnNo = '9400100000000000000001'; }), swiftx, LATER);
+    expect([otherLeg.delivery_carrier, otherLeg.delivery_tracking_number]).toEqual([undefined, undefined]);
+  });
+
   it('reads a line’s order or a partner’s label after DHLink took the parcel as no step back', async () => {
     const row = (trackTime: string, info: string) => ({ trackTime, createDate: null, place: null, info, nodeCode: null, nodeName: null });
     const envelope = changed('swiftx-at-warehouse', (parcel) => {

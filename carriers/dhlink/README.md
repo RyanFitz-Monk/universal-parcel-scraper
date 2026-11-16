@@ -16,7 +16,8 @@ page makes.
 
 - The lookup finds a parcel by its tracking number. A DHLink number (FC and thirteen digits)
   finds it only when it is also the tracking number, as on DHLink's own line; the last leg's
-  number finds nothing. A line provider's number can be the tracking number: `XZG`, nine
+  number finds nothing unless the parcel carries it as its tracking number, as parcels under
+  SwiftX's own number do. A line provider's number can be the tracking number: `XZG`, nine
   digits and `WL` is one; `YLUS` and ten digits, `QH`, twelve digits and `FS`, and `YF`, ten
   digits and `CN`, on US lines GOFO delivers, `EYT`, ten digits and `HZ`, and KTD's `KTDWE`
   and ten digits, on lines SwiftX delivers, and `YHKJ` and ten digits, on a line to Britain,
@@ -62,15 +63,15 @@ page makes.
   such as China Post's once the warehouse sent it off, is transit.
 - Clocks have no offset. DHLink records each row on Beijing time (`createDate`), seconds after
   the clock of a row scanned in China. A scan with a place in China is read on Beijing time.
-  So is every scan of a parcel whose last leg is GOFO or SwiftX: DHLink relays their scans on
-  its own clock, however late it records them. GOFO's own feed gives the same instants, and
-  SwiftX's rounds and deliveries are recorded before a US reading of their clocks. DHLink's own
-  row of GOFO's pickup (`TQ001`) is the exception when it names GOFO's hub: it is GOFO's
-  arrival there, at the hub's wall clock. A partner's copy of a scan DHLink records can come
-  too, on the partner's US clock, as SwiftX's hub scans do; a scan whose US reading is the
-  instant of another with the same wording is that copy and is dropped. With another partner or
-  none known, that other row must be read on Beijing time, as a pickup row recorded at once
-  is. UniUni's scans can come twice, on its hub's clock, often after the hub's town, and on
+  So is every scan of a parcel whose last-leg number is GOFO's or SwiftX's: DHLink relays
+  their scans on its own clock, however late it records them. GOFO's own feed gives the same
+  instants, and SwiftX's rounds and deliveries are recorded before a US reading of their
+  clocks. DHLink's own row of GOFO's pickup (`TQ001`) is the exception when it names GOFO's
+  hub: it is GOFO's arrival there, at the hub's wall clock. A partner's copy of a scan DHLink
+  records can come too, on the partner's US clock, as SwiftX's hub scans do; a scan whose US
+  reading is the instant of another with the same wording is that copy and is dropped. With
+  another partner or none known, that other row must be read on Beijing time, as a pickup row
+  recorded at once is. UniUni's scans can come twice, on its hub's clock, often after the hub's town, and on
   UTC: when a row read on UTC, before DHLink recorded either, is another's US reading to the
   second, with the same wording beside the town, the pair is one scan on that US clock and the
   UTC copy is dropped. A wording that opens with the town and state its row's place starts with
@@ -91,7 +92,11 @@ page makes.
   the number's whole layout in an explicit table: `SWX` and eighteen digits is SwiftX, `GFUS`
   and fourteen digits is GOFO, and fourteen digits from depots 0600 to 0619 is DPD
   Switzerland. Other numbers give no hand-off; parcels USPS or a post delivers give no
-  last-leg number.
+  last-leg number. The partner is named under its number even when that is the number asked,
+  so a host that filed the parcel under the partner reads DHLink's answer as an earlier leg.
+  A parcel with no last-leg number whose tracking number has a partner's layout names that
+  partner under it. SwiftX's own numbers come so, and DHLink records their scans after a US
+  reading of their clocks: they are read as a parcel's with no known last leg.
 - Places lose postcodes, placeholders such as a relayed label row's "SYSTEM", a forwarder's name a
   warehouse writes as its place (one ending in "EXP", "Express" or "Logistics") and the destination
   code feeds append to Chinese places, whether written in Chinese or as a province or city in Latin
