@@ -1,0 +1,34 @@
+{
+  "id": "esbjerg-gods",
+  "displayName": "Esbjerg Gods",
+  "aliases": [
+    "Esbjerg Gods A/S"
+  ],
+  "region": {
+    "countries": [
+      "DK"
+    ]
+  },
+  "brand": {
+    "color": "#c2122b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://t.alicetms.dk/#/Esbjerg-gods/TrackAndTrace/{trackingNumber}",
+    "searchUrl": "https://esbjerg-gods.dk/",
+    "canaryUrl": "https://t.alicetms.dk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

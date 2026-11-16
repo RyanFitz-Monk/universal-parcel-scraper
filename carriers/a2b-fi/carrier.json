@@ -1,0 +1,44 @@
+{
+  "id": "a2b-fi",
+  "displayName": "A2B",
+  "aliases": [
+    "A to B Finland Oy"
+  ],
+  "region": {
+    "countries": [
+      "FI"
+    ]
+  },
+  "brand": {
+    "color": "#00398e"
+  },
+  "selectable": true,
+  "timezone": "Europe/Helsinki",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://a2bfi.opter.cloud/TT?keyword={trackingNumber}",
+    "searchUrl": "https://a2bfi.opter.cloud/TT",
+    "canaryUrl": "https://a2bfi.opter.cloud/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "a2bfi.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "apollo-budbiler",
+  "displayName": "Apollo Budbiler",
+  "aliases": [
+    "Apollo Budbiler AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#e9540d"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://apollono.opter.cloud/TT?keyword={trackingNumber}",
+    "searchUrl": "https://apollono.opter.cloud/TT",
+    "canaryUrl": "https://apollono.opter.cloud/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "apollono.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

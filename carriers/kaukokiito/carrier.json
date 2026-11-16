@@ -1,0 +1,44 @@
+{
+  "id": "kaukokiito",
+  "displayName": "Kaukokiito",
+  "aliases": [
+    "Kaukokiito Oy"
+  ],
+  "region": {
+    "countries": [
+      "FI"
+    ]
+  },
+  "brand": {
+    "color": "#002c77"
+  },
+  "selectable": true,
+  "timezone": "Europe/Helsinki",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.kaukokiito.fi/kuljetuspalvelut/lahetysten-seuranta/?query={trackingNumber}&type=Cmr",
+    "searchUrl": "https://www.kaukokiito.fi/kuljetuspalvelut/lahetysten-seuranta/",
+    "canaryUrl": "https://www.kaukokiito.fi/kuljetuspalvelut/lahetysten-seuranta/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "kaukokiito.fi"
+      ],
+      "pathPattern": "^/kuljetuspalvelut/lahetysten-seuranta/?$",
+      "params": [
+        "query"
+      ]
+    }
+  ],
+  "detection": []
+}

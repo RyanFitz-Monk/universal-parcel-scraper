@@ -1,0 +1,33 @@
+{
+  "id": "ramberg",
+  "displayName": "Ramberg",
+  "aliases": [
+    "B.H. Ramberg AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#a90733"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.ramberg.no/sporing/",
+    "canaryUrl": "https://www.ramberg.no/sporing/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

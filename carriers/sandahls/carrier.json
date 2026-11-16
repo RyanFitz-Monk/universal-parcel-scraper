@@ -1,0 +1,46 @@
+{
+  "id": "sandahls",
+  "displayName": "Sandahls",
+  "aliases": [
+    "Sandahlsbolagen",
+    "Sandahlsbolagen Sweden AB",
+    "Sandahls Logistik"
+  ],
+  "region": {
+    "countries": [
+      "SE"
+    ]
+  },
+  "brand": {
+    "color": "#e30613"
+  },
+  "selectable": true,
+  "timezone": "Europe/Stockholm",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://portal.sandahlsbolagen.se/opter/TT?keyword={trackingNumber}",
+    "searchUrl": "https://portal.sandahlsbolagen.se/opter/TT",
+    "canaryUrl": "https://portal.sandahlsbolagen.se/opter/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "portal.sandahlsbolagen.se"
+      ],
+      "pathPattern": "^/opter/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

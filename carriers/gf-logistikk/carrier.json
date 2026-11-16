@@ -1,0 +1,42 @@
+{
+  "id": "gf-logistikk",
+  "displayName": "GF Logistikk",
+  "aliases": [
+    "GF Logistikk AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#c11923"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://pda.gfedi.net/rcserver?o=900&SP=401{trackingNumber}",
+    "searchUrl": "https://gfas.no/",
+    "canaryUrl": "https://pda.gfedi.net/rcserver",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "pda.gfedi.net"
+      ],
+      "pathPattern": "^/rcserver$",
+      "query": "^(?=(?:.*&)?o=900(?:&|$))(?:.*&)?SP=401([^&]+)(?=&|$)"
+    }
+  ],
+  "detection": []
+}

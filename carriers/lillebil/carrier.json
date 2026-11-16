@@ -1,0 +1,44 @@
+{
+  "id": "lillebil",
+  "displayName": "Lillebil",
+  "aliases": [
+    "Lillebil AB"
+  ],
+  "region": {
+    "countries": [
+      "SE"
+    ]
+  },
+  "brand": {
+    "color": "#fdc500"
+  },
+  "selectable": true,
+  "timezone": "Europe/Stockholm",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://kundportal.lillebil.se/opter/TT?keyword={trackingNumber}",
+    "searchUrl": "https://kundportal.lillebil.se/opter/TT",
+    "canaryUrl": "https://kundportal.lillebil.se/opter/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "kundportal.lillebil.se"
+      ],
+      "pathPattern": "^/opter/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

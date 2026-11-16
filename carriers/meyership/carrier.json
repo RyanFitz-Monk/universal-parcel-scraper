@@ -1,0 +1,44 @@
+{
+  "id": "meyership",
+  "displayName": "Meyership",
+  "aliases": [
+    "Meyership AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#001d63"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://kundeportal.meyership.no/ms/opter/TT?keyword={trackingNumber}",
+    "searchUrl": "https://kundeportal.meyership.no/ms/opter/TT",
+    "canaryUrl": "https://kundeportal.meyership.no/ms/opter/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "kundeportal.meyership.no"
+      ],
+      "pathPattern": "^/ms/opter/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

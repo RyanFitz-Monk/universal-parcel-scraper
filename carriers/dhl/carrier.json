@@ -3,7 +3,8 @@
   "displayName": "DHL",
   "aliases": [
     "DHL Paket",
-    "Deutsche Post DHL"
+    "Deutsche Post DHL",
+    "Deutsche Post"
   ],
   "region": {
     "countries": [

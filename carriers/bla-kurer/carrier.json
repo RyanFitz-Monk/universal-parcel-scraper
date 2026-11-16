@@ -1,0 +1,44 @@
+{
+  "id": "bla-kurer",
+  "displayName": "Blå Kurér",
+  "aliases": [
+    "Blå Kurér AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#001c37"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://blakurerno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://blakurerno.opter.cloud/tt",
+    "canaryUrl": "https://blakurerno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "blakurerno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

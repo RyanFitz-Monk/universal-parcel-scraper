@@ -1,0 +1,44 @@
+{
+  "id": "kurer-as",
+  "displayName": "Kurér",
+  "aliases": [
+    "Kurér AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#f38601"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://opter.kurer.no/opter/tt?keyword={trackingNumber}",
+    "searchUrl": "https://opter.kurer.no/opter/tt",
+    "canaryUrl": "https://opter.kurer.no/opter/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "opter.kurer.no"
+      ],
+      "pathPattern": "^/opter/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

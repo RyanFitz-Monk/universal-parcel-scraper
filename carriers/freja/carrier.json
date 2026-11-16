@@ -1,0 +1,39 @@
+{
+  "id": "freja",
+  "displayName": "FREJA",
+  "aliases": [
+    "FREJA Transport & Logistics A/S",
+    "FREJA Transport & Logistics"
+  ],
+  "region": {
+    "countries": [
+      "DK",
+      "SE",
+      "NO",
+      "FI",
+      "PL"
+    ]
+  },
+  "brand": {
+    "color": "#d4181f"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://en.freja.com/online-services/track-and-trace-road/?{trackingNumber}",
+    "searchUrl": "https://en.freja.com/online-services/track-and-trace-road/",
+    "canaryUrl": "https://en.freja.com/online-services/track-and-trace-road/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

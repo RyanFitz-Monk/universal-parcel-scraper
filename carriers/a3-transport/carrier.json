@@ -1,0 +1,44 @@
+{
+  "id": "a3-transport",
+  "displayName": "A3 Transport",
+  "aliases": [
+    "A3 Transport AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#002e51"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://a3transportno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://a3transportno.opter.cloud/tt",
+    "canaryUrl": "https://a3transportno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "a3transportno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

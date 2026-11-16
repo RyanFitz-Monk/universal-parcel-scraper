@@ -1,0 +1,46 @@
+{
+  "id": "interfjord",
+  "displayName": "Interfjord",
+  "aliases": [
+    "INTERFJORD A/S"
+  ],
+  "region": {
+    "countries": [
+      "DK",
+      "NO",
+      "PL"
+    ]
+  },
+  "brand": {
+    "color": "#4c565d"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.interfjord.dk/?track={trackingNumber}",
+    "searchUrl": "https://tracking.interfjord.dk/",
+    "canaryUrl": "https://tracking.interfjord.dk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.interfjord.dk"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "track"
+      ]
+    }
+  ],
+  "detection": []
+}

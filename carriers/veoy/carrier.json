@@ -1,0 +1,34 @@
+{
+  "id": "veoy",
+  "displayName": "Veøy",
+  "aliases": [
+    "Veøy AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#002957"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://login.smartsys.no/smartTrackAndTrace/PublicTrackAndTrace?TenantGUID=ad936210-03b6-4ca7-9776-a491c03d4ba6&SearchFor={trackingNumber}",
+    "searchUrl": "https://login.smartsys.no/smartTrackAndTrace/PublicTrackAndTrace?TenantGUID=ad936210-03b6-4ca7-9776-a491c03d4ba6",
+    "canaryUrl": "https://login.smartsys.no/smartTrackAndTrace/PublicTrackAndTrace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

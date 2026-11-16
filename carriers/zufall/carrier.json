@@ -1,0 +1,34 @@
+{
+  "id": "zufall",
+  "displayName": "ZUFALL",
+  "aliases": [
+    "ZUFALL logistics group",
+    "Friedrich Zufall GmbH & Co. KG"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#006eb6"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://connect.zufall.de/Track/",
+    "canaryUrl": "https://connect.zufall.de/Track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

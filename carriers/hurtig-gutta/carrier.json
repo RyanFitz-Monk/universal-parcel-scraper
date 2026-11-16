@@ -1,0 +1,44 @@
+{
+  "id": "hurtig-gutta",
+  "displayName": "Hurtig-Gutta",
+  "aliases": [
+    "Hurtig-Gutta Transport AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#d2232a"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://hurtigguttano.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://hurtigguttano.opter.cloud/tt",
+    "canaryUrl": "https://hurtigguttano.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "hurtigguttano.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

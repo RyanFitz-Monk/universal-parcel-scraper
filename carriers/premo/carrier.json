@@ -1,0 +1,44 @@
+{
+  "id": "premo",
+  "displayName": "Premo",
+  "aliases": [
+    "Pressen Morgontjänst KB"
+  ],
+  "region": {
+    "countries": [
+      "SE"
+    ]
+  },
+  "brand": {
+    "color": "#670067"
+  },
+  "selectable": true,
+  "timezone": "Europe/Stockholm",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.premo.se/paketsparning?id={trackingNumber}",
+    "searchUrl": "https://www.premo.se/paketsparning",
+    "canaryUrl": "https://www.premo.se/paketsparning",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "premo.se"
+      ],
+      "pathPattern": "^/paketsparning/?$",
+      "params": [
+        "id"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "pakettipiste",
+  "displayName": "Pakettipiste",
+  "aliases": [
+    "Lehtipiste Oy"
+  ],
+  "region": {
+    "countries": [
+      "FI"
+    ]
+  },
+  "brand": {
+    "color": "#005cf9"
+  },
+  "selectable": true,
+  "timezone": "Europe/Helsinki",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://pakettipisteseuranta.r2web.fi/?tid={trackingNumber}",
+    "searchUrl": "https://pakettipisteseuranta.r2web.fi/",
+    "canaryUrl": "https://pakettipisteseuranta.r2web.fi/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "pakettipisteseuranta.r2web.fi"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "tid"
+      ]
+    }
+  ],
+  "detection": []
+}

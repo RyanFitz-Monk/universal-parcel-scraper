@@ -1,0 +1,42 @@
+{
+  "id": "smafrakt",
+  "displayName": "Småfrakt",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "SE"
+    ]
+  },
+  "brand": {
+    "color": "#0e7f40"
+  },
+  "selectable": true,
+  "timezone": "Europe/Stockholm",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://smafraktse.opter.cloud/TT?keyword={trackingNumber}",
+    "searchUrl": "https://smafraktse.opter.cloud/TT",
+    "canaryUrl": "https://smafraktse.opter.cloud/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "smafraktse.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}
