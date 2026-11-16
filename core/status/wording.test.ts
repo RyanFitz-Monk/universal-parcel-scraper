@@ -1206,12 +1206,14 @@ describe('classifyWording', () => {
       // signing for it as the recipient's signer, and a pickup point sending back a parcel nobody collected.
       ['已代收', 'ready_for_pickup'], ['包裹已代收', 'ready_for_pickup'], ['代收点签收', 'delivered'], ['代收點簽收', 'delivered'],
       ['派送失敗:由自提點退件', 'returned'], ['派送失败：由自提点退件', 'returned'],
+      // Receipt confirmed on the order, as ParcelsApp relays JD's.
+      ['已确认收货', 'delivered'], ['您的订单已确认收货，感谢您的购物', 'delivered'], ['系统已自动确认收货', 'delivered'], ['已確認收貨', 'delivered'],
     ] as const) expect(classifyWording(wording, 'pending'), wording).toEqual({ stage, source: 'wording:language' });
     // A centre sending the item back, a return under way, a note about after the signature, an abnormal
     // signature, a parcel waiting for a courier, a courier's pickup from the sender and cash on delivery
     // are no final scan.
     for (const wording of ['【示例市处理中心】退回', '退回中', '签收后第一时间开箱', 'PDA异常签收扫描',
-      '待签收', '待取件', '已出库待取件', '京东快件已取件', '寄件人已修改寄件信息，预计取件时间是：2026-01-02', '已下单，待取件', '代收货款', '如需退回请联系派件员',
+      '待签收', '待取件', '已出库待取件', '待确认收货', '未确认收货', '请确认收货', '京东快件已取件', '寄件人已修改寄件信息，预计取件时间是：2026-01-02', '已下单，待取件', '代收货款', '如需退回请联系派件员',
       '範例中心國際快捷股, 到達出口互換局, 後續處理方式:退回', '签收人：示例', '开始长途运输前请确认地址', 'Landed in 3 days?',
       // Nor is an arrival at the hub in brackets.
       '包裹已送達【示例】物流中心，進行理貨轉運中', '快件已送达【示例分拨中心】', '您的快件已送达【示例转运中心】，准备发往下一站']) {

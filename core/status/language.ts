@@ -336,6 +336,9 @@ const ZH_FINAL: ReadonlyArray<readonly [RegExp, Stage]> = [
   // handed over ("已送达"). "未妥投", "请签收" and "签收后" are not deliveries, nor is an arrival at the
   // place in brackets ("已送达【…转运中心】").
   [new RegExp(String.raw`${ZH_LEAD}${ZH_SIGNED}${ZH_END}|${ZH_LEAD}已[经經]?送[达達](?! ?【)${ZH_END}|${ZH_LEAD}(?:投[递遞]|派送|配送)成功${ZH_END}`), 'delivered'],
+  // Receipt confirmed on the order, by the buyer or by the shop's system after the delivery, as ParcelsApp relays
+  // JD's "已确认收货". Receipt still to confirm ("待确认收货") is not one.
+  [new RegExp(String.raw`${ZH_LEAD}(?:买家|買家|客户|客戶|收件人|系[统統])?已[经經]?(?:自[动動])?(?:确认|確認)收[货貨]${ZH_END}`), 'delivered'],
 ];
 
 /** The stage of a Chinese final scan, or undefined for other wording. */
