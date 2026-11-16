@@ -1,0 +1,112 @@
+{
+  "yal-ZQ8H7J": [
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mercredi 10 décembre à 13:39",
+      "datetime": "2025-12-10 13:39:39",
+      "status": "Livré",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mercredi 10 décembre à 08:55",
+      "datetime": "2025-12-10 08:55:36",
+      "status": "Sorti en livraison",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mercredi 10 décembre à 08:53",
+      "datetime": "2025-12-10 08:53:28",
+      "status": "En localisation",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mercredi 10 décembre à 08:39",
+      "datetime": "2025-12-10 08:39:28",
+      "status": "Prêt pour livreur",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mardi 09 décembre à 16:13",
+      "datetime": "2025-12-09 16:13:24",
+      "status": "Reçu à Wilaya",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mardi 09 décembre à 16:02",
+      "datetime": "2025-12-09 16:02:01",
+      "status": "Vers Wilaya",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mardi 09 décembre à 14:59",
+      "datetime": "2025-12-09 14:59:50",
+      "status": "Centre",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mardi 09 décembre à 08:29",
+      "datetime": "2025-12-09 08:29:42",
+      "status": "En attente du client",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "mardi 09 décembre à 03:19",
+      "datetime": "2025-12-09 03:19:17",
+      "status": "Centre",
+      "wilaya": "Béjaïa",
+      "commune": "Akbou",
+      "centre": "Agence de Akbou [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "lundi 08 décembre à 17:57",
+      "datetime": "2025-12-08 17:57:13",
+      "status": "Vers Wilaya",
+      "wilaya": "Alger",
+      "commune": "Bordj El Bahri",
+      "centre": "Agence Bordj El Bahri (Café Chergui) [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "lundi 08 décembre à 17:28",
+      "datetime": "2025-12-08 17:28:32",
+      "status": "Expédié",
+      "wilaya": "Alger",
+      "commune": "Bordj El Bahri",
+      "centre": "Agence Bordj El Bahri (Café Chergui) [Yalidine]"
+    },
+    {
+      "tracking": "yal-ZQ8H7J",
+      "date": "lundi 08 décembre à 10:42",
+      "datetime": "2025-12-08 10:42:09",
+      "status": "En préparation",
+      "wilaya": null,
+      "commune": null,
+      "centre": null
+    }
+  ]
+}

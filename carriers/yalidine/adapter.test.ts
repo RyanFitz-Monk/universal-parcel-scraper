@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { TrawlClient } from '../../core/transport/trawl.js';
+import { YALIDINE_MOBILE } from './mobile.js';
 import { adapter, YALIDINE_PAGE, YalidineTracker } from './adapter.js';
 
 const NUMBER = 'YALZQ8H7J', SERVICE = 'https://trawl.invalid';
@@ -17,7 +18,8 @@ const bootstrap = (extra: Record<string, unknown> = {}) => page(`<body><input ty
 function harness(...replies: Response[]) {
   const fetcher = vi.fn<typeof fetch>(); for (const reply of replies) fetcher.mockResolvedValueOnce(reply);
   const recorder = { ...NOOP_RECORDER, step: vi.fn(), lookup: vi.fn() };
-  return { fetcher, recorder, tracker: new YalidineTracker({ fetcher, recorder, trawl: new TrawlClient(SERVICE) }) };
+  const transport: typeof fetch = (url, init) => String(url).startsWith(YALIDINE_MOBILE) ? Promise.resolve(response({}, 403)) : fetcher(url, init);
+  return { fetcher, transport, recorder, tracker: new YalidineTracker({ fetcher: transport, recorder, trawl: new TrawlClient(SERVICE) }) };
 }
 
 describe('Yalidine verified guest retrieval', () => {
@@ -35,7 +37,7 @@ describe('Yalidine verified guest retrieval', () => {
     expect(`${JSON.stringify(result)}${JSON.stringify(h.recorder.step.mock.calls)}`).not.toContain(SECRET);
     expect(JSON.stringify(result)).not.toContain(COOKIE);
     expect(h.recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'trawl', outcome: 'ok' }));
-    expect(h.recorder.lookup).toHaveBeenCalledWith(expect.objectContaining({ attempts: 1, finalStep: 'trawl', outcome: 'ok' }));
+    expect(h.recorder.lookup).toHaveBeenCalledWith(expect.objectContaining({ attempts: 2, finalStep: 'trawl', outcome: 'ok' }));
   });
 
   it('reads a verified explicit negative and keeps generic retries as challenges', async () => {
@@ -84,8 +86,8 @@ describe('Yalidine verified guest retrieval', () => {
     expect(JSON.stringify(error)).not.toContain(COOKIE);
   });
 
-  it('requires TRAWL, reserves transport time and starts no request after cancellation', async () => {
-    await expect(new YalidineTracker().fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+  it('preserves an unrecovered challenge without TRAWL, reserves transport time and starts no request after cancellation', async () => {
+    await expect(new YalidineTracker({ fetcher: vi.fn<typeof fetch>().mockResolvedValue(response({}, 403)) }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
     const h = harness(bootstrap(), page());
     await expect(h.tracker.fetch(NUMBER, { budgetMs: 1000 })).rejects.toMatchObject({ kind: 'budget' });
     const controller = new AbortController(); controller.abort(new Error('Cancelled'));
@@ -95,7 +97,7 @@ describe('Yalidine verified guest retrieval', () => {
 
   it('provides native tracking while HTTP recognition starts no browser flow', async () => {
     const h = harness(bootstrap(), page());
-    const native = adapter({ fetcher: h.fetcher, recorder: h.recorder, env: {}, trawl: new TrawlClient(SERVICE), browserExecutablePath: null });
+    const native = adapter({ fetcher: h.transport, recorder: h.recorder, env: {}, trawl: new TrawlClient(SERVICE), browserExecutablePath: null });
     expect(native.recognize).toBeUndefined(); expect(h.fetcher).not.toHaveBeenCalled();
     await expect(native.track({ number: NUMBER })).resolves.toMatchObject({ status: 'delivered' });
   });

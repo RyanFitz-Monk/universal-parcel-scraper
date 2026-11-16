@@ -45,8 +45,9 @@ const BUDGET_SETTLE_MS = 500;
 const HOST_USER_AGENT = 'ConformanceHost/1.0';
 /** A browser's own User-Agent, unlike a client that names itself in a `compatible` clause. */
 const BROWSER_USER_AGENT = /^Mozilla\/5\.0 \((?!compatible;)/;
-/** Carriers whose gateway answers only its own mobile app's HTTP client, with the client they name. */
+/** Carriers whose native guest request builder uses its app's HTTP client identity. */
 const APP_USER_AGENT: Readonly<Record<string, string>> = {
+  yalidine: 'Yalidine-App-Android',
   'australia-post': 'okhttp/4.12.0', 'egypt-post': 'Dart/3.9 (dart:io)', jne: 'okhttp/4.12.0', 'posta-slovenije': 'MojaPosta/2.5.0 (android)',
 };
 const BROWSER_SERVICE = 'http://trawl.invalid';
@@ -73,7 +74,6 @@ const BROWSER_ONLY: Readonly<Record<string, readonly (keyof Browsers)[]>> = {
   'j-and-t-br': ['service'],
   'costco-logistics': ['service'],
   'toyou': ['service'],
-  'yalidine': ['service'],
   'kolay-gelsin': ['service'],
   'zoom-ve': ['service'],
   'fm-transportes': ['service'],

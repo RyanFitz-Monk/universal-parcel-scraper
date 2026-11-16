@@ -2,10 +2,11 @@ import { load } from 'cheerio';
 import type { AdapterFactory, TrackingContext } from '../../core/adapter/index.js';
 import { BudgetExceededError, ChallengeError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
-import { runSteps } from '../../core/runner/index.js';
+import { runSteps, recoverableByDefault } from '../../core/runner/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient, type TrawlScrapeRequest } from '../../core/transport/trawl.js';
 import { scopedTrawlCookies, trawlPrivateScrape } from '../../core/transport/trawlPrivate.js';
+import { fetchYalidineMobile } from './mobile.js';
 import { parseYalidine, PROVIDER, YALIDINE_MAX_BYTES, yalidineRequestNumber } from './parser.js';
 
 export const YALIDINE_PAGE = 'https://www.yalidine.com/suivre-un-colis/';
@@ -17,9 +18,10 @@ export class YalidineTracker {
   async fetch(raw: string, context: TrackingContext = {}): Promise<CarrierResult> {
     context.signal?.throwIfAborted();
     const number = yalidineRequestNumber(raw);
-    if (!this.options.trawl) throw new ChallengeError(PROVIDER, 'Yalidine requires the browser tracking service');
     return runSteps({ carrier: 'yalidine', budgetMs: context.budgetMs ?? 75_000,
-      signal: context.signal, recorder: this.options.recorder ?? NOOP_RECORDER }, [{ id: 'trawl', run: async ({ signal, remainingMs }) => {
+      signal: context.signal, recorder: this.options.recorder ?? NOOP_RECORDER }, [{ id: 'direct', run: ({ signal, remainingMs }) => fetchYalidineMobile(number, { fetcher: this.options.fetcher, signal,
+        timeoutMs: this.options.trawl ? Math.min(8_000, remainingMs / 3) : Math.min(20_000, remainingMs) }) },
+    { id: 'trawl', enabled: !!this.options.trawl, recovers: error => recoverableByDefault(error) || error instanceof SchemaError, run: async ({ signal, remainingMs }) => {
       const start = performance.now();
       const read = async (request: TrawlScrapeRequest) => {
         const left = remainingMs - (performance.now() - start);
@@ -57,5 +59,5 @@ export class YalidineTracker {
 
 export const adapter: AdapterFactory = environment => {
   const tracker = new YalidineTracker({ trawl: environment.trawl, fetcher: environment.fetcher, recorder: environment.recorder });
-  return { id: 'yalidine', recordsSteps: true, steps: ['trawl'], track: (input, context) => tracker.fetch(input.number, context) };
+  return { id: 'yalidine', recordsSteps: true, steps: ['direct', 'trawl'], track: (input, context) => tracker.fetch(input.number, context) };
 };
