@@ -585,6 +585,10 @@ describe('DHLink status vocabulary', () => {
     // The last-mile carrier's facility on a US line, named by any code; another receiver is not read as one.
     expect(statusMapAnswer({ carrier: 'dhlink', providerCode: null, description: 'Parcel received by XYZ12.' })).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'dhlink', providerCode: null, description: 'Parcel received by the recipient.' })).toEqual({ kind: 'unknown' });
+    // The destination customs' inspection and hold are customs; the warehouse's stocktaking moves nothing.
+    expect(statusMapAnswer({ carrier: 'dhlink', providerCode: 'YC001', description: 'Package has been detained' })).toEqual({ kind: 'mapped', stage: 'customs' });
+    expect(statusMapAnswer({ carrier: 'dhlink', providerCode: null, description: 'Stocktaking delay' }))
+      .toEqual({ kind: 'intentional_gap', note: expect.stringMatching(/keeps the stage it had/) });
     // A clock alone names no step.
     for (const description of ['(13:05)', '( 9:40 )']) {
       expect(statusMapAnswer({ carrier: 'dhlink', providerCode: null, description }), description)

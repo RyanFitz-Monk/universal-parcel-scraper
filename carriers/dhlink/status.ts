@@ -172,6 +172,10 @@ const PATTERNS: readonly (readonly [RegExp, Stage])[] = [
   [/^航班已落地[;；]/, 'in_transit'],
   [/^拆板提货中[;；]/, 'in_transit'],
   [/^拆板清关中[;；]/, 'customs'],
+  // The destination's customs inspecting the parcel and holding it, in Chinese, and the hold in English between them.
+  [/^目的国海关查验$/, 'customs'],
+  [/^海关扣关$/, 'customs'],
+  [/^package has been detained\.?$/, 'customs'],
   [/^清关完成[,，]交仓中/, 'in_transit'],
   [/^货物已交仓[,，]/, 'in_transit'],
   [/^包裹交接给本地物流商处理/, 'in_transit'],
@@ -227,6 +231,8 @@ export function dhlinkStage(code: string, name: string, wording: string): Classi
   return worded.source === 'none' ? null : worded;
 }
 
+// The destination warehouse's stocktaking holding the parcel up: no step.
+const STOCKTAKING = /^stocktaking delay\.?$/;
 // A clock alone in brackets, written after the hand-over to the airline: it names no step.
 const CLOCK_ONLY = /^\(\s*\d{1,2}[:：]\d{2}\s*\)$/;
 
@@ -235,5 +241,6 @@ export const statusMap: CarrierStatusMap = {
   gaps: [],
   gapNote: (_code, wording) => (FLIGHT_BOOKED.test(wording)
     ? 'The flight the parcel is booked on, any date, not a movement: the adapter drops the row and the parcel keeps the stage it had.'
-    : CLOCK_ONLY.test(normalizeStatusWording(wording)) ? 'A clock alone in brackets, no wording: it names no step, so the parcel keeps the stage it had.' : undefined),
+    : CLOCK_ONLY.test(normalizeStatusWording(wording)) ? 'A clock alone in brackets, no wording: it names no step, so the parcel keeps the stage it had.'
+      : STOCKTAKING.test(normalizeStatusWording(wording)) ? 'A delay while the warehouse counts its stock, not a movement: the parcel keeps the stage it had.' : undefined),
 };
