@@ -53,6 +53,10 @@ const ABROAD = /^(?:PO\/\d{2}|PAR\/18)$/;
 // Its dispatch to Brazil, a transfer listed without a Brazilian unit before the item's first scan in Brazil. China
 // Post's history shows its dispatch at that wall clock; on Brasília's clock it would lie hours ahead when first listed.
 const TRANSFERS = new Set(['RO/01', 'DO/01']);
+// Customs' review of the declaration: the recipient's tax number asked for or under review, the information sent to
+// customs, the product's classification and the import authorized. Correios does it in Brazil, at the unit it names, while
+// the item may still be with the sending post, so these rows do not show the item reached Brazil.
+const DECLARATION_REVIEW = new Set(['FC/16', 'PAR/12', 'PAR/21', 'FC/40', 'PAR/07']);
 
 /** The Brazilian unit a row names, as "city, state", or empty. */
 function unitPlace(row: JsonObject): string {
@@ -107,9 +111,12 @@ export function parseCorreios(payload: unknown, number: string): CarrierResult {
   const originBasis = hasSeveralClocks(origin) ? 'carrier' : 'place';
   const events: CarrierEvent[] = [];
   const seen = new Set<string>();
-  // Rows are newest first: those after the oldest row naming a Brazilian unit come before the item reached Brazil.
+  // Rows are newest first: those after the oldest row naming a Brazilian unit come before the item reached Brazil. A
+  // review of the declaration is no such row.
   let inBrazil = -1;
-  payload.eventos.forEach((row, index) => { if (isRecord(row) && unitPlace(row)) inBrazil = index; });
+  payload.eventos.forEach((row, index) => {
+    if (isRecord(row) && unitPlace(row) && !DECLARATION_REVIEW.has(`${clean(row.codigo, 8)}/${clean(row.tipo, 8)}`)) inBrazil = index;
+  });
   for (const [index, row] of payload.eventos.entries()) {
     if (!isRecord(row)) throw new SchemaError('Correios', 'Correios returned an incomplete scan');
     const code = clean(row.codigo, 8);
