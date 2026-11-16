@@ -12,10 +12,10 @@ is juxiex.com, with express and postal small-parcel lines. Universal providers n
 Its waybills are JXC, two letters, ten digits and YQ. Forwarders on the Hualei (华磊) platform
 end their waybills with YQ and open them with their own code, as [GZYL](../gzyl/README.md) does,
 and Juxi Express's old tracker ran on that platform. A sample on ParcelPanel's Juxi Express page
-and parcels a universal provider files under SHJX share the layout. On two lines, coded `YI` and
-`ZO` after JXC, [DHLink](../dhlink/README.md)'s tracker knows the waybill; it does not know those
-of Juxi's other lines. So `juxi-express-2` is low confidence beside DHLink's preferred rule for
-those two codes: recognition asks DHLink, and a provider naming Juxi alone still names Juxi.
+and parcels a universal provider files under SHJX share the layout. On four lines, coded `YI`, `ZO`,
+`US` and `ZI` after JXC, [DHLink](../dhlink/README.md)'s tracker knows the waybills of the parcels
+it carries; it does not know those of Juxi's other lines. So `juxi-express-2` is low confidence
+beside DHLink's preferred rule for those codes: recognition asks DHLink, and a provider naming Juxi alone still names Juxi.
 `juxi-express-1` names Juxi for the other codes.
 
 ## Times

@@ -324,8 +324,8 @@ describe('prefixed Asian shipment references and shared numeric formats', () => 
     }
   });
 
-  it('asks DHLink first about Juxi Express waybills on the two lines its tracker knows, and no other', () => {
-    for (const number of ['JXCYI0000000001YQ', 'JXCZO0000000001YQ']) {
+  it('asks DHLink first about Juxi Express waybills on the lines its tracker knows, and no other', () => {
+    for (const number of ['JXCYI0000000001YQ', 'JXCZO0000000001YQ', 'JXCUS0000000001YQ', 'JXCZI0000000001YQ']) {
       expect(detectCarrierMatch(number), number).toMatchObject({
         carrier: 'unknown', confidence: 'low', candidates: ['dhlink', 'juxi-express'], preferred: ['dhlink'],
       });
@@ -333,7 +333,7 @@ describe('prefixed Asian shipment references and shared numeric formats', () => 
     }
     expect(detectCarrierMatch('jxczo 0000 0000 01 yq').candidates).toEqual(['dhlink', 'juxi-express']);
     // Juxi's other lines are its own: DHLink's tracker does not know them.
-    for (const number of ['JXCYT0000000001YQ', 'JXCZI0000000001YQ', 'JXCOZ0000000001YQ']) {
+    for (const number of ['JXCYT0000000001YQ', 'JXCYQ0000000001YQ', 'JXCYG0000000001YQ', 'JXCNI0000000001YQ', 'JXCOZ0000000001YQ', 'JXCSU0000000001YQ']) {
       expect(detectCarrierMatch(number), number).toMatchObject({ carrier: 'juxi-express', confidence: 'high', candidates: ['juxi-express'] });
     }
     for (const number of ['JXCZO000000001YQ', 'JXCZ0000000001YQ', 'JXCZO0000000001Y', 'JXDZO0000000001YQ', 'JXC1T0000000001YQ']) {

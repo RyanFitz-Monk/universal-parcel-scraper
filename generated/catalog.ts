@@ -18468,7 +18468,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       },
       {
-        "pattern": "^JXC(?:YI|ZO)\\d{10}YQ$",
+        "pattern": "^JXC(?:YI|ZO|US|ZI)\\d{10}YQ$",
         "confidence": "low",
         "preferred": true
       }
@@ -33111,11 +33111,11 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": [
       {
-        "pattern": "^JXC(?!YI|ZO)[A-Z]{2}\\d{10}YQ$",
+        "pattern": "^JXC(?!YI|ZO|US|ZI)[A-Z]{2}\\d{10}YQ$",
         "confidence": "high"
       },
       {
-        "pattern": "^JXC(?:YI|ZO)\\d{10}YQ$",
+        "pattern": "^JXC(?:YI|ZO|US|ZI)\\d{10}YQ$",
         "confidence": "low"
       }
     ]

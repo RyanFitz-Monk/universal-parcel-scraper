@@ -303,7 +303,7 @@
           "juxi-express"
         ]
       },
-      "note": "Made-up number in the shape of Juxi Express's waybills, on a line whose code DHLink's tracker answered: JXC, YI or ZO, ten digits and YQ. Its serial sits far beyond the range in use."
+      "note": "Made-up number in the shape of Juxi Express's waybills, on a line whose code DHLink's tracker answered: JXC, YI, ZO, US or ZI, ten digits and YQ. Its serial sits far beyond the range in use."
     }
   ]
 }
