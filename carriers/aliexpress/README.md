@@ -119,7 +119,8 @@ activity confirms the Cainiao tracking leg; an empty internal pending module doe
   after a scan and naming no delivery date, so no planned step), a changed order and a transit
   sorting center's failed inbound. When one is the newest row, the parcel's status is that of its
   newest scan with a moving stage, and the notice stays the last update. A notice worded only by
-  the placeholder "Carrier update" leaves that scan's wording as the headline.
+  the placeholder "Carrier update" leaves that scan's wording as the headline. The advance notice
+  worded so shows Cainiao's wording for it, "Last-mile delivery forecast".
 - The global feed has no place field. It writes a scan's town in brackets before the standard
   wording, `[Town] Out for delivery`, in every language. That town becomes the location and the
   wording keeps the rest, and the event's `original_description` the wording as it came. A

@@ -208,6 +208,9 @@ const NOTICES = [
 
 export const CAINIAO_NOTICE_ACTIONS: ReadonlySet<string> = new Set(NOTICES.map((notice) => notice.code));
 
+/** Cainiao's own wording for a notice it also sends with the placeholder "Carrier update" alone. */
+export const CAINIAO_NOTICE_WORDINGS: ReadonlyMap<string, string> = new Map([['LAST_MILE_ASN_NOTIFY', 'Last-mile delivery forecast']]);
+
 /** The review queue uses the same per-scan mapping as the adapter. */
 export const statusMap: CarrierStatusMap = {
   stage: (code, wording) => {

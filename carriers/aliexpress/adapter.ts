@@ -35,6 +35,7 @@ import { isRecord, type JsonObject } from '../../core/types.js';
 import {
   CAINIAO_ACTION_STATUS,
   CAINIAO_NOTICE_ACTIONS,
+  CAINIAO_NOTICE_WORDINGS,
   CAINIAO_STATUS,
   cainiaoActionCode,
   cainiaoActionStage,
@@ -165,6 +166,15 @@ function scanWording(scan: JsonObject): string {
   return (/^carrier update$/i.test(standard) && text(scan.desc)) || standard || text(scan.desc);
 }
 
+/**
+ * A scan's wording as shown: a notice Cainiao words only by the placeholder takes the
+ * wording Cainiao gives the same notice elsewhere ("Last-mile delivery forecast").
+ */
+function shownWording(scan: JsonObject): string {
+  const wording = scanWording(scan);
+  return (/^carrier update$/i.test(wording) && CAINIAO_NOTICE_WORDINGS.get(cainiaoActionCode(scan.actionCode))) || wording;
+}
+
 const BEIJING_OFFSET_MS = 8 * 3_600_000;
 
 /**
@@ -267,7 +277,7 @@ export function parseCainiaoTrackingResponse(value: unknown, trackingNumber: str
   const events = details.slice(0, MAX_EVENTS_TO_RETURN).map((event): CarrierEvent => {
     const code = cainiaoActionCode(event.actionCode);
     const stage = cainiaoActionStage(code);
-    const placed = placedWording(scanWording(event), carriers);
+    const placed = placedWording(shownWording(event), carriers);
     return {
       ...scanClock(event),
       // Cainiao Express's tracker states a town or a country code in `location`.
@@ -300,7 +310,7 @@ export function parseCainiaoTrackingResponse(value: unknown, trackingNumber: str
     status,
     ...(currentStage ? { current_stage: currentStage } : {}),
     // Before any scan, Cainiao words its order token in `statusDesc` ("Awaiting seller dispatch").
-    last_status_text: placedWording(scanWording(headline), carriers).description || text(trackingModule.statusDesc) || rawStatus,
+    last_status_text: placedWording(shownWording(headline), carriers).description || text(trackingModule.statusDesc) || rawStatus,
     last_update: 'time' in latestClock ? latestClock.time || null : null,
     ...('local_time' in latestClock ? { last_update_local: latestClock.local_time } : {}),
     expected_delivery: status === 'delivered' ? null : expected,

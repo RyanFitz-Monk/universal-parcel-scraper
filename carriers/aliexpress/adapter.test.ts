@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { sameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
 import { deliveryHandoff } from '../../core/catalog/handoff.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { normalizeCarrierResult, type CarrierResult } from '../../core/result/index.js';
@@ -455,14 +456,19 @@ describe('Cainiao projection', () => {
     expect(result.events?.[0]).toMatchObject({ stage_source: 'none' });
     expect(result.events?.[1]).not.toHaveProperty('stage_source');
     // Worded only by the placeholder, after import customs started, it leaves the parcel in customs, under the
-    // scan's wording, while it stays the last update.
+    // scan's wording, while it stays the last update. Its row takes Cainiao's wording for the notice.
     const placeholder = scan('LAST_MILE_ASN_NOTIFY', '2026-06-10 09:00:00');
     const customs = parseCainiaoTrackingResponse({ module: [{ mailNo: 'LP00000000000001',
       latestTrace: placeholder, detailList: [placeholder, scan('CC_IM_START', '2026-06-10 08:00:00', '', 'Import customs clearance started'), departed],
     }] }, 'LP00000000000001');
     expect(customs).toMatchObject({ status: 'in_transit', current_stage: 'customs', last_status_text: 'Import customs clearance started',
       last_update: '2026-06-10T09:00:00+08:00' });
-    expect(customs.events?.[0]).toMatchObject({ description: 'Carrier update' });
+    expect(customs.events?.[0]).toMatchObject({ description: 'Last-mile delivery forecast' });
+    // A row stored with the placeholder takes that wording at the same instant and place.
+    const policy = sameInstantIdentityPolicy('aliexpress', { supportsScanMatching: true });
+    const stored = { stage: 'in_transit', description: 'Carrier update', location: '', providerCode: 'LAST_MILE_ASN_NOTIFY' };
+    expect(policy?.matches?.({ ...stored, description: 'Last-mile delivery forecast' }, stored)).toBe(true);
+    expect(policy?.matches?.({ ...stored, description: 'Last-mile delivery forecast', providerCode: 'SC_OUTBOUND_SUCCESS' }, stored)).toBe(false);
     // Seconds after a departure from a placed sorting center, the headline keeps the departure without its town.
     const outbound = scan('SC_OUTBOUND_SUCCESS', '2026-06-10 08:59:19', '', '[Example Town] Departed from sorting center');
     const placed = parseCainiaoTrackingResponse({ module: [{ mailNo: 'LP00000000000001', latestTrace: placeholder, detailList: [placeholder, outbound] }] },
@@ -478,7 +484,12 @@ describe('Cainiao projection', () => {
       .toEqual({ kind: 'intentional_gap', note: expect.stringMatching(/keeps the stage of the scan before it/) });
     // Before any scan, a notice leaves the parcel pending.
     const alone = parseCainiaoTrackingResponse({ module: [{ mailNo: 'LP00000000000001', latestTrace: placeholder, detailList: [placeholder] }] }, 'LP00000000000001');
-    expect(alone.events?.[0]).toMatchObject({ stage: 'pending', stage_source: 'none' });
+    expect(alone.events?.[0]).toMatchObject({ stage: 'pending', stage_source: 'none', description: 'Last-mile delivery forecast' });
+    expect(alone.last_status_text).toBe('Last-mile delivery forecast');
+    // Another notice worded only by the placeholder has no wording of Cainiao's to take.
+    const failed = scan('SC_TRANS_INBOUND_FAILURE', '2026-06-10 09:00:00');
+    expect(parseCainiaoTrackingResponse({ module: [{ mailNo: 'LP00000000000001', latestTrace: failed, detailList: [failed, departed] }] },
+      'LP00000000000001').events?.[0]).toMatchObject({ description: 'Carrier update' });
   });
 
   it('keeps a flight out dated at midnight as its day', () => {
