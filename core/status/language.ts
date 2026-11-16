@@ -633,6 +633,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // covered, as providers relay them with no carrier: in transit, like its departures on the road.
   if (/^开始长途运[输輸](?:[，,] ?距[离離]下一站 ?\d+(?:\.\d+)? ?(?:km|公里))?[。.]?$/.test(text)) return 'in_transit';
   if (/^正在长途运[输輸]中(?:[，,] ?[当當]前位[于於] ?\d+(?:\.\d+)? ?(?:km|公里))?[。.]?$/.test(text)) return 'in_transit';
+  // JD Express's delivery round (its state 11000), for fresh goods too, as providers relay it with no carrier and the
+  // courier's contact after it: out for delivery, as JD's map reads it.
+  if (/^(?:【[^【】]{1,80}】 ?)?(?:[您你]的)?(?:生鲜)?快件正在派送中(?:[，,。].*)?$/.test(text)) return 'out_for_delivery';
   // Australia Post's lodgement and its landing in a country (INT-2144, INT-2164), as providers relay them
   // with no carrier: accepted and in transit, as Australia Post's map reads them.
   if (/^item lodged$/.test(text)) return 'accepted';
