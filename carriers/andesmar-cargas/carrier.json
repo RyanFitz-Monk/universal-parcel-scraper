@@ -1,0 +1,42 @@
+{
+  "id": "andesmar-cargas",
+  "displayName": "Andesmar Cargas",
+  "aliases": [
+    "Andesmar"
+  ],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#00519b"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Mendoza",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://andesmarcargas.com/seguimiento?numero={trackingNumber}&tipo=seguimiento",
+    "searchUrl": "https://andesmarcargas.com/seguimiento",
+    "canaryUrl": "https://andesmarcargas.com/seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "andesmarcargas.com"
+      ],
+      "pathPattern": "^/seguimiento/?$",
+      "query": "^(?=(?:.*&)?tipo=seguimiento(?:&|$))(?:.*&)?numero=([^&]+)(?=&|$)"
+    }
+  ],
+  "detection": []
+}

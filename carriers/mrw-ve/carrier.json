@@ -1,0 +1,31 @@
+{
+  "id": "mrw-ve",
+  "displayName": "MRW Venezuela",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "VE"
+    ]
+  },
+  "brand": {
+    "color": "#e30613"
+  },
+  "selectable": true,
+  "timezone": "America/Caracas",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://mrwve.com/",
+    "canaryUrl": "https://mrwve.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

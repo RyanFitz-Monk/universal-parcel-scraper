@@ -1,0 +1,44 @@
+{
+  "id": "pickit",
+  "displayName": "Pickit",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "AR",
+      "CL",
+      "CO",
+      "MX",
+      "PE",
+      "UY"
+    ]
+  },
+  "brand": {
+    "color": "#ff6c0e"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.pickit.com.ar/{trackingNumber}",
+    "searchUrl": "https://tracking.pickit.com.ar/",
+    "canaryUrl": "https://tracking.pickit.com.ar/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.pickit.com.ar"
+      ],
+      "path": "^/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

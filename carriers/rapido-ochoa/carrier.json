@@ -1,0 +1,33 @@
+{
+  "id": "rapido-ochoa",
+  "displayName": "Rápido Ochoa",
+  "aliases": [
+    "Rapido Ochoa"
+  ],
+  "region": {
+    "countries": [
+      "CO"
+    ]
+  },
+  "brand": {
+    "color": "#de0613"
+  },
+  "selectable": true,
+  "timezone": "America/Bogota",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://rapidoochoa.tmsolutions.com.co/tmland/faces/public/tmland-carga/cotizador_envios.xhtml?parametroInicial=cmFwaWRvb2Nob2E=",
+    "canaryUrl": "https://rapidoochoa.tmsolutions.com.co/tmland/faces/public/tmland-carga/cotizador_envios.xhtml",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

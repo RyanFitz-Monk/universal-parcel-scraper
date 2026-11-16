@@ -1,0 +1,34 @@
+{
+  "id": "treggo",
+  "displayName": "Treggo",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "AR",
+      "CO",
+      "MX",
+      "UY"
+    ]
+  },
+  "brand": {
+    "color": "#002c42"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://ar.treggo.co/tracking/",
+    "canaryUrl": "https://ar.treggo.co/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "urbano-ar",
+  "displayName": "Urbano Argentina",
+  "aliases": [
+    "Urbano Express Argentina"
+  ],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#db0814"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.urbano.com.ar/segui-tu-envio",
+    "canaryUrl": "https://www.urbano.com.ar/segui-tu-envio",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

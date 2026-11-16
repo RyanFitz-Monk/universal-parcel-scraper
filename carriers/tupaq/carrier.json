@@ -1,0 +1,44 @@
+{
+  "id": "tupaq",
+  "displayName": "Tupaq Courier",
+  "aliases": [
+    "Tupaq"
+  ],
+  "region": {
+    "countries": [
+      "DO"
+    ]
+  },
+  "brand": {
+    "color": "#00005b"
+  },
+  "selectable": true,
+  "timezone": "America/Santo_Domingo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://app.iplus.com.do/tupaq/fe/lg-es/ut/Estatus.aspx?id={trackingNumber}",
+    "searchUrl": "https://app.iplus.com.do/tupaq/fe/lg-es/ut/Estatus.aspx",
+    "canaryUrl": "https://app.iplus.com.do/tupaq/fe/lg-es/ut/Estatus.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "app.iplus.com.do"
+      ],
+      "pathPattern": "^/tupaq/fe/lg-es/ut/Estatus\\.aspx$",
+      "params": [
+        "id"
+      ]
+    }
+  ],
+  "detection": []
+}

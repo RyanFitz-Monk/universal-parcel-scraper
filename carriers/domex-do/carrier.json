@@ -1,0 +1,44 @@
+{
+  "id": "domex-do",
+  "displayName": "Domex Expreso",
+  "aliases": [
+    "Domex República Dominicana"
+  ],
+  "region": {
+    "countries": [
+      "DO"
+    ]
+  },
+  "brand": {
+    "color": "#fdda1c"
+  },
+  "selectable": true,
+  "timezone": "America/Santo_Domingo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://domex.do/rastreo?guia={trackingNumber}",
+    "searchUrl": "https://domex.do/rastreo",
+    "canaryUrl": "https://domex.do/rastreo",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "domex.do"
+      ],
+      "pathPattern": "^/rastreo/?$",
+      "params": [
+        "guia"
+      ]
+    }
+  ],
+  "detection": []
+}

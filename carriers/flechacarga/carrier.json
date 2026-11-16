@@ -1,0 +1,34 @@
+{
+  "id": "flechacarga",
+  "displayName": "FlechaCarga",
+  "aliases": [
+    "Flecha Carga",
+    "Buspack"
+  ],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#ff0000"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.flechacarga.com/segui-tu-envio/",
+    "canaryUrl": "https://www.flechacarga.com/segui-tu-envio/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,31 @@
+{
+  "id": "aeropaq",
+  "displayName": "Aeropaq",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "DO"
+    ]
+  },
+  "brand": {
+    "color": "#ff6c00"
+  },
+  "selectable": true,
+  "timezone": "America/Santo_Domingo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://aeropaq.com/",
+    "canaryUrl": "https://aeropaq.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

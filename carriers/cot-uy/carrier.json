@@ -1,0 +1,33 @@
+{
+  "id": "cot-uy",
+  "displayName": "COT Encomiendas",
+  "aliases": [
+    "COT"
+  ],
+  "region": {
+    "countries": [
+      "UY"
+    ]
+  },
+  "brand": {
+    "color": "#f0511b"
+  },
+  "selectable": true,
+  "timezone": "America/Montevideo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.cot.com.uy/encomiendas",
+    "canaryUrl": "https://www.cot.com.uy/encomiendas",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

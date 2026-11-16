@@ -1,0 +1,39 @@
+{
+  "id": "liftit",
+  "displayName": "Liftit",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "CO"
+    ]
+  },
+  "brand": {
+    "color": "#2b3492"
+  },
+  "selectable": true,
+  "timezone": "America/Bogota",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.liftit.co/{trackingNumber}",
+    "searchUrl": "https://tracking.liftit.co/",
+    "canaryUrl": "https://tracking.liftit.co/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.liftit.co"
+      ],
+      "path": "^/([A-Za-z0-9]{4,40})/?$"
+    }
+  ],
+  "detection": []
+}

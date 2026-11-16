@@ -1,0 +1,35 @@
+{
+  "id": "caribe-pack",
+  "displayName": "Caribe Pack",
+  "aliases": [
+    "CaribePack",
+    "Caribe Tours"
+  ],
+  "region": {
+    "countries": [
+      "DO",
+      "HT"
+    ]
+  },
+  "brand": {
+    "color": "#33409b"
+  },
+  "selectable": true,
+  "timezone": "America/Santo_Domingo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://caribepack-erp.iplus.app/fe/lg-es/ut/Estatus.aspx",
+    "canaryUrl": "https://caribepack-erp.iplus.app/fe/lg-es/ut/Estatus.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

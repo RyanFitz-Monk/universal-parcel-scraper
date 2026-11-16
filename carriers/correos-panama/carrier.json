@@ -1,0 +1,46 @@
+{
+  "id": "correos-panama",
+  "displayName": "Correos Panamá",
+  "aliases": [
+    "Correos de Panamá",
+    "COTEL",
+    "Correos y Telégrafos Nacionales de Panamá"
+  ],
+  "region": {
+    "countries": [
+      "PA"
+    ]
+  },
+  "brand": {
+    "color": "#2d2768"
+  },
+  "selectable": true,
+  "timezone": "America/Panama",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://operaciones.correospanama.gob.pa/IPSWebTracking/IPSWeb_item_events.aspx?itemid={trackingNumber}",
+    "searchUrl": "https://operaciones.correospanama.gob.pa/IPSWebTracking/",
+    "canaryUrl": "https://operaciones.correospanama.gob.pa/IPSWebTracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "operaciones.correospanama.gob.pa"
+      ],
+      "pathPattern": "^/IPSWebTracking/IPSWeb_item_events\\.aspx$",
+      "params": [
+        "itemid"
+      ]
+    }
+  ],
+  "detection": []
+}

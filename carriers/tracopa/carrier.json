@@ -1,0 +1,34 @@
+{
+  "id": "tracopa",
+  "displayName": "Tracopa",
+  "aliases": [
+    "Transportes Costarricenses Panameños"
+  ],
+  "region": {
+    "countries": [
+      "CR",
+      "PA"
+    ]
+  },
+  "brand": {
+    "color": "#2d3186"
+  },
+  "selectable": true,
+  "timezone": "America/Costa_Rica",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.tracopacr.com/Servicios_encomiendas",
+    "canaryUrl": "https://www.tracopacr.com/Servicios_encomiendas",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

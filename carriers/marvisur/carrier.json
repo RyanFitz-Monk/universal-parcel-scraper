@@ -1,0 +1,34 @@
+{
+  "id": "marvisur",
+  "displayName": "Expreso Marvisur",
+  "aliases": [
+    "Marvisur",
+    "Arequipa Expreso Marvisur"
+  ],
+  "region": {
+    "countries": [
+      "PE"
+    ]
+  },
+  "brand": {
+    "color": "#e42222"
+  },
+  "selectable": true,
+  "timezone": "America/Lima",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.expresomarvisur.com/seccion/consulta-gret",
+    "canaryUrl": "https://www.expresomarvisur.com/seccion/consulta-gret",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

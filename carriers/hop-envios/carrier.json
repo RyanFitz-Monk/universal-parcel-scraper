@@ -1,0 +1,44 @@
+{
+  "id": "hop-envios",
+  "displayName": "HOP Envíos",
+  "aliases": [
+    "HOP"
+  ],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#22cdc6"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://hopenvios.com.ar/segui-tu-envio?c={trackingNumber}",
+    "searchUrl": "https://hopenvios.com.ar/segui-tu-envio",
+    "canaryUrl": "https://hopenvios.com.ar/segui-tu-envio",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "hopenvios.com.ar"
+      ],
+      "pathPattern": "^/segui-tu-envio/?$",
+      "params": [
+        "c"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,50 @@
+{
+  "id": "recibelo",
+  "displayName": "Recíbelo",
+  "aliases": [
+    "Recibelo"
+  ],
+  "region": {
+    "countries": [
+      "CL"
+    ]
+  },
+  "brand": {
+    "color": "#e6166a"
+  },
+  "selectable": true,
+  "timezone": "America/Santiago",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.recibelo.cl/seguimiento/?codigo={trackingNumber}",
+    "searchUrl": "https://www.recibelo.cl/seguimiento/",
+    "canaryUrl": "https://www.recibelo.cl/seguimiento/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "recibelo.cl"
+      ],
+      "pathPattern": "^/seguimiento/?$",
+      "params": [
+        "codigo"
+      ]
+    },
+    {
+      "domains": [
+        "recibelo.cl"
+      ],
+      "path": "^/seguimiento/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

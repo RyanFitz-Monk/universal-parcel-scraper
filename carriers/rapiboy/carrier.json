@@ -1,0 +1,38 @@
+{
+  "id": "rapiboy",
+  "displayName": "Rapiboy",
+  "aliases": [
+    "Rapilog"
+  ],
+  "region": {
+    "countries": [
+      "AR",
+      "BR",
+      "CL",
+      "CO",
+      "MX",
+      "UY"
+    ]
+  },
+  "brand": {
+    "color": "#242468"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://rapilog.com.ar/SeguimientoPedido",
+    "canaryUrl": "https://rapilog.com.ar/SeguimientoPedido",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,42 @@
+{
+  "id": "iflow",
+  "displayName": "iFLOW",
+  "aliases": [
+    "iFLOW Logística"
+  ],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#83c241"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.iflow21.com/#/tracking/code/{trackingNumber}",
+    "searchUrl": "https://tracking.iflow21.com/",
+    "canaryUrl": "https://tracking.iflow21.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.iflow21.com"
+      ],
+      "pathPattern": "^/?$",
+      "fragment": "^/tracking/code/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

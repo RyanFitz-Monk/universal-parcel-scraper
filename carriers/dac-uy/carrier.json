@@ -1,0 +1,35 @@
+{
+  "id": "dac-uy",
+  "displayName": "DAC",
+  "aliases": [
+    "DAC Uruguay",
+    "Agencia Central",
+    "Encomiendas del Litoral"
+  ],
+  "region": {
+    "countries": [
+      "UY"
+    ]
+  },
+  "brand": {
+    "color": "#d50c29"
+  },
+  "selectable": true,
+  "timezone": "America/Montevideo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.dac.com.uy/envios/rastrear",
+    "canaryUrl": "https://www.dac.com.uy/envios/rastrear",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

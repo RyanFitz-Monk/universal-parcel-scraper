@@ -1,0 +1,41 @@
+{
+  "id": "sharf",
+  "displayName": "Sharf",
+  "aliases": [
+    "Scharff"
+  ],
+  "region": {
+    "countries": [
+      "PE"
+    ]
+  },
+  "brand": {
+    "color": "#68002b"
+  },
+  "selectable": true,
+  "timezone": "America/Lima",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://envia.holasharf.com/tracking/{trackingNumber}",
+    "searchUrl": "https://envia.holasharf.com/tracking",
+    "canaryUrl": "https://envia.holasharf.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "envia.holasharf.com"
+      ],
+      "path": "^/tracking/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

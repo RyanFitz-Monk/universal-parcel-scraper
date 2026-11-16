@@ -6827,11 +6827,29 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "aeropaq": {
+    "displayName": "Aeropaq",
+    "color": "#ff6c00",
+    "countries": [
+      "DO"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://aeropaq.com/",
+    "trackingSearchUrl": "https://aeropaq.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "aeropost": {
     "displayName": "Aeropost",
     "color": "#0b3e9d",
     "aliases": [
-      "Aeropost Costa Rica"
+      "Aeropost Costa Rica",
+      "Aerocasillas"
     ],
     "countries": [
       "CR",
@@ -8346,6 +8364,35 @@
         "confidence": "low"
       }
     ]
+  },
+  "andesmar-cargas": {
+    "displayName": "Andesmar Cargas",
+    "color": "#00519b",
+    "aliases": [
+      "Andesmar"
+    ],
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Mendoza",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://andesmarcargas.com/seguimiento",
+    "trackingUrlTemplate": "https://andesmarcargas.com/seguimiento?numero={trackingNumber}&tipo=seguimiento",
+    "trackingSearchUrl": "https://andesmarcargas.com/seguimiento",
+    "linkRules": [
+      {
+        "domains": [
+          "andesmarcargas.com"
+        ],
+        "pathPattern": "^/seguimiento/?$",
+        "query": "^(?=(?:.*&)?tipo=seguimiento(?:&|$))(?:.*&)?numero=([^&]+)(?=&|$)"
+      }
+    ],
+    "detectionRules": []
   },
   "andreani": {
     "displayName": "Andreani",
@@ -11282,6 +11329,37 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "bm-cargo": {
+    "displayName": "BM Cargo",
+    "color": "#1578c0",
+    "aliases": [
+      "BMCargo"
+    ],
+    "countries": [
+      "DO"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bmcargo-online.iplus.com.do/lg-es/ut/Estatus.aspx",
+    "trackingUrlTemplate": "https://bmcargo-online.iplus.com.do/lg-es/ut/Estatus.aspx?id={trackingNumber}",
+    "trackingSearchUrl": "https://bmcargo-online.iplus.com.do/lg-es/ut/Estatus.aspx",
+    "linkRules": [
+      {
+        "domains": [
+          "bmcargo-online.iplus.com.do"
+        ],
+        "pathPattern": "^/lg-es/ut/Estatus\\.aspx$",
+        "params": [
+          "id"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "bolt-kargo": {
     "displayName": "BOLT Kargo",
     "color": "#fce029",
@@ -12895,6 +12973,28 @@
       }
     ]
   },
+  "caribe-pack": {
+    "displayName": "Caribe Pack",
+    "color": "#33409b",
+    "aliases": [
+      "CaribePack",
+      "Caribe Tours"
+    ],
+    "countries": [
+      "DO",
+      "HT"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://caribepack-erp.iplus.app/fe/lg-es/ut/Estatus.aspx",
+    "trackingSearchUrl": "https://caribepack-erp.iplus.app/fe/lg-es/ut/Estatus.aspx",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "carry-flap": {
     "displayName": "CARRY FLAP",
     "color": "#2aa738",
@@ -14404,6 +14504,27 @@
     ],
     "detectionRules": []
   },
+  "civa-cargo": {
+    "displayName": "Civa Cargo",
+    "color": "#582885",
+    "aliases": [
+      "CIVA",
+      "Turismo CIVA"
+    ],
+    "countries": [
+      "PE"
+    ],
+    "selectable": true,
+    "timezone": "America/Lima",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cargo.civa.com.pe/",
+    "trackingSearchUrl": "https://cargo.civa.com.pe/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "cj-logistics": {
     "displayName": "CJ Logistics",
     "color": "#ef151e",
@@ -15441,6 +15562,39 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "correos-panama": {
+    "displayName": "Correos Panamá",
+    "color": "#2d2768",
+    "aliases": [
+      "Correos de Panamá",
+      "COTEL",
+      "Correos y Telégrafos Nacionales de Panamá"
+    ],
+    "countries": [
+      "PA"
+    ],
+    "selectable": true,
+    "timezone": "America/Panama",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://operaciones.correospanama.gob.pa/IPSWebTracking/",
+    "trackingUrlTemplate": "https://operaciones.correospanama.gob.pa/IPSWebTracking/IPSWeb_item_events.aspx?itemid={trackingNumber}",
+    "trackingSearchUrl": "https://operaciones.correospanama.gob.pa/IPSWebTracking/",
+    "linkRules": [
+      {
+        "domains": [
+          "operaciones.correospanama.gob.pa"
+        ],
+        "pathPattern": "^/IPSWebTracking/IPSWeb_item_events\\.aspx$",
+        "params": [
+          "itemid"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "coship": {
     "displayName": "COSHIP",
     "color": "#e40613",
@@ -15514,6 +15668,26 @@
         "confidence": "high"
       }
     ]
+  },
+  "cot-uy": {
+    "displayName": "COT Encomiendas",
+    "color": "#f0511b",
+    "aliases": [
+      "COT"
+    ],
+    "countries": [
+      "UY"
+    ],
+    "selectable": true,
+    "timezone": "America/Montevideo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.cot.com.uy/encomiendas",
+    "trackingSearchUrl": "https://www.cot.com.uy/encomiendas",
+    "linkRules": [],
+    "detectionRules": []
   },
   "coupang-logistics": {
     "displayName": "Coupang Logistics Services",
@@ -15967,6 +16141,27 @@
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "cruz-del-sur-pe": {
+    "displayName": "Cruz del Sur Cargo",
+    "color": "#001c46",
+    "aliases": [
+      "Cruz del Sur Envíos",
+      "CDS Envíos"
+    ],
+    "countries": [
+      "PE"
+    ],
+    "selectable": true,
+    "timezone": "America/Lima",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://venta.cruzdelsurcargo.com.pe/home-filtro-busqueda",
+    "trackingSearchUrl": "https://venta.cruzdelsurcargo.com.pe/home-filtro-busqueda",
+    "linkRules": [],
     "detectionRules": []
   },
   "cse-russia": {
@@ -16438,6 +16633,28 @@
         "path": "^/(?:rs/pracenje-posiljaka|en/track-and-trace)/([^/?#]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "dac-uy": {
+    "displayName": "DAC",
+    "color": "#d50c29",
+    "aliases": [
+      "DAC Uruguay",
+      "Agencia Central",
+      "Encomiendas del Litoral"
+    ],
+    "countries": [
+      "UY"
+    ],
+    "selectable": true,
+    "timezone": "America/Montevideo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.dac.com.uy/envios/rastrear",
+    "trackingSearchUrl": "https://www.dac.com.uy/envios/rastrear",
+    "linkRules": [],
     "detectionRules": []
   },
   "daewoo-fastex": {
@@ -18542,6 +18759,37 @@
     ],
     "detectionRules": []
   },
+  "domex-do": {
+    "displayName": "Domex Expreso",
+    "color": "#fdda1c",
+    "aliases": [
+      "Domex República Dominicana"
+    ],
+    "countries": [
+      "DO"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://domex.do/rastreo",
+    "trackingUrlTemplate": "https://domex.do/rastreo?guia={trackingNumber}",
+    "trackingSearchUrl": "https://domex.do/rastreo",
+    "linkRules": [
+      {
+        "domains": [
+          "domex.do"
+        ],
+        "pathPattern": "^/rastreo/?$",
+        "params": [
+          "guia"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "dongdu": {
     "displayName": "Dongdu Logistics",
     "color": "#5b9a68",
@@ -19839,6 +20087,36 @@
         "confidence": "high"
       }
     ]
+  },
+  "e-pick": {
+    "displayName": "E-Pick",
+    "color": "#0a1550",
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://app.e-pick.com.ar/seguimiento",
+    "trackingUrlTemplate": "https://app.e-pick.com.ar/seguimiento?codigo={trackingNumber}",
+    "trackingSearchUrl": "https://app.e-pick.com.ar/seguimiento",
+    "linkRules": [
+      {
+        "domains": [
+          "app.e-pick.com.ar"
+        ],
+        "pathPattern": "^/seguimiento/?$",
+        "params": [
+          "codigo",
+          "code",
+          "c"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "e24metro-ca": {
     "displayName": "E24",
@@ -23983,6 +24261,27 @@
         "confidence": "low"
       }
     ]
+  },
+  "flechacarga": {
+    "displayName": "FlechaCarga",
+    "color": "#ff0000",
+    "aliases": [
+      "Flecha Carga",
+      "Buspack"
+    ],
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.flechacarga.com/segui-tu-envio/",
+    "trackingSearchUrl": "https://www.flechacarga.com/segui-tu-envio/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "fleetex": {
     "displayName": "FleetExpress",
@@ -28212,6 +28511,37 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "hop-envios": {
+    "displayName": "HOP Envíos",
+    "color": "#22cdc6",
+    "aliases": [
+      "HOP"
+    ],
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://hopenvios.com.ar/segui-tu-envio",
+    "trackingUrlTemplate": "https://hopenvios.com.ar/segui-tu-envio?c={trackingNumber}",
+    "trackingSearchUrl": "https://hopenvios.com.ar/segui-tu-envio",
+    "linkRules": [
+      {
+        "domains": [
+          "hopenvios.com.ar"
+        ],
+        "pathPattern": "^/segui-tu-envio/?$",
+        "params": [
+          "c"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "hopexpress": {
     "displayName": "Hopexpress",
     "color": "#1c75bc",
@@ -29192,6 +29522,35 @@
         "params": [
           "trackingNumber"
         ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "iflow": {
+    "displayName": "iFLOW",
+    "color": "#83c241",
+    "aliases": [
+      "iFLOW Logística"
+    ],
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.iflow21.com/",
+    "trackingUrlTemplate": "https://tracking.iflow21.com/#/tracking/code/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.iflow21.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.iflow21.com"
+        ],
+        "pathPattern": "^/?$",
+        "fragment": "^/tracking/code/([^/?#]+)/?$"
       }
     ],
     "detectionRules": []
@@ -34322,6 +34681,24 @@
     ],
     "detectionRules": []
   },
+  "liberty-express": {
+    "displayName": "Liberty Express",
+    "color": "#c2262b",
+    "countries": [
+      "VE",
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/Caracas",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://iqpack.libertyexpress.com/SearchGuide",
+    "trackingSearchUrl": "https://iqpack.libertyexpress.com/SearchGuide",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "libya-post": {
     "displayName": "Libya Post",
     "color": "#286db4",
@@ -34471,6 +34848,31 @@
         "preferred": true
       }
     ]
+  },
+  "liftit": {
+    "displayName": "Liftit",
+    "color": "#2b3492",
+    "countries": [
+      "CO"
+    ],
+    "selectable": true,
+    "timezone": "America/Bogota",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.liftit.co/",
+    "trackingUrlTemplate": "https://tracking.liftit.co/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.liftit.co/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.liftit.co"
+        ],
+        "path": "^/([A-Za-z0-9]{4,40})/?$"
+      }
+    ],
+    "detectionRules": []
   },
   "lightning-express": {
     "displayName": "Lightning Express",
@@ -36353,6 +36755,27 @@
     ],
     "detectionRules": []
   },
+  "marvisur": {
+    "displayName": "Expreso Marvisur",
+    "color": "#e42222",
+    "aliases": [
+      "Marvisur",
+      "Arequipa Expreso Marvisur"
+    ],
+    "countries": [
+      "PE"
+    ],
+    "selectable": true,
+    "timezone": "America/Lima",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.expresomarvisur.com/seccion/consulta-gret",
+    "trackingSearchUrl": "https://www.expresomarvisur.com/seccion/consulta-gret",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "matkahuolto": {
     "displayName": "Matkahuolto",
     "color": "#001e60",
@@ -37705,6 +38128,23 @@
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "mrw-ve": {
+    "displayName": "MRW Venezuela",
+    "color": "#e30613",
+    "countries": [
+      "VE"
+    ],
+    "selectable": true,
+    "timezone": "America/Caracas",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://mrwve.com/",
+    "trackingSearchUrl": "https://mrwve.com/",
+    "linkRules": [],
     "detectionRules": []
   },
   "msg-post": {
@@ -42242,6 +42682,36 @@
       }
     ]
   },
+  "pickit": {
+    "displayName": "Pickit",
+    "color": "#ff6c0e",
+    "countries": [
+      "AR",
+      "CL",
+      "CO",
+      "MX",
+      "PE",
+      "UY"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.pickit.com.ar/",
+    "trackingUrlTemplate": "https://tracking.pickit.com.ar/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.pickit.com.ar/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.pickit.com.ar"
+        ],
+        "path": "^/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "pickupp": {
     "displayName": "Pickupp",
     "color": "#ef3b3b",
@@ -45093,6 +45563,31 @@
     ],
     "detectionRules": []
   },
+  "rapiboy": {
+    "displayName": "Rapiboy",
+    "color": "#242468",
+    "aliases": [
+      "Rapilog"
+    ],
+    "countries": [
+      "AR",
+      "BR",
+      "CL",
+      "CO",
+      "MX",
+      "UY"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://rapilog.com.ar/SeguimientoPedido",
+    "trackingSearchUrl": "https://rapilog.com.ar/SeguimientoPedido",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "rapid-courier-gr": {
     "displayName": "Rapid Courier",
     "color": "#b40e21",
@@ -45122,6 +45617,26 @@
     ],
     "detectionRules": []
   },
+  "rapido-ochoa": {
+    "displayName": "Rápido Ochoa",
+    "color": "#de0613",
+    "aliases": [
+      "Rapido Ochoa"
+    ],
+    "countries": [
+      "CO"
+    ],
+    "selectable": true,
+    "timezone": "America/Bogota",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://rapidoochoa.tmsolutions.com.co/tmland/faces/public/tmland-carga/cotizador_envios.xhtml",
+    "trackingSearchUrl": "https://rapidoochoa.tmsolutions.com.co/tmland/faces/public/tmland-carga/cotizador_envios.xhtml?parametroInicial=cmFwaWRvb2Nob2E=",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "rayspeed": {
     "displayName": "RaySpeed Asia",
     "color": "#25266a",
@@ -45141,6 +45656,43 @@
     "canaryUrl": "https://rayspeed.com/en/track",
     "trackingSearchUrl": "https://rayspeed.com/en/track",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "recibelo": {
+    "displayName": "Recíbelo",
+    "color": "#e6166a",
+    "aliases": [
+      "Recibelo"
+    ],
+    "countries": [
+      "CL"
+    ],
+    "selectable": true,
+    "timezone": "America/Santiago",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.recibelo.cl/seguimiento/",
+    "trackingUrlTemplate": "https://www.recibelo.cl/seguimiento/?codigo={trackingNumber}",
+    "trackingSearchUrl": "https://www.recibelo.cl/seguimiento/",
+    "linkRules": [
+      {
+        "domains": [
+          "recibelo.cl"
+        ],
+        "pathPattern": "^/seguimiento/?$",
+        "params": [
+          "codigo"
+        ]
+      },
+      {
+        "domains": [
+          "recibelo.cl"
+        ],
+        "path": "^/seguimiento/([^/?#]+)/?$"
+      }
+    ],
     "detectionRules": []
   },
   "red-courier-gr": {
@@ -46741,6 +47293,34 @@
       }
     ]
   },
+  "samex": {
+    "displayName": "Samex",
+    "color": "#34424c",
+    "countries": [
+      "CL"
+    ],
+    "selectable": true,
+    "timezone": "America/Santiago",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.samex.cl/wp-content/rastreo/rastreo/v1/rastreo_form.php",
+    "trackingUrlTemplate": "https://mysamex.samex.cl/gts/pub/locNumSeguimiento.seam?tipo=L&localizador={trackingNumber}",
+    "trackingSearchUrl": "https://www.samex.cl/wp-content/rastreo/rastreo/v1/rastreo_form.php",
+    "linkRules": [
+      {
+        "domains": [
+          "mysamex.samex.cl"
+        ],
+        "pathPattern": "^/gts/pub/locNumSeguimiento\\.seam$",
+        "params": [
+          "localizador"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "samoa-post": {
     "displayName": "Samoa Post",
     "color": "#011b3b",
@@ -47821,6 +48401,34 @@
     "canaryUrl": "https://shalom.com.pe/",
     "trackingSearchUrl": "https://shalom.com.pe/rastrea",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "sharf": {
+    "displayName": "Sharf",
+    "color": "#68002b",
+    "aliases": [
+      "Scharff"
+    ],
+    "countries": [
+      "PE"
+    ],
+    "selectable": true,
+    "timezone": "America/Lima",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://envia.holasharf.com/tracking",
+    "trackingUrlTemplate": "https://envia.holasharf.com/tracking/{trackingNumber}",
+    "trackingSearchUrl": "https://envia.holasharf.com/tracking",
+    "linkRules": [
+      {
+        "domains": [
+          "envia.holasharf.com"
+        ],
+        "path": "^/tracking/([^/?#]+)/?$"
+      }
+    ],
     "detectionRules": []
   },
   "shenghang": {
@@ -50587,7 +51195,8 @@
     "displayName": "Starken",
     "color": "#009f3e",
     "aliases": [
-      "Starken Chile"
+      "Starken Chile",
+      "Tur-Bus Cargo"
     ],
     "countries": [
       "CL"
@@ -53899,6 +54508,27 @@
     ],
     "detectionRules": []
   },
+  "tracopa": {
+    "displayName": "Tracopa",
+    "color": "#2d3186",
+    "aliases": [
+      "Transportes Costarricenses Panameños"
+    ],
+    "countries": [
+      "CR",
+      "PA"
+    ],
+    "selectable": true,
+    "timezone": "America/Costa_Rica",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.tracopacr.com/Servicios_encomiendas",
+    "trackingSearchUrl": "https://www.tracopacr.com/Servicios_encomiendas",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "tracx-logis": {
     "displayName": "TracX Logis",
     "color": "#0084ca",
@@ -53951,6 +54581,38 @@
         "confidence": "high"
       }
     ]
+  },
+  "tramaco": {
+    "displayName": "Tramaco Express",
+    "color": "#2a52f3",
+    "aliases": [
+      "Tramaco",
+      "TMC Grupo Tramaco"
+    ],
+    "countries": [
+      "EC"
+    ],
+    "selectable": true,
+    "timezone": "America/Guayaquil",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.tramaco.com.ec/rastreo.html",
+    "trackingUrlTemplate": "https://www.tramaco.com.ec/rastreo.html?guia={trackingNumber}",
+    "trackingSearchUrl": "https://www.tramaco.com.ec/rastreo.html",
+    "linkRules": [
+      {
+        "domains": [
+          "tramaco.com.ec"
+        ],
+        "pathPattern": "^/rastreo\\.html$",
+        "params": [
+          "guia"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "trans-o-flex": {
     "displayName": "trans-o-flex",
@@ -54475,6 +55137,26 @@
     ],
     "detectionRules": []
   },
+  "treggo": {
+    "displayName": "Treggo",
+    "color": "#002c42",
+    "countries": [
+      "AR",
+      "CO",
+      "MX",
+      "UY"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ar.treggo.co/tracking/",
+    "trackingSearchUrl": "https://ar.treggo.co/tracking/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "trendyol-express": {
     "displayName": "Trendyol Express",
     "color": "#f16623",
@@ -54949,6 +55631,37 @@
         "confidence": "low"
       }
     ]
+  },
+  "tupaq": {
+    "displayName": "Tupaq Courier",
+    "color": "#00005b",
+    "aliases": [
+      "Tupaq"
+    ],
+    "countries": [
+      "DO"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://app.iplus.com.do/tupaq/fe/lg-es/ut/Estatus.aspx",
+    "trackingUrlTemplate": "https://app.iplus.com.do/tupaq/fe/lg-es/ut/Estatus.aspx?id={trackingNumber}",
+    "trackingSearchUrl": "https://app.iplus.com.do/tupaq/fe/lg-es/ut/Estatus.aspx",
+    "linkRules": [
+      {
+        "domains": [
+          "app.iplus.com.do"
+        ],
+        "pathPattern": "^/tupaq/fe/lg-es/ut/Estatus\\.aspx$",
+        "params": [
+          "id"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "turkmenpost": {
     "displayName": "Turkmenpost",
@@ -55699,6 +56412,26 @@
         "confidence": "low"
       }
     ]
+  },
+  "urbano-ar": {
+    "displayName": "Urbano Argentina",
+    "color": "#db0814",
+    "aliases": [
+      "Urbano Express Argentina"
+    ],
+    "countries": [
+      "AR"
+    ],
+    "selectable": true,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.urbano.com.ar/segui-tu-envio",
+    "trackingSearchUrl": "https://www.urbano.com.ar/segui-tu-envio",
+    "linkRules": [],
+    "detectionRules": []
   },
   "urvaam": {
     "displayName": "Urvaam",

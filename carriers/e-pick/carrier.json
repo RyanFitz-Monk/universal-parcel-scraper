@@ -1,0 +1,44 @@
+{
+  "id": "e-pick",
+  "displayName": "E-Pick",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "AR"
+    ]
+  },
+  "brand": {
+    "color": "#0a1550"
+  },
+  "selectable": true,
+  "timezone": "America/Argentina/Buenos_Aires",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://app.e-pick.com.ar/seguimiento?codigo={trackingNumber}",
+    "searchUrl": "https://app.e-pick.com.ar/seguimiento",
+    "canaryUrl": "https://app.e-pick.com.ar/seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "app.e-pick.com.ar"
+      ],
+      "pathPattern": "^/seguimiento/?$",
+      "params": [
+        "codigo",
+        "code",
+        "c"
+      ]
+    }
+  ],
+  "detection": []
+}

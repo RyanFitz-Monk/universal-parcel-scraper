@@ -1,0 +1,32 @@
+{
+  "id": "liberty-express",
+  "displayName": "Liberty Express",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "VE",
+      "US"
+    ]
+  },
+  "brand": {
+    "color": "#c2262b"
+  },
+  "selectable": true,
+  "timezone": "America/Caracas",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://iqpack.libertyexpress.com/SearchGuide",
+    "canaryUrl": "https://iqpack.libertyexpress.com/SearchGuide",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

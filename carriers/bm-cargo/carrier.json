@@ -1,0 +1,44 @@
+{
+  "id": "bm-cargo",
+  "displayName": "BM Cargo",
+  "aliases": [
+    "BMCargo"
+  ],
+  "region": {
+    "countries": [
+      "DO"
+    ]
+  },
+  "brand": {
+    "color": "#1578c0"
+  },
+  "selectable": true,
+  "timezone": "America/Santo_Domingo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://bmcargo-online.iplus.com.do/lg-es/ut/Estatus.aspx?id={trackingNumber}",
+    "searchUrl": "https://bmcargo-online.iplus.com.do/lg-es/ut/Estatus.aspx",
+    "canaryUrl": "https://bmcargo-online.iplus.com.do/lg-es/ut/Estatus.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "bmcargo-online.iplus.com.do"
+      ],
+      "pathPattern": "^/lg-es/ut/Estatus\\.aspx$",
+      "params": [
+        "id"
+      ]
+    }
+  ],
+  "detection": []
+}

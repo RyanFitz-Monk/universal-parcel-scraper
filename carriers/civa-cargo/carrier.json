@@ -1,0 +1,34 @@
+{
+  "id": "civa-cargo",
+  "displayName": "Civa Cargo",
+  "aliases": [
+    "CIVA",
+    "Turismo CIVA"
+  ],
+  "region": {
+    "countries": [
+      "PE"
+    ]
+  },
+  "brand": {
+    "color": "#582885"
+  },
+  "selectable": true,
+  "timezone": "America/Lima",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cargo.civa.com.pe/",
+    "canaryUrl": "https://cargo.civa.com.pe/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

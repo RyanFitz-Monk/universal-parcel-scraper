@@ -1,0 +1,45 @@
+{
+  "id": "tramaco",
+  "displayName": "Tramaco Express",
+  "aliases": [
+    "Tramaco",
+    "TMC Grupo Tramaco"
+  ],
+  "region": {
+    "countries": [
+      "EC"
+    ]
+  },
+  "brand": {
+    "color": "#2a52f3"
+  },
+  "selectable": true,
+  "timezone": "America/Guayaquil",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.tramaco.com.ec/rastreo.html?guia={trackingNumber}",
+    "searchUrl": "https://www.tramaco.com.ec/rastreo.html",
+    "canaryUrl": "https://www.tramaco.com.ec/rastreo.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tramaco.com.ec"
+      ],
+      "pathPattern": "^/rastreo\\.html$",
+      "params": [
+        "guia"
+      ]
+    }
+  ],
+  "detection": []
+}

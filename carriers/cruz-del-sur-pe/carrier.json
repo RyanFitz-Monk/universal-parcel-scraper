@@ -1,0 +1,34 @@
+{
+  "id": "cruz-del-sur-pe",
+  "displayName": "Cruz del Sur Cargo",
+  "aliases": [
+    "Cruz del Sur Envíos",
+    "CDS Envíos"
+  ],
+  "region": {
+    "countries": [
+      "PE"
+    ]
+  },
+  "brand": {
+    "color": "#001c46"
+  },
+  "selectable": true,
+  "timezone": "America/Lima",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://venta.cruzdelsurcargo.com.pe/home-filtro-busqueda",
+    "canaryUrl": "https://venta.cruzdelsurcargo.com.pe/home-filtro-busqueda",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}
