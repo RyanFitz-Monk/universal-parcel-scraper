@@ -2,6 +2,7 @@ import type { CarrierStatus } from '../../core/result/index.js';
 import { languageStageStatus, type ClassifiedStatus, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
 import { chinaPostRelayedStage } from '../china-post/status.js';
+import { imileRelayedStage } from '../imile/status.js';
 import { withoutCourtesy } from '../j-and-t-au/identity.js';
 import { J_AND_T_AU_HOTLINE, jAndTAuRelayedStage } from '../j-and-t-au/status.js';
 import { yweMappedStage } from '../ywe/status.js';
@@ -196,9 +197,9 @@ const yweRelayedStage = (wording: string): Stage | undefined => yweMappedStage(w
 
 // China Post's domestic scans, which Yanwen relays in Chinese with the centre in 【】, read as China Post's own
 // map reads them: "邮件离开【…】，正在发往下一站" in transit, the security check's "【…】退回" an exception. Then J&T
-// Australia's, then YWE's.
+// Australia's, then YWE's, then iMile's in Germany, which open with iMile's centre in 【】 as iMile writes them.
 const relayedStage = (normalized: string): Stage | undefined => chinaPostRelayedStage(normalized) ?? jAndTAuRelayedStage(normalized)
-  ?? yweRelayedStage(normalized);
+  ?? yweRelayedStage(normalized) ?? imileRelayedStage(normalized);
 
 function relayedStatus(description: string): ClassifiedStatus | undefined {
   const stage = relayedStage(normalizeStatusWording(description));

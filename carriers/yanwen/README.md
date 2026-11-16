@@ -34,7 +34,8 @@ before Yanwen's outbound scan, and Yanwen's "Despatched and en route to
 Inpost" after it. YWE's scans in the United States, relayed
 without YWE's codes, read as YWE's map reads them, its hub's receipt of the
 container and of the parcel as that handover, in transit. So is Poste Italiane's
-first scan after the handover.
+first scan after the handover. iMile's scans in Germany, relayed without iMile's
+codes, read as iMile's map reads them.
 USPS's "Shipping Label Created, USPS Awaiting Item", relayed while Yanwen still
 has the parcel in China, is a notice: it keeps the stage of the scan before it
 and loses its place, the label's US origin, where the parcel has not been.

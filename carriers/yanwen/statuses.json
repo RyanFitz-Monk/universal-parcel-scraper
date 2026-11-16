@@ -1014,6 +1014,22 @@
       "note": "The same courier's sorting."
     },
     {
+      "wording": "【Sample DS】Parcel shipped to【Sample DS】.",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "iMile's line haul between its German centres, relayed without iMile's code; read as iMile's map reads it."
+    },
+    {
+      "wording": "【Sample DS】Dispatch task assigned to DA.",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "iMile's delivery associate named before the run, relayed without iMile's code; read as iMile's map reads it, in transit until the round starts."
+    },
+    {
       "wording": "First parcel scan along Poste Italiane’s logistic network",
       "language": "en",
       "stage": "in_transit",
