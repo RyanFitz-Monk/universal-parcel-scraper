@@ -1,7 +1,7 @@
 import type { Stage } from '../../core/status/index.js';
 import { statusWordings } from '../../core/status/english.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
-import { countryCode } from '../../core/time/index.js';
+import { countryCode, usStateTimeZone } from '../../core/time/index.js';
 import statuses from './statuses.json' with { type: 'json' };
 
 const WORDINGS = statusWordings(statuses.entries);
@@ -95,6 +95,18 @@ const UPS_ROWS = new Set(['发件人已创建标签，但是 UPS 尚未收到包
 /** Whether a row is one UPS wrote, by its wording or its place in the United States: it is on UPS's wall clock. */
 export const isJrtUpsRow = (wording: string, place: string): boolean =>
   UPS_ROWS.has(normalizeStatusWording(wording)) || /(?:^|,)\s*US$/.test(place.trim());
+
+// A US partner's scan the tracker copies under the town and its state's code, as GOFO's hub scans ("EXAMPLE TOWN,IL").
+const US_TOWN_STATE = /^([^,]+),\s*([A-Z]{2})$/;
+/** The town of a place the tracker writes as a US town and its state's code; null for another place. */
+export function jrtUsTown(place: string): string | null {
+  const parts = US_TOWN_STATE.exec(place.trim());
+  return parts && usStateTimeZone(parts[2]) ? parts[1]!.trim() : null;
+}
+// GOFO's label, which the tracker copies in GOFO's words on the line into the United States.
+const GOFO_LABEL = /^shipping label created$/i;
+/** Whether a row is one a US partner wrote that the tracker copies, on the partner's wall clock: under a US town and state, or GOFO's label. */
+export const isJrtUsPartnerRow = (wording: string, place: string): boolean => GOFO_LABEL.test(wording.trim()) || jrtUsTown(place) !== null;
 
 // DHL's English sentences, as the tracker copies them on the line into Europe: "The shipment has arrived at the parcel center.",
 // the recipient's preferred location for its delivery, and a round that found no one, or no such recipient, at the address.

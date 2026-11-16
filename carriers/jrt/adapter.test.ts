@@ -216,6 +216,35 @@ describe('JRT tracking adapter', () => {
     ]);
   });
 
+  it('reads GOFO’s rows on the line into the United States on GOFO’s clocks', () => {
+    // Live shape: the tracker copies GOFO's hub scan under the town and state's code and GOFO's label without a
+    // place, each at the digits GOFO's own reply gives on the station's zone and on Pacific time; read on Beijing
+    // time, the hub scan came 14 hours before GOFO's own and the label 15.
+    const parsed = parseJrtTrack(fixture('track-gofo'), 'UP0000000000000004', Date.parse('2026-02-16T00:00:00Z'))!;
+    const expected = [
+      ['2026-02-14T05:12:40-06:00', 'America/Chicago', 'place', 'Arrived at GOFO Regional Hub', 'in_transit'],
+      // JRT's own rows stay on the platform's clock.
+      ['2026-02-14T02:30:00+08:00', undefined, undefined, '包裹交接给本地物流商处理/Received by local delivery company', 'in_transit'],
+      ['2026-02-13T01:40:00+08:00', undefined, undefined, '货物已清关完成/Import customs clearance complete', 'in_transit'],
+      ['2026-02-07T09:10:00+08:00', undefined, undefined, '航班已落地，拆板中/Package arrived at destination country', 'in_transit'],
+      ['2026-02-06T23:20:00+08:00', undefined, undefined, '航班已启运/Package in transit to destination country', 'in_transit'],
+      ['2026-02-03T15:05:11+08:00', undefined, undefined, 'The electronic cargo information has been received', 'registered'],
+      ['2026-02-03T00:44:09-08:00', 'America/Los_Angeles', 'carrier', 'Shipping Label Created', 'registered'],
+    ];
+    for (const result of [parsed, dateLocalClocks('jrt', parsed)]) {
+      expect(result.events?.map(({ time, time_zone, time_zone_basis, description, stage }) => [time, time_zone, time_zone_basis, description, stage]))
+        .toEqual(expected);
+      expect(result.last_update).toBe('2026-02-14T05:12:40-06:00');
+    }
+    // A US partner's row at a town GOFO does not list keeps its wall clock, which its state dates.
+    const payload = fixture('track-gofo') as { data: { trackDetails: Record<string, string>[] }[] }[];
+    payload[0]!.data[0]!.trackDetails[0]!.track_location = 'Example Town,GA';
+    const elsewhere = parseJrtTrack(payload, 'UP0000000000000004', Date.parse('2026-02-16T00:00:00Z'))!;
+    expect(elsewhere.events?.[0]).toMatchObject({ local_time: '2026-02-14T05:12:40', location: 'Example Town,GA' });
+    expect(elsewhere.events?.[0]?.time).toBeUndefined();
+    expect(dateLocalClocks('jrt', elsewhere).events?.[0]).toMatchObject({ time: '2026-02-14T05:12:40-05:00', time_zone_basis: 'place' });
+  });
+
   it('reads UPS’s access point note on UPS’s wall clock, as its other rows', () => {
     const payload = fixture('track-ups') as { data: { consigneeCountry: string; trackDetails: Record<string, string>[] }[] }[];
     const record = payload[0]!.data[0]!;

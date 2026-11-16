@@ -49,6 +49,12 @@ browser is needed, and no portal link is published.
   Beijing time would fall before dawn there. Rows in UPS's words, its note that the parcel goes to
   an access point included, or at a place in the United States keep their wall clocks, which the scan's state dates, or a neighbouring scan's for a
   row without a place. The flight row names its month and day, read as an ellipsis.
+- The line into the United States can end with GOFO instead. The tracker copies GOFO's scans in
+  GOFO's English under the town and its state's code ("EXAMPLE TOWN,IL"), and GOFO's label
+  ("Shipping Label Created") without a place, at the digits GOFO's own reply gives: a station GOFO
+  dates on its zone takes that zone and the label Pacific time ([GOFO](../gofo/README.md)). A row at
+  another US town and state keeps its wall clock, which the state dates. Read on Beijing time, the
+  hub scan came 14 hours before GOFO's own row.
 - The line into Mexico ends with J&T Express Mexico. The tracker copies J&T's rows in Spanish, the
   town and the site in brackets, on J&T's clock in Mexico City, the one its own tracker answers on:
   read on Beijing time, the night's sorting at J&T's centre would fall in the morning. The map reads
