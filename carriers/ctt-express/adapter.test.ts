@@ -32,6 +32,19 @@ describe('CTT Express direct tracking', () => {
     expect(classifyCttExpressStatus('constructor')).toBeUndefined();
   });
 
+  it('keeps international transit pending CTT reception as pre-advice', () => {
+    const payload = clone();
+    payload.data.shipping_history.events = [
+      { code: '0000', description: 'Pendiente de recepción en CTT Express', type: 'STATUS', source: 'ITEM_STATUS_V2', event_date: '2026-01-01T10:00:00Z' },
+      { code: '3900', description: 'En tránsito internacional. Pendiente de recepción en CTT Express', type: 'STATUS', source: 'ITEM_STATUS_V2', event_date: '2026-01-02T10:00:00Z' },
+    ] as typeof payload.data.shipping_history.events;
+    const result = normalizeCarrierResult(parseCttExpress(payload, NUMBER));
+    expect(result).toMatchObject({ status: 'pending', current_stage: 'registered', last_update: '2026-01-02T10:00:00Z' });
+    expect(result.events?.map(event => event.stage)).toEqual(['registered', 'registered']);
+    expect(classifyCttExpressStatus('0500')).toEqual({ status: 'in_transit', stage: 'accepted' });
+    expect(classifyCttExpressStatus('1000')).toEqual({ status: 'in_transit', stage: 'in_transit' });
+  });
+
   it('binds one exact shipment and its single package, rejecting multi-piece completion', () => {
     expect(normalizeCttExpressNumber('000000 000000 0000000001')).toBe(NUMBER);
     for (const raw of ['1000000000000000000001', NUMBER + '000', NUMBER + '002', 'DT000000005PT', '', NUMBER + '?']) expect(() => normalizeCttExpressNumber(raw)).toThrow(InvalidInputError);
@@ -309,7 +322,7 @@ describe('CTT Express direct tracking', () => {
       international_tracking_number: 'RR123456785PT', delivery_carrier: 'ctt', delivery_tracking_number: 'RR123456785PT', expected_delivery: null });
     expect(deliveryHandoff('ctt-express', NUMBER, held)).toEqual({ carrier: 'ctt', number: 'RR123456785PT', basis: 'partner' });
     expect(held.events?.map((event) => [event.provider_code, event.stage])).toEqual([['1700', 'exception'], ['1600', 'exception'],
-      ['1500', 'out_for_delivery'], ['3900', 'in_transit'], ['0500', 'accepted'], ['0000', 'registered']]);
+      ['1500', 'out_for_delivery'], ['3900', 'registered'], ['0500', 'accepted'], ['0000', 'registered']]);
     expect(JSON.stringify(held)).not.toContain('PRIVATE_SYNTHETIC');
     payload.data.shipping_history.events.push(scan('2400', 'Nuevo reparto', '2026-01-05T08:00:00Z') as never);
     expect(parseCttExpress(payload, NUMBER)).toMatchObject({ status: 'out_for_delivery', expected_delivery: '2026-01-06' });

@@ -6,7 +6,8 @@ const codes: Record<string, ClassifiedStatus> = {
   '0500': { status: 'in_transit', stage: 'accepted' },
   '0600': { status: 'exception', stage: 'exception' },
   '1000': { status: 'in_transit', stage: 'in_transit' },
-  '3900': { status: 'in_transit', stage: 'in_transit' },
+  // The international leg is still upstream: CTT Express has not received the parcel.
+  '3900': { status: 'pending', stage: 'registered' },
   '1500': { status: 'out_for_delivery', stage: 'out_for_delivery' },
   '1600': { status: 'exception', stage: 'exception' },
   // Held at the depot after a failed delivery, until a new round or a return.
