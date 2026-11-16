@@ -11,6 +11,8 @@
     {"wording": "Parcel departure in Shenzhen Sorting Centre.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "The line’s sorting centre, its city in the wording."},
     {"wording": "Parcel departure in Transit Facility, Parcel Departure", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-13"},
     {"wording": "Customs declaration completed", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "China’s export declaration, before the flight: the parcel is not held. PFC Express’s map, whose line writes the same rows, reads it the same way."},
-    {"wording": "Parcel is leaving Airport, Parcel Leaving Port", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "The flight leaving the airport of origin, the day after the export declaration."}
+    {"wording": "Parcel is leaving Airport, Parcel Leaving Port", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "The flight leaving the airport of origin, the day after the export declaration."},
+    {"wording": "Clearence processing completed - Export", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "China's export clearance done, in the line's spelling, before the flight: the parcel is not held."},
+    {"wording": "International flight has departed", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The flight out of China, after the export clearance."}
   ]
 }

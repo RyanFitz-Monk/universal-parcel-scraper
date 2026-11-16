@@ -485,6 +485,15 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-08",
       "note": "Relayed without a code: SpeedX's scan 57112 on its way to the delivering facility, at the same second as SpeedX's own."
+    },
+    {
+      "code": "FPX_O_IRI",
+      "wording": "Label created",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The US partner's label for its leg, placed after the origin facility measured the parcel; read as transit when it follows a movement."
     }
   ]
 }

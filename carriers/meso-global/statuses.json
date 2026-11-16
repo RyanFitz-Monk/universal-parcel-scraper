@@ -21,6 +21,7 @@
     {"wording": "The shipment has been loaded onto the delivery vehicle", "language": "en", "stage": "out_for_delivery", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Relayed from DHL: the destination post's delivery run, after the parcel center."},
     {"wording": "Item is out for delivery", "language": "en", "stage": "out_for_delivery", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Relayed from DHL with the loading onto the delivery vehicle."},
     {"wording": "The shipment has been successfully delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Relayed from DHL: the destination post's delivery, after its delivery run."},
-    {"wording": "Item delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Relayed from DHL with the delivery."}
+    {"wording": "Item delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Relayed from DHL with the delivery."},
+    {"wording": "DHL已交仓 UPS未交仓", "language": "zh", "english": "Handed to DHL's warehouse, not yet to UPS's", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "After the landing: the destination carriers' warehouses, one of which has the shipment."}
   ]
 }

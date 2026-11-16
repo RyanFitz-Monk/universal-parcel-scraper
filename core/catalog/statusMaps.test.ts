@@ -196,6 +196,17 @@ describe('status map answers', () => {
     }
   });
 
+  it("answers 4PX's US label, JRT's order data and UniUni hand-over, JS Express's redelivery reminder, Meso Global's warehouse hand-over, SXW Express's export clearance and flight, and YunExpress's partner hub", () => {
+    expect(answer('four-px', 'FPX_O_IRI', 'Label created')).toEqual(mapped('registered'));
+    expect(answer('jrt', null, 'Parcel data received')).toEqual(mapped('registered'));
+    expect(answer('jrt', null, 'Shipping information received. Your parcel is on its way to UniUni for delivery to you')).toEqual(mapped('in_transit'));
+    expect(answer('js-express', 'OIT', 'Reminder to Schedule Redelivery of your item')).toEqual(mapped('failed_attempt'));
+    expect(answer('meso-global', null, 'DHL已交仓 UPS未交仓')).toEqual(mapped('in_transit'));
+    expect(answer('sxw-express', null, 'Clearence processing completed - Export')).toEqual(mapped('in_transit'));
+    expect(answer('sxw-express', null, 'International flight has departed')).toEqual(mapped('in_transit'));
+    expect(answer('yunexpress', null, "Arrived at Carrier's Regional Hub")).toEqual(mapped('in_transit'));
+  });
+
   it("reads Ukrposhta's Ukrainian wording as providers relay it without a code", () => {
     for (const carrier of ['ukrposhta', 'unknown']) {
       expect(answer(carrier, null, 'Прийнято')).toEqual(mapped('accepted'));
@@ -1692,6 +1703,15 @@ describe("universal providers' answers", () => {
     expect(answer('inpost', null, 'Accepted at the Logistics Centre')).toEqual(mapped('in_transit'));
     // A hand-over to the airline or the recipient's side is still no round.
     expect(answer('unknown', null, 'Handed over to airline')).not.toEqual(mapped('out_for_delivery'));
+  });
+
+  it("read Bring's pre-advice and terminal registration, a cross-border line's receipt and data, and USPS's redelivery reminder as their carriers do", () => {
+    expect(answer('unknown', null, 'The sender has let us know that a parcel is on its way.')).toEqual(mapped('registered'));
+    expect(answer('unknown', null, 'The parcel has been registered with us.')).toEqual(mapped('in_transit'));
+    expect(answer('unknown', null, 'Package received for processing')).toEqual(mapped('accepted'));
+    expect(answer('unknown', null, 'Shipment Info Received by international carrier')).toEqual(mapped('registered'));
+    expect(answer('unknown', null, 'Reminder to Schedule Redelivery of your item')).toEqual(mapped('failed_attempt'));
+    expect(answer('usps', null, 'Reminder to Schedule Redelivery of your item')).toEqual(mapped('failed_attempt'));
   });
 
   it("read Česká pošta's English as its own map does when an aggregator relays it", () => {

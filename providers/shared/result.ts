@@ -257,6 +257,8 @@ function sourceEventStage(description: string, includeBroadMovement = true): Sta
   if (/not delivered|could not.*deliver|unable to deliver|delivery failed/i.test(description)) return 'failed_attempt';
   // A notice card left for the recipient ends the attempt, as Canada Post reads it.
   if (/^notice (?:card )?left\b/i.test(description)) return 'failed_attempt';
+  // USPS's reminder after such a notice: the parcel waits for the recipient to book another delivery, as USPS's map reads it.
+  if (/^reminder to schedule redelivery of your item[.!]?$/i.test(description)) return 'failed_attempt';
   // A new attempt announced for the next round is no failure; the shared rules tell them apart.
   if (/delivery attempt/i.test(description) && [undefined, 'failed_attempt'].includes(trackingLanguageStage(description))) return 'failed_attempt';
   // Carrier-reported problems that are neither a missed attempt nor a return.
@@ -301,6 +303,14 @@ function sourceEventStage(description: string, includeBroadMovement = true): Sta
   if (/^wi\s*[–-]\s*intermediate warehouse\. (?:container (?:received|reception)|package (?:received at|reception at) intermediate warehouse|processed)[.!]?$/i
     .test(description)) return 'in_transit';
   if (/^delivery office\. received at branch[.!]?$/i.test(description)) return 'in_transit';
+  // Bring's pre-advice (PRE_NOTIFIED) and its terminal's registration of the parcel (IN_TRANSIT), in Bring's English
+  // as ParcelsApp relays them, read as Bring's map reads their codes.
+  if (/^the sender has let us know that a parcel is on its way[.!]?$/i.test(description)) return 'registered';
+  if (/^the parcel has been registered with us[.!]?$/i.test(description)) return 'in_transit';
+  // A cross-border line's receipt of the parcel for processing, and its record of the international carrier's data at
+  // the same minute, before it processes the parcel and sends it on.
+  if (/^package received for processing[.!]?$/i.test(description)) return 'accepted';
+  if (/^shipment info received by (?:the )?international carrier[.!]?$/i.test(description)) return 'registered';
   // Sender pre-advice such as Quickpac's "Shipment recorded by sender (data delivered)".
   if (/being prepared by the sender|recorded by (?:the )?(?:foreign )?sender|\bdata delivered\b|en route to .*awaiting processing/i.test(description)) return 'registered';
   // 17FEIA's customs broker taking the parcel to its warehouse after the flight, as Ship24 relays it with

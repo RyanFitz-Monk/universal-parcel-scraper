@@ -172,6 +172,7 @@
     {"wording": "Departed Destination Hub", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-07", "note": "The US delivery partner's hub sends the parcel on to its last-mile warehouse."},
     {"wording": "Arrived At Warehouse", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-07", "note": "The US delivery partner's last-mile warehouse, before the delivery round."},
     {"wording": "Parcel scan delays", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-08", "note": "A note under OIT, hours after the parcel reached a USPS facility, while no scan follows: the parcel stays on its way."},
-    {"code": "DOP", "wording": "Enviado", "stage": "in_transit", "language": "es", "confirmedBy": "live", "firstSeen": "2026-11-12", "note": "CTT Express's status (its code 1000), relayed after the local courier received the parcel and before its round: sent on, as CTT Express's own map reads it."}
+    {"code": "DOP", "wording": "Enviado", "stage": "in_transit", "language": "es", "confirmedBy": "live", "firstSeen": "2026-11-12", "note": "CTT Express's status (its code 1000), relayed after the local courier received the parcel and before its round: sent on, as CTT Express's own map reads it."},
+    {"code": "OIT", "wording": "Reminder to Schedule Redelivery of your item", "stage": "failed_attempt", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "USPS's reminder a day after its notice that no secure place was there: the parcel waits for the recipient to book another delivery, as USPS's own map reads it."}
   ]
 }

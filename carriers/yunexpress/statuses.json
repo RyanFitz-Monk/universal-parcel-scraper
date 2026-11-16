@@ -1003,6 +1003,14 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-10",
       "note": "Relayed from J&T Express Australia: its delivery round. Matched on its fixed words, with the customer service sentence it can end with or without."
+    },
+    {
+      "wording": "Arrived at Carrier's Regional Hub",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The US shipping partner's regional hub, after its collection for the last-mile carrier; GOFO's map reads the same wording with its own name as transit."
     }
   ]
 }

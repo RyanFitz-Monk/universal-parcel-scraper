@@ -1173,6 +1173,22 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-13",
       "note": "The destination's import clearance is done, before the delivering carrier's first scan, as a completed clearance reads."
+    },
+    {
+      "wording": "Parcel data received",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The line's order row: the shipment's data received."
+    },
+    {
+      "wording": "Shipping information received. Your parcel is on its way to UniUni for delivery to you",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "On the line into Canada, after the booked flight: UniUni, the delivering courier, has the shipment's data while the parcel travels on to it."
     }
   ]
 }
