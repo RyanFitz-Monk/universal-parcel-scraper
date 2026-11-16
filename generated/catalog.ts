@@ -53149,7 +53149,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "takesend",
+      "recognitionRank": 986,
+      "recognitionPattern": "^TS2\\d(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{7}$"
     },
     "canaryUrl": "https://t.17track.net/",
     "linkRules": [

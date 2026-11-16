@@ -1,4 +1,145 @@
 {
   "carrier": "takesend",
-  "entries": []
+  "entries": [
+    {
+      "code": "100",
+      "wording": "Outbound",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Outbound: the parcel has left the warehouse."
+    },
+    {
+      "code": "101",
+      "wording": "Info Received",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Info Received: the order's data, before Take Send has the parcel."
+    },
+    {
+      "code": "102",
+      "wording": "In Transit",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page files under In Transit with 110."
+    },
+    {
+      "code": "110",
+      "wording": "Transit",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "note": "A record's `trackstatus`, `statusnameus` Transit and `statusname` 运输途中, which the page labels In Transit."
+    },
+    {
+      "code": "104",
+      "wording": "Alert",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Alert."
+    },
+    {
+      "code": "198",
+      "wording": "Alert",
+      "stage": "exception",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page files under Alert with 104."
+    },
+    {
+      "code": "200",
+      "wording": "Delivery",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Delivery with the days the parcel took."
+    },
+    {
+      "code": "206",
+      "wording": "Return",
+      "stage": "returned",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Return."
+    },
+    {
+      "code": "109",
+      "wording": "No Update",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels No Update: it says the tracker has no news, not where the parcel is, so it names no stage."
+    },
+    {
+      "code": "201",
+      "wording": "Enquiry",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Enquiry without saying more: it names no stage."
+    },
+    {
+      "code": "202",
+      "wording": "Enquiry",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page files under Enquiry with 201: it names no stage."
+    },
+    {
+      "code": "203",
+      "wording": "Case close",
+      "language": "en",
+      "confirmedBy": "bundle",
+      "note": "A record's `trackstatus`, which the page labels Case close: it says the tracker stopped following the parcel, not where it is, so it names no stage."
+    },
+    {
+      "wording": "The Item is at the shippers warehouse",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The order's first row, while the parcel is still with the shipper."
+    },
+    {
+      "wording": "Shipment information received",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The shipment's data reaching Take Send, seconds after the order's first row."
+    },
+    {
+      "wording": "Enter the distribution center",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Take Send's own distribution centre taking the parcel in: its first scan of the parcel."
+    },
+    {
+      "wording": "Leaving the distribution center",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Leaving Take Send's distribution centre."
+    },
+    {
+      "wording": "Scan receipt",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "A receipt scan after the parcel left the distribution centre."
+    },
+    {
+      "wording": "Packaged",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The parcel packed for its line, after the receipt scan."
+    }
+  ]
 }
