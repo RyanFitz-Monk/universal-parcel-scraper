@@ -77,7 +77,8 @@ makes, with the China leg Cainiao's global tracker holds under the same number.
   The `trackStage` code stages it: Delivered (`2060`) and Returned to Client (`2065`) decide
   whatever the sentence says. Return Handling Process (`1008`) is the way back, centres and
   drivers' reasons included, so it reads as a problem until a sentence says the sender has the
-  parcel. In Transit (`1002`) and
+  parcel. The code after a third failed attempt (`2084`) gives that attempt, then the return
+  starting with its reason in brackets, which reads as a problem too. In Transit (`1002`) and
   Delivery (`1003`) cover flights, clearance, centres, delivery runs and drivers' reasons, which
   the sentence tells apart. A booked delivery day and a stock count move nothing, and so does the
   recipient choosing to collect the parcel; a sentence asking them to collect it at a named point

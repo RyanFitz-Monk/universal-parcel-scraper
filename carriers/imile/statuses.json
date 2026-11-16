@@ -63,6 +63,9 @@
     {"code": "1008", "wording": "【Maglod RDC】Shipment received.", "stage": "exception", "language": "en", "confirmedBy": "live"},
     {"code": "1008", "wording": "【Contact Error】need to return.", "stage": "exception", "language": "en", "confirmedBy": "live", "note": "The reason the parcel goes back, in 【】."},
     {"code": "1008", "wording": "【Maglod RDC】Order Closed.", "stage": "exception", "language": "en", "confirmedBy": "live"},
+    {"code": "2084", "wording": "Three delivery attempts failed: need to return.", "stage": "exception", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The third failed attempt ends the deliveries; the return to the sender starts."},
+    {"code": "2084", "wording": "We failed to deliver your order.", "stage": "failed_attempt", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The third failed attempt, at the minute the return starts."},
+    {"code": "2084", "wording": "Start returning，reason:[Three delivery attempts failed]", "stage": "exception", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The return starting, with its reason in brackets: under way until Returned to Client (2065)."},
     {"code": "2065", "wording": "【Maglod RDC】Return signature", "stage": "returned", "language": "en", "confirmedBy": "live", "note": "Returned to Client."},
     {"code": "2065", "wording": "【Milan Transit Center】Shipment returned to origin.", "stage": "returned", "language": "en", "confirmedBy": "live", "note": "Returned to Client."}
   ]

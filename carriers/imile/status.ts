@@ -100,6 +100,8 @@ const PHRASES: ReadonlyMap<string, Stage | null> = new Map<string, Stage | null>
   ['delivered', 'delivered'],
   ['your package was received', 'delivered'],
   ['order delivery failed, returning to sender', 'exception'],
+  // The third failed attempt (`2084`), at the minute the return starts.
+  ['we failed to deliver your order', 'failed_attempt'],
   // The delivery order closed without a delivery, as the return starts (`1008`), also as Shouwu relays it.
   ['order closed', 'exception'],
   ['shipment returned to origin', 'returned'],
@@ -119,6 +121,8 @@ const OPENINGS: readonly (readonly [RegExp, Stage | null])[] = [
   [/^flight schedule etd\b/, null],
   [SCHEDULED, null],
   [/^the driver failed to deliver\b/, 'failed_attempt'],
+  // The return starting, with iMile's reason in brackets: "Start returning，reason:[Three delivery attempts failed]".
+  [/^start returning\s*[,，]\s*reason\s*:/, 'exception'],
   // The driver could not book the delivery with the recipient, with the reason: "failed to schedule due to [noanswer]".
   [/^failed to schedule due to\b/, 'failed_attempt'],
   // The parcel waits at a pickup point the sentence names, for the recipient's code. The page writes
