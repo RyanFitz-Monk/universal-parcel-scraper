@@ -520,6 +520,32 @@ describe('JS Express tracking adapter', () => {
       ['2026-11-07T14:39:42Z', undefined], [undefined, '2026-11-06T12:16:00']]);
   });
 
+  it("reads USPS's other rows on UTC in a history whose USPS scans come to the second, when to the second or at a town without a state", () => {
+    const scan = (date: string, address: string, status: string, code: string, timeZone = '-05:00'): Row & { code: string } =>
+      ({ ...row(date, address, status), timeZone, code });
+    const rows = [
+      scan('2026-11-16 08:00:00', '', 'Reminder to Schedule Redelivery of your item', 'OIT'),
+      // JS Express's own note, at the offset of its own clock, keeps its wall clock.
+      scan('2026-11-15 10:20:00', '9', 'There is no available secure delivery location', 'DDF', '+08:00'),
+      scan('2026-11-12 16:06:54', 'SAMPLE TOWN', 'Delivered, In/At Mailbox', 'DSD'),
+      // The round on a whole minute, at the minute USPS's own tracker gives it on UTC.
+      scan('2026-11-12 11:10:00', 'SAMPLE TOWN', 'Out for Delivery', 'DIG'),
+      scan('2026-11-11 14:32:47', 'SAMPLE TOWN', 'Arrived at Post Office', 'OIT'),
+      scan('2026-11-11 13:13:37', 'SAMPLE TOWN', 'Arrived at USPS Facility', 'OIT'),
+      scan('2026-11-10 11:41:54', '', 'In Transit to Next Facility', 'OIT'),
+      // A row to the minute at a town and its state keeps its town's clock.
+      scan('2026-11-10 03:31:00', 'EXAMPLE, WA 99999', 'Arrived at Post Office', 'OIT', '-08:00'),
+      scan('2026-11-03 17:56:00', 'Sample Hub', 'Delivery to local courier', 'OIT'),
+    ];
+    const result = parseJsExpress(waybill(rows, { country: 'United States' }), DELIVERED);
+    expect(result.events?.map((event) => event.time ?? event.local_time)).toEqual([
+      '2026-11-16T08:00:00Z', '2026-11-15T10:20:00', '2026-11-12T16:06:54Z', '2026-11-12T11:10:00Z', '2026-11-11T14:32:47Z',
+      '2026-11-11T13:13:37Z', '2026-11-10T11:41:54Z', '2026-11-10T03:31:00', '2026-11-03T17:56:00']);
+    // Without USPS's scans to the second, the same round keeps its town's clock.
+    const minute = parseJsExpress(waybill([rows[3]!, rows[8]!], { country: 'United States' }), DELIVERED);
+    expect(minute.events?.map((event) => event.time ?? event.local_time)).toEqual(['2026-11-12T11:10:00', '2026-11-03T17:56:00']);
+  });
+
   it("dates a row without a place on the destination's one clock when the offset it states is that clock's, and keeps its code", () => {
     const stated = (date: string, address: string, status: string, timeZone: string, code?: string): Row & { code?: string } =>
       ({ ...row(date, address, status), timeZone, ...(code ? { code } : {}) });

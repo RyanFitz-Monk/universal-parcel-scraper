@@ -52,6 +52,11 @@ const PROVINCE = /,\s*([A-Z]{2})$/;
 // USPS's scans, relayed from two feeds: to the minute with the town, state and postal code, on the town's clock, or to
 // the second on UTC's.
 const USPS = /\busps\b/i;
+// USPS's rows that do not name it: its label, the delivering office's arrival, its transit between facilities, the
+// round, the delivery, a missed delivery's notice and the reminder that follows it.
+const USPS_WORDING = /^(?:shipping label created|arrived at post office|in transit to next facility|out for delivery|delivered\b|notice left\b|delivery attempted\b|available for pickup|reminder to schedule redelivery)/i;
+// A town and its state, with or without the postal code, as USPS's feed to the minute writes its places.
+const STATE = /,\s*[A-Z]{2}(?:\s+\d{5}(?:-\d{4})?)?$/;
 // The offset a row states, as "+02:00".
 const OFFSET = /^[+-]\d{2}:\d{2}$/;
 // J&T Express Germany's rows in German, as the destination courier: its scans opening with the district in 【】, its
@@ -125,13 +130,19 @@ function canadianTown(location: string, label: string): boolean {
  * keeps its wall clock. In a history that names Straightship, its rows are on
  * UTC, as its own page writes them: those that name it, those whose wording
  * ended with a town and a Canadian province, and its record of the parcel's
- * data. USPS's scans relayed to the second are on UTC too. Null otherwise:
- * airports' codes, other rows without a place and other couriers' rows.
+ * data. USPS's scans relayed to the second are on UTC too, and in a history
+ * that has them, so are USPS's other rows given to the second or at a place
+ * without a state: the delivering office's arrival, the round, the delivery
+ * and the rest that do not name USPS, and those that came on a whole minute.
+ * Null otherwise: airports' codes, other rows without a place and other
+ * couriers' rows.
  */
-function scanZone(local: string, description: string, location: string, label: string, straightship: boolean): string | null {
+function scanZone(local: string, description: string, location: string, label: string, straightship: boolean, utcFeed: boolean): string | null {
   if (straightship && (STRAIGHTSHIP.test(description) || canadianTown(location, label)
     || (!location && STRAIGHTSHIP_RECORD.test(description)))) return 'UTC';
-  if (USPS.test(description) && !local.endsWith(':00')) return 'UTC';
+  const seconds = !local.endsWith(':00');
+  if (USPS.test(description) && seconds) return 'UTC';
+  if (utcFeed && (USPS.test(description) || USPS_WORDING.test(description)) && (seconds || !STATE.test(location))) return 'UTC';
   return jsExpressChinaClock(description, location) ?? null;
 }
 
@@ -272,10 +283,12 @@ export function parseJsExpress(payload: unknown, rawNumber: string): CarrierResu
   }
 
   const straightship = scans.some((scan) => STRAIGHTSHIP.test(scan.description));
+  // USPS's feed on UTC, which gives its scans to the second.
+  const utcFeed = scans.some((scan) => USPS.test(scan.description) && !scan.local.endsWith(':00'));
   const receivers = new Map<CarrierEvent, string>();
   const events = scans.map(({ local, label, description, whole, location, offset, code }): CarrierEvent => {
     const stated = statedInstant(local, offset, description);
-    const zone = stated ? null : scanZone(local, description, location, label, straightship) ?? (location ? null : statedZone(local, offset, country));
+    const zone = stated ? null : scanZone(local, description, location, label, straightship, utcFeed) ?? (location ? null : statedZone(local, offset, country));
     const time = stated ?? (zone ? isoTime(local, zone)?.iso : undefined);
     const staged = jsExpressStage(description, code);
     const event: CarrierEvent = {
