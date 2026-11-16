@@ -179,6 +179,9 @@ const CUSTOMS_RELEASED = new RegExp([
   // Verb first: "Shipment completed the customs clearance process at destination".
   String.raw`\b(?:completed|finished) (?:the |its )?${CUSTOMS_SIDE}customs clearance\b`,
   String.raw`\b(?:import|export) (?:procedures|formalities)\b${SENTENCE}*?\b(?:are|were|have been|has been) (?:now )?(?:complete|completed|finished|done)\b`,
+  // An export declaration done, the parcel cleared to leave: "Export customs declaration completed". An import or
+  // unsided declaration only lodges the entry.
+  String.raw`\bexport customs declaration (?:(?:has been|was|is) )?(?:complete|completed|finished|done|successful|passed)\b`,
   String.raw`(?:leaving|departed from|left|exited|exiting|out of|passed(?: through)?) (?:the )?${CUSTOMS_SIDE}customs\b(?! (?:to|for) (?:the )?(?:sender|shipper)\b)`,
   // An entry allowed: 17TRACK's "Import allowed by destination customs" after the parcel is held for inspection.
   String.raw`\ballowed by (?:the )?${CUSTOMS_SIDE}customs\b`,

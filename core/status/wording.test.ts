@@ -427,6 +427,8 @@ describe('classifyWording', () => {
       // China Post's release label in English, as forwarders and providers relay it.
       'Export customs release', 'Export customs/release [Example City]',
       'The package was released by the clearing agency.',
+      // An export declaration done, as Take Send, Yanwen and their peers word it.
+      'Export customs declaration completed', 'Export customs declaration has been completed',
       // 17TRACK's entry allowed after an inspection hold.
       'Import allowed by destination customs', 'Import has been allowed by destination customs',
       'Problème douanier résolu, colis en cours d’acheminement', 'Colis dédouané', 'Dédouanement effectué', 'Sorti de la douane',
@@ -445,6 +447,7 @@ describe('classifyWording', () => {
       'Once released from customs, your parcel will be forwarded', 'Customs clearance will be completed soon',
       'Customs clearance in progress, documents completed', 'The shipment item is being customs cleared by us.',
       'Awaiting release from customs', 'Released to customs broker', 'Held for export customs inspection', 'Submitted to customs',
+      'Import customs declaration completed', 'Customs declaration completed',
       'Destination customs: Released to customs broker',
       'Import not allowed by destination customs', "Shipment wasn't allowed by customs",
       'Waiting to be allowed by customs', 'Import to be allowed by destination customs',
