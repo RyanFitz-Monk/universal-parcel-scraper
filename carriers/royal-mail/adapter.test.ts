@@ -215,6 +215,9 @@ describe('Royal Mail structured response', () => {
     ]);
     expect(statusMap.gaps.map(gap => gap.code)).toEqual(['EVNSC', 'EVNCE', 'EVNRT']);
     expect(statusMap.stage('EVNCE', 'collected from your customer service point')).toBeUndefined();
+    // The same words under EVNAE, minutes after the round, without a scan of the attempt.
+    expect(royalMailScanStage('EVNAE', 'Available for Redelivery or Collection')).toBe('ready_for_pickup');
+    expect(statusMap.stage('EVNAE', 'available for redelivery or collection')).toBe('ready_for_pickup');
   });
 
   it('leaves the delivery office’s retention after a hold for a fee without a stage of its own', () => {

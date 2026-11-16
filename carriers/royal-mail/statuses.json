@@ -349,6 +349,15 @@
       "note": "Kept at a Customer Service Point after missed deliveries, for the recipient to collect or book a redelivery."
     },
     {
+      "code": "EVNAE",
+      "wording": "Available for Redelivery or Collection",
+      "language": "en",
+      "stage": "ready_for_pickup",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "EVNDA's wording, minutes after the day's round with no scan of the attempt: the item kept for the recipient to collect or book a redelivery."
+    },
+    {
       "code": "EVNSC",
       "wording": "Collected and Signed at Your Customer Service Point",
       "language": "en",
