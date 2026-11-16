@@ -69,6 +69,8 @@ const VERIFIED_WORDING: Readonly<Record<string, Stage>> = {
   'the parcel has now cleared customs': 'in_transit',
   "we have your parcel and it's on its way to our depot": 'in_transit',
   "we have your parcel and it's on its way to you": 'in_transit',
+  // A return under way: the sender does not have the parcel yet.
+  "we have your parcel and it's on its way back to the sender": 'exception',
   'we have x-rayed your parcel as part of our normal security procedures': 'in_transit',
   "we've received your order details, but have not yet received your parcel": 'registered',
   "we've received your order details, and we're expecting your parcel shortly": 'registered',

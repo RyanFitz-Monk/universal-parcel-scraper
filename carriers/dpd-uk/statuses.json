@@ -23,6 +23,7 @@
     { "wording": "The parcel is on the vehicle for delivery", "language": "en", "stage": "out_for_delivery", "confirmedBy": "live", "firstSeen": "2026-10-08" },
     { "wording": "Your parcel has been delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-08" },
     { "wording": "The parcel has been delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-08" },
-    { "wording": "Your parcel is waiting for you at home (left in safe place)", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-08", "note": "Left in the recipient's safe place." }
+    { "wording": "Your parcel is waiting for you at home (left in safe place)", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-08", "note": "Left in the recipient's safe place." },
+    { "wording": "We have your parcel and it's on its way back to the sender", "language": "en", "stage": "exception", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "A return under way, before the sender has the parcel back." }
   ]
 }
