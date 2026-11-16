@@ -735,9 +735,9 @@ describe('PosteItalianeTracker fetch', () => {
     const result = await new PosteItalianeTracker({ timeoutMs: 1_000 }).fetch(TRACKING_NUMBER);
     expect(result.status).toBe('delivered');
     expect(seen).toHaveLength(1);
-    expect(seen[0]!.url).toBe('https://www.poste.it/online/dovequando/DQ-REST/ricercasemplice');
+    expect(seen[0]!.url).toBe('https://www.poste.it/online/dovequando/DQ-REST-TRUSTED/ricercasemplice');
     expect(JSON.parse(seen[0]!.body)).toEqual({
-      codiceSpedizione: TRACKING_NUMBER, tipoRichiedente: 'WEB', periodoRicerca: 1,
+      codiceSpedizione: TRACKING_NUMBER, tipoRichiedente: 'APP', periodoRicerca: 1,
     });
   });
 

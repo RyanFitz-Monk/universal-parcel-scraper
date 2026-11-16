@@ -26,6 +26,8 @@ import { classifyPosteItalianeStatus, posteItalianeMovementWording, posteItalian
 //   #/risultati-spedizioni/{code} resolves the code and renders the tracker
 //   (expired parcels show the documented "Tracciatura non disponibile").
 const TRACKING_ENDPOINT = 'https://www.poste.it/online/dovequando/DQ-REST/ricercasemplice';
+// Guest request in the official com.posteitaliane.spim app; no account header is needed.
+const APP_TRACKING_ENDPOINT = 'https://www.poste.it/online/dovequando/DQ-REST-TRUSTED/ricercasemplice';
 const DEFAULT_TIMEOUT_MS = 15_000;
 /** `fetchBounded` repeats a request that failed in transit once, after this pause. */
 const TRANSIENT_RETRY_DELAY_MS = 1_000;
@@ -394,7 +396,7 @@ export class PosteItalianeTracker {
     }
     budget.signal.throwIfAborted();
     state.sentAt.push(Date.now());
-    const { response, bytes } = await fetchBounded(TRACKING_ENDPOINT, {
+    const { response, bytes } = await fetchBounded(APP_TRACKING_ENDPOINT, {
       method: 'POST',
       signal: budget.signal,
       headers: {
@@ -405,7 +407,7 @@ export class PosteItalianeTracker {
         Referer: 'https://www.poste.it/',
         'User-Agent': this.userAgent,
       },
-      body: JSON.stringify({ codiceSpedizione: trackingNumber, tipoRichiedente: 'WEB', periodoRicerca: 1 }),
+      body: JSON.stringify({ codiceSpedizione: trackingNumber, tipoRichiedente: 'APP', periodoRicerca: 1 }),
     }, {
       provider: 'Poste Italiane tracking',
       timeoutMs: Math.min(this.timeoutMs, budget.remainingMs()),

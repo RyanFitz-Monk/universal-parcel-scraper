@@ -1,7 +1,7 @@
 # Poste Italiane
 
-The Italian postal operator. Tracked through the keyless DoveQuando REST endpoint behind the
-`poste.it/cerca` tracker. Dutch handoffs of Poste Italiane consignments stay with
+The Italian postal operator. Tracked through the guest DoveQuando REST endpoint used by the
+[official Poste Italiane app](https://play.google.com/store/apps/details?id=com.posteitaliane.spim). Dutch handoffs of Poste Italiane consignments stay with
 [PostNL](../spring-gds/README.md). SDA parcel shapes are recognition candidates;
 matching native Poste status or progress confirms them. Other postal shapes use the generic postal fallback.
 Detection names Poste Italiane for the parcels, EMS, registered and tracked-letter items it
@@ -27,8 +27,8 @@ Italiane for a number issued abroad.
 
 ## How it works
 
-1. `direct`: one `POST https://www.poste.it/online/dovequando/DQ-REST/ricercasemplice` with
-   `{ codiceSpedizione, tipoRichiedente: "WEB", periodoRicerca: 1 }` and `poste.it`
+1. `direct`: one `POST https://www.poste.it/online/dovequando/DQ-REST-TRUSTED/ricercasemplice` with
+   `{ codiceSpedizione, tipoRichiedente: "APP", periodoRicerca: 1 }` and `poste.it`
    `Origin`/`Referer`. No cookies, token or account. The echoed `idTracciatura` must match.
    The envelope decides the outcome, not the HTTP status (unknown numbers answer 200):
    - `esitoRicerca` `1` or `2`: not-found.
@@ -39,9 +39,9 @@ Italiane for a number issued abroad.
    - `esitoRicerca` `3` for letter post (`tipoSpedizione` `C`) at `stato` `1`, with neither a
      product nor a movement list: a code Poste does not know, so not-found. A code whose check
      digit fails answers that way.
-   - HTTP 404/410 means the tracking endpoint is unavailable. After every twenty searches from
-     one address, the service answers the next two with HTTP 400 and an error envelope asking
-     for a CAPTCHA: a challenge. Other non-200 replies remain upstream errors.
+   - HTTP 404/410 means the tracking endpoint is unavailable. The web tracker answers two searches after every twenty
+     from one address with HTTP 400 and an error envelope asking
+     for a CAPTCHA: a challenge. The app route keeps the same transport pacing and pause. Other non-200 replies remain upstream errors.
    - The CAPTCHA counts searches, not hours: twenty pass however long they take, and the two
      after them are refused. At most eighteen searches an hour go through one transport,
      recognition included, which spreads a busy hour's searches without keeping the CAPTCHA
