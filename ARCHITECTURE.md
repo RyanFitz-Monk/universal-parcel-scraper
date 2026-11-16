@@ -77,6 +77,12 @@ request: a lookup fails as `invalid_input` with reason `placeholder_number`, and
 answers unknown. Detection
 still reads their shape, and `isPlaceholderNumber` lets a consumer refuse one at its own form.
 
+A carrier whose `tracking.linkToken` is true takes the token of the link that opens the parcel
+as its number, as an [Amazon order](carriers/amazon-order/README.md) takes its Share tracking
+link's. `universalPlan()` plans no provider for it, and `UniversalTracker.fetchSource()`
+refuses it as `invalid_input` with reason `link_token`: the token is a key to the parcel, not a
+number a carrier prints. Clients need not show it.
+
 A phone number typed as a tracking number is read with the reader's country:
 `isPhoneNumber(number, country)` holds a mobile number written as it is dialled there, such as
 Paraguay's 0 and nine digits from an operator's range. Only formats no carrier serving that

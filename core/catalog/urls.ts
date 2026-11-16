@@ -1,4 +1,5 @@
 import { normalizeTrackingNumber } from '../detection/index.js';
+import { AMAZON_STORE_COUNTRIES } from './amazon.js';
 
 const PLANZER_SHARED_HOST = 'trackandtrace.planzergroup.com';
 const PLANZER_SHARED_PATH = /^\/shared\/sendungen\/([^/]+)\/?$/;
@@ -226,4 +227,54 @@ export function validateDachserTrackingUrl(rawUrl: string, trackingNumber: strin
   url.hostname = DACHSER_HOST;
   url.port = '';
   return url.toString();
+}
+
+const AMAZON_SHARE_PATH = /^\/progress-tracker\/package\/share\/?$/;
+const AMAZON_SHARE_TOKEN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** An Amazon share token's dashed lower-case form, from the token or the tracking number it normalizes to. */
+export function amazonShareToken(raw: string): string | undefined {
+  const hex = raw.trim().toLowerCase().replace(/-/g, '');
+  if (!/^[0-9a-f]{32}$/.test(hex)) return undefined;
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+/** An Amazon store's shared package tracking link, read into its store and token. */
+export interface AmazonShareLink {
+  /** The domain after `amazon.`, such as `co.uk`. */
+  store: string;
+  /** The share token, dashed and lower case. */
+  token: string;
+  /** The link as Amazon's app shares it, without the referral tag. */
+  url: string;
+}
+
+/**
+ * Read the link the Amazon app's Share tracking button gives, bound to the complete
+ * share token the tracking number holds. It is kept on the store's `www` host with
+ * Amazon's own parameters, whatever referral tags the pasted link carried.
+ */
+export function readAmazonShareUrl(rawUrl: string, trackingNumber: string): AmazonShareLink {
+  let url: URL;
+  try { url = new URL(rawUrl.trim()); } catch { throw new TypeError('Paste the complete Amazon tracking link'); }
+  const host = url.hostname.toLowerCase();
+  const store = host.replace(/^(?:www\.)?amazon\./, '');
+  if (rawUrl.length > 4096 || url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443')
+    || store === host || !Object.hasOwn(AMAZON_STORE_COUNTRIES, store)) {
+    throw new TypeError('Amazon tracking links must be on an Amazon store’s https address');
+  }
+  if (!AMAZON_SHARE_PATH.test(url.pathname)) throw new TypeError('Paste the link from Amazon’s Share tracking button');
+  const tokens = url.searchParams.getAll('shareToken');
+  if (tokens.length !== 1 || !AMAZON_SHARE_TOKEN.test(tokens[0]!)) {
+    throw new TypeError('The Amazon tracking link must include its share token');
+  }
+  const token = tokens[0]!.toLowerCase();
+  if (amazonShareToken(trackingNumber) !== token) throw new TypeError('The Amazon tracking link belongs to a different parcel');
+  return { store, token,
+    url: `https://www.amazon.${store}/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&shareToken=${token}` };
+}
+
+/** An Amazon shared package tracking link, as the link it keeps. */
+export function validateAmazonShareUrl(rawUrl: string, trackingNumber: string): string {
+  return readAmazonShareUrl(rawUrl, trackingNumber).url;
 }

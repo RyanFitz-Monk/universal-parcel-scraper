@@ -191,6 +191,10 @@
           "description": "True when every scan the adapter dates by its day alone is one the carrier gives no clock by design, such as a delivery round or a history listed under day headings. Fallback providers have no clock to add to such a scan.",
           "const": true
         },
+        "linkToken": {
+          "description": "True when the tracking number is the token of the link that opens the parcel, as the share token of an Amazon order's tracking link, rather than a number the carrier prints. No fallback provider is asked about it, and a client need not show it.",
+          "const": true
+        },
         "browser": {
           "description": "True when a lookup through the adapter can open a browser: the private browser service or a local or remote Chromium. Consumers can space out repeated lookups.",
           "const": true

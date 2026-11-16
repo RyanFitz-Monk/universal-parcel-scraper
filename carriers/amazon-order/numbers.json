@@ -1,0 +1,155 @@
+{
+  "carrier": "amazon-order",
+  "records": [
+    {
+      "number": "e9e3e310-44d7-4f1b-80b9-d10b8fe0a887",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://urlscan.io/result/01a18c5c-6b3a-738d-a796-3df6418b027a/",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An amazon.co.uk Share tracking link a public scan opened; the page is fixtures/delivered-by-amazon.html. The number is the link's share token."
+    },
+    {
+      "number": "e253332d-7088-43ae-8056-02fbbba45691",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20261106214138/https://www.amazon.fr/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&shareToken=e253332d-7088-43ae-8056-02fbbba45691",
+        "date": "2026-11-06",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.fr shared page naming Colis Privé; the page is fixtures/colis-prive-in-transit.html. The number is the link's share token."
+    },
+    {
+      "number": "3222e752-cc82-45c2-948d-41a3e655a865",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260401200129/https://www.amazon.com/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&shareToken=3222e752-cc82-45c2-948d-41a3e655a865",
+        "date": "2026-04-01",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.com shared page naming USPS; the page is fixtures/usps-delivered.html. The number is the link's share token."
+    },
+    {
+      "number": "b47ca126-7149-4b37-9ef6-c9db4d467965",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260927212952/https://www.amazon.es/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&ref=ppx_pt2_mob_ap_st_rcpt&shareToken=b47ca126-7149-4b37-9ef6-c9db4d467965",
+        "date": "2026-09-27",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.es shared page of a late parcel with Correos Express; the page is fixtures/lost.html. The number is the link's share token."
+    },
+    {
+      "number": "b4107d80-6f20-4771-adf0-f4481f7bf430",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260929174117/https://www.amazon.es/progress-tracker/package/share/?shareToken=b4107d80-6f20-4771-adf0-f4481f7bf430&unauthenticated=1&vt=SHARED_PACKAGE_TRACKING",
+        "date": "2026-09-29",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.es shared page naming CTT ES; the page is fixtures/ctt-es.html. The number is the link's share token."
+    },
+    {
+      "number": "10c5bc0b-982d-4a9b-9585-5ffd9982821c",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260904163515/https://www.amazon.ca/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&ref=ppx_pt2_mob_ap_st_rcpt&shareToken=10c5bc0b-982d-4a9b-9585-5ffd9982821c",
+        "date": "2026-09-04",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.ca shared page of a seller-fulfilled order with YunExpress; the page is fixtures/seller-yunexpress.html. The number is the link's share token."
+    },
+    {
+      "number": "dd5de6f6-70f7-460a-bcee-63f239533ba3",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20251104220538/https://www.amazon.co.jp/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&ref=ppx_pt2_mob_ap_st_rcpt&shareToken=dd5de6f6-70f7-460a-bcee-63f239533ba3",
+        "date": "2025-11-04",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.co.jp shared page of a refused parcel; the page is fixtures/refused.html. The number is the link's share token."
+    },
+    {
+      "number": "36ce92ca-5488-4d61-a2a9-2db990d2b421",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260709005904/https://www.amazon.com/progress-tracker/package/share/?unauthenticated=1&vt=SHARED_PACKAGE_TRACKING&ref=ppx_pt2_mob_ap_st_rcpt&shareToken=36ce92ca-5488-4d61-a2a9-2db990d2b421",
+        "date": "2026-07-09",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived amazon.com shared page without news from the carrier; the page is fixtures/no-information.html. The number is the link's share token."
+    }
+  ]
+}

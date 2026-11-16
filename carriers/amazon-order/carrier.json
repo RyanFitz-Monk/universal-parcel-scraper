@@ -1,0 +1,96 @@
+{
+  "id": "amazon-order",
+  "displayName": "Amazon order",
+  "displayNames": {
+    "en": "Amazon order",
+    "de": "Amazon-Bestellung",
+    "fr": "Commande Amazon",
+    "it": "Ordine Amazon",
+    "es": "Pedido de Amazon",
+    "pt": "Encomenda Amazon",
+    "pl": "Zamówienie Amazon"
+  },
+  "aliases": [],
+  "region": {
+    "countries": []
+  },
+  "brand": {
+    "color": "#ff9900"
+  },
+  "selectable": false,
+  "timezone": "UTC",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "amazon-order",
+    "steps": [
+      "direct",
+      "retry"
+    ],
+    "requirements": [
+      {
+        "field": "trackingUrl",
+        "validator": "amazonShareUrl",
+        "label": "Amazon tracking link",
+        "type": "url",
+        "placeholder": "https://www.amazon.com/progress-tracker/package/share/?…",
+        "help": "In the Amazon app, open Track package, tap Share tracking and paste the link."
+      }
+    ],
+    "linkToken": true
+  },
+  "capabilities": [
+    "provider_code"
+  ],
+  "portal": {
+    "canaryUrl": "https://www.amazon.com/progress-tracker/package/share/",
+    "shows": [
+      "status",
+      "eta",
+      "delivery_carrier"
+    ],
+    "scraped": [
+      "status",
+      "provider_code",
+      "delivery_carrier"
+    ],
+    "discarded": [],
+    "unavailable": [
+      "history",
+      "location",
+      "tracking_number"
+    ]
+  },
+  "links": [
+    {
+      "domains": [
+        "amazon.com",
+        "amazon.ca",
+        "amazon.com.mx",
+        "amazon.com.br",
+        "amazon.co.uk",
+        "amazon.ie",
+        "amazon.de",
+        "amazon.fr",
+        "amazon.it",
+        "amazon.es",
+        "amazon.nl",
+        "amazon.se",
+        "amazon.pl",
+        "amazon.com.be",
+        "amazon.com.tr",
+        "amazon.ae",
+        "amazon.sa",
+        "amazon.eg",
+        "amazon.in",
+        "amazon.co.jp",
+        "amazon.sg",
+        "amazon.com.au",
+        "amazon.co.za"
+      ],
+      "pathPattern": "^/progress-tracker/package/share/?$",
+      "query": "(?:^|&)shareToken=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?=&|$)",
+      "keepsCapabilityUrl": true
+    }
+  ],
+  "detection": []
+}

@@ -280,6 +280,17 @@ describe('universal discovery chain', () => {
     expect(browserLookup).not.toHaveBeenCalled();
   });
 
+  it("sends no provider the token of an Amazon order's tracking link, which opens the parcel", async () => {
+    const providers = ['ParcelsApp', 'Ship24', '17TRACK', 'Postal Ninja', 'UPU'] as const;
+    const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new Error('no request expected'));
+    const tracker = new UniversalTracker({ providers: [...providers], enablePostalNinja: true, trawlUrl: 'http://browser.test', fetcher });
+    for (const source of providers) {
+      await expect(tracker.fetchSource(source, '0F1E2D3C4B5A49688776A5B4C3D2E1F0', 20_000, null, null, undefined, null, 'amazon-order'))
+        .rejects.toMatchObject({ kind: 'invalid_input', provider: source, reason: 'link_token' });
+    }
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it('sends a number of seven characters or fewer only with its carrier, whose shipment a provider would otherwise guess', async () => {
     const providers = ['ParcelsApp', 'Ship24', '17TRACK', 'Postal Ninja'] as const;
     const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new Error('no request expected'));

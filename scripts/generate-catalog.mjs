@@ -55,7 +55,7 @@ async function readAdapterFolders() {
 }
 
 const carrierInputValidators = {
-  trackingUrl: new Set(['planzerSharedUrl', 'dachserCapabilityUrl', 'instaboxCapabilityUrl', 'freightwaysCapabilityUrl']),
+  trackingUrl: new Set(['planzerSharedUrl', 'dachserCapabilityUrl', 'instaboxCapabilityUrl', 'freightwaysCapabilityUrl', 'amazonShareUrl']),
   postcode: new Set([
     'swissPostcode',
     'francePostcode',
@@ -208,6 +208,8 @@ function contractTracking(tracking) {
   if (tracking.pageClock !== undefined) contractValue.pageClock = tracking.pageClock;
   // Consumers need not ask fallback providers for the clock of a scan dated by its day alone.
   if (tracking.dateOnlyScans !== undefined) contractValue.dateOnlyScans = tracking.dateOnlyScans;
+  // No fallback provider is asked about a link's token, and clients need not show it.
+  if (tracking.linkToken !== undefined) contractValue.linkToken = tracking.linkToken;
   // Clients space out repeated lookups that can open a browser.
   if (tracking.browser !== undefined) contractValue.browser = tracking.browser;
   return contractValue;

@@ -1,6 +1,6 @@
 import { isValidS10TrackingNumber } from '../core/detection/s10.js';
 import { normalizeTrackingNumber } from '../core/detection/normalize.js';
-import { CARRIER_IDS } from '../generated/catalog.js';
+import { CARRIER_CATALOG, CARRIER_IDS, type CarrierId } from '../generated/catalog.js';
 import { coverageTiers, type CoverageTier } from './coverage.js';
 import type { UniversalSource as Source } from './types.js';
 export const UNIVERSAL_SOURCES: Source[] = ['ParcelsApp', 'Ship24', '17TRACK', 'Track718', 'UPU'];
@@ -72,6 +72,15 @@ const CARRIERS: ReadonlySet<string> = new Set(CARRIER_IDS.filter((carrier) => ca
  * evidence shows its history, and about any number no carrier is named for,
  * where it is often the only provider with the parcel.
  */
+/**
+ * Whether a carrier's number is the token of the link that opens the parcel (`tracking.linkToken`),
+ * as an Amazon order's: it means nothing to a provider, so none is asked about it.
+ */
+export function numberIsLinkToken(carrier: string | null | undefined): boolean {
+  return !!carrier && Object.hasOwn(CARRIER_CATALOG, carrier)
+    && CARRIER_CATALOG[carrier as CarrierId].tracking.linkToken === true;
+}
+
 export function universalPlan(options: {
   carriers?: ReadonlyArray<string | null | undefined>;
   trackingNumber?: string;
@@ -83,6 +92,9 @@ export function universalPlan(options: {
   const carriers = options.carriers ?? [];
   const carrier = carriers.find((candidate) => coverageTiers(candidate)) ?? null;
   const tiers = coverageTiers(carrier);
+  if (carriers.some(numberIsLinkToken)) {
+    return { sources: [], carrier, tier: (source) => tiers?.[source] ?? 'unknown', rank: (source) => tierRank(tiers, source) };
+  }
   const named = carriers.some((candidate) => candidate && CARRIERS.has(candidate));
   const postalNinja = enablePostalNinja && (!named || ['full', 'partial'].includes(tiers?.['Postal Ninja'] ?? 'unknown'));
   const defaults: Source[] = postalNinja ? ['ParcelsApp', 'Ship24', '17TRACK', 'Postal Ninja', 'UPU'] : [...UNIVERSAL_SOURCES];

@@ -53,6 +53,16 @@ export function amazonShippingOrigin(raw: string): string {
   return `https://track.amazon.${domains[prefix] ?? 'fr'}`;
 }
 
+/**
+ * Amazon's retail stores, by the domain after `amazon.`, with the country each
+ * sells to: the stores whose orders the app's Share tracking button shares.
+ */
+export const AMAZON_STORE_COUNTRIES: Readonly<Record<string, string>> = {
+  com: 'US', ca: 'CA', 'com.mx': 'MX', 'com.br': 'BR', 'co.uk': 'GB', ie: 'IE', de: 'DE', fr: 'FR',
+  it: 'IT', es: 'ES', nl: 'NL', se: 'SE', pl: 'PL', 'com.be': 'BE', 'com.tr': 'TR', ae: 'AE', sa: 'SA',
+  eg: 'EG', in: 'IN', 'co.jp': 'JP', sg: 'SG', 'com.au': 'AU', 'co.za': 'ZA',
+};
+
 export function amazonShippingUrl(raw: string): string {
   return `${amazonShippingOrigin(raw)}/tracking/${encodeURIComponent(raw.replace(/[\s.-]/g, '').toUpperCase())}`;
 }

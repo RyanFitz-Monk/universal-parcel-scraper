@@ -20,6 +20,7 @@ import { AdapterRegistry, type AdapterEnvironment, type AdapterFactory, type Car
 import { trackCarrier } from '../core/adapter/track.js';
 import { activeRequirements } from '../core/catalog/index.js';
 import { carrierLinkRules } from '../core/catalog/linkRules.js';
+import { amazonShareToken } from '../core/catalog/urls.js';
 import { normalizeTrackingNumber } from '../core/detection/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../core/telemetry/index.js';
 import { loadNumberCorpusFiles } from '../core/testing/corpus.js';
@@ -127,6 +128,8 @@ function credential(validator: string, number: string, carrier: string): string 
       const receiver = carrierLinkRules(carrier as CarrierId).find((rule) => rule.keepsCapabilityUrl)!.domains[0];
       return `https://${receiver}/?consignmentid=CU..${number}.Z.0000000.1`;
     }
+    case 'amazonShareUrl':
+      return `https://www.amazon.co.uk/progress-tracker/package/share/?shareToken=${amazonShareToken(number)}`;
     default: throw new Error(`No synthetic credential for ${validator}`);
   }
 }

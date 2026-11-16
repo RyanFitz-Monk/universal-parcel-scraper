@@ -198,6 +198,11 @@
     "reason": "An invented prefix outside the marketplace list, kept as a shape check."
   },
   {
+    "carrier": "amazon-order",
+    "kind": "by_design",
+    "reason": "An Amazon order is tracked by the share token of its Share tracking link. The token alone names no carrier, so detection reads it only from the link."
+  },
+  {
     "carrier": "amazon-shipping",
     "kind": "by_design",
     "reason": "Amazon Logistics owns the shared Amazon pattern. A parcel moves here only after Amazon's public tracker answers for it."

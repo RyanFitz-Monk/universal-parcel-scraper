@@ -47,7 +47,7 @@ export { TrackingCaptureError } from './shared/capture.js';
 export type { UniversalSource } from './shared/result.js';
 
 export * from './plan.js';
-import { universalPlan, universalSourceBudget } from './plan.js';
+import { numberIsLinkToken, universalPlan, universalSourceBudget } from './plan.js';
 
 /**
  * A source is asked only with this much budget left. A provider that runs out
@@ -174,6 +174,10 @@ export class UniversalTracker {
         { reason: 'usps_routing_barcode' });
     }
     const number = pic ?? normalized;
+    // An Amazon order's number is its share link's token, which no provider can look up.
+    if (numberIsLinkToken(carrier)) {
+      throw new InvalidInputError(source, 'A link token is not sent', { reason: 'link_token' });
+    }
     // Providers merge other people's shipments under a placeholder such as 123456789.
     if (isPlaceholderNumber(number)) {
       throw new InvalidInputError(source, 'A placeholder number is not sent', { reason: 'placeholder_number' });

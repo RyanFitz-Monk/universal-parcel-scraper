@@ -23,6 +23,8 @@ adapter, and sync marks these parcels unsupported without calling any tracker.
   carrier is still decided by the `amazon-shipping` check.
 - Only the typed number is stored. The app never asks for Amazon credentials or holds an
   Amazon session.
+- The buyer can share the parcel's status instead: the link of the Share tracking button is
+  tracked as an [Amazon order](../amazon-order/README.md).
 
 ## Rejected approaches
 

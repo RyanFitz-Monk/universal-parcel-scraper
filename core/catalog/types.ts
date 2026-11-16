@@ -17,6 +17,7 @@ export type CarrierInputValidator =
   | 'dachserCapabilityUrl'
   | 'instaboxCapabilityUrl'
   | 'freightwaysCapabilityUrl'
+  | 'amazonShareUrl'
   | 'swissPostcode'
   | 'francePostcode'
   | 'germanyPostcode'
@@ -164,6 +165,8 @@ export interface CarrierDefinition {
     pageClock?: boolean;
     /** Every scan the adapter dates by its day alone is one the carrier gives no clock by design. */
     dateOnlyScans?: boolean;
+    /** The number is the token of the link that opens the parcel, not one the carrier prints. */
+    linkToken?: boolean;
     /** A lookup can open a browser: the private browser service or a local or remote Chromium. */
     browser?: boolean;
   };
