@@ -1581,6 +1581,9 @@ describe("universal providers' answers", () => {
     expect(answer('unknown', null, 'INTERACTIVE DELIVERY INFORMATION')).toEqual(gap);
     // La Poste's import moving on abroad, and XDP's first record, as ParcelsApp relays them.
     expect(answer('unknown', null, 'Your shipment continues its journey to its destination country.')).toEqual(mapped('in_transit'));
+    // Its parcel and Chronopost's entering the destination country, in French.
+    expect(answer('unknown', null, 'Colis entré dans le pays de destination')).toEqual(mapped('in_transit'));
+    expect(classifyWording('Colis entré dans le pays de destination', 'pending')).toEqual({ stage: 'in_transit', source: 'wording:language' });
     expect(answer('unknown', null, 'CREATE')).toEqual(mapped('registered'));
     expect(answer('unknown', null, 'Die Sendung ist im Zielland/Zielgebiet eingetroffen')).toEqual(mapped('in_transit'));
     // Wording the carriers' own maps now read.

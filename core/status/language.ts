@@ -697,6 +697,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // La Poste's import moving on in the destination territory (ET3, "Votre envoi poursuit son acheminement sur
   // son territoire de destination"), as ParcelsApp words it.
   if (/^(?:your |the )?(?:shipment|parcel|package|item) continues its journey to (?:its|the) destination country$/.test(text)) return 'in_transit';
+  // Its parcel and Chronopost's entering the destination country (EI), as ParcelsApp relays them with no code: in
+  // transit, as Chronopost's map reads it.
+  if (/^(?:le |votre )?(?:colis|envoi) (?:est )?entre dans (?:le|son) pays de destination$/.test(text)) return 'in_transit';
   // UPS's scans as providers relay them without its activity codes, read as UPS's own map reads them: a delivery
   // change the receiver asked for, carried out, and a wrong company or receiver name holding the delivery.
   if (/^as requested, (?:the )?(?:ups my choice®? )?delivery change (?:was|has been) completed$|^(?:the )?(?:delivery )?address (?:was|has been) changed as (?:the )?(?:receiver|recipient) requested$/.test(text)) return 'in_transit';
