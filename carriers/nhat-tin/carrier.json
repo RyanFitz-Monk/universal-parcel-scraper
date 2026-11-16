@@ -19,18 +19,61 @@
   "timezone": "Asia/Ho_Chi_Minh",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "nhat-tin",
+    "steps": [
+      "direct"
+    ],
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "eta",
+    "provider_code",
+    "service_name"
+  ],
   "portal": {
     "url": "https://ntlogistics.vn/tra-van-don.html?bill={trackingNumber}",
     "searchUrl": "https://ntlogistics.vn/tra-van-don.html",
     "canaryUrl": "https://ntlogistics.vn/tra-van-don.html",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "service_name",
+      "sender_name",
+      "recipient_name",
+      "phone_numbers",
+      "origin",
+      "destination",
+      "payment_details",
+      "order_contents",
+      "order_date"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "provider_code",
+      "service_name"
+    ],
+    "discarded": [
+      "sender_name",
+      "recipient_name",
+      "phone_numbers",
+      "origin",
+      "destination",
+      "payment_details",
+      "order_contents",
+      "order_date"
+    ],
+    "unavailable": [
+      "offset_timestamps",
+      "weight",
+      "proof_of_delivery"
+    ]
   },
   "links": [
     {

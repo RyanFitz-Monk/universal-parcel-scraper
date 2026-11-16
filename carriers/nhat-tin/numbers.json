@@ -69,6 +69,80 @@
         ]
       },
       "note": "The shipment in the webhook payload example of Nhat Tin Logistics' own API documentation."
+    },
+    {
+      "number": "CP12446495887",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://donsan.vn/tra-cuu-van-don-nhat-tin",
+        "date": "2026-11-16",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "la-poste"
+        ]
+      },
+      "note": "Donsan's Nhat Tin Logistics tracking guide gives it as an example. Nhat Tin Logistics' tracker answers it as a bill delivered within Hanoi."
+    },
+    {
+      "number": "CP120498464",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://travandon.com/ntlogistics",
+        "date": "2026-11-16",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-it"
+        ]
+      },
+      "note": "The example in the search box of travandon.com's Nhat Tin Logistics tracker. Nhat Tin Logistics' tracker answers it as a bill from Hanoi delivered in Ho Chi Minh City."
+    },
+    {
+      "number": "1174350186",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://vntracuu.com/tracking/ntlogistics",
+        "date": "2026-11-16",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "dhl",
+          "mondial-relay",
+          "relais-colis",
+          "estafeta",
+          "packeta",
+          "box-now",
+          "cargus",
+          "dhl-ecommerce-es",
+          "gls-es"
+        ]
+      },
+      "note": "The example in vntracuu.com's Nhat Tin Logistics tracking page. Nhat Tin Logistics' tracker answers it as a bill from Hanoi delivered in Đắk Lắk."
     }
   ]
 }

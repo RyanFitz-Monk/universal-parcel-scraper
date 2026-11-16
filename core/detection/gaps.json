@@ -2407,6 +2407,18 @@
     "reason": "Eight digits are shared by many carriers and nothing in the number points to Next Level."
   },
   {
+    "carrier": "nhat-tin",
+    "pattern": "^\\d{10}$",
+    "kind": "collision",
+    "reason": "Ten-digit Nhat Tin Logistics bills share their shape with many carriers' numeric waybills, so the shape cannot name Nhat Tin Logistics."
+  },
+  {
+    "carrier": "nhat-tin",
+    "pattern": "^CP\\d{9}(?:\\d{2})?$",
+    "kind": "open",
+    "reason": "Nhat Tin Logistics' tracker knows CP bills of nine and eleven digits, but each length has one public sample, and La Poste's and GLS Italy's rules take those shapes."
+  },
+  {
     "carrier": "nim-express",
     "pattern": "^\\d{13}$",
     "kind": "collision",

@@ -39521,7 +39521,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Ho_Chi_Minh",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "nhat-tin",
+      "localClocks": true
     },
     "canaryUrl": "https://ntlogistics.vn/tra-van-don.html",
     "trackingUrlTemplate": "https://ntlogistics.vn/tra-van-don.html?bill={trackingNumber}",

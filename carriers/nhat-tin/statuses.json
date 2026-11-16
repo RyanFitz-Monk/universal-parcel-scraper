@@ -21,6 +21,10 @@
     {"wording": "Xuất vận đơn từ", "stage": "in_transit", "language": "vi", "confirmedBy": "official-doc", "note": "A history event in the developer documentation's tracking example, followed by the warehouse."},
     {"wording": "Trả vận đơn cho", "stage": "delivered", "language": "vi", "confirmedBy": "official-doc", "note": "The final history event in the developer documentation's tracking example, followed by the receiver; its English label reads \"Delivered to\"."},
     {"wording": "Bill import to", "stage": "in_transit", "language": "en", "confirmedBy": "official-doc", "note": "English label of \"Nhập vận đơn vào\" in the developer documentation's tracking example, followed by the warehouse."},
-    {"wording": "Bill export from", "stage": "in_transit", "language": "en", "confirmedBy": "official-doc", "note": "English label of \"Xuất vận đơn từ\" in the developer documentation's tracking example, followed by the warehouse."}
+    {"wording": "Bill export from", "stage": "in_transit", "language": "en", "confirmedBy": "official-doc", "note": "English label of \"Xuất vận đơn từ\" in the developer documentation's tracking example, followed by the warehouse."},
+    {"code": "FBC", "wording": "Đã giao hàng", "stage": "delivered", "language": "vi", "confirmedBy": "live", "note": "The tracking page's bill status code and wording for a delivered bill."},
+    {"wording": "Nhập kho:", "stage": "in_transit", "language": "vi", "confirmedBy": "live", "note": "A history operation of the newer layout, followed by the warehouse."},
+    {"wording": "Xuất kho - kho:", "stage": "in_transit", "language": "vi", "confirmedBy": "live", "note": "A history operation of the newer layout, followed by the warehouse it leaves and the one it goes to."},
+    {"wording": "Xuất kho trả hàng", "stage": "out_for_delivery", "language": "vi", "confirmedBy": "live", "note": "Out of the last warehouse to the receiver, before \"Trả vận đơn cho\"."}
   ]
 }

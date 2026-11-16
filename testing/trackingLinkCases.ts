@@ -2275,6 +2275,7 @@ export const uncheckedTrackingLinks: Partial<Record<CarrierId, string>> = {
   'nepal-post': 'The internal tracker requires Nepali network access; the rendered-link check has no country-specific browser transport.',
   'russian-post': 'The public tracker requires Russian network access; the rendered-link check has no country-specific browser transport.',
   'surat-kargo': 'The public tracker requires Turkish network access; the rendered-link check has no country-specific browser transport.',
+  'nhat-tin': 'The tracking page searches only after its reCAPTCHA, and its lookup service requires Vietnamese network access; the rendered-link check has neither.',
   eushipments: 'euShipments\' tracking page takes the number only in its form, which posts it to a handler, so no address opens one order',
   'no-limit': 'No Limit\'s tracking page takes the number only in its form, which it posts back to itself with the page\'s state, so no address opens one shipment',
   'ecms-express': 'Opening a numbered tracking link requires an arithmetic picture CAPTCHA; the adapter solves the separate guest API flow.',
