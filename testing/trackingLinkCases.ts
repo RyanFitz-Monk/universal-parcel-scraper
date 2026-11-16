@@ -2270,6 +2270,7 @@ export const uncheckedTrackingLinks: Partial<Record<CarrierId, string>> = {
   veho: "the page shows a parcel or its absence only once Firebase App Check attests the browser's address, which the daily link check cannot count on; native tracking obtains the attestation in the browser service",
   'fm-transportes': 'the parcel view needs a Turnstile guest session, and its initial empty view is not a number-bound missing-parcel notice',
   roadie: 'The tracker requires US egress; the rendered-link canary has no scoped US browser transport.',
+  'aaa-cooper': 'The website refuses visitors outside the Americas; the rendered-link canary has no scoped American browser transport.',
   'peninsula-truck-lines': 'The website refuses visitors outside North America; the rendered-link canary has no scoped North American browser transport.',
   'asyad-express': 'The web tracker requires Omani network access; the adapter reads the separate mobile guest endpoints.',
   'nepal-post': 'The internal tracker requires Nepali network access; the rendered-link check has no country-specific browser transport.',
