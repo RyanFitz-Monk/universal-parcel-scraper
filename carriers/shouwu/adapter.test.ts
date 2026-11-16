@@ -466,6 +466,11 @@ describe('Shouwu International status vocabulary', () => {
     // DPD's failed round with a wrong address joined: the parcel went back to the depot, not to the sender.
     expect(statusMapAnswer({ carrier: 'shouwu', providerCode: null,
       description: 'Unfortunately we have not been able to deliver your parcel. Consignee address not correct.' })).toEqual({ kind: 'mapped', stage: 'failed_attempt' });
+    // The last mile's station keeping the parcel after a failed delivery names no stage.
+    for (const wording of ['STATIONED SHIPMENT', 'STATIONED LOCATED']) {
+      expect(shouwuStage(wording), wording).toBeNull();
+      expect(statusMapAnswer({ carrier: 'shouwu', providerCode: null, description: wording }), wording).toMatchObject({ kind: 'intentional_gap' });
+    }
   });
 
   it('maps every status it recorded to the stage recorded for it, and keeps the page’s labels off scan wording', () => {

@@ -73,5 +73,7 @@ export function shouwuStage(wording: string): ClassifiedWording | null {
 /** What the map says about a parcel's status, by its code, or about a scan, by its wording. */
 export const statusMap: CarrierStatusMap = {
   stage: (code, wording) => (code ? CODES.get(code) : mappedStage(wording)),
-  gaps: [],
+  // The last mile's rows after its failed delivery, minutes apart, while its station keeps the parcel.
+  gaps: ['stationed shipment', 'stationed located'].map((wording) => ({ wording,
+    note: "The last mile's station keeping the parcel after a failed delivery: it says neither that the parcel waits for the recipient to collect nor that another round follows, so it names no stage." })),
 };

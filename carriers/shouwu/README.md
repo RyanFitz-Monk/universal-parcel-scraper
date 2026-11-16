@@ -36,7 +36,9 @@ numbers `shouwu-1` offers.
   some lines Shouwu writes its own rows in Chinese, through the flight and the clearance abroad;
   the delivering partner's "Your consignment has been picked up", or FedEx's "Picked up", after
   them is that partner collecting the parcel from Shouwu's depot, in transit, not a handover from
-  the sender.
+  the sender. A last mile's "STATIONED SHIPMENT" and "STATIONED LOCATED" after its failed
+  delivery, its station keeping the parcel, say neither that it waits for collection nor that
+  another round follows, so they name no stage.
 - A delivery after a row that sends the parcel back, as DHL's "Shipment sent directly from parcel
   center to business customer" after its "Shipment will be returned to origin", is the return
   delivered to the sender: returned, which refines Undelivered and Delivered alike.
