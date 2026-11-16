@@ -147,14 +147,15 @@ activity confirms the Cainiao tracking leg; an empty internal pending module doe
 
 - Undocumented, keyless endpoint. Failures surface as sync errors; nothing retries them.
 - Cainiao sometimes answers with Alibaba's slider page instead of the JSON. That page is reported
-  as a `challenge`; the adapter does not solve it. The slider comes in spells: once it shows,
-  nearly every read from the address meets it for about an hour, however few are sent, and then
-  none does. So after a slider page no read goes out for fifteen minutes, through any tracker
-  sending through the same fetcher, recognition and iMile's reads of Cainiao's leg included. A
-  lookup in that time fails as `rate_limited` with the reason `self_paced` and the wait, without a
-  request. The first read after the pause pauses them again if it meets the slider too. The
-  catalog asks for a refresh at most every half hour, and an hour after a failed one, out for
-  delivery included.
+  as a `challenge`; the adapter does not solve it. It shows once about ten reads from an address
+  fall in one minute, and for hours afterwards such a burst meets it again while reads spread out
+  still load. So a transport sends at most six reads in any minute: a read past that waits for its
+  turn when the lookup has the time, and otherwise fails as `rate_limited` with the reason
+  `self_paced` and the wait, without a request. After a slider page no read goes out for fifteen
+  minutes, with the same failure. The first read after the pause pauses them again if it meets the
+  slider too. Both hold for every tracker sending through the same fetcher, recognition and iMile's
+  reads of Cainiao's leg included, and a restart forgets them. The catalog asks for a refresh at
+  most every half hour, and an hour after a failed one, out for delivery included.
 - Scans without a bracketed town have no location. Customs, line-haul and pickup-point scans carry
   none.
 - No pickup point: the scans do not name it, and the consumer page leaves self-pickup details to a

@@ -6,7 +6,7 @@ import { deliveryHandoff } from '../../core/catalog/handoff.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { normalizeCarrierResult, type CarrierResult } from '../../core/result/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
-import { adapter, CainiaoTracker, fetchCainiao, parseCainiaoTrackingResponse, SLIDER_PAUSE_MS } from './adapter.js';
+import { adapter, CAINIAO_READS_PER_MINUTE, CainiaoTracker, fetchCainiao, parseCainiaoTrackingResponse, SLIDER_PAUSE_MS } from './adapter.js';
 import { CAINIAO_ACTION_STATUS, CAINIAO_NOTICE_ACTIONS, CAINIAO_STATUS, cainiaoActionStage, cainiaoStageByStatus, statusMap } from './status.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { locatePlace } from '../../places/index.js';
@@ -148,6 +148,49 @@ describe('Cainiao wrong-number handling', () => {
     await expect(tracker.fetch(CAINIAO_WRONG_NUMBER)).resolves.toMatchObject({ status: 'pending' });
     await expect(tracker.fetch(CAINIAO_WRONG_NUMBER)).resolves.toMatchObject({ status: 'pending' });
     expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+
+  it('sends at most six reads a minute through one transport, and waits for a turn the lookup has time for', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    try {
+      vi.setSystemTime(Date.parse('2026-01-05T08:00:00Z'));
+      const pending = () => jsonResponse({ module: [{ mailNo: CAINIAO_WRONG_NUMBER, mailNoSource: 'INTERNAL', detailList: [] }] });
+      const fetcher = vi.fn<typeof fetch>(async () => pending());
+      const tracker = new CainiaoTracker({ fetcher });
+      for (let read = 0; read < CAINIAO_READS_PER_MINUTE; read += 1) {
+        vi.advanceTimersByTime(1_000);
+        await expect(tracker.fetch(CAINIAO_WRONG_NUMBER)).resolves.toMatchObject({ status: 'pending' });
+      }
+      expect(fetcher).toHaveBeenCalledTimes(CAINIAO_READS_PER_MINUTE);
+      // The seventh turn comes once the first read is a minute old, longer than the lookup's ten seconds.
+      vi.advanceTimersByTime(4_000);
+      await expect(tracker.fetch(CAINIAO_WRONG_NUMBER)).rejects.toMatchObject({
+        name: 'RateLimitedError', kind: 'rate_limited', reason: 'self_paced', provider: 'Cainiao', retryAfterMs: 51_000,
+      });
+      // Every tracker on the transport shares the minute, as iMile's reads of Cainiao's leg do.
+      await expect(new CainiaoTracker({ fetcher }).detail(CAINIAO_WRONG_NUMBER, { budgetMs: 30_000 })).rejects.toMatchObject({ reason: 'self_paced' });
+      expect(fetcher).toHaveBeenCalledTimes(CAINIAO_READS_PER_MINUTE);
+      // Five seconds before the turn, the lookup waits for it and reads.
+      vi.advanceTimersByTime(46_000);
+      const waited = tracker.fetch(CAINIAO_WRONG_NUMBER);
+      await vi.advanceTimersByTimeAsync(4_999);
+      expect(fetcher).toHaveBeenCalledTimes(CAINIAO_READS_PER_MINUTE);
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(waited).resolves.toMatchObject({ status: 'pending' });
+      expect(fetcher).toHaveBeenCalledTimes(CAINIAO_READS_PER_MINUTE + 1);
+      // A lookup cancelled while it waits sends nothing and keeps the pacing as its answer.
+      const controller = new AbortController();
+      const cancelled = tracker.fetch(CAINIAO_WRONG_NUMBER, { signal: controller.signal });
+      await vi.advanceTimersByTimeAsync(400);
+      controller.abort();
+      await expect(cancelled).rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced', retryAfterMs: 600 });
+      expect(fetcher).toHaveBeenCalledTimes(CAINIAO_READS_PER_MINUTE + 1);
+      // Another transport is paced on its own.
+      const other = vi.fn<typeof fetch>(async () => pending());
+      await expect(new CainiaoTracker({ fetcher: other }).fetch(CAINIAO_WRONG_NUMBER)).resolves.toMatchObject({ status: 'pending' });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('uses the environment fetcher the factory hands the tracker', async () => {

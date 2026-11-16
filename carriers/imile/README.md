@@ -19,7 +19,7 @@ makes, with the China leg Cainiao's global tracker holds under the same number.
    that close. A read throttled again stays rate limited.
 3. `cainiao`: once iMile has answered with scans, Cainiao's
    `GET https://global.cainiao.com/global/detail.json?mailNos={number}&lang=en-US`, read as the
-   AliExpress adapter reads it. For a parcel Cainiao carries out of China, it has the pickup,
+   AliExpress adapter reads it, within the same pacing. For a parcel Cainiao carries out of China, it has the pickup,
    sorting, export and flight scans from before iMile's. It gets half of the time iMile left,
    at most eight seconds. A slider, a rate limit, a changed reply or a number Cainiao does not
    know is recorded with its kind and leaves iMile's answer as it is.

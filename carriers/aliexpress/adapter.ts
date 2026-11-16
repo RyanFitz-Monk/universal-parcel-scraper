@@ -27,6 +27,7 @@ import { validTrackingNumber } from '../../core/detection/valid.js';
 import { ChallengeError, IndeterminateError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import type { Stage } from '../../core/status/index.js';
+import { paused } from '../../core/runner/pause.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { decodeText, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { transportOf } from '../../core/transport/transportOf.js';
@@ -322,25 +323,57 @@ function sliderPage(body: string): boolean {
 }
 
 /**
- * How long after a slider page no read is sent. The slider comes in spells: once it shows, nearly
- * every read from the address meets it for about an hour, however few are sent, and then none
- * does. The first read after the pause pauses them again if it meets the slider too.
+ * How long after a slider page no read is sent. The first read after the pause pauses them again
+ * if it meets the slider too.
  */
 export const SLIDER_PAUSE_MS = 15 * 60_000;
 
 /**
- * Until when one transport sends no read. Cainiao judges an address, so every tracker in the
- * process that sends through the same fetcher shares this: recognition, and iMile's reads of
+ * How many reads one transport sends in any minute. Cainiao serves its slider once about ten reads
+ * from an address fall in one minute, and reads spread out load while the address is flagged. A read
+ * past the cap waits for its turn when the lookup's time allows; otherwise it fails as our own
+ * pacing, with the wait, and sends nothing.
+ */
+export const CAINIAO_READS_PER_MINUTE = 6;
+const MINUTE_MS = 60_000;
+/** The time a read that waited for its turn keeps for the read itself. */
+const READ_RESERVE_MS = 3_000;
+
+/**
+ * One transport's pacing: until when it sends no read after a slider page, and when it sent, or
+ * will send, its reads of the last minute, oldest first. Cainiao judges an address, so every tracker
+ * in the process that sends through the same fetcher shares this: recognition, and iMile's reads of
  * Cainiao's leg. A restart forgets it.
  */
-const sliderPauses = new WeakMap<object, { until: number }>();
+interface CainiaoPace { until: number; sent: number[] }
+const paces = new WeakMap<object, CainiaoPace>();
 const GLOBAL_FETCH = {};
 
-function sliderPause(fetcher: typeof fetch | undefined): { until: number } {
+function cainiaoPace(fetcher: typeof fetch | undefined): CainiaoPace {
   const key = transportOf(fetcher) ?? GLOBAL_FETCH;
-  let pause = sliderPauses.get(key);
-  if (!pause) sliderPauses.set(key, pause = { until: 0 });
-  return pause;
+  let pace = paces.get(key);
+  if (!pace) paces.set(key, pace = { until: 0, sent: [] });
+  return pace;
+}
+
+/** When the next read may go out: now, or once the oldest of the minute's last reads leaves the minute. */
+function nextTurn(pace: CainiaoPace, now: number): number {
+  while (pace.sent.length && pace.sent[0]! <= now - MINUTE_MS) pace.sent.shift();
+  return pace.sent.length < CAINIAO_READS_PER_MINUTE ? now : pace.sent[pace.sent.length - CAINIAO_READS_PER_MINUTE]! + MINUTE_MS;
+}
+
+/** During a pause the lookup fails as our own pacing, with the wait, and sends nothing. */
+function throwIfSliderPause(pace: CainiaoPace): void {
+  const waitMs = pace.until - Date.now();
+  if (waitMs > 0) {
+    throw new RateLimitedError(PROVIDER, waitMs, 'Cainiao showed its slider page to a recent read; no read until the pause ends',
+      { reason: 'self_paced' });
+  }
+}
+
+function minuteCap(waitMs: number): RateLimitedError {
+  return new RateLimitedError(PROVIDER, waitMs, 'Cainiao was read as often as a minute allows; no read until a turn frees up',
+    { reason: 'self_paced' });
 }
 
 export class CainiaoTracker {
@@ -386,12 +419,16 @@ export class CainiaoTracker {
   }
 
   private async payload(url: string, referer: string, budget: LookupBudget): Promise<unknown> {
-    // During a pause the lookup fails as our own pacing, with the wait, and sends nothing.
-    const pause = sliderPause(this.fetcher);
-    const waitMs = pause.until - Date.now();
-    if (waitMs > 0) {
-      throw new RateLimitedError(PROVIDER, waitMs, 'Cainiao showed its slider page to a recent read; no read until the pause ends',
-        { reason: 'self_paced' });
+    const pace = cainiaoPace(this.fetcher);
+    throwIfSliderPause(pace);
+    const now = Date.now();
+    const turn = nextTurn(pace, now);
+    if (turn > now && turn - now > budget.remainingMs() - READ_RESERVE_MS) throw minuteCap(turn - now);
+    pace.sent.push(turn);
+    if (turn > now) {
+      // A wait the lookup's end cuts short leaves the pacing as the answer; the turn stays taken.
+      if (!await paused(turn - now, budget.signal)) throw minuteCap(Math.max(1, turn - Date.now()));
+      throwIfSliderPause(pace);
     }
     const { bytes } = await fetchBounded(
       url,
@@ -399,7 +436,7 @@ export class CainiaoTracker {
       { provider: UPSTREAM, timeoutMs: Math.min(this.timeoutMs, budget.remainingMs()), fetcher: this.fetcher },
     );
     if (sliderPage(decodeText(bytes))) {
-      pause.until = Math.max(pause.until, Date.now() + SLIDER_PAUSE_MS);
+      pace.until = Math.max(pace.until, Date.now() + SLIDER_PAUSE_MS);
       throw new ChallengeError(PROVIDER);
     }
     return parseJsonBytes(bytes, UPSTREAM);
