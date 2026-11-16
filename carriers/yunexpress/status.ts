@@ -117,6 +117,10 @@ const ENTRIES: ReadonlyArray<readonly [string, ClassifiedStatus]> = [
   ['Accepted at Carrier\'s Facility', { status: 'in_transit', stage: 'in_transit' }],
   ['Arrived at Carrier\'s Facility', { status: 'in_transit', stage: 'in_transit' }],
   ['Departed Carrier\'s Facility', { status: 'in_transit', stage: 'in_transit' }],
+  // The same intake and facilities when the last-mile carrier is USPS, after the hand-over to it.
+  ['Accepted at USPS Facility', { status: 'in_transit', stage: 'in_transit' }],
+  ['Arrived at USPS Facility', { status: 'in_transit', stage: 'in_transit' }],
+  ['Departed USPS Facility', { status: 'in_transit', stage: 'in_transit' }],
   // Ecoscooting's last mile after the hand-over to it, read as its own codes are: the
   // delivery carrier's acceptance is a hand-over between carriers.
   ['Your shipment has arrived at sorting center', { status: 'in_transit', stage: 'in_transit' }],

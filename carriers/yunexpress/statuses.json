@@ -1011,6 +1011,30 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-16",
       "note": "The US shipping partner's regional hub, after its collection for the last-mile carrier; GOFO's map reads the same wording with its own name as transit."
+    },
+    {
+      "wording": "Accepted at USPS Facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Relayed from USPS after \"Delivered to local carrier\": its intake of a parcel YunExpress already carried, a hand-over, not the parcel's acceptance."
+    },
+    {
+      "wording": "Arrived at USPS Facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Relayed from USPS: its facilities on the last mile."
+    },
+    {
+      "wording": "Departed USPS Facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Relayed from USPS: its facilities on the last mile."
     }
   ]
 }
