@@ -1,6 +1,6 @@
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
-import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
+import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { uspsRoundDelivery } from '../../core/result/round.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
@@ -251,6 +251,26 @@ function lastLeg(entry: Record<string, unknown>): Leg | null {
 }
 
 /**
+ * The partner that delivers the parcel, under the last leg's number, which can be the number
+ * asked. A parcel with none can carry the partner's own number as its tracking number, as
+ * SwiftX's do: DHLink relays them under it.
+ */
+function partnerOf(entry: Record<string, unknown>, tracking: string): Leg | null {
+  return text(entry, 'lastTurnNo', 64) ? lastLeg(entry) : legOf(tracking);
+}
+
+/**
+ * DHLink lists the parcel, under the number asked, without a scan: it holds the order, with its
+ * last leg once the line has one, before its warehouse receives the parcel. It still counts the
+ * parcel not found, but the number is known.
+ */
+function listedWithoutScans(entry: Record<string, unknown>, tracking: string): NoHistoryError {
+  const partner = partnerOf(entry, tracking);
+  return new NoHistoryError(PROVIDER, 'DHLink lists the parcel without scans', { reason: 'listed',
+    ...(partner ? { deliveryCarrier: partner.leg.carrier, deliveryTrackingNumber: partner.number } : {}) });
+}
+
+/**
  * The reply of `POST /stage-api/trbiz/track/queryTrack` for one number. The
  * search finds a parcel by its tracking number, and by other numbers of the
  * parcel too, so the parcel counts only when the number asked is its tracking
@@ -268,8 +288,9 @@ export function parseDhlink(payload: unknown, raw: string, readAt = Date.now()):
   const tracking = normalizeTrackingNumber(text(entry, 'trackno', 64));
   const own = normalizeTrackingNumber(text(entry, 'logisticsNo', 64));
   const rows = entry.trackinfoList;
+  const noRows = rows === null || rows === undefined || (Array.isArray(rows) && !rows.length);
   // The tracker answers a number it does not know with an empty parcel and counts it not found.
-  if (entry.state === STATE_NOT_FOUND && !tracking && !own && (rows === null || rows === undefined)) {
+  if (entry.state === STATE_NOT_FOUND && !tracking && !own && noRows) {
     // It answers a parcel's DHLink number the same way when the parcel has another tracking
     // number, and its last leg's number always: for those layouts the answer settles nothing,
     // but the reason tells it from an outage.
@@ -282,7 +303,7 @@ export function parseDhlink(payload: unknown, raw: string, readAt = Date.now()):
     throw new NotFoundError(PROVIDER);
   }
   if (tracking !== number && own !== number) throw new IndeterminateError(PROVIDER, 'DHLink answered with another parcel');
-  if (rows === null || rows === undefined) throw new IndeterminateError(PROVIDER, 'DHLink has no scans for the parcel yet');
+  if (noRows) throw listedWithoutScans(entry, tracking);
   if (!Array.isArray(rows)) throw new SchemaError(PROVIDER, 'DHLink returned a parcel without scans');
   if (rows.length > MAX_ROWS) throw new SchemaError(PROVIDER, 'DHLink returned an oversized history');
 
@@ -302,10 +323,8 @@ export function parseDhlink(payload: unknown, raw: string, readAt = Date.now()):
   // DHLink writes Britain's code as UK.
   const destination = code === 'UK' ? 'GB' : code;
   const last = lastLeg(entry);
-  // The partner delivers under the last leg's number, which can be the number asked. A parcel
-  // with none can carry the partner's own number as its tracking number, as SwiftX's do: DHLink
-  // relays them under it, and their scans keep the clock a parcel with no known last leg has.
-  const partner = text(entry, 'lastTurnNo', 64) ? last : legOf(tracking);
+  // A parcel whose tracking number is the partner's own keeps the clock a parcel with no known last leg has.
+  const partner = partnerOf(entry, tracking);
   // Newest first, as the tracking page lists them; the clocks sort as written.
   const dated = [...scans.values()].sort((left, right) => (left.stamp < right.stamp ? 1 : left.stamp > right.stamp ? -1 : 0))
     .map((scan) => {
@@ -348,6 +367,8 @@ export function parseDhlink(payload: unknown, raw: string, readAt = Date.now()):
       return { ...(time ? { time: time.iso } : { local_time: scan.stamp }), ...event,
         ...(event.description ? { description: dhlinkWithoutTown(event.description, location ?? '') } : {}), ...placed };
     });
+  // Rows dated after the read may be scans DHLink wrote early; otherwise only notices came, such as a booked flight.
+  if (!events.length && !ahead) throw listedWithoutScans(entry, tracking);
   if (!events.length) throw new IndeterminateError(PROVIDER, 'DHLink has no scans for the parcel yet');
   // A receipt after DHLink moved the parcel on, at another warehouse or the post a line hands it
   // to, takes the parcel along its way: no step back.

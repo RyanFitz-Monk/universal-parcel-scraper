@@ -38,7 +38,12 @@ page makes.
 - An empty parcel with state 1 is the unknown-number answer. For a DHLink number or a last
   leg's number in the partner table it is inconclusive, since the search gives it for parcels it has too. It
   then carries the reason `portal_not_found`, so a consumer can tell DHLink's answer from an outage. A
-  refusal in the envelope, or a parcel without rows, is inconclusive.
+  refusal in the envelope is inconclusive.
+- DHLink lists a parcel whose order it holds before any scan: the parcel under the number asked,
+  often with its last leg's number, no rows and the state of an unknown number. The number is
+  known, so the answer is no history with the reason `listed`, proposing the last leg as the
+  hand-off when the partner table maps it. Rows that are only notices, such as the flight DHLink
+  books, leave the parcel listed too.
 - DHLink's firewall answers clients it refuses, such as a headless browser's User-Agent, with a
   block page and HTTP 403, on the page and the lookup alike. A block is a challenge, never a
   missing parcel. Redirects are not followed.

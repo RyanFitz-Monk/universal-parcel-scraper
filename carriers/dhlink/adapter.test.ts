@@ -461,8 +461,26 @@ describe('DHLink HTTP adapter', () => {
     const lookup = (body: unknown, number = UNKNOWN, init?: ResponseInit) => carrier(vi.fn<typeof fetch>().mockResolvedValue(reply(body, init))).track({ number });
     await expect(lookup(fixture('not-found'))).rejects.toMatchObject({ kind: 'not_found' });
     await expect(lookup({ ...fixture('not-found'), code: 500, msg: '系统繁忙' })).rejects.toMatchObject({ kind: 'indeterminate', reason: undefined });
-    await expect(lookup(changed('swiftx-at-warehouse', (parcel) => { parcel.trackinfoList = null as never; }), WAREHOUSE)).rejects.toMatchObject({ kind: 'indeterminate' });
-    await expect(lookup(changed('swiftx-at-warehouse', (parcel) => { parcel.trackinfoList = []; }), WAREHOUSE)).rejects.toMatchObject({ kind: 'indeterminate' });
+    // DHLink lists a parcel it holds the order of, with its last leg, before a scan: the number is known.
+    for (const rows of [null, []]) {
+      await expect(lookup(changed('swiftx-at-warehouse', (parcel) => { parcel.trackinfoList = rows as never; }), WAREHOUSE))
+        .rejects.toMatchObject({ kind: 'indeterminate', reason: 'listed', deliveryCarrier: 'swiftx', deliveryTrackingNumber: 'SWX990000000000000001' });
+    }
+    // So it answers such a parcel live: counted not found, under the number asked, with a last leg no table entry maps.
+    const ordered = await lookup(changed('swiftx-at-warehouse', (parcel) => {
+      Object.assign(parcel, { state: 1, logisticsNo: null, orderNo: null, lastTurnNo: 'ZZ9900000001', trackinfoList: null, templateNodeList: null });
+    }), WAREHOUSE).catch((error: unknown) => error);
+    expect(ordered).toMatchObject({ kind: 'indeterminate', reason: 'listed' });
+    expect((ordered as { deliveryCarrier?: string }).deliveryCarrier).toBeUndefined();
+    // A booked flight is no scan: the parcel is still only listed.
+    await expect(lookup(changed('swiftx-at-warehouse', (parcel) => {
+      parcel.trackinfoList = parcel.trackinfoList.slice(0, 1).map((row) => ({ ...row, info: '预计配载航班1月13日,Expected flight on January 13th' }));
+    }), WAREHOUSE)).rejects.toMatchObject({ kind: 'indeterminate', reason: 'listed' });
+    // An unknown number's empty parcel is not found with an empty scan list too.
+    await expect(lookup(changed('not-found', (parcel) => { parcel.trackinfoList = []; }))).rejects.toMatchObject({ kind: 'not_found' });
+    // A reply without the parcel, or naming no number with another state, settles nothing: neither is DHLink's answer for an unknown number.
+    await expect(lookup(changed('not-found', (parcel) => { parcel.state = 2; }))).rejects.toMatchObject({ kind: 'indeterminate', reason: undefined });
+    await expect(lookup(changed('not-found', (_parcel, envelope) => { envelope.data.trackList = []; }))).rejects.toMatchObject({ kind: 'schema' });
     // The firewall refuses a headless browser's User-Agent with its page and HTTP 403.
     await expect(lookup(BLOCK_PAGE, UNKNOWN, { status: 403 })).rejects.toMatchObject({ kind: 'challenge' });
     await expect(lookup(BLOCK_PAGE)).rejects.toMatchObject({ kind: 'challenge' });
