@@ -77,6 +77,8 @@ const EVENT_STATUS: Record<string, ClassifiedStatus> = {
   // Observed live on public certified letters in the number corpus.
   'E000001V': { status: 'in_transit', stage: 'customs' },
   'E040990V': { status: 'in_transit', stage: 'customs' },
+  // Arrived at customs, days after leaving the exchange office.
+  'E05F000V': { status: 'in_transit', stage: 'customs' },
   // In the origin country's customs; then the processing completed, which puts the parcel back in transit.
   'B170000V': { status: 'in_transit', stage: 'customs' },
   'E510000V': { status: 'in_transit', stage: 'in_transit' },
