@@ -349,14 +349,15 @@ function keepNoticeStages(events: CarrierEvent[]): void {
 
 /**
  * A request UPS lists while it has only the label ("We have upgraded the package as requested") keeps the label's
- * stage: the parcel has not moved, and the origin scan after it is no step back. Events are newest first.
+ * stage: the parcel has not moved, and the origin scan after it is no step back. UPS's own request codes decide
+ * it, so its source stays the carrier's map. Events are newest first.
  */
 function requestsBeforeParcel(events: CarrierEvent[]): void {
   let previous: string | undefined;
   for (const event of [...events].reverse()) {
     if (isUpsNotice(event.provider_code)) continue;
     if (isUpsRequest(event.provider_code) && previous === 'registered') {
-      Object.assign(event, { stage: previous, stage_source: 'none' });
+      Object.assign(event, { stage: previous, stage_source: 'carrier_map' });
     } else if (event.stage) {
       previous = event.stage;
     }

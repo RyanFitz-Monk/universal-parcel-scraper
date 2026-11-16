@@ -314,7 +314,7 @@ describe('UPS structured response', () => {
     const request = scan('ZA', 'We have upgraded the package as requested.', '20261114 16:31:58');
     const label = scan('MP', 'Shipper created a label, UPS has not received the package yet. ', '20261114 15:53:44', 'United States');
     expect(upgraded([request, label])).toMatchObject({ status: 'pending', current_stage: 'registered' });
-    expect(upgraded([request, label]).events?.[0]).toMatchObject({ provider_code: 'ZA', stage: 'registered', stage_source: 'none' });
+    expect(upgraded([request, label]).events?.[0]).toMatchObject({ provider_code: 'ZA', stage: 'registered', stage_source: 'carrier_map' });
     expect(upgraded([scan('OR', 'Arrived at Facility', '20261116 12:56:52'), request, label]).events?.map((event) => event.stage))
       .toEqual(['accepted', 'registered', 'registered']);
     // Once UPS has the parcel, the request keeps it in transit.
