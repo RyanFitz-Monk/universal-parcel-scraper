@@ -79,6 +79,9 @@ The record must name the requested number in `info.mail.mailNo`; any other
 record is a schema error. A null `info` or a null, blank or empty mail record
 is what the app shows as "no logistics information". It is reported as no
 history: inconclusive, but an answer about the number rather than a failed lookup.
+The check step already answers "no information" for a number China Post holds
+nothing for, so the item's own record without a scan is reported as listed.
+The guest preview's empty list can come without the number, so it is not.
 Scans arrive oldest first and are returned newest first in the service's order,
 not re-sorted. Each scan keeps its office, airport or country (`orgName`), its
 scan code (`operationCode`) and a short text. An airline handover can name the

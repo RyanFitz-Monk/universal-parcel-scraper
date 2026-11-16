@@ -84,7 +84,9 @@ describe('China Post trace projection', () => {
   });
 
   it('keeps an empty record inconclusive and rejects malformed ones', () => {
-    expect(() => parseChinaPostTraces(edit('delivered', (mail) => { mail.mailInfos = []; }), NUMBER)).toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate' }));
+    // The item's own record without a scan is one China Post lists.
+    expect(() => parseChinaPostTraces(edit('delivered', (mail) => { mail.mailInfos = []; }), NUMBER))
+      .toThrow(expect.objectContaining({ name: 'NoHistoryError', kind: 'indeterminate', reason: 'listed' }));
     // The app shows "no logistics information" for these shapes.
     for (const info of [null, { mail: null }, { mail: '' }, { mail: {} }]) {
       expect(() => parseChinaPostTraces({ code: '000000', msg: 'SUCCESS', info }, NUMBER))

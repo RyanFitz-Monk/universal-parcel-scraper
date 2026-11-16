@@ -242,7 +242,9 @@ export function parseChinaPostTraces(payload: unknown, raw: string): CarrierResu
   if (clean(mail.mailNo, 40).toUpperCase() !== number) throw new SchemaError(PROVIDER, 'China Post returned a different shipment');
   if (!Array.isArray(mail.mailInfos) || mail.mailInfos.length > MAX_SCANS) throw new SchemaError(PROVIDER, 'China Post returned an invalid scan list');
   const scans: readonly unknown[] = mail.mailInfos;
-  if (!scans.length) throw new NoHistoryError(PROVIDER, 'China Post returned no scans for this number');
+  // The check step stops a number China Post holds nothing for ("no information"), so the item's own
+  // record reached past it, without a scan yet, is one China Post lists.
+  if (!scans.length) throw new NoHistoryError(PROVIDER, 'China Post returned no scans for this number', { reason: 'listed' });
 
   const country = clean(mail.receiverCountryName, 80);
   const destination = country ? chinaPostCountry(country) : undefined;
