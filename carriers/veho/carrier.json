@@ -20,6 +20,7 @@
     "adapter": "veho",
     "steps": [
       "direct",
+      "browser",
       "trawl"
     ],
     "browser": true,

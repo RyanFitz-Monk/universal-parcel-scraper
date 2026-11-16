@@ -5,19 +5,33 @@ import { runSteps } from '../../core/runner/index.js';
 import type { StepRecord, StepRecorder } from '../../core/telemetry/index.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
+import { attestInBrowser, type AttestationReply } from './browser.js';
 import { API, ATTESTATION, MAX_BYTES, normalizeVehoNumber, ORIGIN, PAGE, parseVeho, PROVIDER, vehoRequest } from './parser.js';
 
 type Route = NonNullable<StepRecord['networkRoute']>;
+/** Where an attestation is read: the private browser, or the browser service on its own address or through the fallback proxy. */
+type Path = 'private' | 'service' | 'proxy';
 
-/** One lookup's browser-service reads: the latest one's route, how many, and whether its query returned dated history. */
-interface ReadRoute { route: Route | null; reads: number; history: boolean }
+/**
+ * One lookup's attestation reads: the latest one's path and route, how many, whether the latest
+ * step failed before its query, and whether its query returned dated history.
+ */
+interface ReadRoute { path: Path | null; route: Route | null; reads: number; attesting: boolean; history: boolean }
 
 interface StepArgs { signal: AbortSignal; remainingMs: number }
 
 const TOKEN = /^[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}$/;
-/** How long an address whose attestation was refused is left alone. */
-const REFUSAL_REST_MS = 30 * 60_000;
+const ROUTES: Record<Path, Route> = { private: 'residential', service: 'default', proxy: 'residential' };
+/**
+ * How long a path whose attestation was refused is left alone. The private browser runs on the
+ * operator's own address, so it rests longest.
+ */
+const REFUSAL_REST_MS: Record<Path, number> = { private: 6 * 3_600_000, service: 30 * 60_000, proxy: 30 * 60_000 };
+/** The private browser reads at most this often, whatever the outcome. */
+const PRIVATE_SPACING_MS = 10 * 60_000;
 const QUERY_TIMEOUT_MS = 10_000;
+
+const freshRead = (): ReadRoute => ({ path: null, route: null, reads: 0, attesting: false, history: false });
 
 /**
  * Veho's order service takes a guest attestation its tracker's page obtains in a browser. The
@@ -26,16 +40,22 @@ const QUERY_TIMEOUT_MS = 10_000;
  */
 export class VehoTracker {
   private readonly fallbackProxy: string | null;
+  private readonly browserEndpoint: string | null;
   private held: { token: string; until: number } | null = null;
   private pending: Promise<void> | null = null;
-  private readonly rests = new Map<Route, number>();
+  private readonly rests = new Map<Path, number>();
+  private privateAfter = 0;
 
   constructor(private readonly environment: AdapterEnvironment, private readonly now: () => number = Date.now) {
     const proxy = environment.env.VEHO_FALLBACK_PROXY_URL?.trim() || null;
     // Checked here, so a mistyped proxy fails at setup with a message that leaves its value out.
     if (proxy) browserContextProxy(proxy);
     this.fallbackProxy = proxy;
+    this.browserEndpoint = environment.env.VEHO_BROWSER_WS_ENDPOINT?.trim() || null;
   }
+
+  /** Whether a browser can obtain an attestation. */
+  get browses(): boolean { return !!this.browserEndpoint || !!this.environment.trawl; }
 
   private token(): string | null {
     if (this.held && this.held.until <= this.now()) this.held = null;
@@ -46,7 +66,7 @@ export class VehoTracker {
   private routed(read: ReadRoute): StepRecorder {
     const recorder = this.environment.recorder;
     return {
-      step: record => recorder.step(read.route && record.step === 'trawl' ? { ...record, networkRoute: read.route,
+      step: record => recorder.step(read.route && ['browser', 'trawl'].includes(record.step) ? { ...record, networkRoute: read.route,
         networkAttempt: read.reads > 1 ? 'retry' : 'initial', historyAvailable: read.history } : record),
       lookup: record => recorder.lookup(record),
     };
@@ -79,29 +99,29 @@ export class VehoTracker {
   }
 
   /**
-   * Open the tracker's page in the browser service and keep the attestation it obtains. The page
-   * is given no number. Veho attests the address: one it refused is left alone for a while.
+   * Open the tracker's page in a browser and keep the attestation it obtains. The page is given no
+   * number. Veho attests the address and the browser: a path it refused is left alone for a while.
    */
-  private async attest(signal: AbortSignal, timeoutMs: number, proxy: string | null, read: ReadRoute): Promise<string> {
-    const route: Route = proxy ? 'residential' : 'default';
-    read.route = route;
-    if ((this.rests.get(route) ?? 0) > this.now()) throw new ChallengeError(PROVIDER, 'Veho refused this address a guest attestation');
+  private async attest(signal: AbortSignal, timeoutMs: number, path: Path, read: ReadRoute): Promise<string> {
+    read.path = path;
+    read.route = ROUTES[path];
+    if ((this.rests.get(path) ?? 0) > this.now()) throw new ChallengeError(PROVIDER, 'Veho refused this address a guest attestation');
+    if (path === 'private' && this.privateAfter > this.now()) {
+      throw new ChallengeError(PROVIDER, 'The private browser asked Veho for an attestation moments ago');
+    }
     if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, timeoutMs);
     read.reads += 1;
-    const page = await this.environment.trawl!.scrape({ url: PAGE, skipHttp: true, maxTier: 3, maxTimeout: timeoutMs,
-      captureResponses: [ATTESTATION], settleTimeout: timeoutMs, ...(proxy ? { proxy } : {}) },
-    { provider: PROVIDER, timeoutMs, signal, maxBytes: 200_000, requireSolved: false, captureWindow: 'last' });
+    if (path === 'private') this.privateAfter = this.now() + PRIVATE_SPACING_MS;
+    const response = path === 'private' ? await attestInBrowser(this.browserEndpoint!, signal, timeoutMs)
+      : await this.serviceRead(signal, timeoutMs, path === 'proxy' ? this.fallbackProxy : null);
     signal.throwIfAborted();
-    const response = page.capturedResponses.filter(row => row.url === ATTESTATION).at(-1);
     if (!response) throw new ChallengeError(PROVIDER, "Veho's page obtained no guest attestation");
     if ([401, 403, 429].includes(response.status)) {
-      this.rests.set(route, this.now() + REFUSAL_REST_MS);
+      this.rests.set(path, this.now() + REFUSAL_REST_MS[path]);
       throw new ChallengeError(PROVIDER, 'Veho refused this address a guest attestation');
     }
     if (response.status !== 200) throw new UpstreamHttpError(PROVIDER, response.status);
-    if (response.error || response.truncated || response.base64Encoded || response.body === null) {
-      throw new TransportError(PROVIDER, 'Veho returned an incomplete attestation');
-    }
+    if (response.truncated || response.body === null) throw new TransportError(PROVIDER, 'Veho returned an incomplete attestation');
     let reply: unknown;
     try { reply = JSON.parse(response.body); } catch { /* Reported below. */ }
     const { token, ttl } = (reply ?? {}) as { token?: unknown; ttl?: unknown };
@@ -109,14 +129,25 @@ export class VehoTracker {
     if (typeof token !== 'string' || token.length > 4096 || !TOKEN.test(token) || seconds < 60) {
       throw new SchemaError(PROVIDER, 'Veho returned an invalid attestation');
     }
-    this.rests.delete(route);
+    this.rests.delete(path);
     // Dropped a little before it ends, so a lookup never starts with one about to lapse.
     this.held = { token, until: this.now() + (seconds - Math.min(300, seconds / 10)) * 1000 };
     return token;
   }
 
+  /** The attestation the browser service captured, if any. */
+  private async serviceRead(signal: AbortSignal, timeoutMs: number, proxy: string | null): Promise<AttestationReply | null> {
+    const page = await this.environment.trawl!.scrape({ url: PAGE, skipHttp: true, maxTier: 3, maxTimeout: timeoutMs,
+      captureResponses: [ATTESTATION], settleTimeout: timeoutMs, ...(proxy ? { proxy } : {}) },
+    { provider: PROVIDER, timeoutMs, signal, maxBytes: 200_000, requireSolved: false, captureWindow: 'last' });
+    const response = page.capturedResponses.filter(row => row.url === ATTESTATION).at(-1);
+    if (!response) return null;
+    const incomplete = !!response.error || response.truncated || response.base64Encoded;
+    return { status: response.status, body: incomplete ? null : response.body, truncated: incomplete };
+  }
+
   /** One browser read at a time: a lookup waits for the read under way and uses its attestation. */
-  private async attested(signal: AbortSignal, deadline: number, proxy: string | null, read: ReadRoute): Promise<string> {
+  private async attested(signal: AbortSignal, deadline: number, path: Path, read: ReadRoute): Promise<string> {
     for (let pending = this.pending; pending && !this.token(); pending = this.pending) {
       let stop!: () => void;
       const aborted = new Promise<void>(resolve => { stop = resolve; signal.addEventListener('abort', stop, { once: true }); });
@@ -126,16 +157,18 @@ export class VehoTracker {
     const held = this.token();
     if (held) return held;
     // The read leaves the query after it two seconds and the service its own two to answer.
-    const run = this.attest(signal, Math.min(25_000, Math.floor(deadline - performance.now() - 4000)), proxy, read);
+    const run = this.attest(signal, Math.min(25_000, Math.floor(deadline - performance.now() - 4000)), path, read);
     const settled = run.then(() => {}, () => {});
     this.pending = settled;
     try { return await run; } finally { if (this.pending === settled) this.pending = null; }
   }
 
-  private async browser(number: string, { signal, remainingMs }: StepArgs, proxy: string | null, read: ReadRoute): Promise<CarrierResult> {
-    if (!this.environment.trawl) throw new ChallengeError(PROVIDER, 'Veho requires the browser tracking service');
+  private async browser(number: string, { signal, remainingMs }: StepArgs, path: Path, read: ReadRoute): Promise<CarrierResult> {
+    if (path !== 'private' && !this.environment.trawl) throw new ChallengeError(PROVIDER, 'Veho requires the browser tracking service');
     const deadline = performance.now() + remainingMs;
-    const token = await this.attested(signal, deadline, proxy, read);
+    read.attesting = true;
+    const token = await this.attested(signal, deadline, path, read);
+    read.attesting = false;
     const left = deadline - performance.now();
     if (left < 1) throw new BudgetExceededError(PROVIDER, remainingMs);
     read.history = false;
@@ -145,27 +178,32 @@ export class VehoTracker {
   }
 
   /**
-   * The browser steps. With a fallback proxy, an attestation the browser service's own address is
-   * refused is asked once more through the proxy, and the first read leaves it half of the time.
+   * The browser steps. The private browser asks first and leaves the browser service half of the
+   * time; any failure to attest there leaves the service its turn. With a fallback proxy, an
+   * attestation the service's own address is refused is asked once more through the proxy, and
+   * that first read leaves it half of the time.
    */
-  browserSteps(number: string, read: ReadRoute = { route: null, reads: 0, history: false }) {
-    const proxy = this.environment.trawl ? this.fallbackProxy : null;
+  browserSteps(number: string, read: ReadRoute = freshRead()) {
+    const trawl = !!this.environment.trawl;
+    const proxy = trawl && !!this.fallbackProxy;
     return [
       // Only a refusal asks for a new attestation: the order service's other failures are its answer.
-      { id: 'trawl', enabled: !!this.environment.trawl, recovers: (error: unknown) => error instanceof ChallengeError,
-        run: ({ signal, remainingMs }: StepArgs) => this.browser(number, { signal, remainingMs: proxy ? remainingMs / 2 : remainingMs }, null, read) },
-      { id: 'trawl', enabled: !!proxy, recovers: (error: unknown) => error instanceof ChallengeError && read.route === 'default',
-        run: (step: StepArgs) => this.browser(number, step, proxy, read) },
+      { id: 'browser', enabled: !!this.browserEndpoint, recovers: (error: unknown) => error instanceof ChallengeError,
+        run: ({ signal, remainingMs }: StepArgs) => this.browser(number, { signal, remainingMs: trawl ? remainingMs / 2 : remainingMs }, 'private', read) },
+      { id: 'trawl', enabled: trawl, recovers: (error: unknown) => error instanceof ChallengeError || (read.path === 'private' && read.attesting),
+        run: ({ signal, remainingMs }: StepArgs) => this.browser(number, { signal, remainingMs: proxy ? remainingMs / 2 : remainingMs }, 'service', read) },
+      { id: 'trawl', enabled: proxy, recovers: (error: unknown) => error instanceof ChallengeError && read.path === 'service',
+        run: (step: StepArgs) => this.browser(number, step, 'proxy', read) },
     ];
   }
 
   fetch(raw: string, context: TrackingContext = {}): Promise<CarrierResult> {
     context.signal?.throwIfAborted();
     const number = normalizeVehoNumber(raw);
-    const read: ReadRoute = { route: null, reads: 0, history: false };
+    const read = freshRead();
     return runSteps({ carrier: 'veho', budgetMs: context.budgetMs ?? 45_000, signal: context.signal, recorder: this.routed(read) }, [
       // Without an attestation the plain lookup can only be refused: with a browser to ask, the lookup starts there.
-      { id: 'direct', enabled: !!this.token() || !this.environment.trawl,
+      { id: 'direct', enabled: !!this.token() || !this.browses,
         run: ({ signal, remainingMs }) => this.direct(number, { signal, budgetMs: Math.min(QUERY_TIMEOUT_MS, remainingMs) }) },
       ...this.browserSteps(number, read),
     ]);
@@ -174,11 +212,11 @@ export class VehoTracker {
 
 export const adapter: AdapterFactory = environment => {
   const tracker = new VehoTracker(environment);
-  return { id: 'veho', recordsSteps: true, steps: ['direct', 'trawl'], track: (input, context) => tracker.fetch(input.number, context),
+  return { id: 'veho', recordsSteps: true, steps: ['direct', 'browser', 'trawl'], track: (input, context) => tracker.fetch(input.number, context),
     // Without an attestation a plain check can only be refused, so the adapter offers the browser check alone.
     recognizeWithBrowser: (number, context, previous) => {
       if (previous instanceof SchemaError) return Promise.reject(previous);
-      if (!environment.trawl) return Promise.reject(new ChallengeError(PROVIDER, 'Veho requires the browser tracking service'));
+      if (!tracker.browses) return Promise.reject(new ChallengeError(PROVIDER, 'Veho requires a browser'));
       return recognizeFromBrowserLookup(() => runSteps({ carrier: 'veho', budgetMs: context?.budgetMs ?? 45_000,
         signal: context?.signal, recorder: environment.recorder }, tracker.browserSteps(normalizeVehoNumber(number))));
     } };

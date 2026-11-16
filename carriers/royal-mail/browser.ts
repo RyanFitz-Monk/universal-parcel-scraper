@@ -2,7 +2,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import type { Browser, Locator, Page, Request, Response as BrowserResponse } from 'playwright-core';
 import { carrierErrorKind, ChallengeError, IndeterminateError, MaintenanceError, RateLimitedError, SchemaError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
-import { withLocalBrowser, withRemoteBrowser } from '../../core/transport/localBrowser.js';
+import { remoteChromeUserAgent, withLocalBrowser, withRemoteBrowser } from '../../core/transport/localBrowser.js';
 import { isRecord } from '../../core/types.js';
 import {
   parseRoyalMailTrackingResponse, royalMailEstimate, royalMailEventsApiUrl, royalMailSummaryApiUrl, royalMailTrackingUrl, royalMailUnconfirmed,
@@ -16,16 +16,9 @@ const MAX_BYTES = 2_000_000;
 const CAPTCHA_CHALLENGE = 'iframe[src*="hcaptcha.com"][src*="frame=challenge"]:visible';
 
 export async function royalMailBrowserUserAgent(browser: Browser, remote: boolean): Promise<string> {
+  // Use the browser's OS, rather than the calling server's platform.
+  if (remote) return remoteChromeUserAgent(browser, PROVIDER);
   const major = browser.version().split('.')[0];
-  if (remote) {
-    // Use the browser's OS, rather than the calling server's platform.
-    const cdp = await browser.newBrowserCDPSession();
-    try {
-      const version = await cdp.send('Browser.getVersion');
-      if (!/^Mozilla\/5\.0 [\x20-\x7E]{20,300}$/.test(version.userAgent)) throw new SchemaError(PROVIDER);
-      return version.userAgent.replace(/HeadlessChrome\/[\d.]+/, `Chrome/${major}.0.0.0`);
-    } finally { await cdp.detach(); }
-  }
   const platform = process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
     : process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64' : 'X11; Linux x86_64';
   return `Mozilla/5.0 (${platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`;

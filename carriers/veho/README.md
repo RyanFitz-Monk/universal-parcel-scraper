@@ -12,17 +12,26 @@ The guest tracker at track.shipveho.com asks `getOrderByTrackingIdCWA` at
 authorization header, which the page obtains as it loads after an invisible reCAPTCHA
 Enterprise check. The token lasts an hour and is bound to no number.
 
-`trawl` opens the tracker's home page in the browser service and keeps the token the page
-obtains. The page is given no tracking number. `direct` then asks the order service over plain
-HTTP, and so does every lookup while the token lasts; the adapter holds it in memory only.
-Lookups made together share one browser read.
+`browser` opens the tracker's home page in a private Chrome at `VEHO_BROWSER_WS_ENDPOINT`, and
+`trawl` in the browser service; each keeps the token the page obtains. The page is given no
+tracking number. `direct` then asks the order service over plain HTTP, and so does every lookup
+while the token lasts; the adapter holds it in memory only. Lookups made together share one
+browser read.
 
 A plain request without a token is always refused, so the adapter offers no HTTP recognition:
 a number is confirmed through the browser check, which needs dated history.
 
-Veho attests the address the browser runs on. With `VEHO_FALLBACK_PROXY_URL` set, a refusal on
-the browser service's own address is followed by one read through that proxy. An address that
-was refused is left alone for half an hour, so a refused lookup costs no page load in that time.
+reCAPTCHA scores both the address and the browser. A datacenter address is refused, and so is
+the browser service's Firefox even on a home address; Chrome on a home address passes. The
+private Chrome is asked first and its failure to attest leaves `trawl` its turn. Veho serves
+headless Chrome a stub page, so the private browser names itself as Chrome. Repeated reads lower
+an address's score: the private browser reads at most every ten minutes, and one token covers
+the hour, so a home address sees about one page load an hour while lookups go on.
+
+With `VEHO_FALLBACK_PROXY_URL` set, a refusal on the browser service's own address is followed
+by one read through that proxy. A path that was refused is left alone, so a refused lookup costs
+no page load in that time: half an hour for the browser service and the proxy, six hours for the
+private browser.
 
 The query is the tracker's own without the recipient's address, the support case and the
 delivery PIN. The operations, their labels and the sentence for each delivery issue come from
@@ -52,7 +61,7 @@ A missing number is the service's reply with a null order and no error. A refuse
 HTTP 401, or an unauthorized error beside a null order: it is a challenge, never a missing
 parcel, and the token is dropped.
 
-Without the browser service, or while every address is refused, a lookup ends as a challenge.
+Without a browser, or while every path is refused, a lookup ends as a challenge.
 
 Collections from the recipient's address are not asked for; their operations carry no stage.
 
@@ -71,4 +80,5 @@ The tracker opens one package from `#/trackingid/<id>`, `#/barcode/<barcode>` or
 
 ## Testing
 
-`FLARESOLVERR_URL=<browser service> npm run test:carriers:live -- carriers/veho`
+`VEHO_BROWSER_WS_ENDPOINT=<private Chrome> npm run test:carriers:live -- carriers/veho`, or
+`FLARESOLVERR_URL=<browser service>`. Each run loads the page once from that browser's address.

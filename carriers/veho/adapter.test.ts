@@ -1,13 +1,15 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AdapterEnvironment } from '../../core/adapter/index.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
+import { TransportError } from '../../core/errors/index.js';
 import { STAGES } from '../../core/status/index.js';
 import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER, type StepRecord } from '../../core/telemetry/index.js';
 import { TrawlClient } from '../../core/transport/trawl.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, VehoTracker } from './adapter.js';
+import { attestInBrowser } from './browser.js';
 import { API, ATTESTATION, normalizeVehoNumber, PAGE, parseVeho, QUERY } from './parser.js';
 import { statusMap, vehoEvent } from './status.js';
 
@@ -16,6 +18,18 @@ const BARCODE = 'VEHOSYN000000001';
 const TOKEN = `${'a'.repeat(20)}.${'b'.repeat(40)}.${'c'.repeat(30)}`;
 const OTHER_TOKEN = `${'d'.repeat(20)}.${'e'.repeat(40)}.${'f'.repeat(30)}`;
 const PROXY = 'http://user:PRIVATE@proxy.test:8000';
+const ENDPOINT = 'ws://browser.test/PRIVATE';
+
+vi.mock('./browser.js', () => ({ attestInBrowser: vi.fn() }));
+afterEach(() => { vi.mocked(attestInBrowser).mockReset(); });
+/** The private browser's answers to its successive reads. */
+const privately = (...replies: (number | Error)[]) => {
+  for (const reply of replies) {
+    if (reply instanceof Error) vi.mocked(attestInBrowser).mockRejectedValueOnce(reply);
+    else vi.mocked(attestInBrowser).mockResolvedValueOnce({ status: reply, truncated: false,
+      body: reply === 200 ? JSON.stringify({ token: TOKEN, ttl: '3600s' }) : null });
+  }
+};
 const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/order.json', import.meta.url), 'utf8'));
 const changed = (edit: (order: ReturnType<typeof fixture>['data']['order']) => void) => { const data = fixture(); edit(data.data.order); return data; };
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
@@ -312,6 +326,67 @@ describe('Veho adapter', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it('asks the private browser first, over the browser service, and rests it long after a refusal', async () => {
+    let clock = 9_000_000;
+    privately(200, 403, 200);
+    const { trawl, requests } = browser([attestation()]);
+    const { tracker, fetcher, records } = setup({ trawl, env: { VEHO_BROWSER_WS_ENDPOINT: ` ${ENDPOINT} ` }, now: () => clock });
+    expect((await tracker.fetch(NUMBER, { budgetMs: 30_000 })).events).toHaveLength(9);
+    expect(attestInBrowser).toHaveBeenCalledExactlyOnceWith(ENDPOINT, expect.any(AbortSignal), expect.any(Number));
+    // The private read leaves the browser service half of the lookup, and the query its own time.
+    expect(vi.mocked(attestInBrowser).mock.calls[0]![2]).toBeLessThanOrEqual(11_000);
+    expect(requests).toHaveLength(0);
+    expect(new Headers(fetcher.mock.calls[0]![1]!.headers).get('authorization')).toBe(TOKEN);
+    expect(records).toMatchObject([{ step: 'browser', outcome: 'ok', networkRoute: 'residential', historyAvailable: true }]);
+    // Refused once the attestation lapses: the browser service answers, and the private browser rests six hours.
+    clock += 3_300_000;
+    expect((await tracker.fetch(NUMBER)).events).toHaveLength(9);
+    expect(records.slice(1)).toMatchObject([{ step: 'browser', outcome: 'challenge', networkRoute: 'residential' },
+      { step: 'trawl', outcome: 'ok', networkRoute: 'default', fallbackFrom: 'browser' }]);
+    clock += 5 * 3_600_000;
+    (tracker as unknown as { held: null }).held = null;
+    await tracker.fetch(NUMBER);
+    expect(attestInBrowser).toHaveBeenCalledTimes(2);
+    expect(records.at(-2)).toMatchObject({ step: 'browser', outcome: 'challenge' });
+    expect(requests).toHaveLength(2);
+    clock += 3_600_000;
+    expect((await tracker.fetch(NUMBER)).events).toHaveLength(9);
+    expect(attestInBrowser).toHaveBeenCalledTimes(3);
+    expect(JSON.stringify(records)).not.toContain('PRIVATE');
+  });
+
+  it('leaves the browser service its turn when the private browser fails to attest, and spaces private reads', async () => {
+    let clock = 9_000_000;
+    privately(new TransportError('Veho', 'Veho browser service is unavailable'), new TransportError('Veho', 'Veho browser service is unavailable'));
+    const { trawl, requests } = browser([attestation()]);
+    const both = setup({ trawl, env: { VEHO_BROWSER_WS_ENDPOINT: ENDPOINT }, now: () => clock });
+    expect((await both.tracker.fetch(NUMBER)).events).toHaveLength(9);
+    expect(both.records).toMatchObject([{ step: 'browser', outcome: 'transport' }, { step: 'trawl', outcome: 'ok', fallbackFrom: 'browser' }]);
+    expect(requests).toHaveLength(1);
+    // With the private browser alone, a failed read is not repeated for ten minutes.
+    const alone = setup({ env: { VEHO_BROWSER_WS_ENDPOINT: ENDPOINT }, now: () => clock });
+    await expect(alone.tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'transport' });
+    await expect(alone.tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+    expect(attestInBrowser).toHaveBeenCalledTimes(2);
+    clock += 10 * 60_000;
+    privately(200);
+    expect((await alone.tracker.fetch(NUMBER)).events).toHaveLength(9);
+    expect(attestInBrowser).toHaveBeenCalledTimes(3);
+    expect(alone.records.map(record => record.step)).toEqual(['browser', 'browser', 'browser']);
+  });
+
+  it('keeps the order service\'s answer after a private attestation, and confirms through the private browser alone', async () => {
+    privately(200);
+    const { trawl, requests } = browser([attestation()]);
+    const { tracker } = setup({ trawl, env: { VEHO_BROWSER_WS_ENDPOINT: ENDPOINT }, fetcher: async () => json({}, 500) });
+    await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ status: 500 });
+    expect(requests).toHaveLength(0);
+    privately(200);
+    const carrier = adapter({ env: { VEHO_BROWSER_WS_ENDPOINT: ENDPOINT }, fetcher: async () => json(fixture()), trawl: null,
+      browserExecutablePath: null, recorder: NOOP_RECORDER });
+    expect(await carrier.recognizeWithBrowser!(NUMBER, { budgetMs: 20_000 })).toMatchObject({ known: true });
+  });
+
   it('confirms a number through the browser check alone, with its dated history', async () => {
     const { trawl, requests } = browser([attestation()]);
     const replies = [json(fixture()), json({ data: { order: null } })];
@@ -331,7 +406,7 @@ describe('Veho adapter', () => {
     const answer = await createTracker({ fetcher, env: {}, providers: [], trawlUrl: 'http://browser.test' }).track({ carrier: 'veho', number: NUMBER });
     expect(answer).toMatchObject({ carrier: 'veho', source: 'veho' });
     expect(answer.result.events).toHaveLength(9);
-    expect(adapter({ env: {}, trawl, browserExecutablePath: null, recorder: NOOP_RECORDER })).toMatchObject({ id: 'veho', steps: ['direct', 'trawl'] });
+    expect(adapter({ env: {}, trawl, browserExecutablePath: null, recorder: NOOP_RECORDER })).toMatchObject({ id: 'veho', steps: ['direct', 'browser', 'trawl'] });
     for (const number of ['VH199999999980', 'VEHOATL000021976']) expect(detectCarrierMatch(number).candidates).toContain('veho');
   });
 });

@@ -3,12 +3,12 @@ import { createTracker } from '../../facade/index.js';
 
 const positive = process.env.VEHO_TRACKING_NUMBER;
 const unknown = process.env.VEHO_UNKNOWN_NUMBER;
-const service = process.env.FLARESOLVERR_URL;
-const tracker = () => createTracker({ providers: [], trawlUrl: service,
-  env: { VEHO_FALLBACK_PROXY_URL: process.env.VEHO_FALLBACK_PROXY_URL } });
+const { FLARESOLVERR_URL: trawlUrl, VEHO_BROWSER_WS_ENDPOINT, VEHO_FALLBACK_PROXY_URL } = process.env;
+const service = trawlUrl || VEHO_BROWSER_WS_ENDPOINT;
+const tracker = () => createTracker({ providers: [], trawlUrl, env: { VEHO_BROWSER_WS_ENDPOINT, VEHO_FALLBACK_PROXY_URL } });
 
 describe('Veho live guest retrieval', () => {
-  it.skipIf(!positive || !service)('reads a package after the browser service obtains the attestation', async () => {
+  it.skipIf(!positive || !service)('reads a package after a browser obtains the attestation', async () => {
     const answer = await tracker().track({ number: positive!, carrier: 'veho' }, { budgetMs: 55_000 });
     expect(answer).toMatchObject({ carrier: 'veho', source: 'veho' });
     expect(answer.result.events.length).toBeGreaterThan(0);

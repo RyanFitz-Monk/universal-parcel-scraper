@@ -5,7 +5,7 @@
  * with a budget error when that deadline passes first.
  */
 import type { Browser } from 'playwright-core';
-import { BudgetExceededError, carrierErrorKind, TransportError } from '../errors/index.js';
+import { BudgetExceededError, carrierErrorKind, SchemaError, TransportError } from '../errors/index.js';
 import { loadChromium } from './optional.js';
 
 export interface LocalBrowserOptions {
@@ -63,6 +63,20 @@ export async function withRemoteBrowser<T>(options: Pick<LocalBrowserOptions, 'p
     // Connection diagnostics can contain the endpoint's capability path.
     throw new TransportError(options.provider, `${options.provider} browser service is unavailable`);
   }
+}
+
+/**
+ * A remote Chrome's own user agent, on that browser's OS, with headless Chrome named as Chrome:
+ * some pages serve headless Chrome a stub.
+ */
+export async function remoteChromeUserAgent(browser: Browser, provider: string): Promise<string> {
+  const major = browser.version().split('.')[0];
+  const cdp = await browser.newBrowserCDPSession();
+  try {
+    const version = await cdp.send('Browser.getVersion');
+    if (!/^Mozilla\/5\.0 [\x20-\x7E]{20,300}$/.test(version.userAgent)) throw new SchemaError(provider);
+    return version.userAgent.replace(/HeadlessChrome\/[\d.]+/, `Chrome/${major}.0.0.0`);
+  } finally { await cdp.detach(); }
 }
 
 async function withBrowser<T>(options: LocalBrowserOptions, run: (session: LocalBrowserSession) => Promise<T>, endpoint?: string): Promise<T> {
