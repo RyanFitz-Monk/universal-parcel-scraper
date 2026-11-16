@@ -1,8 +1,8 @@
 import type { Stage } from '../../core/status/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
 const STAGES: Readonly<Record<string, Stage>> = {
-  // 210 is worded "Em transferencia" like 50 and 90, and came hours before the collection scan, 10.
-  '10': 'accepted', '50': 'in_transit', '90': 'in_transit', '92': 'in_transit', '210': 'in_transit',
+  // 110 and 210 are worded "Em transferencia" like 50 and 90; 110 came between them, 210 hours before the collection scan, 10.
+  '10': 'accepted', '50': 'in_transit', '90': 'in_transit', '92': 'in_transit', '110': 'in_transit', '210': 'in_transit',
   '94': 'out_for_delivery', '100': 'delivered',
 };
 export const jAndTBrStage = (code: string): Stage | undefined => STAGES[code];
