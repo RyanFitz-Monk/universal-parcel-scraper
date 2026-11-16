@@ -1,0 +1,43 @@
+{
+  "id": "kakao-t-same-day",
+  "displayName": "Kakao T Same-Day Delivery",
+  "aliases": [
+    "카카오 T 당일배송",
+    "오늘의픽업",
+    "Today Pickup"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#282d4b"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://todaypickup-partners.kakaomobility.com/front/delivery/list/{trackingNumber}",
+    "searchUrl": "https://todaypickup-partners.kakaomobility.com/front/delivery/list",
+    "canaryUrl": "https://todaypickup-partners.kakaomobility.com/front/delivery/list",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "todaypickup-partners.kakaomobility.com"
+      ],
+      "path": "^/front/delivery/list/([0-9]+)/?$"
+    }
+  ],
+  "detection": []
+}

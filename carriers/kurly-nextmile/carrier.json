@@ -1,0 +1,45 @@
+{
+  "id": "kurly-nextmile",
+  "displayName": "Kurly Next Mile",
+  "aliases": [
+    "컬리넥스트마일",
+    "Kurly Nextmile"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#5f0080"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.kurlynextmile.com/information/invoice?invoice_no={trackingNumber}",
+    "searchUrl": "https://www.kurlynextmile.com/information/invoice",
+    "canaryUrl": "https://www.kurlynextmile.com/information/invoice",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "kurlynextmile.com"
+      ],
+      "pathPattern": "^/information/invoice/?$",
+      "params": [
+        "invoice_no"
+      ]
+    }
+  ],
+  "detection": []
+}

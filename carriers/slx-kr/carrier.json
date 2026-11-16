@@ -1,0 +1,46 @@
+{
+  "id": "slx-kr",
+  "displayName": "SLX",
+  "aliases": [
+    "SLX택배",
+    "에스엘엑스택배",
+    "에스엘엑스"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#2e3092"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://net.slx.co.kr/info/tracking.jsp?iv_no={trackingNumber}",
+    "searchUrl": "https://www.slx.co.kr/new/delivery/waybill.php",
+    "canaryUrl": "https://www.slx.co.kr/new/delivery/waybill.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "net.slx.co.kr"
+      ],
+      "pathPattern": "^/info/tracking\\.jsp$",
+      "params": [
+        "iv_no"
+      ]
+    }
+  ],
+  "detection": []
+}

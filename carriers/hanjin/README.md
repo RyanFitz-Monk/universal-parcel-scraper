@@ -2,7 +2,8 @@
 
 Hanjin Transportation runs the South Korean parcel service 한진택배, which also delivers parcels
 its international express arm flies in. Hanjin Shipping, the container line, is a different
-company. Tracked through the result page of its tracking form.
+company. 농협택배, the parcel service Nonghyup brokers, hands its parcels to Hanjin and shows
+Hanjin waybills on its own tracker. Tracked through the result page of its tracking form.
 
 ## How it works
 

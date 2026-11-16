@@ -1,0 +1,45 @@
+{
+  "id": "yongma-logis",
+  "displayName": "Yongma Logis",
+  "aliases": [
+    "용마로지스",
+    "YONGMA LOGIS CO., LTD."
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#e6958f"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://ylis.yongmalogis.co.kr/cmm/modalDeliveryCargoTrace.do?ordno={trackingNumber}",
+    "searchUrl": "https://yongmalogis.co.kr/",
+    "canaryUrl": "https://ylis.yongmalogis.co.kr/cmm/modalDeliveryCargoTrace.do",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "ylis.yongmalogis.co.kr"
+      ],
+      "pathPattern": "^/cmm/modalDeliveryCargoTrace\\.do$",
+      "params": [
+        "ordno"
+      ]
+    }
+  ],
+  "detection": []
+}

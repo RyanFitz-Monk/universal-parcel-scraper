@@ -1,0 +1,46 @@
+{
+  "id": "doobalhero",
+  "displayName": "Doobalhero",
+  "aliases": [
+    "두발히어로",
+    "Chainlogis",
+    "체인로지스"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#ea2545"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://check.doobalhero.kr/?bookId={trackingNumber}",
+    "searchUrl": "https://check.doobalhero.kr/",
+    "canaryUrl": "https://check.doobalhero.kr/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "check.doobalhero.kr"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "bookId"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -18218,6 +18218,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "doobalhero": {
+    "displayName": "Doobalhero",
+    "color": "#ea2545",
+    "aliases": [
+      "두발히어로",
+      "Chainlogis",
+      "체인로지스"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Seoul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://check.doobalhero.kr/",
+    "trackingUrlTemplate": "https://check.doobalhero.kr/?bookId={trackingNumber}",
+    "trackingSearchUrl": "https://check.doobalhero.kr/",
+    "linkRules": [
+      {
+        "domains": [
+          "check.doobalhero.kr"
+        ],
+        "pathPattern": "^/?$",
+        "params": [
+          "bookId"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "doora-logistics": {
     "displayName": "Doora Logistics",
     "color": "#e27c34",
@@ -26659,7 +26692,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "한진",
       "Hanjin Express",
       "Hanjin Transportation",
-      "Hanjin Parcel"
+      "Hanjin Parcel",
+      "농협택배"
     ],
     "countries": [
       "KR"
@@ -31455,6 +31489,36 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "kakao-t-same-day": {
+    "displayName": "Kakao T Same-Day Delivery",
+    "color": "#282d4b",
+    "aliases": [
+      "카카오 T 당일배송",
+      "오늘의픽업",
+      "Today Pickup"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Seoul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://todaypickup-partners.kakaomobility.com/front/delivery/list",
+    "trackingUrlTemplate": "https://todaypickup-partners.kakaomobility.com/front/delivery/list/{trackingNumber}",
+    "trackingSearchUrl": "https://todaypickup-partners.kakaomobility.com/front/delivery/list",
+    "linkRules": [
+      {
+        "domains": [
+          "todaypickup-partners.kakaomobility.com"
+        ],
+        "path": "^/front/delivery/list/([0-9]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "kanga-services": {
     "displayName": "Kanga Services",
     "color": "#008e43",
@@ -32449,6 +32513,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "canaryUrl": "https://www.kurierzentrale.ch/",
     "trackingSearchUrl": "https://crm.kuz.ch/",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "kurly-nextmile": {
+    "displayName": "Kurly Next Mile",
+    "color": "#5f0080",
+    "aliases": [
+      "컬리넥스트마일",
+      "Kurly Nextmile"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Seoul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.kurlynextmile.com/information/invoice",
+    "trackingUrlTemplate": "https://www.kurlynextmile.com/information/invoice?invoice_no={trackingNumber}",
+    "trackingSearchUrl": "https://www.kurlynextmile.com/information/invoice",
+    "linkRules": [
+      {
+        "domains": [
+          "kurlynextmile.com"
+        ],
+        "pathPattern": "^/information/invoice/?$",
+        "params": [
+          "invoice_no"
+        ]
+      }
+    ],
     "detectionRules": []
   },
   "kwick-box": {
@@ -34433,6 +34529,40 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "canaryUrl": "https://paketversand.lvz-post.de/index.php/tracking/search",
     "trackingSearchUrl": "https://lvz-post.de/privatkunden/sendungsverfolgung/",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "lx-pantos": {
+    "displayName": "LX Pantos",
+    "color": "#a72b2a",
+    "aliases": [
+      "LX판토스",
+      "LX PANTOS Co., Ltd.",
+      "Pantos Logistics",
+      "범한판토스"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Seoul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.epantos.com/ecp/web/pr/dt/popup/dlvChaseInqPopup.do",
+    "trackingUrlTemplate": "https://www.epantos.com/ecp/web/pr/dt/popup/dlvChaseInqPopup.do?locale=en&quickNo={trackingNumber}",
+    "trackingSearchUrl": "https://www.epantos.com/ecp/web/pr/dt/popup/dlvChaseInqPopup.do?locale=en",
+    "linkRules": [
+      {
+        "domains": [
+          "epantos.com"
+        ],
+        "pathPattern": "^/ecp/web/pr/dt/popup/dlvChaseInqPopup\\.do$",
+        "params": [
+          "quickNo"
+        ]
+      }
+    ],
     "detectionRules": []
   },
   "m-and-p": {
@@ -47878,6 +48008,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "slx-kr": {
+    "displayName": "SLX",
+    "color": "#2e3092",
+    "aliases": [
+      "SLX택배",
+      "에스엘엑스택배",
+      "에스엘엑스"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Seoul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.slx.co.kr/new/delivery/waybill.php",
+    "trackingUrlTemplate": "https://net.slx.co.kr/info/tracking.jsp?iv_no={trackingNumber}",
+    "trackingSearchUrl": "https://www.slx.co.kr/new/delivery/waybill.php",
+    "linkRules": [
+      {
+        "domains": [
+          "net.slx.co.kr"
+        ],
+        "pathPattern": "^/info/tracking\\.jsp$",
+        "params": [
+          "iv_no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "sm-express": {
     "displayName": "SM Express",
     "color": "#d32028",
@@ -57507,6 +57670,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "yongma-logis": {
+    "displayName": "Yongma Logis",
+    "color": "#e6958f",
+    "aliases": [
+      "용마로지스",
+      "YONGMA LOGIS CO., LTD."
+    ],
+    "countries": [
+      "KR"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Seoul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ylis.yongmalogis.co.kr/cmm/modalDeliveryCargoTrace.do",
+    "trackingUrlTemplate": "https://ylis.yongmalogis.co.kr/cmm/modalDeliveryCargoTrace.do?ordno={trackingNumber}",
+    "trackingSearchUrl": "https://yongmalogis.co.kr/",
+    "linkRules": [
+      {
+        "domains": [
+          "ylis.yongmalogis.co.kr"
+        ],
+        "pathPattern": "^/cmm/modalDeliveryCargoTrace\\.do$",
+        "params": [
+          "ordno"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "yoseus": {
     "displayName": "Yousheng International Express",
     "color": "#00af8c",
@@ -58867,6 +59062,7 @@ export const CARRIER_IDS = [
   "domesa",
   "domex",
   "dongdu",
+  "doobalhero",
   "doora-logistics",
   "dpd-at",
   "dpd-be",
@@ -59240,6 +59436,7 @@ export const CARRIER_IDS = [
   "junfeng-international",
   "juxi-express",
   "jy-express",
+  "kakao-t-same-day",
   "kanga-services",
   "kargoist",
   "kargoturk",
@@ -59269,6 +59466,7 @@ export const CARRIER_IDS = [
   "kuqi",
   "kurer-as",
   "kurierzentrale",
+  "kurly-nextmile",
   "kwick-box",
   "kyoungdong",
   "kyrgyz-express-post",
@@ -59326,6 +59524,7 @@ export const CARRIER_IDS = [
   "ltl-kr",
   "lucky-fast-express",
   "lvz-post",
+  "lx-pantos",
   "m-and-p",
   "m-one",
   "m-xpress",
@@ -59709,6 +59908,7 @@ export const CARRIER_IDS = [
   "slgtrax",
   "slovak-parcel-service",
   "slovenska-posta",
+  "slx-kr",
   "sm-express",
   "smafrakt",
   "smsa-express",
@@ -59990,6 +60190,7 @@ export const CARRIER_IDS = [
   "yilong-logistics",
   "yimidida",
   "yingtu",
+  "yongma-logis",
   "yoseus",
   "youbang-express",
   "yqs",
@@ -60485,6 +60686,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "domesa": [],
   "domex": [],
   "dongdu": ["dongdu-1"],
+  "doobalhero": [],
   "doora-logistics": [],
   "dpd-at": ["dpd-at-1"],
   "dpd-be": ["dpd-be-1"],
@@ -60858,6 +61060,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "junfeng-international": [],
   "juxi-express": ["juxi-express-1","juxi-express-2"],
   "jy-express": [],
+  "kakao-t-same-day": [],
   "kanga-services": [],
   "kargoist": ["kargoist-1"],
   "kargoturk": [],
@@ -60887,6 +61090,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "kuqi": [],
   "kurer-as": [],
   "kurierzentrale": [],
+  "kurly-nextmile": [],
   "kwick-box": [],
   "kyoungdong": [],
   "kyrgyz-express-post": [],
@@ -60944,6 +61148,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ltl-kr": [],
   "lucky-fast-express": [],
   "lvz-post": [],
+  "lx-pantos": [],
   "m-and-p": [],
   "m-one": ["m-one-s10"],
   "m-xpress": [],
@@ -61327,6 +61532,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "slgtrax": [],
   "slovak-parcel-service": ["slovak-parcel-service-1"],
   "slovenska-posta": ["slovenska-posta-own","slovenska-posta-s10"],
+  "slx-kr": [],
   "sm-express": [],
   "smafrakt": [],
   "smsa-express": [],
@@ -61608,6 +61814,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "yilong-logistics": ["yilong-logistics-1"],
   "yimidida": [],
   "yingtu": [],
+  "yongma-logis": [],
   "yoseus": [],
   "youbang-express": ["youbang-express-1"],
   "yqs": [],

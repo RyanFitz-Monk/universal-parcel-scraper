@@ -1,0 +1,47 @@
+{
+  "id": "lx-pantos",
+  "displayName": "LX Pantos",
+  "aliases": [
+    "LX판토스",
+    "LX PANTOS Co., Ltd.",
+    "Pantos Logistics",
+    "범한판토스"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#a72b2a"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.epantos.com/ecp/web/pr/dt/popup/dlvChaseInqPopup.do?locale=en&quickNo={trackingNumber}",
+    "searchUrl": "https://www.epantos.com/ecp/web/pr/dt/popup/dlvChaseInqPopup.do?locale=en",
+    "canaryUrl": "https://www.epantos.com/ecp/web/pr/dt/popup/dlvChaseInqPopup.do",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "epantos.com"
+      ],
+      "pathPattern": "^/ecp/web/pr/dt/popup/dlvChaseInqPopup\\.do$",
+      "params": [
+        "quickNo"
+      ]
+    }
+  ],
+  "detection": []
+}
