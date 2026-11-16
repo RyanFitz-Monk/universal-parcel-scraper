@@ -148,10 +148,12 @@ export function upsActivityStage(code: string): Stage | undefined {
 /**
  * Codes of notices that are no scan: the receiver's delivery instructions,
  * under either code, seen while UPS had only the label and between the
- * round out for delivery and the delivery. A notice keeps the stage of the
- * scan before it, and the newest other scan decides the parcel's.
+ * round out for delivery and the delivery, and the warehouse scan, which UPS
+ * writes minutes after a customs hold as the held parcel goes into its
+ * warehouse. A notice keeps the stage of the scan before it, and the newest
+ * other scan decides the parcel's.
  */
-const NOTICE_CODES = new Set(['L0', 'L8']);
+const NOTICE_CODES = new Set(['L0', 'L8', 'WH']);
 
 /** Whether a scan's `actCode` is a notice the stage is not read from. */
 export function isUpsNotice(code: string | undefined): boolean {
@@ -195,6 +197,7 @@ export const statusMap: CarrierStatusMap = {
   stage: (code, wording) => (code ? upsActivityStage(code) : upsBannerStage(wording) ?? upsUncodedScanStage(wording)),
   gaps: [
     ...['L0', 'L8'].map((code) => ({ code, note: "The receiver's delivery instructions, a notice and no scan: it keeps the stage of the scan before it, and the newest other scan decides the parcel's." })),
+    { code: 'WH', note: "A warehouse scan, minutes after a customs hold: the held parcel goes into UPS's warehouse and moves nothing, so it keeps the stage of the scan before it, and the newest other scan decides the parcel's." },
     { code: 'VK', note: "A government agency holding the parcel, or releasing it: the code says neither, so the shared rules read the wording, a hold as customs and a release as in transit." },
   ],
 };

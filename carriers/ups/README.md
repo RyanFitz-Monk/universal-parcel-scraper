@@ -91,7 +91,8 @@ rendered status, after that wait.
   and the prose's "will be delivered" is a delivery still to come, not one.
   The receiver's delivery instructions (`L0` or `L8`) are a notice, not a scan: the scan before
   them decides, so a parcel UPS has only the label for does not read in transit, and one out for
-  delivery stays so. An acceptance
+  delivery stays so. The warehouse scan (`WH`), minutes after a customs hold, is one too: the
+  held parcel stays held. An acceptance
   code after the delivery leg, such as the "Pickup Scan" when UPS collects a parcel from the
   access point it waited at, is transit.
 - Duties or taxes due (`7F`) and the hold until they are paid (`OQ`) set `recipient_action`

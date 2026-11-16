@@ -413,6 +413,18 @@ describe('UPS structured response', () => {
     expect(taxId.events?.map((event) => [event.provider_code, event.stage_source, event.recipient_action ?? null])).toEqual([
       ['B5', 'carrier_map', 'tax_id'], ['Z1', 'carrier_map', null],
     ]);
+    // Live order: the warehouse scan minutes after the hold puts the held parcel away; the hold still decides.
+    const stored = parseUPSTrackingResponse(withScans([
+      scan('WH', 'Warehouse Scan', '20260807 13:07:40'),
+      scan('B5', "Importer's consumer or business Identification number is required for clearance. Awaiting information from the customer.", '20260807 13:02:12'),
+      scan('IP', 'Import Scan', '20260807 10:30:00'),
+    ], { progressBarType: 'InTransit' }), TRACKING_NUMBER, TODAY);
+    expect(stored).toMatchObject({ status: 'in_transit', current_stage: 'customs', current_stage_source: 'carrier_map' });
+    expect(stored.events?.map((event) => [event.provider_code, event.stage, event.stage_source, event.recipient_action ?? null])).toEqual([
+      ['WH', 'customs', 'none', null], ['B5', 'customs', 'carrier_map', 'tax_id'], ['IP', 'in_transit', 'carrier_map', null],
+    ]);
+    expect(statusMapAnswer({ carrier: 'ups', providerCode: 'WH', description: 'warehouse scan' }))
+      .toMatchObject({ kind: 'intentional_gap', note: expect.stringContaining('keeps the stage of the scan before it') });
   });
 
   it('reads the clearing agency\'s scan, which UPS sends without a code, as customs by its whole wording', () => {
