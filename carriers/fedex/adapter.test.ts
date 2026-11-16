@@ -184,8 +184,12 @@ describe('FedEx structured response', () => {
     };
     const pickup = ['2026-06-05', 'PU', 'Picked up', 'Package received after FedEx cutoff'] as const;
     const result = cutoff(pickup);
-    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'accepted', last_status_text: 'We have your package' });
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'accepted', current_stage_source: 'carrier_map',
+      last_status_text: 'We have your package' });
     expect(result.events?.[0]).toMatchObject({ description: 'Picked up — Package received after FedEx cutoff', stage: 'accepted' });
+    // The same wording under the in-transit code, staged by the code.
+    expect(cutoff(['2026-06-05', 'AR', 'Arrived at FedEx location', ''], '', 'IT'))
+      .toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map' });
     // A delay the wording names, or the flag on any other newest scan, stays an exception.
     expect(cutoff(pickup, 'Delay: weather')).toMatchObject({ status: 'exception', current_stage: 'exception' });
     expect(cutoff(['2026-06-05', 'DP', 'Left FedEx origin facility', ''])).toMatchObject({ status: 'exception', current_stage: 'exception' });

@@ -466,7 +466,8 @@ function shipmentResult(shipment: FedExShipment, number: string): CarrierResult 
   const dayZone = dayZones.size === 1 ? [...dayZones][0] : null;
   return {
     status,
-    ...(stage ? { current_stage: stage } : {}),
+    // FedEx's own codes and terms decide it, as they decide its scans.
+    ...(stage ? { current_stage: stage, current_stage_source: 'carrier_map' } : {}),
     last_status_text: statusText,
     last_update: newest?.time || null,
     // A newest scan dated by its day alone has no instant, only that day.
