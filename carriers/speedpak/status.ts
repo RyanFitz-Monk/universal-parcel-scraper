@@ -95,9 +95,16 @@ export const speedpakEnglish = (wording: string): string | undefined => (Object.
  */
 export const HANDOFF = /^(?:LM Carrier|尾程供应商)\s*[:：]\s*\[([^\]]+)\]\s*,\s*(?:LM tracking No[.．]?|尾程跟踪号)\s*[:：]\s*\[([A-Z0-9]{4,40})\]$/;
 
+/** The hand-off line as shown: the carrier alone, since the result gives the reference as the hand-off. */
+const HANDOFF_SHOWN = /^(?:LM Carrier|尾程供应商)\s*[:：]\s*\[[^\]]+\]$/;
+const REFERENCE = /\s*,\s*(?:LM tracking No[.．]?|尾程跟踪号)\s*[:：]\s*\[[A-Z0-9]{4,40}\]$/;
+
+/** A hand-off line without its reference; any other wording as it is. */
+export const withoutHandoffReference = (wording: string): string => (HANDOFF.test(wording) ? wording.replace(REFERENCE, '') : wording);
+
 export function speedpakStatus(wording: string): ClassifiedStatus | null {
   if (DELIVERED.test(wording)) return { status: 'delivered', stage: 'delivered' };
-  if (HANDOFF.test(wording)) return MOVING;
+  if (HANDOFF.test(wording) || HANDOFF_SHOWN.test(wording)) return MOVING;
   return Object.hasOwn(MAP, wording) ? MAP[wording]! : null;
 }
 
@@ -108,7 +115,7 @@ export function speedpakScanStatus(wording: string, label: string): ClassifiedSt
 
 const STAGE_BY_WORDING = new Map<string, Stage>(Object.entries(MAP).map(([wording, { stage }]) => [normalizeStatusWording(wording), stage]));
 const DELIVERED_WORDING = new RegExp(DELIVERED.source, 'i');
-const HANDOFF_WORDING = new RegExp(HANDOFF.source, 'i');
+const HANDOFF_WORDING = new RegExp(`${HANDOFF.source}|${HANDOFF_SHOWN.source}`, 'i');
 
 /**
  * What the map says about one scan by its English wording, the only key a scan

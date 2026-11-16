@@ -3,10 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { sameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
+import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, SpeedpakTracker } from './adapter.js';
 import { normalizeSpeedpakNumber, parseSpeedpak } from './parser.js';
-import { statusMap } from './status.js';
+import { statusMap, withoutHandoffReference } from './status.js';
 
 const NUMBER = 'ES0000000000000UN0000000000N';
 const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/delivered.json', import.meta.url), 'utf8'));
@@ -159,6 +160,7 @@ describe('SpeedPAK response projection', () => {
     expect(result.events?.map(event => event.stage)).toEqual([
       'ready_for_pickup', 'failed_attempt', 'out_for_delivery', 'in_transit', 'in_transit', 'in_transit', 'in_transit', 'in_transit', 'in_transit', 'accepted', 'registered',
     ]);
+    expect(result.events?.[7]?.description).toBe('LM Carrier: [DHL]');
     expect(normalizeSpeedpakNumber(number.toLowerCase())).toBe(number);
     expect(() => normalizeSpeedpakNumber(`EM${number.slice(2)}`)).toThrow(expect.objectContaining({ kind: 'invalid_input' }));
     expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'speedpak', confidence: 'high' });
@@ -210,12 +212,13 @@ describe('SpeedPAK retrieval', () => {
 describe('SpeedPAK hand-off wording', () => {
   const routed = 'LM Carrier: [DHL eCommerce] , LM tracking No.: [420000009214490000000000000003]';
   const trimmed = 'LM Carrier: [DHL eCommerce] , LM tracking No.: [9214490000000000000003]';
+  const shown = 'LM Carrier: [DHL eCommerce]';
 
   it('drops the ZIP code a USPS routing barcode opens with', () => {
     const payload = fixture();
     payload.result.waybills[0].traces[2] = { eventDesc: routed, eventDescCn: '尾程供应商:[DHL eCommerce] , 尾程跟踪号：[420000009214490000000000000003]', oprTimestamp: 1767362400000 };
     const result = parseSpeedpak(payload, NUMBER);
-    expect(result.events?.[2]?.description).toBe(trimmed);
+    expect(result.events?.[2]?.description).toBe(shown);
     // DHL eCommerce's detection does not offer the bare USPS number, so no partner is named.
     expect(result.delivery_tracking_number).toBe('9214490000000000000003');
     expect(result.delivery_carrier).toBeUndefined();
@@ -226,7 +229,7 @@ describe('SpeedPAK hand-off wording', () => {
     const payload = fixture();
     payload.result.waybills[0].lastStatus = routed;
     const result = parseSpeedpak(payload, NUMBER);
-    expect(result.last_status_text).toBe(trimmed);
+    expect(result.last_status_text).toBe(shown);
     expect(JSON.stringify(result)).not.toContain('42000000');
   });
 
@@ -255,6 +258,29 @@ describe('SpeedPAK hand-off wording', () => {
     expect(policy?.matches?.(incoming, incoming)).toBe(false);
     expect(policy?.matches?.(incoming, { ...stored, location: 'Example Hub, US' })).toBe(false);
     expect(policy?.matches?.({ ...incoming, description: trimmed.replace('0003]', '0004]') }, stored)).toBe(false);
+  });
+
+  it('shows the hand-off line without the reference the hand-off carries, and lets a row stored with it take that line', () => {
+    const payload = fixture();
+    payload.result.waybills[0].traces[2] = { eventDesc: trimmed, eventDescCn: '尾程供应商信息', oprTimestamp: 1767362400000 };
+    const result = parseSpeedpak(payload, NUMBER);
+    expect(result.events?.[2]).toMatchObject({ description: shown, stage: 'in_transit', stage_source: 'carrier_map' });
+    expect(result.delivery_tracking_number).toBe('9214490000000000000003');
+    expect(JSON.stringify(result.events)).not.toContain('9214490000000000000003');
+    // In Chinese too; a line without a reference stays as written.
+    payload.result.waybills[0].traces[2] = { eventDesc: '尾程供应商:[Uni Uni] , 尾程跟踪号：[UUS00T0000000000000]', oprTimestamp: 1767362400000 };
+    expect(parseSpeedpak(payload, NUMBER).events?.[2]).toMatchObject({ description: '尾程供应商:[Uni Uni]', stage: 'in_transit' });
+    expect(withoutHandoffReference('LM Carrier: [Uni Uni] , LM tracking No.: []')).toBe('LM Carrier: [Uni Uni] , LM tracking No.: []');
+    expect(withoutHandoffReference('Package Received')).toBe('Package Received');
+    // The map reads the line as shown.
+    expect(statusMap.stage(null, normalizeStatusWording(shown))).toBe('in_transit');
+    const policy = sameInstantIdentityPolicy('speedpak', { supportsScanMatching: true });
+    const incoming = { stage: 'in_transit', description: shown, location: '', providerCode: '' };
+    for (const description of [trimmed, routed]) expect(policy?.matches?.(incoming, { ...incoming, description })).toBe(true);
+    // Not another carrier's line, another place, or a line that had no reference.
+    expect(policy?.matches?.({ ...incoming, description: 'LM Carrier: [USPS]' }, { ...incoming, description: trimmed })).toBe(false);
+    expect(policy?.matches?.(incoming, { ...incoming, description: trimmed, location: 'Example Hub, US' })).toBe(false);
+    expect(policy?.matches?.(incoming, incoming)).toBe(false);
   });
 
   it("shows SpeedPAK's Chinese sent as the English wording in English, and a partner's scan in the country it names as its city, not where it departs for", () => {

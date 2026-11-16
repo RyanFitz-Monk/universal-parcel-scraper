@@ -6,7 +6,7 @@ import { countryCode, epochMillisTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { brandCarrierForNumber } from '../../providers/shared/hints.js';
-import { HANDOFF, speedpakEnglish, speedpakScanStatus } from './status.js';
+import { HANDOFF, speedpakEnglish, speedpakScanStatus, withoutHandoffReference } from './status.js';
 import { speedpakPlace, withoutRoutingPrefix } from './wording.js';
 
 const PROVIDER = 'SpeedPAK';
@@ -51,7 +51,7 @@ export function parseSpeedpak(payload: unknown, rawNumber: string): CarrierResul
       const handoff = HANDOFF.exec(text);
       if (handoff) handoffs.set(handoff[2]!, handoff[1]!.trim());
     }
-    const event: CarrierEvent = { description: speedpakEnglish(description) ?? description, ...(time ? { time: time.iso } : { provider_time_text: clean(row.oprTime) || undefined }),
+    const event: CarrierEvent = { description: speedpakEnglish(description) ?? withoutHandoffReference(description), ...(time ? { time: time.iso } : { provider_time_text: clean(row.oprTime) || undefined }),
       ...(location ? { location } : {}), ...(mapped ? { stage: mapped.stage, stage_source: 'carrier_map' } : {}) };
     if (!events.some(previous => JSON.stringify(previous) === JSON.stringify(event))) events.push(event);
   }
@@ -61,7 +61,7 @@ export function parseSpeedpak(payload: unknown, rawNumber: string): CarrierResul
   const wording = (summary && (speedpakEnglish(summary) ?? summary)) || events[0]!.description!;
   const mapped = speedpakScanStatus(wording, clean(shipment.lastStatusCn));
   const latest = events[0]!;
-  const output: CarrierResult = { status: mapped?.status ?? 'unknown', last_status_text: wording, last_update: latest.time ?? null,
+  const output: CarrierResult = { status: mapped?.status ?? 'unknown', last_status_text: withoutHandoffReference(wording), last_update: latest.time ?? null,
     ...(mapped ? { current_stage: mapped.stage, current_stage_source: 'carrier_map' } : {}),
     ...(mapped?.stage === 'delivered' && latest.stage === 'delivered' && latest.time ? { delivered_at: latest.time } : {}),
     events: events.slice(0, 100) };

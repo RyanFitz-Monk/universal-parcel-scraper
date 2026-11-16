@@ -1,7 +1,7 @@
 import type { SameInstantIdentityPolicy, SameInstantScan } from '../../core/catalog/eventIdentity.js';
 import { matchesRereadLocation } from '../../core/catalog/locationIdentity.js';
 import { translatedScanPolicy } from '../../core/status/english.js';
-import { speedpakEnglish } from './status.js';
+import { speedpakEnglish, withoutHandoffReference } from './status.js';
 import { speedpakPlace, withoutRoutingPrefix } from './wording.js';
 
 const normalized = (value: string) => value.replace(/\s+/g, ' ').trim().toLocaleLowerCase('en-US');
@@ -13,6 +13,14 @@ function trimmedRouting(incoming: SameInstantScan, stored: SameInstantScan): boo
   const wording = normalized(incoming.description);
   const trimmed = withoutRoutingPrefix(stored.description);
   return wording !== '' && trimmed !== stored.description && wording === normalized(trimmed)
+    && normalized(incoming.location) === normalized(stored.location);
+}
+
+// A hand-off line stored with its reference takes the line without it, the carrier alone, in place.
+function withoutReference(incoming: SameInstantScan, stored: SameInstantScan): boolean {
+  const wording = normalized(incoming.description);
+  const shown = withoutHandoffReference(withoutRoutingPrefix(stored.description));
+  return wording !== '' && shown !== withoutRoutingPrefix(stored.description) && wording === normalized(shown)
     && normalized(incoming.location) === normalized(stored.location);
 }
 
@@ -28,6 +36,7 @@ const translated = translatedScanPolicy('speedpak', speedpakEnglish);
 export const sameInstantIdentityPolicy: SameInstantIdentityPolicy = {
   sourceCarrierId: 'speedpak', storedSources: ['speedpak'], requireProviderCode: false,
   matchEachScan: true,
-  matches: (incoming, stored) => trimmedRouting(incoming, stored) || matchesRereadLocation(incoming, stored, reread)
+  matches: (incoming, stored) => trimmedRouting(incoming, stored) || withoutReference(incoming, stored)
+    || matchesRereadLocation(incoming, stored, reread)
     || translated.matches!(incoming, stored),
 };

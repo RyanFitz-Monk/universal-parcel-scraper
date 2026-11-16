@@ -155,7 +155,7 @@
       "stage": "in_transit",
       "confirmedBy": "live",
       "firstSeen": "2026-10-20",
-      "note": "The line naming the last-mile carrier and its reference, also written in Chinese. SpeedPAK files it under its label 同步尾程供应商, the hand-over to that carrier."
+      "note": "The line naming the last-mile carrier and its reference, also written in Chinese. SpeedPAK files it under its label 同步尾程供应商, the hand-over to that carrier. It is shown without the reference, which the hand-off carries."
     },
     {
       "wording": "订单接受",
