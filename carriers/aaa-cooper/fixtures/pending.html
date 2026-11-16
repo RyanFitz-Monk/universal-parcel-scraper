@@ -1,0 +1,38 @@
+<!doctype html>
+<html class="act" id="ng-app" data-ng-app="app" lang="en">
+<head><title>
+	Pro Tracking Results | AAA Cooper Transportation
+</title></head>
+<body id="AAACooperMasterPage_masterBody" class="act">
+    <form name="aspnetForm" method="post" action="./ProTrackResults.aspx?ProNum=00000000" onsubmit="javascript:return WebForm_OnSubmit();" id="aspnetForm">
+    <h1 class="text-center mr-lg-5" style="margin-bottom: 15px; font-size: 41px; font-weight: 400;">PRO Track Results</h1>
+
+    <div id="AAACooperMasterPage_bodyContent_ErrorPanel">
+	
+        <table cellpadding="10" cellspacing="0" class="updatedContentCSS" border="0" width="90%" style="vertical-align: middle; margin-left: auto; margin-right: auto">
+            <tr>
+                <td style="height: 100px; text-align: center">
+                    <span class="ErrorText">
+                        PRONUMBER FOUND, PROCESS PENDING. CHECK BACK LATER</span>
+                </td>
+            </tr>
+            <tr id="AAACooperMasterPage_bodyContent_trTimedButton" style="display: none">
+		<td style="height: 50px; vertical-align: top; position: relative">Letters are not case sensitive.
+                    <div id="AAACooperMasterPage_bodyContent_RadCaptcha1" class="RadCaptcha RadCaptcha_Default">
+			<span data-val-errormessage="The code you entered is not valid. Please retry." data-val-validationGroup="CaptchaValidation" id="AAACooperMasterPage_bodyContent_RadCaptcha1_ctl00" data-val="true" data-val-evaluationfunction="CustomValidatorEvaluateIsValid" style="color:Red;visibility:hidden;">The code you entered is not valid. Please retry.</span><div id="AAACooperMasterPage_bodyContent_RadCaptcha1_SpamProtectorPanel">
+				<div id="AAACooperMasterPage_bodyContent_RadCaptcha1_ctl01">
+					<img id="AAACooperMasterPage_bodyContent_RadCaptcha1_CaptchaImageUP" alt="" src="../Telerik.Web.UI.WebResource.axd?type=rca&amp;isc=true&amp;guid=5f9a8c10-9931-455c-8663-1305616f3b02" style="height:50px;width:180px;border-width:0px;display:block;" /><a id="AAACooperMasterPage_bodyContent_RadCaptcha1_CaptchaLinkButton" class="rcRefreshImage" title="Generate New Image" href="javascript:__doPostBack(&#39;AAACooperMasterPage$bodyContent$RadCaptcha1$CaptchaLinkButton&#39;,&#39;&#39;)" style="display:block;">Generate New Image</a><a href="../Telerik.Web.UI.WebResource.axd?type=cah&amp;isc=true&amp;guid=5f9a8c10-9931-455c-8663-1305616f3b02" id="AAACooperMasterPage_bodyContent_RadCaptcha1_CaptchaAudioCodeUP" title="Get Audio Code" class="rcCaptchaAudioLink" style="display:block;">Get Audio Code</a>
+				</div><p><input name="AAACooperMasterPage$bodyContent$RadCaptcha1$CaptchaTextBox" type="text" maxlength="6" id="AAACooperMasterPage_bodyContent_RadCaptcha1_CaptchaTextBox" class="textBox" /><label for="AAACooperMasterPage_bodyContent_RadCaptcha1_CaptchaTextBox" id="AAACooperMasterPage_bodyContent_RadCaptcha1_CaptchaTextBoxLabel"><br />Type the Code from the image</label></p>
+			</div><input id="AAACooperMasterPage_bodyContent_RadCaptcha1_ClientState" name="AAACooperMasterPage_bodyContent_RadCaptcha1_ClientState" type="hidden" />
+		</div>
+
+                    <input type="submit" name="AAACooperMasterPage$bodyContent$btnSubmit" value="Submit" onclick="javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;AAACooperMasterPage$bodyContent$btnSubmit&quot;, &quot;&quot;, true, &quot;CaptchaValidation&quot;, &quot;&quot;, false, false))" id="AAACooperMasterPage_bodyContent_btnSubmit" class="SignIn_button" />
+                </td>
+	</tr>
+	
+        </table>
+    
+</div>
+    </form>
+</body>
+</html>

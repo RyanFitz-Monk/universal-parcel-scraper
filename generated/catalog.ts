@@ -6387,7 +6387,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/Chicago",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "aaa-cooper",
+      "localClocks": true
     },
     "canaryUrl": "https://www.aaacooper.com/",
     "trackingUrlTemplate": "https://www.aaacooper.com/workspace/action-trac?id={trackingNumber}&PG=ProNumber",

@@ -17,18 +17,54 @@
   "timezone": "America/Chicago",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "aaa-cooper",
+    "steps": [
+      "direct",
+      "retry"
+    ],
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location"
+  ],
   "portal": {
     "url": "https://www.aaacooper.com/workspace/action-trac?id={trackingNumber}&PG=ProNumber",
     "searchUrl": "https://www.aaacooper.com/",
     "canaryUrl": "https://www.aaacooper.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "delivery_office",
+      "delivered_at",
+      "signatory",
+      "parcel_count",
+      "weight",
+      "references",
+      "payment_details"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location"
+    ],
+    "discarded": [
+      "delivery_office",
+      "delivered_at",
+      "signatory",
+      "parcel_count",
+      "weight",
+      "references",
+      "payment_details"
+    ],
+    "unavailable": [
+      "eta",
+      "offset_timestamps",
+      "sender_name",
+      "recipient_name",
+      "proof_of_delivery"
+    ]
   },
   "links": [
     {

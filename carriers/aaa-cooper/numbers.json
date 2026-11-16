@@ -23,7 +23,7 @@
           "xpo-ltl"
         ]
       },
-      "note": "An archived lookup on AAA Cooper's own PRO tracking page shows the shipment and its history."
+      "note": "An archived lookup on AAA Cooper's own PRO tracking page shows the shipment and its history under the first eight digits; the ninth is their Luhn check digit."
     },
     {
       "number": "41082478",
@@ -57,10 +57,10 @@
         "url": "https://web.archive.org/web/20161208180720/http://www.aaacooper.com:80/Transit/ProTrackResults.aspx?ProNum=93882420&AllAccounts=true",
         "date": "2016-12-08",
         "dateKind": "capture",
-        "access": "indexed_excerpt"
+        "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -71,7 +71,7 @@
           "heppner"
         ]
       },
-      "note": "An archived lookup on AAA Cooper's own PRO tracking page; the capture was not opened."
+      "note": "An archived lookup on AAA Cooper's own PRO tracking page shows the shipment out for delivery and its history."
     },
     {
       "number": "124664681",
@@ -81,16 +81,16 @@
         "url": "https://web.archive.org/web/20211123181433/https://www.aaacooper.com/Transit/ProTrackResults.aspx?ProNum=124664681",
         "date": "2021-11-23",
         "dateKind": "capture",
-        "access": "indexed_excerpt"
+        "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
         "confidence": "none"
       },
-      "note": "An archived lookup on AAA Cooper's own PRO tracking page; the capture was not opened."
+      "note": "An archived lookup on AAA Cooper's own PRO tracking page shows the shipment and its history under the first eight digits; the ninth is their Luhn check digit."
     },
     {
       "number": "35211086",
@@ -103,7 +103,7 @@
         "access": "indexed_excerpt"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -114,7 +114,7 @@
           "heppner"
         ]
       },
-      "note": "An archived lookup by PRO number on AAA Cooper's own Action Trac page; the capture was not opened."
+      "note": "An archived lookup by PRO number on AAA Cooper's own Action Trac page; the capture was not opened. AAA Cooper's PRO tracking page shows the shipment."
     },
     {
       "number": "35212307",
@@ -127,7 +127,7 @@
         "access": "indexed_excerpt"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -138,7 +138,7 @@
           "heppner"
         ]
       },
-      "note": "An archived lookup by PRO number on AAA Cooper's own Action Trac page; the capture was not opened."
+      "note": "An archived lookup by PRO number on AAA Cooper's own Action Trac page; the capture was not opened. AAA Cooper's PRO tracking page shows the shipment."
     },
     {
       "number": "35225398",
@@ -151,7 +151,7 @@
         "access": "indexed_excerpt"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -162,7 +162,7 @@
           "heppner"
         ]
       },
-      "note": "An archived lookup by PRO number on AAA Cooper's own Action Trac page; the capture was not opened."
+      "note": "An archived lookup by PRO number on AAA Cooper's own Action Trac page; the capture was not opened. AAA Cooper's PRO tracking page shows the shipment."
     },
     {
       "number": "351768593",
@@ -175,13 +175,13 @@
         "access": "indexed_excerpt"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
         "confidence": "none"
       },
-      "note": "An archived request to the PRO check behind AAA Cooper's tracking box; the capture was not opened."
+      "note": "An archived request to the PRO check behind AAA Cooper's tracking box; the capture was not opened. AAA Cooper's PRO tracking page shows the shipment under the first eight digits; the ninth is their Luhn check digit."
     }
   ]
 }

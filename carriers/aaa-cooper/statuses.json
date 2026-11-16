@@ -1,12 +1,13 @@
 {
   "carrier": "aaa-cooper",
   "entries": [
-    {"wording": "Shipment Picked Up From Shipper In NORCROSS, GA", "stage": "accepted", "language": "en", "confirmedBy": "portal", "note": "Seen in archived captures of AAA Cooper's PRO tracking page. The wording ends with the pickup place."},
-    {"wording": "Shipment departed NORTH ATLANTA Service Center", "stage": "in_transit", "language": "en", "confirmedBy": "portal", "note": "Seen in archived captures of AAA Cooper's PRO tracking page. The wording names the service center."},
-    {"wording": "Shipment arrived at NASHVILLE Service Center", "stage": "in_transit", "language": "en", "confirmedBy": "portal", "note": "Seen in archived captures of AAA Cooper's PRO tracking page. The wording names the service center."},
-    {"wording": "Shipment arrived at destination Service Center ORLANDO, FL", "stage": "in_transit", "language": "en", "confirmedBy": "portal", "note": "Seen in archived captures of AAA Cooper's PRO tracking page. The page's source puts three spaces before the place, which a browser shows as one."},
-    {"wording": "Shipment Out For Delivery To Consignee In ORLANDO, FL", "stage": "out_for_delivery", "language": "en", "confirmedBy": "portal", "note": "Seen in archived captures of AAA Cooper's PRO tracking page. The wording ends with the delivery place."},
-    {"wording": "Delivered To Consignee In ORLANDO, FL", "stage": "delivered", "language": "en", "confirmedBy": "portal", "note": "Seen in archived captures of AAA Cooper's PRO tracking page. The wording ends with the delivery place."},
-    {"wording": "Delivered", "stage": "delivered", "language": "en", "confirmedBy": "portal", "note": "The page's delivery status field. Seen in archived captures of AAA Cooper's PRO tracking page."}
+    {"wording": "Shipment Picked Up From Shipper In NORCROSS, GA", "stage": "accepted", "language": "en", "confirmedBy": "live", "note": "A tracing row: the freight was collected from the shipper. The wording ends with the pickup place."},
+    {"wording": "Shipment departed NORTH ATLANTA Service Center", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A tracing row. The wording names the service center."},
+    {"wording": "Shipment arrived at NASHVILLE Service Center", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A tracing row. The wording names the service center."},
+    {"wording": "Shipment arrived at destination Service Center ORLANDO, FL", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A tracing row: the freight reached the delivering service center. The page's source puts three spaces before the place, which a browser shows as one."},
+    {"wording": "Shipment Out For Delivery To Consignee In ORLANDO, FL", "stage": "out_for_delivery", "language": "en", "confirmedBy": "live", "note": "A tracing row. The wording ends with the delivery place."},
+    {"wording": "Delivered To Consignee In ORLANDO, FL", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "A tracing row. The wording ends with the delivery place; some rows write \"in\" in lower case."},
+    {"wording": "Delivered", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "The page's status field once the freight is delivered."},
+    {"wording": "Out for Delivery", "stage": "out_for_delivery", "language": "en", "confirmedBy": "portal", "note": "The page's status field while the freight is out for delivery. Seen in an archived capture of AAA Cooper's PRO tracking page."}
   ]
 }

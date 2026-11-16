@@ -36,6 +36,7 @@ import { statusMap as fourSides } from '../../carriers/4sides/status.js';
 import { statusMap as fivePost } from '../../carriers/5post/status.js';
 import { statusMap as ninetynineMinutos } from '../../carriers/99minutos/status.js';
 import { statusMap as a1Post } from '../../carriers/a1-post/status.js';
+import { statusMap as aaaCooper } from '../../carriers/aaa-cooper/status.js';
 import { statusMap as aDuiePyle } from '../../carriers/a-duie-pyle/status.js';
 import { statusMap as aTuHoraExpress } from '../../carriers/a-tu-hora-express/status.js';
 import { statusMap as abCourier } from '../../carriers/ab-courier/status.js';
@@ -827,7 +828,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'direct-freight-express': directFreightExpress,
   'qatar-post': qatarPost, 'nepal-post': nepalPost, 'wp-ground': wpGround, 'logistics-solution': logisticsSolution, 'quick-fort': quickFort, 'russian-post': russianPost, 'surat-kargo': suratKargo,
   '17feia': seventeenFeia, '2go': twoGo, '4-72': fourSeventyTwo, '4sides': fourSides, '5post': fivePost, '99minutos': ninetynineMinutos,
-  'a-duie-pyle': aDuiePyle, 'a-tu-hora-express': aTuHoraExpress, 'a1-post': a1Post, 'ab-courier': abCourier, 'abf-freight': abfFreight, 'aci-express-kr': aciExpressKr,
+  'aaa-cooper': aaaCooper, 'a-duie-pyle': aDuiePyle, 'a-tu-hora-express': aTuHoraExpress, 'a1-post': a1Post, 'ab-courier': abCourier, 'abf-freight': abfFreight, 'aci-express-kr': aciExpressKr,
   'acs-courier': acsCourier, 'aex-paraguay': aexParaguay, 'airpak-express': airpakExpress, 'ait-worldwide': aitWorldwide, ajex,
   'algerie-poste': algeriePoste, aliexpress, 'allegro-one': allegroOne, alphastline, 'am-home-delivery': amHomeDelivery, 'amazon-shipping': amazonShipping, 'american-west-express': americanWestExpress, amerijet, ampm, 'an-post': anPost, 'anc-delivers': ancDelivers,
   andreani, anjun, anousith, anserx, anteraja, 'apc-overnight': apcOvernight, 'apc-postal-logistics': apcPostalLogistics,
