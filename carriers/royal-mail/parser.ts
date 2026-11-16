@@ -20,6 +20,8 @@ const MAX_EVENTS_TO_INSPECT = 500;
 const MAX_EVENTS_TO_RETURN = 100;
 // A parcel hub's or a mail centre's receipt, without an acceptance before it.
 const FIRST_RECEIPTS = new Set(['EVBAH', 'EVDAC', 'EVDAV']);
+// A Customer Service Point's collection, which can be the recipient's or the delivery office's.
+const COLLECTIONS = new Set(['EVNSC', 'EVNCE']);
 /** A Parcelforce parcel: PB, its consignment number and the parcel's place in it. */
 const PARCELFORCE_PARCEL = /^PB[A-Z]{2}\d{10}$/;
 
@@ -261,6 +263,14 @@ export function parseRoyalMailTrackingResponse(payload: unknown, trackingNumber:
       || events.every(event => event.time) && cleanScalar(summary.lastEventCode, 64) === newest.provider_code);
   const stage = repeated && furtherAlong(summaryStage, newest.stage) ? newest.stage : summaryStage;
   const delivered = stage === 'delivered';
+  // A summary that calls the item collected or delivered on a Customer Service Point's collection
+  // makes that collection the recipient's: the delivery.
+  if (delivered && newest && !newest.stage && COLLECTIONS.has(newest.provider_code ?? '')
+    && !trimmed.some(event => event.stage === 'delivered')
+    && (Boolean(lastTime) && lastTime === newest.time || cleanScalar(summary.lastEventCode, 64) === newest.provider_code)) {
+    newest.stage = 'delivered';
+    newest.stage_source = 'carrier_map';
+  }
   const deliveredAt = !delivered ? null : trimmed.find(event => event.stage === 'delivered' && event.time)?.time
     ?? (royalMailEventStage(cleanScalar(summary.lastEventCode, 64)) === 'delivered' ? lastTime : null);
   const estimate = delivered ? null : expectedDelivery(mailpiece.estimatedDelivery);

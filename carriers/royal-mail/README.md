@@ -55,7 +55,8 @@ answers are not retried. An unavailable browser fails fast.
   "Collected From Your Customer Service Point") gets no stage: these scans came
   just before a booked redelivery's round, and they could as well be the
   recipient's own collection. The same wording under the code the summary
-  turns delivered with is the recipient's collection, and so the delivery.
+  turns delivered with is the recipient's collection, and so the delivery, as
+  is one of these scans when the summary calls the item collected on it.
 - A delivery's scan time becomes `delivered_at`. The details reply's
   destination country becomes `destination_country`.
 - An estimate whose start and end clocks fall on its day becomes that window;

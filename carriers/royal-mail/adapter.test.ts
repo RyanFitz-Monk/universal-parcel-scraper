@@ -220,6 +220,22 @@ describe('Royal Mail structured response', () => {
     expect(statusMap.stage('EVNAE', 'available for redelivery or collection')).toBe('ready_for_pickup');
   });
 
+  it('reads a Customer Service Point’s collection as the delivery when the summary calls the item collected on it', () => {
+    const events = [
+      { eventCode: 'EVNSC', eventName: '**Collected and Signed at Your Customer Service Point**', eventDateTime: '2026-01-20T16:44:56+00:00', locationName: 'Example CSP' },
+      { eventCode: 'EVKNA', eventName: '**Delivery Attempted - No Answer**', eventDateTime: '2026-01-20T10:37:34+00:00', locationName: 'Example DO' },
+    ];
+    const result = parseRoyalMailTrackingResponse({ mailPieces: { mailPieceId: IN_TRANSIT_NUMBER, events,
+      summary: { statusCategory: 'Collected', statusDescription: 'Collected', lastEventCode: 'EVNSC', lastEventDateTime: '2026-01-20T16:44:56+00:00' } } }, IN_TRANSIT_NUMBER);
+    expect(result).toMatchObject({ current_stage: 'delivered', delivered_at: '2026-01-20T16:44:56Z' });
+    expect(result.events?.map(event => event.stage)).toEqual(['delivered', 'failed_attempt']);
+    expect(result.events?.[0]?.stage_source).toBe('carrier_map');
+    // In transit, the same collection stays without a stage.
+    const moving = parseRoyalMailTrackingResponse({ mailPieces: { mailPieceId: IN_TRANSIT_NUMBER, events,
+      summary: { statusCategory: 'In transit', statusDescription: 'In transit', lastEventCode: 'EVNSC', lastEventDateTime: '2026-01-20T16:44:56+00:00' } } }, IN_TRANSIT_NUMBER);
+    expect(moving.events?.[0]?.stage).toBeUndefined();
+  });
+
   it('leaves the delivery office’s retention after a hold for a fee without a stage of its own', () => {
     const result = parseRoyalMailTrackingResponse({ mailPieces: {
       mailPieceId: IN_TRANSIT_NUMBER,
