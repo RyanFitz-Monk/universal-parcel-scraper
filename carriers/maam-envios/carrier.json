@@ -1,0 +1,33 @@
+{
+  "id": "maam-envios",
+  "displayName": "MAAM Envíos",
+  "aliases": [
+    "MAAM Envíos, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#000000"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://maam.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://maam.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

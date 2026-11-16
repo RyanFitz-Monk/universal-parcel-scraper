@@ -1,0 +1,33 @@
+{
+  "id": "logistica-alatec",
+  "displayName": "Logística Alatec",
+  "aliases": [
+    "Alatec, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#518fcd"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://logisticaalatec.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://logisticaalatec.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

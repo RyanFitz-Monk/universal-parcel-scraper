@@ -1,0 +1,34 @@
+{
+  "id": "rojas-express",
+  "displayName": "Rojas Express",
+  "aliases": [
+    "Rojas Express Paquetería",
+    "Rojas Express, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#cc0000"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://rojasexpress.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://rojasexpress.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

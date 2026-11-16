@@ -23352,6 +23352,26 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "fiscourier": {
+    "displayName": "Fiscourier",
+    "color": "#f4a448",
+    "aliases": [
+      "Fiscourier, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "flash-express": {
     "displayName": "Flash Express",
     "color": "#ffea33",
@@ -32126,6 +32146,27 @@
     ],
     "detectionRules": []
   },
+  "kilbourne": {
+    "displayName": "Kilbourne",
+    "color": "#2c8068",
+    "aliases": [
+      "Kilbourne Corporate",
+      "Kilbourne Corporate, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://kilbourne.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://kilbourne.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "king-kong-express": {
     "displayName": "King Kong Express",
     "color": "#21347c",
@@ -34377,6 +34418,26 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "logistica-alatec": {
+    "displayName": "Logística Alatec",
+    "color": "#518fcd",
+    "aliases": [
+      "Alatec, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://logisticaalatec.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://logisticaalatec.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "logistics-solution": {
     "displayName": "Logistics Solution",
     "color": "#6366f1",
@@ -34908,6 +34969,26 @@
         "path": "^/track-my-order/+([^/?#]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "maam-envios": {
+    "displayName": "MAAM Envíos",
+    "color": "#000000",
+    "aliases": [
+      "MAAM Envíos, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://maam.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://maam.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
     "detectionRules": []
   },
   "macau-post": {
@@ -37116,6 +37197,27 @@
         "path": "^/session/order/([^/]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "mundi-express": {
+    "displayName": "Mundi Express",
+    "color": "#cf3432",
+    "aliases": [
+      "Mundi Express Aragón",
+      "Mundi Express Aragón, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://zaragoza.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://zaragoza.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
     "detectionRules": []
   },
   "mvp-courier": {
@@ -40103,6 +40205,26 @@
         "confidence": "high"
       }
     ]
+  },
+  "paqline": {
+    "displayName": "PAQLine",
+    "color": "#003ca6",
+    "aliases": [
+      "PAQLine Express Group"
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://navarra.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://navarra.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
   },
   "paquetexpress": {
     "displayName": "Paquetexpress",
@@ -45006,6 +45128,27 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "rojas-express": {
+    "displayName": "Rojas Express",
+    "color": "#cc0000",
+    "aliases": [
+      "Rojas Express Paquetería",
+      "Rojas Express, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://rojasexpress.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://rojasexpress.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "ross-express": {
     "displayName": "Ross Express",
     "color": "#bc010c",
@@ -47725,6 +47868,27 @@
     },
     "canaryUrl": "https://sinapseria.ro/",
     "trackingSearchUrl": "https://app.couriermanager.eu/cscourier/Main?tracking=true&appcont=17",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "sitra-es": {
+    "displayName": "SITRA",
+    "color": "#009cf8",
+    "aliases": [
+      "Sistemas Integrados de Transporte Alcorcón",
+      "SITRA, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://alcorcon.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://alcorcon.factapp.es/IRIS/Seguimiento",
     "linkRules": [],
     "detectionRules": []
   },
@@ -52803,6 +52967,28 @@
         "fragment": "^/track/([A-Za-z0-9]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "trablisa-expres": {
+    "displayName": "Trablisa Exprés",
+    "color": "#1a2a4a",
+    "aliases": [
+      "Trablisa Express",
+      "Trablisa Distribución y Servicios",
+      "Trablisa Distribución y Servicios, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://trablisa.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://trablisa.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
     "detectionRules": []
   },
   "trackon": {

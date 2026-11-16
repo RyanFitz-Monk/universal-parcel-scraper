@@ -1,0 +1,34 @@
+{
+  "id": "sitra-es",
+  "displayName": "SITRA",
+  "aliases": [
+    "Sistemas Integrados de Transporte Alcorcón",
+    "SITRA, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#009cf8"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://alcorcon.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://alcorcon.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

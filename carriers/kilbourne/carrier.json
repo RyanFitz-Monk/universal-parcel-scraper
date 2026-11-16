@@ -1,0 +1,34 @@
+{
+  "id": "kilbourne",
+  "displayName": "Kilbourne",
+  "aliases": [
+    "Kilbourne Corporate",
+    "Kilbourne Corporate, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#2c8068"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://kilbourne.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://kilbourne.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -23356,6 +23356,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "fiscourier": {
+    "displayName": "Fiscourier",
+    "color": "#f4a448",
+    "aliases": [
+      "Fiscourier, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "flash-express": {
     "displayName": "Flash Express",
     "color": "#ffea33",
@@ -32130,6 +32150,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "kilbourne": {
+    "displayName": "Kilbourne",
+    "color": "#2c8068",
+    "aliases": [
+      "Kilbourne Corporate",
+      "Kilbourne Corporate, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://kilbourne.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://kilbourne.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "king-kong-express": {
     "displayName": "King Kong Express",
     "color": "#21347c",
@@ -34381,6 +34422,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "logistica-alatec": {
+    "displayName": "Logística Alatec",
+    "color": "#518fcd",
+    "aliases": [
+      "Alatec, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://logisticaalatec.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://logisticaalatec.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "logistics-solution": {
     "displayName": "Logistics Solution",
     "color": "#6366f1",
@@ -34912,6 +34973,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "path": "^/track-my-order/+([^/?#]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "maam-envios": {
+    "displayName": "MAAM Envíos",
+    "color": "#000000",
+    "aliases": [
+      "MAAM Envíos, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://maam.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://maam.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
     "detectionRules": []
   },
   "macau-post": {
@@ -37120,6 +37201,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "path": "^/session/order/([^/]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "mundi-express": {
+    "displayName": "Mundi Express",
+    "color": "#cf3432",
+    "aliases": [
+      "Mundi Express Aragón",
+      "Mundi Express Aragón, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://zaragoza.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://zaragoza.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
     "detectionRules": []
   },
   "mvp-courier": {
@@ -40107,6 +40209,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "paqline": {
+    "displayName": "PAQLine",
+    "color": "#003ca6",
+    "aliases": [
+      "PAQLine Express Group"
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://navarra.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://navarra.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
   },
   "paquetexpress": {
     "displayName": "Paquetexpress",
@@ -45010,6 +45132,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "rojas-express": {
+    "displayName": "Rojas Express",
+    "color": "#cc0000",
+    "aliases": [
+      "Rojas Express Paquetería",
+      "Rojas Express, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://rojasexpress.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://rojasexpress.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "ross-express": {
     "displayName": "Ross Express",
     "color": "#bc010c",
@@ -47729,6 +47872,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://sinapseria.ro/",
     "trackingSearchUrl": "https://app.couriermanager.eu/cscourier/Main?tracking=true&appcont=17",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "sitra-es": {
+    "displayName": "SITRA",
+    "color": "#009cf8",
+    "aliases": [
+      "Sistemas Integrados de Transporte Alcorcón",
+      "SITRA, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://alcorcon.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://alcorcon.factapp.es/IRIS/Seguimiento",
     "linkRules": [],
     "detectionRules": []
   },
@@ -52807,6 +52971,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "fragment": "^/track/([A-Za-z0-9]+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "trablisa-expres": {
+    "displayName": "Trablisa Exprés",
+    "color": "#1a2a4a",
+    "aliases": [
+      "Trablisa Express",
+      "Trablisa Distribución y Servicios",
+      "Trablisa Distribución y Servicios, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://trablisa.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://trablisa.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
     "detectionRules": []
   },
   "trackon": {
@@ -59555,6 +59741,7 @@ export const CARRIER_IDS = [
   "first-fly-express",
   "first-line",
   "first-logistics",
+  "fiscourier",
   "flash-express",
   "flash-express-la",
   "flash-express-ph",
@@ -59808,6 +59995,7 @@ export const CARRIER_IDS = [
   "kerry-tj",
   "kex",
   "kex-express-hk",
+  "kilbourne",
   "king-kong-express",
   "king-solutions",
   "kit-tk",
@@ -59873,6 +60061,7 @@ export const CARRIER_IDS = [
   "loggi",
   "logisimple",
   "logista-parcel",
+  "logistica-alatec",
   "logistics-solution",
   "logistiq",
   "logoix",
@@ -59889,6 +60078,7 @@ export const CARRIER_IDS = [
   "m-one",
   "m-xpress",
   "m24-logistics",
+  "maam-envios",
   "macau-post",
   "madhur-courier",
   "maersk-ecommerce",
@@ -59957,6 +60147,7 @@ export const CARRIER_IDS = [
   "mte-xpress",
   "mtscn",
   "multientrega",
+  "mundi-express",
   "mvp-courier",
   "myanmar-post",
   "mylerz",
@@ -60041,6 +60232,7 @@ export const CARRIER_IDS = [
   "pannon-xp",
   "paositra-malagasy",
   "paperfly",
+  "paqline",
   "paquetexpress",
   "paquexpress-urgente",
   "parcel-one",
@@ -60177,6 +60369,7 @@ export const CARRIER_IDS = [
   "rocket-shipping",
   "rodonaves",
   "rohlig",
+  "rojas-express",
   "ross-express",
   "route1-fulfilment",
   "royal-express-mm",
@@ -60256,6 +60449,7 @@ export const CARRIER_IDS = [
   "shunbang-express",
   "sicepat",
   "sinapseria",
+  "sitra-es",
   "siuntos-autobusais",
   "sjl-express",
   "skif-cargo",
@@ -60399,6 +60593,7 @@ export const CARRIER_IDS = [
   "toyou",
   "tp-logistics-th",
   "tpl-rider",
+  "trablisa-expres",
   "trackon",
   "tracx-logis",
   "trans-o-flex",
@@ -61191,6 +61386,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "first-fly-express": [],
   "first-line": ["first-line-1"],
   "first-logistics": [],
+  "fiscourier": [],
   "flash-express": ["flash-express-1"],
   "flash-express-la": [],
   "flash-express-ph": ["flash-express-ph-1"],
@@ -61444,6 +61640,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "kerry-tj": [],
   "kex": [],
   "kex-express-hk": [],
+  "kilbourne": [],
   "king-kong-express": [],
   "king-solutions": [],
   "kit-tk": [],
@@ -61509,6 +61706,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "loggi": ["loggi-1"],
   "logisimple": [],
   "logista-parcel": [],
+  "logistica-alatec": [],
   "logistics-solution": [],
   "logistiq": [],
   "logoix": ["logoix-1"],
@@ -61525,6 +61723,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "m-one": ["m-one-s10"],
   "m-xpress": [],
   "m24-logistics": [],
+  "maam-envios": [],
   "macau-post": [],
   "madhur-courier": [],
   "maersk-ecommerce": ["maersk-ecommerce-1"],
@@ -61593,6 +61792,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "mte-xpress": [],
   "mtscn": ["mtscn-1"],
   "multientrega": [],
+  "mundi-express": [],
   "mvp-courier": [],
   "myanmar-post": [],
   "mylerz": ["mylerz-1"],
@@ -61677,6 +61877,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pannon-xp": ["pannon-xp-1"],
   "paositra-malagasy": [],
   "paperfly": ["paperfly-1","paperfly-2","paperfly-3"],
+  "paqline": [],
   "paquetexpress": ["paquetexpress-1","paquetexpress-2"],
   "paquexpress-urgente": [],
   "parcel-one": [],
@@ -61813,6 +62014,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "rocket-shipping": [],
   "rodonaves": [],
   "rohlig": [],
+  "rojas-express": [],
   "ross-express": [],
   "route1-fulfilment": [],
   "royal-express-mm": [],
@@ -61892,6 +62094,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "shunbang-express": [],
   "sicepat": [],
   "sinapseria": [],
+  "sitra-es": [],
   "siuntos-autobusais": [],
   "sjl-express": [],
   "skif-cargo": [],
@@ -62035,6 +62238,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "toyou": [],
   "tp-logistics-th": ["tp-logistics-th-1"],
   "tpl-rider": [],
+  "trablisa-expres": [],
   "trackon": [],
   "tracx-logis": ["tracx-logis-1"],
   "trans-o-flex": [],

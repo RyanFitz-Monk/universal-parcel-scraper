@@ -1,0 +1,34 @@
+{
+  "id": "mundi-express",
+  "displayName": "Mundi Express",
+  "aliases": [
+    "Mundi Express Aragón",
+    "Mundi Express Aragón, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#cf3432"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://zaragoza.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://zaragoza.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

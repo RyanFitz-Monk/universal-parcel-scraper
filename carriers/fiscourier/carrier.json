@@ -1,0 +1,33 @@
+{
+  "id": "fiscourier",
+  "displayName": "Fiscourier",
+  "aliases": [
+    "Fiscourier, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#f4a448"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}
