@@ -19,6 +19,10 @@ Operation types stage known scans; unknown types do not inherit the page's gener
 Clocks without offsets stay local. Recipient fields and scan contact suffixes are omitted.
 Transport diagnostics retain no verification material.
 
+The carrier-linked [Android app](https://sj.qq.com/appdetail/com.deppon.dpapp) bundles the
+same tracking gateway and slider endpoints. Recipient details, signatures and courier-location
+operations use separate routes and are outside this adapter.
+
 ## Limitations
 
 The request builder accepts a whole waybill without establishing ownership from its shape.
