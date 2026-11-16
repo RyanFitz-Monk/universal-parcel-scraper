@@ -1147,6 +1147,11 @@ describe('classifyWording', () => {
       ['Received item from Sender (Outbound)', 'accepted'],
       // Its network receiving the item.
       ['Received by Australia Post', 'accepted'],
+      // A destination post's receipt after the import clearance, and its round that could not reach the recipient, the
+      // second in the source's spelling.
+      ['Received at Destination Post', 'in_transit'], ['Received at destination post office', 'in_transit'],
+      ['Recipent uncontactable', 'failed_attempt'], ['Recipient uncontactable', 'failed_attempt'],
+      ['Recipient could not be contacted', 'failed_attempt'],
       // A hub identifying a parcel as bulky, at the second it receives it.
       ['INFORMATION. PARCEL IDENTIFIED AS BULKY GOOD (ESI)', 'in_transit'], ['Information. Parcel identified as bulky good', 'in_transit'],
       ['Tracking number changed, Carrier note: Package relabeled', 'in_transit'],
