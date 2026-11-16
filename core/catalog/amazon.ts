@@ -23,7 +23,7 @@ const STORES: Readonly<Record<string, string>> = {
   HR: 'de', SI: 'de', EE: 'de', LV: 'de', LT: 'de', GR: 'de', IS: 'co.uk',
 };
 
-const DELIVERY_STORES: Readonly<Record<string, string>> = { ...STORES, CA: 'ca', MX: 'com.mx', AU: 'com.au' };
+const DELIVERY_STORES: Readonly<Record<string, string>> = { ...STORES, CA: 'ca', MX: 'com.mx', AU: 'com.au', BR: 'com.br' };
 
 /**
  * The Amazon store whose order history holds the parcel. A number's country
@@ -36,6 +36,7 @@ export function amazonMarketplace(raw: string, country = ''): string {
   const destination = country.trim().toUpperCase();
   if (number.startsWith('TBC')) return 'ca';
   if (number.startsWith('TBM')) return 'com.mx';
+  if (number.startsWith('TBR')) return 'com.br';
   if (number.startsWith('TBAU')) return 'com.au';
   if (number.startsWith('TBA')) return destination === 'CA' ? 'ca' : 'com';
   if (!number) return DELIVERY_STORES[destination] ?? 'com';

@@ -411,3 +411,27 @@ describe('settling on a carrier', () => {
     expect(await settled('FR')).toBe('gls-de');
   });
 });
+
+describe('Ozon unseparated postings', () => {
+  it.each(['4827163520481', '014827163520481'])('offers %s without claiming ownership and only asks Ozon in its markets', number => {
+    expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'unknown', confidence: 'low' });
+    expect(detectCarrierMatch(number).candidates).toContain('ozon-logistics');
+    for (const phase of ['http', 'browser'] as const) {
+      for (const countryHint of ['RU', 'BY', 'KZ']) {
+        expect(recognitionAskedCarriers(number, { phase, countryHint })[0]).toBe('ozon-logistics');
+      }
+      for (const countryHint of [undefined, 'GB', 'US', 'XX']) {
+        expect(recognitionCandidates(number, { phase, countryHint, hint: 'ozon-logistics' }).map(c => c.carrier))
+          .not.toContain('ozon-logistics');
+      }
+    }
+  });
+
+  it('keeps printed posting ownership and Rocket references separate', () => {
+    expect(detectCarrierMatch('48271635-2048-1')).toMatchObject({ carrier: 'ozon-logistics', confidence: 'high' });
+    for (const number of ['482716352048', '48271635204811']) {
+      expect(detectCarrierMatch(number).candidates).not.toContain('ozon-logistics');
+    }
+    expect(recognitionAskedCarriers('PL-123456-shop', { countryHint: 'RU' })).not.toContain('ozon-logistics');
+  });
+});

@@ -15,7 +15,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Open-source project example, not a real shipment. The source attributes it to FedEx, which stays one candidate among several."
@@ -344,6 +345,7 @@
           "yunda",
           "korea-post",
           "econt",
+          "ozon-logistics",
           "paquetexpress"
         ]
       },
@@ -583,7 +585,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Track API sandbox example from FedEx, not a real shipment. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -602,7 +605,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Track API sandbox example from FedEx, not a real shipment. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -620,7 +624,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Track API sandbox example FedEx names as a Ground delivery, not a real shipment. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -647,7 +652,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A public court exhibit holds FedEx Ground's proof-of-delivery letter for this tracking number. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -673,7 +679,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A public court exhibit quotes a FedEx shipment notification naming it the master number of a twelve-piece FedEx Ground shipment. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -699,7 +706,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A customer's public complaint about a late FedEx Home delivery gives it as the tracking number. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -725,7 +733,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A shipper's public complaint gives it as the tracking number of a FedEx package delivered to the wrong address. Its last digit is the GS1 check, so detection prefers FedEx."
@@ -741,7 +750,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ],
         "not": [
           "fedex"
@@ -1083,7 +1093,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A 15-digit Ground number archived from a FedEx tracking link."
@@ -1107,7 +1118,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A 15-digit Ground number archived from a FedEx tracking link."
@@ -1133,7 +1145,8 @@
           "dpd-fr",
           "hermes-de",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A 15-digit Ground number archived from a FedEx tracking link. Its leading 0 also fits DPD France's rule."

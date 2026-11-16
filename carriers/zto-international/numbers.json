@@ -309,7 +309,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Listed on kuaidi.com's public ZTO International page. ZTO International's tracker finds it as the first-leg number of a 771 waybill that ZTO's network in Cambodia delivered; the adapter asks the tracker only for 771 waybills, whose reply names the number asked."

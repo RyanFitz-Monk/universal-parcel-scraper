@@ -601,6 +601,40 @@
         "confidence": "high"
       },
       "note": "An Amazon tracking link archived by the Wayback Machine. Amazon's European trackers answer it with their web page instead of data, and the US tracker does not know it."
+    },
+    {
+      "number": "TBR446498521",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.reclameaqui.com.br/amazon/nao-recebi-minha-lavadora-electrolux-comprada-na-amazon_ned2F6BBC5QFHlrc/",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "candidate"
+      },
+      "expect": {
+        "carrier": "amazon-logistics",
+        "confidence": "high"
+      },
+      "note": "Public Brazilian Amazon delivery report. Amazon staff acknowledges the TBR label prefix at https://sellercentral.amazon.com.br/seller-forums/discussions/t/325c78a7-e12e-4dac-88fd-139a07a2ce5f . Format evidence only; the shipment has not been retrieved live."
+    },
+    {
+      "number": "TBR376073880",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.reclameaqui.com.br/amazon/reclamacao-sobre-pedido-atrasado-falta-de-atualizacao-de-rastreio-e-imposs_NmE_V5l0FQAuezfV/",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "candidate"
+      },
+      "expect": {
+        "carrier": "amazon-logistics",
+        "confidence": "high"
+      },
+      "note": "Public Brazilian Amazon delivery report. Amazon staff acknowledges the TBR label prefix at https://sellercentral.amazon.com.br/seller-forums/discussions/t/325c78a7-e12e-4dac-88fd-139a07a2ce5f . Format evidence only; the shipment has not been retrieved live."
     }
   ]
 }

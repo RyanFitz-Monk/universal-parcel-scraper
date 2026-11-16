@@ -902,7 +902,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "US",
       "CA",
       "MX",
-      "AU"
+      "AU",
+      "BR"
     ],
     "selectable": true,
     "timezone": "UTC",
@@ -926,7 +927,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": [
       {
-        "pattern": "^(?:(?:FR|DE|BE|UK|GB|IT|ES|NL|AT|IE|PL|SE|PT|LU|DK|FI|CZ|SK|HU|RO|HR|SI|EE|LV|LT|GR|CY|MT|CH|NO|IS|LI|TR)[0-9]{10}|TB[ACM][0-9]{12}|TBAU[0-9]{9})$",
+        "pattern": "^(?:(?:FR|DE|BE|UK|GB|IT|ES|NL|AT|IE|PL|SE|PT|LU|DK|FI|CZ|SK|HU|RO|HR|SI|EE|LV|LT|GR|CY|MT|CH|NO|IS|LI|TR)[0-9]{10}|TB[ACM][0-9]{12}|TBAU[0-9]{9}|TBR[0-9]{9})$",
         "confidence": "high"
       }
     ]
@@ -41639,6 +41640,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "adapter": "ozon-logistics",
       "recognitionRank": 37,
       "recognitionPattern": "^(?:\\d{13}|\\d{15})$",
+      "recognitionServedCountriesOnly": true,
       "browserRecognitionRank": 37,
       "localClocks": true,
       "browser": true
@@ -41676,6 +41678,10 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pattern": "^PL\\d{6}[0-9A-Z]+$",
         "confidence": "high",
         "rawPattern": "^PL-\\d{6}-[0-9A-Z]+(?:-[0-9A-Z]+)*$"
+      },
+      {
+        "pattern": "^(?:\\d{13}|\\d{15})$",
+        "confidence": "low"
       }
     ]
   },
@@ -65189,7 +65195,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "overseas-express": [],
   "oxperta-express": [],
   "ozon-express-ma": [],
-  "ozon-logistics": ["ozon-logistics-1","ozon-logistics-2"],
+  "ozon-logistics": ["ozon-logistics-1","ozon-logistics-2","ozon-logistics-3"],
   "pack-man": [],
   "packli-punkt": [],
   "packlink": ["packlink-1"],

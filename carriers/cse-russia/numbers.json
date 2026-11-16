@@ -154,6 +154,7 @@
           "yunda",
           "korea-post",
           "econt",
+          "ozon-logistics",
           "paquetexpress"
         ]
       },
@@ -182,6 +183,7 @@
           "yunda",
           "korea-post",
           "econt",
+          "ozon-logistics",
           "paquetexpress"
         ]
       },
@@ -228,7 +230,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "The archived reply of CSE's own tracking API at lk.cse.ru shows a waybill picked up in Moscow."
@@ -323,6 +326,7 @@
           "korea-post",
           "econt",
           "fan-courier",
+          "ozon-logistics",
           "paquetexpress"
         ]
       },

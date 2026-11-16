@@ -1267,7 +1267,7 @@ describe('Andreani shipment numbers', () => {
     for (const prefix of ['36000', '31000', '30000']) {
       for (let digit = 0; digit <= 9; digit++) {
         const number = `${prefix}123456789${digit}`;
-        expect(detectCarrierMatch(number), number).toMatchObject({ preferred: ['andreani'], candidates: ['andreani', 'brt', 'yunda'] });
+        expect(detectCarrierMatch(number), number).toMatchObject({ preferred: ['andreani'], candidates: ['andreani', 'brt', 'yunda', 'ozon-logistics'] });
       }
     }
     const fedexGround = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => `36001123456789${digit}`).find((number) => CHECKSUMS.gs1(number));

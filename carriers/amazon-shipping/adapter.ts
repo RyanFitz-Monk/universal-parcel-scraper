@@ -220,7 +220,7 @@ function metadataValue(metadata: JsonObject, field: string): unknown {
 export function normalizeAmazonShippingTrackingNumber(raw: string): string {
   const value = raw.trim().toLocaleUpperCase('en-US').replace(/[\s.-]/g, '');
   if (!isAmazonTrackingNumber(value)) {
-    throw new InvalidInputError(PROVIDER, 'Amazon tracking numbers need a European country prefix and 10 digits, TBA, TBC or TBM and 12 digits, or TBAU and 9 digits');
+    throw new InvalidInputError(PROVIDER, 'Amazon tracking numbers need a European country prefix and 10 digits, TBA, TBC or TBM and 12 digits, or TBAU or TBR and 9 digits');
   }
   return value;
 }

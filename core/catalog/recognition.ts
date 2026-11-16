@@ -138,10 +138,10 @@ export function recognitionCandidates(
   // abroad. Paquetexpress's guías, letters and digits, are asked whatever the country.
   const bareRun = /^\d+$/.test(normalized);
   const answers = (carrier: string) => {
-    // A browser lookup is costly: a carrier names the numbers worth one (DPD France its own layouts, not every run of digits).
-    if (options.phase === 'browser') return BROWSER_RECOGNITION_PATTERNS.get(carrier)?.test(normalized) ?? true;
     const tracking = CARRIER_DEFINITIONS[carrier as CarrierId]?.tracking;
     if (tracking?.recognitionServedCountriesOnly && bareRun && countryScore(carrier) === 0) return false;
+    // A browser lookup is costly: a carrier names the numbers worth one (DPD France its own layouts, not every run of digits).
+    if (options.phase === 'browser') return BROWSER_RECOGNITION_PATTERNS.get(carrier)?.test(normalized) ?? true;
     return RECOGNITION_PATTERNS.get(carrier)?.test(normalized) ?? true;
   };
   const asked = candidates.filter((carrier) => ranks[carrier] !== undefined && AUTOMATIC_CARRIER_IDS.has(carrier)

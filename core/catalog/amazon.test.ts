@@ -38,3 +38,13 @@ describe('Amazon order-history store', () => {
     expect(parcelTrackingLinks(parcel)[0]?.url).toBe('https://www.amazon.com/gp/your-account/order-history');
   });
 });
+
+describe('Amazon Brazil marketplace', () => {
+  it('opens Brazilian orders for TBR shipments and a Brazilian delivery country', () => {
+    expect(amazonMarketplace('TBR000000001')).toBe('com.br');
+    expect(amazonMarketplace('tbr 000 000 001', 'US')).toBe('com.br');
+    expect(amazonMarketplace('', 'BR')).toBe('com.br');
+    expect(amazonOrdersUrl('TBR000000001')).toBe('https://www.amazon.com.br/gp/your-account/order-history');
+    expect(amazonMarketplace('TBA123456789012', 'BR')).toBe('com');
+  });
+});

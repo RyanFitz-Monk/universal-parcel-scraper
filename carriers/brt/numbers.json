@@ -112,7 +112,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Customer gives this as the shipment number in a complaint addressed to BRT. Fifteen digits is the length of a BRT parcel ID, which BRT's parcel search only finds for recent shipments."
@@ -431,7 +432,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A BRT parcel-ID search archived by the Wayback Machine. BRT's page returns the history of the shipment the parcel belongs to."
@@ -467,7 +469,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A BRT parcel-ID search archived by the Wayback Machine. BRT's page returns the history of the shipment the parcel belongs to."
@@ -504,7 +507,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A BRT parcel-ID search archived by the Wayback Machine. BRT's page returns the history of the shipment the parcel belongs to."
@@ -540,7 +544,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A BRT parcel-ID search archived by the Wayback Machine. BRT's page returns the history of the shipment the parcel belongs to."
@@ -575,7 +580,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A BRT parcel-ID search archived by the Wayback Machine. BRT's page returns the history of the shipment the parcel belongs to."

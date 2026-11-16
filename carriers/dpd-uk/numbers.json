@@ -608,7 +608,8 @@
           "brt",
           "yunda",
           "dpd-de",
-          "dpd-pt"
+          "dpd-pt",
+          "ozon-logistics"
         ]
       },
       "note": "Printed with a digit as its check character. DPD UK did not find it in October 2026."
@@ -638,7 +639,8 @@
           "brt",
           "yunda",
           "dpd-de",
-          "dpd-pt"
+          "dpd-pt",
+          "ozon-logistics"
         ]
       },
       "note": "Printed with a digit as its check character, which FedEx's fifteen-digit check also accepts. DPD UK did not find it in October 2026."

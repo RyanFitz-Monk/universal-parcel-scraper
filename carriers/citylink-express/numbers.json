@@ -20,7 +20,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -44,7 +45,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -68,7 +70,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -92,7 +95,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -116,7 +120,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -140,7 +145,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracking-result page; the opened capture holds the page with the number but its details load in the browser, so it shows no history."
@@ -163,7 +169,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -186,7 +193,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -209,7 +217,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -232,7 +241,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -255,7 +265,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracking-result page; the opened capture holds the page with the number but its details load in the browser, so it shows no history."
@@ -279,7 +290,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on City-Link's own tracker carries it as the consignment number; the capture was not opened."
@@ -301,7 +313,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Lowyat forum post in a City-Link thread gives it as the tracking number of a parcel shipped within Malaysia."
@@ -325,7 +338,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A complaint letter to City-Link Express posted on Lowyat forum gives it as the consignment number."

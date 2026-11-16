@@ -19,7 +19,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Netpost's own former tracking form gave it as the example waybill in its placeholder, on the home page and the tracking page."

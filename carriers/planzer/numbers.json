@@ -18,7 +18,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Publicly reported shipment number, printed as reference.shipment. Planzer's tracker returns its history. No rule claims Planzer's shapes."
@@ -79,7 +80,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Publicly reported shipment number, printed as reference.shipment. Planzer's tracker returns its history, for two parcels. No rule claims Planzer's shapes."
@@ -108,7 +110,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Open-source project example, not a real shipment. The source attributes it to Planzer, which no rule claims."

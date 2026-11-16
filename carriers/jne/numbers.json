@@ -20,7 +20,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Media Konsumen letter about a JNE Express parcel gives it as the parcel number."
@@ -43,7 +44,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Media Konsumen letter gives it as the resi of a JNE YES parcel."
@@ -68,7 +70,8 @@
           "fedex",
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Media Konsumen letter about a JNE shipment gives it as the AWB number."
@@ -122,7 +125,8 @@
           "yunda",
           "dpd-de",
           "dpd-pt",
-          "dpd-uk"
+          "dpd-uk",
+          "ozon-logistics"
         ]
       },
       "note": "A Media Konsumen letter addressed to JNE gives it as the resi in question."
@@ -169,7 +173,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Media Konsumen letter titled after this JNE resi reports the parcel held at a JNE warehouse."
@@ -267,7 +272,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "The GTrack library's README passes it to its JNE lookup as the usage example."

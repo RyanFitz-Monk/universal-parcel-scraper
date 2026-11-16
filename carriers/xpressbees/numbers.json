@@ -84,7 +84,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Fifteen-digit waybill from a review of Xpressbees. Not confirmed live: Xpressbees' public tracker needs reCAPTCHA and its seller feed rejects consumer waybills."
@@ -108,7 +109,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Fifteen-digit waybill from a review of Xpressbees. Not confirmed live: Xpressbees' public tracker needs reCAPTCHA and its seller feed rejects consumer waybills."

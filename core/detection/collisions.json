@@ -1140,6 +1140,16 @@
     "reason": "Purolator's lettered PINs and TNT Australia's domestic consignments both print three letters and nine digits, and Colis Privé accepts any 12-character alphanumeric, so no rule decides; recognition asks them in turn. TNT Australia's own tracker answers its consignments; TNT is not offered, because tnt.com refuses them."
   },
   {
+    "shape": "TBR followed by nine digits",
+    "carriers": [
+      "colis-prive",
+      "purolator",
+      "tnt-au",
+      "amazon-logistics"
+    ],
+    "reason": "Amazon Brazil's TBR prefix identifies its retail tracking references. Colis Privé's alphanumeric rule and Purolator and TNT Australia's three-letter rules overlap at low confidence; Amazon's high-confidence rule decides this family."
+  },
+  {
     "shape": "LTN9{9}",
     "carriers": [
       "colis-prive",
@@ -1225,9 +1235,10 @@
       "brt",
       "dpd-fr",
       "fedex",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "A passing GS1 check digit adds FedEx to BRT, DPD France and Yunda, which accept these numbers without one; a check digit does not establish ownership, so the number stays a low-confidence suggestion."
+    "reason": "A passing GS1 check digit adds FedEx to BRT, DPD France and Yunda, which accept these numbers without one; a check digit does not establish ownership, so the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting 00 that pass the GS1 check",
@@ -1236,44 +1247,49 @@
       "dpd-fr",
       "fedex",
       "hermes-de",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "Hermes Germany joins BRT, DPD France, FedEx and Yunda for a fourteen-digit Hermes barcode typed after a zero, whose GS1 check is the barcode's own. A check digit does not establish ownership, so the number stays a low-confidence suggestion, and recognition asks Hermes first for a lookup in Germany."
+    "reason": "Hermes Germany joins BRT, DPD France, FedEx and Yunda for a fourteen-digit Hermes barcode typed after a zero, whose GS1 check is the barcode's own. A check digit does not establish ownership, so the number stays a low-confidence suggestion, and recognition asks Hermes first for a lookup in Germany. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits outside DPD France's 0/1 prefixes and STO's 77 range that pass the GS1 check",
     "carriers": [
       "brt",
       "fedex",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "A passing GS1 check digit adds FedEx to BRT and Yunda, which accept any fifteen digits; a check digit does not establish ownership, so the number stays a low-confidence suggestion."
+    "reason": "A passing GS1 check digit adds FedEx to BRT and Yunda, which accept any fifteen digits; a check digit does not establish ownership, so the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits outside DPD France's 0/1 prefixes and STO's 77 range that fail the GS1 check",
     "carriers": [
       "brt",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "BRT parcel IDs and Yunda's fifteen-digit rule both accept any fifteen digits and neither carries a check digit, so the number stays a low-confidence suggestion."
+    "reason": "BRT parcel IDs and Yunda's fifteen-digit rule both accept any fifteen digits and neither carries a check digit, so the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting 8880",
     "carriers": [
       "brt",
       "yunda",
-      "j-and-t-br"
+      "j-and-t-br",
+      "ozon-logistics"
     ],
-    "reason": "J&T Express Brazil's domestic waybills start 8880, and BRT and Yunda accept any fifteen digits; FedEx's fifteen-digit rule leaves the range out. Every public 8880 sample is J&T Brazil's and no other carrier's starts 8880, so J&T Brazil's high-confidence rule decides; a parcel it does not know falls back to the others."
+    "reason": "J&T Express Brazil's domestic waybills start 8880, and BRT and Yunda accept any fifteen digits; FedEx's fifteen-digit rule leaves the range out. Every public 8880 sample is J&T Brazil's and no other carrier's starts 8880, so J&T Brazil's high-confidence rule decides; a parcel it does not know falls back to the others. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting 36000, 31000 or 30000",
     "carriers": [
       "andreani",
       "brt",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "Andreani's shipment numbers start 36000, 31000 or 30000, and BRT and Yunda accept any fifteen digits; FedEx's fifteen-digit rule leaves those prefixes out. Every rule is low confidence and Andreani's is preferred, so the number stays a suggestion, Andreani first."
+    "reason": "Andreani's shipment numbers start 36000, 31000 or 30000, and BRT and Yunda accept any fifteen digits; FedEx's fifteen-digit rule leaves those prefixes out. Every rule is low confidence and Andreani's is preferred, so the number stays a suggestion, Andreani first. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting with 27 that pass the GS1 check",
@@ -1281,27 +1297,20 @@
       "brt",
       "fedex",
       "raben",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "Raben's shipment numbers open with 27, a prefix BRT and Yunda also accept, and a passing GS1 check digit adds FedEx; none of them owns the shape, so recognition asks the carriers' trackers."
+    "reason": "Raben's shipment numbers open with 27, a prefix BRT and Yunda also accept, and a passing GS1 check digit adds FedEx; none of them owns the shape, so recognition asks the carriers' trackers. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting with 27 that fail the GS1 check",
     "carriers": [
       "brt",
       "raben",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "Raben's shipment numbers open with 27, while BRT parcel IDs and Yunda's fifteen-digit rule accept any fifteen digits; none carries a check digit, so recognition asks the carriers' trackers."
-  },
-  {
-    "shape": "Fifteen digits starting with 0 or 1 that fail the GS1 check",
-    "carriers": [
-      "brt",
-      "dpd-fr",
-      "yunda"
-    ],
-    "reason": "Without a GS1 check digit FedEx drops out; BRT, DPD France and Yunda still share the shape, so the number stays a low-confidence suggestion."
+    "reason": "Raben's shipment numbers open with 27, while BRT parcel IDs and Yunda's fifteen-digit rule accept any fifteen digits; none carries a check digit, so recognition asks the carriers' trackers. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting with 77 that pass the GS1 check",
@@ -1309,18 +1318,20 @@
       "brt",
       "fedex",
       "sto",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "STO Express's current waybills are fifteen digits in the 77 range, which BRT's parcel IDs and Yunda's fifteen-digit rule also accept, and Yunda's own client sends to its international site. A passing GS1 check digit adds FedEx and lists it first, ahead of STO; neither the range nor a check digit establishes ownership, so the number stays a low-confidence suggestion that STO's trace must confirm."
+    "reason": "STO Express's current waybills are fifteen digits in the 77 range, which BRT's parcel IDs and Yunda's fifteen-digit rule also accept, and Yunda's own client sends to its international site. A passing GS1 check digit adds FedEx and lists it first, ahead of STO; neither the range nor a check digit establishes ownership, so the number stays a low-confidence suggestion that STO's trace must confirm. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Fifteen digits starting with 77 that fail the GS1 check",
     "carriers": [
       "brt",
       "sto",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "STO Express's current waybills are fifteen digits in the 77 range, which BRT's parcel IDs and Yunda's fifteen-digit rule also accept, and Yunda's own client sends to its international site. STO's rule lists it first; the number stays a low-confidence suggestion that STO's trace must confirm."
+    "reason": "STO Express's current waybills are fifteen digits in the 77 range, which BRT's parcel IDs and Yunda's fifteen-digit rule also accept, and Yunda's own client sends to its international site. STO's rule lists it first; the number stays a low-confidence suggestion that STO's trace must confirm. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "B, D, H, P, T, U or V and ten digits",
@@ -1723,9 +1734,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers are shared by five carriers; the number stays a low-confidence suggestion."
+    "reason": "13-digit numbers are shared by five carriers; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 8 or 9, ending 7, 8 or 9",
@@ -1734,9 +1746,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers are shared by four carriers; the number stays a low-confidence suggestion."
+    "reason": "13-digit numbers are shared by four carriers; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 7 that pass the Ukrposhta check, ending 7, 8 or 9",
@@ -1746,9 +1759,10 @@
       "yunda",
       "econt",
       "fan-courier",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
+    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "09{12}",
@@ -1758,9 +1772,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers starting with 0 add DPD France to the four carriers already sharing that length; the number stays a suggestion."
+    "reason": "13-digit numbers starting with 0 add DPD France to the four carriers already sharing that length; the number stays a suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 1 or 250",
@@ -1772,9 +1787,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the five carriers already sharing that length; the number stays a suggestion."
+    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the five carriers already sharing that length; the number stays a suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 1 or 250, ending 7, 8 or 9",
@@ -1785,9 +1801,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the four carriers already sharing that length; the number stays a suggestion."
+    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the four carriers already sharing that length; the number stays a suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 6",
@@ -1798,9 +1815,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers starting with 6, Korea Post's domestic parcels and registered letters among them, are shared by six carriers; the number stays a low-confidence suggestion."
+    "reason": "13-digit numbers starting with 6, Korea Post's domestic parcels and registered letters among them, are shared by six carriers; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 60 or 65",
@@ -1812,9 +1830,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 3 that pass the Ukrposhta check, ending 7, 8 or 9",
@@ -1826,9 +1845,10 @@
       "econt",
       "fan-courier",
       "imile",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number."
+    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 2 to 6, outside 250, ending 7, 8 or 9",
@@ -1839,9 +1859,10 @@
       "yunda",
       "liccardi",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles."
+    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 60 or 65, ending 7, 8 or 9",
@@ -1852,9 +1873,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{20} SSCC under Poczta Polska's GS1 prefix 5900773",
@@ -1914,9 +1936,10 @@
     "carriers": [
       "brt",
       "la-poste",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "Without DPD's check character La Poste matches only its low-confidence fallback, which BRT's parcel IDs and the fifteen-digit Yunda rule share; the number stays a low-confidence suggestion."
+    "reason": "Without DPD's check character La Poste matches only its low-confidence fallback, which BRT's parcel IDs and the fifteen-digit Yunda rule share; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "16-character alphanumeric reference",
@@ -3372,9 +3395,10 @@
       "dpd-fr",
       "dpd-uk",
       "yunda",
-      "dpd-pt"
+      "dpd-pt",
+      "ozon-logistics"
     ],
-    "reason": "When DPD's check character is a digit, the fifteen-digit rules of BRT, DPD France and Yunda match too, and Chronopost delivers DPD parcels entering France under the same number. Direct tracking must confirm the carrier."
+    "reason": "When DPD's check character is a digit, the fifteen-digit rules of BRT, DPD France and Yunda match too, and Chronopost delivers DPD parcels entering France under the same number. Direct tracking must confirm the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "La Poste Smart Data prefix (865, 866, 870, 875, 880 or 885), eleven digits and their check letter",
@@ -3399,9 +3423,10 @@
       "dpd-uk",
       "fedex",
       "yunda",
-      "dpd-pt"
+      "dpd-pt",
+      "ozon-logistics"
     ],
-    "reason": "The fifteen digits also carry a valid FedEx check digit, so FedEx's rule lists FedEx first, ahead of the BRT, DPD France and Yunda fifteen-digit rules. DPD UK's own tracking page published such a number."
+    "reason": "The fifteen digits also carry a valid FedEx check digit, so FedEx's rule lists FedEx first, ahead of the BRT, DPD France and Yunda fifteen-digit rules. DPD UK's own tracking page published such a number. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Six letters",
@@ -3791,9 +3816,10 @@
       "delhivery",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Without Ukrposhta's check digit, 13-digit numbers are shared by four carriers; the number stays a low-confidence suggestion."
+    "reason": "Without Ukrposhta's check digit, 13-digit numbers are shared by four carriers; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 8 or 9 that fails the Ukrposhta check, ending 7, 8 or 9",
@@ -3801,9 +3827,10 @@
       "correos-chile",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Without Ukrposhta's check digit, 13-digit numbers are shared by three carriers; the number stays a low-confidence suggestion."
+    "reason": "Without Ukrposhta's check digit, 13-digit numbers are shared by three carriers; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 7 that fail the Ukrposhta check, ending 7, 8 or 9",
@@ -3812,9 +3839,10 @@
       "yunda",
       "econt",
       "fan-courier",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
+    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{11} starting 2 to 9 that fails the mod 7 check, passing DHL eCommerce Poland's check",
@@ -3957,9 +3985,10 @@
       "korea-post",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the four carriers sharing that length; the number stays a suggestion."
+    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the four carriers sharing that length; the number stays a suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 1 or 250 that fails the Ukrposhta check, ending 7, 8 or 9",
@@ -3969,9 +3998,10 @@
       "korea-post",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the three carriers sharing that length; the number stays a suggestion."
+    "reason": "13-digit numbers starting with 1 or 250 add DPD France and Korea Post's registered letters to the three carriers sharing that length; the number stays a suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Twelve digits that pass the FedEx check",
@@ -4130,18 +4160,6 @@
     "reason": "Passing check digits add FedEx and DHL to the carriers that accept any twelve digits; a check digit does not establish ownership, so the number stays a low-confidence suggestion."
   },
   {
-    "shape": "9{13} starting with 6 that fails the Ukrposhta check",
-    "carriers": [
-      "correos-chile",
-      "delhivery",
-      "korea-post",
-      "yunda",
-      "econt",
-      "paquetexpress"
-    ],
-    "reason": "13-digit numbers starting with 6, Korea Post's domestic parcels and registered letters among them, are shared by five carriers; the number stays a low-confidence suggestion."
-  },
-  {
     "shape": "9{13} starting with 2 to 6, outside 250, that fails the Ukrposhta check",
     "carriers": [
       "correos-chile",
@@ -4150,22 +4168,10 @@
       "yunda",
       "liccardi",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles."
-  },
-  {
-    "shape": "9{13} starting with 60 or 65 that fails the Ukrposhta check",
-    "carriers": [
-      "correos-chile",
-      "delhivery",
-      "korea-post",
-      "yunda",
-      "aras-kargo",
-      "econt",
-      "paquetexpress"
-    ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 2 to 6, outside 250, that fails the Ukrposhta check, ending 7, 8 or 9",
@@ -4175,9 +4181,10 @@
       "yunda",
       "liccardi",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles."
+    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{13} starting with 60 or 65 that fails the Ukrposhta check, ending 7, 8 or 9",
@@ -4187,9 +4194,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "6, a month from January to September, a day and a year from 24, then six digits, that fail the Ukrposhta check",
@@ -4201,9 +4209,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "iMile's dated waybills sit inside the thirteen-digit space Korea Post's domestic parcels and four other carriers' counters share; the date does not establish ownership, so the number stays a low-confidence suggestion. Aras Kargo's thirteen-digit numbers start with 60 or 65, so its low rule joins them there; recognition asks it first from Turkey."
+    "reason": "iMile's dated waybills sit inside the thirteen-digit space Korea Post's domestic parcels and four other carriers' counters share; the date does not establish ownership, so the number stays a low-confidence suggestion. Aras Kargo's thirteen-digit numbers start with 60 or 65, so its low rule joins them there; recognition asks it first from Turkey. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "6, a month from January to September, a day and a year from 24, then six digits, that fail the Ukrposhta check, ending 7, 8 or 9",
@@ -4214,9 +4223,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "iMile's dated waybills sit inside the thirteen-digit space Korea Post's domestic parcels and three other carriers' counters share; the date does not establish ownership, so the number stays a low-confidence suggestion. Aras Kargo's thirteen-digit numbers start with 60 or 65, so its low rule joins them there; recognition asks it first from Turkey."
+    "reason": "iMile's dated waybills sit inside the thirteen-digit space Korea Post's domestic parcels and three other carriers' counters share; the date does not establish ownership, so the number stays a low-confidence suggestion. Aras Kargo's thirteen-digit numbers start with 60 or 65, so its low rule joins them there; recognition asks it first from Turkey. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Twelve digits that pass the GLS check",
@@ -4552,9 +4562,10 @@
       "dpd-uk",
       "la-poste",
       "yunda",
-      "dpd-pt"
+      "dpd-pt",
+      "ozon-logistics"
     ],
-    "reason": "La Poste's tracked-letter numbers end in the ISO 7064 check character DPD prints; when it is a digit, the fifteen-digit BRT and Yunda rules match too. La Poste's high-confidence rule decides."
+    "reason": "La Poste's tracked-letter numbers end in the ISO 7064 check character DPD prints; when it is a digit, the fifteen-digit BRT and Yunda rules match too. La Poste's high-confidence rule decides. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "La Poste Smart Data prefix (865, 866, 870, 875, 880 or 885), eleven digits and their check digit, that pass the GS1 check",
@@ -4567,9 +4578,10 @@
       "fedex",
       "la-poste",
       "yunda",
-      "dpd-pt"
+      "dpd-pt",
+      "ozon-logistics"
     ],
-    "reason": "When La Poste's ISO 7064 check character is a digit and the fifteen digits also pass GS1, FedEx's fifteen-digit rule matches too, as do BRT's and Yunda's. La Poste's high-confidence rule decides."
+    "reason": "When La Poste's ISO 7064 check character is a digit and the fifteen digits also pass GS1, FedEx's fifteen-digit rule matches too, as do BRT's and Yunda's. La Poste's high-confidence rule decides. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Twelve digits starting with 0, 1 or 250 that pass none of the FedEx, GLS, Identcode, Purolator and mod 7 checks",
@@ -4720,9 +4732,10 @@
       "planzer",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "The Planzer 99990 range sits inside the 13-digit space three carriers match broadly; the Planzer rule decides."
+    "reason": "The Planzer 99990 range sits inside the 13-digit space three carriers match broadly; the Planzer rule decides. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "9{20} SSCC with a Nordic GS1 prefix",
@@ -5337,9 +5350,10 @@
     "carriers": [
       "brt",
       "j-and-t-cargo",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "J&T Cargo piece identifiers overlap the broad BRT and Yunda formats. Direct tracking must confirm the carrier."
+    "reason": "J&T Cargo piece identifiers overlap the broad BRT and Yunda formats. Direct tracking must confirm the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "C, L or W followed by seven digits",
@@ -5532,9 +5546,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "ORLEN Paczka's parcel numbers sit inside the thirteen-digit space that Correos de Chile, Delhivery, Korea Post and Yunda match broadly; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania."
+    "reason": "ORLEN Paczka's parcel numbers sit inside the thirteen-digit space that Correos de Chile, Delhivery, Korea Post and Yunda match broadly; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "210 and ten digits that pass the GS1 check and fail the Ukrposhta check, ending 7, 8 or 9",
@@ -5545,9 +5560,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "ORLEN Paczka's parcel numbers sit inside the thirteen-digit space that Correos de Chile, Korea Post and Yunda match broadly; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania."
+    "reason": "ORLEN Paczka's parcel numbers sit inside the thirteen-digit space that Correos de Chile, Korea Post and Yunda match broadly; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "210 and ten digits that pass both the GS1 and the Ukrposhta checks",
@@ -5560,9 +5576,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "When the number also carries a valid Ukrposhta check digit, Ukrposhta joins the carriers sharing ORLEN Paczka's thirteen digits; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania."
+    "reason": "When the number also carries a valid Ukrposhta check digit, Ukrposhta joins the carriers sharing ORLEN Paczka's thirteen digits; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "210 and ten digits that pass both the GS1 and the Ukrposhta checks, ending 7, 8 or 9",
@@ -5574,9 +5591,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "When the number also carries a valid Ukrposhta check digit, Ukrposhta joins the carriers sharing ORLEN Paczka's thirteen digits; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania."
+    "reason": "When the number also carries a valid Ukrposhta check digit, Ukrposhta joins the carriers sharing ORLEN Paczka's thirteen digits; the number stays a low-confidence suggestion. FAN Courier's rule for AWBs starting with 2 joins them; recognition asks it first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "832 and ten digits",
@@ -5586,9 +5604,10 @@
       "shiprocket",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "ShiprocketX's AWBs sit inside the thirteen-digit space that Correos de Chile, Delhivery and Yunda match broadly. Its preferred rule lists Shiprocket first, and recognition asks Shiprocket's tracker; the number stays a low-confidence suggestion."
+    "reason": "ShiprocketX's AWBs sit inside the thirteen-digit space that Correos de Chile, Delhivery and Yunda match broadly. Its preferred rule lists Shiprocket first, and recognition asks Shiprocket's tracker; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "832 and ten digits, ending 7, 8 or 9",
@@ -5597,9 +5616,10 @@
       "shiprocket",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "ShiprocketX's AWBs sit inside the thirteen-digit space that Correos de Chile and Yunda match broadly. Its preferred rule lists Shiprocket first, and recognition asks Shiprocket's tracker; the number stays a low-confidence suggestion."
+    "reason": "ShiprocketX's AWBs sit inside the thirteen-digit space that Correos de Chile and Yunda match broadly. Its preferred rule lists Shiprocket first, and recognition asks Shiprocket's tracker; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "832 and ten digits that pass the Ukrposhta check, ending 7, 8 or 9",
@@ -5609,9 +5629,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "When the number also carries a valid Ukrposhta check digit, Ukrposhta joins the carriers sharing ShiprocketX's thirteen digits; the number stays a low-confidence suggestion."
+    "reason": "When the number also carries a valid Ukrposhta check digit, Ukrposhta joins the carriers sharing ShiprocketX's thirteen digits; the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "14 digits starting 703",
@@ -5895,9 +5916,10 @@
       "dpd-de",
       "dpd-uk",
       "yunda",
-      "dpd-pt"
+      "dpd-pt",
+      "ozon-logistics"
     ],
-    "reason": "jne numbers of this shape fall in each of these carriers' rules; recognition asks them in turn."
+    "reason": "jne numbers of this shape fall in each of these carriers' rules; recognition asks them in turn. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^\\d{12}$",
@@ -6029,17 +6051,6 @@
       "gls-nl"
     ],
     "reason": "Passing check digits add GLS, Purolator and Saia to the carriers that accept any twelve digits; a check digit does not establish ownership, so the number stays a low-confidence suggestion."
-  },
-  {
-    "shape": "^\\d{13}$",
-    "carriers": [
-      "correos-chile",
-      "dpd-fr",
-      "yunda",
-      "econt",
-      "paquetexpress"
-    ],
-    "reason": "vasp-expresso numbers of this shape fall in each of these carriers' rules; recognition asks them in turn."
   },
   {
     "shape": "A country code, nine digits and R or E",
@@ -7500,9 +7511,10 @@
     "carriers": [
       "brt",
       "sp-express",
-      "yunda"
+      "yunda",
+      "ozon-logistics"
     ],
-    "reason": "SP Express order numbers are fifteen digits, which BRT's parcel IDs and Yunda's fifteen-digit rule also accept; the 483 prefix and sending date only suggest SP Express, so the number stays a low-confidence suggestion."
+    "reason": "SP Express order numbers are fifteen digits, which BRT's parcel IDs and Yunda's fifteen-digit rule also accept; the 483 prefix and sending date only suggest SP Express, so the number stays a low-confidence suggestion. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "DG and eleven digits",
@@ -7553,9 +7565,10 @@
       "korea-post",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier."
+    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^\\d{13}$",
@@ -7567,9 +7580,10 @@
       "yunda",
       "liccardi",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles."
+    "reason": "Liccardi's label numbers start 660, inside thirteen digits other carriers share; the number stays a low-confidence suggestion that recognition settles. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^6[05]\\d{11}$ passing FedEx Poland's GS1 check",
@@ -7581,9 +7595,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^\\d{13}$, ending 7, 8 or 9",
@@ -7593,9 +7608,10 @@
       "korea-post",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier."
+    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^6[05]\\d{11}$ passing FedEx Poland's GS1 check, ending 7, 8 or 9",
@@ -7606,9 +7622,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^\\d{13}$",
@@ -7620,9 +7637,10 @@
       "korea-post",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier."
+    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^6[05]\\d{11}$ dated by iMile and passing FedEx Poland's GS1 check",
@@ -7635,9 +7653,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier."
+    "reason": "Aras Kargo's numbers are thirteen digits starting with 60 or 65, so its low rule joins the carriers sharing this shape; recognition asks it first from Turkey and settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^6[05]\\d{11}$ dated by iMile and passing FedEx Poland's GS1 check, ending 7, 8 or 9",
@@ -7649,9 +7668,10 @@
       "yunda",
       "aras-kargo",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier. Aras Kargo's thirteen-digit numbers start with 60 or 65, so its low rule joins them there; recognition asks it first from Turkey."
+    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier. Aras Kargo's thirteen-digit numbers start with 60 or 65, so its low rule joins them there; recognition asks it first from Turkey. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "^\\d{13}$",
@@ -7663,9 +7683,10 @@
       "ukrposhta",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier."
+    "reason": "FedEx Poland's domestic numbers are thirteen digits starting with 6 and ending in a GS1 check digit, as some of these carriers' numbers also are, so its low rule joins theirs and recognition settles the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "SHEIN package number",
@@ -7956,19 +7977,6 @@
     "reason": "Colis Privé's low-confidence rule takes any twelve letters and digits; Sendle's own QSS prefix is preferred."
   },
   {
-    "shape": "13 digits starting with 2 to 5",
-    "carriers": [
-      "correos-chile",
-      "delhivery",
-      "korea-post",
-      "yunda",
-      "fan-courier",
-      "econt",
-      "paquetexpress"
-    ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
-  },
-  {
     "shape": "13 digits starting with 3",
     "carriers": [
       "correos-chile",
@@ -7978,9 +7986,10 @@
       "fan-courier",
       "econt",
       "imile",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number."
+    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "2205 and nine digits",
@@ -7992,9 +8001,10 @@
       "fan-courier",
       "tforce-freight",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "TForce Freight's PARS numbers for the Canadian border are its carrier code 2205 and a PRO, inside the thirteen-digit space these carriers match broadly; its preferred low rule puts it first when the PRO's check passes, and recognition asks it first from Canada."
+    "reason": "TForce Freight's PARS numbers for the Canadian border are its carrier code 2205 and a PRO, inside the thirteen-digit space these carriers match broadly; its preferred low rule puts it first when the PRO's check passes, and recognition asks it first from Canada. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 2 to 5, ending 7, 8 or 9",
@@ -8004,9 +8014,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
+    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 3, ending 7, 8 or 9",
@@ -8017,9 +8028,10 @@
       "fan-courier",
       "econt",
       "imile",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number."
+    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 250",
@@ -8031,9 +8043,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
+    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 2 to 5 that pass the Ukrposhta check",
@@ -8045,9 +8058,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
+    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 3 that pass the Ukrposhta check",
@@ -8060,9 +8074,10 @@
       "fan-courier",
       "econt",
       "imile",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number."
+    "reason": "Thirteen digits starting with 3 are iMile's undated waybills as well as FAN Courier's AWBs and other carriers' counters; iMile's low rule joins theirs, as most such parcels the app tracked were iMile's, and its tracker has to confirm the number. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "13 digits starting with 7, the 7000 series among them",
@@ -8072,9 +8087,10 @@
       "yunda",
       "fan-courier",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania."
+    "reason": "FAN Courier's AWBs are thirteen digits starting with 2 to 5 or 7, inside the space these carriers match broadly; its low rule joins theirs, and recognition asks FAN Courier first from Romania. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "eight digits starting with 2 to 5, four digits and one digit joined by hyphens",
@@ -8209,9 +8225,10 @@
       "korea-post",
       "yunda",
       "econt",
-      "paquetexpress"
+      "paquetexpress",
+      "ozon-logistics"
     ],
-    "reason": "Foxpost gives its home deliveries numbers starting 66639 without saying how long they are; the other carriers take thirteen digits of any kind. Foxpost leads, and direct tracking must confirm the carrier."
+    "reason": "Foxpost gives its home deliveries numbers starting 66639 without saying how long they are; the other carriers take thirteen digits of any kind. Foxpost leads, and direct tracking must confirm the carrier. Unseparated Ozon postings also share this length and remain low-confidence candidates requiring direct confirmation."
   },
   {
     "shape": "Sixteen digits opening 0100",

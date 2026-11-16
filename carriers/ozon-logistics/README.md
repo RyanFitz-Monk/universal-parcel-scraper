@@ -30,8 +30,11 @@ or unsupported postings can be absent from the public tracker.
 
 Ozon posting numbers are an order number of eight or ten digits, four digits and one digit,
 joined by hyphens, as archived lookups on Ozon's trackers show. `ozon-logistics-1` claims them
-when they are printed with their hyphens; without them the digits match other carriers'
-numeric shapes. Ozon Rocket, the delivery service Ozon offered to other shops, tracked their
+when they are printed with their hyphens. Without them, Ozon stays a low-confidence candidate
+alongside other carriers with the same numeric shapes. HTTP and browser recognition ask Ozon
+about those bare numbers only with a Russian, Belarusian or Kazakh country hint; the response
+must confirm the shipment. Explicit Ozon lookups also accept the bare form. Ozon Rocket, the
+delivery service Ozon offered to other shops, tracked their
 orders as `PL-`, a six-digit client code and the shop's own reference; `ozon-logistics-2`
 claims that printed form. Ozon's tracker also shows numbers of partner carriers, mostly
 Chinese postal items, which stay with those carriers.

@@ -19,7 +19,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on M&P's own tracking page shows the consignment delivered with its scan history."
@@ -42,7 +43,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on M&P's own tracking page shows the consignment returned with its scan history."
@@ -65,7 +67,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "An archived lookup on M&P's own tracking page shows the consignment delivered with its scan history."
@@ -157,7 +160,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Sent to M&P's own tracker on mulphilog.com, as an archived address shows; the capture was not opened."
@@ -215,7 +219,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Customers' Trustpilot reviews of M&P (mulphilog.com) give it as the order ID of their complaint; M&P's tracker shows the consignment delivered with its scan history."

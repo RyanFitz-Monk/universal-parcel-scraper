@@ -489,7 +489,8 @@
           "brt",
           "yunda",
           "dpd-pt",
-          "dpd-uk"
+          "dpd-uk",
+          "ozon-logistics"
         ]
       },
       "note": "Chronopost's tracker returns its history: a DPD-network parcel entering France, delivered by Chronopost."

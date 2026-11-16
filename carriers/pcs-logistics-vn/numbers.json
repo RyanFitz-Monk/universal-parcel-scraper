@@ -20,7 +20,8 @@
         "candidates": [
           "fedex",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Example consignment number in the search box placeholder of the PCS Courier tracker; the opened capture shows it."
@@ -43,7 +44,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Example consignment number in the PCS Courier tracker page's instructions; the opened capture shows it."
@@ -66,7 +68,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Example in the PCS Courier tracker's note under its search box on looking up several numbers; the opened capture shows it."

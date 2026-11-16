@@ -19,6 +19,7 @@
           "yunda",
           "korea-post",
           "econt",
+          "ozon-logistics",
           "paquetexpress"
         ]
       },
@@ -36,7 +37,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Synthetic domestic waybill shape; DPD France shares its length, so it stays ambiguous. Its serial sits far beyond the range in use."
@@ -59,7 +61,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Yunda tracking link archived by the Wayback Machine. Yunda's tracker returns its history, ending with collection from a pickup point."
@@ -82,7 +85,8 @@
         "confidence": "low",
         "candidates": [
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "A Yunda tracking link archived by the Wayback Machine. Yunda's tracker no longer shows any scan for it, so it stays unconfirmed."

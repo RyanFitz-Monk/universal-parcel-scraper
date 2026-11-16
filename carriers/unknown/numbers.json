@@ -154,7 +154,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Shared numeric shape that must stay a suggestion rather than a carrier."

@@ -29,7 +29,8 @@
     "browser": true,
     "recognition": {
       "rank": 37,
-      "pattern": "^(?:\\d{13}|\\d{15})$"
+      "pattern": "^(?:\\d{13}|\\d{15})$",
+      "servedCountriesOnly": true
     },
     "browserRecognition": {
       "rank": 37
@@ -94,6 +95,11 @@
       "pattern": "^PL\\d{6}[0-9A-Z]+$",
       "rawPattern": "^PL-\\d{6}-[0-9A-Z]+(?:-[0-9A-Z]+)*$",
       "confidence": "high"
+    },
+    {
+      "id": "ozon-logistics-3",
+      "pattern": "^(?:\\d{13}|\\d{15})$",
+      "confidence": "low"
     }
   ]
 }

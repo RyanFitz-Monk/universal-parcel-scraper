@@ -57,7 +57,8 @@
         "candidates": [
           "dpd-fr",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "The same archived tracking API reply gives it as the label ('etiqueta') of the shipment's only package on every event; the lookup itself used the shipment number."

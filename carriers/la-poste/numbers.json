@@ -142,7 +142,8 @@
         "candidates": [
           "la-poste",
           "brt",
-          "yunda"
+          "yunda",
+          "ozon-logistics"
         ]
       },
       "note": "Invented fifteen-digit tracked-mail identifier whose last digit is not La Poste's key, so La Poste stays one suggestion. Its serial sits far beyond the range in use."
