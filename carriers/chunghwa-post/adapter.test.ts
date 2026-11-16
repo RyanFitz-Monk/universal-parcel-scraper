@@ -5,6 +5,9 @@ import { adapter, ChunghwaPostTracker, normalizeChunghwaPostNumber, parseChunghw
 import { ChunghwaPostOcr } from './ocr.js';
 import { statusMap } from './status.js';
 
+const ocrOnly = (fetcher: typeof fetch): typeof fetch => (url, init) => String(url).endsWith('/webview')
+  ? Promise.resolve(new Response('unavailable', { status: 403 })) : fetcher(url, init);
+
 const NUMBER = 'EE000000005TW';
 const fixture = () => [{ header: { OutputType: 'Screen' }, body: { cptCheck: true, incorrectList: [], iType: 1,
   host_rs: { Status: 'S', MAILNO: NUMBER, ITEM: [
@@ -104,7 +107,7 @@ describe('Chunghwa Post international tracking', () => {
     const payload = fixture(); payload[0]!.body.host_rs.MAILNO = number;
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('')).mockResolvedValueOnce(new Response('image'))
       .mockResolvedValueOnce(Response.json(payload));
-    await expect(new ChunghwaPostTracker({ fetcher, solveCaptcha: async () => '1234' }).fetch(number)).resolves.toMatchObject({ current_stage: 'customs' });
+    await expect(new ChunghwaPostTracker({ fetcher: ocrOnly(fetcher), solveCaptcha: async () => '1234' }).fetch(number)).resolves.toMatchObject({ current_stage: 'customs' });
     expect(JSON.parse(String(fetcher.mock.calls[2]![1]?.body)).body.MAILNO).toBe(number);
     expect(() => parseChunghwaPost(fixture(), number)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
   });
@@ -113,7 +116,7 @@ describe('Chunghwa Post international tracking', () => {
     const opened = new Response('', { headers: { 'Set-Cookie': 'JSESSIONID=synthetic; Path=/pstmail' } });
     Object.defineProperty(opened, 'url', { value: 'https://postserv.post.gov.tw/pstmail/SessionServlet' });
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(opened).mockResolvedValueOnce(new Response('image')).mockResolvedValueOnce(Response.json(fixture()));
-    await expect(new ChunghwaPostTracker({ fetcher, solveCaptcha: async () => '1234' }).fetch(NUMBER)).resolves.toMatchObject({ current_stage: 'customs' });
+    await expect(new ChunghwaPostTracker({ fetcher: ocrOnly(fetcher), solveCaptcha: async () => '1234' }).fetch(NUMBER)).resolves.toMatchObject({ current_stage: 'customs' });
     const imageUrl = new URL(String(fetcher.mock.calls[1]![0]));
     const init = fetcher.mock.calls[2]![1]!;
     expect(JSON.parse(String(init.body))).toMatchObject({ header: { TxnCode: 'EB500200', BizCode: 'query' },
@@ -125,7 +128,7 @@ describe('Chunghwa Post international tracking', () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('')).mockResolvedValueOnce(new Response('image'))
       .mockResolvedValueOnce(Response.json([{ header: { OutputType: 'Screen' }, body: { cptCheck: false } }]))
       .mockResolvedValueOnce(new Response('image')).mockResolvedValueOnce(Response.json(fixture()));
-    await expect(new ChunghwaPostTracker({ fetcher, solveCaptcha: async () => '1234' }).fetch(NUMBER)).resolves.toMatchObject({ current_stage: 'customs' });
+    await expect(new ChunghwaPostTracker({ fetcher: ocrOnly(fetcher), solveCaptcha: async () => '1234' }).fetch(NUMBER)).resolves.toMatchObject({ current_stage: 'customs' });
     const first = JSON.parse(String(fetcher.mock.calls[2]![1]?.body));
     const second = JSON.parse(String(fetcher.mock.calls[4]![1]?.body));
     expect(first.body.uuid).not.toBe(second.body.uuid);

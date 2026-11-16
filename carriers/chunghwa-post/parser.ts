@@ -54,9 +54,24 @@ function taiwanInstant(wall: string): string | undefined {
 }
 
 export function parseChunghwaPost(payload: unknown, raw: string): CarrierResult {
+  return parseHistory(payload, raw, true);
+}
+
+/** The official mobile queryFromWebview flow does not use the web form's CAPTCHA verdict. */
+export function parseChunghwaPostMobile(payload: unknown, raw: string): CarrierResult {
+  const ends: unknown[] = Array.isArray(payload) ? payload.filter(row => isRecord(row) && isRecord(row.header)
+    && row.header.OutputType === 'EndBracket') : [];
+  const end = ends[0];
+  if (ends.length !== 1 || !isRecord(end) || !isRecord(end.body) || end.body.result !== 'success') {
+    throw new SchemaError(PROVIDER, 'Chunghwa Post did not complete the mobile query');
+  }
+  return parseHistory(payload, raw, false);
+}
+
+function parseHistory(payload: unknown, raw: string, requireCaptcha: boolean): CarrierResult {
   const number = normalizeChunghwaPostNumber(raw);
   if (!Array.isArray(payload) || !payload.length || payload.length > 4) throw new SchemaError(PROVIDER, 'Chunghwa Post returned an invalid envelope');
-  if (isChunghwaCaptchaFailure(payload)) throw new ChallengeError(PROVIDER, 'Chunghwa Post rejected the text verification');
+  if (requireCaptcha && isChunghwaCaptchaFailure(payload)) throw new ChallengeError(PROVIDER, 'Chunghwa Post rejected the text verification');
   const screens: Record<string, unknown>[] = [];
   for (const row of payload) {
     if (!isRecord(row) || !isRecord(row.header) || !isRecord(row.body)) throw new SchemaError(PROVIDER, 'Chunghwa Post returned an invalid message');
@@ -73,7 +88,7 @@ export function parseChunghwaPost(payload: unknown, raw: string): CarrierResult 
   }
   if (screens.length !== 1) throw new SchemaError(PROVIDER, 'Chunghwa Post returned no unique tracking result');
   const body = screens[0]!;
-  if (body.cptCheck !== true) throw new SchemaError(PROVIDER, 'Chunghwa Post did not confirm verification');
+  if (requireCaptcha ? body.cptCheck !== true : typeof body.cptCheck !== 'boolean') throw new SchemaError(PROVIDER, 'Chunghwa Post did not confirm verification');
   if (body.incorrectList != null && !Array.isArray(body.incorrectList)) throw new SchemaError(PROVIDER, 'Chunghwa Post returned an invalid validation result');
   if (Array.isArray(body.incorrectList) && body.incorrectList.length) throw new IndeterminateError(PROVIDER, 'Chunghwa Post cannot query this postal reference');
   const host = body.host_rs;

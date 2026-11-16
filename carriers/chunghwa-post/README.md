@@ -1,8 +1,20 @@
 # Chunghwa Post
 
-Reads Chunghwa Post's international postal tracking through its public image-CAPTCHA flow.
+Reads Chunghwa Post's international postal tracking through its official app's guest flow,
+with the public image-CAPTCHA flow as fallback.
 
 ## Retrieval
+
+The [official Android app](https://play.google.com/store/apps/details?id=tw.gov.post.mpost)
+opens `/pstmail/webview` with `Type=2` and the whole item as `MailNo1`. A fresh cookie jar
+retains that guest lookup; `initDataFromWebview` must repeat the same item before
+`queryFromWebview` reads its history. This mobile operation does not use the web form's
+CAPTCHA verdict. Its parser requires a completed response and the whole item with dated
+scans; the CAPTCHA parser still requires accepted verification. No account token is used.
+
+The mobile attempt stays within eight seconds and reserves time in the existing lookup
+budget for OCR. An unavailable or inconclusive mobile result falls back with a separate
+cookie jar. A rate limit or explicit, identity-bound absence stops the lookup.
 
 The [official tracker](https://postserv.post.gov.tw/pstmail/main_mail.html) opens a session
 through `SessionServlet` and creates a four-digit JPEG through `jcaptcha` with a fresh UUID.
@@ -15,7 +27,7 @@ It posts the same UUID, answer and one whole item to `EsoafDispatcher`, using th
 client's `EB500200` query envelope. One fresh challenge is allowed after an unreadable or
 explicitly refused answer. Cookies and verification material stay within that lookup.
 
-The server must confirm verification and repeat the requested item. The parser keeps scan
+For this fallback, the server must confirm verification and repeat the requested item. The parser keeps scan
 wording, event codes and processing locations. Recipient, dispatch-bag and expanded remark fields
 are omitted. Only the server's explicit absence message for the requested item is not found.
 

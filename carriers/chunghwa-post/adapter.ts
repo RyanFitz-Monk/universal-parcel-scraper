@@ -3,11 +3,12 @@ import makeFetchCookie from 'fetch-cookie';
 import { CookieJar } from 'tough-cookie';
 import type { AdapterFactory, TrackingContext } from '../../core/adapter/index.js';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
-import { BudgetExceededError, ChallengeError, InvalidInputError, SchemaError, TransportError, UpstreamHttpError, UpstreamNetworkError } from '../../core/errors/index.js';
+import { BudgetExceededError, CarrierError, ChallengeError, InvalidInputError, SchemaError, TransportError, UpstreamHttpError, UpstreamNetworkError } from '../../core/errors/index.js';
 import { runSteps } from '../../core/runner/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { ChunghwaPostOcr } from './ocr.js';
+import { fetchChunghwaPostMobile } from './mobile.js';
 import { isChunghwaCaptchaFailure, isSupportedChunghwaPostNumber, normalizeChunghwaPostNumber, parseChunghwaPost, PROVIDER } from './parser.js';
 
 export { normalizeChunghwaPostNumber, parseChunghwaPost } from './parser.js';
@@ -46,6 +47,17 @@ export class ChunghwaPostTracker {
         left(); return bytes;
       };
       try {
+        // Keep time for the existing image-verification path when the mobile entry is unavailable.
+        const mobileBudget = Math.min(8_000, left() - 6_000);
+        if (mobileBudget >= 2_000) {
+          try {
+            return await fetchChunghwaPostMobile(number, { fetcher: this.options.fetcher ?? fetch,
+              signal, budgetMs: mobileBudget, userAgent: userAgentOf(this.options.userAgent) });
+          } catch (error) {
+            signal.throwIfAborted();
+            if (!(error instanceof CarrierError) || !['challenge', 'transport', 'schema', 'indeterminate', 'budget'].includes(error.kind)) throw error;
+          }
+        }
         await request('SessionServlet', 4096);
         for (let attempt = 0; attempt < 2; attempt++) {
           const uuid = randomUUID();
