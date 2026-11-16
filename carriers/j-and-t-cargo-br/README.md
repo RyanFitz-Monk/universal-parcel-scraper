@@ -8,13 +8,26 @@ J&T Cargo Brasil is J&T's network for heavier parcels and part loads in Brazil, 
 
 ## Numbers
 
-Its tracker takes waybill numbers of up to fifteen characters, or the shipper's order number. No
-public page shows a J&T Cargo Brasil number, so there is no rule.
+Its [tracker](https://www.jtcargo.com.br/networkQuery) separates waybill numbers from the
+shipper's order references. The waybill filters in both web layouts reject two letters followed
+by ten digits. The order-reference mode accepts other text, so a reference accepted there is
+not evidence of a waybill format.
+
+Two letters and ten digits are used by [J&T Express Indonesia](../j-and-t/README.md),
+[Aramex Australia](../aramex-au/README.md) and [Aramex New Zealand](../aramex-nz/README.md).
+That shared shape cannot identify Cargo Brasil. The site's other allowed formats come from
+shared Cargo software; a public Brasil shipment must establish network ownership before a
+number rule is added.
 
 ## Why there is no adapter
 
-The tracker asks for the last four digits of the sender's or recipient's phone before it shows the
-history. No public number is known to check its replies against.
+The published web flow asks for the last four digits of the sender's or recipient's phone before
+it shows history. No confirmed public Brasil waybill is available to establish a history contract.
+
+The [customer app](https://play.google.com/store/apps/details?id=com.jtcargo.bra.customer)
+is separate from J&T Express Brazil's app. Its guest history call remains unverified.
+[JTC Sprinter](https://play.google.com/store/apps/details?id=com.jtcargo.bra.out) is a staff app
+that requires an authorized work account.
 
 ## Links
 
