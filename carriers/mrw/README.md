@@ -11,6 +11,10 @@ respect the portal's rate limit and share one time budget.
 
 ## Notes
 
+Receipts print the number with a slash after the office's five digits, as the
+[tracking page](https://www.mrw.es/seguimiento) shows. The tracker knows the twelve characters
+without it, and normalization drops it.
+
 The portal sometimes returns a bound current summary with no history. That
 result is marked `summary_only` and contains no invented scans; the summary's
 date and hour still give the current status's wall clock. A page that echoes the

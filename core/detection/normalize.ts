@@ -32,7 +32,8 @@ import { hasS10CheckDigit } from './s10CheckDigit.js';
  * a letter O and thirteen digits, and GOFO's tracker knows the number with the
  * zero. A NO
  * LIMIT shipment number, P/1234/LABC/2026, reads the same without its slashes,
- * which are dropped.
+ * which are dropped. MRW's receipts print a slash after the office's five
+ * digits, 01234/A567890, and its tracker knows the twelve characters without it.
  */
 export function normalizeTrackingNumber(raw: string): string {
   const value = raw.toUpperCase().replace(/[\s.-]/g, '');
@@ -41,6 +42,8 @@ export function normalizeTrackingNumber(raw: string): string {
   if (lastDigit) return `${lastDigit[1]}${lastDigit[2]}`;
   const shipment = value.includes('/') ? noLimitShipmentNumber(value) : undefined;
   if (shipment) return shipment;
+  const mrw = /^(\d{5})\/(\d{7}|[A-Z]\d{6})$/.exec(value);
+  if (mrw) return `${mrw[1]}${mrw[2]}`;
   const piece = /^(J?JD)O(1\d{16}J?)$/.exec(value);
   if (piece) return `${piece[1]}0${piece[2]}`;
   const jrt = /^JRTO(\d{10}MM)$/.exec(value);

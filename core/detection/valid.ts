@@ -14,7 +14,8 @@ function hasTrackingShape(normalized: string): boolean {
     && normalized.length <= 40
     // Letters and digits, with one underscore inside as Better Trucks writes
     // its BTS_ numbers. The NACEX agency/shipment composite is the only other
-    // shape allowed to keep punctuation.
+    // shape allowed to keep punctuation; normalization drops NO LIMIT's and
+    // MRW's slashes.
     && (/^[A-Z0-9]+(?:_[A-Z0-9]+)?$/.test(normalized) || /^\d{4}\/\d{8}$/.test(normalized));
 }
 

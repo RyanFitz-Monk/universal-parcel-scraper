@@ -22,6 +22,8 @@ export const TRACKING_CANDIDATE_PATTERNS = [
   /\b\d{4}\/\d{8}\b/g,
   // NO LIMIT's shipment numbers are printed with slashes, which normalization drops.
   /\bP\/\d{1,6}\/L[A-Z]{3}\/20\d{2}\b/gi,
+  // MRW prints a slash after the office's five digits, which normalization drops.
+  /\b\d{5}\/(?:\d{7}|[A-Z]\d{6})\b/gi,
   /\b\d{26}\b/g,
   /\bH\d{15,19}\b/gi,
   /\b1Z[A-Z0-9]{16}\b/gi,

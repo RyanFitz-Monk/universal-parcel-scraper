@@ -394,6 +394,22 @@ describe('normalization', () => {
     }
   });
 
+  it('drops the slash MRW prints after the office\'s five digits', () => {
+    for (const [typed, number] of [['01234/A567890', '01234A567890'], [' 01234/a567890 ', '01234A567890'], ['01234/5678901', '012345678901']] as const) {
+      expect(normalizeTrackingNumber(typed), typed).toBe(number);
+      expect(validTrackingNumber(typed), typed).toBe(true);
+      expect(detectCarrierMatch(typed).candidates, typed).toContain('mrw');
+    }
+    expect(detectCarrierMatch('01234/A567890')).toMatchObject({ carrier: 'mrw', confidence: 'high' });
+    expect(parseTrackingInput('Nº Etiqueta 01234/A567890, entrega mañana')).toMatchObject({ source: 'text', carrier: 'mrw' });
+    // Other splits keep their slash: NACEX's four and eight digits, and no other layout is a number.
+    expect(normalizeTrackingNumber('1234/56789012')).toBe('1234/56789012');
+    for (const typed of ['0123/4A567890', '012345/A56789', '01234/AA67890', '01234/A5678901']) {
+      expect(normalizeTrackingNumber(typed), typed).toBe(typed);
+      expect(validTrackingNumber(typed), typed).toBe(false);
+    }
+  });
+
   it('accepts one underscore inside a number, as Better Trucks writes its BTS_ numbers', () => {
     expect(normalizeTrackingNumber(' bts_0123smpl002 ')).toBe('BTS_0123SMPL002');
     expect(validTrackingNumber(' bts_0123smpl002 ')).toBe(true);
