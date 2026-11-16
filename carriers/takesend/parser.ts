@@ -65,7 +65,7 @@ export function parseTakesend(xml: string, raw: string): CarrierResult {
   const $ = load(xml, { xml: true });
   const tracks = $('xdoc > xout > track');
   if (tracks.length !== 1) throw new SchemaError(PROVIDER, 'Take Send returned no single tracking record');
-  const track = tracks.first() as Cheerio<Element>;
+  const track = tracks.first();
   if (normalizeTrackingNumber(attribute(track, 'searchBillid', 64)).toUpperCase() !== number) {
     throw new SchemaError(PROVIDER, 'Take Send answered for another number');
   }
@@ -77,7 +77,7 @@ export function parseTakesend(xml: string, raw: string): CarrierResult {
   if (items.length > 500) throw new SchemaError(PROVIDER, 'Take Send returned an invalid history');
   if (!items.length) throw new NoHistoryError(PROVIDER);
   const events: CarrierEvent[] = items.toArray().map((element) => {
-    const item = $(element) as Cheerio<Element>;
+    const item = $(element);
     const description = attribute(item, 'intro') || attribute(item, 'statusnameus') || attribute(item, 'statusname');
     if (!description) throw new SchemaError(PROVIDER, 'Take Send returned an empty scan');
     const place = attribute(item, 'place', 200);
