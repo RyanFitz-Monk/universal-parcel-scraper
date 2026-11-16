@@ -459,6 +459,27 @@ describe('iMile HTTP adapter', () => {
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'retry', outcome: 'ok', fallbackFrom: 'direct', fallbackReason: 'rate_limited' }));
   });
 
+  it('sends the lookups of trackers on one transport at least 1.1 seconds apart', async () => {
+    vi.useFakeTimers();
+    const sent: number[] = [];
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => {
+      sent.push(Date.now());
+      return reply(fixture('in-transit'));
+    });
+    const lookups = Promise.all([0, 1, 2].map(() => new ImileTracker({ fetcher }).fetch(IN_TRANSIT, {}, { cainiao: false })));
+    await vi.advanceTimersByTimeAsync(2_200);
+    await expect(lookups).resolves.toHaveLength(3);
+    expect(sent.map((at) => at - sent[0]!)).toEqual([0, 1_100, 2_200]);
+  });
+
+  it('fails a lookup whose turn leaves no time for its request as its own pacing, and sends nothing', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => reply(fixture('in-transit')));
+    await new ImileTracker({ fetcher }).fetch(IN_TRANSIT, {}, { cainiao: false });
+    await expect(new ImileTracker({ fetcher }).fetch(IN_TRANSIT, { budgetMs: 2_500 }, { cainiao: false }))
+      .rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced', retryAfterMs: expect.any(Number) });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the throttle when the read sent again is throttled too, or when the wait does not fit the budget', async () => {
     vi.useFakeTimers();
     const twice = vi.fn<typeof fetch>().mockResolvedValueOnce(throttled()).mockResolvedValueOnce(throttled()).mockResolvedValue(reply(fixture('in-transit')));

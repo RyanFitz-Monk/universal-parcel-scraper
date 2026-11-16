@@ -16,7 +16,10 @@ makes, with the China leg Cainiao's global tracker holds under the same number.
    half after iMile throttled it, when the wait and a request fit in the budget. iMile refuses
    a lookup that comes within about a second of the one before it, with HTTP 429 and
    `TRACK_QUERY_RATE_LIMIT`, naming no wait; recognition's read and the lookup after it come
-   that close. A read throttled again stays rate limited.
+   that close, and so do two parcels' checks. So the lookups sent through one fetcher, by every
+   tracker in the process, take turns 1.1 seconds apart; one whose turn leaves no time for its
+   request fails as our own pacing (`self_paced`), with the wait, and sends nothing. A read
+   throttled again stays rate limited.
 3. `cainiao`: once iMile has answered with scans, Cainiao's
    `GET https://global.cainiao.com/global/detail.json?mailNos={number}&lang=en-US`, read as the
    AliExpress adapter reads it, within the same pacing. For a parcel Cainiao carries out of China, it has the pickup,

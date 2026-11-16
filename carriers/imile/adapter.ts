@@ -1,7 +1,7 @@
 import { constants, createHash, createPublicKey, publicEncrypt, type KeyObject } from 'node:crypto';
 import { accepted, recognizeFromLookup, type AdapterFactory, type TrackingContext } from '../../core/adapter/index.js';
 import {
-  BudgetExceededError, carrierErrorKind, ChallengeError, NotFoundError, retryAfterMsOf, SchemaError, TransportError,
+  BudgetExceededError, carrierErrorKind, ChallengeError, NotFoundError, RateLimitedError, retryAfterMsOf, SchemaError, TransportError,
 } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { runSteps } from '../../core/runner/index.js';
@@ -9,6 +9,7 @@ import { firstAttemptMs, isNetworkFailure } from '../../core/runner/networkRetry
 import { paused } from '../../core/runner/pause.js';
 import { errorTypeOf, NOOP_RECORDER, outcomeOf, safeRecorder, type StepRecorder } from '../../core/telemetry/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
+import { transportOf } from '../../core/transport/transportOf.js';
 import { CainiaoTracker } from '../aliexpress/adapter.js';
 import { CAINIAO, cainiaoScans, withCainiaoLeg } from './cainiao.js';
 import { IMILE_MAX_BYTES, normalizeImileNumber, parseImile, PROVIDER } from './parser.js';
@@ -52,6 +53,37 @@ const CAINIAO_MIN_MS = 250;
 const THROTTLE_WAIT_MS = 1_500;
 // What the read sent again after the throttle keeps at least for its request.
 const RESEND_MS = 2_000;
+// How far apart one transport's lookups go out, so that its own do not meet that throttle.
+const TURN_MS = 1_100;
+
+/**
+ * When each transport may next send iMile a lookup. iMile judges an address, so every tracker in
+ * the process that sends through the same fetcher takes turns: two parcels' checks, and
+ * recognition's read and the lookup after it. A restart forgets them.
+ */
+const turns = new WeakMap<object, { next: number }>();
+const GLOBAL_FETCH = {};
+
+function selfPaced(waitMs: number): RateLimitedError {
+  return new RateLimitedError(PROVIDER, waitMs, 'iMile was asked less than a second ago; no lookup until its turn', { reason: 'self_paced' });
+}
+
+/**
+ * Waits for the transport's next turn and takes it; the time waited. A lookup whose turn leaves
+ * no time for its request fails as our own pacing, with the wait, and sends nothing.
+ */
+async function takeTurn(fetcher: typeof fetch | undefined, signal: AbortSignal, timeoutMs: number): Promise<number> {
+  const key = transportOf(fetcher) ?? GLOBAL_FETCH;
+  let turn = turns.get(key);
+  if (!turn) turns.set(key, turn = { next: 0 });
+  const now = Date.now();
+  const wait = Math.max(0, turn.next - now);
+  if (wait > 0 && wait + RESEND_MS > timeoutMs) throw selfPaced(wait);
+  turn.next = now + wait + TURN_MS;
+  // A wait the lookup's end cuts short leaves the pacing as the answer; the turn stays taken.
+  if (wait > 0 && !await paused(wait, signal)) throw selfPaced(Math.max(1, now + wait - Date.now()));
+  return wait;
+}
 
 /** The wait before a throttled read is sent again: iMile's own, when it names a longer one. Null for any other failure. */
 function throttleWaitMs(error: unknown): number | null {
@@ -192,9 +224,10 @@ export class ImileTracker {
 
   async #query(number: string, signing: ImileSigning, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
     const { code, sign } = imileSignature(number, signing);
+    const waited = await takeTurn(this.options.fetcher, signal, timeoutMs);
     const { response, bytes } = await fetchBounded(`${IMILE_API}?waybillNo=${encodeURIComponent(number)}&code=${code}`, { method: 'GET', signal,
       headers: { Accept: 'application/json', lang: 'en_US', sign, 'User-Agent': userAgentOf(this.options.userAgent) } },
-    { provider: PROVIDER, timeoutMs, maxBytes: IMILE_MAX_BYTES, redirect: 'manual', fetcher: this.options.fetcher,
+    { provider: PROVIDER, timeoutMs: timeoutMs - waited, maxBytes: IMILE_MAX_BYTES, redirect: 'manual', fetcher: this.options.fetcher,
       allowHttpStatuses: [...REDIRECTS, 404, 410] });
     if (REDIRECTS.includes(response.status)) throw new TransportError(PROVIDER, 'iMile redirected its tracking lookup');
     // The page reads a missing parcel from a 200 reply; a 404 is a moved route.
