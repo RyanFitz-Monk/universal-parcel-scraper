@@ -749,6 +749,7 @@ import { adapter as wanbexpress } from '../carriers/wanbexpress/adapter.js';
 import { adapter as weWorldExpress } from '../carriers/we-world-express/adapter.js';
 import { adapter as wedo } from '../carriers/wedo/adapter.js';
 import { adapter as westernBid } from '../carriers/western-bid/adapter.js';
+import { adapter as whatsship } from '../carriers/whatsship/adapter.js';
 import { adapter as whistl } from '../carriers/whistl/adapter.js';
 import { adapter as whizDelivery } from '../carriers/whiz-delivery/adapter.js';
 import { adapter as wiio } from '../carriers/wiio/adapter.js';
@@ -1538,6 +1539,7 @@ export const REGISTRY: RegistryDefinition = {
     "we-world-express": weWorldExpress,
     "wedo": wedo,
     "western-bid": westernBid,
+    "whatsship": whatsship,
     "whistl": whistl,
     "whiz-delivery": whizDelivery,
     "wiio": wiio,
@@ -3245,6 +3247,7 @@ export const REGISTRY: RegistryDefinition = {
     "west-postal": "universal",
     "western-bid": "western-bid",
     "westweg": "universal",
+    "whatsship": "whatsship",
     "whistl": "whistl",
     "whiz-delivery": "whiz-delivery",
     "widect": "universal",

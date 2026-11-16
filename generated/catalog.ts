@@ -59424,6 +59424,33 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "whatsship": {
+    "displayName": "WhatsShip",
+    "color": "#2563eb",
+    "aliases": [
+      "Whats Ship",
+      "WhatsShip Logistics Inc."
+    ],
+    "selectable": true,
+    "timezone": "UTC",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "whatsship",
+      "recognitionRank": 695,
+      "recognitionPattern": "^WS\\d{17}DL$",
+      "localClocks": true
+    },
+    "canaryUrl": "https://www.whatsship.com/",
+    "trackingUrlTemplate": "https://www.whatsship.com/#tracking",
+    "trackingSearchUrl": "https://www.whatsship.com/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^WS\\d{17}DL$",
+        "confidence": "low"
+      }
+    ]
+  },
   "whistl": {
     "displayName": "Whistl",
     "color": "#fd4f00",
@@ -63853,6 +63880,7 @@ export const CARRIER_IDS = [
   "west-postal",
   "western-bid",
   "westweg",
+  "whatsship",
   "whistl",
   "whiz-delivery",
   "widect",
@@ -65615,6 +65643,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "west-postal": [],
   "western-bid": ["western-bid-1"],
   "westweg": [],
+  "whatsship": ["whatsship-1"],
   "whistl": ["whistl-1"],
   "whiz-delivery": ["whiz-delivery-1"],
   "widect": [],

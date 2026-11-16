@@ -43,6 +43,7 @@ import { isTciFreightReference } from '../detection/tciFreight.js';
 import { isZesExpressReference } from '../detection/zesExpress.js';
 import { isJAndTBrReference } from '../detection/jAndTBr.js';
 import { isOnlogExpressReference } from '../detection/onlogExpress.js';
+import { isWhatsShipReference } from '../detection/whatsShip.js';
 import { isZheldorReference } from '../detection/zheldor.js';
 import { countryCode } from '../time/index.js';
 
@@ -63,6 +64,7 @@ const REFERENCES_LOOKED_UP: Readonly<Record<string, (number: string) => boolean>
   'zes-express': isZesExpressReference,
   'j-and-t-br': isJAndTBrReference,
   'onlog-express': isOnlogExpressReference,
+  whatsship: isWhatsShipReference,
   zheldor: isZheldorReference,
   'costco-logistics': isCostcoLogisticsReference,
   'seino-super-express': isSeinoSuperExpressReference,

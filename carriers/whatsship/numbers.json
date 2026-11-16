@@ -1,0 +1,27 @@
+{
+  "carrier": "whatsship",
+  "records": [
+    {
+      "number": "WS12368808141435820DL",
+      "role": "shipment",
+      "evidence": "official_documentation_example",
+      "source": {
+        "url": "https://www.whatsship.com/",
+        "date": "2026-11-16",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "whatsship"
+        ]
+      },
+      "note": "The branded tracker supplies this example. Its advertised guest JSON endpoint returns a matching whole order reference with dated history."
+    }
+  ]
+}

@@ -59420,6 +59420,33 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "whatsship": {
+    "displayName": "WhatsShip",
+    "color": "#2563eb",
+    "aliases": [
+      "Whats Ship",
+      "WhatsShip Logistics Inc."
+    ],
+    "selectable": true,
+    "timezone": "UTC",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "whatsship",
+      "recognitionRank": 695,
+      "recognitionPattern": "^WS\\d{17}DL$",
+      "localClocks": true
+    },
+    "canaryUrl": "https://www.whatsship.com/",
+    "trackingUrlTemplate": "https://www.whatsship.com/#tracking",
+    "trackingSearchUrl": "https://www.whatsship.com/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^WS\\d{17}DL$",
+        "confidence": "low"
+      }
+    ]
+  },
   "whistl": {
     "displayName": "Whistl",
     "color": "#fd4f00",

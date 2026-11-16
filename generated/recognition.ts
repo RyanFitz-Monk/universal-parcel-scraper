@@ -514,6 +514,7 @@ export const CARRIER_RECOGNITION_RANKS: Readonly<Record<string, number>> = {
   "vozovoz": 569,
   "vrl-logistics": 935,
   "wanbexpress": 33,
+  "whatsship": 695,
   "whistl": 320,
   "whiz-delivery": 104,
   "wiio": 61,

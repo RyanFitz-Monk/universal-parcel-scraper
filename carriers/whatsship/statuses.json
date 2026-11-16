@@ -1,0 +1,133 @@
+{
+  "carrier": "whatsship",
+  "entries": [
+    {
+      "code": "ORDER_CREATION",
+      "wording": "Shipment information received",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "FIRST_MILE_ARRIVE",
+      "wording": "Arrived at origin facility",
+      "language": "en",
+      "stage": "accepted",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "FIRST_MILE_DEPART",
+      "wording": "Departed from sort facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "DEPART_CONFIRM_OC",
+      "wording": "Shipment is in transit to next facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "ARRIVE_CONFIRM_OC",
+      "wording": "Arrived at the origin international airport",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "MAIN_LINE_DEPART",
+      "wording": "International flight has departed",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "MAIN_LINE_ARRIVE",
+      "wording": "International flight has arrived",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "CUSTOMS_PROCESSING",
+      "wording": "In clearance processing - Import",
+      "language": "en",
+      "stage": "customs",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "CUSTOMS_COMPLETE",
+      "wording": "Clearance processing completed - Import",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "IN_TRANSIT",
+      "wording": "Arrived at sort facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "IN_TRANSIT",
+      "wording": "Departed from facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "IN_TRANSIT_CARRIER",
+      "wording": "Arrived at GOFO Regional Hub",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "TRANSITHUB_ARRIVE",
+      "wording": "Delivered to local carrier",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "note": "Handoff to the delivery carrier, before final delivery."
+    },
+    {
+      "code": "IN_TRANSIT_CARRIER",
+      "wording": "Departed GOFO Regional Hub",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "IN_TRANSIT_CARRIER",
+      "wording": "Arrived at GOFO Delivery Station",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "IN_TRANSIT_CARRIER",
+      "wording": "Departed GOFO Delivery Station",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "DELIVERY_ATTEMPT",
+      "wording": "Out for Delivery",
+      "language": "en",
+      "stage": "out_for_delivery",
+      "confirmedBy": "live",
+      "note": "This code also names the delivery round; explicit wording identifies it as out for delivery."
+    },
+    {
+      "code": "DELIVERED",
+      "wording": "Delivered, Door/Yard.",
+      "language": "en",
+      "stage": "delivered",
+      "confirmedBy": "live"
+    }
+  ]
+}
