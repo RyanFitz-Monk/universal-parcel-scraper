@@ -687,6 +687,7 @@ import { statusMap as techlink } from '../../carriers/techlink/status.js';
 import { statusMap as teleship } from '../../carriers/teleship/status.js';
 import { statusMap as tfmExpress } from '../../carriers/tfm-express/status.js';
 import { statusMap as tforceFreight } from '../../carriers/tforce-freight/status.js';
+import { statusMap as tforceLogistics } from '../../carriers/tforce-logistics/status.js';
 import { statusMap as thailandPost } from '../../carriers/thailand-post/status.js';
 import { statusMap as theCourierGuy } from '../../carriers/the-courier-guy/status.js';
 import { statusMap as thhy } from '../../carriers/thhy/status.js';
@@ -902,7 +903,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'southeastern-freight-lines': southeasternFreightLines, 'sp-express': spExpress, 'spee-dee': speeDee, 'speed-and-safe': speedAndSafe, speedaf, speedex, speedpak, speedx, speedy, 'spring-gds': springGds, sptexp, 'spx-br': spxBr, 'spx-id': spxId, 'spx-my': spxMy, 'spx-sg': spxSg,
   'spx-ph': spxPh, 'spx-th': spxTh, 'spx-tw': spxTw, 'spx-vn': spxVn, 'st-courier': stCourier, 'stallion-express': stallionExpress, 'starex-az': starexAz, starken, 'starlinks-global': starlinksGlobal, sto, stone3pl, straightship, 'sundarban-courier': sundarbanCourier, suhu, sunyou, swiftx, 'swiss-post': swissPost, 'swiss-post-cargo': swissPostCargo, 'sxw-express': sxwExpress,
   't-cat': tCat, 't-group': tGroup, 'tanzania-posts': tanzaniaPosts, taxydema, 'taqbin-hk': taqbinHk, 'tcc-co': tccCo, 'tci-express': tciExpress, 'tcs-pakistan': tcsPakistan, tdn, tealca,
-  'team-express-ae': teamExpressAe, 'team-global-express': teamGlobalExpress, 'team-worldwide': teamWorldwide, techlink, teleship, 'tfm-express': tfmExpress, 'tforce-freight': tforceFreight,
+  'team-express-ae': teamExpressAe, 'team-global-express': teamGlobalExpress, 'team-worldwide': teamWorldwide, techlink, teleship, 'tfm-express': tfmExpress, 'tforce-freight': tforceFreight, 'tforce-logistics': tforceLogistics,
   'thailand-post': thailandPost, 'the-courier-guy': theCourierGuy, thhy, tiki, 'timely-titan': timelyTitan, tipsa, 'tirupati-courier': tirupatiCourier, 'tmm-express': tmmExpress, tnt, 'tnt-au': tntAu, 'tnt-it': tntIt, 'today-kr': todayKr, tonami, toptrans, topyou, torrestir, 'total-express': totalExpress, toyou,
   trackon, 'tracx-logis': tracxLogis, transaher, transcorp, transmission, 'trendyol-express': trendyolExpress, tsjy, 'tst-cf-express': tstCfExpress, tufesa, 'tws-express': twsExpress,
   'ubi-smart-parcel': ubiSmartParcel, 'ukp-worldwide': ukpWorldwide, ukrposhta,

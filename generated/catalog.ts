@@ -54143,7 +54143,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/Toronto",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "tforce-logistics"
     },
     "canaryUrl": "https://www.tforcelogistics.com/",
     "trackingUrlTemplate": "https://direct.tfesg.com/finalmiletrack/Track?trackingNumber={trackingNumber}&brand=0",

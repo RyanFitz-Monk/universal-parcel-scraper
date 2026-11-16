@@ -686,6 +686,7 @@ import { adapter as techlink } from '../carriers/techlink/adapter.js';
 import { adapter as teleship } from '../carriers/teleship/adapter.js';
 import { adapter as tfmExpress } from '../carriers/tfm-express/adapter.js';
 import { adapter as tforceFreight } from '../carriers/tforce-freight/adapter.js';
+import { adapter as tforceLogistics } from '../carriers/tforce-logistics/adapter.js';
 import { adapter as thailandPost } from '../carriers/thailand-post/adapter.js';
 import { adapter as theCourierGuy } from '../carriers/the-courier-guy/adapter.js';
 import { adapter as thhy } from '../carriers/thhy/adapter.js';
@@ -1472,6 +1473,7 @@ export const REGISTRY: RegistryDefinition = {
     "teleship": teleship,
     "tfm-express": tfmExpress,
     "tforce-freight": tforceFreight,
+    "tforce-logistics": tforceLogistics,
     "thailand-post": thailandPost,
     "the-courier-guy": theCourierGuy,
     "thhy": thhy,
@@ -3068,7 +3070,7 @@ export const REGISTRY: RegistryDefinition = {
     "tfm-express": "tfm-express",
     "tforce-freight": "tforce-freight",
     "tforce-integrated-solutions": "universal",
-    "tforce-logistics": "universal",
+    "tforce-logistics": "tforce-logistics",
     "thabit-logistics": "universal",
     "thailand-post": "thailand-post",
     "the-courier-guy": "the-courier-guy",

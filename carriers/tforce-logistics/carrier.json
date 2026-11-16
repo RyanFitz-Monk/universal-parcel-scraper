@@ -22,18 +22,46 @@
   "timezone": "America/Toronto",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "tforce-logistics",
+    "steps": [
+      "direct",
+      "retry"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location"
+  ],
   "portal": {
     "url": "https://direct.tfesg.com/finalmiletrack/Track?trackingNumber={trackingNumber}&brand=0",
     "searchUrl": "https://www.tforcelogistics.com/",
     "canaryUrl": "https://www.tforcelogistics.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "origin",
+      "destination",
+      "parcel_count",
+      "weight",
+      "eta"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location"
+    ],
+    "discarded": [
+      "origin",
+      "destination",
+      "parcel_count",
+      "weight",
+      "eta"
+    ],
+    "unavailable": [
+      "proof_of_delivery",
+      "provider_code"
+    ]
   },
   "links": [
     {
