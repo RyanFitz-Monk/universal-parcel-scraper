@@ -1,0 +1,137 @@
+{
+  "code": "200000",
+  "statusCode": 200,
+  "data": {
+    "sicepat": {
+      "status": {
+        "code": 200,
+        "description": "OK"
+      },
+      "result": {
+        "waybill_number": "003179246085",
+        "track_history": [
+          {
+            "date_time": "2026-10-30 07:17",
+            "status": "PICKREQ",
+            "city": "Terima permintaan pick up dari [Tiktok]"
+          },
+          {
+            "date_time": "2026-10-30 17:49",
+            "status": "PICK",
+            "city": "Paket telah di pick up oleh [SIGESIT]"
+          },
+          {
+            "date_time": "2026-10-30 20:47",
+            "status": "IN",
+            "city": "Paket telah di input (manifested) di Tangerang [Tangerang Kosambi FM]"
+          },
+          {
+            "date_time": "2026-10-30 21:59",
+            "status": "OUT",
+            "city": "Paket keluar dari Tangerang [Tangerang Kosambi FM]"
+          },
+          {
+            "date_time": "2026-10-31 01:05",
+            "status": "IN",
+            "city": "Paket telah diproses sortir di Administrasi Jakarta Timur [Jakarta Sortation]"
+          },
+          {
+            "date_time": "2026-10-31 04:38",
+            "status": "OUT",
+            "city": "Paket keluar dari Administrasi Jakarta Timur [Jakarta Sortation]"
+          },
+          {
+            "date_time": "2026-10-31 22:12",
+            "status": "IN",
+            "city": "Paket telah diproses sortir di Palembang [Palembang Sortation]"
+          },
+          {
+            "date_time": "2026-11-01 05:35",
+            "status": "OUT",
+            "city": "Paket keluar dari Palembang [Palembang Sortation]"
+          },
+          {
+            "date_time": "2026-11-01 06:31",
+            "status": "IN",
+            "city": "Paket telah di terima di Palembang [Palembang Jakabaring]"
+          },
+          {
+            "date_time": "2026-11-05 09:51",
+            "status": "ANT",
+            "city": "Paket dibawa [SIGESIT - Synthetic Courier]"
+          },
+          {
+            "date_time": "2026-11-05 16:14",
+            "status": "BAD ADDRESS",
+            "city": "Paket di kembalikan di Palembang [Palembang Jakabaring] - (ATS) Alamat Tidak Sesuai/Tidak Lengkap - Alamat Tidak Lengkap"
+          },
+          {
+            "date_time": "2026-11-05 20:04",
+            "status": "IN",
+            "city": "Paket telah di terima di Palembang [Palembang Sortation]"
+          },
+          {
+            "date_time": "2026-11-06 07:44",
+            "status": "IN",
+            "city": "Paket telah di terima di Palembang [Palembang Jakabaring]"
+          },
+          {
+            "date_time": "2026-11-06 13:05",
+            "status": "ANT",
+            "city": "Paket dibawa [SIGESIT - Synthetic Courier]"
+          },
+          {
+            "date_time": "2026-11-06 13:06",
+            "status": "BAD ADDRESS",
+            "city": "Paket di kembalikan di Palembang [Palembang Jakabaring] - (ATS) Alamat Tidak Sesuai/Tidak Lengkap"
+          },
+          {
+            "date_time": "2026-11-06 13:40",
+            "status": "RETUR PUSAT",
+            "city": "Paket di kembalikan di Palembang [Palembang Jakabaring] - (RTN) Retur Pusat"
+          },
+          {
+            "date_time": "2026-11-07 14:00",
+            "status": "RTA",
+            "city": "Paket telah diproses sortir di Palembang [Palembang Sortation]"
+          },
+          {
+            "date_time": "2026-11-08 21:40",
+            "status": "OUT",
+            "city": "Paket keluar dari Administrasi Jakarta Timur [WH Return Jakarta]"
+          },
+          {
+            "date_time": "2026-11-08 21:44",
+            "status": "RTA",
+            "city": "Paket telah diproses sortir di Administrasi Jakarta Timur [WH Return Jakarta]"
+          },
+          {
+            "date_time": "2026-11-09 04:35",
+            "status": "RTA",
+            "city": "Paket telah diproses sortir di Administrasi Jakarta Timur [Jakarta Sortation]"
+          },
+          {
+            "date_time": "2026-11-09 12:11",
+            "status": "RTA",
+            "city": "Paket telah diproses sortir di Tangerang [Tangerang Sortation 1]"
+          },
+          {
+            "date_time": "2026-11-10 10:19",
+            "status": "IN",
+            "city": "Paket telah di terima di Tangerang [Tangerang Kosambi FM]"
+          },
+          {
+            "date_time": "2026-11-10 11:10",
+            "status": "ANT_RETUR",
+            "city": "Paket Retur dibawa [SIGESIT - Synthetic Courier]"
+          },
+          {
+            "date_time": "2026-11-10 21:31",
+            "status": "RETURN TO SHIPPER",
+            "city": "Paket di kembalikan di Tangerang [Tangerang Kosambi FM] - (RTS) Return To Shipper"
+          }
+        ]
+      }
+    }
+  }
+}

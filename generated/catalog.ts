@@ -47388,7 +47388,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Jakarta",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "sicepat",
+      "localClocks": true,
+      "browser": true
     },
     "canaryUrl": "https://www.sicepat.com/",
     "trackingSearchUrl": "https://www.sicepat.com/",

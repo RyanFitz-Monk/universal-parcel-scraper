@@ -1,33 +1,27 @@
 # SiCepat Ekspres
 
-SiCepat Ekspres parcels use enabled universal providers. There is no dedicated adapter.
+The dedicated adapter reads ordinary domestic numeric waybills through the official
+[SiCepat Android app](https://play.google.com/store/apps/details?id=com.sicepat.consumer)'s guest API.
+Its partner-specific TKP01 branch and account services are separate.
 
-## Numbers
+TRAWL reproduces the app's inline hidden WebView at its configured SiCepat origin and asks
+Google for one fresh reCAPTCHA v3 token with the app's tracking action. This does not load
+the website's homepage. The helper returns a tagged verification envelope, not a tracking
+response. The SDK uses that token once through its supplied HTTP transport, with the shared
+public app client identifier, then drops it. No profile, account, phone digits or OTP is used.
+The compatible SiCepat helper must be installed in TRAWL. Verification refusals, blocked
+HTML, rate limits, malformed replies and a missing waybill stay distinct; providers remain
+available when the guest flow fails.
 
-SiCepat resi numbers are twelve digits starting `00`. SiCepat's own replies to complaints on
-Media Konsumen give them. Twelve digits are also FedEx's and other carriers' layout, and the
-`00` start does not set SiCepat apart, so no rule claims them.
+The reply must echo the whole waybill. The adapter keeps the dated history and native codes,
+leaving unstated scan zones and minute precision intact. The field named `city` contains the
+whole scan sentence; bracketed facilities become locations, while named couriers are removed.
+Contact, recipient, address and proof-of-delivery fields are discarded. The current history
+supplies the summary; an unused estimate or an undated account field does not replace it.
 
-## Links
+The generic numeric input has no carrier detection rule or HTTP recognition. Explicit carrier
+selection and supported named handoffs can ask the adapter. Public examples and their sources
+are in [numbers.json](numbers.json).
 
-SiCepat's tracker reads the number from its form. No address opens one parcel.
-
-## Why there is no adapter
-
-SiCepat's tracker and app ask for a reCAPTCHA token, and for some waybills the last five digits
-of the recipient's phone, before they show a parcel.
-
-The web client posts to `api.sicepatconsumer.com/v2/contentsvc/public/validate-awb-id` with
-`awb_number` and a fresh `x-recaptcha` token for action `checkAwb`. Ordinary waybills then use
-`check-awb` under the same prefix with an empty `awb_id` and `awb_number`, after fresh
-verification. For the other branch the page sends the phone digits as `awb_id`. The Android app
-(`com.sicepat.consumer`) asks `GET api.sicepatconsumer.com/v1/order/public/shipping/awb/{number}`
-with the same kind of token; the content-service routes left in it are no longer called and no
-longer answer. Both services refuse a missing or failed token for made-up numbers too, so the
-refusal says nothing about the number, while a missing waybill gets an explicit `Not Found`
-reply. A dedicated verification flow is not implemented, so SiCepat stays on universal providers.
-
-## Testing
-
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+Run `npm run test:carriers:live -- carriers/sicepat` with `SICEPAT_TRACKING_NUMBER`, optionally
+`SICEPAT_UNKNOWN_NUMBER`, and `FLARESOLVERR_URL` supplied outside Git.

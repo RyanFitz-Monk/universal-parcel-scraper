@@ -112,3 +112,14 @@ it('redacts the credentials of a JSON, cut JSON or XML request body and keeps th
     expect(error.request.body).toBe(kept);
   }
 });
+
+
+it('redacts app guest auth and CAPTCHA headers without losing the actual HTTP refusal', async () => {
+  const { fetchBounded } = await import('./boundedFetch.js');
+  const error = await fetchBounded('https://carrier.example/tracking', { signal: AbortSignal.timeout(1000),
+    headers: { auth: 'synthetic-guest-secret', 'x-recaptcha': 'synthetic-private-captcha', Accept: 'application/json' } },
+  { provider: 'Synthetic', fetcher: async () => new Response('Upstream busy', { status: 503 }), timeoutMs: 1000 })
+    .catch(error => error);
+  expect(error).toMatchObject({ status: 503, request: { headers: { auth: '[redacted]', 'x-recaptcha': '[redacted]', accept: 'application/json' } } });
+  expect(JSON.stringify(error)).not.toMatch(/synthetic-guest-secret|synthetic-private-captcha/);
+});

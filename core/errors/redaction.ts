@@ -13,7 +13,7 @@ import type { UpstreamRequestDiagnostics } from './index.js';
 const REDACTED = '[redacted]';
 
 /** Authorization, cookies, and headers named after a key, token, secret, session or signature. */
-const CREDENTIAL_HEADER = /^(?:proxy-)?authorization$|^(?:set-)?cookie2?$|^x-auth|token|secret|passw|key$|session|signature|csrf|xsrf/i;
+const CREDENTIAL_HEADER = /^(?:proxy-)?authorization$|^(?:set-)?cookie2?$|^x-auth|token|captcha|secret|passw|key$|session|signature|csrf|xsrf|^auth$/i;
 
 // A caller's malformed details must not make the error itself throw.
 function redactedHeaders(headers: Record<string, string>): Record<string, string> {

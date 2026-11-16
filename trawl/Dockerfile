@@ -25,6 +25,7 @@ COPY track123-browser.mjs /app/packages/tiers/src/utils/track123-browser.mjs
 COPY fedex-session.mjs /app/packages/tiers/src/utils/fedex-session.mjs
 COPY australia-post-browser.mjs /app/packages/tiers/src/utils/australia-post-browser.mjs
 COPY wanbexpress-browser.mjs /app/packages/tiers/src/utils/wanbexpress-browser.mjs
+COPY sicepat-app.mjs /app/packages/tiers/src/utils/sicepat-app.mjs
 COPY veho-browser.mjs /app/packages/tiers/src/utils/veho-browser.mjs
 COPY xpo-browser.mjs /app/packages/tiers/src/utils/xpo-browser.mjs
 COPY magyar-posta-browser.mjs /app/packages/tiers/src/utils/magyar-posta-browser.mjs

@@ -41,6 +41,12 @@ responses even when their content length is absent, preserving bounded retries
 and final refusals. Only selected history leaves the context, without page
 HTML, cookies, rotating keys or ownership details.
 
+SiCepat's helper reproduces its official app's inline guest WebView, at the app's configured
+origin, rather than fetching the challenged homepage. It returns one fresh reCAPTCHA v3
+callback in a tagged client envelope, without a tracking number or cookies. The SDK uses
+it once through its own supplied HTTP transport for the whole-waybill app lookup. This
+bootstrap output is separate from a captured tracking reply.
+
 ## Sessions
 
 The service reuses browser sessions, never parcel responses. FedEx keeps one verified context

@@ -18,17 +18,43 @@
   "timezone": "Asia/Jakarta",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "sicepat",
+    "steps": [
+      "trawl"
+    ],
+    "localClocks": true,
+    "browser": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code"
+  ],
   "portal": {
     "searchUrl": "https://www.sicepat.com/",
     "canaryUrl": "https://www.sicepat.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "provider_code"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code"
+    ],
+    "discarded": [
+      "recipient",
+      "contact",
+      "address",
+      "signature",
+      "POD"
+    ],
+    "unavailable": [
+      "eta"
+    ]
   },
   "links": [],
   "detection": []

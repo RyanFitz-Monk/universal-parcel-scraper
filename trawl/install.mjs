@@ -80,6 +80,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
         requestReplacement: handle.requestBrowserReplacement }) } : {
       solveCaptcha: (page, timeout) => solveRecaptchaV2(page, timeout, budget.signal) }) })
   }
+  if (carrierPage && sicepatAppRequest(url, capture)) return await runSicepatApp({ ...carrierRun, signal: budget.signal })
   // Veho attests the address: a request's proxy carries the helper's whole fresh context.
   if (carrierRequest && vehoBrowserRequest(url, capture)) {
     return await runVehoBrowser({ ...carrierRun, signal: budget.signal, ...(proxyUrl ? {
@@ -101,6 +102,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
     + 'import { solveRecaptchaV2 } from "../solvers/recaptcha"\n'
     + 'import { wanbBrowserNumber, runWanbBrowser } from "../utils/wanbexpress-browser.mjs"\n'
     + 'import { newFreshContext as newWanbContext } from "@trawl/browser"\n'
+    + 'import { sicepatAppRequest, runSicepatApp } from "../utils/sicepat-app.mjs"\n'
     + 'import { vehoBrowserRequest, runVehoBrowser } from "../utils/veho-browser.mjs"\n'
     + 'import { xpoBrowserNumber, runXpoBrowser } from "../utils/xpo-browser.mjs"\n'
     + 'import { magyarPostaBrowserNumber, runMagyarPostaBrowser } from "../utils/magyar-posta-browser.mjs"\n'

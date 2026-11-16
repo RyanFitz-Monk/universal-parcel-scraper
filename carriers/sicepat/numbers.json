@@ -139,6 +139,49 @@
         ]
       },
       "note": "SiCepat's reply to a complaint on Media Konsumen gives it as the parcel's resi."
+    },
+    {
+      "number": "006920823346",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://mediakonsumen.com/2026/11/10/keluhan/kurir-sicepat-tembak-resi-ats-1-menit-dan-langsung-main-retur-pusat",
+        "date": "2026-11-10",
+        "dateKind": "posted",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed",
+        "service": "HALU"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-ch",
+          "dpd-fr",
+          "mondial-relay",
+          "gls-fr",
+          "colis-prive",
+          "gls-de",
+          "mrw",
+          "brt",
+          "japan-post",
+          "sf-express",
+          "sto",
+          "zto",
+          "yamato",
+          "j-and-t",
+          "gls-at",
+          "gls-pl",
+          "lbc-express",
+          "metropolitan-warehouse",
+          "paquetexpress",
+          "sagawa",
+          "sending"
+        ]
+      },
+      "note": "The official app guest reply echoes the whole waybill and supplies dated domestic scans."
     }
   ]
 }
