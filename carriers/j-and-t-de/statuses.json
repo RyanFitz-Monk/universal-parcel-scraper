@@ -9,6 +9,7 @@
     {"wording": "Delivery failed, customer refused to accept", "stage": "failed_attempt", "language": "en", "confirmedBy": "live", "firstSeen": "2026-10-27", "note": "The courier loads the parcel for another delivery round the next morning."},
     {"wording": "Returns have begun", "stage": "returned", "language": "en", "confirmedBy": "live", "note": "The parcel is on its way back to the sender, after a failed delivery."},
     {"wording": "The shipment has been returned", "stage": "returned", "language": "en", "confirmedBy": "live"},
+    {"wording": "Your parcel has been delivered to the pickup point. Please check your email for details", "stage": "ready_for_pickup", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "Left at a pickup point after the delivery van's loading; the recipient collects it with the details J&T emails."},
     {"wording": "Your package has been successfully delivered.", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "The tracker follows it with the delivery type in 【】, such as Left with neighbor, and its customer service line. The adapter keeps a delivery type the site offers, out of brackets, and drops the rest."}
   ]
 }
