@@ -140,9 +140,10 @@ const CYRILLIC_START = String.raw`(?<![а-яієґ])`;
 const CYRILLIC_CUSTOMS = String.raw`${CYRILLIC_START}(?:митн|мытн|тамож)`;
 /**
  * A post's movement in Ukrainian or Russian: arrived at a logistics centre, terminal or hub, left
- * any facility, or processed at one. Arrival at a branch is left out: there it may await pickup.
+ * or sent on from any facility or country, or processed at one. Arrival at a branch is left out:
+ * there it may await pickup.
  */
-const CYRILLIC_MOVED = new RegExp(String.raw`^(?:прибул[оаи]?|прибув|прибыл[оаи]?) (?:до|в|у|на) (?:[а-яієґ']+ ){0,2}(?:центр|термінал|терминал|хаб)|^(?:виіхал[оаи]?|виіхав|выехал[оаи]?|убыл[оаи]?) (?:з|із|зі|из|с|со) |^(?:оброблено|обработано|опрацьовано) (?:на|в|у) `);
+const CYRILLIC_MOVED = new RegExp(String.raw`^(?:прибул[оаи]?|прибув|прибыл[оаи]?) (?:до|в|у|на) (?:[а-яієґ']+ ){0,2}(?:центр|термінал|терминал|хаб)|^(?:виіхал[оаи]?|виіхав|выехал[оаи]?|убыл[оаи]?|отправлен[оаы]?|відправлен[оаі]?) (?:з|із|зі|из|с|со) |^(?:оброблено|обработано|опрацьовано) (?:на|в|у) `);
 /** Shipment data received from the sender, in Russian or Ukrainian: "Данные … получены", "Дані отримано". */
 const CYRILLIC_DATA_RECEIVED = new RegExp(String.raw`${CYRILLIC_START}(?:данные|дані)(?: [а-яієґ']+){0,4}? (?:получены|отримано|отримані)`);
 /** Customs or clearance named in any language. */
@@ -520,6 +521,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // A carrier's notice before it has the parcel: "We're expecting your parcel to arrive with us", or
   // "from your sender. We will provide updates here once we receive it", as ParcelsApp relays one.
   if (/\b(?:we're|we are) expecting (?:your|the) (?:parcel|package|item|shipment) (?:to arrive with us|from (?:your|the) (?:sender|shipper|seller|retailer)\b)/.test(text)) return 'registered';
+  // The sender's notice that a parcel is coming, as Bring words its pre-advice in English: "We have received a
+  // message from the sender that a shipment is on its way", "The sender has let us know that a parcel is on its way".
+  if (/^(?:we have|we've) received (?:a )?(?:message|notice|notification) from the (?:sender|shipper) that\b|^the (?:sender|shipper) has (?:let us know|notified us|told us) that\b/.test(text)) return 'registered';
   // GLS's shipment the sender created and has not entrusted to it yet, as GLS Italy and relays word it.
   if (/\bcreated by the sender\b.*\bwaiting for it to be (?:entrusted|handed(?: over)?) to us\b/.test(text)) return 'registered';
   // The shipment's pre-alert, its electronic notice: "Pre-alerted shipment enriched by PostNL management".

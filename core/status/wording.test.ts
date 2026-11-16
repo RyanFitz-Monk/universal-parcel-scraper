@@ -488,7 +488,7 @@ describe('classifyWording', () => {
   it('reads a post\'s movement and acceptance in Ukrainian and Russian', () => {
     for (const wording of [
       'Прибуло до Логістичного центру', 'Прибуло до міжнародного терміналу', 'Прибыло в сортировочный центр',
-      'Виїхало з Відділення', 'Виїхало з Логістичного центру', 'Убыло из сортировочного центра',
+      'Виїхало з Відділення', 'Виїхало з Логістичного центру', 'Убыло из сортировочного центра', 'Отправлено из России',
       'Оброблено на міжнародному терміналі та прямує до країни призначення', 'Обработано в сортировочном центре',
     ]) expect(classifyWording(wording, 'pending'), wording).toEqual({ stage: 'in_transit', source: 'wording:language' });
     for (const wording of ['Прийнято', 'Принято']) expect(classifyWording(wording, 'pending'), wording).toEqual({ stage: 'accepted', source: 'wording:language' });
@@ -986,6 +986,9 @@ describe('classifyWording', () => {
       ["We're expecting your parcel from your sender. We will provide updates here once we receive it.", 'registered'],
       ['The shipment was created by the sender, we are waiting for it to be entrusted to us for sending to its destination', 'registered'],
       ['The shipment has been created by the sender, we are waiting for it to be entrusted to us for dispatch to its destination.', 'registered'],
+      // Bring's pre-advice in English, as ParcelsApp relays it: the parcel is on its way to Bring, not with it.
+      ['We have received a message from the sender that a shipment is on its way.', 'registered'],
+      ['The sender has let us know that a parcel is on its way.', 'registered'],
     ] as const) expect(classifyWording(wording, 'pending'), wording).toEqual({ stage, source: 'wording:language' });
     // A French sort still reads as one; "retrieval" is no sort, nor a notice a pickup.
     expect(wordingStage('Colis trié', 'pending')).toBe('in_transit');
