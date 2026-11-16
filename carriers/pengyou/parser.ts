@@ -7,8 +7,9 @@ export const PROVIDER = 'Pengyou';
 export const PENGYOU_ORIGIN = 'http://120.77.149.241:8082';
 
 // The last-mile delivery, with its town after it: "Delivered Sample Town ST".
-// A row's city after its wording, in brackets: "Arrived at facility [Shenzhen City]".
-const PLACED = /^(.*\S) \[([^[\]]*\p{L}[^[\]]*)\]$/u;
+// A row's city after its wording, in brackets, square or full-width: "Arrived at facility [Shenzhen City]",
+// "Handed over to the carrier for transportation【Hong Kong】".
+const PLACED = /^(.*\S) ?(?:\[([^[\]]*\p{L}[^[\]]*)\]|【([^【】]*\p{L}[^【】]*)】)$/u;
 const DELIVERED = /^(delivered) (\p{L}.*)$/iu;
 // The postal code a delivery's town can end with, after a space or glued on: Canada's "A1A 1A1",
 // the United Kingdom's "AA1A 1AA", a United States ZIP code, and four to six digits elsewhere.
@@ -24,7 +25,7 @@ const POSTCODE = /\s*(?:[A-Z]\d[A-Z] ?\d[A-Z]\d|[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}
 export function splitPengyouRow(content: string, location: string): { content: string; location: string } {
   const text = content.trim().split(/\s+/).join(' ');
   const placed = PLACED.exec(text);
-  if (placed && !location.trim()) return { content: placed[1]!, location: placed[2]!.trim() };
+  if (placed && !location.trim()) return { content: placed[1]!, location: (placed[2] ?? placed[3]!).trim() };
   const match = DELIVERED.exec(text);
   if (!match || location.trim()) return { content, location };
   const town = match[2]!.replace(POSTCODE, '').trim();

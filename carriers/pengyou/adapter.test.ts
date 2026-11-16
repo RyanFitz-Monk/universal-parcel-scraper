@@ -148,6 +148,15 @@ describe('Pengyou tracking adapter', () => {
       expect(splitPengyouRow(content, ''), content).toEqual({ content, location: '' });
     }
     expect(splitPengyouRow('Delivered Sample Town', 'Sample City')).toEqual({ content: 'Delivered Sample Town', location: 'Sample City' });
+    // The Hong Kong script's rows, the last with the city in full-width brackets.
+    for (const [content, wording, stage] of [
+      ['Express delivery arrives at the processing center [Sample City]', 'Express delivery arrives at the processing center', 'accepted'],
+      ['The shipment leaves the processing center [Sample City]', 'The shipment leaves the processing center', 'in_transit'],
+      ['Handed over to the carrier for transportation【Sample City】', 'Handed over to the carrier for transportation', 'in_transit'],
+    ] as const) {
+      expect(splitPengyouRow(content, ''), content).toEqual({ content: wording, location: 'Sample City' });
+      expect(statusMap.stage(null, normalizeStatusWording(content)), content).toBe(stage);
+    }
   });
 
   it('maps every wording it lists by wording alone, and the app reads the map', () => {

@@ -3,6 +3,9 @@
   "entries": [
     {"wording": "Shenzhen Processing Center has received it", "language": "en", "stage": "accepted", "confirmedBy": "live", "note": "The first scan in Pengyou's hands, with the city after it in brackets."},
     {"wording": "Parcel has been sorted and is ready to be sent", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-05", "note": "The processing centre sorting the parcel for the next leg, a day after its receipt, with the city after it in brackets."},
-    {"wording": "Delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "note": "The last-mile delivery, with the town after it, unbracketed, and its two-letter state or province when it gives one."}
+    {"wording": "Delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "note": "The last-mile delivery, with the town after it, unbracketed, and its two-letter state or province when it gives one."},
+    {"wording": "Express delivery arrives at the processing center", "language": "en", "stage": "accepted", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The first row of the Hong Kong script, with the city after it in brackets: the processing centre receiving the parcel, as the Shenzhen script's first row reads."},
+    {"wording": "The shipment leaves the processing center", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The Hong Kong script's second row, with the city after it in brackets."},
+    {"wording": "Handed over to the carrier for transportation", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The Hong Kong script's third row, with the city after it in full-width brackets: the hand-over to the line that flies the parcel."}
   ]
 }

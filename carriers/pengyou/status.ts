@@ -7,8 +7,8 @@ import statuses from './statuses.json' with { type: 'json' };
 export const ENTRIES: readonly { readonly wording: string; readonly stage: string }[] = statuses.entries;
 const WORDINGS = new Map<string, Stage>(ENTRIES.map((entry) => [normalizeStatusWording(entry.wording), entry.stage as Stage]));
 
-// The place Pengyou writes after a row's wording, in brackets: "[Shenzhen City]".
-const PLACE_TAIL = / \[[^\]]+\]$/;
+// The place Pengyou writes after a row's wording, in brackets: "[Shenzhen City]", "【Hong Kong】".
+const PLACE_TAIL = / ?(?:\[[^\]]+\]|【[^】]+】)$/;
 // The last-mile delivery, with the town after it, unbracketed, and its two-letter state or province when
 // it gives one: "Delivered Sample Town CA".
 const DELIVERED_AT = 'delivered ';

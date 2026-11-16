@@ -35,8 +35,8 @@ which files these parcels under Pengyou.
   it, deliveries abroad too: on the destination's clock, some would have been written half a day
   before the delivery they record.
 - The record's product name is the service name.
-- A row can name its city after its wording, in brackets ("[Shenzhen City]"), and leave its
-  place empty. The city becomes the place.
+- A row can name its city after its wording, in square or full-width brackets ("[Shenzhen City]",
+  "【Hong Kong】"), and leave its place empty. The city becomes the place.
 - A delivery names its town after the wording, unbracketed, sometimes with a state or province
   and the recipient's postal code, and leaves the row's place empty. The town becomes the place and
   the postal code is dropped.
