@@ -22,8 +22,10 @@ A plain request without a token is always refused, so the adapter offers no HTTP
 a number is confirmed through the browser check, which needs dated history.
 
 reCAPTCHA scores both the address and the browser. A datacenter address is refused, and so is
-the browser service's Firefox even on a home address; Chrome on a home address passes. The
-private Chrome is asked first and its failure to attest leaves `trawl` its turn. Veho serves
+the browser service's Firefox even on a home address. A new Chrome profile on a home address can
+pass, but after a burst of new profiles from that address reCAPTCHA refuses them, while an
+established profile there still passes. The private Chrome opens a new profile for each read; it
+is asked first and its failure to attest leaves `trawl` its turn. Veho serves
 headless Chrome a stub page, so the private browser names itself as Chrome. Repeated reads lower
 an address's score: the private browser reads at most every ten minutes, and one token covers
 the hour, so a home address sees about one page load an hour while lookups go on.
