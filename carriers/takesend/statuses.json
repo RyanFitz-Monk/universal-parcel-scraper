@@ -140,6 +140,22 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-16",
       "note": "The parcel packed for its line, after the receipt scan."
+    },
+    {
+      "wording": "Depart from facility to service provider",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Leaving Take Send's facility for the partner that flies the line, after the parcel is packed."
+    },
+    {
+      "wording": "Export customs declaration completed",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "China's export declaration done before the flight, between two departures: no customs hold."
     }
   ]
 }
