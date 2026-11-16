@@ -543,7 +543,10 @@ describe('Magyar Posta tracker search', () => {
     // The tracker's wall clocks name no instant, so its answer confirms nothing.
     const web = tracker();
     const page = adapter({ trawl: { scrape: web.scrape }, fetcher: keyRefused } as never);
-    expect(await page.recognizeWithBrowser!(PARCEL, { budgetMs: 40_000 })).toEqual({ known: false, lastActivityAt: null });
+    expect(await page.recognizeWithBrowser!(PARCEL, { budgetMs: 40_000 })).toMatchObject({
+      known: true, lastActivityAt: null, lastActivityLocal: '2026-03-03T13:20:00',
+      result: { current_stage: 'delivered' },
+    });
   });
 });
 

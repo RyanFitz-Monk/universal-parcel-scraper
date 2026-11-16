@@ -254,7 +254,7 @@ export async function recognizeFromBrowserLookup(lookup: () => Promise<CarrierRe
   let result: CarrierResult | undefined;
   // The retained result passes the same checks as every tracking result before anyone reuses it.
   const answer = await recognizeFromLookup(async () => (result = normalizeCarrierResult(await lookup())));
-  if (!answer.known || !answer.lastActivityAt || !result) return { known: false, lastActivityAt: null };
+  if (!answer.known || (!answer.lastActivityAt && !answer.lastActivityLocal) || !result) return { known: false, lastActivityAt: null };
   return { ...answer, result };
 }
 

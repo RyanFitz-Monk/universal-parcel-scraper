@@ -2,12 +2,17 @@
 
 Some carriers and universal providers only answer a full browser session. This image extends
 [TRAWL](https://github.com/germondai/trawl) with identity-bound capture for DHL Express, FedEx, UPS, USPS, Royal Mail,
-Australia Post, YunExpress, 17TRACK, SF Express, WanbExpress, XPO, Asendia, Correios Brazil, DHL Poland, Magyar Posta, Poste Italiane, SwiftX, China Post, JD Logistics, Ozon, MailAmericas, LBC Express, Evri UK, J&T Express Brazil and ZTO. The adapter checks the captured response against
+Australia Post, YunExpress, 17TRACK, SF Express, WanbExpress, XPO, Asendia, Correios Brazil, DHL Poland, Magyar Posta, Poste Italiane, SwiftX, China Post, JD Logistics, Ozon, MailAmericas, LBC Express, Evri UK, J&T Express Brazil, Onlog Express and ZTO. The adapter checks the captured response against
 the requested parcel. A solved challenge alone is not tracking history.
 
 MailAmericas lets the official page complete its AWS check in a fresh context, then captures
 only tracking POSTs for the requested number. It retains bounded refusals and retries without
 cookies, challenge tokens, recipient fields or rendered pages.
+
+Onlog Express uses the canonical guest form and its own Turnstile callback. When the CDN
+loads before the page defines that callback, the helper invokes the existing initializer
+once if its widget is still blank. It captures only the whole-reference guest request and
+projects its reference heading and scan rows, preserving minute wall clocks.
 
 Pro Carrier, Delnext, MRL Global, AIT Worldwide, Hitch, PBT and Celeritas also use the
 ordinary browser tiers after a challenged HTTP lookup. Their adapters read the rendered

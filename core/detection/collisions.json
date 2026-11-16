@@ -99,6 +99,16 @@
     "reason": "Amazon marketplace numbers have twelve characters, which Colis Privé also accepts, and two letters and ten digits are the label shape of Aramex Australia and Aramex New Zealand; the Amazon rule is the only high-confidence one."
   },
   {
+    "shape": "Literal AA followed by ten digits",
+    "carriers": [
+      "onlog-express",
+      "colis-prive",
+      "aramex-au",
+      "aramex-nz"
+    ],
+    "reason": "Onlog's posting reference has the literal AA prefix inside the generic two-letter label formats; each stays a low-confidence candidate until its own tracker confirms the whole number."
+  },
+  {
     "shape": "MX9{10}",
     "carriers": [
       "aramex-nz",

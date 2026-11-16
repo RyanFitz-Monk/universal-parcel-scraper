@@ -124,6 +124,21 @@ describe('catalog recognition', () => {
 });
 
 describe('browser confirmation', () => {
+  it('retains dated local history without inventing an activity instant', async () => {
+    const result = { status: 'delivered' as const, last_update_local: '2026-03-02T09:00',
+      events: [{ local_time: '2026-03-02T09:00', description: 'Delivered' },
+        { local_time: '2026-02-27T18:30', description: 'Collected' }] };
+    await expect(recognizeFromBrowserLookup(async () => result)).resolves.toEqual({
+      known: true, lastActivityAt: null, lastActivityLocal: '2026-03-02T09:00:00', result,
+    });
+    for (const local_time of ['2026-02-30T08:00:00', '2026-09-09T08:00:00+99:00', 'broken']) {
+      await expect(recognizeFromBrowserLookup(async () => ({ status: 'in_transit', events: [{ local_time, description: 'Sorted' }] })), local_time)
+        .resolves.toEqual({ known: false, lastActivityAt: null });
+    }
+    await expect(recognizeFromBrowserLookup(async () => ({ status: 'unknown', events: [], last_update_local: '2026-03-02T09:00' })))
+      .resolves.toEqual({ known: false, lastActivityAt: null });
+  });
+
   it('rejects shells and undated default statuses, and retains dated history', async () => {
     await expect(recognizeFromBrowserLookup(async () => ({ status: 'in_transit', events: [] })))
       .resolves.toEqual({ known: false, lastActivityAt: null });

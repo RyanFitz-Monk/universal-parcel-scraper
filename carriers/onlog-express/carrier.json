@@ -1,0 +1,82 @@
+{
+  "id": "onlog-express",
+  "displayName": "Onlog Express",
+  "aliases": [
+    "ONLOG",
+    "ONLOG Express",
+    "Onlog Franqueadora"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#ed6d28"
+  },
+  "selectable": true,
+  "timezone": "UTC",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "onlog-express",
+    "steps": [
+      "trawl"
+    ],
+    "browser": true,
+    "localClocks": true,
+    "refresh": {
+      "minMinutes": 30,
+      "afterFailureMinutes": 60
+    },
+    "browserRecognition": {
+      "rank": 121,
+      "pattern": "^AA\\d{10}$"
+    }
+  },
+  "capabilities": [
+    "history",
+    "location"
+  ],
+  "portal": {
+    "url": "https://onlog.app.br/rastreio/{trackingNumber}",
+    "searchUrl": "https://conecta.log.br/rastreio.php",
+    "canaryUrl": "https://conecta.log.br/rastreio.php",
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "tracking_reference"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location"
+    ],
+    "discarded": [
+      "tracking_reference"
+    ],
+    "unavailable": [
+      "eta",
+      "weight",
+      "provider_code",
+      "offset_timestamps"
+    ]
+  },
+  "links": [
+    {
+      "domains": [
+        "onlog.app.br"
+      ],
+      "path": "^/rastreio/(AA\\d{10})/?$",
+      "ownNumbersOnly": true
+    }
+  ],
+  "detection": [
+    {
+      "id": "onlog-express-aa",
+      "pattern": "^AA\\d{10}$",
+      "confidence": "low",
+      "preferred": true
+    }
+  ]
+}

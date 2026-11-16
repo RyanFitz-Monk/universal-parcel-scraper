@@ -41034,6 +41034,51 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "onlog-express": {
+    "displayName": "Onlog Express",
+    "color": "#ed6d28",
+    "aliases": [
+      "ONLOG",
+      "ONLOG Express",
+      "Onlog Franqueadora"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "UTC",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "onlog-express",
+      "browserRecognitionRank": 121,
+      "browserRecognitionPattern": "^AA\\d{10}$",
+      "refresh": {
+        "minMinutes": 30,
+        "afterFailureMinutes": 60
+      },
+      "localClocks": true,
+      "browser": true
+    },
+    "canaryUrl": "https://conecta.log.br/rastreio.php",
+    "trackingUrlTemplate": "https://onlog.app.br/rastreio/{trackingNumber}",
+    "trackingSearchUrl": "https://conecta.log.br/rastreio.php",
+    "linkRules": [
+      {
+        "domains": [
+          "onlog.app.br"
+        ],
+        "path": "^/rastreio/(AA\\d{10})/?$",
+        "ownNumbersOnly": true
+      }
+    ],
+    "detectionRules": [
+      {
+        "pattern": "^AA\\d{10}$",
+        "confidence": "low",
+        "preferred": true
+      }
+    ]
+  },
   "ontask-express": {
     "displayName": "Ontask Express",
     "color": "#030097",
@@ -63273,6 +63318,7 @@ export const CARRIER_IDS = [
   "one-world-express",
   "onex",
   "online-worldwide-logistics",
+  "onlog-express",
   "ontask-express",
   "onway-ge",
   "oohpod",
@@ -65034,6 +65080,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "one-world-express": ["one-world-express-1"],
   "onex": [],
   "online-worldwide-logistics": [],
+  "onlog-express": ["onlog-express-aa"],
   "ontask-express": [],
   "onway-ge": [],
   "oohpod": [],

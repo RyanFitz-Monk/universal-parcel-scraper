@@ -10,6 +10,7 @@
  * universal providers, whose map is the reading they give a scan
  * (`providers/status.ts`).
  */
+import { statusMap as onlogExpress } from '../../carriers/onlog-express/status.js';
 import { statusMap as sicepat } from '../../carriers/sicepat/status.js';
 import { statusMap as aneLogistics } from '../../carriers/ane-logistics/status.js';
 import { statusMap as tciFreight } from '../../carriers/tci-freight/status.js';
@@ -805,6 +806,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'western-bid': westernBid,
   libanpost,
   'om-logistics': omLogistics,
+  'onlog-express': onlogExpress,
   sicepat,
   'ane-logistics': aneLogistics,
   'tci-freight': tciFreight,

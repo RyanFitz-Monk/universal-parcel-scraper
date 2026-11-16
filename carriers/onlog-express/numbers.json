@@ -1,0 +1,30 @@
+{
+  "carrier": "onlog-express",
+  "records": [
+    {
+      "number": "AA0108059403",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.reclameaqui.com.br/onlog-express/nao-recebi-minha-encomenda-e-a-transportadora-alega-entrega-sem-comprovante__fB1aIcLnA533MrK/",
+        "date": "2026-11-14",
+        "dateKind": "publication",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "onlog-express",
+          "colis-prive",
+          "aramex-au",
+          "aramex-nz"
+        ]
+      },
+      "note": "The public report gives the whole Onlog posting reference; native guest history binds that reference and supplies dated scans through delivery. The separate object alias does not establish a postal issuer or delivery partner."
+    }
+  ]
+}

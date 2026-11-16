@@ -1,0 +1,11 @@
+{
+  "carrier": "onlog-express",
+  "entries": [
+    { "wording": "OBJETO CRIADO", "stage": "registered", "language": "pt", "confirmedBy": "live" },
+    { "wording": "ETIQUETA EMITIDA", "stage": "registered", "language": "pt", "confirmedBy": "live" },
+    { "wording": "OBJETO POSTADO", "stage": "accepted", "language": "pt", "confirmedBy": "live" },
+    { "wording": "OBJETO EM TRANSFERÊNCIA", "stage": "in_transit", "language": "pt", "confirmedBy": "live" },
+    { "wording": "OBJETO SAIU PARA ENTREGA AO DESTINATÁRIO", "stage": "out_for_delivery", "language": "pt", "confirmedBy": "live" },
+    { "wording": "OBJETO ENTREGUE AO DESTINATÁRIO", "stage": "delivered", "language": "pt", "confirmedBy": "live" }
+  ]
+}
