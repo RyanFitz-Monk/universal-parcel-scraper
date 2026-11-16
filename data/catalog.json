@@ -34087,7 +34087,8 @@
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "lingdong"
+      "adapter": "lingdong",
+      "localClocks": true
     },
     "canaryUrl": "https://t.17track.net/",
     "linkRules": [
