@@ -46,6 +46,26 @@ function handoff(row: Record<string, unknown>, number: string): Pick<CarrierResu
   return { ...(named ? { delivery_carrier: partner } : {}), delivery_tracking_number: reference };
 }
 
+// A row giving the number the parcel was transferred under ("转单:" and the number).
+const TRANSFER = /^转单[:：]\s*([A-Z0-9]{8,40})$/i;
+
+/**
+ * The carrier and number of a transfer row, when no carrier `handoff` named: a number that a
+ * carrier's own rules claim whole at high confidence, such as UPS's `1Z` numbers on the US line.
+ */
+function transferHandoff(scans: readonly { description: string }[], number: string): Pick<CarrierResult, 'delivery_carrier' | 'delivery_tracking_number'> {
+  const reference = scans.map((scan) => TRANSFER.exec(scan.description)?.[1]?.toUpperCase()).find(Boolean);
+  if (!reference || reference === number) return {};
+  const match = detectCarrierMatch(reference);
+  return match.confidence === 'high' && match.carrier !== 'unknown' && match.carrier !== 'huahan'
+    ? { delivery_carrier: match.carrier, delivery_tracking_number: reference } : {};
+}
+
+function handedTo(row: Record<string, unknown>, scans: readonly { description: string }[], number: string) {
+  const local = handoff(row, number);
+  return local.delivery_carrier ? local : { ...local, ...transferHandoff(scans, number) };
+}
+
 function clock(value: string): string {
   if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
     const parsed = DateTime.fromFormat(value, 'yyyy-MM-dd HH:mm:ss', { zone: 'UTC' });
@@ -148,6 +168,6 @@ export function parseHuahan(payload: unknown, raw: string): CarrierResult {
     ...(newest.provider_code ? { provider_code: newest.provider_code } : {}),
     last_status_text: newest.description!, last_update: latest.time ?? null,
     ...(latest.time ? {} : { last_update_local: newest.local_time! }), expected_delivery: null,
-    ...(country ? { destination_country: country } : {}), ...handoff(row, number),
+    ...(country ? { destination_country: country } : {}), ...handedTo(row, scans, number),
     events: placed.slice(0, 100), ...(placed.length > 100 ? { history_truncated: true } : {}) };
 }

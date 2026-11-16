@@ -69,6 +69,10 @@ const WORDINGS: ReadonlyMap<string, Stage> = new Map([
   ['arrived shipping partner facility', 'in_transit'],
   // China Post's receipt on the postal line, after HuaHan's own acceptance: the hand-over to the post.
   ['中国邮政已收取邮件', 'in_transit'],
+  // HuaHan's transfer warehouse taking the parcel in after its departure from the origin facility,
+  // and sending the shipments on before the export declaration.
+  ['shipment received', 'in_transit'],
+  ['shipments were sent', 'in_transit'],
 ]);
 // Milestones in Chinese with the English after them, and lines with a day, a flight, a time or a place.
 const PATTERNS: ReadonlyArray<readonly [RegExp, Stage]> = [
@@ -77,6 +81,9 @@ const PATTERNS: ReadonlyArray<readonly [RegExp, Stage]> = [
   [/^快件抵达机场，预计\d{1,2}号航班飞/, 'in_transit'],
   [/^航班延误，重新配载至\d{1,2}号航班飞/, 'in_transit'],
   [/^目的国清关完成/, 'in_transit'],
+  // The pallet broken down after the flight's arrival, and the number the parcel was transferred under.
+  [/^拆板中/, 'in_transit'],
+  [/^转单[:：]/, 'in_transit'],
   [/^departed shipping partner facility\b/, 'in_transit'],
   // USPS's facility scans, the facility after a comma: USPS takes the parcel over from HuaHan,
   // which accepted it in China, and moves it on. Its pre-advice comes while HuaHan still has it.

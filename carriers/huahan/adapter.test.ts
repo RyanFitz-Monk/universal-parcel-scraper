@@ -83,6 +83,23 @@ describe('HuaHan guest tracking', () => {
     expect(() => parseHuahan(duplicate, NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
   });
 
+  it('names the carrier of the number a transfer row gives when the partner fields name none', () => {
+    const transfer = (local: Record<string, unknown>, comment = '转单:1Z999AA10123456784') => {
+      const reply = fixture();
+      Object.assign(reply.data[0]!, { Country_code: 'US', ...local });
+      reply.data[0]!.Detail.splice(1, 0, { ...reply.data[0]!.Detail[1]!, Status: '', Comment: comment });
+      return parseHuahan(reply, NUMBER);
+    };
+    const handed = transfer({ Local_Carrier: '', Local_Number: 'HZZX000000001' });
+    expect(handed).toMatchObject({ delivery_carrier: 'ups', delivery_tracking_number: '1Z999AA10123456784' });
+    expect(handed.events?.find((event) => event.description?.startsWith('转单'))).toMatchObject({ stage: 'in_transit' });
+    // A carrier the partner fields name keeps its number; a number no carrier's rules claim at high confidence names none.
+    expect(transfer({ Local_Carrier: 'USPS', Local_Number: '9400100000000000000000' }).delivery_carrier).toBe('usps');
+    expect(transfer({ Local_Carrier: '', Local_Number: 'HZZX000000001' }, '转单:1Z999AA10123456785')).toMatchObject({
+      delivery_tracking_number: 'HZZX000000001' });
+    expect(transfer({ Local_Carrier: '', Local_Number: 'HZZX000000001' }, '转单:1Z999AA10123456785').delivery_carrier).toBeUndefined();
+  });
+
   it('names the destination carrier, its number and the destination country', () => {
     expect(parseHuahan(fixture(), NUMBER)).toMatchObject({ destination_country: 'FR', delivery_carrier: 'aliexpress',
       delivery_tracking_number: 'DOFR9999999999980HD' });

@@ -20,7 +20,9 @@ to the destination carrier's scans.
 - `Country_code` is the destination country. `Local_Carrier` and `Local_Number` name the
   destination carrier and its number. A suffix after an underscore (`_D104`) is not part of
   that number. The carrier is named only when the catalog knows it and its rules fit the
-  number. The shipper's reference is omitted.
+  number. When they name no carrier, a transfer row (`转单:` and a number) names the carrier
+  whose own rules claim that number whole at high confidence, such as UPS for a `1Z` number on
+  the US line, with that number. The shipper's reference is omitted.
 - Clocks have no offsets. After `Has been given to local carrier` (`JY`) the reply relays the
   destination carrier's scans on that carrier's clock, cut to the minute: a French history
   matched its partner's own tracker in French time. A destination country of one zone
