@@ -1,0 +1,33 @@
+{
+  "id": "quickbox-kg",
+  "displayName": "QuickBox",
+  "aliases": [
+    "Quick BOX"
+  ],
+  "region": {
+    "countries": [
+      "KG"
+    ]
+  },
+  "brand": {
+    "color": "#546d80"
+  },
+  "selectable": true,
+  "timezone": "Asia/Bishkek",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.quickbox.pro/search-express",
+    "canaryUrl": "https://www.quickbox.pro/search-express",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

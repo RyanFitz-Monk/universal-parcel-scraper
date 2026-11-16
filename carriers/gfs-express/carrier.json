@@ -1,0 +1,43 @@
+{
+  "id": "gfs-express",
+  "displayName": "GFS Express",
+  "aliases": [
+    "GFS Xpress"
+  ],
+  "region": {
+    "countries": [
+      "SA",
+      "KW"
+    ]
+  },
+  "brand": {
+    "color": "#1f63ac"
+  },
+  "selectable": true,
+  "timezone": "Asia/Riyadh",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://track.gfsxpress.com/#/track-order?trackingStr={trackingNumber}",
+    "searchUrl": "https://track.gfsxpress.com/",
+    "canaryUrl": "https://track.gfsxpress.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "track.gfsxpress.com"
+      ],
+      "pathPattern": "^/?$",
+      "fragment": "^/track-order\\?trackingStr=([A-Za-z0-9-]+)$"
+    }
+  ],
+  "detection": []
+}

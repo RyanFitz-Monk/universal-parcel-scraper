@@ -1,0 +1,45 @@
+{
+  "id": "janani-express",
+  "displayName": "Janani Express",
+  "aliases": [
+    "Janani Express Parcel Service"
+  ],
+  "region": {
+    "countries": [
+      "BD"
+    ]
+  },
+  "brand": {
+    "color": "#02a550"
+  },
+  "selectable": true,
+  "timezone": "Asia/Dhaka",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://jananiexpress.com/tracking?cn={trackingNumber}",
+    "searchUrl": "https://jananiexpress.com/tracking",
+    "canaryUrl": "https://jananiexpress.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "jananiexpress.com",
+        "www.jananiexpress.com"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "cn"
+      ]
+    }
+  ],
+  "detection": []
+}

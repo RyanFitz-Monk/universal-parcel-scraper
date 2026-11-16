@@ -1,0 +1,46 @@
+{
+  "id": "nomex-kg",
+  "displayName": "Nomex",
+  "aliases": [
+    "Nomad Express Delivery",
+    "Nomad Express"
+  ],
+  "region": {
+    "countries": [
+      "KG"
+    ]
+  },
+  "brand": {
+    "color": "#ff2a00"
+  },
+  "selectable": true,
+  "timezone": "Asia/Bishkek",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://nomex.kg/?iShip_Invoice={trackingNumber}",
+    "searchUrl": "https://nomex.kg/",
+    "canaryUrl": "https://nomex.kg/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "nomex.kg",
+        "www.nomex.kg"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "iShip_Invoice"
+      ]
+    }
+  ],
+  "detection": []
+}

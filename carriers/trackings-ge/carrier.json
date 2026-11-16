@@ -1,0 +1,43 @@
+{
+  "id": "trackings-ge",
+  "displayName": "Trackings.GE",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "GE"
+    ]
+  },
+  "brand": {
+    "color": "#45ace7"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tbilisi",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://trackings.ge/en/track?track_num={trackingNumber}",
+    "searchUrl": "https://trackings.ge/en/track",
+    "canaryUrl": "https://trackings.ge/en/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "trackings.ge",
+        "www.trackings.ge"
+      ],
+      "pathPattern": "^/(?:en|ka|ru)/track/?$",
+      "params": [
+        "track_num"
+      ]
+    }
+  ],
+  "detection": []
+}

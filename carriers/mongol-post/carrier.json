@@ -1,0 +1,45 @@
+{
+  "id": "mongol-post",
+  "displayName": "Mongol Post",
+  "aliases": [
+    "Монгол Шуудан"
+  ],
+  "region": {
+    "countries": [
+      "MN"
+    ]
+  },
+  "brand": {
+    "color": "#ec1c24"
+  },
+  "selectable": true,
+  "timezone": "Asia/Ulaanbaatar",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.mongolpost.mn/mn/track?trackingNumber={trackingNumber}",
+    "searchUrl": "https://www.mongolpost.mn/mn/track",
+    "canaryUrl": "https://www.mongolpost.mn/mn/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "mongolpost.mn",
+        "www.mongolpost.mn"
+      ],
+      "pathPattern": "^/(?:mn/|en/)?track/?$",
+      "params": [
+        "trackingNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

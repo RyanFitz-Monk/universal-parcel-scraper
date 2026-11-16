@@ -1,0 +1,46 @@
+{
+  "id": "mnpost-mn",
+  "displayName": "MNPOST",
+  "aliases": [
+    "MNPOST LLC",
+    "Марин Нью Пост"
+  ],
+  "region": {
+    "countries": [
+      "MN"
+    ]
+  },
+  "brand": {
+    "color": "#f73237"
+  },
+  "selectable": true,
+  "timezone": "Asia/Ulaanbaatar",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://mnpost.mn/tracking?nums={trackingNumber}",
+    "searchUrl": "https://mnpost.mn/tracking",
+    "canaryUrl": "https://mnpost.mn/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "mnpost.mn",
+        "www.mnpost.mn"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "nums"
+      ]
+    }
+  ],
+  "detection": []
+}

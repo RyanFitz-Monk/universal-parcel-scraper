@@ -88,6 +88,7 @@ export const uncheckedSearchPages: Partial<Record<CarrierId, string>> = {
   'surat-kargo': 'www.suratkargo.com.tr answers a Cloudflare block to many networks outside Turkey; an archived copy shows its number field',
   'thailand-post': 'some of the tracker\'s servers stall on its script bundles, so the form often stays empty past the render window',
   'total-express': 'totalconecta.totalexpress.com.br answers many networks with an Akamai Access Denied page; to the networks it lets through it shows its number field',
+  'trans-express-lk': 'tracking.transexpress.lk shows its waybill field only after its DOMESTIC or COD tab is chosen, so the check finds no field on load',
   'trans-o-flex': 'www.trans-o-flex.com answers the burst of script requests its tracking app makes with HTTP 429, so the form often stays empty past the render window',
   veloblitz: 'veloblitz.kuz.ch keeps its Sendungsnummer field in a hidden pop-up that its "Track Auftrag" button opens, so the check finds no field on load',
   'ward-trucking': 'wardtlctools.com refuses connections from many networks; an archived copy shows its PRO number fields',

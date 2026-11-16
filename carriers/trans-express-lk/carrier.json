@@ -1,0 +1,34 @@
+{
+  "id": "trans-express-lk",
+  "displayName": "Trans Express",
+  "aliases": [
+    "TransExpress",
+    "Trans Express Services Lanka"
+  ],
+  "region": {
+    "countries": [
+      "LK"
+    ]
+  },
+  "brand": {
+    "color": "#ed1c24"
+  },
+  "selectable": true,
+  "timezone": "Asia/Colombo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.transexpress.lk/tracking",
+    "canaryUrl": "https://tracking.transexpress.lk/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

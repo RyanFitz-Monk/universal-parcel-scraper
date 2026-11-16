@@ -1,0 +1,38 @@
+{
+  "id": "zmc-express",
+  "displayName": "ZMC Express",
+  "aliases": [
+    "ZMC Express Cargo",
+    "ZMC Iraq"
+  ],
+  "region": {
+    "countries": [
+      "IQ",
+      "AE",
+      "OM",
+      "TR",
+      "LB"
+    ]
+  },
+  "brand": {
+    "color": "#ff0000"
+  },
+  "selectable": true,
+  "timezone": "Asia/Baghdad",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://apps.zmc-iraq.com/tracking.php",
+    "canaryUrl": "https://apps.zmc-iraq.com/tracking.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

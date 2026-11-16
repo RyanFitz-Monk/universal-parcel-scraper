@@ -1,0 +1,43 @@
+{
+  "id": "turbo-eg",
+  "displayName": "Turbo",
+  "aliases": [
+    "Turbo Logistics",
+    "Turbo EG"
+  ],
+  "region": {
+    "countries": [
+      "EG"
+    ]
+  },
+  "brand": {
+    "color": "#e80505"
+  },
+  "selectable": true,
+  "timezone": "Africa/Cairo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://turbo.info/en/track/{trackingNumber}",
+    "searchUrl": "https://turbo.info/en/track",
+    "canaryUrl": "https://turbo.info/en/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "turbo.info",
+        "www.turbo.info"
+      ],
+      "path": "^/(?:en|ar)/track/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

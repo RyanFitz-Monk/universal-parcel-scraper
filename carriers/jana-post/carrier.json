@@ -1,0 +1,50 @@
+{
+  "id": "jana-post",
+  "displayName": "Jańa Post",
+  "aliases": [
+    "Jana Post",
+    "JAŃA POST"
+  ],
+  "region": {
+    "countries": [
+      "KZ",
+      "KG",
+      "UZ",
+      "TJ",
+      "MN"
+    ]
+  },
+  "brand": {
+    "color": "#1b8918"
+  },
+  "selectable": true,
+  "timezone": "Asia/Almaty",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://janapost.kz/en/track-order?code={trackingNumber}",
+    "searchUrl": "https://janapost.kz/en/track-order",
+    "canaryUrl": "https://janapost.kz/en/track-order",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "janapost.kz",
+        "www.janapost.kz"
+      ],
+      "pathPattern": "^/(?:en|ru|kk|ky|uz|tg|mn|zh)/track-order/?$",
+      "params": [
+        "code"
+      ]
+    }
+  ],
+  "detection": []
+}

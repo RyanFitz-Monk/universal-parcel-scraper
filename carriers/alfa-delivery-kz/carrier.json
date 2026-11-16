@@ -1,0 +1,33 @@
+{
+  "id": "alfa-delivery-kz",
+  "displayName": "Alfa Delivery Services",
+  "aliases": [
+    "Alfa Delivery"
+  ],
+  "region": {
+    "countries": [
+      "KZ"
+    ]
+  },
+  "brand": {
+    "color": "#011689"
+  },
+  "selectable": true,
+  "timezone": "Asia/Almaty",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://adskz.com/en",
+    "canaryUrl": "https://adskz.com/en",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

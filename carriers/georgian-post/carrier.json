@@ -1,0 +1,33 @@
+{
+  "id": "georgian-post",
+  "displayName": "Georgian Post",
+  "aliases": [
+    "საქართველოს ფოსტა"
+  ],
+  "region": {
+    "countries": [
+      "GE"
+    ]
+  },
+  "brand": {
+    "color": "#0075ac"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tbilisi",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.gpost.ge/",
+    "canaryUrl": "https://www.gpost.ge/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

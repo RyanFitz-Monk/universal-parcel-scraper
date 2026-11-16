@@ -1,0 +1,34 @@
+{
+  "id": "fardar-express-lk",
+  "displayName": "Fardar Express Domestic",
+  "aliases": [
+    "FDE Domestic",
+    "Fardar Domestic"
+  ],
+  "region": {
+    "countries": [
+      "LK"
+    ]
+  },
+  "brand": {
+    "color": "#28ace2"
+  },
+  "selectable": true,
+  "timezone": "Asia/Colombo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.fdedomestic.com/",
+    "canaryUrl": "https://www.fdedomestic.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

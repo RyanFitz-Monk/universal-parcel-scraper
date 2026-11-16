@@ -1,0 +1,31 @@
+{
+  "id": "nepal-can-move",
+  "displayName": "Nepal Can Move",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "NP"
+    ]
+  },
+  "brand": {
+    "color": "#d32f2f"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kathmandu",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://portal.nepalcanmove.com/track/",
+    "canaryUrl": "https://portal.nepalcanmove.com/track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

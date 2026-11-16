@@ -1,0 +1,46 @@
+{
+  "id": "sendo-kg",
+  "displayName": "Sendo",
+  "aliases": [
+    "Sendo Express",
+    "СЕНДО"
+  ],
+  "region": {
+    "countries": [
+      "KG"
+    ]
+  },
+  "brand": {
+    "color": "#016028"
+  },
+  "selectable": true,
+  "timezone": "Asia/Bishkek",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.sendoexpress.net/tracking.html?code={trackingNumber}",
+    "searchUrl": "https://www.sendoexpress.net/tracking.html",
+    "canaryUrl": "https://www.sendoexpress.net/tracking.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "sendoexpress.net",
+        "www.sendoexpress.net"
+      ],
+      "pathPattern": "^/tracking\\.html$",
+      "params": [
+        "code"
+      ]
+    }
+  ],
+  "detection": []
+}

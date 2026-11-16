@@ -1,0 +1,45 @@
+{
+  "id": "koombiyo",
+  "displayName": "Koombiyo Delivery",
+  "aliases": [
+    "Koombiyo"
+  ],
+  "region": {
+    "countries": [
+      "LK"
+    ]
+  },
+  "brand": {
+    "color": "#00aeef"
+  },
+  "selectable": true,
+  "timezone": "Asia/Colombo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://koombiyodelivery.lk/track?id={trackingNumber}",
+    "searchUrl": "https://koombiyodelivery.lk/track",
+    "canaryUrl": "https://koombiyodelivery.lk/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "koombiyodelivery.lk",
+        "www.koombiyodelivery.lk"
+      ],
+      "pathPattern": "^/track/?$",
+      "params": [
+        "id"
+      ]
+    }
+  ],
+  "detection": []
+}

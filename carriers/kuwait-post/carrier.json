@@ -1,0 +1,31 @@
+{
+  "id": "kuwait-post",
+  "displayName": "Kuwait Post",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "KW"
+    ]
+  },
+  "brand": {
+    "color": "#243a61"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kuwait",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://moc.gov.kw/en/shipment-tracking",
+    "canaryUrl": "https://moc.gov.kw/en/shipment-tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

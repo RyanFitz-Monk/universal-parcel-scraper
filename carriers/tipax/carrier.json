@@ -1,0 +1,33 @@
+{
+  "id": "tipax",
+  "displayName": "Tipax",
+  "aliases": [
+    "تیپاکس"
+  ],
+  "region": {
+    "countries": [
+      "IR"
+    ]
+  },
+  "brand": {
+    "color": "#00784a"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tehran",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tipaxco.com/tracking",
+    "canaryUrl": "https://tipaxco.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

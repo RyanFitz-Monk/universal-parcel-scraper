@@ -1,0 +1,33 @@
+{
+  "id": "mahex",
+  "displayName": "Mahex",
+  "aliases": [
+    "ماهکس"
+  ],
+  "region": {
+    "countries": [
+      "IR"
+    ]
+  },
+  "brand": {
+    "color": "#002654"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tehran",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://mahex.com/tracking",
+    "canaryUrl": "https://mahex.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

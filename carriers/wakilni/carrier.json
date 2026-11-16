@@ -1,0 +1,39 @@
+{
+  "id": "wakilni",
+  "displayName": "Wakilni",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "LB"
+    ]
+  },
+  "brand": {
+    "color": "#00426b"
+  },
+  "selectable": true,
+  "timezone": "Asia/Beirut",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://portal.wakilni.com/orders/{trackingNumber}",
+    "searchUrl": "https://wakilni.com/",
+    "canaryUrl": "https://wakilni.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "portal.wakilni.com"
+      ],
+      "path": "^/orders/([A-Za-z0-9]+)/?$"
+    }
+  ],
+  "detection": []
+}

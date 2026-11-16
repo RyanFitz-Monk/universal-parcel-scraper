@@ -1,0 +1,33 @@
+{
+  "id": "onway-ge",
+  "displayName": "OnWay",
+  "aliases": [
+    "OnWay Delivery"
+  ],
+  "region": {
+    "countries": [
+      "GE"
+    ]
+  },
+  "brand": {
+    "color": "#5b4bb4"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tbilisi",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://onway.ge/",
+    "canaryUrl": "https://onway.ge/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

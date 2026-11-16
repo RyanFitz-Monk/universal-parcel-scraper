@@ -1,0 +1,44 @@
+{
+  "id": "citypak",
+  "displayName": "Citypak",
+  "aliases": [
+    "CityPak"
+  ],
+  "region": {
+    "countries": [
+      "LK"
+    ]
+  },
+  "brand": {
+    "color": "#fd0100"
+  },
+  "selectable": true,
+  "timezone": "Asia/Colombo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://track.citypak.lk/track?tracking_number={trackingNumber}",
+    "searchUrl": "https://track.citypak.lk/",
+    "canaryUrl": "https://track.citypak.lk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "track.citypak.lk"
+      ],
+      "pathPattern": "^/track/?$",
+      "params": [
+        "tracking_number"
+      ]
+    }
+  ],
+  "detection": []
+}

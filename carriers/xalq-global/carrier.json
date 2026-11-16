@@ -1,0 +1,33 @@
+{
+  "id": "xalq-global",
+  "displayName": "Xalq Global",
+  "aliases": [
+    "Xalq.Global"
+  ],
+  "region": {
+    "countries": [
+      "UZ"
+    ]
+  },
+  "brand": {
+    "color": "#1e5cd7"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tashkent",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://xalq.global/",
+    "canaryUrl": "https://xalq.global/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

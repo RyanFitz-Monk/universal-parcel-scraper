@@ -1,0 +1,44 @@
+{
+  "id": "gaaubesi",
+  "displayName": "Gaaubesi",
+  "aliases": [
+    "Gaaubesi Logistics"
+  ],
+  "region": {
+    "countries": [
+      "NP"
+    ]
+  },
+  "brand": {
+    "color": "#21428a"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kathmandu",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://delivery.gaaubesi.com/orders/track-order/?track_id={trackingNumber}",
+    "searchUrl": "https://delivery.gaaubesi.com/orders/track-order/",
+    "canaryUrl": "https://delivery.gaaubesi.com/orders/track-order/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "delivery.gaaubesi.com"
+      ],
+      "pathPattern": "^/orders/track-order/?$",
+      "params": [
+        "track_id"
+      ]
+    }
+  ],
+  "detection": []
+}

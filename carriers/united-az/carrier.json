@@ -1,0 +1,50 @@
+{
+  "id": "united-az",
+  "displayName": "United.az",
+  "aliases": [
+    "United.az International Shipping Company",
+    "Expargo",
+    "Kargolux",
+    "Kango",
+    "Morex",
+    "166 Cargo",
+    "Findex"
+  ],
+  "region": {
+    "countries": [
+      "AZ"
+    ]
+  },
+  "brand": {
+    "color": "#f47b31"
+  },
+  "selectable": true,
+  "timezone": "Asia/Baku",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://cui.united.az/tracking-code?trackingCode={trackingNumber}",
+    "searchUrl": "https://cui.united.az/tracking-code",
+    "canaryUrl": "https://cui.united.az/tracking-code",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "cui.united.az"
+      ],
+      "pathPattern": "^/tracking-code/?$",
+      "params": [
+        "trackingCode"
+      ]
+    }
+  ],
+  "detection": []
+}
