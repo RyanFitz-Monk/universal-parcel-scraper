@@ -596,6 +596,9 @@ describe('classifyWording', () => {
     for (const [wording, stage] of [
       ['No entregado', 'failed_attempt'],
       ['No se ha podido entregar', 'failed_attempt'],
+      // InPost Spain's missed round as 17TRACK relays it.
+      ['Intentamos entregar tu paquete pero no fue posible hacerlo con éxito. Volveremos a intentarlo.', 'failed_attempt'],
+      ['Hemos intentado entregar tu envío sin éxito', 'failed_attempt'],
       ['Não entregue', 'failed_attempt'],
       ['Não foi possível efetuar a entrega', 'failed_attempt'],
       ['Objeto não entregue - carteiro não atendido', 'failed_attempt'],
@@ -640,6 +643,7 @@ describe('classifyWording', () => {
       'Quando for entregue, receberá um SMS',
       'Fecha de entrega modificada',
       'No disponible para recoger',
+      'Intentamos entregar tu paquete hoy',
     ]) expect(['delivered', 'failed_attempt', 'ready_for_pickup']).not.toContain(wordingStage(wording, 'pending'));
   });
 
