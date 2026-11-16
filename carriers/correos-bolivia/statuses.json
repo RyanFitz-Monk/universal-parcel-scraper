@@ -1,4 +1,26 @@
 {
   "carrier": "correos-bolivia",
-  "entries": []
+  "entries": [
+    {
+      "code": "8",
+      "wording": "Insertar envío en saca (salida)",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "3",
+      "wording": "Recibir envío en oficina de cambio (salida)",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "12",
+      "wording": "Enviar envío al extranjero (recibido por EDI)",
+      "stage": "in_transit",
+      "language": "es",
+      "confirmedBy": "live"
+    }
+  ]
 }

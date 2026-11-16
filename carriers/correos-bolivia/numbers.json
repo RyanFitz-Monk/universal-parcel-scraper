@@ -190,6 +190,24 @@
         "confidence": "high"
       },
       "note": "Listed in the flat data file of the former ECOBOL tracker on correosbolivia.com, with origin and destination office; opened capture, no history shown."
+    },
+    {
+      "number": "LJ007335445FR",
+      "role": "shipment",
+      "evidence": "official_documentation_example",
+      "source": {
+        "url": "https://correos.gob.bo/storage/cms/applications/screenshots/DWhxuyz0H7NflgUIBAAZcsoKTecRxncmvSK9pK26.png",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed",
+        "service": "ORDINARIAS"
+      },
+      "expect": {
+        "carrier": "la-poste",
+        "confidence": "high"
+      },
+      "note": "Whole input displayed in the official TrackingBO app screenshot; the official mobile API returns dated imported EDI history. Adjacent screenshots are not bound to this item and do not establish its date or a Bolivian delivery."
     }
   ]
 }

@@ -14934,7 +14934,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/La_Paz",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "correos-bolivia",
+      "localClocks": true
     },
     "canaryUrl": "https://trackingbo.correos.gob.bo/",
     "trackingSearchUrl": "https://trackingbo.correos.gob.bo/",

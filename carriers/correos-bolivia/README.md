@@ -1,34 +1,38 @@
 # Correos de Bolivia
 
-Correos de Bolivia parcels use enabled universal providers. There is no dedicated adapter.
+Reads the official TrackingBO app's public guest history over HTTP. Select Correos de Bolivia
+explicitly for international postal items; postal detection remains with the international-mail
+carrier. No HTTP recognition claims ownership from imported events alone.
 
-The national post is run by the Agencia Boliviana de Correos (AGBC), which replaced the
-former ECOBOL.
+## Retrieval
 
-## Numbers
+The APK published on the [official applications page](https://correos.gob.bo/misaplicaciones)
+calls `/api/public/tracking/eventos?codigo={number}` on `trackingbo.correos.gob.bo`.
+Its optional API authorization is absent from the distributed configuration and is unnecessary
+for this guest operation. The adapter neither signs in nor subscribes to notifications.
 
-Its items carry UPU S10 numbers ending in BO: registered letters, EMS, parcels and others.
-Generic postal detection handles them, so no carrier rule claims the layout. Some registered
-numbers in AGBC's own published lists have a check digit that does not validate, so detection
-offers no carrier for them.
+The response must identify the whole item in its filter, unique shipment and every event.
+Event counts must match. Only a structured, identity-bound explicit absence is not found;
+a removed endpoint, verification page, rate limit or malformed reply remains a separate failure.
+A network failure can retry once within the lookup budget.
 
-## Links
+Event wording, codes, offices and service names are retained. `created_at` is the facility event
+clock. `sort_at` and its UTC capture label describe ingestion, so they cannot supply the event's
+instant or zone. Events keep their returned order and local wall clocks. Payment notices,
+internal user identifiers and other administrative fields are discarded.
 
-The tracker form sends the number in the `codigo` parameter of its result page together with
-a captcha answer, so no address opens one parcel without the captcha.
+## Scope and limitations
 
-## Guest tracking
+The national post is run by the Agencia Boliviana de Correos, which replaced ECOBOL.
+The guest API includes imported postal EDI history, so a result does not itself prove a completed
+Bolivian delivery. Numeric domestic references and other formats are outside the adapter's
+confirmed S10 scope. No number-rule or cheap recognition expansion is implied.
 
-The page reads `/api/busqueda/captcha` and returns its literal text code as `captcha_answer`,
-together with `captcha_challenge`, to `/api/busqueda/ems-eventos?codigo=...`. Omitting the answer
-returns HTTP 422 and a replacement challenge. Accepted verification can return a whole-code
-HTTP 404 JSON reply with `existe_paquete: false` and an empty `resultado`.
-
-For a found item the page requests `/api/public/tracking/access` and opens its returned detail
-address. A positive shipment read and that detail response are unconfirmed. No dedicated history
-parser is shipped; enabled universal providers handle tracking.
+The ordinary web search uses a separate text-verification flow. It is not needed by the mobile
+operation. Enabled universal providers remain available when native retrieval fails.
 
 ## Testing
 
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+Supply private controls outside Git with `CORREOS_BOLIVIA_TRACKING_NUMBER` and
+`CORREOS_BOLIVIA_UNKNOWN_NUMBER`, then run
+`npm run test:carriers:live -- carriers/correos-bolivia`.

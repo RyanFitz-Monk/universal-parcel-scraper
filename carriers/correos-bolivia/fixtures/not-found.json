@@ -1,0 +1,11 @@
+{
+  "tipo": "tracking_eventos",
+  "filtro": {
+    "codigo": "ZZ000000028BO"
+  },
+  "existe_paquete": false,
+  "fuente": "ninguna",
+  "total_registros": 0,
+  "resultado": [],
+  "message": "No existe dicho paquete"
+}

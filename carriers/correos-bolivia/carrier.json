@@ -20,15 +20,32 @@
   "timezone": "America/La_Paz",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "correos-bolivia",
+    "steps": [
+      "direct",
+      "retry"
+    ],
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location"
+  ],
   "portal": {
     "searchUrl": "https://trackingbo.correos.gob.bo/",
     "canaryUrl": "https://trackingbo.correos.gob.bo/",
-    "shows": [],
-    "scraped": [],
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "service_name"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "service_name"
+    ],
     "discarded": [],
     "unavailable": []
   },
