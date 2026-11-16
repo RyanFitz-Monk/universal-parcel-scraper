@@ -1,0 +1,41 @@
+{
+  "id": "breaze",
+  "displayName": "Breaze",
+  "aliases": [
+    "Breaze Delivery"
+  ],
+  "region": {
+    "countries": [
+      "ZA"
+    ]
+  },
+  "brand": {
+    "color": "#ff5800"
+  },
+  "selectable": true,
+  "timezone": "Africa/Johannesburg",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://portal.breaze.co.za/track-order/{trackingNumber}",
+    "searchUrl": "https://portal.breaze.co.za/track-order",
+    "canaryUrl": "https://portal.breaze.co.za/track-order",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "portal.breaze.co.za"
+      ],
+      "path": "^/track-order/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

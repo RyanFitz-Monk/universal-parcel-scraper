@@ -1,0 +1,43 @@
+{
+  "id": "intigo",
+  "displayName": "Intigo",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "TN"
+    ]
+  },
+  "brand": {
+    "color": "#ff7400"
+  },
+  "selectable": true,
+  "timezone": "Africa/Tunis",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://intigo.net/?nid={trackingNumber}",
+    "searchUrl": "https://intigo.net/",
+    "canaryUrl": "https://intigo.net/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "intigo.net",
+        "www.intigo.net"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "nid"
+      ]
+    }
+  ],
+  "detection": []
+}

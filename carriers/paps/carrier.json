@@ -1,0 +1,47 @@
+{
+  "id": "paps",
+  "displayName": "Paps",
+  "aliases": [
+    "Paps Logistique",
+    "Paps Logistics"
+  ],
+  "region": {
+    "countries": [
+      "SN",
+      "CI"
+    ]
+  },
+  "brand": {
+    "color": "#252e59"
+  },
+  "selectable": true,
+  "timezone": "Africa/Dakar",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://papslogistics.com/tracking/?uid={trackingNumber}",
+    "searchUrl": "https://papslogistics.com/tracking/",
+    "canaryUrl": "https://papslogistics.com/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "papslogistics.com",
+        "www.papslogistics.com"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "uid"
+      ]
+    }
+  ],
+  "detection": []
+}

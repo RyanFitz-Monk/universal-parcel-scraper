@@ -1,0 +1,46 @@
+{
+  "id": "chronopost-ma",
+  "displayName": "Chronopost Maroc",
+  "aliases": [
+    "Chronopost Morocco",
+    "Chronopost International Maroc"
+  ],
+  "region": {
+    "countries": [
+      "MA"
+    ]
+  },
+  "brand": {
+    "color": "#0099e0"
+  },
+  "selectable": true,
+  "timezone": "Africa/Casablanca",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://chronopost.ma/suivez-votre-envoi?SendingNumber={trackingNumber}",
+    "searchUrl": "https://chronopost.ma/suivez-votre-envoi",
+    "canaryUrl": "https://chronopost.ma/suivez-votre-envoi",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "chronopost.ma",
+        "www.chronopost.ma"
+      ],
+      "pathPattern": "^/suivez-votre-envoi/?$",
+      "params": [
+        "SendingNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

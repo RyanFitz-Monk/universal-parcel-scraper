@@ -1,0 +1,34 @@
+{
+  "id": "abc-cargo-express",
+  "displayName": "ABC Cargo Express",
+  "aliases": [
+    "ABC Cargo Xpress",
+    "ABC Cargo"
+  ],
+  "region": {
+    "countries": [
+      "NG"
+    ]
+  },
+  "brand": {
+    "color": "#015028"
+  },
+  "selectable": true,
+  "timezone": "Africa/Lagos",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://abccargoxpress.com/",
+    "canaryUrl": "https://abccargoxpress.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,46 @@
+{
+  "id": "cn-express-za",
+  "displayName": "CN Express",
+  "aliases": [
+    "CN Express International"
+  ],
+  "region": {
+    "countries": [
+      "CN",
+      "ZA"
+    ]
+  },
+  "brand": {
+    "color": "#00a98e"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.cnexpressintl.com/service_support/track?order_no={trackingNumber}",
+    "searchUrl": "https://www.cnexpressintl.com/service_support/track",
+    "canaryUrl": "https://www.cnexpressintl.com/service_support/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.cnexpressintl.com",
+        "cnexpressintl.com"
+      ],
+      "pathPattern": "^/service_support/track/?$",
+      "params": [
+        "order_no"
+      ]
+    }
+  ],
+  "detection": []
+}

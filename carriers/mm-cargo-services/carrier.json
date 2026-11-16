@@ -1,0 +1,46 @@
+{
+  "id": "mm-cargo-services",
+  "displayName": "MM Cargo Services",
+  "aliases": [
+    "MMCS"
+  ],
+  "region": {
+    "countries": [
+      "ZA",
+      "ZM"
+    ]
+  },
+  "brand": {
+    "color": "#f26522"
+  },
+  "selectable": true,
+  "timezone": "Africa/Johannesburg",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://mmcargoservices.co.za/track?number={trackingNumber}",
+    "searchUrl": "https://mmcargoservices.co.za/track",
+    "canaryUrl": "https://mmcargoservices.co.za/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "mmcargoservices.co.za",
+        "www.mmcargoservices.co.za"
+      ],
+      "pathPattern": "^/track/?$",
+      "params": [
+        "number"
+      ]
+    }
+  ],
+  "detection": []
+}

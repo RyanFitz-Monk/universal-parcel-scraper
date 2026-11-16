@@ -1,0 +1,42 @@
+{
+  "id": "ozon-express-ma",
+  "displayName": "Ozon Express",
+  "aliases": [
+    "OzonExpress"
+  ],
+  "region": {
+    "countries": [
+      "MA"
+    ]
+  },
+  "brand": {
+    "color": "#e41c29"
+  },
+  "selectable": true,
+  "timezone": "Africa/Casablanca",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://ozonexpress.ma/tracking-colis/{trackingNumber}",
+    "searchUrl": "https://ozonexpress.ma/",
+    "canaryUrl": "https://ozonexpress.ma/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "ozonexpress.ma",
+        "www.ozonexpress.ma"
+      ],
+      "path": "^/tracking-colis/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,46 @@
+{
+  "id": "postnet-za",
+  "displayName": "PostNet",
+  "aliases": [
+    "PostNet South Africa",
+    "PostNet to PostNet"
+  ],
+  "region": {
+    "countries": [
+      "ZA"
+    ]
+  },
+  "brand": {
+    "color": "#ff0000"
+  },
+  "selectable": true,
+  "timezone": "Africa/Johannesburg",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.postnet.co.za/tracker?pnpp={trackingNumber}",
+    "searchUrl": "https://www.postnet.co.za/tracker",
+    "canaryUrl": "https://www.postnet.co.za/tracker",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.postnet.co.za",
+        "postnet.co.za"
+      ],
+      "pathPattern": "^/tracker/?$",
+      "params": [
+        "pnpp"
+      ]
+    }
+  ],
+  "detection": []
+}

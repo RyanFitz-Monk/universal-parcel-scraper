@@ -1,0 +1,34 @@
+{
+  "id": "red-star-express",
+  "displayName": "Red Star Express",
+  "aliases": [
+    "Red Star Express Plc",
+    "RedStar Express"
+  ],
+  "region": {
+    "countries": [
+      "NG"
+    ]
+  },
+  "brand": {
+    "color": "#ce100d"
+  },
+  "selectable": true,
+  "timezone": "Africa/Lagos",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://redstarplc.com/tracker/",
+    "canaryUrl": "https://redstarplc.com/tracker/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

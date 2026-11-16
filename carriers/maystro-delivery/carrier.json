@@ -1,0 +1,33 @@
+{
+  "id": "maystro-delivery",
+  "displayName": "Maystro Delivery",
+  "aliases": [
+    "Maystro"
+  ],
+  "region": {
+    "countries": [
+      "DZ"
+    ]
+  },
+  "brand": {
+    "color": "#008aff"
+  },
+  "selectable": true,
+  "timezone": "Africa/Algiers",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://maystro-delivery.com/trackingSD.html",
+    "canaryUrl": "https://maystro-delivery.com/trackingSD.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

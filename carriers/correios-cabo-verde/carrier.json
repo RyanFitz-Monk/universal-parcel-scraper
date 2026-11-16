@@ -1,0 +1,46 @@
+{
+  "id": "correios-cabo-verde",
+  "displayName": "Correios de Cabo Verde",
+  "aliases": [
+    "Correios Cabo Verde",
+    "Cabo Verde Post"
+  ],
+  "region": {
+    "countries": [
+      "CV"
+    ]
+  },
+  "brand": {
+    "color": "#e92329"
+  },
+  "selectable": true,
+  "timezone": "Atlantic/Cape_Verde",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://correios.cv/ferramentas/tracking?tracking-ids={trackingNumber}",
+    "searchUrl": "https://correios.cv/ferramentas/tracking",
+    "canaryUrl": "https://correios.cv/ferramentas/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "correios.cv",
+        "www.correios.cv"
+      ],
+      "pathPattern": "^/ferramentas/tracking/?$",
+      "params": [
+        "tracking-ids"
+      ]
+    }
+  ],
+  "detection": []
+}

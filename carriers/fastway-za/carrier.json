@@ -1,0 +1,46 @@
+{
+  "id": "fastway-za",
+  "displayName": "Fastway South Africa",
+  "aliases": [
+    "Fastway Couriers South Africa",
+    "Fastway ZA"
+  ],
+  "region": {
+    "countries": [
+      "ZA"
+    ]
+  },
+  "brand": {
+    "color": "#ba0c2f"
+  },
+  "selectable": true,
+  "timezone": "Africa/Johannesburg",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.fastway.co.za/our-services/track-your-parcel/?l={trackingNumber}",
+    "searchUrl": "https://www.fastway.co.za/our-services/track-your-parcel/",
+    "canaryUrl": "https://www.fastway.co.za/our-services/track-your-parcel/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.fastway.co.za",
+        "fastway.co.za"
+      ],
+      "pathPattern": "^/(?:our-services/track-your-parcel|tools/track)/?$",
+      "params": [
+        "l"
+      ]
+    }
+  ],
+  "detection": []
+}

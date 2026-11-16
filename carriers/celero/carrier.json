@@ -1,0 +1,34 @@
+{
+  "id": "celero",
+  "displayName": "Celero",
+  "aliases": [
+    "Celero Group"
+  ],
+  "region": {
+    "countries": [
+      "MU",
+      "MG"
+    ]
+  },
+  "brand": {
+    "color": "#f17922"
+  },
+  "selectable": true,
+  "timezone": "Indian/Mauritius",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://celerogroup.com/",
+    "canaryUrl": "https://celerogroup.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

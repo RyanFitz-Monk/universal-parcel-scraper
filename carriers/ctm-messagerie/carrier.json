@@ -1,0 +1,31 @@
+{
+  "id": "ctm-messagerie",
+  "displayName": "CTM Messagerie",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "MA"
+    ]
+  },
+  "brand": {
+    "color": "#043882"
+  },
+  "selectable": true,
+  "timezone": "Africa/Casablanca",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://ctm-messagerie.ma/fr/suivi-du-colis",
+    "canaryUrl": "https://ctm-messagerie.ma/fr/suivi-du-colis",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

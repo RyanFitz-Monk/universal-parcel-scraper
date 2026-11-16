@@ -6458,6 +6458,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "abc-cargo-express": {
+    "displayName": "ABC Cargo Express",
+    "color": "#015028",
+    "aliases": [
+      "ABC Cargo Xpress",
+      "ABC Cargo"
+    ],
+    "countries": [
+      "NG"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Lagos",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://abccargoxpress.com/",
+    "trackingSearchUrl": "https://abccargoxpress.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "abf-freight": {
     "displayName": "ABF Freight",
     "color": "#1e6630",
@@ -12010,6 +12031,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "breaze": {
+    "displayName": "Breaze",
+    "color": "#ff5800",
+    "aliases": [
+      "Breaze Delivery"
+    ],
+    "countries": [
+      "ZA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Johannesburg",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://portal.breaze.co.za/track-order",
+    "trackingUrlTemplate": "https://portal.breaze.co.za/track-order/{trackingNumber}",
+    "trackingSearchUrl": "https://portal.breaze.co.za/track-order",
+    "linkRules": [
+      {
+        "domains": [
+          "portal.breaze.co.za"
+        ],
+        "path": "^/track-order/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "brics56": {
     "displayName": "Brics56",
     "color": "#004098",
@@ -13467,6 +13516,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "celero": {
+    "displayName": "Celero",
+    "color": "#f17922",
+    "aliases": [
+      "Celero Group"
+    ],
+    "countries": [
+      "MU",
+      "MG"
+    ],
+    "selectable": true,
+    "timezone": "Indian/Mauritius",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://celerogroup.com/",
+    "trackingSearchUrl": "https://celerogroup.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "central-transport": {
     "displayName": "Central Transport",
     "color": "#fae800",
@@ -13653,6 +13723,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://www.changjiangexpress.com/Home/Query",
     "trackingSearchUrl": "https://www.changjiangexpress.com/Home/Query",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "chark-express": {
+    "displayName": "Chark Express",
+    "color": "#000000",
+    "countries": [
+      "MA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Casablanca",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://charkexpress.com/",
+    "trackingSearchUrl": "https://charkexpress.com/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -13962,6 +14049,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       }
     ]
+  },
+  "chronopost-ma": {
+    "displayName": "Chronopost Maroc",
+    "color": "#0099e0",
+    "aliases": [
+      "Chronopost Morocco",
+      "Chronopost International Maroc"
+    ],
+    "countries": [
+      "MA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Casablanca",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://chronopost.ma/suivez-votre-envoi",
+    "trackingUrlTemplate": "https://chronopost.ma/suivez-votre-envoi?SendingNumber={trackingNumber}",
+    "trackingSearchUrl": "https://chronopost.ma/suivez-votre-envoi",
+    "linkRules": [
+      {
+        "domains": [
+          "chronopost.ma",
+          "www.chronopost.ma"
+        ],
+        "pathPattern": "^/suivez-votre-envoi/?$",
+        "params": [
+          "SendingNumber"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "chukou1": {
     "displayName": "Chukou1",
@@ -14721,6 +14841,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "cn-express-za": {
+    "displayName": "CN Express",
+    "color": "#00a98e",
+    "aliases": [
+      "CN Express International"
+    ],
+    "countries": [
+      "CN",
+      "ZA"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.cnexpressintl.com/service_support/track",
+    "trackingUrlTemplate": "https://www.cnexpressintl.com/service_support/track?order_no={trackingNumber}",
+    "trackingSearchUrl": "https://www.cnexpressintl.com/service_support/track",
+    "linkRules": [
+      {
+        "domains": [
+          "www.cnexpressintl.com",
+          "cnexpressintl.com"
+        ],
+        "pathPattern": "^/service_support/track/?$",
+        "params": [
+          "order_no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "cne": {
     "displayName": "CNE Express",
     "color": "#e83828",
@@ -15251,6 +15404,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "canaryUrl": "https://www.correiosdeangola.ao/",
     "trackingSearchUrl": "https://www.correiosdeangola.ao/pesquisaencomenda.aspx",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "correios-cabo-verde": {
+    "displayName": "Correios de Cabo Verde",
+    "color": "#e92329",
+    "aliases": [
+      "Correios Cabo Verde",
+      "Cabo Verde Post"
+    ],
+    "countries": [
+      "CV"
+    ],
+    "selectable": true,
+    "timezone": "Atlantic/Cape_Verde",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://correios.cv/ferramentas/tracking",
+    "trackingUrlTemplate": "https://correios.cv/ferramentas/tracking?tracking-ids={trackingNumber}",
+    "trackingSearchUrl": "https://correios.cv/ferramentas/tracking",
+    "linkRules": [
+      {
+        "domains": [
+          "correios.cv",
+          "www.correios.cv"
+        ],
+        "pathPattern": "^/ferramentas/tracking/?$",
+        "params": [
+          "tracking-ids"
+        ]
+      }
+    ],
     "detectionRules": []
   },
   "correo-argentino": {
@@ -16301,6 +16487,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://a.ctc-expresstms2.com.tw/",
     "trackingSearchUrl": "https://a.ctc-expresstms2.com.tw/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "ctm-messagerie": {
+    "displayName": "CTM Messagerie",
+    "color": "#043882",
+    "countries": [
+      "MA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Casablanca",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ctm-messagerie.ma/fr/suivi-du-colis",
+    "trackingSearchUrl": "https://ctm-messagerie.ma/fr/suivi-du-colis",
     "linkRules": [],
     "detectionRules": []
   },
@@ -23501,6 +23704,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "fastway-za": {
+    "displayName": "Fastway South Africa",
+    "color": "#ba0c2f",
+    "aliases": [
+      "Fastway Couriers South Africa",
+      "Fastway ZA"
+    ],
+    "countries": [
+      "ZA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Johannesburg",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.fastway.co.za/our-services/track-your-parcel/",
+    "trackingUrlTemplate": "https://www.fastway.co.za/our-services/track-your-parcel/?l={trackingNumber}",
+    "trackingSearchUrl": "https://www.fastway.co.za/our-services/track-your-parcel/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.fastway.co.za",
+          "fastway.co.za"
+        ],
+        "pathPattern": "^/(?:our-services/track-your-parcel|tools/track)/?$",
+        "params": [
+          "l"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "fastwl": {
     "displayName": "Fast World Logistic",
     "color": "#f1592a",
@@ -27589,6 +27825,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "guepex": {
+    "displayName": "Guepex",
+    "color": "#c81d2e",
+    "countries": [
+      "DZ"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Algiers",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.guepex.dz/",
+    "trackingSearchUrl": "https://www.guepex.dz/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "gyujtoszallitas": {
     "displayName": "Gyűjtőszállítás.hu",
     "color": "#633388",
@@ -30414,6 +30667,35 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/website/tracking\\.html$",
         "params": [
           "sdnr"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "intigo": {
+    "displayName": "Intigo",
+    "color": "#ff7400",
+    "countries": [
+      "TN"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Tunis",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://intigo.net/",
+    "trackingUrlTemplate": "https://intigo.net/?nid={trackingNumber}",
+    "trackingSearchUrl": "https://intigo.net/",
+    "linkRules": [
+      {
+        "domains": [
+          "intigo.net",
+          "www.intigo.net"
+        ],
+        "pathPattern": "^/?$",
+        "params": [
+          "nid"
         ]
       }
     ],
@@ -37021,6 +37303,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "maystro-delivery": {
+    "displayName": "Maystro Delivery",
+    "color": "#008aff",
+    "aliases": [
+      "Maystro"
+    ],
+    "countries": [
+      "DZ"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Algiers",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://maystro-delivery.com/trackingSD.html",
+    "trackingSearchUrl": "https://maystro-delivery.com/trackingSD.html",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "mds-collivery": {
     "displayName": "MDS Collivery",
     "color": "#00823d",
@@ -37684,6 +37986,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "params": [
           "package",
           "q"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "mm-cargo-services": {
+    "displayName": "MM Cargo Services",
+    "color": "#f26522",
+    "aliases": [
+      "MMCS"
+    ],
+    "countries": [
+      "ZA",
+      "ZM"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Johannesburg",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://mmcargoservices.co.za/track",
+    "trackingUrlTemplate": "https://mmcargoservices.co.za/track?number={trackingNumber}",
+    "trackingSearchUrl": "https://mmcargoservices.co.za/track",
+    "linkRules": [
+      {
+        "domains": [
+          "mmcargoservices.co.za",
+          "www.mmcargoservices.co.za"
+        ],
+        "pathPattern": "^/track/?$",
+        "params": [
+          "number"
         ]
       }
     ],
@@ -40685,6 +41020,35 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "ozon-express-ma": {
+    "displayName": "Ozon Express",
+    "color": "#e41c29",
+    "aliases": [
+      "OzonExpress"
+    ],
+    "countries": [
+      "MA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Casablanca",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ozonexpress.ma/",
+    "trackingUrlTemplate": "https://ozonexpress.ma/tracking-colis/{trackingNumber}",
+    "trackingSearchUrl": "https://ozonexpress.ma/",
+    "linkRules": [
+      {
+        "domains": [
+          "ozonexpress.ma",
+          "www.ozonexpress.ma"
+        ],
+        "path": "^/tracking-colis/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "ozon-logistics": {
     "displayName": "Ozon",
     "color": "#005bff",
@@ -41313,6 +41677,40 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "paps": {
+    "displayName": "Paps",
+    "color": "#252e59",
+    "aliases": [
+      "Paps Logistique",
+      "Paps Logistics"
+    ],
+    "countries": [
+      "SN",
+      "CI"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Dakar",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://papslogistics.com/tracking/",
+    "trackingUrlTemplate": "https://papslogistics.com/tracking/?uid={trackingNumber}",
+    "trackingSearchUrl": "https://papslogistics.com/tracking/",
+    "linkRules": [
+      {
+        "domains": [
+          "papslogistics.com",
+          "www.papslogistics.com"
+        ],
+        "pathPattern": "^/tracking/?$",
+        "params": [
+          "uid"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "paqline": {
     "displayName": "PAQLine",
@@ -42712,6 +43110,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
           "tracking.pickit.com.ar"
         ],
         "path": "^/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
+  "pickup-mtaani": {
+    "displayName": "Pickup Mtaani",
+    "color": "#fcda45",
+    "aliases": [
+      "Pickup Mtaani Delivery"
+    ],
+    "countries": [
+      "KE"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Nairobi",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://new.pickupmtaani.com/track-package",
+    "trackingUrlTemplate": "https://new.pickupmtaani.com/track-package?package={trackingNumber}",
+    "trackingSearchUrl": "https://new.pickupmtaani.com/track-package",
+    "linkRules": [
+      {
+        "domains": [
+          "new.pickupmtaani.com"
+        ],
+        "pathPattern": "^/track-package/?$",
+        "params": [
+          "package"
+        ]
       }
     ],
     "detectionRules": []
@@ -44188,6 +44617,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/(?:fr/?)?(?:track-your-shipment/?)?$",
         "params": [
           "bniTrackingID"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "postnet-za": {
+    "displayName": "PostNet",
+    "color": "#ff0000",
+    "aliases": [
+      "PostNet South Africa",
+      "PostNet to PostNet"
+    ],
+    "countries": [
+      "ZA"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Johannesburg",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.postnet.co.za/tracker",
+    "trackingUrlTemplate": "https://www.postnet.co.za/tracker?pnpp={trackingNumber}",
+    "trackingSearchUrl": "https://www.postnet.co.za/tracker",
+    "linkRules": [
+      {
+        "domains": [
+          "www.postnet.co.za",
+          "postnet.co.za"
+        ],
+        "pathPattern": "^/tracker/?$",
+        "params": [
+          "pnpp"
         ]
       }
     ],
@@ -45750,6 +46212,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://redexpress.kg/",
     "trackingSearchUrl": "https://redexpress.kg/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "red-star-express": {
+    "displayName": "Red Star Express",
+    "color": "#ce100d",
+    "aliases": [
+      "Red Star Express Plc",
+      "RedStar Express"
+    ],
+    "countries": [
+      "NG"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Lagos",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://redstarplc.com/tracker/",
+    "trackingSearchUrl": "https://redstarplc.com/tracker/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -61026,6 +61509,7 @@ export const CARRIER_IDS = [
   "a3-transport",
   "aaa-cooper",
   "ab-courier",
+  "abc-cargo-express",
   "abf-freight",
   "ace-ee",
   "ace-lt",
@@ -61188,6 +61672,7 @@ export const CARRIER_IDS = [
   "braspress",
   "brauns-express",
   "brazil-border",
+  "breaze",
   "brics56",
   "bridge-intl",
   "bringer-parcel",
@@ -61232,11 +61717,13 @@ export const CARRIER_IDS = [
   "cdl",
   "cel-changda",
   "celeritas",
+  "celero",
   "central-transport",
   "centurion-transport",
   "ceska-posta",
   "ceva-logistics",
   "changjiang-express",
+  "chark-express",
   "chazki",
   "cheetah-delivery",
   "chic-express",
@@ -61246,6 +61733,7 @@ export const CARRIER_IDS = [
   "chit-chats",
   "choir-express",
   "chronodiali",
+  "chronopost-ma",
   "chukou1",
   "chunghwa-post",
   "chunil",
@@ -61267,6 +61755,7 @@ export const CARRIER_IDS = [
   "ckeex",
   "closer-logistics",
   "cmt-express",
+  "cn-express-za",
   "cne",
   "codexpress",
   "collicare",
@@ -61281,6 +61770,7 @@ export const CARRIER_IDS = [
   "corporate-couriers",
   "corre",
   "correios-angola",
+  "correios-cabo-verde",
   "correo-argentino",
   "correo-paraguayo",
   "correo-uruguayo",
@@ -61314,6 +61804,7 @@ export const CARRIER_IDS = [
   "csomagpiac",
   "cst-italia",
   "ctc-express",
+  "ctm-messagerie",
   "cts-group",
   "cttyex",
   "cupost",
@@ -61512,6 +62003,7 @@ export const CARRIER_IDS = [
   "fastgo",
   "fastship-th",
   "fasttrack-ar",
+  "fastway-za",
   "fastwl",
   "favorita-transportes",
   "fedex-freight",
@@ -61628,6 +62120,7 @@ export const CARRIER_IDS = [
   "gta-airskip",
   "gtl-goto",
   "guatex",
+  "guepex",
   "gyujtoszallitas",
   "gzyl",
   "hadeland-bud",
@@ -61714,6 +62207,7 @@ export const CARRIER_IDS = [
   "intertown-transport",
   "intex-courier",
   "intex-paketdienst",
+  "intigo",
   "intime-bg",
   "intime-hr",
   "ipostel",
@@ -61908,6 +62402,7 @@ export const CARRIER_IDS = [
   "maxzeego",
   "may-courier",
   "mayiyinfu",
+  "maystro-delivery",
   "mds-collivery",
   "mebel-taxi",
   "meest",
@@ -61930,6 +62425,7 @@ export const CARRIER_IDS = [
   "miller-deliveries",
   "mira-transportes",
   "mixpakk",
+  "mm-cargo-services",
   "mng-kargo",
   "mobel-services",
   "mobi-logistica",
@@ -62018,6 +62514,7 @@ export const CARRIER_IDS = [
   "overnite",
   "overseas-express",
   "oxperta-express",
+  "ozon-express-ma",
   "ozon-logistics",
   "pack-man",
   "packli-punkt",
@@ -62036,6 +62533,7 @@ export const CARRIER_IDS = [
   "pannon-xp",
   "paositra-malagasy",
   "paperfly",
+  "paps",
   "paqline",
   "paquetexpress",
   "paquexpress-urgente",
@@ -62074,6 +62572,7 @@ export const CARRIER_IDS = [
   "pflogistics",
   "phlpost",
   "pickit",
+  "pickup-mtaani",
   "pickupp",
   "pickupp-sg",
   "pigeon-express",
@@ -62111,6 +62610,7 @@ export const CARRIER_IDS = [
   "poste-srpske",
   "postex",
   "postmedia-parcel-services",
+  "postnet-za",
   "postplus",
   "posturinn",
   "ppl",
@@ -62160,6 +62660,7 @@ export const CARRIER_IDS = [
   "recibelo",
   "red-courier-gr",
   "red-express",
+  "red-star-express",
   "redbox-mv",
   "redpack",
   "redur",
@@ -62741,6 +63242,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "a3-transport": [],
   "aaa-cooper": [],
   "ab-courier": [],
+  "abc-cargo-express": [],
   "abf-freight": [],
   "ace-ee": [],
   "ace-lt": [],
@@ -62903,6 +63405,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "braspress": [],
   "brauns-express": [],
   "brazil-border": [],
+  "breaze": [],
   "brics56": [],
   "bridge-intl": [],
   "bringer-parcel": ["bringer-parcel-1"],
@@ -62947,11 +63450,13 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "cdl": ["cdl-1","cdl-2"],
   "cel-changda": [],
   "celeritas": [],
+  "celero": [],
   "central-transport": [],
   "centurion-transport": [],
   "ceska-posta": ["ceska-posta-1","ceska-posta-s10"],
   "ceva-logistics": [],
   "changjiang-express": [],
+  "chark-express": [],
   "chazki": [],
   "cheetah-delivery": [],
   "chic-express": [],
@@ -62961,6 +63466,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "chit-chats": ["chit-chats-1"],
   "choir-express": [],
   "chronodiali": ["chronodiali-1","chronodiali-2"],
+  "chronopost-ma": [],
   "chukou1": ["chukou1-1"],
   "chunghwa-post": ["chunghwa-post-1","chunghwa-post-2"],
   "chunil": [],
@@ -62982,6 +63488,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ckeex": [],
   "closer-logistics": [],
   "cmt-express": [],
+  "cn-express-za": [],
   "cne": ["cne-1"],
   "codexpress": [],
   "collicare": [],
@@ -62996,6 +63503,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "corporate-couriers": [],
   "corre": ["corre-s10"],
   "correios-angola": [],
+  "correios-cabo-verde": [],
   "correo-argentino": ["correo-argentino-s10"],
   "correo-paraguayo": [],
   "correo-uruguayo": ["correo-uruguayo-s10"],
@@ -63029,6 +63537,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "csomagpiac": [],
   "cst-italia": ["cst-italia-1","cst-italia-2"],
   "ctc-express": [],
+  "ctm-messagerie": [],
   "cts-group": [],
   "cttyex": ["cttyex-1"],
   "cupost": [],
@@ -63227,6 +63736,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "fastgo": ["fastgo-1"],
   "fastship-th": [],
   "fasttrack-ar": [],
+  "fastway-za": [],
   "fastwl": [],
   "favorita-transportes": [],
   "fedex-freight": [],
@@ -63343,6 +63853,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "gta-airskip": ["gta-airskip-1"],
   "gtl-goto": ["gtl-goto-1","gtl-goto-2"],
   "guatex": [],
+  "guepex": [],
   "gyujtoszallitas": [],
   "gzyl": ["gzyl-1","gzyl-2"],
   "hadeland-bud": [],
@@ -63429,6 +63940,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "intertown-transport": [],
   "intex-courier": [],
   "intex-paketdienst": [],
+  "intigo": [],
   "intime-bg": [],
   "intime-hr": [],
   "ipostel": [],
@@ -63623,6 +64135,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "maxzeego": [],
   "may-courier": [],
   "mayiyinfu": ["mayiyinfu-1","mayiyinfu-2"],
+  "maystro-delivery": [],
   "mds-collivery": [],
   "mebel-taxi": [],
   "meest": ["meest-1","meest-2","meest-3"],
@@ -63645,6 +64158,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "miller-deliveries": [],
   "mira-transportes": [],
   "mixpakk": [],
+  "mm-cargo-services": [],
   "mng-kargo": [],
   "mobel-services": [],
   "mobi-logistica": [],
@@ -63733,6 +64247,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "overnite": [],
   "overseas-express": [],
   "oxperta-express": [],
+  "ozon-express-ma": [],
   "ozon-logistics": ["ozon-logistics-1","ozon-logistics-2"],
   "pack-man": [],
   "packli-punkt": [],
@@ -63751,6 +64266,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pannon-xp": ["pannon-xp-1"],
   "paositra-malagasy": [],
   "paperfly": ["paperfly-1","paperfly-2","paperfly-3"],
+  "paps": [],
   "paqline": [],
   "paquetexpress": ["paquetexpress-1","paquetexpress-2"],
   "paquexpress-urgente": [],
@@ -63789,6 +64305,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pflogistics": ["pflogistics-1"],
   "phlpost": ["phlpost-s10"],
   "pickit": [],
+  "pickup-mtaani": [],
   "pickupp": ["pickupp-1"],
   "pickupp-sg": ["pickupp-sg-1"],
   "pigeon-express": [],
@@ -63826,6 +64343,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "poste-srpske": [],
   "postex": [],
   "postmedia-parcel-services": [],
+  "postnet-za": [],
   "postplus": [],
   "posturinn": ["posturinn-s10"],
   "ppl": ["ppl-1"],
@@ -63875,6 +64393,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "recibelo": [],
   "red-courier-gr": [],
   "red-express": [],
+  "red-star-express": [],
   "redbox-mv": [],
   "redpack": [],
   "redur": [],

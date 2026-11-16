@@ -1,0 +1,44 @@
+{
+  "id": "pickup-mtaani",
+  "displayName": "Pickup Mtaani",
+  "aliases": [
+    "Pickup Mtaani Delivery"
+  ],
+  "region": {
+    "countries": [
+      "KE"
+    ]
+  },
+  "brand": {
+    "color": "#fcda45"
+  },
+  "selectable": true,
+  "timezone": "Africa/Nairobi",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://new.pickupmtaani.com/track-package?package={trackingNumber}",
+    "searchUrl": "https://new.pickupmtaani.com/track-package",
+    "canaryUrl": "https://new.pickupmtaani.com/track-package",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "new.pickupmtaani.com"
+      ],
+      "pathPattern": "^/track-package/?$",
+      "params": [
+        "package"
+      ]
+    }
+  ],
+  "detection": []
+}
