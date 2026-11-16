@@ -155,6 +155,18 @@ export function upsActivityStage(code: string): Stage | undefined {
  */
 const NOTICE_CODES = new Set(['L0', 'L8', 'WH']);
 
+/**
+ * Requests the map reads in transit because the parcel goes on after them: an address correction, the receiver's
+ * changes of address, access point or delivery, and an upgrade or a Saturday delivery asked for. Before UPS has the
+ * parcel they move nothing.
+ */
+const REQUEST_CODES = new Set(['AL', 'H6', 'TB', 'VM', 'ZA', 'ZB', 'ZC', 'RF']);
+
+/** Whether a scan's `actCode` is a request rather than a movement. */
+export function isUpsRequest(code: string | undefined): boolean {
+  return REQUEST_CODES.has((code ?? '').trim().toUpperCase());
+}
+
 /** Whether a scan's `actCode` is a notice the stage is not read from. */
 export function isUpsNotice(code: string | undefined): boolean {
   return NOTICE_CODES.has((code ?? '').trim().toUpperCase());

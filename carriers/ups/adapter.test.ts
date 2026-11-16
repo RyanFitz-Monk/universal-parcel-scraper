@@ -309,6 +309,17 @@ describe('UPS structured response', () => {
       .toEqual([['L0', 'registered', 'none'], ['MP', 'registered', 'carrier_map']]);
     expect(statusMapAnswer({ carrier: 'ups', providerCode: 'L0', description: 'delivery instructions have been provided by the receiver.' }))
       .toMatchObject({ kind: 'intentional_gap', note: expect.stringContaining('keeps the stage of the scan before it') });
+    // A request while UPS has only the label keeps the label's stage, so the origin scan after it is no step back.
+    const upgraded = (scans: Record<string, unknown>[]) => parseUPSTrackingResponse(withScans(scans, { progressBarType: 'InTransit' }), TRACKING_NUMBER, TODAY);
+    const request = scan('ZA', 'We have upgraded the package as requested.', '20261114 16:31:58');
+    const label = scan('MP', 'Shipper created a label, UPS has not received the package yet. ', '20261114 15:53:44', 'United States');
+    expect(upgraded([request, label])).toMatchObject({ status: 'pending', current_stage: 'registered' });
+    expect(upgraded([request, label]).events?.[0]).toMatchObject({ provider_code: 'ZA', stage: 'registered', stage_source: 'none' });
+    expect(upgraded([scan('OR', 'Arrived at Facility', '20261116 12:56:52'), request, label]).events?.map((event) => event.stage))
+      .toEqual(['accepted', 'registered', 'registered']);
+    // Once UPS has the parcel, the request keeps it in transit.
+    expect(upgraded([request, scan('AR', 'Arrived at Facility', '20261114 10:00:00')]).events?.[0])
+      .toMatchObject({ stage: 'in_transit', stage_source: 'carrier_map' });
     // A government agency's hold and release share VK: the map leaves each wording to the shared rules.
     for (const description of ["Your package is pending release from a Government Agency. We'll notify the receiver or sender if information is needed.",
       'Your package has been released by a government agency.']) {

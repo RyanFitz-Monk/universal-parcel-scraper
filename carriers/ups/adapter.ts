@@ -17,7 +17,7 @@ import { otherRegionZones, regionZone } from '../../places/zones.js';
 import { clean, cleanScalar, decodeText, fetchBounded, parseJsonBytes, TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
 import { UPSApiClient, upsApiCredentials, upsApiNotFound, upsApiNotices, type UPSApiCredentials } from './api.js';
-import { isUpsNotice, UPS_PROGRESS_STATUS, UPS_STATUS_TYPE, upsActivityStage, upsBannerStage, upsRecipientAction, upsStatus, upsUncodedScanStage } from './status.js';
+import { isUpsNotice, isUpsRequest, UPS_PROGRESS_STATUS, UPS_STATUS_TYPE, upsActivityStage, upsBannerStage, upsRecipientAction, upsStatus, upsUncodedScanStage } from './status.js';
 import { decodeEntities } from './text.js';
 
 const TRACKING_BASE = 'https://www.ups.com/track';
@@ -347,6 +347,22 @@ function keepNoticeStages(events: CarrierEvent[]): void {
   }
 }
 
+/**
+ * A request UPS lists while it has only the label ("We have upgraded the package as requested") keeps the label's
+ * stage: the parcel has not moved, and the origin scan after it is no step back. Events are newest first.
+ */
+function requestsBeforeParcel(events: CarrierEvent[]): void {
+  let previous: string | undefined;
+  for (const event of [...events].reverse()) {
+    if (isUpsNotice(event.provider_code)) continue;
+    if (isUpsRequest(event.provider_code) && previous === 'registered') {
+      Object.assign(event, { stage: previous, stage_source: 'none' });
+    } else if (event.stage) {
+      previous = event.stage;
+    }
+  }
+}
+
 /** Stages a parcel reaches only on its delivery leg. */
 /** Delivered to an access point, and held there: the scans whose parcel waits at the reply's access point. */
 const AT_ACCESS_POINT: ReadonlySet<string> = new Set(['2Q', 'ZP']);
@@ -568,6 +584,7 @@ export function parseUPSTrackingResponse(
     }
   }
   laterPickupsInTransit(events);
+  requestsBeforeParcel(events);
   keepNoticeStages(events);
   const newest = events[0];
   // UPS lists the newest scan first. Its code outranks the coarse progress
@@ -778,6 +795,7 @@ export function parseUPSApiResponse(payload: unknown, trackingNumber: string): C
     });
   }
   laterPickupsInTransit(events);
+  requestsBeforeParcel(events);
   keepNoticeStages(events);
   // The API lists the newest scan first; its code outranks the status type. A notice is no scan.
   const newest = events[0];
