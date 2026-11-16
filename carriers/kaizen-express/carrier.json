@@ -1,0 +1,34 @@
+{
+  "id": "kaizen-express",
+  "displayName": "Kaizen Express",
+  "aliases": [
+    "Kaizen Expres",
+    "Kaizen Expres, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#24242b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.kaizenexpres.com/seguimiento/",
+    "canaryUrl": "https://www.kaizenexpres.com/seguimiento/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

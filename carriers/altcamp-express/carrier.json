@@ -1,0 +1,34 @@
+{
+  "id": "altcamp-express",
+  "displayName": "Altcamp Express",
+  "aliases": [
+    "Alt Camp Express",
+    "Alt Camp Express, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#fecf2f"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://valls.factapp.es/IRIS/Seguimiento",
+    "canaryUrl": "https://valls.factapp.es/IRIS/Seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

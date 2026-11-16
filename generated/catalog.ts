@@ -7913,6 +7913,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "altcamp-express": {
+    "displayName": "Altcamp Express",
+    "color": "#fecf2f",
+    "aliases": [
+      "Alt Camp Express",
+      "Alt Camp Express, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://valls.factapp.es/IRIS/Seguimiento",
+    "trackingSearchUrl": "https://valls.factapp.es/IRIS/Seguimiento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "am-home-delivery": {
     "displayName": "AM Home Delivery",
     "color": "#013e81",
@@ -31669,6 +31690,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "kaizen-express": {
+    "displayName": "Kaizen Express",
+    "color": "#24242b",
+    "aliases": [
+      "Kaizen Expres",
+      "Kaizen Expres, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.kaizenexpres.com/seguimiento/",
+    "trackingSearchUrl": "https://www.kaizenexpres.com/seguimiento/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "kakao-t-same-day": {
     "displayName": "Kakao T Same-Day Delivery",
     "color": "#282d4b",
@@ -35807,6 +35849,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://maxzeego.com/",
     "trackingSearchUrl": "https://maxzeego.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "may-courier": {
+    "displayName": "May Courier",
+    "color": "#cb241a",
+    "aliases": [
+      "May Courier International",
+      "May Courier Madrid",
+      "May Courier Madrid, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://maycouriermadrid.com/consulta-tu-envio/",
+    "trackingSearchUrl": "https://maycouriermadrid.com/consulta-tu-envio/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -40084,6 +40148,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       }
     ]
+  },
+  "paquexpress-urgente": {
+    "displayName": "Paquexpress Urgente",
+    "color": "#d1122a",
+    "aliases": [
+      "Paquexpress",
+      "Paquexpress Urgente, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.paquexpressurgente.com/go/seguimiento",
+    "trackingSearchUrl": "https://www.paquexpressurgente.com/go/seguimiento",
+    "linkRules": [],
+    "detectionRules": []
   },
   "parcel-one": {
     "displayName": "PARCEL.ONE",
@@ -59039,6 +59124,7 @@ export const CARRIER_IDS = [
   "allied-express",
   "alljoy",
   "alphastline",
+  "altcamp-express",
   "am-home-delivery",
   "amalgamated-distribution",
   "ambro-express",
@@ -59709,6 +59795,7 @@ export const CARRIER_IDS = [
   "junfeng-international",
   "juxi-express",
   "jy-express",
+  "kaizen-express",
   "kakao-t-same-day",
   "kanga-services",
   "kargoist",
@@ -59829,6 +59916,7 @@ export const CARRIER_IDS = [
   "mauritius-post",
   "max-pakket",
   "maxzeego",
+  "may-courier",
   "mayiyinfu",
   "mds-collivery",
   "mebel-taxi",
@@ -59954,6 +60042,7 @@ export const CARRIER_IDS = [
   "paositra-malagasy",
   "paperfly",
   "paquetexpress",
+  "paquexpress-urgente",
   "parcel-one",
   "parcelabc",
   "parceljet",
@@ -60671,6 +60760,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "allied-express": [],
   "alljoy": ["alljoy-1","alljoy-2"],
   "alphastline": ["alphastline-1"],
+  "altcamp-express": [],
   "am-home-delivery": [],
   "amalgamated-distribution": [],
   "ambro-express": [],
@@ -61341,6 +61431,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "junfeng-international": [],
   "juxi-express": ["juxi-express-1","juxi-express-2"],
   "jy-express": [],
+  "kaizen-express": [],
   "kakao-t-same-day": [],
   "kanga-services": [],
   "kargoist": ["kargoist-1"],
@@ -61461,6 +61552,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "mauritius-post": [],
   "max-pakket": [],
   "maxzeego": [],
+  "may-courier": [],
   "mayiyinfu": ["mayiyinfu-1","mayiyinfu-2"],
   "mds-collivery": [],
   "mebel-taxi": [],
@@ -61586,6 +61678,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "paositra-malagasy": [],
   "paperfly": ["paperfly-1","paperfly-2","paperfly-3"],
   "paquetexpress": ["paquetexpress-1","paquetexpress-2"],
+  "paquexpress-urgente": [],
   "parcel-one": [],
   "parcelabc": [],
   "parceljet": [],

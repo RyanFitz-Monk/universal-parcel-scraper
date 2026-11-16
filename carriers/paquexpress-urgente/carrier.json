@@ -1,0 +1,34 @@
+{
+  "id": "paquexpress-urgente",
+  "displayName": "Paquexpress Urgente",
+  "aliases": [
+    "Paquexpress",
+    "Paquexpress Urgente, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#d1122a"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.paquexpressurgente.com/go/seguimiento",
+    "canaryUrl": "https://www.paquexpressurgente.com/go/seguimiento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

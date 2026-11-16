@@ -1,0 +1,35 @@
+{
+  "id": "may-courier",
+  "displayName": "May Courier",
+  "aliases": [
+    "May Courier International",
+    "May Courier Madrid",
+    "May Courier Madrid, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#cb241a"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://maycouriermadrid.com/consulta-tu-envio/",
+    "canaryUrl": "https://maycouriermadrid.com/consulta-tu-envio/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}
