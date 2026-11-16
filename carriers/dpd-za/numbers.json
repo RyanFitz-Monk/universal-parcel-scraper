@@ -219,6 +219,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -276,6 +277,7 @@
           "dpd-hu",
           "dpd-nl",
           "dpd-pt",
+          "gls-nl",
           "jadlog",
           "xpressbees"
         ]

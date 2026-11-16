@@ -49,6 +49,7 @@
           "zto",
           "j-and-t",
           "gls-at",
+          "gls-nl",
           "gls-pl",
           "lbc-express",
           "metropolitan-warehouse",
@@ -97,6 +98,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -116,6 +118,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -241,6 +244,7 @@
           "zto",
           "j-and-t",
           "gls-at",
+          "gls-nl",
           "gls-pl",
           "lbc-express",
           "metropolitan-warehouse",
@@ -317,6 +321,7 @@
           "zto",
           "j-and-t",
           "gls-at",
+          "gls-nl",
           "gls-pl",
           "lbc-express",
           "metropolitan-warehouse",
@@ -359,6 +364,7 @@
           "dpd-nl",
           "dpd-pt",
           "dpd-uk",
+          "gls-nl",
           "jadlog"
         ]
       },
@@ -399,6 +405,7 @@
           "dpd-nl",
           "dpd-pt",
           "dpd-uk",
+          "gls-nl",
           "jadlog"
         ]
       },
@@ -439,6 +446,7 @@
           "dpd-nl",
           "dpd-pt",
           "dpd-uk",
+          "gls-nl",
           "jadlog"
         ]
       },
@@ -752,6 +760,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },

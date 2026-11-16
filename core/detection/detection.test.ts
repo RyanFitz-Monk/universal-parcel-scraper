@@ -476,7 +476,7 @@ describe('the detection engine', () => {
     expect(detectCarrierMatch('06080000000002')).toMatchObject({
       carrier: 'unknown', confidence: 'low', preferred: ['dpd'],
       candidates: ['dpd', 'dpd-fr', 'chronopost', 'ciblex', 'seur', 'brt', 'dhl-ecommerce-uk', 'dpd-be', 'dpd-de', 'dpd-hu', 'dpd-nl', 'dpd-pt', 'dpd-uk',
-        'jadlog'],
+        'gls-nl', 'jadlog'],
     });
     // DPD Switzerland's forms ask for numbers starting with 060.
     for (const number of ['06000000000003', '06030000000002', '06190000000001']) {

@@ -37,8 +37,10 @@ describe('carrier names reported by universal providers', () => {
     expect(brandCarrierForNumber('DPD Group', '06460000000002')).toBeUndefined();
     // Germany and the UK share the number shape; the bare brand cannot pick a country.
     expect(brandCarrierForNumber('DPD Group', '20000000000002')).toBeUndefined();
+    // Of GLS's networks, only GLS Netherlands issues fourteen digits.
+    expect(brandCarrierForNumber('GLS', '06080000000002')).toBe('gls-nl');
     // The number is no network of the brand at all.
-    expect(brandCarrierForNumber('GLS', '06080000000002')).toBeUndefined();
+    expect(brandCarrierForNumber('GLS', '0608000000002')).toBeUndefined();
     // Not a bare brand.
     expect(brandCarrierForNumber('Swiss Post', '06080000000002')).toBeUndefined();
   });

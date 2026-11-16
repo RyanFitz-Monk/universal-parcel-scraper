@@ -8,8 +8,15 @@
       "derivedFrom": "official_shape",
       "shapeConfirmed": "2026-09-12",
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "Made-up number that follows the published format."
     },
@@ -21,8 +28,15 @@
         "url": "https://forum.quechoisir.org/probleme-colis-mondial-relay-gls-t286523.html"
       },
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "Publicly reported shipment number; the attribution was not independently verified."
     },
@@ -34,8 +48,15 @@
         "url": "https://marketplace.fnacdarty.com/s/article/Dois-je-obligatoirement-renseigner-un-num%C3%A9ro-de-suivi-tracking-pour-ma-commande?language=fr_BE"
       },
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "Published integration example, not a real shipment."
     },
@@ -65,6 +86,7 @@
           "zto",
           "j-and-t",
           "gls-at",
+          "gls-nl",
           "gls-pl",
           "lbc-express",
           "metropolitan-warehouse",
@@ -118,6 +140,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -179,6 +202,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -206,6 +230,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -227,8 +252,15 @@
         "assessment": "confirmed"
       },
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "One of three parcels a GLS France review lists; GLS France's tracker returns the history."
     },
@@ -248,8 +280,15 @@
         "assessment": "confirmed"
       },
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "One of three parcels a GLS France review lists; GLS France's tracker returns the history."
     },
@@ -269,8 +308,15 @@
         "assessment": "confirmed"
       },
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "One of three parcels a GLS France review lists; GLS France's tracker returns the history."
     },
@@ -296,6 +342,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },
@@ -317,8 +364,15 @@
         "assessment": "confirmed"
       },
       "expect": {
-        "carrier": "gls-fr",
-        "confidence": "high"
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "gls-fr",
+          "gls-ch",
+          "gls-de",
+          "gls-nl",
+          "loggi"
+        ]
       },
       "note": "A GLS France review names this parcel after a postponed delivery; GLS France's tracker returns the history."
     }

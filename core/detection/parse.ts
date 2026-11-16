@@ -188,8 +188,8 @@ export function parseTrackingInput(raw: string): TrackingInputMatch {
     const trackingUrl = trimPastedUrl(pastedUrl);
     try {
       const url = new URL(trackingUrl);
-      const rules = linkRulesForHost(url.hostname.toLowerCase()).filter((candidate) =>
-        !candidate.pathPattern || candidate.pathPattern.test(url.pathname));
+      const hostRules = linkRulesForHost(url.hostname.toLowerCase());
+      const rules = hostRules.filter((candidate) => !candidate.pathPattern || candidate.pathPattern.test(url.pathname));
       // The longer matching domain comes first, then a rule bound to a path on it.
       const specificity = (rule: TrackingLinkRule) => Math.max(...rule.domains.filter((domain) => matchesDomain(url.hostname.toLowerCase(), domain)).map((domain) => domain.length));
       rules.sort((a, b) => specificity(b) - specificity(a) || Number(Boolean(b.pathPattern)) - Number(Boolean(a.pathPattern)));
@@ -199,8 +199,11 @@ export function parseTrackingInput(raw: string): TrackingInputMatch {
           const detected = detectCarrierMatch(trackingNumber);
           const suggestedRules = rules.filter((candidate) => detected.candidates.includes(candidate.carrier));
           const suggestedCarriers = new Set(suggestedRules.map((candidate) => candidate.carrier));
+          // A group-wide link leaves a shared number to detection, as when its number prefers
+          // another network with links of its own on this host.
           if (firstRule.detectFromNumber && (detected.confidence === 'high'
-            || (detected.confidence === 'low' && suggestedCarriers.size > 1))) {
+            || (detected.confidence === 'low' && (suggestedCarriers.size > 1 || detected.preferred.some((carrier) =>
+              carrier !== firstRule.carrier && hostRules.some((candidate) => candidate.carrier === carrier)))))) {
             return { trackingNumber, ...detected, source: 'link' };
           }
           const rule = detected.confidence === 'high'

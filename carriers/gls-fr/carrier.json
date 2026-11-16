@@ -98,7 +98,8 @@
     {
       "id": "gls-fr-1",
       "pattern": "^00(?=[A-Z0-9]{6}$)(?=.*[A-Z])(?=.*\\d)[A-Z0-9]{6}$",
-      "confidence": "high"
+      "confidence": "low",
+      "preferred": true
     },
     {
       "id": "gls-fr-2",

@@ -1574,7 +1574,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "detectionRules": [
       {
         "pattern": "^00(?=[A-Z0-9]{6}$)(?=.*[A-Z])(?=.*\\d)[A-Z0-9]{6}$",
-        "confidence": "high"
+        "confidence": "low",
+        "preferred": true
       },
       {
         "pattern": "^(?=[A-Z0-9]{8}$)(?=.*[A-Z])(?=.*\\d)[A-Z0-9]{8}$",
@@ -25584,6 +25585,75 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       },
       {
         "pattern": "^[A-Z]\\d{10}$",
+        "confidence": "low"
+      }
+    ]
+  },
+  "gls-nl": {
+    "displayName": "GLS Netherlands",
+    "color": "#ffdd00",
+    "aliases": [
+      "GLS Nederland",
+      "GLS NL",
+      "General Logistics Systems Netherlands"
+    ],
+    "countries": [
+      "NL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "gls-nl",
+      "requirements": [
+        {
+          "field": "postcode",
+          "validator": "internationalPostcode",
+          "optional": true,
+          "showsMore": true,
+          "label": "Delivery postcode",
+          "type": "text",
+          "placeholder": "1012 AB",
+          "help": "GLS Netherlands shows a parcel only with its delivery postcode. Without it, other sources are asked.",
+          "pattern": "^(?=.{3,12}$)(?=.*[0-9])[A-Za-z0-9]+(?:[ \\-][A-Za-z0-9]+)*$",
+          "maxLength": 12,
+          "inputMode": "text",
+          "autoComplete": "postal-code"
+        }
+      ],
+      "refresh": {
+        "minMinutes": 60,
+        "afterFailureMinutes": 240
+      },
+      "localClocks": true
+    },
+    "canaryUrl": "https://www.gls-info.nl/tracking",
+    "trackingUrlTemplate": "https://www.gls-info.nl/tracking",
+    "trackingSearchUrl": "https://www.gls-info.nl/tracking",
+    "linkRules": [
+      {
+        "domains": [
+          "gls-info.nl"
+        ],
+        "pathPattern": "^/tracking(?:/ttlink)?/?$",
+        "params": [
+          "parcelNo",
+          "NDOC"
+        ]
+      }
+    ],
+    "detectionRules": [
+      {
+        "pattern": "^\\d{14}$",
+        "confidence": "low"
+      },
+      {
+        "pattern": "^\\d{12}$",
+        "confidence": "low",
+        "checksum": "gls"
+      },
+      {
+        "pattern": "^(?=[A-Z0-9]{8}$)(?=.*[A-Z])(?=.*\\d)[A-Z0-9]{8}$",
         "confidence": "low"
       }
     ]
@@ -59462,6 +59532,7 @@ export const CARRIER_IDS = [
   "gls-ca",
   "gls-es",
   "gls-it",
+  "gls-nl",
   "gls-pl",
   "gls-us",
   "gms-worldwide",
@@ -61093,6 +61164,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "gls-ca": [],
   "gls-es": ["gls-es-1","gls-es-2"],
   "gls-it": ["gls-it-1","gls-it-digit-depot"],
+  "gls-nl": ["gls-nl-1","gls-nl-2","gls-nl-3"],
   "gls-pl": ["gls-pl-1","gls-pl-2"],
   "gls-us": ["gls-us-1"],
   "gms-worldwide": [],

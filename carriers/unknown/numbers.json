@@ -42,6 +42,7 @@
           "dpd-nl",
           "dpd-pt",
           "dpd-uk",
+          "gls-nl",
           "jadlog"
         ]
       },
@@ -70,6 +71,7 @@
           "dpd-nl",
           "dpd-pt",
           "dpd-uk",
+          "gls-nl",
           "jadlog",
           "xpressbees"
         ]
@@ -243,6 +245,7 @@
           "gls-ch",
           "gls-fr",
           "gls-de",
+          "gls-nl",
           "loggi"
         ]
       },

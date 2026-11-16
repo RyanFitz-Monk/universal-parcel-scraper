@@ -1,0 +1,129 @@
+{
+  "id": "gls-nl",
+  "displayName": "GLS Netherlands",
+  "aliases": [
+    "GLS Nederland",
+    "GLS NL",
+    "General Logistics Systems Netherlands"
+  ],
+  "region": {
+    "countries": [
+      "NL"
+    ]
+  },
+  "brand": {
+    "color": "#ffdd00"
+  },
+  "selectable": true,
+  "timezone": "Europe/Amsterdam",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "gls-nl",
+    "requirements": [
+      {
+        "field": "postcode",
+        "validator": "internationalPostcode",
+        "optional": true,
+        "showsMore": true,
+        "label": "Delivery postcode",
+        "type": "text",
+        "placeholder": "1012 AB",
+        "help": "GLS Netherlands shows a parcel only with its delivery postcode. Without it, other sources are asked.",
+        "pattern": "^(?=.{3,12}$)(?=.*[0-9])[A-Za-z0-9]+(?:[ \\-][A-Za-z0-9]+)*$",
+        "maxLength": 12,
+        "inputMode": "text",
+        "autoComplete": "postal-code"
+      }
+    ],
+    "steps": [
+      "direct"
+    ],
+    "localClocks": true,
+    "refresh": {
+      "minMinutes": 60,
+      "afterFailureMinutes": 240
+    }
+  },
+  "capabilities": [
+    "history",
+    "location",
+    "eta",
+    "eta_window",
+    "pickup_point",
+    "weight",
+    "delivered_at",
+    "destination_country",
+    "provider_code"
+  ],
+  "portal": {
+    "url": "https://www.gls-info.nl/tracking",
+    "searchUrl": "https://www.gls-info.nl/tracking",
+    "canaryUrl": "https://www.gls-info.nl/tracking",
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "eta_window",
+      "pickup_point",
+      "weight",
+      "dimensions",
+      "sender_name",
+      "recipient_name",
+      "recipient_address",
+      "coordinates"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "eta",
+      "eta_window",
+      "pickup_point",
+      "weight",
+      "delivered_at",
+      "destination_country",
+      "provider_code"
+    ],
+    "discarded": [
+      "dimensions",
+      "sender_name",
+      "recipient_name",
+      "recipient_address",
+      "coordinates"
+    ],
+    "unavailable": [
+      "offset_timestamps"
+    ]
+  },
+  "links": [
+    {
+      "domains": [
+        "gls-info.nl"
+      ],
+      "pathPattern": "^/tracking(?:/ttlink)?/?$",
+      "params": [
+        "parcelNo",
+        "NDOC"
+      ]
+    }
+  ],
+  "detection": [
+    {
+      "id": "gls-nl-1",
+      "pattern": "^\\d{14}$",
+      "confidence": "low"
+    },
+    {
+      "id": "gls-nl-2",
+      "pattern": "^\\d{12}$",
+      "confidence": "low",
+      "checksum": "gls"
+    },
+    {
+      "id": "gls-nl-3",
+      "pattern": "^(?=[A-Z0-9]{8}$)(?=.*[A-Z])(?=.*\\d)[A-Z0-9]{8}$",
+      "confidence": "low"
+    }
+  ]
+}

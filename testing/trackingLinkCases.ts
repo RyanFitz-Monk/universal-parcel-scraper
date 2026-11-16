@@ -2255,6 +2255,7 @@ export const trackingLinkCases: TrackingLinkCase[] = [
  * tracking comes from shared providers, not the page the link opens.
  */
 export const uncheckedTrackingLinks: Partial<Record<CarrierId, string>> = {
+  'gls-nl': 'the tracker shows a parcel only with its delivery postcode, which the generated link does not carry, so the link opens the empty search form',
   'fan-courier-international': 'the tracking page takes the number only from its own form post, so the link opens the empty form; native tracking calls the status API behind it',
   'j-and-t-br': 'the current page ignores the waybill query and searches only after its number-only form and Tencent callback; native retrieval fills that form in a scoped browser helper',
   zheldor: 'the printed-number page submits a picture code; native tracking uses the separate official QR guest flow, which the rendered-link canary does not submit',

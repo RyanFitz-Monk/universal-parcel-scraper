@@ -89,6 +89,9 @@ this confirmation before they can identify the French network.
   valid GLS check digit. A GLS parcel number is 11 digits, so a 12-digit number is
   looked up by its first 11 and, only if that is not found, once more as printed;
   either way the parcel is identified by its 11 digits.
+- GLS Netherlands issues track IDs of `00` and six letters and digits too, so
+  detection lists GLS France first for them at low confidence, and recognition
+  confirms the French ones.
 - No weight or dimensions in the response, so those capabilities are not declared.
 - The endpoint only keeps recent parcels: older numbers answer the "no command
   found" 404.

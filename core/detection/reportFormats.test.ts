@@ -307,9 +307,10 @@ describe('evidence-backed tracking formats', () => {
       .toMatchObject({ trackingNumber: 'AALZJR', carrier: 'gls-de', confidence: 'high', source: 'link' });
     expect(parseTrackingInput('https://gls-group.eu/GROUP/en/parcel-tracking?match=12345678901'))
       .toMatchObject({ trackingNumber: '12345678901', carrier: 'gls-de', confidence: 'high', source: 'link' });
-    // GLS France's tracker forwards to GROUP links; a number only GLS France issues still names it there.
+    // GLS France's tracker forwards to GROUP links. GLS Netherlands issues the same 00 track IDs,
+    // so the link lists GLS France first and recognition decides.
     expect(parseTrackingInput('https://gls-group.eu/GROUP/fr/parcel-tracking?match=00AB12CD'))
-      .toMatchObject({ trackingNumber: '00AB12CD', carrier: 'gls-fr', confidence: 'high', source: 'link' });
+      .toMatchObject({ trackingNumber: '00AB12CD', carrier: 'unknown', confidence: 'low', preferred: ['gls-fr'], source: 'link' });
     // A GLS track ID that LSO's pattern also matches stays with GLS on a GLS Germany link.
     expect(parseTrackingInput('https://gls-group.eu/EU/en/parcel-tracking?match=ZY0AB12C'))
       .toMatchObject({ trackingNumber: 'ZY0AB12C', carrier: 'gls-de', source: 'link' });
