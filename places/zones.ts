@@ -68,7 +68,9 @@ const COUNTRY_CLOCKS: Readonly<Record<string, readonly Clock[]>> = {
   PG: [['Pacific/Port_Moresby', -9.5, 147.2], ['Pacific/Bougainville', -6.2, 155.6]],
   PS: [['Asia/Gaza', 31.5, 34.5], ['Asia/Hebron', 31.5, 35.1]],
   PT: [['Europe/Lisbon', 38.7, -9.1], ['Atlantic/Madeira', 32.6, -16.9], ['Atlantic/Azores', 37.7, -25.7]],
-  RU: [['Europe/Kaliningrad', 54.7, 20.5], ['Europe/Moscow', 55.8, 37.6], ['Europe/Kirov', 58.6, 49.6],
+  // The North Caucasus keeps Moscow's clock but lies nearer Astrakhan than Volgograd, so Moscow's
+  // clock takes a second place there, at Grozny.
+  RU: [['Europe/Kaliningrad', 54.7, 20.5], ['Europe/Moscow', 55.8, 37.6], ['Europe/Moscow', 43.3, 45.7], ['Europe/Kirov', 58.6, 49.6],
     ['Europe/Volgograd', 48.7, 44.4], ['Europe/Astrakhan', 46.4, 48], ['Europe/Saratov', 51.6, 46],
     ['Europe/Ulyanovsk', 54.3, 48.4], ['Europe/Samara', 53.2, 50.1], ['Asia/Yekaterinburg', 56.9, 60.6],
     ['Asia/Omsk', 55, 73.4], ['Asia/Novosibirsk', 55, 82.9], ['Asia/Barnaul', 53.4, 83.8],
@@ -244,7 +246,7 @@ export function keepsZone(country: string, zone: string): boolean {
 /** The zones a country keeps: its one clock or each of its several; none for an unknown code. */
 export function countryZones(country: string): readonly string[] {
   const clocks = COUNTRY_CLOCKS[country];
-  if (clocks) return clocks.map(([zone]) => zone);
+  if (clocks) return [...new Set(clocks.map(([zone]) => zone))];
   const zone = SINGLE_CLOCKS[country] ?? countryTimeZone(country);
   return zone ? [zone] : [];
 }

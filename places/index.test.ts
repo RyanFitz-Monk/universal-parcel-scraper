@@ -375,6 +375,16 @@ describe('locatePlace', () => {
     expect(place('МОСКВА')).toMatchObject({ country: 'RU', name: 'Moscow' });
   });
 
+  it('keeps the North Caucasus on Moscow’s clock, and Astrakhan on its own', () => {
+    // The office of exchange that sends Russian mail to Armenia, as IPS names it.
+    const exchange = place('MINERALNYE VODY PCI, Russian Federation', ['RU'])!;
+    expect(exchange).toMatchObject({ country: 'RU', name: 'Mineralnye Vody' });
+    expect(placeTimeZone(exchange)).toBe('Europe/Moscow');
+    for (const town of ['Makhachkala', 'Vladikavkaz', 'Nalchik']) expect(placeTimeZone(place(town, ['RU'])!), town).toBe('Europe/Moscow');
+    expect(placeTimeZone(place('Astrakhan', ['RU'])!)).toBe('Europe/Astrakhan');
+    expect(placeTimeZone(place('Volgograd', ['RU'])!)).toBe('Europe/Volgograd');
+  });
+
   it('reads a town of a country written in Greek or Thai by its name in that script', () => {
     expect(place('ΑΘΗΝΑ 00000')).toMatchObject({ country: 'GR', name: 'Athens' });
     expect(place('Θεσσαλονίκη')).toMatchObject({ country: 'GR', latitude: 40.641 });
