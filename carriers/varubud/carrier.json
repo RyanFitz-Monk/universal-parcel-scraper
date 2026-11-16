@@ -1,0 +1,45 @@
+{
+  "id": "varubud",
+  "displayName": "Varubud",
+  "aliases": [
+    "Varubud Åkeri",
+    "Varubud Åkeri AB"
+  ],
+  "region": {
+    "countries": [
+      "SE"
+    ]
+  },
+  "brand": {
+    "color": "#e40520"
+  },
+  "selectable": true,
+  "timezone": "Europe/Stockholm",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://varubudse.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://varubudse.opter.cloud/tt",
+    "canaryUrl": "https://varubudse.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "varubudse.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

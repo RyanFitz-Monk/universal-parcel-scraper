@@ -1,0 +1,44 @@
+{
+  "id": "eek-logistikk",
+  "displayName": "Eek Logistikk",
+  "aliases": [
+    "Eek Logistikk AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#183466"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://eek.driftcentral.net/opter/tt?keyword={trackingNumber}",
+    "searchUrl": "https://eek.driftcentral.net/opter/tt",
+    "canaryUrl": "https://eek.driftcentral.net/opter/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "eek.driftcentral.net"
+      ],
+      "pathPattern": "^/opter/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

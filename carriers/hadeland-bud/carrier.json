@@ -1,0 +1,45 @@
+{
+  "id": "hadeland-bud",
+  "displayName": "Hadeland Bud",
+  "aliases": [
+    "Hadeland Bud og Varetransport",
+    "Hadeland Bud og Varetransport AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#f3bb45"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://hadelandbudno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://hadelandbudno.opter.cloud/tt",
+    "canaryUrl": "https://hadelandbudno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "hadelandbudno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,35 @@
+{
+  "id": "parts-express",
+  "displayName": "Parts Express",
+  "aliases": [
+    "PartsExpress"
+  ],
+  "region": {
+    "countries": [
+      "NL",
+      "BE",
+      "LU"
+    ]
+  },
+  "brand": {
+    "color": "#06183e"
+  },
+  "selectable": true,
+  "timezone": "Europe/Amsterdam",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tnt.partsexpress.nl/",
+    "canaryUrl": "https://tnt.partsexpress.nl/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

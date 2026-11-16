@@ -1,0 +1,44 @@
+{
+  "id": "alfta-frakt",
+  "displayName": "Alfta Frakt",
+  "aliases": [
+    "Alfta Frakt AB"
+  ],
+  "region": {
+    "countries": [
+      "SE"
+    ]
+  },
+  "brand": {
+    "color": "#263c98"
+  },
+  "selectable": true,
+  "timezone": "Europe/Stockholm",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://alftafraktse.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://alftafraktse.opter.cloud/tt",
+    "canaryUrl": "https://alftafraktse.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "alftafraktse.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

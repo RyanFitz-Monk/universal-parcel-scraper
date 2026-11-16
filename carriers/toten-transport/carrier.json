@@ -1,0 +1,45 @@
+{
+  "id": "toten-transport",
+  "displayName": "Toten Transport",
+  "aliases": [
+    "Toten Transport AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#dd052b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://sporing.toten-transport.no/?gsin={trackingNumber}",
+    "searchUrl": "https://sporing.toten-transport.no/",
+    "canaryUrl": "https://sporing.toten-transport.no/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "sporing.toten-transport.no"
+      ],
+      "pathPattern": "^/$",
+      "params": [
+        "gsin",
+        "sscc"
+      ]
+    }
+  ],
+  "detection": []
+}

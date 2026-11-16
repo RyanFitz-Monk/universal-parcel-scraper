@@ -1,0 +1,44 @@
+{
+  "id": "tromso-budbil-sentral",
+  "displayName": "Tromsø Budbil Sentral",
+  "aliases": [
+    "Tromsø Budbil Sentral AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#006338"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tbsno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://tbsno.opter.cloud/tt",
+    "canaryUrl": "https://tbsno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tbsno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

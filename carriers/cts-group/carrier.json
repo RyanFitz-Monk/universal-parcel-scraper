@@ -1,0 +1,31 @@
+{
+  "id": "cts-group",
+  "displayName": "CTS Group",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "NL"
+    ]
+  },
+  "brand": {
+    "color": "#00509f"
+  },
+  "selectable": true,
+  "timezone": "Europe/Amsterdam",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.ctsgroup.nl/track-trace/",
+    "canaryUrl": "https://www.ctsgroup.nl/track-trace/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

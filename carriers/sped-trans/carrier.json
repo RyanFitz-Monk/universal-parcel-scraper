@@ -1,0 +1,45 @@
+{
+  "id": "sped-trans",
+  "displayName": "Sped Trans",
+  "aliases": [
+    "Sped Trans AS",
+    "SpedTrans"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#f47216"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://amp.andmork.com/opter/tt?keyword={trackingNumber}",
+    "searchUrl": "https://amp.andmork.com/opter/tt",
+    "canaryUrl": "https://amp.andmork.com/opter/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "amp.andmork.com"
+      ],
+      "pathPattern": "^/opter/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

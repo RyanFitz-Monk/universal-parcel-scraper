@@ -1,0 +1,45 @@
+{
+  "id": "svenns-transport",
+  "displayName": "Svenns Transport",
+  "aliases": [
+    "Svenns Transport AS",
+    "Svenn's Transport"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#00488d"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://svennsno.opter.cloud/TT?keyword={trackingNumber}",
+    "searchUrl": "https://svennsno.opter.cloud/TT",
+    "canaryUrl": "https://svennsno.opter.cloud/TT",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "svennsno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

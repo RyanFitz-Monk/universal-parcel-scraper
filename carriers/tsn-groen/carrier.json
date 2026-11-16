@@ -1,0 +1,31 @@
+{
+  "id": "tsn-groen",
+  "displayName": "TSN Groen",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "NL"
+    ]
+  },
+  "brand": {
+    "color": "#2d9040"
+  },
+  "selectable": true,
+  "timezone": "Europe/Amsterdam",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cptsngroen.dirextion.nl/",
+    "canaryUrl": "https://cptsngroen.dirextion.nl/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

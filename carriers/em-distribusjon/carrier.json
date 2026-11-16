@@ -1,0 +1,45 @@
+{
+  "id": "em-distribusjon",
+  "displayName": "EM Distribusjon",
+  "aliases": [
+    "EM Distribusjon AS",
+    "EM Distribution"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#d10801"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://emdno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://emdno.opter.cloud/tt",
+    "canaryUrl": "https://emdno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "emdno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "ubsend",
+  "displayName": "UBsend",
+  "aliases": [
+    "UBsend A/S"
+  ],
+  "region": {
+    "countries": [
+      "DK"
+    ]
+  },
+  "brand": {
+    "color": "#212934"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://ui.ubsend.io/track-and-trace?search={trackingNumber}",
+    "searchUrl": "https://ui.ubsend.io/track-and-trace",
+    "canaryUrl": "https://ui.ubsend.io/track-and-trace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "ui.ubsend.io"
+      ],
+      "pathPattern": "^/track-and-trace/?$",
+      "params": [
+        "search"
+      ]
+    }
+  ],
+  "detection": []
+}

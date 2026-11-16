@@ -1,0 +1,33 @@
+{
+  "id": "diera",
+  "displayName": "DIERA",
+  "aliases": [
+    "DIERA Sp. z o.o."
+  ],
+  "region": {
+    "countries": [
+      "PL"
+    ]
+  },
+  "brand": {
+    "color": "#e30613"
+  },
+  "selectable": true,
+  "timezone": "Europe/Warsaw",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.diera.pl/",
+    "canaryUrl": "https://tracking.diera.pl/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

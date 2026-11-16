@@ -7678,6 +7678,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "alfta-frakt": {
+    "displayName": "Alfta Frakt",
+    "color": "#263c98",
+    "aliases": [
+      "Alfta Frakt AB"
+    ],
+    "countries": [
+      "SE"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Stockholm",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://alftafraktse.opter.cloud/tt",
+    "trackingUrlTemplate": "https://alftafraktse.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://alftafraktse.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "alftafraktse.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "algerie-poste": {
     "displayName": "Algérie Poste",
     "color": "#22297c",
@@ -10255,6 +10286,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "bergen-transport-sentral": {
+    "displayName": "Bergen Transport Sentral",
+    "color": "#ff230f",
+    "aliases": [
+      "Bergen Transport Sentral AS",
+      "Bergen Transportsentral"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bergentsno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://bergentsno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://bergentsno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "bergentsno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "best-courier-ro": {
     "displayName": "Best Courier",
     "color": "#154687",
@@ -10679,6 +10742,35 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "bft-logistik": {
+    "displayName": "BFT Logistik",
+    "color": "#00536a",
+    "aliases": [
+      "BFT Logistik ApS"
+    ],
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://t.bftlogistik.dk/",
+    "trackingUrlTemplate": "https://t.bftlogistik.dk/#/t/{trackingNumber}",
+    "trackingSearchUrl": "https://t.bftlogistik.dk/",
+    "linkRules": [
+      {
+        "domains": [
+          "t.bftlogistik.dk"
+        ],
+        "pathPattern": "^/$",
+        "fragment": "^/t/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "bh-posta": {
     "displayName": "BH Pošta",
     "color": "#034ea2",
@@ -10697,6 +10789,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://bhpwebout.posta.ba/trackwebapp/",
     "trackingSearchUrl": "https://www.posta.ba/pracenje-posiljaka/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "bhs-logistics": {
+    "displayName": "BHS Logistics",
+    "color": "#27348b",
+    "aliases": [
+      "BHS Logistics A/S",
+      "Bech-Hansen & Studsgaard",
+      "Bech-Hansen & Studsgaard A/S"
+    ],
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bhslogistics.dk/track-and-trace/",
+    "trackingSearchUrl": "https://bhslogistics.dk/track-and-trace/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -15889,6 +16003,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "cts-group": {
+    "displayName": "CTS Group",
+    "color": "#00509f",
+    "countries": [
+      "NL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.ctsgroup.nl/track-trace/",
+    "trackingSearchUrl": "https://www.ctsgroup.nl/track-trace/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "cttyex": {
     "displayName": "CTTYEX",
     "color": "#0068AC",
@@ -17796,6 +17927,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://www.dida-exp.com/",
     "trackingSearchUrl": "https://www.dida-exp.com/track.asp",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "diera": {
+    "displayName": "DIERA",
+    "color": "#e30613",
+    "aliases": [
+      "DIERA Sp. z o.o."
+    ],
+    "countries": [
+      "PL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Warsaw",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.diera.pl/",
+    "trackingSearchUrl": "https://tracking.diera.pl/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -20084,6 +20235,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "eek-logistikk": {
+    "displayName": "Eek Logistikk",
+    "color": "#183466",
+    "aliases": [
+      "Eek Logistikk AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://eek.driftcentral.net/opter/tt",
+    "trackingUrlTemplate": "https://eek.driftcentral.net/opter/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://eek.driftcentral.net/opter/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "eek.driftcentral.net"
+        ],
+        "pathPattern": "^/opter/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "ees-logistics": {
     "displayName": "EES Logistics",
     "color": "#b62126",
@@ -20466,6 +20648,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "preferred": true
       }
     ]
+  },
+  "em-distribusjon": {
+    "displayName": "EM Distribusjon",
+    "color": "#d10801",
+    "aliases": [
+      "EM Distribusjon AS",
+      "EM Distribution"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://emdno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://emdno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://emdno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "emdno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "emex": {
     "displayName": "EMEX",
@@ -23043,6 +23257,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "checksum": "gs1"
       }
     ]
+  },
+  "fennoroad": {
+    "displayName": "FennoRoad",
+    "color": "#ba3733",
+    "aliases": [
+      "Fenno Road",
+      "Fenno Road Oy"
+    ],
+    "countries": [
+      "FI"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Helsinki",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://fennoroad.fi/",
+    "trackingSearchUrl": "https://app.kuljetusvelho.fi/webtrack.php?env=froad&lang=fi",
+    "linkRules": [],
+    "detectionRules": []
   },
   "fercam": {
     "displayName": "FERCAM",
@@ -26893,6 +27128,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "hadeland-bud": {
+    "displayName": "Hadeland Bud",
+    "color": "#f3bb45",
+    "aliases": [
+      "Hadeland Bud og Varetransport",
+      "Hadeland Bud og Varetransport AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://hadelandbudno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://hadelandbudno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://hadelandbudno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "hadelandbudno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "hanjin": {
     "displayName": "Hanjin",
@@ -30948,7 +31215,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "Jetpak Finland",
       "Jetpak Air",
       "Jetpak Road",
-      "JetPak"
+      "JetPak",
+      "Budakuten",
+      "Budakuten i Malmö"
     ],
     "countries": [
       "SE",
@@ -34302,6 +34571,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       }
     ]
+  },
+  "loadmaster-no": {
+    "displayName": "LoadMaster",
+    "color": "#ff4500",
+    "aliases": [
+      "LoadMaster AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://loadmasterno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://loadmasterno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://loadmasterno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "loadmasterno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "logen": {
     "displayName": "Logen",
@@ -40521,6 +40821,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "parts-express": {
+    "displayName": "Parts Express",
+    "color": "#06183e",
+    "aliases": [
+      "PartsExpress"
+    ],
+    "countries": [
+      "NL",
+      "BE",
+      "LU"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tnt.partsexpress.nl/",
+    "trackingSearchUrl": "https://tnt.partsexpress.nl/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "parxl": {
     "displayName": "Parxl",
     "color": "#129bb0",
@@ -44255,7 +44577,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "Raben Group",
       "Raben Logistics",
-      "Raben Logistics Polska"
+      "Raben Logistics Polska",
+      "DGO Express"
     ],
     "countries": [
       "PL",
@@ -46359,6 +46682,31 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "params": [
           "number01"
         ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "scan-global-logistics": {
+    "displayName": "Scan Global Logistics",
+    "color": "#cd171d",
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.scangl.com/",
+    "trackingUrlTemplate": "https://tracking.scangl.com/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.scangl.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.scangl.com"
+        ],
+        "path": "^/(?!details/?$)([^/?#]+)/?$"
       }
     ],
     "detectionRules": []
@@ -48960,6 +49308,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "sped-trans": {
+    "displayName": "Sped Trans",
+    "color": "#f47216",
+    "aliases": [
+      "Sped Trans AS",
+      "SpedTrans"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://amp.andmork.com/opter/tt",
+    "trackingUrlTemplate": "https://amp.andmork.com/opter/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://amp.andmork.com/opter/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "amp.andmork.com"
+        ],
+        "pathPattern": "^/opter/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "speed-and-safe": {
     "displayName": "Gokulam Speed & Safe",
     "color": "#2e3192",
@@ -50429,6 +50809,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/service-query/?$",
         "params": [
           "no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "svenns-transport": {
+    "displayName": "Svenns Transport",
+    "color": "#00488d",
+    "aliases": [
+      "Svenns Transport AS",
+      "Svenn's Transport"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://svennsno.opter.cloud/TT",
+    "trackingUrlTemplate": "https://svennsno.opter.cloud/TT?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://svennsno.opter.cloud/TT",
+    "linkRules": [
+      {
+        "domains": [
+          "svennsno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
         ]
       }
     ],
@@ -52912,6 +53324,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "toten-transport": {
+    "displayName": "Toten Transport",
+    "color": "#dd052b",
+    "aliases": [
+      "Toten Transport AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://sporing.toten-transport.no/",
+    "trackingUrlTemplate": "https://sporing.toten-transport.no/?gsin={trackingNumber}",
+    "trackingSearchUrl": "https://sporing.toten-transport.no/",
+    "linkRules": [
+      {
+        "domains": [
+          "sporing.toten-transport.no"
+        ],
+        "pathPattern": "^/$",
+        "params": [
+          "gsin",
+          "sscc"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "toyou": {
     "displayName": "toyou",
     "color": "#007481",
@@ -53747,6 +54191,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "tromso-budbil-sentral": {
+    "displayName": "Tromsø Budbil Sentral",
+    "color": "#006338",
+    "aliases": [
+      "Tromsø Budbil Sentral AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tbsno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://tbsno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://tbsno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "tbsno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "trumpcard": {
     "displayName": "TrumpCard",
     "color": "#a90000",
@@ -53902,6 +54377,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "tsn-groen": {
+    "displayName": "TSN Groen",
+    "color": "#2d9040",
+    "countries": [
+      "NL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cptsngroen.dirextion.nl/",
+    "trackingSearchUrl": "https://cptsngroen.dirextion.nl/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "tst-cf-express": {
     "displayName": "TST-CF Express",
@@ -54330,6 +54822,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "preferred": true
       }
     ]
+  },
+  "ubsend": {
+    "displayName": "UBsend",
+    "color": "#212934",
+    "aliases": [
+      "UBsend A/S"
+    ],
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ui.ubsend.io/track-and-trace",
+    "trackingUrlTemplate": "https://ui.ubsend.io/track-and-trace?search={trackingNumber}",
+    "trackingSearchUrl": "https://ui.ubsend.io/track-and-trace",
+    "linkRules": [
+      {
+        "domains": [
+          "ui.ubsend.io"
+        ],
+        "pathPattern": "^/track-and-trace/?$",
+        "params": [
+          "search"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "ubx-uk": {
     "displayName": "UBX UK",
@@ -55086,6 +55609,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "canaryUrl": "https://www.valueway.net/main.html",
     "trackingSearchUrl": "https://www.valueway.net/main.html",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "varubud": {
+    "displayName": "Varubud",
+    "color": "#e40520",
+    "aliases": [
+      "Varubud Åkeri",
+      "Varubud Åkeri AB"
+    ],
+    "countries": [
+      "SE"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Stockholm",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://varubudse.opter.cloud/tt",
+    "trackingUrlTemplate": "https://varubudse.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://varubudse.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "varubudse.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
     "detectionRules": []
   },
   "vasp-expresso": {
@@ -59349,6 +59904,7 @@ export const CARRIER_IDS = [
   "aland-post",
   "albatomi",
   "alem-tat",
+  "alfta-frakt",
   "algerie-poste",
   "alil-post",
   "allegro-one",
@@ -59421,6 +59977,7 @@ export const CARRIER_IDS = [
   "begad",
   "bel",
   "belpost",
+  "bergen-transport-sentral",
   "best-courier-ro",
   "best-express-kh",
   "best-express-my",
@@ -59433,7 +59990,9 @@ export const CARRIER_IDS = [
   "better-trucks",
   "bex-express",
   "bfe-express",
+  "bft-logistik",
   "bh-posta",
+  "bhs-logistics",
   "big-smart",
   "bigfoot-express",
   "bigpost",
@@ -59583,6 +60142,7 @@ export const CARRIER_IDS = [
   "csomagpiac",
   "cst-italia",
   "ctc-express",
+  "cts-group",
   "cttyex",
   "cupost",
   "curiera",
@@ -59634,6 +60194,7 @@ export const CARRIER_IDS = [
   "dhx",
   "diakinisis",
   "dida-international",
+  "diera",
   "dimex",
   "direct-courier-gr",
   "direct-couriers",
@@ -59693,6 +60254,7 @@ export const CARRIER_IDS = [
   "ecourier-uk",
   "ecparcel",
   "edi-express",
+  "eek-logistikk",
   "ees-logistics",
   "efs-asia",
   "egxpress",
@@ -59704,6 +60266,7 @@ export const CARRIER_IDS = [
   "elite-post-al",
   "elog-luxembourg",
   "elta",
+  "em-distribusjon",
   "emex",
   "emile",
   "emirates-courier-express",
@@ -59776,6 +60339,7 @@ export const CARRIER_IDS = [
   "fedex-freight",
   "fedex-international-connect",
   "fedex-pl",
+  "fennoroad",
   "fercam",
   "fermopoint",
   "fez-delivery",
@@ -59885,6 +60449,7 @@ export const CARRIER_IDS = [
   "guatex",
   "gyujtoszallitas",
   "gzyl",
+  "hadeland-bud",
   "hanjin",
   "hapdong",
   "happy-courier-gr",
@@ -60103,6 +60668,7 @@ export const CARRIER_IDS = [
   "liuchen",
   "ljx-express",
   "lm-parcel",
+  "loadmaster-no",
   "logen",
   "loggi",
   "logisimple",
@@ -60286,6 +60852,7 @@ export const CARRIER_IDS = [
   "parceljet",
   "parcelpoint",
   "pargo",
+  "parts-express",
   "parxl",
   "pasarex",
   "passport",
@@ -60450,6 +61017,7 @@ export const CARRIER_IDS = [
   "saudi-post",
   "savar-express",
   "sbs-sokuhai",
+  "scan-global-logistics",
   "scg-express",
   "schneider",
   "seabourne-logistics",
@@ -60526,6 +61094,7 @@ export const CARRIER_IDS = [
   "southwestern-motor-transport",
   "sp-express",
   "spark-kz",
+  "sped-trans",
   "speed-and-safe",
   "speedaf",
   "speedex",
@@ -60563,6 +61132,7 @@ export const CARRIER_IDS = [
   "superb-express",
   "surat-kargo",
   "suto-logistics",
+  "svenns-transport",
   "svuum",
   "sway",
   "swftbox",
@@ -60637,6 +61207,7 @@ export const CARRIER_IDS = [
   "torrestir",
   "total-express",
   "total-transportation",
+  "toten-transport",
   "toyou",
   "tp-logistics-th",
   "tpl-rider",
@@ -60663,11 +61234,13 @@ export const CARRIER_IDS = [
   "trexity",
   "tribex-courier",
   "trobud",
+  "tromso-budbil-sentral",
   "trumpcard",
   "trunkrs",
   "trustexpress",
   "tsb-es",
   "tsjy",
+  "tsn-groen",
   "tst-cf-express",
   "ttk-europe",
   "tufesa",
@@ -60680,6 +61253,7 @@ export const CARRIER_IDS = [
   "u-envios",
   "u-post",
   "ubi-smart-parcel",
+  "ubsend",
   "ubx-uk",
   "ues-uy",
   "ukp-worldwide",
@@ -60702,6 +61276,7 @@ export const CARRIER_IDS = [
   "valmo",
   "value-logistics",
   "valueway",
+  "varubud",
   "vasp-expresso",
   "vatican-post",
   "veho",
@@ -60996,6 +61571,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "aland-post": [],
   "albatomi": [],
   "alem-tat": [],
+  "alfta-frakt": [],
   "algerie-poste": ["algerie-poste-1","algerie-poste-s10","algerie-poste-ey"],
   "alil-post": [],
   "allegro-one": ["allegro-one-1","allegro-one-2"],
@@ -61068,6 +61644,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "begad": [],
   "bel": [],
   "belpost": ["belpost-s10"],
+  "bergen-transport-sentral": [],
   "best-courier-ro": [],
   "best-express-kh": [],
   "best-express-my": ["best-express-my-1"],
@@ -61080,7 +61657,9 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "better-trucks": ["better-trucks-1"],
   "bex-express": [],
   "bfe-express": [],
+  "bft-logistik": [],
   "bh-posta": [],
+  "bhs-logistics": [],
   "big-smart": [],
   "bigfoot-express": [],
   "bigpost": [],
@@ -61230,6 +61809,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "csomagpiac": [],
   "cst-italia": ["cst-italia-1","cst-italia-2"],
   "ctc-express": [],
+  "cts-group": [],
   "cttyex": ["cttyex-1"],
   "cupost": [],
   "curiera": [],
@@ -61281,6 +61861,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "dhx": [],
   "diakinisis": [],
   "dida-international": [],
+  "diera": [],
   "dimex": [],
   "direct-courier-gr": [],
   "direct-couriers": [],
@@ -61340,6 +61921,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ecourier-uk": [],
   "ecparcel": [],
   "edi-express": [],
+  "eek-logistikk": [],
   "ees-logistics": [],
   "efs-asia": [],
   "egxpress": ["egxpress-1"],
@@ -61351,6 +61933,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "elite-post-al": [],
   "elog-luxembourg": [],
   "elta": ["elta-s10"],
+  "em-distribusjon": [],
   "emex": [],
   "emile": ["emile-1","emile-2"],
   "emirates-courier-express": [],
@@ -61423,6 +62006,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "fedex-freight": [],
   "fedex-international-connect": ["fedex-international-connect-1"],
   "fedex-pl": ["fedex-pl-2","fedex-pl-1"],
+  "fennoroad": [],
   "fercam": ["fercam-1"],
   "fermopoint": ["fermopoint-1"],
   "fez-delivery": ["fez-delivery-1"],
@@ -61532,6 +62116,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "guatex": [],
   "gyujtoszallitas": [],
   "gzyl": ["gzyl-1","gzyl-2"],
+  "hadeland-bud": [],
   "hanjin": [],
   "hapdong": [],
   "happy-courier-gr": [],
@@ -61750,6 +62335,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "liuchen": ["liuchen-1"],
   "ljx-express": [],
   "lm-parcel": ["lm-parcel-1"],
+  "loadmaster-no": [],
   "logen": [],
   "loggi": ["loggi-1"],
   "logisimple": [],
@@ -61933,6 +62519,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "parceljet": [],
   "parcelpoint": [],
   "pargo": ["pargo-1"],
+  "parts-express": [],
   "parxl": [],
   "pasarex": ["pasarex-1"],
   "passport": ["passport-1"],
@@ -62097,6 +62684,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "saudi-post": ["saudi-post-1","saudi-post-s10"],
   "savar-express": [],
   "sbs-sokuhai": [],
+  "scan-global-logistics": [],
   "scg-express": ["scg-express-1"],
   "schneider": [],
   "seabourne-logistics": [],
@@ -62173,6 +62761,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "southwestern-motor-transport": [],
   "sp-express": ["sp-express-1"],
   "spark-kz": [],
+  "sped-trans": [],
   "speed-and-safe": [],
   "speedaf": ["speedaf-12","speedaf-r"],
   "speedex": [],
@@ -62210,6 +62799,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "superb-express": [],
   "surat-kargo": [],
   "suto-logistics": [],
+  "svenns-transport": [],
   "svuum": [],
   "sway": [],
   "swftbox": [],
@@ -62284,6 +62874,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "torrestir": ["torrestir-1"],
   "total-express": ["total-express-awb","total-express-client"],
   "total-transportation": [],
+  "toten-transport": [],
   "toyou": [],
   "tp-logistics-th": ["tp-logistics-th-1"],
   "tpl-rider": [],
@@ -62310,11 +62901,13 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "trexity": [],
   "tribex-courier": [],
   "trobud": [],
+  "tromso-budbil-sentral": [],
   "trumpcard": [],
   "trunkrs": [],
   "trustexpress": [],
   "tsb-es": [],
   "tsjy": ["tsjy-1"],
+  "tsn-groen": [],
   "tst-cf-express": [],
   "ttk-europe": [],
   "tufesa": [],
@@ -62327,6 +62920,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "u-envios": [],
   "u-post": [],
   "ubi-smart-parcel": ["ubi-smart-parcel-1"],
+  "ubsend": [],
   "ubx-uk": [],
   "ues-uy": ["ues-uy-1"],
   "ukp-worldwide": ["ukp-worldwide-1"],
@@ -62349,6 +62943,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "valmo": ["valmo-1"],
   "value-logistics": [],
   "valueway": [],
+  "varubud": [],
   "vasp-expresso": [],
   "vatican-post": [],
   "veho": ["veho-1","veho-2"],

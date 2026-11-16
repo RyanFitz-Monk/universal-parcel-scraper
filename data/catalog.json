@@ -7674,6 +7674,37 @@
     ],
     "detectionRules": []
   },
+  "alfta-frakt": {
+    "displayName": "Alfta Frakt",
+    "color": "#263c98",
+    "aliases": [
+      "Alfta Frakt AB"
+    ],
+    "countries": [
+      "SE"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Stockholm",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://alftafraktse.opter.cloud/tt",
+    "trackingUrlTemplate": "https://alftafraktse.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://alftafraktse.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "alftafraktse.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "algerie-poste": {
     "displayName": "Algérie Poste",
     "color": "#22297c",
@@ -10251,6 +10282,38 @@
       }
     ]
   },
+  "bergen-transport-sentral": {
+    "displayName": "Bergen Transport Sentral",
+    "color": "#ff230f",
+    "aliases": [
+      "Bergen Transport Sentral AS",
+      "Bergen Transportsentral"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bergentsno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://bergentsno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://bergentsno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "bergentsno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "best-courier-ro": {
     "displayName": "Best Courier",
     "color": "#154687",
@@ -10675,6 +10738,35 @@
     ],
     "detectionRules": []
   },
+  "bft-logistik": {
+    "displayName": "BFT Logistik",
+    "color": "#00536a",
+    "aliases": [
+      "BFT Logistik ApS"
+    ],
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://t.bftlogistik.dk/",
+    "trackingUrlTemplate": "https://t.bftlogistik.dk/#/t/{trackingNumber}",
+    "trackingSearchUrl": "https://t.bftlogistik.dk/",
+    "linkRules": [
+      {
+        "domains": [
+          "t.bftlogistik.dk"
+        ],
+        "pathPattern": "^/$",
+        "fragment": "^/t/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "bh-posta": {
     "displayName": "BH Pošta",
     "color": "#034ea2",
@@ -10693,6 +10785,28 @@
     },
     "canaryUrl": "https://bhpwebout.posta.ba/trackwebapp/",
     "trackingSearchUrl": "https://www.posta.ba/pracenje-posiljaka/",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "bhs-logistics": {
+    "displayName": "BHS Logistics",
+    "color": "#27348b",
+    "aliases": [
+      "BHS Logistics A/S",
+      "Bech-Hansen & Studsgaard",
+      "Bech-Hansen & Studsgaard A/S"
+    ],
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bhslogistics.dk/track-and-trace/",
+    "trackingSearchUrl": "https://bhslogistics.dk/track-and-trace/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -15885,6 +15999,23 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "cts-group": {
+    "displayName": "CTS Group",
+    "color": "#00509f",
+    "countries": [
+      "NL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.ctsgroup.nl/track-trace/",
+    "trackingSearchUrl": "https://www.ctsgroup.nl/track-trace/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "cttyex": {
     "displayName": "CTTYEX",
     "color": "#0068AC",
@@ -17792,6 +17923,26 @@
     },
     "canaryUrl": "https://www.dida-exp.com/",
     "trackingSearchUrl": "https://www.dida-exp.com/track.asp",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "diera": {
+    "displayName": "DIERA",
+    "color": "#e30613",
+    "aliases": [
+      "DIERA Sp. z o.o."
+    ],
+    "countries": [
+      "PL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Warsaw",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.diera.pl/",
+    "trackingSearchUrl": "https://tracking.diera.pl/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -20080,6 +20231,37 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "eek-logistikk": {
+    "displayName": "Eek Logistikk",
+    "color": "#183466",
+    "aliases": [
+      "Eek Logistikk AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://eek.driftcentral.net/opter/tt",
+    "trackingUrlTemplate": "https://eek.driftcentral.net/opter/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://eek.driftcentral.net/opter/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "eek.driftcentral.net"
+        ],
+        "pathPattern": "^/opter/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "ees-logistics": {
     "displayName": "EES Logistics",
     "color": "#b62126",
@@ -20462,6 +20644,38 @@
         "preferred": true
       }
     ]
+  },
+  "em-distribusjon": {
+    "displayName": "EM Distribusjon",
+    "color": "#d10801",
+    "aliases": [
+      "EM Distribusjon AS",
+      "EM Distribution"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://emdno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://emdno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://emdno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "emdno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "emex": {
     "displayName": "EMEX",
@@ -23039,6 +23253,27 @@
         "checksum": "gs1"
       }
     ]
+  },
+  "fennoroad": {
+    "displayName": "FennoRoad",
+    "color": "#ba3733",
+    "aliases": [
+      "Fenno Road",
+      "Fenno Road Oy"
+    ],
+    "countries": [
+      "FI"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Helsinki",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://fennoroad.fi/",
+    "trackingSearchUrl": "https://app.kuljetusvelho.fi/webtrack.php?env=froad&lang=fi",
+    "linkRules": [],
+    "detectionRules": []
   },
   "fercam": {
     "displayName": "FERCAM",
@@ -26889,6 +27124,38 @@
         "confidence": "high"
       }
     ]
+  },
+  "hadeland-bud": {
+    "displayName": "Hadeland Bud",
+    "color": "#f3bb45",
+    "aliases": [
+      "Hadeland Bud og Varetransport",
+      "Hadeland Bud og Varetransport AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://hadelandbudno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://hadelandbudno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://hadelandbudno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "hadelandbudno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "hanjin": {
     "displayName": "Hanjin",
@@ -30944,7 +31211,9 @@
       "Jetpak Finland",
       "Jetpak Air",
       "Jetpak Road",
-      "JetPak"
+      "JetPak",
+      "Budakuten",
+      "Budakuten i Malmö"
     ],
     "countries": [
       "SE",
@@ -34298,6 +34567,37 @@
         "confidence": "low"
       }
     ]
+  },
+  "loadmaster-no": {
+    "displayName": "LoadMaster",
+    "color": "#ff4500",
+    "aliases": [
+      "LoadMaster AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://loadmasterno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://loadmasterno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://loadmasterno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "loadmasterno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "logen": {
     "displayName": "Logen",
@@ -40517,6 +40817,28 @@
       }
     ]
   },
+  "parts-express": {
+    "displayName": "Parts Express",
+    "color": "#06183e",
+    "aliases": [
+      "PartsExpress"
+    ],
+    "countries": [
+      "NL",
+      "BE",
+      "LU"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tnt.partsexpress.nl/",
+    "trackingSearchUrl": "https://tnt.partsexpress.nl/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "parxl": {
     "displayName": "Parxl",
     "color": "#129bb0",
@@ -44251,7 +44573,8 @@
     "aliases": [
       "Raben Group",
       "Raben Logistics",
-      "Raben Logistics Polska"
+      "Raben Logistics Polska",
+      "DGO Express"
     ],
     "countries": [
       "PL",
@@ -46355,6 +46678,31 @@
         "params": [
           "number01"
         ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "scan-global-logistics": {
+    "displayName": "Scan Global Logistics",
+    "color": "#cd171d",
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.scangl.com/",
+    "trackingUrlTemplate": "https://tracking.scangl.com/{trackingNumber}",
+    "trackingSearchUrl": "https://tracking.scangl.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "tracking.scangl.com"
+        ],
+        "path": "^/(?!details/?$)([^/?#]+)/?$"
       }
     ],
     "detectionRules": []
@@ -48956,6 +49304,38 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "sped-trans": {
+    "displayName": "Sped Trans",
+    "color": "#f47216",
+    "aliases": [
+      "Sped Trans AS",
+      "SpedTrans"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://amp.andmork.com/opter/tt",
+    "trackingUrlTemplate": "https://amp.andmork.com/opter/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://amp.andmork.com/opter/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "amp.andmork.com"
+        ],
+        "pathPattern": "^/opter/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "speed-and-safe": {
     "displayName": "Gokulam Speed & Safe",
     "color": "#2e3192",
@@ -50425,6 +50805,38 @@
         "pathPattern": "^/service-query/?$",
         "params": [
           "no"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "svenns-transport": {
+    "displayName": "Svenns Transport",
+    "color": "#00488d",
+    "aliases": [
+      "Svenns Transport AS",
+      "Svenn's Transport"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://svennsno.opter.cloud/TT",
+    "trackingUrlTemplate": "https://svennsno.opter.cloud/TT?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://svennsno.opter.cloud/TT",
+    "linkRules": [
+      {
+        "domains": [
+          "svennsno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
         ]
       }
     ],
@@ -52908,6 +53320,38 @@
     ],
     "detectionRules": []
   },
+  "toten-transport": {
+    "displayName": "Toten Transport",
+    "color": "#dd052b",
+    "aliases": [
+      "Toten Transport AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://sporing.toten-transport.no/",
+    "trackingUrlTemplate": "https://sporing.toten-transport.no/?gsin={trackingNumber}",
+    "trackingSearchUrl": "https://sporing.toten-transport.no/",
+    "linkRules": [
+      {
+        "domains": [
+          "sporing.toten-transport.no"
+        ],
+        "pathPattern": "^/$",
+        "params": [
+          "gsin",
+          "sscc"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "toyou": {
     "displayName": "toyou",
     "color": "#007481",
@@ -53743,6 +54187,37 @@
     ],
     "detectionRules": []
   },
+  "tromso-budbil-sentral": {
+    "displayName": "Tromsø Budbil Sentral",
+    "color": "#006338",
+    "aliases": [
+      "Tromsø Budbil Sentral AS"
+    ],
+    "countries": [
+      "NO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Oslo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tbsno.opter.cloud/tt",
+    "trackingUrlTemplate": "https://tbsno.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://tbsno.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "tbsno.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "trumpcard": {
     "displayName": "TrumpCard",
     "color": "#a90000",
@@ -53898,6 +54373,23 @@
         "confidence": "high"
       }
     ]
+  },
+  "tsn-groen": {
+    "displayName": "TSN Groen",
+    "color": "#2d9040",
+    "countries": [
+      "NL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Amsterdam",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cptsngroen.dirextion.nl/",
+    "trackingSearchUrl": "https://cptsngroen.dirextion.nl/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "tst-cf-express": {
     "displayName": "TST-CF Express",
@@ -54326,6 +54818,37 @@
         "preferred": true
       }
     ]
+  },
+  "ubsend": {
+    "displayName": "UBsend",
+    "color": "#212934",
+    "aliases": [
+      "UBsend A/S"
+    ],
+    "countries": [
+      "DK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Copenhagen",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ui.ubsend.io/track-and-trace",
+    "trackingUrlTemplate": "https://ui.ubsend.io/track-and-trace?search={trackingNumber}",
+    "trackingSearchUrl": "https://ui.ubsend.io/track-and-trace",
+    "linkRules": [
+      {
+        "domains": [
+          "ui.ubsend.io"
+        ],
+        "pathPattern": "^/track-and-trace/?$",
+        "params": [
+          "search"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "ubx-uk": {
     "displayName": "UBX UK",
@@ -55082,6 +55605,38 @@
     "canaryUrl": "https://www.valueway.net/main.html",
     "trackingSearchUrl": "https://www.valueway.net/main.html",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "varubud": {
+    "displayName": "Varubud",
+    "color": "#e40520",
+    "aliases": [
+      "Varubud Åkeri",
+      "Varubud Åkeri AB"
+    ],
+    "countries": [
+      "SE"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Stockholm",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://varubudse.opter.cloud/tt",
+    "trackingUrlTemplate": "https://varubudse.opter.cloud/tt?keyword={trackingNumber}",
+    "trackingSearchUrl": "https://varubudse.opter.cloud/tt",
+    "linkRules": [
+      {
+        "domains": [
+          "varubudse.opter.cloud"
+        ],
+        "pathPattern": "^/[Tt][Tt]/?$",
+        "params": [
+          "keyword"
+        ]
+      }
+    ],
     "detectionRules": []
   },
   "vasp-expresso": {

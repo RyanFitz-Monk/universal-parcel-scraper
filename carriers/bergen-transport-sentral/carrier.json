@@ -1,0 +1,45 @@
+{
+  "id": "bergen-transport-sentral",
+  "displayName": "Bergen Transport Sentral",
+  "aliases": [
+    "Bergen Transport Sentral AS",
+    "Bergen Transportsentral"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#ff230f"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://bergentsno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://bergentsno.opter.cloud/tt",
+    "canaryUrl": "https://bergentsno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "bergentsno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

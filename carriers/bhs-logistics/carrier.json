@@ -1,0 +1,35 @@
+{
+  "id": "bhs-logistics",
+  "displayName": "BHS Logistics",
+  "aliases": [
+    "BHS Logistics A/S",
+    "Bech-Hansen & Studsgaard",
+    "Bech-Hansen & Studsgaard A/S"
+  ],
+  "region": {
+    "countries": [
+      "DK"
+    ]
+  },
+  "brand": {
+    "color": "#27348b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://bhslogistics.dk/track-and-trace/",
+    "canaryUrl": "https://bhslogistics.dk/track-and-trace/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

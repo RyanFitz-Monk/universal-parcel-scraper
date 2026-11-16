@@ -1,0 +1,39 @@
+{
+  "id": "scan-global-logistics",
+  "displayName": "Scan Global Logistics",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "DK"
+    ]
+  },
+  "brand": {
+    "color": "#cd171d"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.scangl.com/{trackingNumber}",
+    "searchUrl": "https://tracking.scangl.com/",
+    "canaryUrl": "https://tracking.scangl.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.scangl.com"
+      ],
+      "path": "^/(?!details/?$)([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

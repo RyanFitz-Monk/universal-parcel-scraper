@@ -1,0 +1,44 @@
+{
+  "id": "loadmaster-no",
+  "displayName": "LoadMaster",
+  "aliases": [
+    "LoadMaster AS"
+  ],
+  "region": {
+    "countries": [
+      "NO"
+    ]
+  },
+  "brand": {
+    "color": "#ff4500"
+  },
+  "selectable": true,
+  "timezone": "Europe/Oslo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://loadmasterno.opter.cloud/tt?keyword={trackingNumber}",
+    "searchUrl": "https://loadmasterno.opter.cloud/tt",
+    "canaryUrl": "https://loadmasterno.opter.cloud/tt",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "loadmasterno.opter.cloud"
+      ],
+      "pathPattern": "^/[Tt][Tt]/?$",
+      "params": [
+        "keyword"
+      ]
+    }
+  ],
+  "detection": []
+}

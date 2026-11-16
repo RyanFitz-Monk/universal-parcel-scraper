@@ -1,0 +1,42 @@
+{
+  "id": "bft-logistik",
+  "displayName": "BFT Logistik",
+  "aliases": [
+    "BFT Logistik ApS"
+  ],
+  "region": {
+    "countries": [
+      "DK"
+    ]
+  },
+  "brand": {
+    "color": "#00536a"
+  },
+  "selectable": true,
+  "timezone": "Europe/Copenhagen",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://t.bftlogistik.dk/#/t/{trackingNumber}",
+    "searchUrl": "https://t.bftlogistik.dk/",
+    "canaryUrl": "https://t.bftlogistik.dk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "t.bftlogistik.dk"
+      ],
+      "pathPattern": "^/$",
+      "fragment": "^/t/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}
