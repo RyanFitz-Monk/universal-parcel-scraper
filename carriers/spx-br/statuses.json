@@ -609,6 +609,15 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-10",
       "note": "Fleet feed: the parcel is held for confiscation after reaching its delivery hub. The Portuguese feed sends no message; the wording is SPX's English as ParcelsApp relays it."
+    },
+    {
+      "code": "A101",
+      "wording": "Seu pedido passou pela alfândega e será preparado para o próximo centro logístico",
+      "language": "pt",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "A progress notice: customs passed, the parcel goes on to the next logistics centre. Seen among the import pre-clearance rows (F370) before the flight; the parcel went on."
     }
   ]
 }
