@@ -2714,6 +2714,15 @@ describe('ParcelsApp result parsing', () => {
       .toEqual(['2026-05-22T14:20:30.000Z', '2026-05-19T13:47:46.000Z']);
     // Yanwen's own row states its shipment information +08:00, at the minute ParcelsApp labels UTC.
     expect(times(['Yanwen Logistics'], [scan('2026-11-04T09:26:00Z')])).toEqual(['2026-11-04T01:26:00.000Z']);
+    // Its copy of the delivering post's scan at an office no step locates is on the destination's clock:
+    // Poczta Polska's "Doręczona" had the digits of Poland Post's own delivery, stated +01:00, and stays one scan with it.
+    const relayed = parseParcelsAppResponse({ carriers: ['Yanwen Logistics', 'Poland Post'], destination: 'Poland', destinationCode: 'PL',
+      states: [{ date: '2026-11-09T11:53:00Z', status: 'Doręczona', carrier: 0, location: 'UP Example 9' },
+        { date: '2026-11-09T11:53:00+01:00', status: 'Delivered', carrier: 1, location: 'UP Example 9, Example, 00-000' },
+        { date: '2026-11-03T18:38:00Z', status: 'International shipment release - Import', carrier: 0 }] }, number, identity()).events;
+    expect(relayed?.map((event) => [event.description, event.time, event.stage])).toEqual([
+      ['Doręczona', '2026-11-09T10:53:00.000Z', 'delivered'],
+      ['International shipment release - Import', '2026-11-03T10:38:00.000Z', 'in_transit']]);
     // FAR's tracker states each scan's offset, China's or the last-mile carrier's abroad, and ParcelsApp
     // keeps the digits alone: read on FAR's Chinese clock, an Argentine scan came 11 hours early.
     const far = parseParcelsAppResponse({ carriers: ['FAR'], states: [scan('2026-11-06T06:39:05Z'), scan('2026-11-04T13:19:00Z', 'Example City')] },

@@ -1576,7 +1576,12 @@ function guessedZone(payload: Record<string, unknown>, state: Record<string, unk
   const guess = (candidate: string | null) => fitsPlace(candidate, location);
   if (typeof name !== 'string') return guess(fallback);
   const nameZone = carrierNameCountryZone(name);
-  const named = guess((nameZone && (filedNetworkZone(carrier, filed) ?? numberNetworkZone(carrier, number))) || nameZone
+  // Yanwen files its own rows without a place. One with a place no step located is its copy of the
+  // delivering post's scan at the facility's wall clock: Poczta Polska's own words ("Doręczona") at
+  // a Polish office had the digits of Poland Post's scans, stated +01:00. It takes the destination's
+  // clock where that keeps one.
+  const relayed = key === 'yanwenlogistics' && location ? countryTimeZone(countryCode(destination)) : null;
+  const named = guess(relayed || (nameZone && (filedNetworkZone(carrier, filed) ?? numberNetworkZone(carrier, number))) || nameZone
     || (HOME_COUNTRIES[key] ?? null));
   if (named) return named;
   // A location with no single-clock country ("Toronto, ON", "Chicago, US")

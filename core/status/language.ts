@@ -339,6 +339,10 @@ export function chineseFinalStage(text: string): Stage | undefined {
   return ZH_FINAL.find(([pattern]) => pattern.test(text))?.[1];
 }
 
+const POCZTA_POLSKA_WORDS: Readonly<Record<string, Stage>> = {
+  przygotowana: 'registered', nadana: 'accepted', 'w transporcie': 'in_transit', 'w doreczeniu': 'out_for_delivery', doreczona: 'delivered',
+};
+
 /**
  * INFERRED language rules, not captured carrier codes. EN/FR/DE/IT/ES/PT/PL equivalents
  * are intuitive and overridable: an adapter must resolve verified codes and
@@ -367,6 +371,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // Posta Slovenije's delivery round (N) and GLS's (INDELIVERY), as universal providers relay
   // them without the code: each carrier's map reads the sentence as out for delivery.
   if (/^the item is expected to be delivered today\.?$|^(?:the )?parcel is expected to be delivered during the day\.?$/.test(text)) return 'out_for_delivery';
+  // Poczta Polska's one-word statuses, which Yanwen relays in Polish beside their English: the
+  // sender's data, the posting, transport, the delivery round and the delivery.
+  if (Object.hasOwn(POCZTA_POLSKA_WORDS, text)) return POCZTA_POLSKA_WORDS[text];
   // Every rule below reads only what happened, never a delivery still to come.
   const reported = deliveryForecastRemainder(text);
   if (reported !== undefined) return reported ? trackingLanguageStage(reported) : undefined;

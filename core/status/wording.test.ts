@@ -35,6 +35,9 @@ describe('classifyWording', () => {
     for (const wording of ['Shipment not yet picked up by the courier', 'Label created, not yet picked up',
       'Not yet picked up by the last-mile carrier']) expect(trackingLanguageStage(wording), wording).toBe('registered');
     expect(trackingLanguageStage('Parcel not yet collected by the recipient')).toBe('ready_for_pickup');
+    // Poczta Polska's one-word statuses, as Yanwen relays them in Polish.
+    expect(['Przygotowana', 'Nadana', 'W transporcie', 'W doręczeniu', 'Doręczona', 'Udostępnienie EPO'].map(trackingLanguageStage))
+      .toEqual(['registered', 'accepted', 'in_transit', 'out_for_delivery', 'delivered', undefined]);
     for (const wording of ['If not picked up within 7 days the parcel returns', 'Shipment will be picked up as scheduled', 'To be picked up by courier']) {
       expect(trackingLanguageStage(wording), wording).toBeUndefined();
     }

@@ -472,7 +472,10 @@ step exists for future protocol changes.
   (Korea Post's page) and "Posten Norge - Norway Post" (Bring's offsets, in Denmark too) were
   checked at home only, so their home clock is a step 3 guess that a location in another
   country rules out. So is "Yanwen Logistics"'s, China's: its shipment information came at
-  the minute of Yanwen's own row, stated +08:00. So was "Japan Post" (2026-10-11): Japan Post's portal gives local
+  the minute of Yanwen's own row, stated +08:00. Yanwen files its own rows without a place, so
+  one with a place no step locates is its copy of the delivering post's scan, on the
+  destination's clock where that keeps one: Poczta Polska's own words at a Polish office had
+  the digits of Poland Post's scans, stated +01:00. So was "Japan Post" (2026-10-11): Japan Post's portal gives local
   times, 10:27 for a delivery in Japan that Cainiao dates 10:27 GMT+9 and Ship24 01:27Z.
   So were "Yodel" and "InPost UK", InPost's UK network, and "Collect+", PayPoint's
   shop network, on London time: InPost's own offsets give the same instants. So was "XZG", a
