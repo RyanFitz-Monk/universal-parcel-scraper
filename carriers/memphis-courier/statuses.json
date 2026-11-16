@@ -38,12 +38,58 @@
       "note": "Moved between sites."
     },
     {
+      "code": "DEP",
+      "wording": "A encomenda saiu da origem e está a caminho do aeroporto de destino (Guarulhos - SP)",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The parcel leaves the origin for the destination airport."
+    },
+    {
+      "code": "ARR",
+      "wording": "Seu pedido chegou ao aeroporto de destino (Guarulhos - SP)",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Landed at the destination airport."
+    },
+    {
+      "code": "AAZ",
+      "wording": "Pedido recebido pela GRU Airport",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "The airport's cargo terminal receives the parcel, before clearance starts."
+    },
+    {
       "code": "BRP",
-      "wording": "Alfândega",
+      "wording": "Processo de desembaraço iniciado",
       "stage": "customs",
       "language": "pt",
-      "confirmedBy": "bundle",
-      "note": "The tracking page's customs step, which this code reaches; the scan's own wording is not known."
+      "confirmedBy": "live",
+      "note": "Clearance starts; the tracking page's customs step.",
+      "firstSeen": "2026-11-16"
+    },
+    {
+      "code": "HOC",
+      "wording": "Encomenda sendo inspecionada pela Alfândega",
+      "stage": "customs",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "Customs inspects the parcel."
+    },
+    {
+      "code": "ANV",
+      "wording": "Em inspeção pela ANVISA",
+      "stage": "customs",
+      "language": "pt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "ANVISA, Brazil's health regulator, inspects the parcel during clearance."
     },
     {
       "code": "CLA",

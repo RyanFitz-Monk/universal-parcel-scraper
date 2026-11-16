@@ -11,7 +11,14 @@ const CODES: ReadonlyMap<string, Stage> = new Map([
   ['CHK', 'in_transit'],
   ['ENO', 'in_transit'],
   ['TRA', 'in_transit'],
+  // The flight to Guarulhos and the airport's receipt.
+  ['DEP', 'in_transit'],
+  ['ARR', 'in_transit'],
+  ['AAZ', 'in_transit'],
+  // Clearance starts, then customs and ANVISA, the health regulator, inspect the parcel.
   ['BRP', 'customs'],
+  ['HOC', 'customs'],
+  ['ANV', 'customs'],
   // Released by customs: the parcel moves on.
   ['CLA', 'in_transit'],
   ['DLV', 'delivered'],
