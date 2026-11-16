@@ -18,6 +18,7 @@ const CODES: ReadonlyMap<string, Stage> = new Map([
   ['403', 'in_transit'], // Back at the depot after a failed attempt, not a return to the sender.
   ['410', 'in_transit'], // Held at the depot.
   ['723', 'in_transit'], // The sender corrected the address after a failed attempt.
+  ['509', 'in_transit'], // The delivery moved to another day after the round went out.
   ['OFD', 'out_for_delivery'],
   // The driver left the parcel at a pickup point or locker, and the point took it in.
   ['001', 'ready_for_pickup'],
