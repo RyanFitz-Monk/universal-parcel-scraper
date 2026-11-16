@@ -59,6 +59,10 @@ none.
 
 ## Limitations
 
+bpost's tracker shows no place for a scan. The feed's location names are kept,
+except `LCI` on the receipt of the shipper's data and `PSM IN PARCELS` on a sort,
+which name no place and are left out.
+
 Scan clocks have no offsets. bpost's scans in Belgium are on Belgian time: the
 reply also gives the item's creation as an instant (`key.tmmCreated`), and that
 is the pre-advice scan's clock read on Brussels time (`key.created` has the same

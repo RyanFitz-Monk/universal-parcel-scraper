@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { normalizeCarrierResult } from '../../core/result/index.js';
 import { adapter, BpostTracker } from './adapter.js';
-import { normalizeBpostNumber, parseBpost } from './parser.js';
+import { bpostPlaceName, normalizeBpostNumber, parseBpost } from './parser.js';
+import { sameInstantIdentityPolicy } from '../../app.js';
 import { classifyBpostStatus } from './status.js';
 import { InvalidInputError } from '../../core/errors/index.js';
 
@@ -127,6 +128,41 @@ describe('bpost direct history', () => {
     expect(skipped).not.toHaveProperty('time');
     expect(repeated).toMatchObject({ time: '2026-10-25T02:30:00+02:00' });
     expect(parseBpost(changes, NUMBER)).toMatchObject({ last_update: null, last_update_local: '2026-03-29T02:30:00' });
+  });
+
+  it('leaves out the names that are no place, and lets scans stored with them keep their rows', () => {
+    const coded = payload();
+    coded.items[0].countryOfDepurture = 'NL';
+    coded.items[0].events[3].location = { locationName: 'PSM IN PARCELS' };
+    coded.items[0].events[4].location = { locationName: ' lci ' };
+    coded.items[0].events[2].location = { locationName: 'Example hub' };
+    const events = parseBpost(coded, NUMBER).events ?? [];
+    // bpost's own records with no place, on Brussels time; a readable name stays, on its wall clock.
+    expect(events.slice(3)).toEqual([expect.objectContaining({ time: '2026-01-02T12:00:00+01:00', stage: 'in_transit' }),
+      expect.objectContaining({ time: '2026-01-01T12:00:00+01:00', stage: 'registered' })]);
+    expect(events.slice(3).some((event) => event.location)).toBe(false);
+    expect(events[2]).toMatchObject({ local_time: '2026-01-03T10:00:00', location: 'Example hub' });
+    expect(bpostPlaceName('PSM IN PARCELS')).toBe('');
+    expect(bpostPlaceName('PSM Example')).toBe('PSM Example');
+    const national = payload();
+    national.items[0].countryOfDepurture = 'BE';
+    for (const event of national.items[0].events) event.location = { locationName: 'Example sorting centre' };
+    const scans = (parseBpost(national, NUMBER).events ?? []).map((event) => ({ time: event.time, stage: event.stage ?? '',
+      description: event.description ?? '', location: event.location ?? '', providerCode: '' }));
+    // What an earlier release stored: the sorted scan placed at the sorting line, the announcement at "LCI".
+    const placed = ['Example sorting centre', 'Example sorting centre', 'Example sorting centre', 'PSM IN PARCELS', 'LCI'];
+    const stored = scans.map((scan, index) => ({ ...scan, location: placed[index]! }));
+    const incoming = scans.map((scan, index) => (index >= 3 ? { ...scan, location: '' } : scan));
+    const policy = sameInstantIdentityPolicy('bpost', { supportsScanMatching: true })!;
+    // As the app matches: one row at the scan's instant, and that row matching no other scan of the batch.
+    const takenOver = incoming.map((scan) => {
+      const rows = stored.filter((row) => row.time === scan.time && policy.matches!(scan, row));
+      const others = incoming.filter((other) => other.time === scan.time && rows[0] && policy.matches!(other, rows[0]));
+      return rows.length === 1 && others.length === 1 ? rows[0]!.location : null;
+    });
+    expect(takenOver).toEqual([null, null, null, 'PSM IN PARCELS', 'LCI']);
+    // A row stored at a readable place is not taken over by a scan that names none.
+    expect(policy.matches!(incoming[3]!, { ...stored[3]!, location: 'Example sorting centre' })).toBe(false);
   });
 
   it('keeps pickup availability, unrecognized scans and return delivery distinct', () => {

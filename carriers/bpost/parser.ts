@@ -3,7 +3,7 @@ import { isValidS10TrackingNumber } from '../../core/detection/s10.js';
 import { IndeterminateError, InvalidInputError, NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { firstOccurrence, zonedTime } from '../../core/time/index.js';
-import { clean } from '../../core/transport/index.js';
+import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
 import { classifyBpostStatus } from './status.js';
 
@@ -84,6 +84,15 @@ function brusselsTime(local: string): string {
     ? zoned.toISO({ suppressMilliseconds: true }) ?? '' : '';
 }
 
+/**
+ * Names bpost's feed gives as a scan's location that are no place: "LCI" on its receipt of the shipper's
+ * data, and the sorting line "PSM IN PARCELS". bpost's own tracker shows no place for any scan.
+ */
+const NOT_PLACES: ReadonlySet<string> = new Set(['LCI', 'PSM IN PARCELS']);
+
+/** A location name bpost's feed gives, or nothing when it is no place. */
+export const bpostPlaceName = (name: string): string => (NOT_PLACES.has(name.replace(/\s+/g, ' ').trim().toUpperCase()) ? '' : name);
+
 export function parseBpost(payload: unknown, number: string): CarrierResult {
   const requested = normalizeBpostNumber(number);
   if (!isRecord(payload)) throw new SchemaError('bpost');
@@ -121,12 +130,11 @@ export function parseBpost(payload: unknown, number: string): CarrierResult {
     const local = parsed.isValid ? parsed.toISO({ includeOffset: false, suppressMilliseconds: true }) : null;
     if (!local) throw new SchemaError('bpost', 'bpost returned an invalid scan date');
     const country = isRecord(raw.location) ? countryCode(raw.location.countryCode) : '';
-    const location = isRecord(raw.location) ? [clean(raw.location.locationName, 160), clean(raw.location.countryCode, 2)]
-      .filter(Boolean).join(', ') : '';
+    const name = isRecord(raw.location) ? bpostPlaceName(clean(raw.location.locationName, 160)) : '';
+    const location = isRecord(raw.location) ? [name, clean(raw.location.countryCode, 2)].filter(Boolean).join(', ') : '';
     // A scan that names no place at all, or a country alone, is bpost's own record, on Brussels time
     // wherever the parcel is. So is one of a parcel sent abroad in the destination country, unless
     // it is the partner's scan relayed under its office ("PTLISL Portugal PT"), on the partner's clock.
-    const name = isRecord(raw.location) ? clean(raw.location.locationName, 160) : '';
     const partner = destination !== 'BE' && country === destination && !name.endsWith(` ${country}`);
     const time = country === 'BE' || !location || !name || (national && !country) || partner ? brusselsTime(local) : '';
     const dedup = `${local}\u0000${description}\u0000${location}`;
