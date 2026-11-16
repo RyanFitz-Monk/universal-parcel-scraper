@@ -32,6 +32,7 @@
     {"code": "3:3002", "wording": "Arrived at Site", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "Arrival at a delivery site named in 【】."},
     {"code": "4", "wording": "scanned for delivery", "language": "en", "stage": "out_for_delivery", "confirmedBy": "live", "note": "The clerk's name and the site in 【】 come first, the courier's name, and sometimes phone, after."},
     {"code": "4", "wording": "已做派件扫描", "language": "zh", "stage": "out_for_delivery", "confirmedBy": "live"},
+    {"code": "-1:IP01", "wording": "Cause of problem【No Answer】", "language": "en", "stage": "failed_attempt", "confirmedBy": "live", "note": "After a delivery round: the recipient did not answer the courier."},
     {"code": "-1:IP06", "wording": "Issue Parcel Reason【Rescheduled delivery】", "language": "en", "stage": "failed_attempt", "confirmedBy": "live", "note": "After a delivery round; the new day follows in 【】."},
     {"code": "-1:IP05", "wording": "Issue Parcel Reason【Receiver Rejected Parcel】", "language": "en", "stage": "exception", "confirmedBy": "live"},
     {"code": "-1:5577", "wording": "Issue Parcel Reason【Delayed payment of tax by customer】", "language": "en", "stage": "customs", "confirmedBy": "live", "note": "The courier came back with the duty unpaid."},

@@ -39,6 +39,7 @@ const ACTIONS: ReadonlyMap<string, Stage> = new Map([
 
 /** Issue scans (-1), by the reason in their sub-action. */
 const ISSUES: ReadonlyMap<string, Stage> = new Map([
+  ['-1:IP01', 'failed_attempt'], // The recipient did not answer the courier.
   ['-1:IP05', 'exception'], // The recipient refused the parcel.
   ['-1:IP06', 'failed_attempt'], // The recipient had the delivery moved to another day.
   ['-1:5577', 'customs'], // The recipient has not paid the duty yet.
