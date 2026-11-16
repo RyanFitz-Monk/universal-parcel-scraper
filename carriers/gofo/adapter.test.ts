@@ -212,6 +212,16 @@ describe('GOFO US history', () => {
     }
   });
 
+  it('reads the parcel GOFO returns without a scan as listed with no history', () => {
+    const listed = expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' });
+    const value = JSON.parse(readFileSync(new URL('./fixtures/listed.json', import.meta.url), 'utf8'));
+    expect(() => parseGofo(value, 'GFUS00000000000003')).toThrow(listed);
+    // Only the parcel of the number asked: another parcel without a scan stays a mismatch.
+    expect(() => parseGofo(value, NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    const canada = structuredClone(value); item(canada).waybillNo = item(canada).trackingNumber = 'GFCA00000000000003'; item(canada).toCountry = 'CA';
+    expect(() => parseGofo(canada, 'GFCA00000000000003', GOFO_CANADA)).toThrow(listed);
+  });
+
   it('requires the rate-limit wording as well as its failed envelope and leaves the retry delay unknown', () => {
     for (const [site, number] of [[GOFO_US, NUMBER], [GOFO_CANADA, 'GFCA00000000000001']] as const) {
       for (const msg of ['Rate limit exceeded', 'RATE-LIMITED', 'Too many requests']) {

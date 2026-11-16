@@ -1,6 +1,6 @@
 import { DateTime, IANAZone } from 'luxon';
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
-import { IndeterminateError, InvalidInputError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
+import { IndeterminateError, InvalidInputError, NoHistoryError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
@@ -140,7 +140,9 @@ export function parseGofo(payload: unknown, rawNumber: string, site: GofoSite = 
   }
   const item = entries[0]!;
   if (!Array.isArray(item.trackEventList) || item.trackEventList.length > 500 || !item.trackEventList.every(isRecord)) throw new SchemaError(site.provider);
-  if (!item.trackEventList.length) throw new IndeterminateError(site.provider, 'GOFO returned no parcel scans');
+  // GOFO answers a number it does not know in its error list, so its parcel for the number without a scan is
+  // one it lists: the waybill is booked and GOFO has not scanned it yet.
+  if (!item.trackEventList.length) throw new NoHistoryError(site.provider, 'GOFO lists the waybill without a scan', { reason: 'listed' });
   // The public client renders this entire list without paging and ignores the
   // counter, which can also count scans the list omits. A larger counter is
   // accepted only while the list still reaches label creation; the summary

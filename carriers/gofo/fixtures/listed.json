@@ -1,0 +1,23 @@
+{
+  "success": 1,
+  "code": 200,
+  "data": {
+    "success": [
+      {
+        "waybillNo": "GFUS00000000000003",
+        "trackingNumber": "GFUS00000000000003",
+        "status": "Processing",
+        "trackEventCount": 0,
+        "toCountry": "USA",
+        "serviceName": "GOFO EXPRESS",
+        "weight": 0.5,
+        "estimatedArrivalTime": null,
+        "lastTrackEvent": null,
+        "trackEventList": []
+      }
+    ],
+    "error": {
+      "errorCount": 0
+    }
+  }
+}

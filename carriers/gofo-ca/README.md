@@ -13,7 +13,8 @@ typed there as that zero, the form the tracker knows.
 
 The reply sorts unknown numbers by the region their prefix names. Only the
 Canadian error list proves absence; the US service files a `GFCA` number under
-it as another region's, so that answer stays inconclusive.
+it as another region's, so that answer stays inconclusive. A parcel returned without a scan
+has no history, with the reason `listed`, as on [GOFO US](../gofo/README.md).
 
 ## Notes
 

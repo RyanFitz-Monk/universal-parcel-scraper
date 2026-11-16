@@ -38,7 +38,8 @@ The public page renders the whole list without paging and ignores the event
 counter, which can count scans the list omits. A larger counter is accepted only
 while the list still starts at label creation, so a list cut at either end stays
 inconclusive, as do contradictory counts, regional reroutes and empty responses.
-Only the explicit US error list proves absence. A failed envelope with numeric
+Only the explicit US error list proves absence. The parcel GOFO returns for the number without a scan
+has no history, with the reason `listed`: GOFO knows the waybill. A failed envelope with numeric
 code `20002` and explicit rate-limit wording raises `rate_limited` so callers can
 back off. The code alone stays inconclusive, and no retry delay is invented.
 GOFO's limit follows the overall rate from one address, not one parcel's: its refusals come in
