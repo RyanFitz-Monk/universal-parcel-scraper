@@ -108,6 +108,10 @@ export function stageForText(text: string, fallback = 'in_transit'): string {
   // A booked collection precedes "Pick-up was successful.", so it cannot be progress beyond it.
   if (/^pick-up has been scheduled\b/.test(value)) return 'registered';
   if (/will be transported to the destination country/.test(value)) return 'in_transit';
+  // "Auslands-Sendung an DHL übergeben." sums up the scan that prepares the international shipment
+  // for the destination country, which DHL's English summary calls the parcel center of origin: the
+  // parcel moves on, as that scan does.
+  if (/\bauslands-?sendung\b[^.]*\ban dhl übergeben\b/.test(value)) return 'in_transit';
   if (/pick-up was successful|accepted|handed (?:over|to)|has been posted by the sender|eingeliefert|übergeben|^die sendung wurde (?:von dhl )?abgeholt\b/.test(value)) return 'accepted';
   if (/processed|sorted|sorting|sortierung|bearbeitet|briefzentrum|paketzentrum|transit|transport|arrived|eingetroffen|departed/.test(value)) return 'in_transit';
   return fallback;

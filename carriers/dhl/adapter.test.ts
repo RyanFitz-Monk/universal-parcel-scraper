@@ -113,6 +113,17 @@ describe('DHL public tracking normalization', () => {
     }
   });
 
+  it('reads the summary of an international shipment handed to DHL as the move its newest scan is', () => {
+    const scan = 'Die Auslandssendung wurde an DHL übergeben und wird für den Weitertransport in das Zielland vorbereitet.';
+    const status = 'Auslands-Sendung an DHL übergeben.';
+    const timeline = shipment().sendungen[0]!.sendungsdetails.sendungsverlauf;
+    const payload = shipment({ sendungsverlauf: { ...timeline, status } });
+    payload.sendungen[0]!.sendungsdetails.sendungsverlauf.events.push({ datum: '2026-08-10T19:00:00+02:00', status: scan });
+    const result = parseDHLTrackingResponse(payload, NUMBER);
+    expect(result.events?.[0]).toMatchObject({ description: scan, stage: 'in_transit' });
+    expect(result).toMatchObject({ current_stage: 'in_transit', last_status_text: status });
+  });
+
   it('reads a redirect DHL refused as a notice that keeps the stage before it, not a delivery attempt', () => {
     const refused = 'Die Paketumleitung wurde aufgrund Produkt/Service- Kombination nicht erlaubt storniert. Die Sendung wird an die Hausadresse zugestellt.';
     const timeline = shipment().sendungen[0]!.sendungsdetails.sendungsverlauf;
