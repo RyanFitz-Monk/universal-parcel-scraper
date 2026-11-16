@@ -1,0 +1,44 @@
+{
+  "id": "brazil-border",
+  "displayName": "Brazil Border",
+  "aliases": [
+    "Brazil Border Express"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#e00000"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://bbexp.com.br/rastreio/?code={trackingNumber}",
+    "searchUrl": "https://bbexp.com.br/rastreio/",
+    "canaryUrl": "https://bbexp.com.br/rastreio/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "bbexp.com.br"
+      ],
+      "pathPattern": "^/rastreio/?$",
+      "params": [
+        "code"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,34 @@
+{
+  "id": "ativa-logistica",
+  "displayName": "Ativa Logística",
+  "aliases": [
+    "Ativa Distribuição e Logística",
+    "Ativa Distribuição e Logística Ltda"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#003489"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://ativalog.com.br/",
+    "canaryUrl": "https://ativalog.com.br/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

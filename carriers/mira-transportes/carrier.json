@@ -1,0 +1,31 @@
+{
+  "id": "mira-transportes",
+  "displayName": "Mira Transportes",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#e60032"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cliente.mira.com.br/rastreamento",
+    "canaryUrl": "https://cliente.mira.com.br/rastreamento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

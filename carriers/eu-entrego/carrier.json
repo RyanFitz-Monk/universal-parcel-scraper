@@ -1,0 +1,31 @@
+{
+  "id": "eu-entrego",
+  "displayName": "Eu Entrego",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#5e17eb"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.euentrego.com.br/",
+    "canaryUrl": "https://tracking.euentrego.com.br/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

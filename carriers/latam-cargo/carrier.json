@@ -1,0 +1,40 @@
+{
+  "id": "latam-cargo",
+  "displayName": "LATAM Cargo",
+  "aliases": [
+    "LATAM Cargo Brasil",
+    "LAN Cargo",
+    "TAM Cargo"
+  ],
+  "region": {
+    "countries": [
+      "BR",
+      "CL",
+      "CO",
+      "EC",
+      "PE",
+      "US"
+    ]
+  },
+  "brand": {
+    "color": "#070b64"
+  },
+  "selectable": true,
+  "timezone": "America/Santiago",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.latamcargo.com/en/trackshipment",
+    "canaryUrl": "https://www.latamcargo.com/en/trackshipment",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

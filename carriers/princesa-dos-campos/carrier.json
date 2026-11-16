@@ -1,0 +1,33 @@
+{
+  "id": "princesa-dos-campos",
+  "displayName": "Princesa dos Campos",
+  "aliases": [
+    "Princesa dos Campos Encomendas"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#00c800"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://encomendas.princesadoscampos.com.br/rastreio/",
+    "canaryUrl": "https://encomendas.princesadoscampos.com.br/rastreio/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

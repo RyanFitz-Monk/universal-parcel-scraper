@@ -1,0 +1,33 @@
+{
+  "id": "uello",
+  "displayName": "Uello",
+  "aliases": [
+    "Uello Tecnologia S.A."
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#e63c4f"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://uello.com.br/consulta-do-pedido/",
+    "canaryUrl": "https://uello.com.br/consulta-do-pedido/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

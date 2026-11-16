@@ -1,0 +1,33 @@
+{
+  "id": "favorita-transportes",
+  "displayName": "Favorita Transportes",
+  "aliases": [
+    "Favorita Transportes Ltda"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#ee1e24"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cliente.favorita.com.br/rastreamento",
+    "canaryUrl": "https://cliente.favorita.com.br/rastreamento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

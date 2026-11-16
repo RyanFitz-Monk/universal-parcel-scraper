@@ -1,0 +1,48 @@
+{
+  "id": "nobordist",
+  "displayName": "Nobordist",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#0d2a45"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://trackmyorder.io/trackings?trackingNumber={trackingNumber}",
+    "searchUrl": "https://trackmyorder.io/trackings",
+    "canaryUrl": "https://trackmyorder.io/trackings",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "trackmyorder.io"
+      ],
+      "pathPattern": "^/trackings/?$",
+      "params": [
+        "trackingNumber"
+      ]
+    },
+    {
+      "domains": [
+        "trackmyorder.io"
+      ],
+      "path": "^/trackings/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

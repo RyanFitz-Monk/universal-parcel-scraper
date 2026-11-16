@@ -7678,6 +7678,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "alfa-transportes": {
+    "displayName": "Alfa Transportes",
+    "color": "#df2140",
+    "aliases": [
+      "Alfa Transportes Ltda"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://alfatransportes.com.br/",
+    "trackingSearchUrl": "https://alfatransportes.com.br/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "alfta-frakt": {
     "displayName": "Alfta Frakt",
     "color": "#263c98",
@@ -9588,6 +9608,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "ativa-logistica": {
+    "displayName": "Ativa Logística",
+    "color": "#003489",
+    "aliases": [
+      "Ativa Distribuição e Logística",
+      "Ativa Distribuição e Logística Ltda"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://ativalog.com.br/",
+    "trackingSearchUrl": "https://ativalog.com.br/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "atlantic-courier": {
     "displayName": "Atlantic International Express",
     "color": "#e31e24",
@@ -10095,6 +10136,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "bauer-express": {
+    "displayName": "Bauer Express",
+    "color": "#fdbb2d",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.bauerexpress.com.br/area-do-cliente/rastreamento-de-encomenda/",
+    "trackingSearchUrl": "https://www.bauerexpress.com.br/area-do-cliente/rastreamento-de-encomenda/",
+    "linkRules": [],
     "detectionRules": []
   },
   "bcs-courier": {
@@ -11843,6 +11901,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "brazil-border": {
+    "displayName": "Brazil Border",
+    "color": "#e00000",
+    "aliases": [
+      "Brazil Border Express"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bbexp.com.br/rastreio/",
+    "trackingUrlTemplate": "https://bbexp.com.br/rastreio/?code={trackingNumber}",
+    "trackingSearchUrl": "https://bbexp.com.br/rastreio/",
+    "linkRules": [
+      {
+        "domains": [
+          "bbexp.com.br"
+        ],
+        "pathPattern": "^/rastreio/?$",
+        "params": [
+          "code"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "brics56": {
     "displayName": "Brics56",
     "color": "#004098",
@@ -12267,6 +12356,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://poste-burundi.bi/",
     "trackingSearchUrl": "https://poste-burundi.bi/fr/suivre",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "buslog": {
+    "displayName": "Buslog",
+    "color": "#214882",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://envio.buslog.com.br/rastreamento",
+    "trackingSearchUrl": "https://envio.buslog.com.br/rastreamento",
     "linkRules": [],
     "detectionRules": []
   },
@@ -17907,6 +18013,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "dialogo-logistica": {
+    "displayName": "Diálogo Logística",
+    "color": "#1a2441",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://bbmlogistica.com.br/",
+    "trackingSearchUrl": "https://bbmlogistica.com.br/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "dida-international": {
     "displayName": "DIDA International Logistics",
     "color": "#213071",
@@ -21692,6 +21815,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "eu-entrego": {
+    "displayName": "Eu Entrego",
+    "color": "#5e17eb",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.euentrego.com.br/",
+    "trackingSearchUrl": "https://tracking.euentrego.com.br/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "eurodis": {
     "displayName": "EURODIS",
     "color": "#0b418b",
@@ -23116,6 +23256,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "favorita-transportes": {
+    "displayName": "Favorita Transportes",
+    "color": "#ee1e24",
+    "aliases": [
+      "Favorita Transportes Ltda"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cliente.favorita.com.br/rastreamento",
+    "trackingSearchUrl": "https://cliente.favorita.com.br/rastreamento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "fedex-freight": {
     "displayName": "FedEx Freight",
     "color": "#de002e",
@@ -23630,6 +23790,31 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "canaryUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
     "trackingSearchUrl": "https://fiscourier.factapp.es/IRIS/Seguimiento",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "flash-courier": {
+    "displayName": "Flash Courier",
+    "color": "#1b2470",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.flashcourier.com.br/rastreio/",
+    "trackingUrlTemplate": "https://www.flashcourier.com.br/rastreio/{trackingNumber}",
+    "trackingSearchUrl": "https://www.flashcourier.com.br/rastreio/",
+    "linkRules": [
+      {
+        "domains": [
+          "flashcourier.com.br"
+        ],
+        "path": "^/rastreio/([^/?#]+)/?$"
+      }
+    ],
     "detectionRules": []
   },
   "flash-express": {
@@ -26604,6 +26789,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "canaryUrl": "https://www.golilla.it/",
     "trackingSearchUrl": "https://my.golilla.it/segui",
     "linkRules": [],
+    "detectionRules": []
+  },
+  "gollog": {
+    "displayName": "GOLLOG",
+    "color": "#ff7020",
+    "aliases": [
+      "GOL Linhas Aéreas"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://servicos.gollog.com.br/app/site/tracking",
+    "trackingUrlTemplate": "https://servicos.gollog.com.br/app/site/tracking?code={trackingNumber}",
+    "trackingSearchUrl": "https://servicos.gollog.com.br/app/site/tracking",
+    "linkRules": [
+      {
+        "domains": [
+          "servicos.gollog.com.br"
+        ],
+        "pathPattern": "^/app/site/tracking/?$",
+        "params": [
+          "code"
+        ]
+      }
+    ],
     "detectionRules": []
   },
   "golucky": {
@@ -30261,6 +30477,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "j-and-t-cargo-br": {
+    "displayName": "J&T Cargo Brasil",
+    "color": "#00b075",
+    "aliases": [
+      "J&T Cargo Brazil"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.jtcargo.com.br/networkQuery",
+    "trackingUrlTemplate": "https://www.jtcargo.com.br/networkQuery?waybillNo={trackingNumber}&type=0",
+    "trackingSearchUrl": "https://www.jtcargo.com.br/networkQuery",
+    "linkRules": [
+      {
+        "domains": [
+          "jtcargo.com.br"
+        ],
+        "pathPattern": "^/networkQuery/?$",
+        "params": [
+          "waybillNo"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "j-and-t-cn": {
     "displayName": "J&T Express China",
     "color": "#e62019",
@@ -33614,6 +33861,33 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "latam-cargo": {
+    "displayName": "LATAM Cargo",
+    "color": "#070b64",
+    "aliases": [
+      "LATAM Cargo Brasil",
+      "LAN Cargo",
+      "TAM Cargo"
+    ],
+    "countries": [
+      "BR",
+      "CL",
+      "CO",
+      "EC",
+      "PE",
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/Santiago",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.latamcargo.com/en/trackshipment",
+    "trackingSearchUrl": "https://www.latamcargo.com/en/trackshipment",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "latam-global-express": {
     "displayName": "Latam Global Express",
     "color": "#fbbc24",
@@ -36941,6 +37215,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "mira-transportes": {
+    "displayName": "Mira Transportes",
+    "color": "#e60032",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cliente.mira.com.br/rastreamento",
+    "trackingSearchUrl": "https://cliente.mira.com.br/rastreamento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "mixpakk": {
     "displayName": "Mixpakk",
     "color": "#1ca12a",
@@ -37346,6 +37637,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "movvi": {
+    "displayName": "Movvi",
+    "color": "#ff6701",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://movvi.com.br/ferramentas/rastreio",
+    "trackingSearchUrl": "https://movvi.com.br/ferramentas/rastreio",
+    "linkRules": [],
     "detectionRules": []
   },
   "mr-courier-al": {
@@ -38262,6 +38570,40 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "nobordist": {
+    "displayName": "Nobordist",
+    "color": "#0d2a45",
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://trackmyorder.io/trackings",
+    "trackingUrlTemplate": "https://trackmyorder.io/trackings?trackingNumber={trackingNumber}",
+    "trackingSearchUrl": "https://trackmyorder.io/trackings",
+    "linkRules": [
+      {
+        "domains": [
+          "trackmyorder.io"
+        ],
+        "pathPattern": "^/trackings/?$",
+        "params": [
+          "trackingNumber"
+        ]
+      },
+      {
+        "domains": [
+          "trackmyorder.io"
+        ],
+        "path": "^/trackings/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
   },
   "noerpel": {
     "displayName": "Noerpel",
@@ -43604,6 +43946,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://primewell.cy/",
     "trackingSearchUrl": "https://tracking.primewell.cy/OD_WEB_APP_EX/Track.aspx",
+    "linkRules": [],
+    "detectionRules": []
+  },
+  "princesa-dos-campos": {
+    "displayName": "Princesa dos Campos",
+    "color": "#00c800",
+    "aliases": [
+      "Princesa dos Campos Encomendas"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://encomendas.princesadoscampos.com.br/rastreio/",
+    "trackingSearchUrl": "https://encomendas.princesadoscampos.com.br/rastreio/",
     "linkRules": [],
     "detectionRules": []
   },
@@ -51911,6 +52273,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "tecmar": {
+    "displayName": "Tecmar",
+    "color": "#253aa4",
+    "aliases": [
+      "Tecmar Transportes",
+      "Tecmar Transportes Ltda",
+      "Tecmar Transporte & Logística"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://smonet.tecmartransportes.com.br/smonet/",
+    "trackingSearchUrl": "https://smonet.tecmartransportes.com.br/smonet/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "tej-couriers": {
     "displayName": "Tej Couriers",
     "color": "#d2232a",
@@ -53936,6 +54320,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "transportes-bertolini": {
+    "displayName": "Transportes Bertolini",
+    "color": "#009fe2",
+    "aliases": [
+      "TBL",
+      "Transportes Bertolini Ltda",
+      "Empresas Bertolini"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tbl.com.br/RastreamentoCarga",
+    "trackingSearchUrl": "https://tbl.com.br/RastreamentoCarga",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "transportes-condesa": {
     "displayName": "Transportes Condesa",
     "color": "#101888",
@@ -54889,6 +55295,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "uello": {
+    "displayName": "Uello",
+    "color": "#e63c4f",
+    "aliases": [
+      "Uello Tecnologia S.A."
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://uello.com.br/consulta-do-pedido/",
+    "trackingSearchUrl": "https://uello.com.br/consulta-do-pedido/",
+    "linkRules": [],
     "detectionRules": []
   },
   "ues-uy": {
@@ -59904,6 +60330,7 @@ export const CARRIER_IDS = [
   "aland-post",
   "albatomi",
   "alem-tat",
+  "alfa-transportes",
   "alfta-frakt",
   "algerie-poste",
   "alil-post",
@@ -59957,6 +60384,7 @@ export const CARRIER_IDS = [
   "asigna",
   "asyad-express",
   "athinaiki",
+  "ativa-logistica",
   "atlantic-courier",
   "ats-healthcare",
   "auexpress",
@@ -59971,6 +60399,7 @@ export const CARRIER_IDS = [
   "barid-al-maghrib",
   "barq",
   "basic-shipping",
+  "bauer-express",
   "bcs-courier",
   "bee-fast",
   "beexprss",
@@ -60022,6 +60451,7 @@ export const CARRIER_IDS = [
   "branding-worldwide",
   "braspress",
   "brauns-express",
+  "brazil-border",
   "brics56",
   "bridge-intl",
   "bringer-parcel",
@@ -60035,6 +60465,7 @@ export const CARRIER_IDS = [
   "bulgarian-posts",
   "burd-delivery",
   "burundi-post",
+  "buslog",
   "bussgods",
   "byhd",
   "bypost",
@@ -60193,6 +60624,7 @@ export const CARRIER_IDS = [
   "dhlink",
   "dhx",
   "diakinisis",
+  "dialogo-logistica",
   "dida-international",
   "diera",
   "dimex",
@@ -60296,6 +60728,7 @@ export const CARRIER_IDS = [
   "etkin-dagitim",
   "etomars",
   "ets-express",
+  "eu-entrego",
   "eurodis",
   "euroexpress-ba",
   "europochta",
@@ -60336,6 +60769,7 @@ export const CARRIER_IDS = [
   "fastship-th",
   "fasttrack-ar",
   "fastwl",
+  "favorita-transportes",
   "fedex-freight",
   "fedex-international-connect",
   "fedex-pl",
@@ -60352,6 +60786,7 @@ export const CARRIER_IDS = [
   "first-line",
   "first-logistics",
   "fiscourier",
+  "flash-courier",
   "flash-express",
   "flash-express-la",
   "flash-express-ph",
@@ -60433,6 +60868,7 @@ export const CARRIER_IDS = [
   "gofo-nl",
   "gogo-xpress",
   "golilla",
+  "gollog",
   "golucky",
   "goodluck-courier",
   "goodmaji",
@@ -60543,6 +60979,7 @@ export const CARRIER_IDS = [
   "j-and-t-au",
   "j-and-t-br",
   "j-and-t-cargo",
+  "j-and-t-cargo-br",
   "j-and-t-cn",
   "j-and-t-co",
   "j-and-t-de",
@@ -60641,6 +61078,7 @@ export const CARRIER_IDS = [
   "lao-post",
   "laser-logistics",
   "last-one-mile-coop",
+  "latam-cargo",
   "latam-global-express",
   "latvijas-pasts",
   "lbc-express",
@@ -60740,6 +61178,7 @@ export const CARRIER_IDS = [
   "mikropakket",
   "miles-express",
   "miller-deliveries",
+  "mira-transportes",
   "mixpakk",
   "mng-kargo",
   "mobel-services",
@@ -60753,6 +61192,7 @@ export const CARRIER_IDS = [
   "motorex",
   "mountain-movers",
   "movin",
+  "movvi",
   "mr-courier-al",
   "mrl-global",
   "msg-post",
@@ -60782,6 +61222,7 @@ export const CARRIER_IDS = [
   "nippon-express",
   "nk-logistic",
   "no-limit",
+  "nobordist",
   "noerpel",
   "noest",
   "nord-wheel",
@@ -60925,6 +61366,7 @@ export const CARRIER_IDS = [
   "premier-deliveries-uk",
   "premo",
   "primewell",
+  "princesa-dos-campos",
   "prisma-courier",
   "pro-carrier",
   "product-care-group",
@@ -61165,6 +61607,7 @@ export const CARRIER_IDS = [
   "team-global-express",
   "team-worldwide",
   "techlink",
+  "tecmar",
   "tej-couriers",
   "teleport",
   "teleship",
@@ -61225,6 +61668,7 @@ export const CARRIER_IDS = [
   "transmission",
   "transnatur",
   "transport-rdl",
+  "transportes-bertolini",
   "transportes-condesa",
   "transportes-rapex",
   "transports-besson",
@@ -61255,6 +61699,7 @@ export const CARRIER_IDS = [
   "ubi-smart-parcel",
   "ubsend",
   "ubx-uk",
+  "uello",
   "ues-uy",
   "ukp-worldwide",
   "union-express",
@@ -61571,6 +62016,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "aland-post": [],
   "albatomi": [],
   "alem-tat": [],
+  "alfa-transportes": [],
   "alfta-frakt": [],
   "algerie-poste": ["algerie-poste-1","algerie-poste-s10","algerie-poste-ey"],
   "alil-post": [],
@@ -61624,6 +62070,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "asigna": [],
   "asyad-express": [],
   "athinaiki": [],
+  "ativa-logistica": [],
   "atlantic-courier": [],
   "ats-healthcare": [],
   "auexpress": [],
@@ -61638,6 +62085,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "barid-al-maghrib": ["barid-al-maghrib-s10"],
   "barq": [],
   "basic-shipping": [],
+  "bauer-express": [],
   "bcs-courier": [],
   "bee-fast": [],
   "beexprss": [],
@@ -61689,6 +62137,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "branding-worldwide": [],
   "braspress": [],
   "brauns-express": [],
+  "brazil-border": [],
   "brics56": [],
   "bridge-intl": [],
   "bringer-parcel": ["bringer-parcel-1"],
@@ -61702,6 +62151,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "bulgarian-posts": ["bulgarian-posts-1","bulgarian-posts-s10"],
   "burd-delivery": [],
   "burundi-post": [],
+  "buslog": [],
   "bussgods": ["bussgods-1"],
   "byhd": ["byhd-1"],
   "bypost": [],
@@ -61860,6 +62310,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "dhlink": ["dhlink-1","dhlink-xzg","dhlink-ylus","dhlink-eyt","dhlink-qh","dhlink-yf","dhlink-ktdwe","dhlink-yhkj","dhlink-by","dhlink-tdt","dhlink-yle","dhlink-aus","dhlink-qye","dhlink-cys","dhlink-jas","dhlink-xyl","dhlink-jxc"],
   "dhx": [],
   "diakinisis": [],
+  "dialogo-logistica": [],
   "dida-international": [],
   "diera": [],
   "dimex": [],
@@ -61963,6 +62414,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "etkin-dagitim": [],
   "etomars": ["etomars-1"],
   "ets-express": ["ets-express-1"],
+  "eu-entrego": [],
   "eurodis": [],
   "euroexpress-ba": [],
   "europochta": ["europochta-1"],
@@ -62003,6 +62455,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "fastship-th": [],
   "fasttrack-ar": [],
   "fastwl": [],
+  "favorita-transportes": [],
   "fedex-freight": [],
   "fedex-international-connect": ["fedex-international-connect-1"],
   "fedex-pl": ["fedex-pl-2","fedex-pl-1"],
@@ -62019,6 +62472,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "first-line": ["first-line-1"],
   "first-logistics": [],
   "fiscourier": [],
+  "flash-courier": [],
   "flash-express": ["flash-express-1"],
   "flash-express-la": [],
   "flash-express-ph": ["flash-express-ph-1"],
@@ -62100,6 +62554,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "gofo-nl": ["gofo-nl-1"],
   "gogo-xpress": ["gogo-xpress-1"],
   "golilla": [],
+  "gollog": [],
   "golucky": [],
   "goodluck-courier": [],
   "goodmaji": [],
@@ -62210,6 +62665,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "j-and-t-au": ["j-and-t-au-1"],
   "j-and-t-br": ["j-and-t-br-1"],
   "j-and-t-cargo": ["j-and-t-cargo-1","j-and-t-cargo-2"],
+  "j-and-t-cargo-br": [],
   "j-and-t-cn": ["j-and-t-cn-1"],
   "j-and-t-co": [],
   "j-and-t-de": ["j-and-t-de-1"],
@@ -62308,6 +62764,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "lao-post": [],
   "laser-logistics": [],
   "last-one-mile-coop": [],
+  "latam-cargo": [],
   "latam-global-express": [],
   "latvijas-pasts": ["latvijas-pasts-own","latvijas-pasts-s10"],
   "lbc-express": ["lbc-domestic"],
@@ -62407,6 +62864,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "mikropakket": [],
   "miles-express": [],
   "miller-deliveries": [],
+  "mira-transportes": [],
   "mixpakk": [],
   "mng-kargo": [],
   "mobel-services": [],
@@ -62420,6 +62878,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "motorex": [],
   "mountain-movers": [],
   "movin": [],
+  "movvi": [],
   "mr-courier-al": [],
   "mrl-global": [],
   "msg-post": [],
@@ -62449,6 +62908,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "nippon-express": [],
   "nk-logistic": [],
   "no-limit": ["no-limit-1"],
+  "nobordist": [],
   "noerpel": [],
   "noest": [],
   "nord-wheel": [],
@@ -62592,6 +63052,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "premier-deliveries-uk": [],
   "premo": [],
   "primewell": [],
+  "princesa-dos-campos": [],
   "prisma-courier": [],
   "pro-carrier": ["pro-carrier-1"],
   "product-care-group": [],
@@ -62832,6 +63293,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "team-global-express": [],
   "team-worldwide": [],
   "techlink": ["techlink-1"],
+  "tecmar": [],
   "tej-couriers": [],
   "teleport": [],
   "teleship": ["teleship-ts"],
@@ -62892,6 +63354,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "transmission": ["transmission-1"],
   "transnatur": [],
   "transport-rdl": [],
+  "transportes-bertolini": [],
   "transportes-condesa": [],
   "transportes-rapex": [],
   "transports-besson": [],
@@ -62922,6 +63385,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ubi-smart-parcel": ["ubi-smart-parcel-1"],
   "ubsend": [],
   "ubx-uk": [],
+  "uello": [],
   "ues-uy": ["ues-uy-1"],
   "ukp-worldwide": ["ukp-worldwide-1"],
   "union-express": [],

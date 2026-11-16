@@ -1,0 +1,33 @@
+{
+  "id": "alfa-transportes",
+  "displayName": "Alfa Transportes",
+  "aliases": [
+    "Alfa Transportes Ltda"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#df2140"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://alfatransportes.com.br/",
+    "canaryUrl": "https://alfatransportes.com.br/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,31 @@
+{
+  "id": "dialogo-logistica",
+  "displayName": "Diálogo Logística",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#1a2441"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://bbmlogistica.com.br/",
+    "canaryUrl": "https://bbmlogistica.com.br/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

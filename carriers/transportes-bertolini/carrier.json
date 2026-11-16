@@ -1,0 +1,35 @@
+{
+  "id": "transportes-bertolini",
+  "displayName": "Transportes Bertolini",
+  "aliases": [
+    "TBL",
+    "Transportes Bertolini Ltda",
+    "Empresas Bertolini"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#009fe2"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tbl.com.br/RastreamentoCarga",
+    "canaryUrl": "https://tbl.com.br/RastreamentoCarga",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

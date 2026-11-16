@@ -1,0 +1,44 @@
+{
+  "id": "gollog",
+  "displayName": "GOLLOG",
+  "aliases": [
+    "GOL Linhas Aéreas"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#ff7020"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://servicos.gollog.com.br/app/site/tracking?code={trackingNumber}",
+    "searchUrl": "https://servicos.gollog.com.br/app/site/tracking",
+    "canaryUrl": "https://servicos.gollog.com.br/app/site/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "servicos.gollog.com.br"
+      ],
+      "pathPattern": "^/app/site/tracking/?$",
+      "params": [
+        "code"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "j-and-t-cargo-br",
+  "displayName": "J&T Cargo Brasil",
+  "aliases": [
+    "J&T Cargo Brazil"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#00b075"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.jtcargo.com.br/networkQuery?waybillNo={trackingNumber}&type=0",
+    "searchUrl": "https://www.jtcargo.com.br/networkQuery",
+    "canaryUrl": "https://www.jtcargo.com.br/networkQuery",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "jtcargo.com.br"
+      ],
+      "pathPattern": "^/networkQuery/?$",
+      "params": [
+        "waybillNo"
+      ]
+    }
+  ],
+  "detection": []
+}

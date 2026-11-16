@@ -1,0 +1,35 @@
+{
+  "id": "tecmar",
+  "displayName": "Tecmar",
+  "aliases": [
+    "Tecmar Transportes",
+    "Tecmar Transportes Ltda",
+    "Tecmar Transporte & Logística"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#253aa4"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://smonet.tecmartransportes.com.br/smonet/",
+    "canaryUrl": "https://smonet.tecmartransportes.com.br/smonet/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

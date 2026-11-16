@@ -1,0 +1,39 @@
+{
+  "id": "flash-courier",
+  "displayName": "Flash Courier",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#1b2470"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.flashcourier.com.br/rastreio/{trackingNumber}",
+    "searchUrl": "https://www.flashcourier.com.br/rastreio/",
+    "canaryUrl": "https://www.flashcourier.com.br/rastreio/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "flashcourier.com.br"
+      ],
+      "path": "^/rastreio/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}
