@@ -10733,6 +10733,28 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "bir-gunde-kargo": {
+    "displayName": "Bir Günde Kargo",
+    "color": "#e79e23",
+    "aliases": [
+      "Birgünde Kargo",
+      "Bir Gunde Kargo",
+      "Bir Günde Kargo Lojistik A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.birgundekargo.com/",
+    "trackingSearchUrl": "https://www.birgundekargo.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "biz-courier": {
     "displayName": "BIZ Courier",
     "color": "#0f6ab2",
@@ -11283,11 +11305,14 @@
     "color": "#0048ff",
     "aliases": [
       "WeFast",
-      "WEFAST India Pvt Ltd"
+      "WEFAST India Pvt Ltd",
+      "Banabikurye",
+      "Hemen Getir Teknoloji Ltd. Şti."
     ],
     "countries": [
       "IN",
-      "ID"
+      "ID",
+      "TR"
     ],
     "selectable": true,
     "timezone": "Asia/Kolkata",
@@ -12517,6 +12542,38 @@
           "tracking.cargomini.com"
         ],
         "path": "^/([A-Za-z0-9]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
+  "cargox": {
+    "displayName": "Cargo X",
+    "color": "#fbe900",
+    "aliases": [
+      "CargoX",
+      "CargoX Kargo Taşımacılık A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.cargox.com.tr/",
+    "trackingUrlTemplate": "https://t.cargox.com.tr/getlink.php?barcode={trackingNumber}",
+    "trackingSearchUrl": "https://www.cargox.com.tr/",
+    "linkRules": [
+      {
+        "domains": [
+          "t.cargox.com.tr"
+        ],
+        "pathPattern": "^/getlink\\.php$",
+        "params": [
+          "barcode"
+        ]
       }
     ],
     "detectionRules": []
@@ -21277,6 +21334,27 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "etkin-dagitim": {
+    "displayName": "Etkin Dağıtım",
+    "color": "#151b48",
+    "aliases": [
+      "Etkin Dagitim",
+      "Etkin Dağıtım ve Nakliyat Oto Kir. Hiz. Paz. Tic. Ltd. Şti."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://musteri.etkindagitim.com/",
+    "trackingSearchUrl": "https://musteri.etkindagitim.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "etomars": {
     "displayName": "Etomars",
     "color": "#1779ec",
@@ -29017,6 +29095,38 @@
         "confidence": "low"
       }
     ]
+  },
+  "inter-global-kargo": {
+    "displayName": "İnter Global Kargo",
+    "color": "#87276c",
+    "aliases": [
+      "Inter Global Kargo",
+      "Inter Global Cargo",
+      "IGC",
+      "İGC Global Kargo",
+      "İnter Global Kargo Lojistik ve Taşımacılık Ticaret A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.globalkargo.com/tr",
+    "trackingUrlTemplate": "https://www.globalkargo.com/tr/KargoDetay/{trackingNumber}/0000",
+    "trackingSearchUrl": "https://www.globalkargo.com/tr",
+    "linkRules": [
+      {
+        "domains": [
+          "globalkargo.com"
+        ],
+        "path": "^/tr/KargoDetay/([A-Za-z0-9]+)/[0-9]+/?$"
+      }
+    ],
+    "detectionRules": []
   },
   "intereuropa": {
     "displayName": "Intereuropa",
@@ -39725,6 +39835,26 @@
     ],
     "detectionRules": []
   },
+  "pamukkale-kargo": {
+    "displayName": "Pamukkale Kargo",
+    "color": "#ec1c24",
+    "aliases": [
+      "A Pamukkale Kargo Lojistik ve Taşımacılık A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.pamukkalekargo.com.tr/ords/r/pkbs/pamukkale-kargo/kargom-nerede",
+    "trackingSearchUrl": "https://www.pamukkalekargo.com.tr/ords/r/pkbs/pamukkale-kargo/kargom-nerede",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "pandu-logistics": {
     "displayName": "Pandu Logistics",
     "color": "#052f66",
@@ -41828,6 +41958,38 @@
       }
     ]
   },
+  "post-anatolia": {
+    "displayName": "Post Anatolia",
+    "color": "#eb3f3f",
+    "aliases": [
+      "PostAnatolia",
+      "Post Anatolia Lojistik Kurumsal Hizmetler San. ve Tic. Ltd. Şti."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://panel.postanatolia.net/takip",
+    "trackingUrlTemplate": "https://panel.postanatolia.net/takip?trackingNumber={trackingNumber}",
+    "trackingSearchUrl": "https://panel.postanatolia.net/takip",
+    "linkRules": [
+      {
+        "domains": [
+          "panel.postanatolia.net"
+        ],
+        "pathPattern": "^/takip/?$",
+        "params": [
+          "trackingNumber"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "post-haste": {
     "displayName": "Post Haste",
     "color": "#24b2d8",
@@ -43102,7 +43264,8 @@
     "displayName": "PTS Worldwide Express",
     "color": "#be1722",
     "aliases": [
-      "PTS Kargo"
+      "PTS Kargo",
+      "Paket Taşımacılık Sistemleri A.Ş."
     ],
     "countries": [
       "TR"
@@ -49839,7 +50002,8 @@
     "aliases": [
       "Surat Kargo",
       "SuratKargo",
-      "Surat Cargo"
+      "Surat Cargo",
+      "Port Kargo ve Lojistik A.Ş."
     ],
     "countries": [
       "TR"
@@ -57663,6 +57827,38 @@
         "pathPattern": "^/trackIndex\\.htm$",
         "params": [
           "documentCode"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "yol-kargo": {
+    "displayName": "Yol Kargo",
+    "color": "#f66814",
+    "aliases": [
+      "YOL KARGO",
+      "Yol Kargo Yurtiçi Yurtdışı Taşımacılık A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://yolkargo.com.tr/",
+    "trackingUrlTemplate": "https://yolkargo.com.tr/kargo.php?q={trackingNumber}",
+    "trackingSearchUrl": "https://yolkargo.com.tr/",
+    "linkRules": [
+      {
+        "domains": [
+          "yolkargo.com.tr"
+        ],
+        "pathPattern": "^/kargo\\.php$",
+        "params": [
+          "q"
         ]
       }
     ],

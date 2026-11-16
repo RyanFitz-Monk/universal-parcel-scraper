@@ -1,6 +1,6 @@
 # PTS Worldwide Express
 
-PTS Worldwide Express, known to customers as PTS Kargo, is a Turkish courier for international
+PTS Worldwide Express, known to customers as PTS Kargo (Paket Taşımacılık Sistemleri A.Ş.), is a Turkish courier for international
 express and domestic e-commerce parcels. Abroad, and for some shippers in Turkey, a partner such
 as UPS, Cainiao or HepsiJET delivers the parcel under its own number. Tracked through the lookup
 its tracking page makes.

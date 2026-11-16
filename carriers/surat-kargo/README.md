@@ -2,6 +2,9 @@
 
 Tracks Sürat Kargo through the merchant tracking link and its guest piece-history lookup.
 
+Since 2021 Sürat Kargo has been run by Port Kargo ve Lojistik A.Ş., which holds its postal licence
+in BTK's register.
+
 ## Retrieval
 
 One `direct` step opens `www.suratkargo.com.tr/KargoTakip/?kargotakipno={number}` with a fresh

@@ -1,0 +1,45 @@
+{
+  "id": "post-anatolia",
+  "displayName": "Post Anatolia",
+  "aliases": [
+    "PostAnatolia",
+    "Post Anatolia Lojistik Kurumsal Hizmetler San. ve Tic. Ltd. Şti."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#eb3f3f"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://panel.postanatolia.net/takip?trackingNumber={trackingNumber}",
+    "searchUrl": "https://panel.postanatolia.net/takip",
+    "canaryUrl": "https://panel.postanatolia.net/takip",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "panel.postanatolia.net"
+      ],
+      "pathPattern": "^/takip/?$",
+      "params": [
+        "trackingNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

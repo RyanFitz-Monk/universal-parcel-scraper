@@ -1,0 +1,45 @@
+{
+  "id": "inter-global-kargo",
+  "displayName": "İnter Global Kargo",
+  "aliases": [
+    "Inter Global Kargo",
+    "Inter Global Cargo",
+    "IGC",
+    "İGC Global Kargo",
+    "İnter Global Kargo Lojistik ve Taşımacılık Ticaret A.Ş."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#87276c"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.globalkargo.com/tr/KargoDetay/{trackingNumber}/0000",
+    "searchUrl": "https://www.globalkargo.com/tr",
+    "canaryUrl": "https://www.globalkargo.com/tr",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "globalkargo.com"
+      ],
+      "path": "^/tr/KargoDetay/([A-Za-z0-9]+)/[0-9]+/?$"
+    }
+  ],
+  "detection": []
+}

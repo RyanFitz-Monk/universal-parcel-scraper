@@ -1,0 +1,45 @@
+{
+  "id": "yol-kargo",
+  "displayName": "Yol Kargo",
+  "aliases": [
+    "YOL KARGO",
+    "Yol Kargo Yurtiçi Yurtdışı Taşımacılık A.Ş."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#f66814"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://yolkargo.com.tr/kargo.php?q={trackingNumber}",
+    "searchUrl": "https://yolkargo.com.tr/",
+    "canaryUrl": "https://yolkargo.com.tr/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "yolkargo.com.tr"
+      ],
+      "pathPattern": "^/kargo\\.php$",
+      "params": [
+        "q"
+      ]
+    }
+  ],
+  "detection": []
+}

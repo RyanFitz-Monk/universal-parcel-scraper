@@ -1,0 +1,34 @@
+{
+  "id": "etkin-dagitim",
+  "displayName": "Etkin Dağıtım",
+  "aliases": [
+    "Etkin Dagitim",
+    "Etkin Dağıtım ve Nakliyat Oto Kir. Hiz. Paz. Tic. Ltd. Şti."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#151b48"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://musteri.etkindagitim.com/",
+    "canaryUrl": "https://musteri.etkindagitim.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

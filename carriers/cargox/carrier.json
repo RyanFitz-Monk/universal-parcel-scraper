@@ -1,0 +1,45 @@
+{
+  "id": "cargox",
+  "displayName": "Cargo X",
+  "aliases": [
+    "CargoX",
+    "CargoX Kargo Taşımacılık A.Ş."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#fbe900"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://t.cargox.com.tr/getlink.php?barcode={trackingNumber}",
+    "searchUrl": "https://www.cargox.com.tr/",
+    "canaryUrl": "https://www.cargox.com.tr/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "t.cargox.com.tr"
+      ],
+      "pathPattern": "^/getlink\\.php$",
+      "params": [
+        "barcode"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "pamukkale-kargo",
+  "displayName": "Pamukkale Kargo",
+  "aliases": [
+    "A Pamukkale Kargo Lojistik ve Taşımacılık A.Ş."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#ec1c24"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.pamukkalekargo.com.tr/ords/r/pkbs/pamukkale-kargo/kargom-nerede",
+    "canaryUrl": "https://www.pamukkalekargo.com.tr/ords/r/pkbs/pamukkale-kargo/kargom-nerede",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

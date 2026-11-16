@@ -3,7 +3,7 @@
 Borzo parcels use enabled universal providers. There is no dedicated adapter.
 
 Borzo, formerly WeFast, is an on-demand same-day courier service within cities in India and
-Indonesia. Its platform matches senders with independent couriers, and it issues its own tracking
+Indonesia, and in Istanbul, Izmir and Ankara as Banabikurye, whose site runs on Borzo's platform. Its platform matches senders with independent couriers, and it issues its own tracking
 codes, which recipients get in an SMS link. Its site is borzodelivery.com.
 
 ## Numbers

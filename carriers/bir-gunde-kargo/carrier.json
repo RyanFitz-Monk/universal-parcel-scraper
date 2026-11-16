@@ -1,0 +1,35 @@
+{
+  "id": "bir-gunde-kargo",
+  "displayName": "Bir Günde Kargo",
+  "aliases": [
+    "Birgünde Kargo",
+    "Bir Gunde Kargo",
+    "Bir Günde Kargo Lojistik A.Ş."
+  ],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#e79e23"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.birgundekargo.com/",
+    "canaryUrl": "https://www.birgundekargo.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

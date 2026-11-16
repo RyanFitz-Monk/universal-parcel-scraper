@@ -10737,6 +10737,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "bir-gunde-kargo": {
+    "displayName": "Bir Günde Kargo",
+    "color": "#e79e23",
+    "aliases": [
+      "Birgünde Kargo",
+      "Bir Gunde Kargo",
+      "Bir Günde Kargo Lojistik A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.birgundekargo.com/",
+    "trackingSearchUrl": "https://www.birgundekargo.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "biz-courier": {
     "displayName": "BIZ Courier",
     "color": "#0f6ab2",
@@ -11287,11 +11309,14 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "color": "#0048ff",
     "aliases": [
       "WeFast",
-      "WEFAST India Pvt Ltd"
+      "WEFAST India Pvt Ltd",
+      "Banabikurye",
+      "Hemen Getir Teknoloji Ltd. Şti."
     ],
     "countries": [
       "IN",
-      "ID"
+      "ID",
+      "TR"
     ],
     "selectable": true,
     "timezone": "Asia/Kolkata",
@@ -12521,6 +12546,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
           "tracking.cargomini.com"
         ],
         "path": "^/([A-Za-z0-9]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
+  "cargox": {
+    "displayName": "Cargo X",
+    "color": "#fbe900",
+    "aliases": [
+      "CargoX",
+      "CargoX Kargo Taşımacılık A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.cargox.com.tr/",
+    "trackingUrlTemplate": "https://t.cargox.com.tr/getlink.php?barcode={trackingNumber}",
+    "trackingSearchUrl": "https://www.cargox.com.tr/",
+    "linkRules": [
+      {
+        "domains": [
+          "t.cargox.com.tr"
+        ],
+        "pathPattern": "^/getlink\\.php$",
+        "params": [
+          "barcode"
+        ]
       }
     ],
     "detectionRules": []
@@ -21281,6 +21338,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "etkin-dagitim": {
+    "displayName": "Etkin Dağıtım",
+    "color": "#151b48",
+    "aliases": [
+      "Etkin Dagitim",
+      "Etkin Dağıtım ve Nakliyat Oto Kir. Hiz. Paz. Tic. Ltd. Şti."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://musteri.etkindagitim.com/",
+    "trackingSearchUrl": "https://musteri.etkindagitim.com/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "etomars": {
     "displayName": "Etomars",
     "color": "#1779ec",
@@ -29021,6 +29099,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       }
     ]
+  },
+  "inter-global-kargo": {
+    "displayName": "İnter Global Kargo",
+    "color": "#87276c",
+    "aliases": [
+      "Inter Global Kargo",
+      "Inter Global Cargo",
+      "IGC",
+      "İGC Global Kargo",
+      "İnter Global Kargo Lojistik ve Taşımacılık Ticaret A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.globalkargo.com/tr",
+    "trackingUrlTemplate": "https://www.globalkargo.com/tr/KargoDetay/{trackingNumber}/0000",
+    "trackingSearchUrl": "https://www.globalkargo.com/tr",
+    "linkRules": [
+      {
+        "domains": [
+          "globalkargo.com"
+        ],
+        "path": "^/tr/KargoDetay/([A-Za-z0-9]+)/[0-9]+/?$"
+      }
+    ],
+    "detectionRules": []
   },
   "intereuropa": {
     "displayName": "Intereuropa",
@@ -39729,6 +39839,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "pamukkale-kargo": {
+    "displayName": "Pamukkale Kargo",
+    "color": "#ec1c24",
+    "aliases": [
+      "A Pamukkale Kargo Lojistik ve Taşımacılık A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.pamukkalekargo.com.tr/ords/r/pkbs/pamukkale-kargo/kargom-nerede",
+    "trackingSearchUrl": "https://www.pamukkalekargo.com.tr/ords/r/pkbs/pamukkale-kargo/kargom-nerede",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "pandu-logistics": {
     "displayName": "Pandu Logistics",
     "color": "#052f66",
@@ -41832,6 +41962,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "post-anatolia": {
+    "displayName": "Post Anatolia",
+    "color": "#eb3f3f",
+    "aliases": [
+      "PostAnatolia",
+      "Post Anatolia Lojistik Kurumsal Hizmetler San. ve Tic. Ltd. Şti."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://panel.postanatolia.net/takip",
+    "trackingUrlTemplate": "https://panel.postanatolia.net/takip?trackingNumber={trackingNumber}",
+    "trackingSearchUrl": "https://panel.postanatolia.net/takip",
+    "linkRules": [
+      {
+        "domains": [
+          "panel.postanatolia.net"
+        ],
+        "pathPattern": "^/takip/?$",
+        "params": [
+          "trackingNumber"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "post-haste": {
     "displayName": "Post Haste",
     "color": "#24b2d8",
@@ -43106,7 +43268,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "displayName": "PTS Worldwide Express",
     "color": "#be1722",
     "aliases": [
-      "PTS Kargo"
+      "PTS Kargo",
+      "Paket Taşımacılık Sistemleri A.Ş."
     ],
     "countries": [
       "TR"
@@ -49843,7 +50006,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "Surat Kargo",
       "SuratKargo",
-      "Surat Cargo"
+      "Surat Cargo",
+      "Port Kargo ve Lojistik A.Ş."
     ],
     "countries": [
       "TR"
@@ -57672,6 +57836,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "yol-kargo": {
+    "displayName": "Yol Kargo",
+    "color": "#f66814",
+    "aliases": [
+      "YOL KARGO",
+      "Yol Kargo Yurtiçi Yurtdışı Taşımacılık A.Ş."
+    ],
+    "countries": [
+      "TR"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Istanbul",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://yolkargo.com.tr/",
+    "trackingUrlTemplate": "https://yolkargo.com.tr/kargo.php?q={trackingNumber}",
+    "trackingSearchUrl": "https://yolkargo.com.tr/",
+    "linkRules": [
+      {
+        "domains": [
+          "yolkargo.com.tr"
+        ],
+        "pathPattern": "^/kargo\\.php$",
+        "params": [
+          "q"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "yongma-logis": {
     "displayName": "Yongma Logis",
     "color": "#e6958f",
@@ -58853,6 +59049,7 @@ export const CARRIER_IDS = [
   "big-smart",
   "bigfoot-express",
   "bigpost",
+  "bir-gunde-kargo",
   "biz-courier",
   "bjs-home-delivery",
   "bla-kurer",
@@ -58906,6 +59103,7 @@ export const CARRIER_IDS = [
   "cargobus",
   "cargoline",
   "cargomini",
+  "cargox",
   "cargus",
   "carry-flap",
   "carrybee",
@@ -59144,6 +59342,7 @@ export const CARRIER_IDS = [
   "estes",
   "estes-forwarding",
   "ethiopian-post",
+  "etkin-dagitim",
   "etomars",
   "ets-express",
   "eurodis",
@@ -59367,6 +59566,7 @@ export const CARRIER_IDS = [
   "intelligent-logistik",
   "inter-courier",
   "inter-express-logistics",
+  "inter-global-kargo",
   "intereuropa",
   "interfjord",
   "interlogistica",
@@ -59677,6 +59877,7 @@ export const CARRIER_IDS = [
   "pakistan-post",
   "palletways",
   "pallex",
+  "pamukkale-kargo",
   "pandu-logistics",
   "pannon-xp",
   "paositra-malagasy",
@@ -59732,6 +59933,7 @@ export const CARRIER_IDS = [
   "pony-express",
   "porlor",
   "pos-indonesia",
+  "post-anatolia",
   "post-haste",
   "post-international",
   "post-luxembourg",
@@ -60192,6 +60394,7 @@ export const CARRIER_IDS = [
   "yilong-logistics",
   "yimidida",
   "yingtu",
+  "yol-kargo",
   "yongma-logis",
   "yoseus",
   "youbang-express",
@@ -60477,6 +60680,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "big-smart": [],
   "bigfoot-express": [],
   "bigpost": [],
+  "bir-gunde-kargo": [],
   "biz-courier": [],
   "bjs-home-delivery": ["bjs-home-delivery-1"],
   "bla-kurer": [],
@@ -60530,6 +60734,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "cargobus": [],
   "cargoline": [],
   "cargomini": [],
+  "cargox": [],
   "cargus": ["cargus-1","cargus-2"],
   "carry-flap": [],
   "carrybee": [],
@@ -60768,6 +60973,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "estes": [],
   "estes-forwarding": [],
   "ethiopian-post": [],
+  "etkin-dagitim": [],
   "etomars": ["etomars-1"],
   "ets-express": ["ets-express-1"],
   "eurodis": [],
@@ -60991,6 +61197,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "intelligent-logistik": [],
   "inter-courier": [],
   "inter-express-logistics": ["inter-express-logistics-1"],
+  "inter-global-kargo": [],
   "intereuropa": ["intereuropa-1"],
   "interfjord": [],
   "interlogistica": [],
@@ -61301,6 +61508,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pakistan-post": ["pakistan-post-1","pakistan-post-s10"],
   "palletways": [],
   "pallex": [],
+  "pamukkale-kargo": [],
   "pandu-logistics": [],
   "pannon-xp": ["pannon-xp-1"],
   "paositra-malagasy": [],
@@ -61356,6 +61564,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pony-express": [],
   "porlor": [],
   "pos-indonesia": ["pos-indonesia-1","pos-indonesia-s10"],
+  "post-anatolia": [],
   "post-haste": [],
   "post-international": [],
   "post-luxembourg": ["post-luxembourg-s10"],
@@ -61816,6 +62025,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "yilong-logistics": ["yilong-logistics-1"],
   "yimidida": [],
   "yingtu": [],
+  "yol-kargo": [],
   "yongma-logis": [],
   "yoseus": [],
   "youbang-express": ["youbang-express-1"],
