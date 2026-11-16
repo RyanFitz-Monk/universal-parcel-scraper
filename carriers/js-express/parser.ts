@@ -13,6 +13,7 @@ import { jsExpressChinaClock } from './clock.js';
 import { imileReceiver } from '../imile/parser.js';
 import { IMILE_RECEIVER, LIST_PLACE, RECEIVER } from './identity.js';
 import { isJsExpressDepotReceipt, jsExpressEnglish, jsExpressStage } from './status.js';
+import { isUspsRedeliveryReminder } from '../usps/status.js';
 
 export const PROVIDER = 'JS Express';
 // A reply is a few kilobytes; five hundred rows stay under 256 kB.
@@ -291,10 +292,11 @@ export function parseJsExpress(payload: unknown, rawNumber: string): CarrierResu
 
   // Oldest first: the depot's receipt keeps the stage of the scan before it with no source of its own. Before a round
   // the parcel is in transit; after a missed delivery it is back from that round, waiting for the next one or for the
-  // recipient's request.
+  // recipient's request. USPS's reminder to book a redelivery is a notice that keeps it too.
   let previous: Stage | undefined;
   for (const event of [...events].reverse()) {
-    if (previous && isJsExpressDepotReceipt(event.description ?? '')) Object.assign(event, { stage: previous, stage_source: 'none' });
+    const wording = event.description ?? '';
+    if (previous && (isJsExpressDepotReceipt(wording) || isUspsRedeliveryReminder(wording))) Object.assign(event, { stage: previous, stage_source: 'none' });
     // A note mapped as pending, such as the call to the recipient, keeps the stage before it too.
     if (event.stage !== 'pending') previous = (event.stage as Stage | undefined) ?? previous;
   }

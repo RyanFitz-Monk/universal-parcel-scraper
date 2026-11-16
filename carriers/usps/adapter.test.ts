@@ -287,6 +287,24 @@ describe('USPS rendered page', () => {
     expect(parseUSPSTrackingHtml(page(), 'CW000000005NL')).toMatchObject({ last_status_text: 'Origin Post is Preparing Shipment', current_stage: 'registered' });
   });
 
+  it('keeps the stage of the scan before the redelivery reminder, a notice with no source of its own', () => {
+    const step = (detail: string, date: string) => `<div class="tb-step"><p class="tb-status-detail">${detail}</p>`
+      + `<p class="tb-location">EXAMPLE CITY, CA 90001</p><p class="tb-date">${date}</p></div>`;
+    const page = '<html><head><title>USPS Tracking</title></head><body><div class="track-bar-container">'
+      + '<span id="trackingNum">9400100000000000000000</span><div class="latest-update-banner-wrapper"><div class="banner-header">Delivery Attempt</div></div>'
+      + '<div class="current-tracking-status-wrapper"><div class="tb-step current-step"><p class="tb-status">Delivery Attempt</p>'
+      + '<p class="tb-status-detail">Reminder to Schedule Redelivery of your item</p><p class="tb-date">October 23, 2026</p></div>'
+      + step('Notice Left (No Authorized Recipient Available)', 'October 21, 2026, 10:12 am')
+      + step('Out for Delivery', 'October 21, 2026, 6:10 am') + '</div></div></body></html>';
+    const result = parseUSPSTrackingHtml(page, '9400100000000000000000');
+    expect(result.events?.map((event) => [event.description, event.stage, event.stage_source])).toEqual([
+      ['Reminder to Schedule Redelivery of your item', 'failed_attempt', 'none'],
+      ['Notice Left (No Authorized Recipient Available)', 'failed_attempt', undefined],
+      ['Out for Delivery', 'out_for_delivery', undefined],
+    ]);
+    expect(result).toMatchObject({ current_stage: 'failed_attempt' });
+  });
+
   it('takes no scan’s date for the estimate when the current step has no detail', () => {
     const page = '<html><head><title>USPS Tracking</title></head><body><div class="track-bar-container">'
       + '<span id="trackingNum">CW000000005NL</span><div class="latest-update-banner-wrapper"><div class="banner-header">Moving Through Network</div></div>'

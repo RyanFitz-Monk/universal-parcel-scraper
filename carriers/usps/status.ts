@@ -65,7 +65,7 @@ const IN_TRANSIT_TERMS = [
  */
 export function uspsStage(text: string): Stage | null {
   const value = text.toLocaleLowerCase('en-US');
-  if (!value) return null;
+  if (!value || isUspsRedeliveryReminder(text)) return null;
   if (RETURNED_TERMS.some((term) => value.includes(term))) return 'returned';
   if (FAILED_ATTEMPT_TERMS.some((term) => value.includes(term))) return 'failed_attempt';
   if (DELIVERED_TERMS.some((term) => value.includes(term))) return 'delivered';
@@ -96,5 +96,17 @@ export function uspsStatus(text: string, hasEvents = false): CarrierStatus {
   return hasEvents ? 'in_transit' : 'unknown';
 }
 
+/**
+ * USPS's reminder to book a redelivery, sent days after its notice of a missed delivery while the item
+ * waits: a notice, not a scan, so it keeps the stage of the scan before it.
+ */
+export const isUspsRedeliveryReminder = (wording: string): boolean =>
+  /^reminder to schedule redelivery of your item[.!]?$/i.test(wording.replace(/\s+/g, ' ').trim());
+
+const REMINDER_NOTE = "USPS's reminder to book a redelivery, sent days after its notice of a missed delivery: a notice, not a scan, so it keeps the stage of the scan before it.";
+
 /** What the map says about one scan: USPS's scans carry no code, and their wording alone stages them. */
-export const statusMap: CarrierStatusMap = { stage: (_code, wording) => uspsStage(wording) ?? undefined, gaps: [] };
+export const statusMap: CarrierStatusMap = {
+  stage: (_code, wording) => uspsStage(wording) ?? undefined,
+  gaps: [{ wording: 'reminder to schedule redelivery of your item', note: REMINDER_NOTE }],
+};

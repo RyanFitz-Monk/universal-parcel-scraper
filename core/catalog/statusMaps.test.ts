@@ -200,7 +200,8 @@ describe('status map answers', () => {
     expect(answer('four-px', 'FPX_O_IRI', 'Label created')).toEqual(mapped('registered'));
     expect(answer('jrt', null, 'Parcel data received')).toEqual(mapped('registered'));
     expect(answer('jrt', null, 'Shipping information received. Your parcel is on its way to UniUni for delivery to you')).toEqual(mapped('in_transit'));
-    expect(answer('js-express', 'OIT', 'Reminder to Schedule Redelivery of your item')).toEqual(mapped('failed_attempt'));
+    // USPS's redelivery reminder is a notice that keeps the stage of the scan before it.
+    expect(answer('js-express', 'OIT', 'Reminder to Schedule Redelivery of your item')).toEqual(gap);
     expect(answer('meso-global', null, 'DHL已交仓 UPS未交仓')).toEqual(mapped('in_transit'));
     expect(answer('sxw-express', null, 'Clearence processing completed - Export')).toEqual(mapped('in_transit'));
     expect(answer('sxw-express', null, 'International flight has departed')).toEqual(mapped('in_transit'));
@@ -1707,13 +1708,15 @@ describe("universal providers' answers", () => {
     expect(answer('unknown', null, 'Handed over to airline')).not.toEqual(mapped('out_for_delivery'));
   });
 
-  it("read Bring's pre-advice and terminal registration, a cross-border line's receipt and data, and USPS's redelivery reminder as their carriers do", () => {
+  it("read Bring's pre-advice and terminal registration and a cross-border line's receipt and data as their carriers do, and USPS's redelivery reminder as a notice", () => {
     expect(answer('unknown', null, 'The sender has let us know that a parcel is on its way.')).toEqual(mapped('registered'));
     expect(answer('unknown', null, 'The parcel has been registered with us.')).toEqual(mapped('in_transit'));
     expect(answer('unknown', null, 'Package received for processing')).toEqual(mapped('accepted'));
     expect(answer('unknown', null, 'Shipment Info Received by international carrier')).toEqual(mapped('registered'));
-    expect(answer('unknown', null, 'Reminder to Schedule Redelivery of your item')).toEqual(mapped('failed_attempt'));
-    expect(answer('usps', null, 'Reminder to Schedule Redelivery of your item')).toEqual(mapped('failed_attempt'));
+    // USPS's redelivery reminder is a notice that keeps the stage of the scan before it, wherever it is read.
+    expect(answer('unknown', null, 'Reminder to Schedule Redelivery of your item')).toEqual(gap);
+    expect(answer('usps', null, 'Reminder to Schedule Redelivery of your item')).toEqual(gap);
+    expect(answer('usps', null, 'Redelivery Scheduled for Next Business Day')).toEqual(mapped('failed_attempt'));
   });
 
   it("read Česká pošta's English as its own map does when an aggregator relays it", () => {

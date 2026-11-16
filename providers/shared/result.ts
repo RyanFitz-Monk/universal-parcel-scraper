@@ -26,6 +26,8 @@ import { chinaPostRelayedStage } from '../../carriers/china-post/status.js';
 import { postaShqiptareScanStage } from '../../carriers/posta-shqiptare/status.js';
 import { ukrposhtaWordingStage } from '../../carriers/ukrposhta/status.js';
 import { sunYouWording } from '../../carriers/sunyou/identity.js';
+import { withoutCarrierNote } from '../../carriers/aliexpress/status.js';
+import { isUspsRedeliveryReminder } from '../../carriers/usps/status.js';
 import { ESTIMATE as FLIGHT_ESTIMATE } from '../../carriers/tsjy/status.js';
 import { FLIGHT_BOOKED as DHLINK_FLIGHT } from '../../carriers/dhlink/status.js';
 import { flightBooked as intelValleyFlight } from '../../carriers/intel-valley/status.js';
@@ -257,8 +259,6 @@ function sourceEventStage(description: string, includeBroadMovement = true): Sta
   if (/not delivered|could not.*deliver|unable to deliver|delivery failed/i.test(description)) return 'failed_attempt';
   // A notice card left for the recipient ends the attempt, as Canada Post reads it.
   if (/^notice (?:card )?left\b/i.test(description)) return 'failed_attempt';
-  // USPS's reminder after such a notice: the parcel waits for the recipient to book another delivery, as USPS's map reads it.
-  if (/^reminder to schedule redelivery of your item[.!]?$/i.test(description)) return 'failed_attempt';
   // A new attempt announced for the next round is no failure; the shared rules tell them apart.
   if (/delivery attempt/i.test(description) && [undefined, 'failed_attempt'].includes(trackingLanguageStage(description))) return 'failed_attempt';
   // Carrier-reported problems that are neither a missed attempt nor a return.
@@ -775,8 +775,11 @@ const EMPTY_LABEL = /^[(（]\s*(?:中文|英文|chinese|english)\s*[:：]\s*[)�
 const leftOut = (label: string): boolean => isNotice(label) || flightToCome(label) || SCHEDULE.test(label) || BARE_TIME.test(label)
   || EMPTY_LABEL.test(label);
 
-/** A copy of SunYou's departure drops the last-mile number, as SunYou's own result does. */
-const relayedLabel = (description: unknown): string => sunYouWording(relayedNotice(text(description)).replace(CLEARANCE_STATUS, ''));
+/** A relayed row's wording before the providers' own changes to it: SunYou's departure without the last-mile number, as SunYou's own result has it. */
+const relayedText = (description: unknown): string => sunYouWording(relayedNotice(text(description)).replace(CLEARANCE_STATUS, ''));
+
+/** A relayed row's wording as shown: a Cainiao step without the carrier's note, as Cainiao's tracker shows it. */
+const relayedLabel = (description: unknown): string => withoutCarrierNote(relayedText(description));
 
 /** Whether the providers leave a relayed row out of a history as no scan, as they do while reading it. */
 export function relayedRowLeftOut(description: string): boolean {
@@ -793,8 +796,15 @@ function describe(description: unknown, stage?: unknown): { description: string;
   // Established source semantics (e.g. handoff/negation) remain first. A real
   // provider stage outranks the new intuitive translation fallback. A scan naming
   // a code, a door or a signatory keeps its words: a host shows it only to the
-  // parcel's owner (`hasPrivateDeliveryDetails`).
-  return { description: label, ...classifyEvent(label, declared) };
+  // parcel's owner (`hasPrivateDeliveryDetails`). A Cainiao step the shared rules
+  // read only by its carrier's note ("Tracking number changed", relabelled) is read with it.
+  const classified = classifyEvent(label, declared);
+  const whole = relayedText(description);
+  if (classified.stage_source === 'none' && whole !== label) {
+    const noted = classifyEvent(whole, declared);
+    if (noted.stage_source !== 'none') return { description: label, ...noted };
+  }
+  return { description: label, ...classified };
 }
 
 /** A timestamp's shape for an error: digits read 9 and letters a, but for ISO's `T` and `Z` (`9999-99-99T99:99:99Z`). */
@@ -950,13 +960,19 @@ function newestFirst(events: CarrierEvent[]): CarrierEvent[] {
 // Cainiao's order data sent ahead to the last-mile carrier, in ParcelsApp's and Postal Ninja's words, is
 // neither a scan nor a forecast of one: it keeps the stage of the scan before it, as Cainiao's own map reads it.
 const LAST_MILE_NOTICE = /^(?:last-mile delivery forecast|forecast of last-mile delivery by carrier)[.!]?$/i;
+// USPS's closing of a customer's missing-mail search, which ParcelsApp follows with the place of the scan.
+const RESEARCH_CASE_CLOSED = /^package research case closed(?:, [^,]{1,60}){0,2}$/i;
 
-/** A last-mile notice with no stage of its own takes the stage of the scan before it, newest first. */
+/** A notice that keeps the stage of the scan before it: Cainiao's last-mile data, and USPS's redelivery reminder and closed search. */
+const keepsStage = (wording: string): boolean => LAST_MILE_NOTICE.test(wording) || isUspsRedeliveryReminder(wording)
+  || RESEARCH_CASE_CLOSED.test(wording.replace(/\s+/g, ' ').trim());
+
+/** A notice with no stage of its own takes the stage of the scan before it, newest first. */
 function keepStages(events: CarrierEvent[]): void {
   for (let index = events.length - 2; index >= 0; index--) {
     const event = events[index]!;
     const before = events[index + 1]!.stage;
-    if (LAST_MILE_NOTICE.test(event.description ?? '') && (event.stage_source ?? 'none') === 'none' && before && before !== 'pending') {
+    if (keepsStage(event.description ?? '') && (event.stage_source ?? 'none') === 'none' && before && before !== 'pending') {
       Object.assign(event, { stage: before, stage_source: 'none' });
     }
   }

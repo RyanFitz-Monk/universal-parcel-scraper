@@ -80,7 +80,10 @@ and [the benchmark](../benchmark/README.md) holds what was measured.
   seller" and the sentence of GLS's progress bar that points to the detailed tracking below
   keep no time when dated after the lookup: the seller's deadline and GLS's delivery estimate.
   Cainiao's "Last-mile delivery forecast", its order data sent ahead to the courier, keeps the
-  stage of the scan before it.
+  stage of the scan before it, as do USPS's reminder to book a redelivery and its closed
+  research case. A Cainiao step relayed with the carrier's note after it ("…, Carrier note: …")
+  shows Cainiao's wording alone, as Cainiao's tracker does; the note is read only when that
+  wording settles no stage.
 - `fetchSource()` treats a history in which no scan has an instant (only wall times with
   no known zone) as inconclusive: `indeterminate` with reason `undated_history`, so the
   chain moves on. UPU is exempt, because its local clocks are by design.

@@ -211,6 +211,20 @@ export const CAINIAO_NOTICE_ACTIONS: ReadonlySet<string> = new Set(NOTICES.map((
 /** Cainiao's own wording for a notice it also sends with the placeholder "Carrier update" alone. */
 export const CAINIAO_NOTICE_WORDINGS: ReadonlyMap<string, string> = new Map([['LAST_MILE_ASN_NOTIFY', 'Last-mile delivery forecast']]);
 
+const CARRIER_NOTE = /^(.*?\S)\s*[,，]\s*Carrier note\s*[:：]\s*(.*)$/is;
+
+/**
+ * A Cainiao step as the providers relay it, its standard wording followed by the carrier's own sentence
+ * ("Arrived at sorting center, Carrier note: …"), shown as Cainiao's tracker shows it: the standard wording
+ * alone, or the carrier's sentence where the standard one is the placeholder "Carrier update". Any other
+ * wording as it is.
+ */
+export function withoutCarrierNote(wording: string): string {
+  const [, step, note] = CARRIER_NOTE.exec(wording) ?? [];
+  if (step === undefined) return wording;
+  return /^carrier update$/i.test(step.trim()) ? note!.trim() || step : step;
+}
+
 /** The review queue uses the same per-scan mapping as the adapter. */
 export const statusMap: CarrierStatusMap = {
   stage: (code, wording) => {

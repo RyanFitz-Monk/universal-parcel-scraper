@@ -270,6 +270,31 @@ describe('ParcelsApp YTO scans', () => {
     ]);
   });
 
+  it("shows a Cainiao step without the carrier's note, as Cainiao's tracker does, and reads it with the note where the step alone says nothing", () => {
+    const parsed = parseParcelsAppResponse({ carriers: ['Cainiao'], states: [
+      { date: '2026-11-01T12:00:00Z', status: 'Tracking number changed, Carrier note: Package relabeled', carrier: 0 },
+      { date: '2026-11-01T10:00:00Z', status: 'Carrier update, Carrier note: Departed from facility', carrier: 0 },
+      { date: '2026-11-01T08:00:00Z', status: 'Arrived at linehaul office, Carrier note: Arrived at linehual office', carrier: 0 },
+    ] }, number, identity());
+    expect(parsed.events?.map((event) => [event.description, event.stage, event.stage_source])).toEqual([
+      ['Tracking number changed', 'in_transit', 'wording:language'],
+      ['Departed from facility', 'in_transit', 'wording:language'],
+      ['Arrived at linehaul office', 'in_transit', 'wording:language'],
+    ]);
+  });
+
+  it("keeps the stage of the scan before USPS's redelivery reminder and closed research case, which are no scans", () => {
+    const parsed = parseParcelsAppResponse({ carriers: ['USPS'], states: [
+      { date: '2026-11-05T15:00:00Z', status: 'Package Research Case Closed, Example City, ZZ', carrier: 0 },
+      { date: '2026-11-04T15:00:00Z', status: 'Reminder to Schedule Redelivery of your item', carrier: 0 },
+      { date: '2026-11-03T15:00:00Z', status: 'Notice Left (No Authorized Recipient Available)', carrier: 0, location: 'EXAMPLE CITY, ZZ 00000' },
+    ] }, number, identity());
+    expect(parsed.events?.map((event) => [event.stage, event.stage_source])).toEqual([
+      ['failed_attempt', 'none'], ['failed_attempt', 'none'], ['failed_attempt', 'wording:provider'],
+    ]);
+    expect(parsed).toMatchObject({ current_stage: 'failed_attempt' });
+  });
+
   it("reads Mayi Yinfu's relayed airport hand-over as transit, and its delivery abroad as a delivery", () => {
     const parcel = (states: Record<string, unknown>[]) => parseParcelsAppResponse({ carriers: ['DHL Parcel Spain', 'Mayiyinfu'],
       originCode: 'CN', destinationCode: 'ES', states }, number, identity());

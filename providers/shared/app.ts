@@ -2,6 +2,7 @@ import type { SameInstantIdentityPolicy, SameInstantScan } from '../../core/cata
 import { matchesLocationEnrichment, matchesRereadLocation } from '../../core/catalog/locationIdentity.js';
 import { chinaPostEnglish, chinaPostLabelPlace } from '../../carriers/china-post/status.js';
 import { ytoRelayedWording } from '../../carriers/yto/wording.js';
+import { withoutCarrierNote } from '../../carriers/aliexpress/status.js';
 import { place, trailingPlace } from './result.js';
 
 const normalized = (value: string) => value.replace(/\s+/g, ' ').trim().toLocaleLowerCase('en-US');
@@ -46,6 +47,17 @@ function matchesYtoContacts(incoming: SameInstantScan, stored: SameInstantScan):
 }
 
 /**
+ * A Cainiao step stored with the carrier's note after its wording, before the providers' copies left the
+ * note out: the stored step without it, at the same location, with provider codes that agree.
+ */
+function matchesCarrierNote(incoming: SameInstantScan, stored: SameInstantScan): boolean {
+  const wording = withoutCarrierNote(stored.description);
+  return wording !== stored.description && normalized(wording) === normalized(incoming.description)
+    && normalized(incoming.location) === normalized(stored.location)
+    && (!incoming.providerCode || !stored.providerCode || incoming.providerCode === stored.providerCode);
+}
+
+/**
  * A delivery stored as a bare "Delivered", before the providers kept the
  * carrier's own wording and a place naming a door or a signatory: a delivery
  * in any words, at the location stored or where none was, with provider codes
@@ -60,12 +72,13 @@ function matchesBareDelivery(incoming: SameInstantScan, stored: SameInstantScan)
 // A copy may add a place, or drop a label it was once stored with that names
 // no place (Posti's "abroad", a feed's system user) or the words before a
 // depot's town, show a China Post label in English, or take the place from
-// after its wording, or leave out a YTO courier's contact. A delivery stored
-// as a bare "Delivered" takes the carrier's own words.
+// after its wording, or leave out a YTO courier's contact or a Cainiao carrier's
+// note. A delivery stored as a bare "Delivered" takes the carrier's own words.
 export const sameInstantIdentityPolicy: SameInstantIdentityPolicy = {
   sourceCarrierId: 'unknown', storedSources: ['unknown'], requireProviderCode: false,
   matchEachScan: true,
   matches: (incoming, stored) => matchesLocationEnrichment(incoming, stored)
     || matchesRereadLocation(incoming, stored, place) || matchesChinaPostEnglish(incoming, stored)
-    || matchesTrailingPlace(incoming, stored) || matchesYtoContacts(incoming, stored) || matchesBareDelivery(incoming, stored),
+    || matchesTrailingPlace(incoming, stored) || matchesYtoContacts(incoming, stored) || matchesCarrierNote(incoming, stored)
+    || matchesBareDelivery(incoming, stored),
 };

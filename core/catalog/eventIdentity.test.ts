@@ -223,6 +223,15 @@ describe('same-instant identity policies', () => {
     expect(policy?.matches?.({ ...stored, providerCode: '' }, { ...stored, description: 'Doręczona', providerCode: '' })).toBe(false);
   });
 
+  it("lets a universal copy of a Cainiao step that lost the carrier's note take over its stored row", () => {
+    const policy = sameInstantIdentityPolicy('unknown', { supportsScanMatching: true });
+    const stored = { stage: 'in_transit', description: 'Arrived at sorting center, Carrier note: Arrived in sorting center', location: '', providerCode: '' };
+    expect(policy?.matches?.({ ...stored, description: 'Arrived at sorting center' }, stored)).toBe(true);
+    for (const different of [{ ...stored, description: 'Departed from sorting center' }, { ...stored, description: 'Arrived at sorting center', location: 'Example Hub' }]) {
+      expect(policy?.matches?.(different, stored)).toBe(false);
+    }
+  });
+
   it('lets a universal copy that lost Posti\'s "abroad" label take over its stored row', () => {
     const policy = sameInstantIdentityPolicy('unknown', { supportsScanMatching: true });
     const stored = { stage: 'in_transit', description: 'Item is in transport in destination country.', location: 'ULKOMAILLA', providerCode: '' };

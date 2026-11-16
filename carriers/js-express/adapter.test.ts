@@ -498,6 +498,11 @@ describe('JS Express tracking adapter', () => {
     expect(redirected.events?.slice(0, 3).map((event) => [event.stage, event.stage_source])).toEqual([
       ['in_transit', 'none'], ['in_transit', 'carrier_map'], ['failed_attempt', 'none']]);
     expect(redirected).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map' });
+    // USPS's reminder to book a redelivery is a notice too: it keeps the missed delivery's stage.
+    const reminded = parseJsExpress(waybill([coded('2026-11-07 10:00:00', 'Reminder to Schedule Redelivery of your item', 'OIT'), ...rows],
+      { country: 'Germany' }), DELIVERED);
+    expect(reminded.events?.slice(0, 2).map((event) => [event.stage, event.stage_source])).toEqual([['failed_attempt', 'none'], ['failed_attempt', 'none']]);
+    expect(reminded).toMatchObject({ current_stage: 'failed_attempt', current_stage_source: 'carrier_map' });
     // The call to the recipient at the second of the missed delivery moves nothing: the miss leads, and the receipt keeps it.
     const called = parseJsExpress(waybill([rows[0]!, coded('2026-11-06 13:25:48', 'Consignee Contacted', 'OIT'), ...rows.slice(1)],
       { country: 'Germany' }), DELIVERED);

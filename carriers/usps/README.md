@@ -135,6 +135,8 @@ Parsing, in order:
   stored in its earlier wording at its instant and place, and a place-less scan the row
   showing its wall clock under another deduced zone. A step reworded and re-zoned between
   two reads matches neither way.
+- The reminder to book a redelivery, days after a missed delivery, is a notice: it keeps the
+  stage of the scan before it with no source of its own.
 - "Available for Pickup" and a hold at the post office are stage `ready_for_pickup` but result
   status `out_for_delivery`. "Arrived at Post Office" is the delivering office's arrival before
   the delivery round, so it stays `in_transit`.

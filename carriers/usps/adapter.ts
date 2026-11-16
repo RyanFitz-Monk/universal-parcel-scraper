@@ -12,7 +12,7 @@ import { firstOccurrence } from '../../core/time/index.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
 import { clean, TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from '../../core/transport/index.js';
 import { STATE_PATTERN, uspsRowZone, uspsScanZone } from './clock.js';
-import { uspsStage, uspsStatus } from './status.js';
+import { isUspsRedeliveryReminder, uspsStage, uspsStatus } from './status.js';
 
 /**
  * USPS, through the server-rendered tracking page.
@@ -232,6 +232,15 @@ function parseRow(cells: string[], index: number, readAt: number): ParsedRow | n
   };
 }
 
+/** Newest first, the redelivery reminder takes the stage of the scan before it with no source of its own: a notice. */
+function reminderStages(events: CarrierEvent[]): CarrierEvent[] {
+  return events.map((event, index) => {
+    if (event.stage || !isUspsRedeliveryReminder(event.description ?? '')) return event;
+    const before = events.slice(index + 1).find((other) => other.stage && !isUspsRedeliveryReminder(other.description ?? ''))?.stage;
+    return before ? { ...event, stage: before, stage_source: 'none' } : event;
+  });
+}
+
 /** Current USPS markup includes collapsed scans in the DOM, without a table.
  * Undated progress steps and the history-expansion control are not scans. */
 function parseTimelineRow(description: string, dateText: string, location: string, readAt: number): CarrierEvent | null {
@@ -360,8 +369,8 @@ export function parseUSPSTrackingHtml(page: string, trackingNumber: string, read
   rows.sort((left, right) => right.timestamp - left.timestamp || left.index - right.index);
   // The current timeline is newest-first. Keep its order even when some scans
   // have no resolvable timezone; sorting those behind dated scans loses meaning.
-  const events = returnLeg(handoffsInTransit(timeline.length ? timeline.slice(0, MAX_EVENTS_TO_RETURN)
-    : rows.slice(0, MAX_EVENTS_TO_RETURN).map(({ event }) => event)));
+  const events = reminderStages(returnLeg(handoffsInTransit(timeline.length ? timeline.slice(0, MAX_EVENTS_TO_RETURN)
+    : rows.slice(0, MAX_EVENTS_TO_RETURN).map(({ event }) => event))));
   const summary = statusArea || banner;
   const statusText = (ORIGIN_POST_NOTICE.test(summary) ? events[0]?.description : undefined) || summary
     || events[0]?.description || 'Tracking information received';

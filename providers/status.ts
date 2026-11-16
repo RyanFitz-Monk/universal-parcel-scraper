@@ -134,6 +134,9 @@ export const statusMap: CarrierStatusMap = {
     wording: 'interactive delivery information',
     note: "DPD Portugal's interactive message to the recipient about the coming delivery (700), as Ship24 relays it: not a scan, so it keeps the stage the parcel already had.",
   }, {
+    wording: 'reminder to schedule redelivery of your item',
+    note: "USPS's reminder to book a redelivery, sent days after its notice of a missed delivery, as providers and forwarders relay it: not a scan, so it keeps the stage the parcel already had.",
+  }, {
     wording: 'information on delivery transmitted',
     note: "The delivery's details sent to the recipient, as ParcelsApp relays it for DHL parcels between the hub's sorting and the planned delivery: not a scan, so it keeps the stage the parcel already had.",
   }, ...NO_STEP.map(([wording, note]) => ({ wording, note }))],
