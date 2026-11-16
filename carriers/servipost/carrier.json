@@ -1,0 +1,36 @@
+{
+  "id": "servipost",
+  "displayName": "ServiPost",
+  "aliases": [
+    "Valnot",
+    "Valenciana de Notificadores",
+    "Valenciana de Notificadores, S.L.",
+    "Servipost Canarias, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#57abdd"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://localizador.servipost.es/localizador",
+    "canaryUrl": "https://localizador.servipost.es/localizador",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

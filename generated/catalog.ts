@@ -7543,6 +7543,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "akropost": {
+    "displayName": "Akropost",
+    "color": "#157cc0",
+    "aliases": [
+      "Akropost, Servicios Postales del País Vasco, S.A.",
+      "Akropost Araba, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://intranet.akropost.com/tracking",
+    "trackingSearchUrl": "https://intranet.akropost.com/tracking",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "aks-express": {
     "displayName": "AKS Express Kurir",
     "color": "#2b0299",
@@ -46882,6 +46903,29 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "servipost": {
+    "displayName": "ServiPost",
+    "color": "#57abdd",
+    "aliases": [
+      "Valnot",
+      "Valenciana de Notificadores",
+      "Valenciana de Notificadores, S.L.",
+      "Servipost Canarias, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://localizador.servipost.es/localizador",
+    "trackingSearchUrl": "https://localizador.servipost.es/localizador",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "seven-eleven-tw": {
     "displayName": "7-ELEVEN Taiwan",
     "color": "#00734d",
@@ -59299,6 +59343,7 @@ export const CARRIER_IDS = [
   "ajex",
   "akash-ganga",
   "akis-express",
+  "akropost",
   "aks-express",
   "aland-post",
   "albatomi",
@@ -60420,6 +60465,7 @@ export const CARRIER_IDS = [
   "serpost",
   "servex",
   "servientrega",
+  "servipost",
   "seven-eleven-tw",
   "sfc",
   "sfyd-express",
@@ -60944,6 +60990,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ajex": ["ajex-1"],
   "akash-ganga": [],
   "akis-express": [],
+  "akropost": [],
   "aks-express": [],
   "aland-post": [],
   "albatomi": [],
@@ -62065,6 +62112,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "serpost": ["serpost-s10"],
   "servex": [],
   "servientrega": [],
+  "servipost": [],
   "seven-eleven-tw": [],
   "sfc": ["sfc-1","sfc-ae"],
   "sfyd-express": [],

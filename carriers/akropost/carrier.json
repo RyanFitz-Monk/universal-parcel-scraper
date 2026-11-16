@@ -1,0 +1,34 @@
+{
+  "id": "akropost",
+  "displayName": "Akropost",
+  "aliases": [
+    "Akropost, Servicios Postales del País Vasco, S.A.",
+    "Akropost Araba, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#157cc0"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://intranet.akropost.com/tracking",
+    "canaryUrl": "https://intranet.akropost.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

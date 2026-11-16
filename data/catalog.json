@@ -7539,6 +7539,27 @@
     ],
     "detectionRules": []
   },
+  "akropost": {
+    "displayName": "Akropost",
+    "color": "#157cc0",
+    "aliases": [
+      "Akropost, Servicios Postales del País Vasco, S.A.",
+      "Akropost Araba, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://intranet.akropost.com/tracking",
+    "trackingSearchUrl": "https://intranet.akropost.com/tracking",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "aks-express": {
     "displayName": "AKS Express Kurir",
     "color": "#2b0299",
@@ -46876,6 +46897,29 @@
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "servipost": {
+    "displayName": "ServiPost",
+    "color": "#57abdd",
+    "aliases": [
+      "Valnot",
+      "Valenciana de Notificadores",
+      "Valenciana de Notificadores, S.L.",
+      "Servipost Canarias, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://localizador.servipost.es/localizador",
+    "trackingSearchUrl": "https://localizador.servipost.es/localizador",
+    "linkRules": [],
     "detectionRules": []
   },
   "seven-eleven-tw": {
