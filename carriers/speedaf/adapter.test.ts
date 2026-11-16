@@ -147,13 +147,17 @@ describe('Speedaf HTTP adapter', () => {
     ]);
   });
 
-  it('reads an unknown number as not found, and a record without scans as no history', () => {
+  it('reads an unknown number as not found, and a record without scans as listed with no history', () => {
     expect(() => parseSpeedaf(fixture('not-found'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));
-    expect(() => parseSpeedaf(changed('delivered', (_body, entry) => { entry.tracks = []; }), DELIVERED))
-      .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
-    // Only the hidden action: the page shows nothing either.
+    const listed = expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' });
+    expect(() => parseSpeedaf(fixture('listed'), 'NG000000003R')).toThrow(listed);
+    expect(() => parseSpeedaf(changed('delivered', (_body, entry) => { entry.tracks = []; }), DELIVERED)).toThrow(listed);
+    // Only the hidden action: the page shows nothing either, but Speedaf has the waybill.
     expect(() => parseSpeedaf(changed('delivered', (_body, entry) => { entry.tracks = entry.tracks.filter((row) => row.action === '-2'); }), DELIVERED))
-      .toThrow(expect.objectContaining({ name: 'NoHistoryError' }));
+      .toThrow(listed);
+    // Only another piece's scans settle nothing.
+    expect(() => parseSpeedaf(changed('delivered', (_body, entry) => { for (const row of entry.tracks) row.mailNo = 'ZA000000009R'; }), DELIVERED))
+      .toThrow(expect.objectContaining({ name: 'IndeterminateError' }));
   });
 
   it('counts a shipment only when its own number is in the reply', () => {

@@ -153,7 +153,7 @@ function projectRow(row: Record<string, unknown>): { key: string; event: Carrier
  * with `success`, `error` and `data`, one entry per number asked. The entry
  * must name the number asked. An entry without a destination country or a
  * scan is a number Speedaf does not know; a record with its country but no
- * scan has no history to show.
+ * scan is listed with no history to show.
  */
 export function parseSpeedaf(payload: unknown, raw: string): CarrierResult {
   const number = normalizeSpeedafNumber(raw);
@@ -195,7 +195,8 @@ export function parseSpeedaf(payload: unknown, raw: string): CarrierResult {
   }
   if (!events.length) {
     if (foreign) throw new IndeterminateError(PROVIDER, 'Speedaf answered with scans of another shipment');
-    throw new NoHistoryError(PROVIDER);
+    // Speedaf lists the waybill, with its destination or with scans the page hides.
+    throw new NoHistoryError(PROVIDER, 'Speedaf lists the waybill without a scan to show', { reason: 'listed' });
   }
   // Newest first, as the reply orders them; scans on one clock keep their order.
   const newestFirst = events

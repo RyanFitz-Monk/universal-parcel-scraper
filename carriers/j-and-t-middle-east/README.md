@@ -21,7 +21,8 @@ lookup its tracking page makes.
   reports a challenge without a lookup. A reply with code 1350200260, the page's cue to show
   the captcha, is a challenge too.
 - An unknown waybill is HTTP 200 with code 135020020, which the page reports as not found. A
-  found waybill without scans, which the page says it cannot track, has no history. A 404 or
+  found waybill without scans, which the page says it cannot track, has no history, with the
+  reason `listed`: J&T knows the waybill. A 404 or
   a redirect is a moved route, and a page in place of JSON is a challenge.
 - Codes 999001010 and 999001030 refuse the request's parameters. They are schema failures, not
   unknown waybills.

@@ -18,7 +18,7 @@ post. Tracked through the lookup its tracker page makes.
   data", which the page shows as "Package Not Found". That answer is inconclusive, never
   not-found.
 - A 404 is a moved route, a bot check's page is a challenge, and a reply that is not a parcel is
-  a changed schema. A parcel without scans has no history yet.
+  a changed schema. A parcel without scans has no history yet, with the reason `listed`.
 - The parcel must name the number asked as APC's own: `trackingReference2`, or the package
   number while it is not the partner's.
 - No recognition: the lookup cannot tell a number it lacks from a failure.

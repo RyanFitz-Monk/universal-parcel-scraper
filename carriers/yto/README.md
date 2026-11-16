@@ -39,7 +39,8 @@ and a row that opens with a contact is left out.
 ## Limitations
 
 An echoed number with no scans, as YTO answers for a waybill not scanned yet, is no history
-(`NoHistoryError`): inconclusive, not a failure of the lookup. Archived histories and international
+(`NoHistoryError`): inconclusive, not a failure of the lookup. It has no `listed` reason: the feed
+echoes a number YTO never issued the same way. Archived histories and international
 YTO Global shipments use separate website flows and are outside this adapter's scope.
 
 ## Testing

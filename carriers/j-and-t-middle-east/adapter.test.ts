@@ -117,7 +117,7 @@ describe('J&T Express Middle East HTTP adapter', () => {
     expect(result.events!.map((event) => event.stage)).toEqual(['delivered', 'out_for_delivery', 'exception', 'out_for_delivery', 'registered']);
   });
 
-  it('reads the unknown-waybill code as not found, a captcha request as a challenge and a waybill without scans as no history', () => {
+  it('reads the unknown-waybill code as not found, a captcha request as a challenge and a waybill without scans as listed with no history', () => {
     expect(() => parseJAndTMiddleEast(fixture('not-found'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'not_found' }));
     const refusal = (code: number, msg: string) => ({ code, msg, data: null, succ: false, fail: true });
     expect(() => parseJAndTMiddleEast(refusal(1350200260, 'Verification failed'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'challenge' }));
@@ -125,9 +125,10 @@ describe('J&T Express Middle East HTTP adapter', () => {
     expect(() => parseJAndTMiddleEast(refusal(999001010, 'Incomplete parameters'), UNKNOWN)).toThrow(expect.objectContaining({ kind: 'schema' }));
     expect(() => parseJAndTMiddleEast(refusal(999006020, 'Something wrong. Please Contact Tech for support.'), UNKNOWN))
       .toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+    const listed = expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError', reason: 'listed' });
+    expect(() => parseJAndTMiddleEast(fixture('listed'), 'JTE300000000003')).toThrow(listed);
     for (const details of [[], null]) {
-      expect(() => parseJAndTMiddleEast(changed('delivered', (answer) => { answer.details = details as Row[]; }), DELIVERED))
-        .toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'NoHistoryError' }));
+      expect(() => parseJAndTMiddleEast(changed('delivered', (answer) => { answer.details = details as Row[]; }), DELIVERED)).toThrow(listed);
     }
   });
 

@@ -137,8 +137,9 @@ export function parseJAndTMiddleEast(payload: unknown, raw: string): CarrierResu
     seen.add(scan.key);
     scans.push({ timestamp: scan.timestamp, index: scans.length, event: scan.event });
   }
-  // The page tells a waybill without scans that it cannot track it.
-  if (!scans.length) throw new NoHistoryError(PROVIDER);
+  // The page tells a waybill without scans that it cannot track it. J&T lists the waybill: an
+  // unknown one has its own code.
+  if (!scans.length) throw new NoHistoryError(PROVIDER, 'J&T Express Middle East lists the waybill without a scan', { reason: 'listed' });
   // Newest first, as the page lists them; scans at one instant keep the reply's order.
   const newestFirst = scans.sort((a, b) => b.timestamp - a.timestamp || a.index - b.index).map(({ event }) => event);
   // An import's pickup comes after its clearance and transit at the gateway branch: J&T

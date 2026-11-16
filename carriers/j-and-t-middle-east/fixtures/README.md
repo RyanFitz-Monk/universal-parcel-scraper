@@ -1,7 +1,7 @@
 # Fixtures
 
 `not-found.json` is the reply of `getDetailByWaybillNo` for a waybill J&T Express Middle East
-does not know. `delivered.json` and `in-transit.json` have the shape of a found waybill's reply:
+does not know, and `listed.json` its reply for a waybill it knows without a scan yet. `delivered.json` and `in-transit.json` have the shape of a found waybill's reply:
 one answer in `data` that names the waybill in `keyword` and lists its scans in `details`,
 newest first, each with every field a live scan has. Only the order creation scan copies a
 live one's label, code and sentence.
