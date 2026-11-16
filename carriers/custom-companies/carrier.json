@@ -17,18 +17,57 @@
   "timezone": "America/Chicago",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "custom-companies",
+    "steps": [
+      "direct",
+      "retry"
+    ],
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location",
+    "provider_code"
+  ],
   "portal": {
-    "url": "https://api.customco.com/shipmenttrace.htm?referencenumber={trackingNumber}",
+    "url": "https://api.customco.com/scripts/cgiip.exe/boldetail.htm?wbtn=PRO&wpro1={trackingNumber}&seskey=&nav=top&language=",
     "searchUrl": "https://www.customco.com/",
     "canaryUrl": "https://www.customco.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "delivered_at",
+      "signatory",
+      "customer_reference",
+      "origin",
+      "destination",
+      "parcel_count",
+      "weight",
+      "service_name",
+      "dimensions"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "provider_code"
+    ],
+    "discarded": [
+      "signatory",
+      "customer_reference",
+      "origin",
+      "destination",
+      "parcel_count",
+      "weight",
+      "service_name",
+      "dimensions"
+    ],
+    "unavailable": [
+      "offset_timestamps",
+      "eta",
+      "proof_of_delivery"
+    ]
   },
   "links": [
     {

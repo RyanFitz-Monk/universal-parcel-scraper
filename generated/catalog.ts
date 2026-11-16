@@ -16723,10 +16723,11 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/Chicago",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "custom-companies",
+      "localClocks": true
     },
     "canaryUrl": "https://www.customco.com/",
-    "trackingUrlTemplate": "https://api.customco.com/shipmenttrace.htm?referencenumber={trackingNumber}",
+    "trackingUrlTemplate": "https://api.customco.com/scripts/cgiip.exe/boldetail.htm?wbtn=PRO&wpro1={trackingNumber}&seskey=&nav=top&language=",
     "trackingSearchUrl": "https://www.customco.com/",
     "linkRules": [
       {
