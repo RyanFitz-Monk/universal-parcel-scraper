@@ -981,10 +981,10 @@
     {
       "wording": "En tránsito internacional. Pendiente de recepción en CTT Express",
       "language": "es",
-      "stage": "pending",
+      "stage": "in_transit",
       "confirmedBy": "live",
       "firstSeen": "2026-11-04",
-      "note": "CTT Express's pre-advice of a parcel on its way to it, its code 3900, copied on the line into Spain in CTT's words and at CTT's instant, between JRT's own transit rows. It moves nothing."
+      "note": "CTT Express's pre-advice of a parcel in international transit to it, its code 3900, copied on the line into Spain in CTT's words and at CTT's instant, between JRT's own transit rows after the parcel left. Read as the transit its words name: a pending step there would read as a step back."
     },
     {
       "wording": "Pre-clearance completed",
