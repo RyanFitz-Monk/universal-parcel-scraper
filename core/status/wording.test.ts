@@ -1006,9 +1006,19 @@ describe('classifyWording', () => {
     for (const wording of ['Arrived in delivery depot', 'Sorted in delivery centre', 'Parcel scanned in delivery hub']) {
       expect(wordingStage(wording, 'pending'), wording).not.toBe('out_for_delivery');
     }
-    // A sender's deposit is no delivery; a deposit for the recipient is.
+    // A sender's deposit is no delivery; a deposit at the recipient's address is, and one in a locker waits there.
     expect(wordingStage('Deposited by the sender at the post office', 'pending')).not.toBe('delivered');
-    expect(wordingStage('Deposited in the mailbox', 'pending')).toBe('delivered');
+    for (const wording of ['Deposited in the mailbox', 'Item deposited in letterbox', 'Parcel deposited at the front door', 'Deposited at safe place']) {
+      expect(classifyWording(wording, 'pending'), wording).toEqual({ stage: 'delivered', source: 'wording:delivered' });
+    }
+    for (const wording of ['Deposited to Locker', 'Deposited in Citibox', 'Deposited in ParcelBOX']) {
+      expect(classifyWording(wording, 'pending'), wording).toEqual({ stage: 'ready_for_pickup', source: 'wording:ready_for_pickup' });
+    }
+    // Any other deposit, or a notice deposited at the address, is left to the carrier's map.
+    for (const wording of ['Item deposited', 'Item deposited at ELTA', 'Item deposited to local postal operator', 'Notice deposited in mailbox',
+      'A delivery card has been deposited in your letterbox', 'The consignment was deposited to Balíkovna.', 'deposited by sender in locker']) {
+      expect(classifyWording(wording, 'pending'), wording).toEqual({ stage: 'pending', source: 'none' });
+    }
     for (const wording of ['Shipment in letterbox', 'Your parcel was left in the mailbox']) expect(wordingStage(wording, 'pending'), wording).toBe('delivered');
     // A collection still to come is none.
     expect(wordingStage('Once you have collected your parcel, rate your delivery', 'pending')).not.toBe('delivered');

@@ -13,6 +13,13 @@ import { deliveryForecastRemainder, trackingLanguageStage } from './language.js'
 // A German delivery booked, chosen, simplified or stopped, which no round has started.
 const DELIVERY_ARRANGED = /wunsch|gebucht|gewählt|gewünscht|festgelegt|beauftragt|angefordert|vereinbart|vereinfacht|gestoppt|angehalten/;
 
+// A parcel deposited is delivered only where the recipient lives: in the mailbox or at the door. Carriers deposit
+// parcels in bags, at post offices and with other posts on the way, and senders deposit them with the carrier, so
+// any other deposit is left to the carrier's map. A notice or card deposited there is no parcel.
+const DEPOSITED_AT_ADDRESS = /^(?!.*\b(?:notice|card|slip|advice|notification|avis)\b)(?!.*\bby (?:the )?(?:sender|shipper|seller|merchant)\b).*\bdeposited\b[^.;]*\b(?:mail ?box|letter ?box|front door|door ?step|door|porch|safe place)\b/;
+// One deposited in a locker or a pickup station waits for the recipient there, unless the sender put it in.
+const DEPOSITED_FOR_COLLECTION = /^(?!.*\bby (?:the )?(?:sender|shipper|seller|merchant)\b).*\bdeposited\b[^.;]*\b(?:(?:parcel )?lockers?|parcel ?box|(?:pick ?up )?parcel station|pick ?up (?:point|station)|packstation|citibox)\b/;
+
 export interface ClassifiedWording {
   stage: Stage;
   /**
@@ -81,10 +88,10 @@ export function classifyWording(text: string, fallback: Stage = 'in_transit'): C
     return matched('exception', 'exception_incident');
   }
   if (['ready for pickup', 'ready for pick-up', 'ready for pick up', 'ready for collection', 'abholbereit',
-    'deposited in the mypost24 machine'].some((term) => value.includes(term))) return matched('ready_for_pickup', 'ready_for_pickup');
-  // The sender depositing the parcel with the carrier is no delivery.
+    'deposited in the mypost24 machine'].some((term) => value.includes(term))
+    || DEPOSITED_FOR_COLLECTION.test(value)) return matched('ready_for_pickup', 'ready_for_pickup');
   if (['delivered', 'zugestellt', 'confirmation of receipt'].some((term) => value.includes(term))
-    || /\bdeposited\b(?![^.;]*\b(?:by (?:the )?(?:sender|shipper|seller|merchant)|postal partner)\b)/.test(value)) {
+    || DEPOSITED_AT_ADDRESS.test(value)) {
     return matched('delivered', 'delivered');
   }
   // "In delivery", but not a delivery terminal or depot the parcel is sorted in, nor a delivery
