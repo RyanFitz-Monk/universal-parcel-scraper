@@ -5810,6 +5810,16 @@
     "reason": "Aramex Australia and Aramex New Zealand print the same twelve-character labels on one platform, each with its own database, and Colis Privé's rule takes any twelve letters or digits. All three are low-confidence: the label names neither network, so direct tracking must find it on one of them."
   },
   {
+    "shape": "AR and ten digits",
+    "carriers": [
+      "colis-prive",
+      "aramex-au",
+      "aramex-nz",
+      "360lion"
+    ],
+    "reason": "360Lion's parcels for Argentina carry AR and ten digits, which also fit Aramex Australia's and Aramex New Zealand's twelve-character labels and Colis Privé's twelve letters or digits. All four rules are low, recognition asks 360Lion's tracker, and the carrier that knows the number decides."
+  },
+  {
     "shape": "Two letters, or a digit and a letter, followed by ten digits",
     "carriers": [
       "colis-prive",

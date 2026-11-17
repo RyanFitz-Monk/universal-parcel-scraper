@@ -37,8 +37,9 @@ The reply lists the parcel by its number, and must list the requested one.
 Archived lookups on its former tracker show WSH, a two-letter destination country, ten digits and
 YQ, and a complaint about a SHEIN parcel that ProShips delivered in Colombia gives a number of the
 same layout. The samples come from two sources, so the rule is low. The tracker also answers for
-a destination country's two letters and ten digits, which detection does not offer 360Lion for:
-no public sample of that layout is known.
+a destination country's two letters and ten digits. Detection offers 360Lion for AR and ten
+digits, the layout its parcels to Argentina carry, with a low rule that Aramex's two letters and
+ten digits share, and recognition asks the tracker. Other countries' letters stay unclaimed.
 
 ## Limitations
 

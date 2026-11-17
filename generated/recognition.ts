@@ -4,6 +4,7 @@
 export const CARRIER_RECOGNITION_RANKS: Readonly<Record<string, number>> = {
   "17feia": 991,
   "2go": 799,
+  "360lion": 694,
   "4-72": 896,
   "4sides": 783,
   "99minutos": 40,

@@ -5854,7 +5854,8 @@
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "360lion"
+      "adapter": "360lion",
+      "recognitionRank": 694
     },
     "canaryUrl": "https://toms.360lion.com/track",
     "trackingUrlTemplate": "https://toms.360lion.com/track?trackNumber={trackingNumber}",
@@ -5873,6 +5874,10 @@
     "detectionRules": [
       {
         "pattern": "^WSH[A-Z]{2}\\d{10}YQ$",
+        "confidence": "low"
+      },
+      {
+        "pattern": "^AR\\d{10}$",
         "confidence": "low"
       }
     ]

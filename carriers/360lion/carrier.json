@@ -42,7 +42,10 @@
     "adapter": "360lion",
     "steps": [
       "direct"
-    ]
+    ],
+    "recognition": {
+      "rank": 694
+    }
   },
   "capabilities": [
     "history",
@@ -102,6 +105,11 @@
     {
       "id": "360lion-1",
       "pattern": "^WSH[A-Z]{2}\\d{10}YQ$",
+      "confidence": "low"
+    },
+    {
+      "id": "360lion-2",
+      "pattern": "^AR\\d{10}$",
       "confidence": "low"
     }
   ]

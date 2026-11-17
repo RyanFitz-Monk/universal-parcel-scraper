@@ -1,13 +1,38 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { recognitionCandidates } from '../../core/catalog/recognition.js';
+import { recognitionAskedCarriers, recognitionCandidates } from '../../core/catalog/recognition.js';
+import { detectCarrierMatch } from '../../core/detection/index.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { languageStageStatus, STAGES } from '../../core/status/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
-import { LionTracker } from './adapter.js';
+import { adapter, LionTracker } from './adapter.js';
 import { lionUrl, normalizeLionNumber, parseLion, parseLionReply } from './parser.js';
 import { lionGroup, lionRail, lionScan, statusMap } from './status.js';
+
+describe('360Lion numbers', () => {
+  it('suggests 360Lion for AR and ten digits and asks its tracker, but not for other countries\' letters', () => {
+    for (const number of ['AR0000000001', 'ar 0000000001']) {
+      expect(detectCarrierMatch(number), number).toMatchObject({ confidence: 'low' });
+      expect(detectCarrierMatch(number).candidates, number).toContain('360lion');
+      for (const countryHint of [undefined, 'AR', 'CN']) expect(recognitionAskedCarriers(number, { countryHint }), `${number} ${countryHint}`).toContain('360lion');
+    }
+    expect(recognitionCandidates(NUMBER).map(candidate => candidate.carrier)).toContain('360lion');
+    for (const other of ['AR000000001', 'AR00000000001', 'AB0000000001', 'MX0000000001', 'CO0000000001', 'XAR0000000001']) {
+      expect(detectCarrierMatch(other).candidates ?? [], other).not.toContain('360lion');
+    }
+  });
+
+  it('recognizes a number its tracker lists with scans and not one it files as not found', async () => {
+    const lookups = [response(changed(parcel => { parcel.hawbCode = 'AR0000000001'; })), response(missing('AR0000000002'))];
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => lookups.shift()!);
+    const lion = adapter({ fetcher, env: {}, recorder: NOOP_RECORDER } as never);
+    await expect(lion.recognize!('AR0000000001', { budgetMs: 5_000 })).resolves.toMatchObject({ known: true });
+    await expect(lion.recognize!('AR0000000002', { budgetMs: 5_000 })).resolves.toEqual({ known: false });
+    await expect(lion.recognize!('AR-1', { budgetMs: 5_000 })).resolves.toEqual({ known: false });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+});
 
 const NUMBER = 'WSHAR0000000001YQ';
 const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/tracking.json', import.meta.url), 'utf8'));
@@ -184,14 +209,13 @@ describe('360Lion guest adapter', () => {
     await expect(new LionTracker({ fetcher }).fetch(NUMBER, { signal: during.signal })).rejects.toThrow('synthetic cancellation');
   });
 
-  it('routes an explicit selection and keeps recognition out', async () => {
+  it('routes an explicit selection', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => response(fixture()));
     const tracker = createTracker({ fetcher, env: {}, providers: [] });
     const result = await tracker.track({ carrier: '360lion', number: NUMBER });
     expect(result.source).toBe('360lion');
     expect(result.result.events).toHaveLength(5);
     expect(result.result.last_status_text).toBe('Transit in Destination Country');
-    expect(recognitionCandidates(NUMBER).map(candidate => candidate.carrier)).not.toContain('360lion');
     for (const number of ['', 'AR00001', 'WSH AR0000000001YQ', 'WSHAR0000000001YQ,AR0000000001', 'WSH-AR0000000001YQ', 'A'.repeat(41)]) expect(() => normalizeLionNumber(number)).toThrow();
     for (const number of [NUMBER, 'AR0000000001', 'wshar0000000001yq']) expect(normalizeLionNumber(` ${number} `)).toBe(number.toUpperCase());
   });

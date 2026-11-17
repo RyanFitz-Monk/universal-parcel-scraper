@@ -5858,7 +5858,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "360lion"
+      "adapter": "360lion",
+      "recognitionRank": 694
     },
     "canaryUrl": "https://toms.360lion.com/track",
     "trackingUrlTemplate": "https://toms.360lion.com/track?trackNumber={trackingNumber}",
@@ -5877,6 +5878,10 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "detectionRules": [
       {
         "pattern": "^WSH[A-Z]{2}\\d{10}YQ$",
+        "confidence": "low"
+      },
+      {
+        "pattern": "^AR\\d{10}$",
         "confidence": "low"
       }
     ]
@@ -66727,7 +66732,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "24curier": [],
   "2ebox": [],
   "2go": ["2go-1"],
-  "360lion": ["360lion-1"],
+  "360lion": ["360lion-1","360lion-2"],
   "360zebra": [],
   "3pe-express": [],
   "4-72": ["4-72-s10"],
