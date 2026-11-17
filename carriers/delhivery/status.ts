@@ -40,5 +40,6 @@ export const statusMap: CarrierStatusMap = {
     const stage = classifyDelhiveryStatus(wording)?.stage;
     return stage === 'delivered' ? undefined : stage;
   },
-  gaps: [{ wording: 'delivered', note: 'Delivered to the recipient, or to the seller when its scan type or the shipment\'s flow is a return: the stored scan does not keep either.' }],
+  gaps: [{ wording: 'delivered', note: 'Delivered to the recipient, or to the seller when its scan type or the shipment\'s flow is a return: the stored scan does not keep either.' },
+    { wording: 'pickup', note: 'The bare "PICKUP" status token, before the next scan: it does not say whether the courier is yet to collect the parcel or has collected it.' }],
 };

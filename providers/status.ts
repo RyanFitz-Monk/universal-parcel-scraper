@@ -72,6 +72,10 @@ const NO_STEP: ReadonlyArray<readonly [wording: string, note: string]> = [
   ['barcode scanning', "A Shenzhen forwarder's warehouse scan that First Line reads as its intake and PFC Express as transit: the wording names neither."],
   ['packaged', "A forwarder's packing, or a seller's: the wording does not say whose."],
   ['ready for dispatch', "A parcel made ready to go, by a shop before any carrier has it or by a carrier on its way: the wording does not say whose."],
+  ['returns', "A bare returns scan: a courier bringing the parcel back to its depot after a round, as BUFFALO's between two rounds, or a return to the sender: the wording does not say which."],
+  ['exceptional parcel returned', "A forwarder's line, relayed between export and import clearance for parcels that went on to the last-mile carrier: the wording does not say what went back, or where."],
+  ['common pracel status', 'A placeholder relayed beside Poczta Polska\'s scans, misspelt as it comes: it names no step.'],
+  ['udostępnienie epo', "Poczta Polska making its electronic proof of delivery available, beside the delivery scan: not a scan of its own."],
 ];
 
 export const statusMap: CarrierStatusMap = {

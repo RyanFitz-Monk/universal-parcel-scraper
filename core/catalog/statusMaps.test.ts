@@ -1350,6 +1350,7 @@ describe('status map answers', () => {
     expect(answer('delhivery', null, 'RTO')).toEqual(mapped('returned'));
     expect(answer('delhivery', null, 'Canceled')).toEqual(mapped('exception'));
     expect(answer('delhivery', null, 'Delivered')).toEqual(gap);
+    expect(answer('delhivery', null, 'PICKUP')).toEqual(gap);
     expect(answer('delhivery', null, 'Synthetic scan')).toEqual(unknown);
   });
 
@@ -1586,6 +1587,9 @@ describe("universal providers' answers", () => {
     // DPD Portugal's in Ship24's English: its depot scan, and its message to the recipient about the delivery, no scan.
     expect(answer('unknown', null, 'WAREHOUSE READING')).toEqual(mapped('in_transit'));
     expect(answer('unknown', null, 'INTERACTIVE DELIVERY INFORMATION')).toEqual(gap);
+    for (const wording of ['RETURNS', 'Exceptional Parcel Returned', 'Common pracel status', 'Udostępnienie EPO']) {
+      expect(answer('unknown', null, wording), wording).toEqual(gap);
+    }
     // La Poste's import moving on abroad, and XDP's first record, as ParcelsApp relays them.
     expect(answer('unknown', null, 'Your shipment continues its journey to its destination country.')).toEqual(mapped('in_transit'));
     // Its parcel and Chronopost's entering the destination country, in French.
