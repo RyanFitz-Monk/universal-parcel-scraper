@@ -60,6 +60,9 @@ sent within Brazil. Tracked through the lookups its two tracking pages make.
   so its answers have Brazil as their destination, and a scan without a place takes a Brazilian clock.
 - Returning to a sorting centre after failed deliveries is an exception: the parcel can still go
   out again.
+- A failed delivery whose reason is "Pacote não pertence à Base" is in transit, not a failed
+  attempt: the parcel reached a delivery base that does not serve its address, and the next scan
+  is the parcel back at a transit centre. Nobody tried the door.
 - The reply names no destination carrier's number, so there is no hand-off.
 
 ## Limitations

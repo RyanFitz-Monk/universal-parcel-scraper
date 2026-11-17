@@ -44,6 +44,7 @@
     {"code": "Delivery_point_reception", "wording": "Objeto chegou ao ponto de entrega", "stage": "in_transit", "language": "pt", "confirmedBy": "live", "note": "At the delivery station the courier leaves from."},
     {"code": "to_be_delivered", "wording": "Objeto saiu para entrega ao destinatário", "stage": "out_for_delivery", "language": "pt", "confirmedBy": "live"},
     {"code": "delivery_failed", "wording": "A entrega falhou", "stage": "failed_attempt", "language": "pt", "confirmedBy": "live", "note": "The reply gives the reason apart, as Cliente ausente or Endereço fora da rota."},
+    {"code": "delivery_failed", "wording": "A entrega falhou: Pacote não pertence à Base", "stage": "in_transit", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The reason says the parcel reached a delivery base that does not serve its address, a sorting misroute: nobody tried the door, and the next scan is the parcel back at a transit centre."},
     {"code": "Returns_being_shipped_to_warehouse", "wording": "O pacote está a caminho do centro de trânsito para devolução.", "stage": "exception", "language": "pt", "confirmedBy": "live", "note": "Back to a sorting centre after failed deliveries; the parcel went out again and was delivered in the history seen."},
     {"code": "delivered", "wording": "O pacote foi assinado", "stage": "delivered", "language": "pt", "confirmedBy": "live"},
     {"code": "delivered", "wording": "Objeto entregue ao destinatário", "stage": "delivered", "language": "pt", "confirmedBy": "live"},

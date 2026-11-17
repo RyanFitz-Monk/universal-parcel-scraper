@@ -66,6 +66,17 @@ const CODES: ReadonlyMap<string, Stage> = new Map([
   ['problem', 'exception'],
 ]);
 
+/**
+ * A failed delivery whose reason says the parcel reached a delivery base that does not serve its address, a sorting
+ * misroute ("A entrega falhou: Pacote não pertence à Base"). Nobody tried the recipient's door: the parcel goes back to
+ * a transit centre, so the scan is in transit.
+ */
+const MISROUTED = /:\s*pacote n[aã]o pertence [aà] base\b/i;
+
+function misrouted(code: string, wording: string): boolean {
+  return anjunCodeKey(code) === 'delivery_failed' && MISROUTED.test(wording);
+}
+
 /** A code as the map reads it: lower case, without spaces. */
 export function anjunCodeKey(code: string): string {
   return code.replace(/\s+/g, '').toLowerCase();
@@ -78,7 +89,7 @@ export function anjunMappedStage(code: string): Stage | undefined {
 
 /** A scan's stage: its code, else the shared wording rules, else nothing. */
 export function anjunStage(code: string, wording: string): ClassifiedWording | null {
-  const mapped = anjunMappedStage(code);
+  const mapped = misrouted(code, wording) ? 'in_transit' : anjunMappedStage(code);
   if (mapped) return { stage: mapped, source: 'carrier_map' };
   const worded = classifyWording(wording, 'in_transit');
   return worded.source === 'none' ? null : worded;
@@ -86,6 +97,6 @@ export function anjunStage(code: string, wording: string): ClassifiedWording | n
 
 export const statusMap: CarrierStatusMap = {
   codeKey: anjunCodeKey,
-  stage: (code) => (code ? anjunMappedStage(code) : undefined),
+  stage: (code, wording) => (code ? (misrouted(code, wording) ? 'in_transit' : anjunMappedStage(code)) : undefined),
   gaps: [],
 };

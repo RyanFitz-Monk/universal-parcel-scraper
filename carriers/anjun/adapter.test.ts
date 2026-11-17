@@ -105,6 +105,9 @@ describe('Anjun HTTP adapter', () => {
       body.extra.countryCode = 'br';
     }), DELIVERED);
     expect(result.events![2]).toMatchObject({ description: 'A entrega falhou: Endereço incorreto, Nova tentativa amanhã' });
+    expect(result.events![2]).toMatchObject({ stage: 'failed_attempt' });
+    const misrouted = parseAnjun(changed('delivered', (rows) => { rows[2]!.extraData = { problemType: 'Pacote não pertence à Base' }; }), DELIVERED);
+    expect(misrouted.events![2]).toMatchObject({ description: 'A entrega falhou: Pacote não pertence à Base', stage: 'in_transit', stage_source: 'carrier_map' });
     expect(result).toMatchObject({ destination_country: 'BR' });
     expect(JSON.stringify(result)).not.toMatch(/Rua Sample|Sample District/);
     // A country the page could show that is not a code is left out.
@@ -384,6 +387,11 @@ describe('Anjun status vocabulary', () => {
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'anjun', providerCode: 'synthetic_code', description: 'Synthetic note' })).toEqual({ kind: 'unknown' });
     expect(anjunStage('DELIVERY_FAILED', 'Synthetic note')).toEqual({ stage: 'failed_attempt', source: 'carrier_map' });
+    // A misroute to a base that does not serve the address is no attempt at the door.
+    expect(statusMapAnswer({ carrier: 'anjun', providerCode: 'delivery_failed', description: 'A entrega falhou: Pacote não pertence à Base' }))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(statusMapAnswer({ carrier: 'anjun', providerCode: 'delivery_failed', description: 'A entrega falhou: Cliente ausente' }))
+      .toEqual({ kind: 'mapped', stage: 'failed_attempt' });
     expect(anjunStage('synthetic_code', 'Synthetic note')).toBeNull();
   });
 });
