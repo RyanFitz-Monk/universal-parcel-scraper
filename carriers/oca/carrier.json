@@ -23,7 +23,8 @@
       "direct"
     ],
     "recognition": {
-      "rank": 974
+      "rank": 974,
+      "servedCountriesOnly": true
     }
   },
   "capabilities": [
@@ -98,5 +99,11 @@
       ]
     }
   ],
-  "detection": []
+  "detection": [
+    {
+      "id": "oca-1",
+      "pattern": "^\\d{5}0000\\d{10}$",
+      "confidence": "low"
+    }
+  ]
 }

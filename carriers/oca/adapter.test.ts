@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { recognitionAskedCarriers } from '../../core/catalog/recognition.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
+import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, OCA_API, OcaTracker } from './adapter.js';
@@ -227,5 +229,22 @@ describe('OCA status vocabulary', () => {
     // A state the map does not know falls to the shared wording rules.
     expect(ocaStage('Estado de Visita ONLINE (Entregado al portero)')).toMatchObject({ source: expect.stringMatching(/^wording:/) });
     expect(ocaStage('Estado sintético')).toBeNull();
+  });
+});
+
+describe('OCA numbers', () => {
+  it('suggests OCA for five digits, 0000 and ten digits, and asks it only for a lookup in Argentina', () => {
+    for (const number of [DELIVERED, '9876500000123456789', '98765 0000 1234567890']) {
+      expect(detectCarrierMatch(number), number).toMatchObject({ carrier: 'unknown', confidence: 'low' });
+      expect(detectCarrierMatch(number).candidates, number).toContain('oca');
+      expect(recognitionAskedCarriers(number, { countryHint: 'AR' }), number).toContain('oca');
+      for (const countryHint of [undefined, 'ES', 'SE', 'DE', 'BR']) {
+        expect(recognitionAskedCarriers(number, { countryHint }), `${number} ${countryHint}`).not.toContain('oca');
+      }
+    }
+    // Zeros elsewhere, one digit short or long, or a piece's dash and digit.
+    for (const other of ['1234510000000000011', '1234500010000000011', '123450000000000001', '12345000000000000111', `${DELIVERED}-1`]) {
+      expect(detectCarrierMatch(other).candidates ?? [], other).not.toContain('oca');
+    }
   });
 });

@@ -8521,5 +8521,13 @@
       "ppl"
     ],
     "reason": "These numeric waybill layouts overlap for the public BEST China freight reference; their lengths and check digits do not establish shipment ownership."
+  },
+  {
+    "shape": "Nineteen digits in OCA's layout that also fit the Hermes Einrichtungs-Service delivery-note layout",
+    "carriers": [
+      "hermes",
+      "oca"
+    ],
+    "reason": "OCA's five digits, 0000 and ten digits can also read as a Hermes delivery note: a year digit, the day of the year, six digits, 0000 and five digits. Both rules are low, recognition asks OCA only for a lookup in Argentina, and the carrier that knows the number decides."
   }
 ]

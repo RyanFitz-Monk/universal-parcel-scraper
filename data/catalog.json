@@ -42117,7 +42117,8 @@
     "tracking": {
       "mode": "automatic",
       "adapter": "oca",
-      "recognitionRank": 974
+      "recognitionRank": 974,
+      "recognitionServedCountriesOnly": true
     },
     "canaryUrl": "https://www.oca.com.ar/Seguimiento/BuscarEnvio",
     "trackingUrlTemplate": "https://www.oca.com.ar/Seguimiento/Paquetes/{trackingNumber}",
@@ -42162,7 +42163,12 @@
         ]
       }
     ],
-    "detectionRules": []
+    "detectionRules": [
+      {
+        "pattern": "^\\d{5}0000\\d{10}$",
+        "confidence": "low"
+      }
+    ]
   },
   "ocasa": {
     "displayName": "OCASA",

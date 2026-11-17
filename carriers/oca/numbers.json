@@ -16,7 +16,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's tracking service behind its web search; the opened capture shows the parcel's history."
     },
@@ -35,7 +38,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's parcel tracking page; the opened capture shows the parcel's history."
     },
@@ -54,7 +60,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's parcel tracking page; the opened capture shows the parcel's history."
     },
@@ -73,7 +82,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's parcel tracking page; the opened capture shows the parcel's history."
     },
@@ -92,7 +104,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker; the opened capture shows only the robot check, not the parcel. OCA's tracking service knows it."
     },
@@ -111,7 +126,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -130,7 +148,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -149,7 +170,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -170,7 +194,8 @@
         "carrier": "unknown",
         "confidence": "low",
         "candidates": [
-          "hermes"
+          "hermes",
+          "oca"
         ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
@@ -190,7 +215,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's e-Pak tracking page, as an archived address shows; the capture was not opened."
     },
@@ -211,7 +239,8 @@
         "carrier": "unknown",
         "confidence": "low",
         "candidates": [
-          "hermes"
+          "hermes",
+          "oca"
         ]
       },
       "note": "Looked up on OCA's e-Pak tracking page, as an archived address shows; the capture was not opened."
@@ -231,7 +260,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -250,7 +282,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -269,7 +304,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -288,7 +326,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     },
@@ -307,7 +348,10 @@
       },
       "expect": {
         "carrier": "unknown",
-        "confidence": "none"
+        "confidence": "low",
+        "candidates": [
+          "oca"
+        ]
       },
       "note": "Looked up on OCA's current tracker, as an archived address shows; the capture was not opened. OCA's tracking service knows it."
     }

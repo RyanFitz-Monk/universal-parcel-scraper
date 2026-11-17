@@ -42121,7 +42121,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "tracking": {
       "mode": "automatic",
       "adapter": "oca",
-      "recognitionRank": 974
+      "recognitionRank": 974,
+      "recognitionServedCountriesOnly": true
     },
     "canaryUrl": "https://www.oca.com.ar/Seguimiento/BuscarEnvio",
     "trackingUrlTemplate": "https://www.oca.com.ar/Seguimiento/Paquetes/{trackingNumber}",
@@ -42166,7 +42167,12 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
-    "detectionRules": []
+    "detectionRules": [
+      {
+        "pattern": "^\\d{5}0000\\d{10}$",
+        "confidence": "low"
+      }
+    ]
   },
   "ocasa": {
     "displayName": "OCASA",
@@ -67791,7 +67797,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "nz-couriers": [],
   "oak-harbor": [],
   "obibox": ["obibox-1"],
-  "oca": [],
+  "oca": ["oca-1"],
   "ocasa": ["ocasa-1"],
   "ock-cn": [],
   "ocolchonespack": [],
