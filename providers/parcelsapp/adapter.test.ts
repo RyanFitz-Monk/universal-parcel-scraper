@@ -3166,6 +3166,24 @@ describe('ParcelsApp result parsing', () => {
     ]);
   });
 
+  it("reads Correos de México's copies of 4-72's scans in Colombia back to 4-72's clock", () => {
+    // Correos de México shows 4-72's wall clock as UTC on Mexico City's clock: its arrival and customs inspection
+    // came six hours before UPU's copies of them, which carry 4-72's digits.
+    const scan = (date: string, status: string, carrier: number, location?: string) => ({ date, status, carrier, ...(location ? { location } : {}) });
+    const events = parseParcelsAppResponse({ carriers: ['Universal Postal Union', 'Mexico Post'], originCode: 'MX', destinationCode: 'CO', states: [
+      scan('2026-11-13T20:10:00Z', 'Arrived at sorting center in destination country', 0, 'EXAMPLE OFFICE, Colombia'),
+      scan('2026-11-13T14:15:00Z', 'Start of customs inspection in destination country', 1, 'COEXAM'),
+      scan('2026-11-13T14:10:00Z', 'Arrival at Mexico Exchange Zone, awaiting entry into customs', 1, 'COLOMBIA'),
+      scan('2026-10-23T08:36:00Z', 'Piece deposited in a bag and sent to the destination country office.', 1, 'Example Office, Mexico City'),
+    ] }, number, identity()).events?.map(({ description, time, time_zone }) => [description, time, time_zone]);
+    expect(events).toEqual([
+      ['Start of customs inspection in destination country', '2026-11-14T01:15:00.000Z', 'America/Bogota'],
+      ['Arrived at sorting center in destination country', '2026-11-14T01:10:00.000Z', 'America/Bogota'],
+      ['Arrival at Mexico Exchange Zone, awaiting entry into customs', '2026-11-14T01:10:00.000Z', 'America/Bogota'],
+      ['Piece deposited in a bag and sent to the destination country office.', '2026-10-23T14:36:00.000Z', 'America/Mexico_City'],
+    ]);
+  });
+
   it('reads EMS\'s office of exchange in a country of several clocks on the one most of its people live on', () => {
     // On a parcel to Chile, EMS's arrival and import customs at the Santiago office came at the digits of UPU's
     // copies placed there; read under ParcelsApp's label they came three hours early.

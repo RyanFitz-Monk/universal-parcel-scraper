@@ -42,7 +42,9 @@ in Mexico ends with its state's abbreviation. Since Mexico dropped summer time, 
 on central time keep UTC−6 all year, so their offices' scans are dated on Mexico City's clock.
 Offices in other states, in states with several clocks, without a state, such as the office of
 exchange, and abroad, where foreign posts' scans come through with their own clocks, are kept as
-local times. Rows are ordered by their clocks, as the event numbers sometimes put a scan before one
+local times. 4-72's data gives its offices' wall clocks as UTC times, which the tracker shows on
+Mexico City's clock, six hours before UPU's copies of the same scans, so a scan the tracker places
+in Colombia, by name or UPU office code, is read back onto Bogotá's clock ([clock.ts](clock.ts)). Rows are ordered by their clocks, as the event numbers sometimes put a scan before one
 made minutes earlier.
 
 Foreign posts' events use the same names, so an arrival abroad is worded as an arrival in Mexico.

@@ -200,6 +200,21 @@ describe('Correos de México tracking adapter', () => {
     expect(correosDeMexicoResult([scan('Centro, CDMX', 1), scan('Centro, CDMX', 1)], KNOWN).events).toHaveLength(1);
   });
 
+  it("reads 4-72's scans in Colombia back to its clock, which the tracker shows as UTC on Mexico City's", () => {
+    // 4-72's arrival and customs inspection came six hours before UPU's copies of them, which carry 4-72's digits.
+    const scan = (location: string, wall = '2026-11-13T14:10:00'): CorreosDeMexicoScan =>
+      ({ sequence: 1, wall, location, description: 'Arribo a Zona Intercambio México, en espera de ingreso a la Aduana' });
+    const clock = (location: string, wall?: string) => {
+      const [event] = correosDeMexicoResult([scan(location, wall)], KNOWN).events!;
+      return event!.time ?? `local ${String(event!.local_time)}`;
+    };
+    expect(clock('COLOMBIA')).toBe('2026-11-13T20:10:00-05:00');
+    expect(clock('COEXAM', '2026-11-13T14:15:00')).toBe('2026-11-13T20:15:00-05:00');
+    expect(clock('CO', '2026-11-13T22:30:00')).toBe('2026-11-14T04:30:00-05:00');
+    // Other posts' scans, and a Mexican place of an office code's shape, keep their wall clocks.
+    for (const location of ['PERU', 'PEEXAM', 'Estados Unidos de América', 'COLIMA']) expect(clock(location), location).toBe('local 2026-11-13T14:10:00');
+  });
+
   it('names the counter an item waits at, and the counter it was collected from', () => {
     const waiting = read('inbound', INBOUND);
     expect(waiting).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup',

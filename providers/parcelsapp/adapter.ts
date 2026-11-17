@@ -36,6 +36,7 @@ import { countryZones, hasSeveralClocks, keepsZone, mainZone } from '../../place
 import { captureFailure, capturedBodies, loadCapture, type CaptureSpec } from '../shared/capture.js';
 import { CAINIAO_CHINA_LEG, CAINIAO_CHINA_ZONE } from '../../carriers/aliexpress/clock.js';
 import { chinaPostEnglish, chinaPostLabelPlace } from '../../carriers/china-post/status.js';
+import { correosDeMexicoForeignClock } from '../../carriers/correos-de-mexico/clock.js';
 import { correosOriginZone } from '../../carriers/correos-spain/clock.js';
 import { cttSiteZone, portugalZone } from '../../carriers/ctt/clock.js';
 import { DHLINK_RECORD_ZONE, usClockCopy } from '../../carriers/dhlink/clock.js';
@@ -1167,6 +1168,17 @@ function laPosteLetterRelay(name: unknown, date: unknown, location: string, numb
 }
 
 /**
+ * Correos de México's copy of a foreign post's scan that it shows from that post's wall clock read
+ * as UTC, on Mexico City's clock (carriers/correos-de-mexico/clock.ts): its digits go back to the
+ * wall clock before that post's clock reads them.
+ */
+function correosDeMexicoRelay(name: unknown, date: unknown, location: string): { zone: string; date: string } | null {
+  if (typeof name !== 'string' || carrierIdFromName(name) !== 'correos-de-mexico') return null;
+  const foreign = correosDeMexicoForeignClock(location, date);
+  return foreign ? { zone: foreign.zone, date: `${foreign.wall}Z` } : null;
+}
+
+/**
  * The clock of the number's own network of a brand, when a country-qualified
  * name gives another: the depot prefix of a DPD UK number outweighs "DPD
  * France", the network ParcelsApp asked (checked 2026-10-10: DPD UK's own
@@ -1609,7 +1621,8 @@ function readState(payload: Record<string, unknown>, raw: Record<string, unknown
   const location = scanLocation(name, raw.location);
   const offset = ownOffset(name, raw.date, location);
   const wallClock = WALL_CLOCKS.has(nameKey(name)) && !offset && !uspsLabelRow(name, status);
-  const relay = polandPostRelay(name, raw.date, location, number, destination) ?? laPosteLetterRelay(name, raw.date, location, number);
+  const relay = polandPostRelay(name, raw.date, location, number, destination) ?? laPosteLetterRelay(name, raw.date, location, number)
+    ?? correosDeMexicoRelay(name, raw.date, location);
   const pitneyBowes = relay ? undefined : pitneyBowesClock(payload, raw, status, destination);
   const own = relay?.zone ?? (pitneyBowes ? pitneyBowes.zone : carrierClock(payload, raw, number, status, destination));
   // iMile's page writes every scan on the recipient country's clock, wherever it happened, and

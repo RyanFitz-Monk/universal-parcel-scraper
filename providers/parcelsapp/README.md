@@ -591,7 +591,9 @@ step exists for future protocol changes.
   Paris's clock, its copy of China Post's posting on a parcel came seven hours after La Poste's
   own instant. On a tracked letter (an S10 number of the L series) La Poste shows that wall
   clock read as UTC on Paris's clock, as 17TRACK has it, so the digits go back to the wall
-  clock first.
+  clock first. Correos de México does the same on Mexico City's clock for 4-72's scans in
+  Colombia ([its clocks](../../carriers/correos-de-mexico/clock.ts)): read as given, they came
+  six hours before UPU's copies of them, which carry 4-72's digits.
   Correios Brazil names it after "Country, ", in Portuguese: read on Brasília's clock, China Post's posting
   came eleven hours after China Post's own row of it. There a name a Brazilian town shares ("FRANCA") is the country. Albania Post's relays under the foreign post's country ("Finland") keep their wall clock, as
   its own tracker leaves them: they run hours ahead of the foreign post's own scans.
