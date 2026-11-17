@@ -253,6 +253,42 @@ describe('Ship24 result parsing', () => {
     // The United States keep several clocks.
     expect(noon('Example Town (US)', 'US')).toBeUndefined();
   });
+
+  describe('a parcel wnDirect hands to Hermes Germany', () => {
+    const barcode = 'H1000000000000000001';
+    const hermes = { crawler_code: 'hermes-de-tracking', country_code: 'DE', translation: { name: 'Hermes Germany' } };
+    const wnDirect = { crawler_code: 'wndirect-tracking', country_code: 'GB', translation: { name: 'WnDirect/Asendia UK' } };
+    const scans = [
+      { timestamp: '2026-11-17T08:10:00Z', status: 'Die Sendung wurde im Hermes Verteilzentrum sortiert.', courier: hermes },
+      { timestamp: '2026-11-16T22:13:00', status: 'Scanned to Container', courier: wnDirect },
+      { timestamp: '2026-11-15T10:00:00', status: 'Manifest received', courier: wnDirect },
+    ];
+    const listing = (crawlers: string[], id = barcode) => ({ is_main: false, tracking_number: id, crawler_codes: crawlers });
+    const parse = (events: unknown[] = scans, listed: unknown[] = [listing(['hermes-de-tracking', 'wndirect-tracking'])]) => parseShip24Response({ data: {
+      tracking_number: number, destination_country_code: 'DE', couriers: [hermes, wnDirect],
+      tracking_numbers: [{ is_main: true, tracking_number: number, crawler_codes: ['wndirect-tracking'] }, ...listed], events } }, number);
+
+    it('reads wnDirect\'s offset-less scans on London\'s clock, which its joined name shares, and Hermes\'s at their own offset', () => {
+      expect(parse().events!.map(({ time, time_zone }) => [time, time_zone])).toEqual([
+        ['2026-11-17T08:10:00.000Z', undefined], ['2026-11-16T22:13:00.000Z', 'Europe/London'], ['2026-11-15T10:00:00.000Z', 'Europe/London']]);
+    });
+
+    it('names Hermes and the barcode Ship24 lists for it as the delivery partner, while Hermes has the newest scan', () => {
+      expect(parse()).toMatchObject({ delivery_carrier: 'hermes-de', delivery_tracking_number: barcode });
+      const partner = (events: unknown[], listed?: unknown[]) => {
+        const { delivery_carrier, delivery_tracking_number } = parse(events, listed);
+        return [delivery_carrier, delivery_tracking_number];
+      };
+      // wnDirect's scan is the newest: no partner yet.
+      expect(partner(scans.slice(1))).toEqual([undefined, undefined]);
+      // A number Hermes's feed does not follow, or one Hermes's rule does not claim.
+      expect(partner(scans, [listing(['wndirect-tracking'])])).toEqual([undefined, undefined]);
+      expect(partner(scans, [listing(['hermes-de-tracking'], 'H10000')])).toEqual([undefined, undefined]);
+      // Two numbers for one partner name none.
+      expect(partner(scans, [listing(['hermes-de-tracking']), listing(['hermes-de-tracking'], 'H1000000000000000002')]))
+        .toEqual([undefined, undefined]);
+    });
+  });
 });
 
 describe('Ship24 feeds that relabel the carrier\'s wall clock', () => {

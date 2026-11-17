@@ -226,7 +226,7 @@ When a result names a delivery partner, the tracker also asks that partner's ada
 answer comes back separately, checked against the number on its own and finished as a direct
 lookup's answer is. Adopting it is the consumer's choice. A provider's answer names one only
 by a number that the own rule of its newest scan's carrier claims, as ParcelsApp's next
-number for the parcel. A checksum-valid
+number for the parcel or a number Ship24 lists for that carrier. A checksum-valid
 S10 item with no partner named proposes the post of the destination country its answer
 reports, or for a DHL Paket parcel the partner DHL names there, if that partner looks up
 DHL's number. When none is reported, a consumer may give

@@ -165,8 +165,11 @@ No account, cookie, fingerprint or issued token is used.
   only from one in the origin country: 4PX's feed lists USPS's label before the pickup
   in China.
 
-  Then, for a parcel not known to cross a border: the clock every courier the reply
-  names keeps at that moment, else the zone routing passes for the parcel's carrier.
+  Then, for a parcel not known to cross a border: the clock of the courier the scan names,
+  or the one clock the parts of a joined name keep ("WnDirect/Asendia UK", London's), else
+  the clock every courier the reply names keeps at that moment, else the zone routing passes
+  for the parcel's carrier. wnDirect's scans of a parcel it hands to Hermes Germany carry no
+  offset, and the destination's clock read them an hour off.
   Last, a GOFO scan at a town the stations do not list, in a reply where no GOFO scan is
   placed, is read on Pacific time, Ship24's own label: three hours late in the East, but
   the reply keeps the instants it had.
@@ -197,7 +200,11 @@ No account, cookie, fingerprint or issued token is used.
 - `couriers[].translation.name` becomes `reported_carriers`, and becomes
   `discovered_carrier` only when exactly one name maps to a catalog id. A bare brand
   ("DPD") maps only when the number leaves one of the brand's catalog networks.
-- The aggregator's delivery estimate, courier phone/website and alternate numbers are
+- A number listed in `tracking_numbers` beside the asked one names the delivery partner
+  when the newest scan's courier follows it (`crawler_codes`) and that courier's carrier's own
+  rule claims it, as Hermes Germany's barcode for a parcel wnDirect hands to it. Only one such
+  number names one.
+- The aggregator's delivery estimate, courier phone/website and other alternate numbers are
   not kept.
 
 ## Rejected approaches

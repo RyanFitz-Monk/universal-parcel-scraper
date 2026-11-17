@@ -34,7 +34,8 @@ import { imileCountryClock } from '../../carriers/imile/clock.js';
 import { swissPostDestinationZone } from '../../carriers/swiss-post/clock.js';
 import { trackingPlace } from '../../places/trackingLocation.js';
 import { keepsZone } from '../../places/zones.js';
-import { courierZone, universalCarrierHints } from '../shared/hints.js';
+import { detectCarrierMatch } from '../../core/detection/index.js';
+import { brandCarrierForNumber, courierZone, universalCarrierHints } from '../shared/hints.js';
 import { localEvent, numberOf, place, result, type UniversalSource } from '../shared/result.js';
 import { ship24CourierCode } from './couriers.js';
 import { Ship24HttpClient } from './http.js';
@@ -403,6 +404,22 @@ interface Placed { zone: string; basis: 'place' | 'neighbour' | 'destination' | 
 const carrierZone = (zone: string | null | undefined): Placed | null => zone ? { zone, basis: 'carrier' } : null;
 
 /**
+ * For a parcel not known to cross a border, the clock of the courier the scan
+ * itself names, when it has one: wnDirect's scans of a parcel it hands to
+ * Hermes Germany give Hermes's scans at Hermes's UTC digits, on London's clock
+ * in November, where Hermes's own carry their offset. A name joining two
+ * ("WnDirect/Asendia UK") keeps the clock its parts share.
+ */
+function scanCourierZone(journey: Journey, scan: Record<string, unknown>, wall: string): string | null {
+  if (journey.international) return null;
+  const name = isRecord(scan.courier) && isRecord(scan.courier.translation) ? scan.courier.translation.name : undefined;
+  if (typeof name !== 'string' || name.length > 80) return null;
+  const zones = name.split('/').map((part) => part.trim()).filter(Boolean)
+    .map((part) => courierZone(part, journey.number, wall)).filter((zone): zone is string => zone !== null);
+  return zones.length ? sharedClockZone(zones, wall) : null;
+}
+
+/**
  * For a parcel that stays in one country, the clock every courier the reply
  * names keeps at that moment (La Poste and its Chronopost leg), else the zone
  * routing passes for the parcel's carrier.
@@ -496,6 +513,38 @@ function borrowedZone(readings: readonly Reading[], reading: Reading, journey: J
   return earlier?.zone ?? later?.zone ?? null;
 }
 
+/**
+ * The carrier Ship24 follows the parcel to and its number: a number it lists
+ * for the parcel beside the one asked, which the newest scan's courier follows
+ * too (`crawler_codes`) and that courier's carrier's own rule claims, as Hermes
+ * Germany's barcode for a parcel wnDirect hands to it. Only one such pair
+ * names the partner.
+ */
+function listedPartner(data: Record<string, unknown>, events: readonly unknown[], number: string): Pick<CarrierResult, 'delivery_carrier' | 'delivery_tracking_number'> {
+  const instant = (scan: Record<string, unknown>) => {
+    const time = typeof scan.datetime === 'string' ? scan.datetime : scan.timestamp;
+    return typeof time === 'string' ? Date.parse(time) : Number.NaN;
+  };
+  const newest = events.filter(isRecord).filter((scan) => Number.isFinite(instant(scan)))
+    .reduce<Record<string, unknown> | null>((best, scan) => !best || instant(scan) > instant(best) ? scan : best, null);
+  const courier = newest && isRecord(newest.courier) ? newest.courier : null;
+  const code = courier?.crawler_code;
+  const name = courier && isRecord(courier.translation) ? courier.translation.name : undefined;
+  if (typeof code !== 'string' || typeof name !== 'string') return {};
+  const listed = Array.isArray(data.tracking_numbers) ? data.tracking_numbers.slice(0, MAX_COURIERS) : [];
+  const pairs = new Map<string, { carrier: string; id: string }>();
+  for (const entry of listed) {
+    if (!isRecord(entry) || typeof entry.tracking_number !== 'string' || !Array.isArray(entry.crawler_codes)
+      || !entry.crawler_codes.includes(code)) continue;
+    const id = entry.tracking_number.toUpperCase().replace(/[\s.-]/g, '');
+    if (id === number || !/^[A-Z0-9]{4,40}$/.test(id)) continue;
+    const carrier = carrierIdFromName(name) ?? brandCarrierForNumber(name, id);
+    if (carrier && (detectCarrierMatch(id).candidates as readonly string[]).includes(carrier)) pairs.set(`${carrier} ${id}`, { carrier, id });
+  }
+  const [partner, ...others] = pairs.values();
+  return partner && !others.length ? { delivery_carrier: partner.carrier, delivery_tracking_number: partner.id } : {};
+}
+
 export function parseShip24Response(payload: unknown, trackingNumber: string, timezone: string | null = null, now = Date.now()): CarrierResult {
   const number = numberOf(trackingNumber);
   const data = isRecord(payload) && isRecord(payload.data) ? payload.data : null;
@@ -552,7 +601,8 @@ export function parseShip24Response(payload: unknown, trackingNumber: string, ti
     // Correos's copy of an origin post's scan takes that post's clock, or keeps its wall clock.
     const sent = wall ? correosOriginCopy(raw, journey) : undefined;
     const placed = !wall ? null : carrierZone(relayed) ?? carrierZone(feed?.clock?.(journey))
-      ?? (sent !== undefined ? carrierZone(sent) : placedZone(journey, raw, wall, feed) ?? (unnamed ? null : carrierZone(namedZone(journey, wall))));
+      ?? (sent !== undefined ? carrierZone(sent) : placedZone(journey, raw, wall, feed)
+        ?? (unnamed ? null : carrierZone(scanCourierZone(journey, raw, wall) ?? namedZone(journey, wall))));
     readings.push({ event: parsed, wall, feed, country: feed?.country ?? locationCountry(raw.location), zone: placed?.zone ?? null, basis: placed?.basis,
       upu: isRecord(raw.courier) && raw.courier.crawler_code === UPU_FEED, zulu: zuluWall(raw) });
   }
@@ -570,7 +620,7 @@ export function parseShip24Response(payload: unknown, trackingNumber: string, ti
     delete timed.local_time;
     return timed;
   });
-  return { ...result(events, SOURCE), ...names };
+  return { ...result(events, SOURCE), ...names, ...listedPartner(data, data.events, number) };
 }
 
 /**
