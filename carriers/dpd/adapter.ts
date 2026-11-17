@@ -1330,12 +1330,9 @@ export class DPDTracker {
       allowHttpError: true,
       fetcher: this.fetcher,
     });
+    // A refused page, Cloudflare's challenge or a block without its markers, needs the browser service.
+    if (result.response.status === 401 || result.response.status === 403) throw new DPDChallengeError();
     const html = decodeText(result.bytes);
-    if (result.response.status === 403
-      && (result.response.headers.get('cf-mitigated') === 'challenge'
-        || /Just a moment|Enable JavaScript and cookies/i.test(html))) {
-      throw new DPDChallengeError();
-    }
     if (!result.response.ok) throw new IndeterminateError('DPD', `DPD returned HTTP ${result.response.status}`);
     return html;
   }

@@ -1147,6 +1147,15 @@ describe('DPDTracker steps', () => {
       .rejects.toThrow('configure FLARESOLVERR_URL');
   });
 
+  it('asks for a browser solver when the page is refused without a challenge', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('<html>maintenance</html>'))
+      .mockResolvedValueOnce(new Response('<html>Forbidden</html>', { status: 403 }));
+
+    await expect(new DPDTracker({ timeoutMs: 1_000, trawl: null }).fetch(TRACKING_NUMBER))
+      .rejects.toMatchObject({ name: 'DPDChallengeError', message: expect.stringContaining('configure FLARESOLVERR_URL') });
+  });
+
   it('solves the page through the browser service when one is configured', async () => {
     const fetcher = vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response('<html>maintenance</html>'))

@@ -16,7 +16,8 @@ Netherlands is [dpd-nl](../dpd-nl/README.md), Hungary is
    lookups share a refresh; cancellation does not poison later lookups.
 2. `page`: the rendered Swiss consignee page recovers from inconclusive guest
    replies, transport failures or mismatched identities. Cloudflare challenges
-   require the browser service configured by `FLARESOLVERR_URL`.
+   and other refusals of the page require the browser service configured by
+   `FLARESOLVERR_URL`.
 
 A parcel-details 404 establishes absence, as does a 400 typed
 `PARCEL_NOT_FOUND` to a lookup without a postcode. A lookup with one is first

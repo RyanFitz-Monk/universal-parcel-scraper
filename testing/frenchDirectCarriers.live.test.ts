@@ -6,7 +6,7 @@ import { RelaisColisTracker } from '../carriers/relais-colis/adapter.js';
 
 describe('French direct carriers live wrong-number handling', () => {
   it('maps Relais Colis no data to a clean 404', async () => {
-    await expect(new RelaisColisTracker().fetch('0000000000')).rejects.toMatchObject({
+    await expect(new RelaisColisTracker().fetch('ZQXJ7KTESTW04K')).rejects.toMatchObject({
       name: 'RelaisColisTrackingError',
       status: 404,
       message: 'Relais Colis could not locate the shipment',
