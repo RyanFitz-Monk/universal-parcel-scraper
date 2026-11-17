@@ -64,7 +64,8 @@ const CATALOG_NAMES = new Set([
 // the rest of its budget: forty-five seconds by default, a minute at most.
 // Barid Al-Maghrib dates scans to the day: its clocks lack AM or PM. Algérie
 // Poste's tracker, EMS Champion Post Algérie's, was seen answering for EMS
-// from abroad, not for registered mail. Posta Kenya dates only scans it places
+// from abroad, not for parcels or registered mail, so it is asked about EMS
+// only. Posta Kenya dates only scans it places
 // in Kenya by name. Correo Uruguayo's clocks name no zone, and those relayed
 // from abroad keep the sender's. Posta dates only scans at a Faroese place.
 // Correos de El Salvador's clocks name no zone either, nor do Correos de

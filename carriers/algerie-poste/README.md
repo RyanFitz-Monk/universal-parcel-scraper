@@ -32,10 +32,11 @@ tracker of its express subsidiary, EMS Champion Post Algérie, at ems.dz.
   reads the timeline only.
 - EMS Champion Post Algérie's Android app (`com.noteasy.ems`) opens the site's mobile page in a
   web view. Its form opens `ems.dz/track/mobile.php?icd={number}`, which shows the same timeline.
-- Algérie Poste's own site, poste.dz, does not answer from outside Algeria.
 
 ## Limitations
 
+- The tracker, like Algérie Poste's own site, poste.dz, answers only Algerian addresses. From
+  elsewhere the connection times out, and the adapter reports the tracker unreachable.
 - The page has no ETA, weight, service, destination or delivery instant with a zone.
 - Registered letters and parcels quoted in public reports, from abroad or of Algérie Poste's own,
   were not found on the tracker, while EMS items were. Older items drop out of its records
@@ -56,8 +57,9 @@ Algérie Poste about them, and `algerie-poste-ey` about its `EY` codes without a
 digit, which Chronopost's broad rule matches too. `algerie-poste-1` suggests Algérie Poste for
 the domestic numbers with low confidence; La Poste's broad rule for two characters and eleven
 digits matches them too. Mail from abroad reaches Algérie Poste when a caller names it, a
-provider names it, or a result gives Algeria as the destination of an S10 item. The samples and
-their sources are in [`numbers.json`](numbers.json).
+provider names it, or a result gives Algeria as the destination of an EMS item, the only mail from
+abroad the tracker was seen holding. The samples and their sources are in
+[`numbers.json`](numbers.json).
 
 ## Links
 
@@ -67,7 +69,7 @@ one item opens at `ems.dz/track/index.php?icd={number}`. An earlier version read
 
 ## Testing
 
-`npm run test:carriers:live -- carriers/algerie-poste`, with `ALGERIE_POSTE_TRACKING_NUMBER` set
-outside the repository to an item the tracker knows. Optionally set
+`npm run test:carriers:live -- carriers/algerie-poste`, from an Algerian address, with
+`ALGERIE_POSTE_TRACKING_NUMBER` set outside the repository to an item the tracker knows. Optionally set
 `ALGERIE_POSTE_INBOUND_NUMBER` to an EMS item from abroad and `ALGERIE_POSTE_UNKNOWN_NUMBER` to a
 number the tracker holds nothing for.

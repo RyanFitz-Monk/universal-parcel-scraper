@@ -88,6 +88,13 @@ describe('general delivery handoff candidates', () => {
     expect(deliveryHandoff('aliexpress', 'UA123456785CN', { destination_country: 'FR' }))
       .toEqual({ carrier: 'la-poste', number: 'UA123456785CN', basis: 'destination' });
   });
+  it('hands Algérie Poste EMS from abroad, the only mail its tracker holds', () => {
+    expect(deliveryHandoff('emirates-post', 'EE123456785AE', { destination_country: 'DZ' }))
+      .toEqual({ carrier: 'algerie-poste', number: 'EE123456785AE', basis: 'destination' });
+    expect(deliveryHandoff('emirates-post', 'CP123456785AE', { destination_country: 'DZ' })).toBeNull();
+    expect(deliveryHandoff('emirates-post', 'RR123456785AE', { destination_country: 'Algeria' })).toBeNull();
+    expect(deliveryHandoff('japan-post', 'RA123456785JP', {}, 'DZ')).toBeNull();
+  });
   it('hands EMS from abroad to Parcelforce, the UK EMS operator, and other mail to Royal Mail', () => {
     expect(deliveryHandoff('japan-post', 'EA123456785JP', { destination_country: 'GB' }))
       .toEqual({ carrier: 'parcelforce', number: 'EA123456785JP', basis: 'destination' });
