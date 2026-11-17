@@ -14,7 +14,8 @@ by ten digits. The order-reference mode accepts other text, so a reference accep
 not evidence of a waybill format.
 
 Two letters and ten digits are used by [J&T Express Indonesia](../j-and-t/README.md),
-[Aramex Australia](../aramex-au/README.md) and [Aramex New Zealand](../aramex-nz/README.md).
+[Aramex Australia](../aramex-au/README.md), [Aramex New Zealand](../aramex-nz/README.md) and,
+in Brazil, [Onlog Express](../onlog-express/README.md), whose references are `AA` and ten digits.
 That shared shape cannot identify Cargo Brasil. The site's other allowed formats come from
 shared Cargo software; a public Brasil shipment must establish network ownership before a
 number rule is added.
