@@ -337,6 +337,8 @@ the adapter can tell: `api_denied` when the carrier refused the request outright
 `puzzle_missing` when no puzzle appeared, `puzzle_unsolved` or `solver_unavailable` when the
 solver gave no answer, `verification_refused` when the answer was refused, and
 `verification_unfinished` when time ran out before verification and tracking finished.
+A transport failure carries `capture_missing` when a browser lookup submitted the carrier's
+form and its reply never came back.
 
 USPS barcode validation shares the carrier adapter's whole-identifier checks. A routing
 barcode is `420`, the recipient's five- or nine-digit ZIP code and a 22- or 26-digit package

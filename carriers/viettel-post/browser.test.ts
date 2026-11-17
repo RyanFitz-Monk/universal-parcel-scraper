@@ -45,6 +45,15 @@ describe('Viettel Post verified browser transport', () => {
       .rejects.toMatchObject({ kind: 'rate_limited', retryAfterMs: 120000 });
   });
 
+  it('says when the form went out and its reply never came back', async () => {
+    const helper = (reason: string) => ({ scrape: vi.fn().mockResolvedValue({ url: viettelPostHistoryUrl(HISTORY_NUMBER), statusCode: 200,
+      tier: 2, capturedResponses: [], raw: { timings: [{ reason }] } }) } as unknown as TrawlClient);
+    await expect(read(helper('viettel-post-capture_missing'))).rejects.toMatchObject({ kind: 'transport', reason: 'capture_missing' });
+    const broken: unknown = await read(helper('viettel-post-runtime')).catch((error: unknown) => error);
+    expect(broken).toMatchObject({ kind: 'transport' });
+    expect(broken).not.toHaveProperty('reason', 'capture_missing');
+  });
+
   it('falls back to the partial legacy record after verification failure, preserving the runner provenance', async () => {
     const trawl = service([row(null, { status: 403 })]);
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({ status: 200, error: false, data: {

@@ -51,7 +51,10 @@ describe('Onlog guest browser adapter', () => {
     await expect(harness([capture({ sucesso: false, mensagem: 'Erro.' })]).tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'indeterminate' });
     await expect(harness([capture(null)]).tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'schema' });
     await expect(harness([]).tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge', reason: 'verification_unfinished' });
-    await expect(harness([], { timings: [{ reason: 'onlog-capture_missing' }] }).tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'transport' });
+    await expect(harness([], { timings: [{ reason: 'onlog-capture_missing' }] }).tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'transport', reason: 'capture_missing' });
+    const broken: unknown = await harness([], { timings: [{ reason: 'onlog-runtime' }] }).tracker.fetch(NUMBER).catch((error: unknown) => error);
+    expect(broken).toMatchObject({ kind: 'transport' });
+    expect(broken).not.toHaveProperty('reason', 'capture_missing');
     await expect(harness([capture({ sucesso: false, mensagem: 'Nenhum objeto encontrado na base de dados.' })]).tracker.fetch(NUMBER))
       .rejects.toMatchObject({ kind: 'not_found' });
   });

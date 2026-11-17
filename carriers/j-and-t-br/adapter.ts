@@ -69,7 +69,8 @@ export class JAndTBrTracker {
       if ([404, 410].includes(page.statusCode)) throw new TransportError(PROVIDER, 'J&T Brazil tracking page is unavailable');
       if (page.statusCode >= 400) throw new UpstreamHttpError(PROVIDER, page.statusCode);
       if (['jt-br-runtime', 'jt-br-capture_missing'].includes(lastReason(page))) {
-        throw new TransportError(PROVIDER, 'J&T Brazil could not complete its guest response capture');
+        throw new TransportError(PROVIDER, 'J&T Brazil could not complete its guest response capture',
+          lastReason(page) === 'jt-br-capture_missing' ? { reason: 'capture_missing' } : undefined);
       }
       throw new ChallengeError(PROVIDER, 'J&T Brazil returned no bound guest reply', { reason: 'verification_unfinished' });
     } }]);

@@ -117,6 +117,13 @@ describe('J&T Brazil guest history', () => {
       await expect(tracker(once).fetch(NUMBER, { budgetMs })).rejects.toMatchObject({ kind: 'challenge', reason: 'verification_unfinished' });
       expect(once).toHaveBeenCalledTimes(1);
     }
+    // A form sent without its reply coming back says so; a helper that failed to run does not.
+    const missing = vi.fn<typeof fetch>().mockImplementation(async () => reply([], 'jt-br-capture_missing'));
+    await expect(tracker(missing).fetch(NUMBER)).rejects.toMatchObject({ kind: 'transport', reason: 'capture_missing' });
+    const broken = vi.fn<typeof fetch>().mockImplementation(async () => reply([], 'jt-br-runtime'));
+    const failure: unknown = await tracker(broken).fetch(NUMBER).catch((error: unknown) => error);
+    expect(failure).toMatchObject({ kind: 'transport' });
+    expect(failure).not.toHaveProperty('reason', 'capture_missing');
   });
   it('does not start I/O without a browser, sufficient budget or an active signal', async () => {
     await expect(new JAndTBrTracker({ env: {}, browserExecutablePath: null, recorder: NOOP_RECORDER, trawl: null }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });

@@ -65,7 +65,8 @@ export async function fetchViettelPostHistory(number: string, options: { trawl: 
   if (page.statusCode >= 400) throw new UpstreamHttpError(PROVIDER, page.statusCode);
   const last: unknown = Array.isArray(page.raw?.timings) ? page.raw.timings.at(-1) : undefined;
   if (page.statusCode === 0 || isRecord(last) && ['viettel-post-runtime', 'viettel-post-capture_missing'].includes(String(last.reason))) {
-    throw new TransportError(PROVIDER, 'Viettel Post could not initialize or capture its guest lookup');
+    const missing = page.statusCode !== 0 && isRecord(last) && last.reason === 'viettel-post-capture_missing';
+    throw new TransportError(PROVIDER, 'Viettel Post could not initialize or capture its guest lookup', missing ? { reason: 'capture_missing' } : undefined);
   }
   throw new ChallengeError(PROVIDER, 'Viettel Post did not finish guest history verification', { reason: 'verification_unfinished' });
 }

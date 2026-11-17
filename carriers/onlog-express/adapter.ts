@@ -68,7 +68,10 @@ export class OnlogExpressTracker {
         if (page.statusCode === 429) throw new RateLimitedError(PROVIDER);
         if ([404, 410].includes(page.statusCode)) throw new TransportError(PROVIDER, 'Onlog Express guest page is unavailable', { status: page.statusCode });
         if (page.statusCode >= 400) throw new UpstreamHttpError(PROVIDER, page.statusCode);
-        if (['onlog-runtime', 'onlog-capture_missing'].includes(reason(page))) throw new TransportError(PROVIDER, 'Onlog Express could not capture its guest reply');
+        if (reason(page) === 'onlog-capture_missing') {
+          throw new TransportError(PROVIDER, 'Onlog Express could not capture its guest reply', { reason: 'capture_missing' });
+        }
+        if (reason(page) === 'onlog-runtime') throw new TransportError(PROVIDER, 'Onlog Express could not capture its guest reply');
         throw new ChallengeError(PROVIDER, 'Onlog Express did not finish browser verification', { reason: 'verification_unfinished' });
       } catch (error) {
         // The outer service request URL and diagnostics can carry the input or browser state.
