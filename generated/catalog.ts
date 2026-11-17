@@ -58584,7 +58584,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "tracking": {
       "mode": "automatic",
       "adapter": "viettel-post",
-      "localClocks": true
+      "localClocks": true,
+      "browser": true
     },
     "canaryUrl": "https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/",
     "trackingSearchUrl": "https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/",

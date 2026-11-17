@@ -11,4 +11,17 @@ export function viettelPostStage(wording: string): ClassifiedWording | null {
   return classified.source === 'none' ? null : classified;
 }
 
-export const statusMap: CarrierStatusMap = { stage: (_code, wording) => WORDINGS.get(wording), gaps: [] };
+const HISTORY_CODES: ReadonlyMap<string, Stage> = new Map([
+  ['100', 'registered'], ['200', 'accepted'], ['300', 'in_transit'], ['400', 'in_transit'],
+  ['500', 'out_for_delivery'], ['501', 'delivered'],
+]);
+
+export function viettelPostHistoryStage(code: string): Stage | undefined { return HISTORY_CODES.get(code); }
+
+export const statusMap: CarrierStatusMap = {
+  stage: (code, wording) => code && /^\d{3,4}$/.test(code) ? HISTORY_CODES.get(code) : WORDINGS.get(wording),
+  gaps: [
+    { code: '103', note: 'Order assigned to a post office; does not establish physical collection.' },
+    { code: '202', note: 'Waybill details edited; retains the preceding shipment stage.' },
+  ],
+};

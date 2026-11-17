@@ -1,16 +1,137 @@
 {
   "carrier": "viettel-post",
   "entries": [
-    {"code": "2", "wording": "Nhập phiếu gửi", "stage": "registered", "language": "vi", "confirmedBy": "live", "note": "The legacy shipment record's registration, which can remain behind the current tracking history."},
-    {"wording": "Chấp nhận gửi (Posting / Collection)", "stage": "accepted", "language": "vi", "confirmedBy": "portal"},
-    {"wording": "Đi khỏi bưu cục (Departure from PO)", "stage": "in_transit", "language": "vi", "confirmedBy": "portal", "note": "Left a post office or sorting centre, named below."},
-    {"wording": "Đã đến bưu cục (Arrival at PO)", "stage": "in_transit", "language": "vi", "confirmedBy": "portal", "note": "Arrived at a post office or sorting centre, named below."},
-    {"wording": "Giao bưu tá đi phát (For Delivery)", "stage": "out_for_delivery", "language": "vi", "confirmedBy": "portal", "note": "Handed to the courier for delivery."},
-    {"wording": "Đang đi phát (Out For Delivery)", "stage": "out_for_delivery", "language": "vi", "confirmedBy": "portal"},
-    {"wording": "Ton - Sai dia chi", "stage": "failed_attempt", "language": "vi", "confirmedBy": "portal", "note": "Summary status: held because the address is wrong."},
-    {"wording": "Đang chuyển hoàn (Out For Delivery)", "stage": "returned", "language": "vi", "confirmedBy": "portal", "note": "Being returned to the sender, despite the English label."},
-    {"wording": "Chuyển hoàn thành công (Shipment Delivered)", "stage": "returned", "language": "vi", "confirmedBy": "portal", "note": "Returned to the sender, despite the English label."},
-    {"wording": "Thanh cong chuyen tra nguoi gui", "stage": "returned", "language": "vi", "confirmedBy": "portal", "note": "Summary status: successfully returned to the sender."},
-    {"wording": "Người nhận (Received and signed by)", "stage": "delivered", "language": "vi", "confirmedBy": "portal", "note": "Signature line; the signer's name follows. Here it closes a return."}
+    {
+      "code": "2",
+      "wording": "Nhập phiếu gửi",
+      "stage": "registered",
+      "language": "vi",
+      "confirmedBy": "live",
+      "note": "The legacy shipment record's registration, which can remain behind the current tracking history."
+    },
+    {
+      "wording": "Chấp nhận gửi (Posting / Collection)",
+      "stage": "accepted",
+      "language": "vi",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "Đi khỏi bưu cục (Departure from PO)",
+      "stage": "in_transit",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Left a post office or sorting centre, named below."
+    },
+    {
+      "wording": "Đã đến bưu cục (Arrival at PO)",
+      "stage": "in_transit",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Arrived at a post office or sorting centre, named below."
+    },
+    {
+      "wording": "Giao bưu tá đi phát (For Delivery)",
+      "stage": "out_for_delivery",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Handed to the courier for delivery."
+    },
+    {
+      "wording": "Đang đi phát (Out For Delivery)",
+      "stage": "out_for_delivery",
+      "language": "vi",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "Ton - Sai dia chi",
+      "stage": "failed_attempt",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Summary status: held because the address is wrong."
+    },
+    {
+      "wording": "Đang chuyển hoàn (Out For Delivery)",
+      "stage": "returned",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Being returned to the sender, despite the English label."
+    },
+    {
+      "wording": "Chuyển hoàn thành công (Shipment Delivered)",
+      "stage": "returned",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Returned to the sender, despite the English label."
+    },
+    {
+      "wording": "Thanh cong chuyen tra nguoi gui",
+      "stage": "returned",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Summary status: successfully returned to the sender."
+    },
+    {
+      "wording": "Người nhận (Received and signed by)",
+      "stage": "delivered",
+      "language": "vi",
+      "confirmedBy": "portal",
+      "note": "Signature line; the signer's name follows. Here it closes a return."
+    },
+    {
+      "code": "100",
+      "wording": "Khách hàng tạo đơn",
+      "stage": "registered",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "200",
+      "wording": "Nhập doanh thu",
+      "stage": "accepted",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "300",
+      "wording": "Đóng gói đi",
+      "stage": "in_transit",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "300",
+      "wording": "Tạo bàn giao",
+      "stage": "in_transit",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "400",
+      "wording": "Vận chuyển",
+      "stage": "in_transit",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "400",
+      "wording": "Nhận bàn giao",
+      "stage": "in_transit",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "500",
+      "wording": "Phân công phát",
+      "stage": "out_for_delivery",
+      "language": "vi",
+      "confirmedBy": "live"
+    },
+    {
+      "code": "501",
+      "wording": "Phát thành công",
+      "stage": "delivered",
+      "language": "vi",
+      "confirmedBy": "live"
+    }
   ]
 }

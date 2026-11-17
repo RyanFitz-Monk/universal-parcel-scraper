@@ -23,6 +23,7 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.live.test.ts",
+    "carriers/**/fixtures",
     "core/testing",
     "node_modules",
     "dist"

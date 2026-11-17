@@ -4,8 +4,11 @@ import type { AdapterFactory, TrackingContext } from '../../core/adapter/index.j
 import { BudgetExceededError, ChallengeError, SchemaError, UpstreamHttpError, UpstreamNetworkError } from '../../core/errors/index.js';
 import { runSteps } from '../../core/runner/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
+import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
+import type { TrawlClient } from '../../core/transport/trawl.js';
 import { decodeText, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
+import { fetchViettelPostHistory } from './browser.js';
 import { ViettelPostOcr } from './ocr.js';
 import { isViettelCaptchaError, normalizeViettelPostNumber, parseViettelPost, PROVIDER, VIETTEL_MAX_BYTES } from './parser.js';
 
@@ -17,12 +20,19 @@ type Solver = (bytes: Uint8Array, signal: AbortSignal) => Promise<string>;
 
 export class ViettelPostTracker {
   private readonly ocr = new ViettelPostOcr();
-  constructor(private readonly options: { fetcher?: typeof fetch; recorder?: StepRecorder; userAgent?: string; solveCaptcha?: Solver } = {}) {}
+  constructor(private readonly options: { fetcher?: typeof fetch; recorder?: StepRecorder; userAgent?: string;
+    solveCaptcha?: Solver; trawl?: TrawlClient | null; browserProxy?: string } = {}) {
+    if (options.browserProxy) browserContextProxy(options.browserProxy);
+  }
 
   async fetch(raw: string, context: TrackingContext = {}) {
     const number = normalizeViettelPostNumber(raw);
-    return runSteps({ carrier: 'viettel-post', budgetMs: context.budgetMs ?? 20_000, signal: context.signal,
-      recorder: this.options.recorder ?? NOOP_RECORDER }, [{ id: 'direct', run: async ({ signal, remainingMs }) => {
+    const budgetMs = context.budgetMs ?? (this.options.trawl ? 95_000 : 20_000);
+    return runSteps({ carrier: 'viettel-post', budgetMs, signal: context.signal,
+      recorder: this.options.recorder ?? NOOP_RECORDER }, [{ id: 'trawl', enabled: !!this.options.trawl && budgetMs >= 35_000,
+      run: ({ signal, remainingMs }) => fetchViettelPostHistory(number, { trawl: this.options.trawl!,
+        fetcher: this.options.fetcher, proxy: this.options.browserProxy, signal, remainingMs,
+        legacyReserveMs: Math.min(20_000, Math.floor(budgetMs / 4)) }) }, { id: 'direct', run: async ({ signal, remainingMs }) => {
       const deadline = performance.now() + remainingMs;
       const left = () => {
         signal.throwIfAborted();
@@ -74,6 +84,8 @@ export class ViettelPostTracker {
 }
 
 export const adapter: AdapterFactory = environment => {
-  const tracker = new ViettelPostTracker({ fetcher: environment.fetcher, recorder: environment.recorder, userAgent: environment.userAgent });
-  return { id: 'viettel-post', recordsSteps: true, steps: ['direct'], track: (input, context) => tracker.fetch(input.number, context) };
+  const tracker = new ViettelPostTracker({ fetcher: environment.fetcher, recorder: environment.recorder,
+    userAgent: environment.userAgent, trawl: environment.trawl,
+    browserProxy: environment.env.VIETTEL_POST_BROWSER_PROXY_URL?.trim() || undefined });
+  return { id: 'viettel-post', recordsSteps: true, steps: ['trawl', 'direct'], track: (input, context) => tracker.fetch(input.number, context) };
 };

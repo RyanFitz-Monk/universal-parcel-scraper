@@ -329,6 +329,43 @@
         ]
       },
       "note": "A public government response identifies Viettel Post as the carrier. The official legacy API repeats the whole waybill in its registration record, without current tracking history."
+    },
+    {
+      "number": "149881900136",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://forum.uit.edu.vn/t/tan-sv-khoa-2026-huong-dan-nhap-hoc-van-bang-1-chinh-quy/161705?page=17",
+        "date": "2026-08-21",
+        "dateKind": "post",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "dpd-fr",
+          "mondial-relay",
+          "colis-prive",
+          "mrw",
+          "brt",
+          "japan-post",
+          "sf-express",
+          "sto",
+          "zto",
+          "yamato",
+          "j-and-t",
+          "lbc-express",
+          "metropolitan-warehouse",
+          "paquetexpress",
+          "sagawa",
+          "sending"
+        ]
+      },
+      "note": "Public admissions receipt; the carrier guest history repeats the whole waybill."
     }
   ]
 }

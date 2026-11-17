@@ -1,31 +1,41 @@
 # Viettel Post
 
-Reads a Viettel Post shipment record through its legacy text-CAPTCHA lookup.
+Reads current guest history in a fresh TRAWL browser, with the legacy text-CAPTCHA shipment
+record as fallback. No account, recipient phone or delivery credential is used.
 
 ## Retrieval
 
-The [public tracking client](https://viettelpost.vn/viettelpost-iframe/tra-cuu-hanh-trinh-don-hang)
-contains the legacy `api.viettelpost.vn/api/orders/getCaptcha` and `viewTrackingOrders` flow.
-Each lookup opens a fresh cookie jar, reads the text image with the bundled local
-[OCR model](../../core/transport/text-captcha-model/README.md) and submits its id, answer and one whole waybill. One fresh
-challenge is allowed after unreadable text or an explicit rejected answer. Changed payloads,
-limits and blocked pages do not become not-found.
+The [public guest form](https://viettelpost.vn/viettelpost-iframe/tra-cuu-hanh-trinh-don-hang-v3-recaptcha)
+posts one whole waybill to `api/orders/viewTrackingOrders3` after reCAPTCHA verification.
+Its client creates a fresh browser key and signs the guest request with an ES256 `X-Token`
+proof. The browser executes that client; keys and verification tokens remain in its context.
+`VIETTEL_POST_BROWSER_PROXY_URL` routes the whole context through the caller's configured
+proxy, including verification and tracking. It never falls back to another address.
 
-The record must repeat the requested waybill in `MA_KIEN`. Its wording, status clock,
-provider code and service name are retained. The clock keeps its local wall time.
+The capture starts before navigation and retains bounded verification refusals and retries.
+The shipment and every scan must repeat the whole waybill. Hidden query echoes and empty
+histories remain inconclusive. Contacts, addresses, recipient prose and delivery controls
+are excluded. The milestone groups are ordered by each scan's local wall clock; no offset
+or delivery estimate is invented. Administrative edits retain the preceding stage.
+
+The full-history attempt reserves time for the legacy record. When TRAWL is unavailable or
+verification cannot finish, a fresh cookie jar uses `getCaptcha` and `viewTrackingOrders`.
+The bundled local OCR model reads the text code, with one refresh after unreadable or refused
+text. This record can remain at registration after delivery, so it is marked `summary_only`
+and enabled universal providers are asked for richer history.
 
 ## Limitations
 
-This is a partial record, not the current tracker's history. It can still show registration
-after delivery. Every answer is `summary_only`, so enabled universal providers are asked for
-richer and newer history. Recipient details, office addresses and verification state are omitted.
-
-The current tracker and the Android app `com.viettel.ViettelPost` require reCAPTCHA for
-their guest history endpoints; neither is used. No cheap recognition solves a CAPTCHA.
-Overlapping numeric shapes do not establish carrier ownership. Existing order-page links
-can be read, but the signed-in page is not built as a public tracking address.
+Neither HTTP nor browser recognition opens this verification flow. Shared numeric layouts
+do not establish carrier ownership. Existing order-page links can be read, but the signed-in
+page is not built as a public tracking address. The Android app's separate guest history
+endpoint is not used.
 
 ## Testing
 
-`npm run test:carriers:live -- carriers/viettel-post`. Set `VIETTEL_POST_TRACKING_NUMBER`
-to read a known record and `VIETTEL_POST_UNKNOWN_NUMBER` to check an unknown waybill.
+Set `VIETTEL_POST_TRACKING_NUMBER` and optionally `VIETTEL_POST_UNKNOWN_NUMBER` outside Git.
+Configure `FLARESOLVERR_URL` and the browser proxy to exercise current history, then run:
+
+```sh
+npm run test:carriers:live -- carriers/viettel-post
+```
