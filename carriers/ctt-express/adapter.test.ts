@@ -75,8 +75,16 @@ describe('CTT Express direct tracking', () => {
     const wrong = clone(); wrong.data.shipping_code = packageCode; wrong.data.shipping_history.item_code = OTHER + '001';
     expect(() => parseCttExpress(wrong, packageCode)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     expect(() => parseCttExpress(fixture, packageCode)).toThrowError(expect.objectContaining({ kind: 'schema' }));
+    // A package of a multi-piece shipment, asked by its own code, reads its own scans; another package's do not answer it.
     const multi = clone(); multi.data.shipping_code = packageCode; multi.data.item_count = 2;
-    expect(() => parseCttExpress(multi, packageCode)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
+    expect(parseCttExpress(multi, packageCode).events).toHaveLength(7);
+    const sibling = clone(); sibling.data.shipping_code = packageCode; sibling.data.item_count = 2;
+    sibling.data.shipping_history.item_code = NUMBER + '002';
+    expect(() => parseCttExpress(sibling, packageCode)).toThrowError(expect.objectContaining({ kind: 'schema' }));
+    for (const count of [undefined, 0, 1.5, '2']) {
+      const odd = clone(); odd.data.shipping_code = packageCode; (odd.data as Record<string, unknown>).item_count = count;
+      expect(() => parseCttExpress(odd, packageCode)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
+    }
   });
 
   it('keeps token errors, unbound errors and echoed empty history inconclusive', async () => {

@@ -75,10 +75,16 @@ export function parseCttExpress(payload: unknown, number: string): CarrierResult
   if (!Array.isArray(history.events) || history.events.length > 500) throw new SchemaError('CTT Express');
   if (!history.events.length) throw new IndeterminateError('CTT Express', 'CTT Express returned no tracking scans');
   // The public response contains one package's history. Shipment completion
-  // cannot be inferred from one delivered package of a multi-piece shipment.
-  if (data.item_count !== 1) throw new IndeterminateError('CTT Express', 'CTT Express did not return a single-piece shipment');
+  // cannot be inferred from one delivered package of a multi-piece shipment, so
+  // a shipment reference needs a single piece; a package code's history is the
+  // history of the package it names, whatever the shipment's count.
   // Official label specification: 22 shipment digits + 3 parcel-counter digits.
-  const packageCode = requested.length === 25 ? requested : `${requested}001`;
+  const packageAsked = requested.length === 25;
+  const count = data.item_count;
+  if (count !== 1 && !(packageAsked && typeof count === 'number' && Number.isInteger(count) && count > 1 && count <= 999)) {
+    throw new IndeterminateError('CTT Express', 'CTT Express did not return a single-piece shipment');
+  }
+  const packageCode = packageAsked ? requested : `${requested}001`;
   if (history.item_code !== packageCode) throw new SchemaError('CTT Express', 'CTT Express returned a different package');
   // A parcel that entered from another postal network keeps its first number.
   // CTT Portugal tracks its own numbers, which also name its leg of the parcel.

@@ -9,8 +9,10 @@ One GET requests shipment history using the complete input. The returned shipmen
 its package code must identify the sole package according to the carrier's
 [label specification](https://transfer.cttexpress.com/IT/export/integra/Shipment_Number_Calculation_and_Package_Codes_of_CttExpress.pdf).
 Package inputs retain their counter and must match the returned package exactly.
-Multi-piece shipments remain inconclusive because the public response contains
-only one package's scans. Portuguese postal references use the universal providers.
+The public response contains only one package's scans, so a multi-piece shipment's
+reference stays inconclusive: it answers with another package's scans, which cannot
+say the shipment is complete. A package code of a multi-piece shipment reads its own
+package's scans. Portuguese postal references use the universal providers.
 A few percent of lookups get an error reply, the one the tracking page shows as "Ha ocurrido un
 error". CTT repeats it for that shipment for a quarter of an hour or more while other shipments
 read normally, so it is not read again at once; the parcel reads on a later poll, and the
