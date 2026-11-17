@@ -273,6 +273,7 @@ import { adapter as foxpost } from '../carriers/foxpost/adapter.js';
 import { adapter as franchExpress } from '../carriers/franch-express/adapter.js';
 import { adapter as freightwaysGlobal } from '../carriers/freightways-global/adapter.js';
 import { adapter as frontierCa } from '../carriers/frontier-ca/adapter.js';
+import { adapter as ftdNz } from '../carriers/ftd-nz/adapter.js';
 import { adapter as fukuyama } from '../carriers/fukuyama/adapter.js';
 import { adapter as fxdcPost } from '../carriers/fxdc-post/adapter.js';
 import { adapter as gaash } from '../carriers/gaash/adapter.js';
@@ -1066,6 +1067,7 @@ export const REGISTRY: RegistryDefinition = {
     "franch-express": franchExpress,
     "freightways-global": freightwaysGlobal,
     "frontier-ca": frontierCa,
+    "ftd-nz": ftdNz,
     "fukuyama": fukuyama,
     "fxdc-post": fxdcPost,
     "gaash": gaash,
@@ -2203,6 +2205,7 @@ export const REGISTRY: RegistryDefinition = {
     "freja": "universal",
     "frontdoor-collective": "universal",
     "frontier-ca": "frontier-ca",
+    "ftd-nz": "ftd-nz",
     "fudu-logistics": "universal",
     "fukuyama": "fukuyama",
     "furniture-logis": "universal",

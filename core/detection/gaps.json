@@ -4670,5 +4670,11 @@
     "pattern": "^\\d{11}$",
     "kind": "by_design",
     "reason": "BEST China freight shares eleven-digit waybills with other carriers; shape alone cannot establish ownership."
+  },
+  {
+    "carrier": "ftd-nz",
+    "pattern": "^[A-Z]{3}\\d{6}$",
+    "kind": "by_design",
+    "reason": "A short reference with three letters and six digits does not establish FTD as its issuer; its official link or whole-bound history identifies the carrier."
   }
 ]

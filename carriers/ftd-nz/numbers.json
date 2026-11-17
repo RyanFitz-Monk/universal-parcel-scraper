@@ -1,0 +1,22 @@
+{
+  "carrier": "ftd-nz",
+  "records": [
+    {
+      "number": "NZF005263",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.kdso.net/kdso/B0FCB9FCD7B7D7D9BCC7C2BC/130/1/c.htm",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "Public query archive attributed to New Zealand FTD; the official tracker binds the whole reference to dated forwarder history and a named downstream reference. The downstream history is incomplete."
+    }
+  ]
+}

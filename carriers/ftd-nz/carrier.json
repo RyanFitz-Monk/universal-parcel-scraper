@@ -1,0 +1,75 @@
+{
+  "id": "ftd-nz",
+  "displayName": "FTD New Zealand",
+  "aliases": [
+    "新西兰富腾达",
+    "富腾达",
+    "富腾达国际货运代理",
+    "FTD Express (NZ)"
+  ],
+  "region": {
+    "countries": [
+      "NZ",
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#00a54f"
+  },
+  "selectable": true,
+  "timezone": "Pacific/Auckland",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "ftd-nz",
+    "steps": [
+      "direct",
+      "retry"
+    ],
+    "localClocks": true
+  },
+  "capabilities": [
+    "history",
+    "location",
+    "delivery_tracking_number",
+    "delivery_carrier"
+  ],
+  "portal": {
+    "url": "https://www.ftd.nz/query/?code={trackingNumber}",
+    "searchUrl": "https://www.ftd.nz/query/",
+    "canaryUrl": "https://www.ftd.nz/",
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "delivery_tracking_number",
+      "delivery_carrier"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location",
+      "delivery_tracking_number",
+      "delivery_carrier"
+    ],
+    "discarded": [
+      "shipment screenshot control",
+      "undated downstream lookup failure"
+    ],
+    "unavailable": [
+      "eta"
+    ]
+  },
+  "links": [
+    {
+      "domains": [
+        "www.ftd.nz",
+        "ftd.nz"
+      ],
+      "pathPattern": "^/query/?$",
+      "params": [
+        "code"
+      ]
+    }
+  ],
+  "detection": []
+}

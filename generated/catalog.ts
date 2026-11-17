@@ -25637,6 +25637,43 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "ftd-nz": {
+    "displayName": "FTD New Zealand",
+    "color": "#00a54f",
+    "aliases": [
+      "新西兰富腾达",
+      "富腾达",
+      "富腾达国际货运代理",
+      "FTD Express (NZ)"
+    ],
+    "countries": [
+      "NZ",
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Pacific/Auckland",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "ftd-nz",
+      "localClocks": true
+    },
+    "canaryUrl": "https://www.ftd.nz/",
+    "trackingUrlTemplate": "https://www.ftd.nz/query/?code={trackingNumber}",
+    "trackingSearchUrl": "https://www.ftd.nz/query/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.ftd.nz",
+          "ftd.nz"
+        ],
+        "pathPattern": "^/query/?$",
+        "params": [
+          "code"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "fudu-logistics": {
     "displayName": "Fudu Logistics",
     "color": "#000000",
@@ -63252,6 +63289,7 @@ export const CARRIER_IDS = [
   "freja",
   "frontdoor-collective",
   "frontier-ca",
+  "ftd-nz",
   "fudu-logistics",
   "fukuyama",
   "furniture-logis",
@@ -65028,6 +65066,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "freja": [],
   "frontdoor-collective": [],
   "frontier-ca": [],
+  "ftd-nz": [],
   "fudu-logistics": [],
   "fukuyama": [],
   "furniture-logis": [],

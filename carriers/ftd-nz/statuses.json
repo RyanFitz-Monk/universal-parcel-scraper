@@ -1,0 +1,35 @@
+{
+  "carrier": "ftd-nz",
+  "entries": [
+    {
+      "wording": "已揽收",
+      "stage": "accepted",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "分拣中心",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "货物已发往机场",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "已发往中国",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "已抵达",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    }
+  ]
+}

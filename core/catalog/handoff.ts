@@ -20,6 +20,7 @@ import { isRoyaleInternationalReference } from '../detection/royaleInternational
 import { isTopdeliveryReference } from '../detection/topdelivery.js';
 import { isKargoturkReference } from '../detection/kargoturk.js';
 import { isProfitFieldsReference } from '../detection/profitFields.js';
+import { isFtdNzReference } from '../detection/ftdNz.js';
 import { isBestFreightCnReference } from '../detection/bestFreightCn.js';
 import { isLhtexReference } from '../detection/lhtex.js';
 import { isLmParcelReference } from '../detection/lmParcel.js';
@@ -75,7 +76,7 @@ const REFERENCES_LOOKED_UP: Readonly<Record<string, (number: string) => boolean>
   'post-one': isPostOneReference,
   polonez: isPolonezReference, 'v-xpress': isVXpressReference, airspeed: isAirspeedReference, 'freightways-global': isFreightwaysGlobalReference, 'fxdc-post': isFxdcPostReference, 'frontier-ca': isFrontierCaReference,
   topdelivery: isTopdeliveryReference, kargoturk: isKargoturkReference, expedico: isExpedicoReference, 'fan-courier': isFanCourierReference,
-  'best-freight-cn': isBestFreightCnReference, lhtex: isLhtexReference, 'profit-fields': isProfitFieldsReference, 'lm-parcel': isLmParcelReference, znlogic: isZnlogicReference,
+  'ftd-nz': isFtdNzReference, 'best-freight-cn': isBestFreightCnReference, lhtex: isLhtexReference, 'profit-fields': isProfitFieldsReference, 'lm-parcel': isLmParcelReference, znlogic: isZnlogicReference,
   'fez-delivery': isFezDeliveryReference,
   'junfeng-international': isJunfengInternationalReference,
   'shipglobal-us': isShipglobalUsReference,

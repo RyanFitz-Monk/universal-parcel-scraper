@@ -22,6 +22,7 @@ try {
     JSON.parse(readFileSync(path.join(root, `carriers/gofo-${region}/fixtures/delivered.json`), 'utf8'))]));
   const omgoReplies = Object.fromEntries(['tracking-page.html', 'tracking.json'].map(file => [file,
     readFileSync(path.join(root, 'carriers/omgo/fixtures', file), 'utf8')]));
+  const ftdNzReply = readFileSync(path.join(root, 'carriers/ftd-nz/fixtures/tracking.html'), 'utf8');
   const lhtexReply = JSON.parse(readFileSync(path.join(root, 'carriers/lhtex/fixtures/tracking.json'), 'utf8'));
   const ninjaReply = JSON.parse(readFileSync(path.join(root, 'carriers/ninja-van/fixtures/delivered.json'), 'utf8'));
   writeFileSync(path.join(scratch,'smoke.mjs'), `
@@ -79,6 +80,28 @@ try {
     } catch { assert.equal(bestFreightCalls, 1); }
     assert(existsSync(new URL('./carriers/best-freight-cn/ocr-worker.mjs', import.meta.resolve('universal-parcel-scraper/node'))));
     assert(existsSync(new URL('./carriers/best-freight-cn/ocr-consensus.mjs', import.meta.resolve('universal-parcel-scraper/node'))));
+    // The installed forwarder keeps its incomplete history and named handoff.
+    const ftdNzReply = ${JSON.stringify(ftdNzReply)};
+    let ftdNzCalls = 0, ftdNzHandoffCalls = 0;
+    const ftdNz = await createTracker({ providers: [], fetcher: async (url, init) => {
+      if (new URL(String(url)).hostname === 'hdgateway.zto.com') {
+        ftdNzHandoffCalls += 1;
+        assert(String(init.body).includes('73974682510368'));
+        return new Response('Synthetic downstream verification refusal', { status: 403 });
+      }
+      ftdNzCalls += 1;
+      assert.equal(String(url), 'https://www.ftd.nz/query/?code=QXZ974682');
+      assert(init.signal instanceof AbortSignal);
+      return new Response(ftdNzReply);
+    } }).track({ number: 'QXZ974682', carrier: 'ftd-nz' });
+    assert.equal(ftdNz.source, 'ftd-nz');
+    assert.equal(ftdNz.result.status, 'in_transit');
+    assert.equal(ftdNz.result.events.length, 5);
+    assert.equal(ftdNz.result.history_truncated, true);
+    assert.equal(ftdNz.result.delivery_carrier, 'zto');
+    assert.equal(ftdNz.result.delivery_tracking_number, '73974682510368');
+    assert.equal(ftdNzCalls, 1);
+    assert.equal(ftdNzHandoffCalls, 1);
     // Read DPD Germany's forecast through the installed adapter and result facade.
     const dpdAppReplies = ${JSON.stringify(dpdAppReplies)};
     const dpd = await createTracker({ providers: [], fetcher: async (url, init) => {
