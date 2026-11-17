@@ -174,6 +174,17 @@ describe('JRT tracking adapter', () => {
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
   });
 
+  it('keeps the parcel in transit under CTT Express’s pre-advice, copied between JRT’s rows on the line into Spain', () => {
+    const payload = fixture('track-dhl') as { data: { trackDetails: Record<string, string>[] }[] }[];
+    const record = payload[0]!.data[0]!;
+    const row = (track_date: string, track_content: string) => ({ ...record.trackDetails.at(-1)!, track_date, track_createdate: track_date, track_content, track_location: '' });
+    record.trackDetails = [row('2026-03-03 10:00:00', 'During transportation to Spain'),
+      row('2026-03-02 16:05:45', 'En tránsito internacional. Pendiente de recepción en CTT Express'), row('2026-03-01 15:21:17', '货物离开操作中心')];
+    const result = parseJrtTrack(payload, UP_REFERENCE, Date.parse('2026-03-04T00:00:00Z'))!;
+    expect(result.events?.map(({ stage }) => stage)).toEqual(['in_transit', 'pending', 'in_transit']);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+  });
+
   it('reads the Shenzhen hub’s receipt after the operation center as transit, in English', () => {
     const payload = fixture('track-dhl') as { data: { trackDetails: Record<string, string>[] }[] }[];
     const record = payload[0]!.data[0]!;
