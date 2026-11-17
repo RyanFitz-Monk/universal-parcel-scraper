@@ -51,6 +51,11 @@ interface Clock {
   readonly localTime?: string;
 }
 
+// Posts whose data gives their offices' wall clocks as UTC times, which the feed then shows on the
+// country's clock, ahead by its offset: Pakistan Post's receipt and delivery of an item from
+// Lithuania come five hours after the same scans on Pakistan Post's own tracker.
+const WALL_CLOCK_AS_UTC: ReadonlySet<string> = new Set(['PK']);
+
 /**
  * The feed labels every row with Vilnius's offset. Its own rows are Vilnius
  * times; a row from abroad carries that country's wall clock instead, which is
@@ -62,8 +67,14 @@ function clockOf(value: unknown, country: string | null): Clock | null {
   if (!match || !labeled) return null;
   if (!country || country === HOME) return { order: labeled.timestamp, time: labeled.iso };
   const zone = countryTimeZone(country);
-  const local = zone ? isoTime(match[1], zone) : null;
-  return local ? { order: labeled.timestamp, time: local.iso } : { order: labeled.timestamp, localTime: match[1] };
+  let wall = match[1];
+  if (zone && WALL_CLOCK_AS_UTC.has(country)) {
+    // The UTC time behind the shown clock is the office's own wall clock.
+    const shown = isoTime(wall, zone);
+    if (shown) wall = new Date(shown.timestamp).toISOString().slice(0, 19);
+  }
+  const local = zone ? isoTime(wall, zone) : null;
+  return local ? { order: labeled.timestamp, time: local.iso } : { order: labeled.timestamp, localTime: wall };
 }
 
 interface Place {

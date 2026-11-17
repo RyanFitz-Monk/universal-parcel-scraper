@@ -58,7 +58,9 @@ as returned. The tracking page leaves out a return label's mail, and so does the
 
 Every clock carries Vilnius's offset. Rows in Lithuania are Vilnius times. A row from abroad
 carries that country's wall clock under the same offset, so it is read in the country's zone, or
-kept as a wall clock without an offset when the country has several zones.
+kept as a wall clock without an offset when the country has several zones. Pakistan Post's data
+gives its offices' wall clocks as UTC times, so the feed shows its rows five hours ahead of
+Pakistan Post's own tracker; the adapter reads the UTC time back as the office's clock.
 
 A place is kept when it is a town, a sorting centre or a country, which a row from abroad names
 in Lithuanian and the adapter in English. A parcel locker or post office keeps its name and town;

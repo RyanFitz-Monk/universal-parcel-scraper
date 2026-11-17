@@ -117,6 +117,20 @@ describe('Lietuvos paštas tracking adapter', () => {
     expect(rows(near)[0]).toEqual(['2026-07-03T19:20:00+03:00', 'DEPARTED_RECEIVER_LC', 'in_transit', 'carrier_map', 'Rīga']);
   });
 
+  it('reads Pakistan Post’s rows back to its offices’ clocks, which its data gives as UTC times', () => {
+    // The feed shows Pakistan's clock five hours ahead of Pakistan Post's own tracker for the same scans.
+    const pakistan = parseLietuvosPastas(edited('abroad', (_payload, events) => {
+      Object.assign(events[4]!, { eventDate: '2026-07-06T14:28:00+03:00', countryCode: 'PK', location: 'Pakistanas' });
+      Object.assign(events[5]!, { eventDate: '2026-07-06T14:28:00+03:00', countryCode: 'PK', location: 'Pakistanas' });
+    }), ABROAD);
+    expect(pakistan).toMatchObject({ last_update: '2026-07-06T09:28:00+05:00', destination_country: 'PK' });
+    expect(rows(pakistan).slice(0, 3)).toEqual([
+      ['2026-07-06T09:28:00+05:00', 'DEPARTED_RECEIVER_LC', 'in_transit', 'carrier_map', 'Pakistan'],
+      ['2026-07-06T09:28:00+05:00', 'RECEIVED_RECEIVER_LC', 'in_transit', 'carrier_map', 'Pakistan'],
+      ['2026-07-02T13:40:00+03:00', 'DELIVERY_EXPORTED', 'in_transit', 'carrier_map', 'Vilnius'],
+    ]);
+  });
+
   it('names the country an item sent abroad reached last, whose post is asked for the rest', () => {
     // A transit country's centre comes before the recipient's.
     const reached = parseLietuvosPastas(edited('abroad', (_payload, events) => {
