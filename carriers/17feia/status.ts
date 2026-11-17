@@ -1,5 +1,6 @@
 import { classifyWording, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
+import statuses from './statuses.json' with { type: 'json' };
 
 /**
  * 17FEIA's own status labels. Each row carries one in Chinese whatever the
@@ -66,12 +67,20 @@ export function seventeenFeiaLabelStage(label: string, wording: string): Stage |
   return LABELS.get(label);
 }
 
+/** The partners' wordings the map records under the relayed label, such as UPS's milestone before its scan. */
+const RELAYED: ReadonlyMap<string, Stage> = new Map(statuses.entries
+  .filter((entry) => entry.code === RELAYED_LABEL && entry.wording && entry.stage)
+  .map((entry) => [normalizeStatusWording(entry.wording!), entry.stage as Stage]));
+
 /**
- * A relayed row's stage, from the partner's wording through the shared rules.
- * The partner takes the parcel after 17FEIA flew it out, so its receipt or
- * announcement is the journey going on, and so is wording no rule reads.
+ * A relayed row's stage: the map's own for a partner wording it records, else
+ * from the partner's wording through the shared rules. The partner takes the
+ * parcel after 17FEIA flew it out, so its receipt or announcement is the
+ * journey going on, and so is wording no rule reads.
  */
 function relayedStage(wording: string): ClassifiedWording {
+  const recorded = RELAYED.get(normalizeStatusWording(wording));
+  if (recorded) return { stage: recorded, source: 'carrier_map' };
   const worded = classifyWording(wording, 'pending');
   return worded.source === 'none' || ['pending', 'registered', 'accepted'].includes(worded.stage)
     ? { stage: 'in_transit', source: 'carrier_map' } : worded;

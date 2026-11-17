@@ -120,7 +120,7 @@ describe('17FEIA HTTP adapter', () => {
 
   it('dates DHL’s relayed scans on Germany’s clock, keeps the flight’s and customs’ milestones local and drops the estimate', () => {
     const result = parseSeventeenFeia(fixture('dhl-relayed'), RELAYED, LATER);
-    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'wording:language',
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
       last_update: '2026-03-19T21:37:00+01:00', delivery_carrier: 'dhl', delivery_tracking_number: 'CE000000014DE', destination_country: 'FR' });
     expect(result.last_update_local).toBeUndefined();
     expect(result.events!.map((event) => [event.time ?? event.local_time, event.provider_code ?? null, event.stage, event.location ?? null])).toEqual([
@@ -392,6 +392,10 @@ describe('17FEIA status vocabulary', () => {
       }
       expect(statusMap.stage(code || null, wording.toLowerCase())).toBe(entry.stage);
       expect(seventeenFeiaStage(code, wording)?.stage).toBe(entry.stage);
+    }
+    // UPS's relayed scans, its milestone before some of them, are the map's own.
+    for (const wording of ['We have your Package, Arrived at Facility', 'Departed from Facility', 'On the Way, Delivery will be delayed by one business day.']) {
+      expect(seventeenFeiaStage('运输途中', wording)).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     }
     // A relayed row whose wording no rule reads is the partner carrying the parcel on.
     expect(statusMapAnswer({ carrier: '17feia', providerCode: '运输途中', description: 'Synthetic partner note' }))
