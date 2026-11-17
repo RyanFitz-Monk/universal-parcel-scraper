@@ -217,6 +217,19 @@ describe('Shipter native tracking', () => {
     expect(result.last_status_text).toBe('Synthetic unresolved event');
   });
 
+  it('gives a partner notice relayed after the acceptance no stage, the parcel at the scan before it', () => {
+    const reply = fixture();
+    reply.result[0]!.status = '';
+    reply.result[0]!.events = scans(reply).slice(-2);
+    scans(reply).unshift(
+      { content: 'Shipping information received', time: '2026-03-12 09:00 GMT+09:00', location: '' },
+      { content: 'Your parcel will be entrusted to last mile .it is being prepared by your sender', time: '2026-03-11 18:00 GMT+09:00', location: '' },
+    );
+    const result = parseShipter(reply, NUMBER);
+    expect(result.events!.slice(0, 2).map((event) => event.stage)).toEqual([undefined, undefined]);
+    expect(result).toMatchObject({ current_stage: 'accepted', current_stage_source: 'carrier_map', last_status_text: 'Shipping information received' });
+  });
+
   it('retries a network failure once with the same identifier and records its provenance', async () => {
     const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new TypeError('Synthetic socket failure')).mockResolvedValueOnce(json(fixture()));
     const recorder = { ...NOOP_RECORDER, step: vi.fn() };

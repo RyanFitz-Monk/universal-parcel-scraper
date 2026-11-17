@@ -5,7 +5,7 @@ import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import { calendarDay, explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
-import { shipterStage } from './status.js';
+import { isShipterNotice, shipterStage } from './status.js';
 
 export const PROVIDER = 'Shipter';
 export const SHIPTER_ENDPOINT = 'https://shiptertracking.com:3963/tracking/getTracks';
@@ -54,10 +54,11 @@ function eventOf(value: unknown): CarrierEvent {
   if (typeof value.time !== 'string' || value.time.length > 64) throw new SchemaError(PROVIDER, 'Shipter returned an invalid scan clock');
   const clock = eventClock(value.time.trim());
   const location = field(value, 'location', 200);
-  const mapped = shipterStage(null, normalizeStatusWording(description));
+  const wording = normalizeStatusWording(description);
+  const mapped = shipterStage(null, wording);
   const classified = classifyWording(description, 'pending');
   const staged = mapped ? { stage: mapped, stage_source: 'carrier_map' }
-    : classified.source === 'none' ? {} : { stage: classified.stage, stage_source: classified.source };
+    : isShipterNotice(wording) || classified.source === 'none' ? {} : { stage: classified.stage, stage_source: classified.source };
   return { ...clock, description, ...(location ? { location } : {}), ...staged };
 }
 
