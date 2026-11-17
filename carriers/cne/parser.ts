@@ -6,6 +6,7 @@ import { classifyWording, languageStageStatus, type Stage } from '../../core/sta
 import { explicitOffsetTime, isoTime } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
+import cttExpressStatuses from '../ctt-express/statuses.json' with { type: 'json' };
 
 const PROVIDER = 'CNE Express';
 const WORDING: Readonly<Record<string, Stage>> = {
@@ -57,6 +58,12 @@ const PARTNERS: Readonly<Record<string, string>> = {
 // scans of the step. Its other rows abroad can keep the destination's clock.
 const BEIJING_LABELS: ReadonlySet<string> = new Set(['arrived at destination', 'handled by local carrier']);
 const BEIJING = 'Asia/Shanghai';
+// CTT Express's statuses in Spain, which CNE relays as "label,explanation" two hours after CTT Express's
+// instant, to the second, whatever Madrid's offset: CTT Portugal's copies of the same scans agree with
+// CTT Express's instants, not with CNE's clock read in Madrid.
+const CTT_EXPRESS_LABELS: ReadonlySet<string> = new Set([...cttExpressStatuses.entries.map(({ wording }) => wording), 'Entregado']
+  .map((wording) => wording.toLowerCase()));
+const CTT_EXPRESS_CLOCK = 'UTC+2';
 
 export function normalizeCneNumber(raw: string): string {
   const number = normalizeTrackingNumber(raw);
@@ -73,8 +80,8 @@ function scanTime(value: string) {
 
 // CNE's clocks name no zone, and its legs cross zones: a valid one stays a
 // wall clock in `local_time`, never placed in a zone, unless its label is one
-// CNE writes on Beijing time.
-function scanClock(value: string, label: string): { time?: string; local_time?: string; provider_time_text?: string } {
+// CNE writes on Beijing time or a relayed CTT Express status.
+function scanClock(value: string, description: string): { time?: string; local_time?: string; provider_time_text?: string } {
   const instant = scanTime(value);
   if (instant) return { time: instant.iso };
   const wall = DateTime.fromFormat(value, 'yyyy-MM-dd HH:mm:ss', { zone: 'UTC' });
@@ -82,7 +89,11 @@ function scanClock(value: string, label: string): { time?: string; local_time?: 
   if (wall.isValid && wall.toFormat('yyyy-MM-dd HH:mm:ss') === value) {
     const local = wall.toISO({ includeOffset: false, suppressMilliseconds: true });
     // China keeps one offset all year: every valid wall clock is an instant there.
-    return BEIJING_LABELS.has(label.toLowerCase()) ? { time: isoTime(local, BEIJING)!.iso } : { local_time: local };
+    if (BEIJING_LABELS.has(labelOf(description).toLowerCase())) return { time: isoTime(local, BEIJING)!.iso };
+    if (description.includes(',') && CTT_EXPRESS_LABELS.has(commaLabelOf(description).toLowerCase())) {
+      return { time: isoTime(local, CTT_EXPRESS_CLOCK)!.iso };
+    }
+    return { local_time: local };
   }
   return value ? { provider_time_text: value } : {};
 }
@@ -113,7 +124,7 @@ function scan(raw: unknown): CarrierEvent {
   const description = clean(raw.details, 1000), clock = clean(raw.date, 64);
   const location = clean(raw.place, 200), code = cleanScalar(raw.state);
   const mapped = cneScanStage(description, code);
-  return { description, ...(location ? { location } : {}), ...scanClock(clock, labelOf(description)),
+  return { description, ...(location ? { location } : {}), ...scanClock(clock, description),
     ...(mapped ? { stage: mapped.stage, stage_source: mapped.source } : {}),
     ...(code ? { provider_code: code } : {}) };
 }

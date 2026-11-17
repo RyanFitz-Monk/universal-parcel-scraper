@@ -154,6 +154,19 @@ describe('CNE response projection', () => {
     expect(parseCne(payload, HANDOFF_NUMBER)).not.toHaveProperty('last_update_local');
   });
 
+  it("reads CTT Express's relayed statuses two hours after its instants, whatever Madrid's offset", () => {
+    const payload = handoffFixture();
+    payload.trackingEventList.push(
+      { date: '2026-11-02 17:50:46', place: '', details: 'Pendiente de recepción en CTT Express,Ya tenemos todos los detalles de tu envío.', state: '' },
+      { date: '2026-11-15 08:49:06', place: 'EXAMPLE CITY', details: 'Enviado,Te entregaremos tu envío lo antes posible.', state: '2' },
+      { date: '2026-07-16 15:27:44', place: 'EXAMPLE CITY', details: 'Entregado,Ya hemos entregado tu envío.', state: '3' },
+    );
+    const times = new Map(parseCne(payload, HANDOFF_NUMBER).events?.map(event => [event.description, [event.time, event.local_time]]));
+    expect(times.get('Pendiente de recepción en CTT Express,Ya tenemos todos los detalles de tu envío.')).toEqual(['2026-11-02T17:50:46+02:00', undefined]);
+    expect(times.get('Enviado,Te entregaremos tu envío lo antes posible.')).toEqual(['2026-11-15T08:49:06+02:00', undefined]);
+    expect(times.get('Entregado,Ya hemos entregado tu envío.')).toEqual(['2026-07-16T15:27:44+02:00', undefined]);
+  });
+
   it('names a supplier only with the transfer number it tracks', () => {
     const payload = handoffFixture(); payload.Response_Info.Number_t = HANDOFF_NUMBER; delete payload.Response_Info.transNbr;
     const result = parseCne(payload, HANDOFF_NUMBER);
