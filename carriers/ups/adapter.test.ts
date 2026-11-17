@@ -367,6 +367,9 @@ describe('UPS structured response', () => {
     // So do events outside UPS's control, between facility scans.
     expect(statusMapAnswer({ carrier: 'ups', providerCode: 'C5', description: 'uncontrollable events have delayed delivery. we are adjusting delivery plans as quickly as possible. please check back on the next business day for updates.' }))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
+    // A missort UPS has rerouted: the parcel goes on, not back.
+    expect(statusMapAnswer({ carrier: 'ups', providerCode: '34', description: 'we’re sorry, your package was sent in the wrong direction. we’ve rerouted it to the correct location and are working to keep your delivery moving.' }))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
   });
 
   it('reads a pickup after the delivery leg, from an access point, as transit', () => {

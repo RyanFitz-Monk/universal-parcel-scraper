@@ -459,6 +459,7 @@ describe('Shouwu International status vocabulary', () => {
     expect(shouwuStage('End of shipment')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     // The origin facility the parcel reaches after its pickup.
     expect(shouwuStage('Arrived at origin facility')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+    expect(shouwuStage('Departed from sort facility')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     expect(shouwuStage('STATIONED SHIPMENT')).toBeNull();
     // The import released in the destination, and the delivering partner's towns on its way.
     for (const wording of ['Import Released', 'arrival city', 'leave the city']) {

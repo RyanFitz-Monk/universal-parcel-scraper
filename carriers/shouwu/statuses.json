@@ -368,6 +368,14 @@
       "note": "Two hours after the pickup: the parcel reaching the facility it leaves China from."
     },
     {
+      "wording": "Departed from sort facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Hours after the arrival at the origin facility: the parcel leaving it."
+    },
+    {
       "wording": "Departed from the origin facility",
       "stage": "in_transit",
       "language": "en",
