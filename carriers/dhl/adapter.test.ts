@@ -222,6 +222,33 @@ describe('DHL public tracking normalization', () => {
     expect(JSON.stringify(result)).not.toContain(NUMBER);
   });
 
+  it('reads a scan DHL lists again without its place abroad on that country’s clock', () => {
+    // Live shape: a parcel from Latvia, whose arrival at its parcel center of origin DHL listed in Latvia, then without a place.
+    const answer = (rows: { datum: string; ort?: string; status: string }[], zielland?: string) => {
+      const payload = shipment();
+      const details = payload.sendungen[0]!.sendungsdetails;
+      Object.assign(details, zielland ? { zielland } : {});
+      details.sendungsverlauf.events = rows;
+      details.sendungsverlauf.datumAktuellerStatus = rows.at(-1)!.datum;
+      return parseDHLTrackingResponse(payload, NUMBER).events?.map(({ time, local_time, location }) => [time ?? local_time, location || null]);
+    };
+    const origin = { datum: '2026-10-31T12:39:00+01:00', status: 'The shipment has arrived at the parcel center of origin' };
+    const exported = { datum: '2026-11-01T08:22:00+01:00', ort: 'Latvia', status: 'The shipment has arrived at the export parcel center' };
+    const arrived = { datum: '2026-11-04T14:57:51+01:00', ort: 'Germany', status: 'The shipment has arrived in the destination country/destination area' };
+    expect(answer([origin, exported, arrived])).toEqual([
+      ['2026-11-04T14:57:51+01:00', 'Germany'], ['2026-11-01T08:22:00', 'Latvia'], ['2026-10-31T12:39:00', null],
+    ]);
+    const payload = shipment();
+    payload.sendungen[0]!.sendungsdetails.sendungsverlauf.events = [origin, exported, arrived];
+    // Its neighbour dates it on Riga's clock, at the instant of its placed listing.
+    expect(dateLocalClocks('dhl', parseDHLTrackingResponse(payload, NUMBER)).events?.[2]).toMatchObject({ time: '2026-10-31T12:39:00+02:00' });
+    // Between two scans in that country too, but not next to a scan in Germany, nor at the start of a parcel bound there.
+    expect(answer([{ ...exported, datum: '2026-10-30T09:00:00+01:00' }, origin, exported, arrived])?.[2]).toEqual(['2026-10-31T12:39:00', null]);
+    expect(answer([{ ...arrived, datum: '2026-10-30T09:00:00+01:00' }, origin, exported, arrived])?.[2]).toEqual(['2026-10-31T12:39:00+01:00', null]);
+    expect(answer([origin, exported], 'Latvia')?.[1]).toEqual(['2026-10-31T12:39:00+01:00', null]);
+    expect(answer([origin, arrived])?.[1]).toEqual(['2026-10-31T12:39:00+01:00', null]);
+  });
+
   it('reads a scan abroad on its country’s clock, where DHL puts Germany’s offset on it', () => {
     const payload = shipment();
     const timeline = payload.sendungen[0]!.sendungsdetails.sendungsverlauf;

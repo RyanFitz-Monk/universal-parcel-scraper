@@ -156,6 +156,9 @@ how a consumer learns that DHL holds one behind a postcode.
   wall clock under Germany's offset, as the partners' copies of the same scans
   show, so they keep the wall clock alone and the country's zone dates them
   (`tracking.localClocks`). An offset other than Germany's stays as stated.
+  DHL can list such a scan again without its place: a scan without a place between
+  scans in one other country, or older than them on a parcel not bound there, keeps
+  its wall clock too.
   The delivery window (`zustellzeitfensterVon` to `…Bis`) keeps both clocks when
   they fall on one day; otherwise it is that day, or the days it spans.
 - A single unambiguous link to a known carrier portal in an arrival event (such

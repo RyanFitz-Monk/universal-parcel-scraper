@@ -127,11 +127,30 @@ function millis(value: unknown): number {
  * wall clock alone, for the country to date it. An offset that is not
  * Germany's stays as DHL states it.
  */
-function clock(time: string, location: string): Pick<CarrierEvent, 'time' | 'local_time'> {
-  const country = countryCode(location);
+function clock(time: string, country: string | null | undefined): Pick<CarrierEvent, 'time' | 'local_time'> {
   const stated = /T.*[+-]\d{2}:\d{2}$/.test(time) ? DateTime.fromISO(time, { setZone: true }) : null;
   if (!country || country === 'DE' || !stated?.isValid || stated.offset !== stated.setZone(TIMEZONE).offset) return { time };
   return { local_time: stated.toFormat("yyyy-MM-dd'T'HH:mm:ss") };
+}
+
+/**
+ * The country of each scan's clock, newest first: the one its place names. DHL can list a scan
+ * abroad again without its place, at the same wall clock, as it did a parcel's arrival at its
+ * parcel center of origin in Latvia. A scan without a place takes the foreign country of the
+ * placed scans on both sides of it, or of the newer one when it is the oldest placed and the
+ * parcel is not bound there.
+ */
+function clockCountries(locations: readonly string[], bound: string | undefined): (string | null)[] {
+  const placed = locations.map((location) => (location ? countryCode(location) ?? null : null));
+  return placed.map((country, index) => {
+    if (locations[index]) return country;
+    let newer = index - 1;
+    while (newer >= 0 && !locations[newer]) newer -= 1;
+    const older = locations.findIndex((location, at) => at > index && location);
+    const abroad = newer >= 0 ? placed[newer] : null;
+    if (!abroad || abroad === 'DE') return null;
+    return (older >= 0 ? placed[older] === abroad : bound !== abroad) ? abroad : null;
+  });
 }
 
 /** The destination country DHL names in `zielland`, never more of the address. */
@@ -239,9 +258,10 @@ export function parseDHLTrackingResponse(payload: unknown, trackingNumber: strin
   // A pre-advice dated after a scan that moved the parcel is a notice, not movement: it is left
   // out, so the stage cannot move back. One dated first, or with the first move, stays registered.
   const firstMove = Math.min(...scans.filter((scan) => scan.time && movedParcel(scan.description)).map((scan) => millis(scan.time)));
-  const events: CarrierEvent[] = scans.filter((scan) => !(scan.time && preAdvice(scan.description) && millis(scan.time) > firstMove))
-    .sort((left, right) => millis(right.time) - millis(left.time)).slice(0, 100)
-    .map(({ time, ...event }) => ({ ...event, ...clock(time, event.location) }));
+  const kept = scans.filter((scan) => !(scan.time && preAdvice(scan.description) && millis(scan.time) > firstMove))
+    .sort((left, right) => millis(right.time) - millis(left.time)).slice(0, 100);
+  const countries = clockCountries(kept.map((scan) => scan.location), destination(details).destination_country);
+  const events: CarrierEvent[] = kept.map(({ time, ...event }, index) => ({ ...event, ...clock(time, countries[index]) }));
   // A refused redirect or a Packstation as the address is a notice: it keeps the stage of the scan before it.
   events.forEach((event, index) => {
     if (keepsStage(event.description ?? '')) {
@@ -271,7 +291,7 @@ export function parseDHLTrackingResponse(payload: unknown, trackingNumber: strin
   const stated = date(timeline.datumAktuellerStatus);
   const newest = events[0];
   // The status DHL dates as its newest scan abroad keeps that scan's wall clock.
-  const local = newest?.local_time && (!stated || clock(stated, newest.location ?? '').local_time === newest.local_time)
+  const local = newest?.local_time && (!stated || clock(stated, countries[0]).local_time === newest.local_time)
     ? newest.local_time : undefined;
   return {
     status: statusForStage(stage), current_stage: stage,
