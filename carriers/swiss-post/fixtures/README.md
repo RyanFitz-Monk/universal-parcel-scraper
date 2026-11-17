@@ -1,5 +1,5 @@
-`out-for-delivery.json`: a domestic parcel out for delivery (summary with a
-delivery window, three events, matching translation patterns) plus the
-addressee's name and address, which the parser reads, and signature and contact
-fields it drops. Constructed in the public result shape; the number and names
-are synthetic.
+`out-for-delivery.json`: a domestic parcel out for delivery, as the tracker's item
+detail gives it: the summary with a delivery window, three events, the delivery
+address an anonymous lookup gets, and a sender address and document the parser
+drops. Constructed in the public reply shape; the number, key and names are
+synthetic.

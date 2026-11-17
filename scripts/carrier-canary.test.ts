@@ -189,7 +189,7 @@ describe('carrier front-door canaries', () => {
     });
     expect(attempts[1]).toMatchObject({ attempt: 2, status: 302 });
     expect(attempts[1].error).toBeUndefined();
-    expect(lines).toContainEqual(expect.stringMatching(/^PASS swiss-post(,[a-z-]+)* service\.post\.ch HTTP 302$/));
+    expect(lines).toContainEqual(expect.stringMatching(/^PASS swiss-post(,[a-z-]+)* mys\.post\.ch HTTP 302$/));
     const targets = automaticCanaryTargets().filter((item) => !(item.carrierId in unreachableFrontDoors));
     const urls = new Set(targets.map((item) => item.url)).size;
     expect(urls).toBeLessThan(targets.length);
@@ -207,12 +207,12 @@ describe('carrier front-door canaries', () => {
     vi.stubEnv('GITHUB_OUTPUT', output);
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(null, {
-      status: new URL(url).hostname === 'service.post.ch' ? 404 : 200,
+      status: new URL(url).hostname === 'mys.post.ch' ? 404 : 200,
     })));
 
     expect(await carrierCanaryMain(['--attempts', '1'])).toBe(1);
-    expect(fs.readFileSync(summary, 'utf8')).toMatch(/\| ❌ failed \| swiss-post[a-z,-]* \(service\.post\.ch\) \| `HTTP 404` \|/);
-    expect(fs.readFileSync(output, 'utf8')).toMatch(/^failures<<(EOF_[\w-]+)\n- `swiss-post[a-z,-]* \(service\.post\.ch\)`: HTTP 404\n\1\n$/);
+    expect(fs.readFileSync(summary, 'utf8')).toMatch(/\| ❌ failed \| swiss-post[a-z,-]* \(mys\.post\.ch\) \| `HTTP 404` \|/);
+    expect(fs.readFileSync(output, 'utf8')).toMatch(/^failures<<(EOF_[\w-]+)\n- `swiss-post[a-z,-]* \(mys\.post\.ch\)`: HTTP 404\n\1\n$/);
   });
 
   it('keeps unreachable front doors only for automatic carriers', () => {
@@ -277,7 +277,7 @@ describe('carrier front-door canaries', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     let unreachable = 2;
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {
-      if (new URL(url).hostname === 'service.post.ch' && unreachable-- > 0) throw new TypeError('fetch failed');
+      if (new URL(url).hostname === 'mys.post.ch' && unreachable-- > 0) throw new TypeError('fetch failed');
       return new Response(null, { status: 200 });
     }));
     expect(await carrierCanaryMain(['--recheck-pause', '0.001'])).toBe(0);

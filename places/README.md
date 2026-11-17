@@ -250,8 +250,9 @@ Node lookups through `trackCarrier()` and `createTracker()` apply it to a carrie
 Some carriers say exactly where a scan happened, and the town's centre can be kilometres off:
 Swiss Post's "Zürich Briefzentrum" is in Mülligen.
 
-- `facilities.json` places sorting centres by the six-digit site number Swiss Post ends its
-  scan text with ("Zürich Briefzentrum 801050"), whichever source relayed the scan. The text
+- `facilities.json` places sorting centres by the six-digit site number that ends Swiss Post's
+  scan text in its former tracker and in relays ("Zürich Briefzentrum 801050"), whichever source
+  relayed the scan. Swiss Post's own tracker now ends the name with the facility's postcode instead. The text
   must also start with the site's town. The place keeps the town as its name; a distinct facility name is returned as `site`.
   Only sites seen in scans are listed, each with the
   OpenStreetMap element its point comes from. The first four digits are often not a

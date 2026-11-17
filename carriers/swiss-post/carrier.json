@@ -33,7 +33,6 @@
     "history",
     "location",
     "eta",
-    "pickup_point",
     "provider_code",
     "weight",
     "dimensions",
@@ -43,14 +42,13 @@
     "url": "https://www.post.ch/swisspost-tracking?formattedParcelCodes={trackingNumber}",
     "searchUrl": "https://www.post.ch/de/empfangen/sendung-verfolgen",
     "helpUrl": "https://www.post.ch/de/hilfe-und-kontakt/empfangen",
-    "canaryUrl": "https://service.post.ch/",
+    "canaryUrl": "https://mys.post.ch/my-consignments/",
     "shows": [
       "status",
       "history",
       "location",
       "eta",
       "eta_window",
-      "pickup_point",
       "weight",
       "dimensions",
       "delivered_at",
@@ -65,7 +63,6 @@
       "history",
       "location",
       "eta",
-      "pickup_point",
       "provider_code",
       "weight",
       "dimensions",
@@ -78,7 +75,9 @@
       "signature",
       "delivery_instructions"
     ],
-    "unavailable": []
+    "unavailable": [
+      "pickup_point"
+    ]
   },
   "links": [
     {

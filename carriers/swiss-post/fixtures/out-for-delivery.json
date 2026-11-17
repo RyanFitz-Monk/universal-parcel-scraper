@@ -1,42 +1,56 @@
 {
-  "shipment": {
-    "identity": "private-summary-id",
-    "shipmentNumber": "99.34.123456.99999980",
-    "internationalBarcode": "RA999999987CH",
-    "globalStatus": "IN_DELIVERY",
-    "calculatedDeliveryDate": "2026-09-12",
-    "deliveryTimeInterval": { "start": "2026-09-12T09:00:00+02:00", "end": "2026-09-12T12:00:00+02:00" },
-    "deliveryRange": { "start": "2026-09-12", "end": "2026-09-12" },
-    "lastEventDateTime": "2026-09-12T08:00:00+02:00",
-    "physicalProperties": { "weight": 720, "dimension1": 230, "dimension2": 160, "dimension3": 115 },
-    "recipientCountry": "CH",
-    "addressee": { "name1": "PRIVATE RECIPIENT", "name2": null, "name3": null, "street": "PRIVATE STREET", "number": "7",
-      "zip": "8000", "city": "Zurich", "streetAndNumber": "PRIVATE STREET 7" },
-    "signature": "PRIVATE SIGNATURE",
-    "recipientEmail": "private@example.test"
+  "mailpieceKey": "synthetic-mailpiece-key",
+  "mailpieceId": "993412345699999980",
+  "type": "PARCEL",
+  "summaryDescription": "Domestic sender",
+  "status": {
+    "status": "ON_GOING_DELIVERY",
+    "title": "Expected delivery",
+    "subtitle": "Saturday, 12 September 2026, 9:00 - 12:00",
+    "expectedDelivery": { "from": "2026-09-12T09:00+02:00", "to": "2026-09-12T12:00:00.000+02:00" }
   },
+  "lastUpdateTimestamp": "2026-09-12T08:00:00+02:00",
+  "product": { "code": "1", "description": "PostPac Economy", "name": "Parcel" },
+  "productName": "Parcel",
+  "physicalDimensions": {
+    "details": { "height": 115, "length": 230, "weight": 720, "width": 160 },
+    "dimensions": "23.0 x 16.0 x 11.5 cm",
+    "weight": "0.72 kg"
+  },
+  "recipientAddress": {
+    "address": ["8000 Zurich"],
+    "addressType": "OTHER",
+    "details": { "city": "Zurich", "zipCode": "8000" },
+    "postboxDelivery": "POSSIBLE",
+    "title": "Delivery address"
+  },
+  "senderAddress": { "address": ["PRIVATE SENDER", "3000 Bern"], "addressType": "OTHER" },
+  "documents": [{ "documentId": "private-document-id", "documentType": "PROOF_OF_DELIVERY" }],
+  "billingItems": [],
+  "badges": [],
+  "tags": ["OPEN"],
+  "attributes": { "complete": false, "open": true, "liveTrackingActive": false },
   "events": [
     {
-      "eventCode": "PARCEL.*.1.1003",
       "timestamp": "2026-09-12T08:00:00+02:00",
-      "city": "Zurich",
-      "zip": "8000",
-      "recipient": "PRIVATE RECIPIENT"
+      "location": { "city": "Zurich", "zipCode": "8000", "country": "CH" },
+      "code": "1003",
+      "subtitle": "8000 Zurich",
+      "title": "Loading into delivery vehicle"
     },
     {
-      "eventCode": "PARCEL.*.2.820",
-      "timestamp": "2026-09-11T21:30:00+02:00",
-      "city": "Härkingen",
-      "zip": "4622"
+      "timestamp": "2026-09-11T21:30+02:00",
+      "location": { "city": "Härkingen Paketzentrum", "zipCode": "4622", "country": "CH" },
+      "code": "1201",
+      "subtitle": "4622 Härkingen Paketzentrum",
+      "title": "Sorted for delivery"
     },
     {
-      "eventCode": "PARCEL.*.1.600",
-      "timestamp": "2026-09-10T17:05:00+02:00"
+      "timestamp": "2026-09-10T17:05:00+02:00",
+      "location": { "country": "CH" },
+      "code": "600",
+      "subtitle": "",
+      "title": "Shipment data transmitted – Shipment not yet handed over to Swiss Post"
     }
-  ],
-  "translations": {
-    "PARCEL.*.1.1003.INLAND": "Loading into delivery vehicle",
-    "PARCEL.*.2.820.INLAND": "Shipment is being forwarded",
-    "PARCEL.*.1.600.INLAND": "Your shipment will shortly be handed over to Swiss Post"
-  }
+  ]
 }

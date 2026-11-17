@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { AdapterEnvironment, LookupBudget } from '../../core/adapter/index.js';
+import type { AdapterEnvironment } from '../../core/adapter/index.js';
 import { carrierErrorKind, IndeterminateError, MaintenanceError, NotFoundError, TransportError, UpstreamHttpError } from '../../core/errors/index.js';
 import { delayedFetcher } from '../../core/testing/hang.js';
 import { fakeBudgetClock } from '../../testing/budgetClock.js';
 import type { JsonObject } from '../../core/types.js';
-import { adapter, parseSwissPostShipment, swissPostPickupPoint, SwissPostTracker } from './adapter.js';
-import { EVENT_STAGE_BY_CODE, swissPostEventStage } from './status.js';
+import { adapter, parseSwissPostShipment, swissPostExpectedDelivery, SwissPostTracker } from './adapter.js';
+import { EVENT_STAGE_BY_CODE, swissPostEventStage, SWISS_POST_GLOBAL_STATUSES } from './status.js';
 
-const WRONG_SWISS_POST_NUMBER = '989999999999999999';
+const SHIPMENT = '993412345699999980';
 /** Swiss Post's public outage page, served in place of JSON, with HTTP 200, while its service is down. */
 const OUTAGE_PAGE = `<!--
   ~ Copyright 2025 by Swiss Post, Information Technology
@@ -25,38 +25,43 @@ const OUTAGE_PAGE = `<!--
 </html>
 `;
 
-interface ShipmentFixture {
-  shipment: JsonObject;
-  events: unknown[];
-  translations: Record<string, string>;
+/** The fixture's item detail, and the search's summary of it: the same item without its scans. */
+function outForDelivery(): { detail: JsonObject; summary: JsonObject; events: JsonObject[] } {
+  const detail = JSON.parse(readFileSync(new URL('./fixtures/out-for-delivery.json', import.meta.url), 'utf8')) as JsonObject;
+  const summary = Object.fromEntries(Object.entries(detail).filter(([key]) => !['events', 'documents', 'billingItems'].includes(key)));
+  return { detail, summary, events: detail.events as JsonObject[] };
 }
-
-const outForDelivery = (): ShipmentFixture => JSON.parse(
-  readFileSync(new URL('./fixtures/out-for-delivery.json', import.meta.url), 'utf8'),
-) as ShipmentFixture;
 const capabilities = (JSON.parse(
   readFileSync(new URL('./carrier.json', import.meta.url), 'utf8'),
 ) as { capabilities: string[] }).capabilities;
 
-function mockSearchResult(items: unknown): ReturnType<typeof vi.spyOn> {
-  return vi.spyOn(globalThis, 'fetch')
-    .mockResolvedValueOnce(new Response(JSON.stringify({
-      userIdentifier: 'unit-test-user',
-    }), { headers: { 'x-csrf-token': 'unit-test-csrf' } }))
-    .mockResolvedValueOnce(new Response(JSON.stringify({ hash: 'unit-test-hash' })))
-    .mockResolvedValueOnce(new Response(JSON.stringify(items)));
+/** An item of the given type and product with the given scans, as the item detail gives them. */
+const item = (extra: JsonObject = {}): JsonObject => ({ type: 'PARCEL', product: { code: '1' }, status: { status: 'ON_GOING_DELIVERY' }, ...extra });
+const scan = (code: string, timestamp: string, extra: JsonObject = {}): JsonObject => ({ code, timestamp, location: {}, title: '', ...extra });
+
+/**
+ * A tracker whose search answers `search` and whose item detail answers the fixture, but for the
+ * calls matching `step`, which get `reply`.
+ */
+function tracker(options: { search?: () => Response; step?: RegExp; reply?: () => Response } = {}) {
+  const { detail, summary } = outForDelivery();
+  const calls: Array<{ url: string; language: string | null }> = [];
+  const fetcher: typeof fetch = async (input, init) => {
+    const url = String(input);
+    calls.push({ url, language: new Headers(init?.headers).get('accept-language') });
+    if (options.step?.test(url) && options.reply) return options.reply();
+    if (url.includes('/compact/?')) return options.search?.() ?? Response.json({ mailpieces: [summary] });
+    if (url.endsWith('/detail')) return Response.json(detail);
+    return new Response('unexpected', { status: 404 });
+  };
+  return { calls, fetcher, tracker: new SwissPostTracker({ fetcher }) };
 }
+
+const failure = (promise: Promise<unknown>) => promise.then(() => expect.unreachable('the lookup succeeded'), (error: unknown) => error);
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('Swiss Post historical event codes', () => {
-  it('retains the exact international barcode supplied by the carrier', () => {
-    expect(parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', internationalBarcode: '12345678901' }, []))
-      .toMatchObject({ international_tracking_number: '12345678901' });
-    expect(parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', internationalBarcode: null }, []))
-      .not.toHaveProperty('international_tracking_number');
-  });
-
+describe('Swiss Post event codes', () => {
   it.each([
     ['100', 'Time at which your consignment was mailed', 'accepted'],
     ['500', 'Picked up at the sender', 'accepted'],
@@ -85,730 +90,451 @@ describe('Swiss Post historical event codes', () => {
     ['3800', 'Delivered to the mailbox/letter box', 'delivered'],
     ['4020', 'Forwarding abroad', 'in_transit'],
     ['9400', 'Consignment poste restante in post office and ready for collection', 'ready_for_pickup'],
-  ])('classifies scan %s from its code for letters and parcels alike', (code, description, stage) => {
+  ])('classifies scan %s from its code for letters and parcels alike', (code, title, stage) => {
     expect(EVENT_STAGE_BY_CODE[code]).toBe(stage);
-    for (const eventCode of [`LETTER.*.90.${code}`, `LETTER.*.93.${code}`, `PARCEL.*.2.${code}`]) {
-      expect(swissPostEventStage(eventCode)).toBe(stage);
-      const result = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [
-        { eventCode, timestamp: '2026-09-10T07:00:00+02:00', externalMetadata: { description } },
+    expect(swissPostEventStage(code)).toBe(stage);
+    for (const [type, product] of [['LETTER', '90'], ['LETTER', '93'], ['PARCEL', '2']]) {
+      const result = parseSwissPostShipment(item({ type, product: { code: product } }), [
+        scan(code, '2026-09-10T07:00:00+02:00', { title }),
       ]);
       expect(result.current_stage).toBe(stage);
-      expect(result.events?.[0]).toMatchObject({ description, stage });
+      // Written as the former tracker wrote it, and as stored scans carry it.
+      expect(result.events?.[0]).toMatchObject({ description: title, stage, provider_code: `${type}.*.${product}.${code}` });
     }
+  });
+
+  it('keeps the bare code when the item names no type or product', () => {
+    expect(parseSwissPostShipment({ status: { status: 'DELIVERED' } }, [scan('4000', '2026-09-10T07:00:00+02:00')]).events?.[0])
+      .toMatchObject({ provider_code: '4000', stage: 'delivered' });
+    expect(parseSwissPostShipment(item({ product: { code: ['1'] } }), [scan('4000', '2026-09-10T07:00:00+02:00')]).events?.[0])
+      .toMatchObject({ provider_code: '4000' });
   });
 
   it('leaves unknown codes, enquiry and delay notes and recipient orders to the wording', () => {
     expect(swissPostEventStage('PARCEL.*.1.1003')).toBe(EVENT_STAGE_BY_CODE['1003']);
-    expect(swissPostEventStage('PARCEL.*.1.9999')).toBeUndefined();
-    expect(swissPostEventStage('LETTER.*.93.9112')).toBeUndefined();
-    expect(swissPostEventStage('LETTER.*.90.1800')).toBeUndefined();
-    expect(swissPostEventStage('PARCEL.*.1.9224')).toBeUndefined();
+    for (const code of ['9999', '9112', '1800', '9224', 'LETTER.*.93.9112']) expect(swissPostEventStage(code)).toBeUndefined();
   });
 
-  it('reads a parcel held at a post office after a refusal as ready for collection, not as the summary\'s failed delivery', () => {
-    const result = parseSwissPostShipment({ globalStatus: 'NOT_DELIVERED' }, [
-      { eventCode: 'PARCEL.*.1.3700', timestamp: '2026-09-08T10:55:00+02:00' },
-      { eventCode: 'PARCEL.*.1.1001', timestamp: '2026-09-10T16:34:21+02:00' },
-      { eventCode: 'PARCEL.*.1.9400', timestamp: '2026-09-10T16:34:29+02:00' },
+  it('reads a parcel held at a post office after a refusal as ready for collection', () => {
+    const result = parseSwissPostShipment(item(), [
+      scan('3700', '2026-09-08T10:55:00+02:00'),
+      scan('1001', '2026-09-10T16:34:21+02:00'),
+      scan('9400', '2026-09-10T16:34:29+02:00'),
     ]);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'ready_for_pickup' });
   });
 
   it('drops the copy without a place of a scan Swiss Post lists twice at one instant', () => {
-    const arrival = { eventCode: 'LETTER.*.106.818', timestamp: '2026-09-10T14:48:56+02:00', externalMetadata: { description: 'Arrival in destination country' } };
-    const result = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [
-      { eventCode: 'LETTER.*.106.912', timestamp: '2026-09-08T11:56:57+01:00' },
+    const arrival = scan('818', '2026-09-10T14:48:56+02:00', { title: 'Arrival in destination country' });
+    const result = parseSwissPostShipment(item({ type: 'LETTER', product: { code: '106' } }), [
       arrival,
-      { ...arrival, city: 'Sampletown Letter Centre', zip: '000000' },
-      { eventCode: 'LETTER.*.106.820', timestamp: '2026-09-10T15:18:56+02:00' },
+      { ...arrival, location: { city: 'Example Briefzentrum', zipCode: '9999', country: 'CH' } },
     ]);
-    expect(result.events?.map((event) => [event.provider_code, event.location])).toEqual([
-      ['LETTER.*.106.820', ''], ['LETTER.*.106.818', 'Sampletown Letter Centre 000000'], ['LETTER.*.106.912', ''],
+    expect(result.events).toEqual([expect.objectContaining({ location: 'Example Briefzentrum 9999' })]);
+  });
+
+  it('keeps scans of one instant in the order Swiss Post lists them, newest first', () => {
+    const same = '2026-09-01T06:16:00+02:00';
+    const result = parseSwissPostShipment(item(), [
+      scan('924', '2026-09-01T08:21:00+02:00'), scan('909', same), scan('921', same), scan('906', '2026-09-01T03:15:00+02:00'),
     ]);
-    // Two places, or another scan at that instant, stay.
-    const two = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [
-      { ...arrival, city: 'Sampletown', zip: '0001' }, { ...arrival, city: 'Otherville', zip: '0002' },
-      { ...arrival, eventCode: 'LETTER.*.106.820' },
+    expect(result.events?.map((event) => event.provider_code?.split('.').at(-1))).toEqual(['924', '909', '921', '906']);
+  });
+
+  it('adds the detail the tracker shows under a scan, and takes no stage from a revoked one', () => {
+    const detail = (information: string) => ({ additionalInformation: { code: '1', information } });
+    const delivered = parseSwissPostShipment(item(), [scan('4000', '2026-09-10T13:53:01+02:00',
+      { title: 'Delivered', subtitle: 'Deposited with authorization for delivery', ...detail('Deposited with authorization for delivery') })]);
+    expect(delivered.events?.[0]).toMatchObject({ description: 'Delivered — Deposited with authorization for delivery', stage: 'delivered' });
+    expect(parseSwissPostShipment(item(), [scan('4000', '2026-09-10T13:53:01+02:00', { title: 'Delivered', ...detail('Delivered') })])
+      .events?.[0]?.description).toBe('Delivered');
+    const revoked = parseSwissPostShipment(item(), [
+      scan('1003', '2026-09-10T07:00:00+02:00', { title: 'Loading into delivery vehicle' }),
+      scan('4000', '2026-09-10T13:53:01+02:00', { title: 'Distribué', ...detail('Révocation') }),
     ]);
-    expect(two.events).toHaveLength(3);
+    expect(revoked.events?.[0]).toMatchObject({ description: 'Distribué — Révocation' });
+    expect(revoked.events?.[0]).not.toHaveProperty('stage');
+    expect(revoked.current_stage).toBe('in_transit');
   });
 
-  it('keeps scans of one instant in the carrier\'s order when it lists them oldest first', () => {
-    const result = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [
-      { eventCode: 'PARCEL.*.1.3700', timestamp: '2026-09-08T10:55:00+02:00' },
-      { eventCode: 'PARCEL.*.1.1001', timestamp: '2026-09-10T16:34:21+02:00' },
-      { eventCode: 'PARCEL.*.1.9400', timestamp: '2026-09-10T16:34:21+02:00' },
-    ]);
-    expect(result.events?.map((event) => event.provider_code)).toEqual(['PARCEL.*.1.9400', 'PARCEL.*.1.1001', 'PARCEL.*.1.3700']);
+  it('words a scan without wording by its built-in label, else by its code', () => {
+    const result = parseSwissPostShipment(item(), [scan('1003', '2026-09-10T07:00:00+02:00'), scan('7777', '2026-09-09T07:00:00+02:00')]);
+    expect(result.events?.map((event) => event.description)).toEqual(['Loading into delivery vehicle', '7777']);
   });
 
-  it.each([
-    [99, 'oldest first'], [100, 'oldest first'], [101, 'oldest first'],
-    [99, 'newest first'], [100, 'newest first'], [101, 'newest first'],
-  ])('keeps the delivery and the newest scans of %i listed %s, and says when older ones were left out', (count, order) => {
-    // Sorting scans one minute apart, the delivery last; an oldest-first list puts it at the cutoff.
-    const sorting = Array.from({ length: count - 1 }, (_, minute) => ({
-      eventCode: 'PARCEL.*.1.1213', timestamp: new Date(Date.UTC(2026, 8, 1, 6, minute)).toISOString(),
-    }));
-    const delivery = { eventCode: 'PARCEL.*.1.4000', timestamp: '2026-09-02T09:00:00Z' };
-    const oldestFirst = [...sorting, delivery];
-    const result = parseSwissPostShipment({ globalStatus: 'DELIVERED' },
-      order === 'oldest first' ? oldestFirst : [...oldestFirst].reverse());
-    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: delivery.timestamp });
-    expect(result.events).toHaveLength(Math.min(count, 100));
-    expect(result.events?.[0]).toMatchObject({ time: delivery.timestamp, stage: 'delivered' });
-    // The oldest scan is the one left out.
-    expect(result.events?.at(-1)?.time).toBe(count > 100 ? sorting[1]!.timestamp : sorting[0]!.timestamp);
-    if (count > 100) expect(result.history_truncated).toBe(true);
-    else expect(result).not.toHaveProperty('history_truncated');
-  });
-
-  it('never takes a stage from a revoked scan', () => {
-    expect(swissPostEventStage('PARCEL.*.2.4000', 'CANPDS')).toBeUndefined();
-    expect(swissPostEventStage('LETTER.*.1.4000', 'CAN1')).toBeUndefined();
-    expect(swissPostEventStage('PARCEL.*.2.4000', '1')).toBe('delivered');
-    const result = parseSwissPostShipment({ globalStatus: 'IN_DELIVERY' }, [
-      { eventCode: 'PARCEL.*.1.1003', timestamp: '2026-09-01T08:00:00+02:00' },
-      { eventCode: 'PARCEL.*.1.4000', subEventId: 'CANPDS', subEventDetailCode: '7', timestamp: '2026-09-01T09:00:00+02:00' },
-    ], { 'PARCEL.*.*.4000.*': 'Delivered', 'PARCEL.*.*.4000.*.CANPDS.7': 'Revocation' });
-    expect(result.events?.[0]).toMatchObject({ description: 'Delivered — Revocation' });
-    expect(result.events?.[0]).not.toHaveProperty('stage');
-    expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery' });
-    expect(result).not.toHaveProperty('delivered_at');
-  });
-
-  it('reads a pickup notice\'s deadline as the tracker\'s page fills it', () => {
-    const wording = { 'LETTER.*.*.2100.*': 'Registered for collection', 'LETTER.*.*.2100.*.MEZ1': 'Deadline to {{valueParameter}}' };
-    const notice = (extra: Record<string, unknown>) => parseSwissPostShipment({ globalStatus: 'MISSED_DELIVERY' }, [
-      { eventCode: 'LETTER.*.92.1001', timestamp: '2026-10-20T08:05:06+02:00' },
-      { eventCode: 'LETTER.*.92.2100', subEventId: 'MEZ1', timestamp: '2026-10-20T08:46:31+02:00', ...extra },
-    ], wording);
-    expect(notice({ subEventAdditionalInfo: '27.10.2026' })).toMatchObject({ status: 'in_transit', current_stage: 'ready_for_pickup',
-      last_status_text: 'Registered for collection — Deadline to 27.10.2026' });
-    // Without a date the deadline is left out, never shown as its placeholder.
-    for (const extra of [{}, { subEventAdditionalInfo: 'see notice' }]) {
-      expect(notice(extra).events?.[0]).toMatchObject({ description: 'Registered for collection', stage: 'ready_for_pickup' });
-    }
-  });
-
-  it('reads the destination post\'s unlocated events on its clock, not on the Swiss offset they carry', () => {
+  it("reads the destination post's unlocated events on its clock, not on the Swiss offset they carry", () => {
     const history = [
-      { eventCode: 'LETTER.*.82.909', timestamp: '2026-10-08T12:26:00+02:00' },
-      { eventCode: 'LETTER.*.82.9112', timestamp: '2026-10-06T06:45:39+02:00', country: 'CH' },
-      { eventCode: 'LETTER.*.82.918', timestamp: '2026-09-24T15:30:00+02:00' },
-      { eventCode: 'LETTER.*.82.915', timestamp: '2026-09-03T22:19:00+02:00' },
-      { eventCode: 'LETTER.*.82.813', timestamp: '2026-09-03T12:20:24+02:00', city: 'Example', zip: '000000', country: 'CH' },
+      scan('909', '2026-10-08T12:26+02:00'),
+      scan('9112', '2026-10-06T06:45:39+02:00', { location: { country: 'CH' } }),
+      scan('918', '2026-09-24T15:30:00+02:00'),
+      scan('915', '2026-09-03T22:19:00+02:00'),
+      scan('813', '2026-09-03T12:20:24+02:00', { location: { city: 'Example', zipCode: '9999', country: 'CH' } }),
     ];
-    const clocks = (shipment: Record<string, unknown>) => parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', ...shipment }, history)
-      .events?.map((event) => event.time);
-    expect(clocks({ internationalExport: true, recipientCountry: 'SV' })).toEqual([
+    const exported = (host: string) => item({ type: 'LETTER', product: { code: '82' }, international: 'EXPORT',
+      exportTrackingUrl: `https://${host}/track` });
+    const clocks = (shipment: JsonObject) => parseSwissPostShipment(shipment, history).events?.map((event) => event.time);
+    expect(clocks(exported('www.correos.gob.sv'))).toEqual([
       '2026-10-08T12:26:00-06:00', '2026-10-06T06:45:39+02:00', '2026-09-24T15:30:00-06:00',
       '2026-09-03T22:19:00+02:00', '2026-09-03T12:20:24+02:00']);
+    expect(parseSwissPostShipment(exported('www.correos.gob.sv'), history)).toMatchObject({ destination_country: 'SV' });
     // A destination with several clocks keeps Swiss Post's offset, the last guess.
-    const several = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', internationalExport: true, recipientCountry: 'US' }, history);
-    expect(several.events?.map((event) => event.time)).toEqual(history.map((event) => event.timestamp));
-    expect(several).toMatchObject({ last_update: '2026-10-08T12:26:00+02:00' });
-    expect(several).not.toHaveProperty('last_update_local');
-    // A parcel arriving in Switzerland keeps every offset as sent.
-    expect(clocks({ internationalImport: true, recipientCountry: 'CH' })?.[0]).toBe('2026-10-08T12:26:00+02:00');
+    const several = parseSwissPostShipment(exported('tools.usps.com'), history);
+    expect(several).toMatchObject({ destination_country: 'US', last_update: '2026-10-08T12:26:00+02:00' });
+    expect(several.events?.map((event) => event.time)).toEqual(history.map((event) => String(event.timestamp).replace(/T(\d\d:\d\d)\+/, 'T$1:00+')));
+    // A destination the link does not name keeps every offset as sent.
+    expect(clocks(exported('www.dhl.com'))?.[0]).toBe('2026-10-08T12:26:00+02:00');
+    expect(parseSwissPostShipment(exported('www.dhl.com'), history)).not.toHaveProperty('destination_country');
+    // An item arriving in Switzerland keeps every offset as sent.
+    expect(clocks(item({ international: 'IMPORT', exportTrackingUrl: 'https://www.correos.gob.sv/track' }))?.[0])
+      .toBe('2026-10-08T12:26:00+02:00');
     // China's customs scans too: UPU gives Beijing's office 11:05 and Hangzhou's 14:30.
-    const customs = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', internationalExport: true, recipientCountry: 'CN' }, [
-      { eventCode: 'LETTER.*.82.902', timestamp: '2026-08-09T14:30:00+02:00' },
-      { eventCode: 'LETTER.*.82.901', timestamp: '2026-08-07T11:05:00+02:00' },
+    const customs = parseSwissPostShipment({ ...exported('www.ems.com.cn'), events: [] }, [
+      scan('902', '2026-08-09T14:30+02:00'), scan('901', '2026-08-07T11:05+02:00'),
     ]);
     expect(customs.events?.map((event) => event.time)).toEqual(['2026-08-09T14:30:00+08:00', '2026-08-07T11:05:00+08:00']);
   });
 
-  it('reads a London office of exchange\'s events on a parcel from abroad on London\'s clock', () => {
+  it("reads a London office of exchange's events on a parcel from abroad on London's clock", () => {
     const history = [
-      { eventCode: 'PARCEL.*.2.1202', timestamp: '2026-10-23T18:38:15+02:00', city: 'Example Paketzentrum', zip: '000000', country: 'CH' },
-      { eventCode: 'PARCEL.*.2.915', timestamp: '2026-10-16T17:57:00+02:00', city: 'LON E ET BEA' },
-      { eventCode: 'PARCEL.*.2.913', timestamp: '2026-10-16T17:27:00+02:00', city: 'LON E ET BEA' },
-      { eventCode: 'PARCEL.*.2.912', timestamp: '2026-10-16T16:57:00+02:00', city: 'Belgian Post' },
+      scan('1202', '2026-10-23T18:38:15+02:00', { location: { city: 'Example Paketzentrum', zipCode: '9999', country: 'CH' } }),
+      scan('915', '2026-10-16T17:57+02:00', { location: { city: 'LON E ET BEA' } }),
+      scan('913', '2026-10-16T17:27+02:00', { location: { city: 'LON E ET BEA' } }),
+      scan('912', '2026-10-16T16:57+02:00', { location: { city: 'Belgian Post' } }),
     ];
-    const clocks = (shipment: Record<string, unknown>) => parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', ...shipment }, history)
-      .events?.map((event) => event.time);
+    const clocks = (shipment: JsonObject) => parseSwissPostShipment(shipment, history).events?.map((event) => event.time);
     // UPU has the departure at 17:57 +01:00. The posting names a post, not an office, and keeps Swiss Post's offset.
-    expect(clocks({ internationalImport: true, recipientCountry: 'CH' })).toEqual([
+    expect(clocks(item({ international: 'IMPORT' }))).toEqual([
       '2026-10-23T18:38:15+02:00', '2026-10-16T17:57:00+01:00', '2026-10-16T17:27:00+01:00', '2026-10-16T16:57:00+02:00']);
     // Only a parcel from abroad passes an office abroad on its way in.
-    expect(clocks({ recipientCountry: 'CH' })).toEqual(history.map((event) => event.timestamp));
+    expect(clocks(item())).toEqual(['2026-10-23T18:38:15+02:00', '2026-10-16T17:57:00+02:00', '2026-10-16T17:27:00+02:00',
+      '2026-10-16T16:57:00+02:00']);
   });
 
   it("reads a consolidator's notice that its letter will shortly be handed over on Beijing's clock", () => {
-    const history = [
-      { eventCode: 'LETTER.*.106.818', timestamp: '2026-10-27T09:06:11+01:00' },
-      { eventCode: 'LETTER.*.106.859', timestamp: '2026-10-26T18:12:57+01:00' },
-    ];
-    const clocks = (shipment: Record<string, unknown>) => parseSwissPostShipment({ globalStatus: 'REPORTED', ...shipment }, history)
-      .events?.map((event) => event.time);
-    expect(clocks({ senderCountry: 'NL', recipientCountry: 'CH' })).toEqual(['2026-10-27T09:06:11+01:00', '2026-10-26T18:12:57+08:00']);
-    expect(parseSwissPostShipment({ globalStatus: 'REPORTED', senderCountry: 'NL' }, history.slice(1)))
+    const letter = item({ type: 'LETTER', product: { code: '106' }, status: { status: 'NOT_YET_SENT' } });
+    const history = [scan('818', '2026-10-27T09:06:11+01:00'), scan('859', '2026-10-26T18:12:57+01:00')];
+    expect(parseSwissPostShipment(letter, history).events?.map((event) => event.time))
+      .toEqual(['2026-10-27T09:06:11+01:00', '2026-10-26T18:12:57+08:00']);
+    expect(parseSwissPostShipment(letter, history.slice(1)))
       .toMatchObject({ last_update: '2026-10-26T18:12:57+08:00', current_stage: 'registered' });
-    // Before the arrival scan the reply may name no sender yet.
-    expect(parseSwissPostShipment({ globalStatus: 'REPORTED' }, history.slice(1)).events?.[0]?.time).toBe('2026-10-26T18:12:57+08:00');
-    // A reply naming Switzerland as the sender, after the hub's deposit, had the notice hours ahead of it.
-    expect(parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', senderCountry: 'CH', recipientCountry: 'CH' }, [
-      { eventCode: 'LETTER.*.106.912', timestamp: '2026-10-30T10:56:57+01:00' },
-      { eventCode: 'LETTER.*.106.859', timestamp: '2026-10-30T19:16:41+01:00' },
-    ]).events?.map((event) => event.time)).toEqual(['2026-10-30T19:16:41+08:00', '2026-10-30T10:56:57+01:00']);
+    // A notice hours ahead of the hub's deposit.
+    expect(parseSwissPostShipment(letter, [scan('912', '2026-10-30T10:56:57+01:00'), scan('859', '2026-10-30T19:16:41+01:00')])
+      .events?.map((event) => event.time)).toEqual(['2026-10-30T19:16:41+08:00', '2026-10-30T10:56:57+01:00']);
     // Senders in Switzerland give their notice under another code, on Swiss Post's clock, as parcels do.
-    for (const eventCode of ['LETTER.*.20.600', 'PARCEL.*.2.600']) {
-      expect(parseSwissPostShipment({ globalStatus: 'REPORTED', senderCountry: 'CH' }, [
-        { eventCode, timestamp: '2026-10-23T17:42:40+02:00' },
-      ]).events?.[0]?.time).toBe('2026-10-23T17:42:40+02:00');
+    expect(parseSwissPostShipment(letter, [scan('600', '2026-10-23T17:42:40+02:00')]).events?.[0]?.time)
+      .toBe('2026-10-23T17:42:40+02:00');
+  });
+
+  it('falls back to the summary when the newest scan has no stage', () => {
+    const result = parseSwissPostShipment(item(), [scan('924', '2026-09-02T10:00:00+02:00'), scan('9112', '2026-09-09T10:00:00+02:00')]);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+    expect(parseSwissPostShipment(item({ status: { status: 'NOT_YET_SENT' } }), [])).toMatchObject({
+      status: 'pending', current_stage: 'registered', last_status_text: 'NOT_YET_SENT', summary_only: true,
+    });
+    expect(parseSwissPostShipment(item({ status: { status: 'WAITING_FOR_PICKUP' } }), [])).toMatchObject({
+      status: 'in_transit', current_stage: 'ready_for_pickup',
+    });
+    expect(parseSwissPostShipment(item({ status: { status: 'UNKNOWN' } }), [])).not.toHaveProperty('current_stage');
+    // A status-only answer's text is one the app can tell from a scan, as it can the former tracker's.
+    for (const code of ['NOT_YET_SENT', 'ON_GOING_DELIVERY', 'WAITING_FOR_PICKUP', 'DELIVERED', 'RETURNED', 'UNKNOWN', 'TO_BE_DELIVERED']) {
+      expect(SWISS_POST_GLOBAL_STATUSES).toContain(code);
     }
   });
 
-  it('falls back to the shipment summary when the newest scan has no stage', () => {
-    const result = parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [
-      { eventCode: 'LETTER.*.82.924', timestamp: '2026-09-02T10:00:00+02:00' },
-      { eventCode: 'LETTER.*.82.9112', timestamp: '2026-09-09T10:00:00+02:00' },
-    ]);
-    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
-    expect(parseSwissPostShipment({ globalStatus: 'REPORTED' }, [])).toMatchObject({
-      status: 'pending', current_stage: 'registered',
-    });
-  });
-
-  it('reads a shipment that came back to its sender as returned, not delivered', () => {
-    const history = [
-      { eventCode: 'LETTER.*.93.923', timestamp: '2026-05-04T11:51:00+02:00' },
-      { eventCode: 'LETTER.*.93.4000', timestamp: '2026-05-23T07:59:55+02:00' },
-    ];
-    const enquiry = { eventCode: 'LETTER.*.93.9112', timestamp: '2026-06-08T16:06:14+02:00' };
+  it('reads an item that came back to its sender as returned, not delivered', () => {
+    const history = [scan('923', '2026-05-04T11:51:00+02:00'), scan('4000', '2026-05-23T07:59:55+02:00')];
+    const enquiry = scan('9112', '2026-06-08T16:06:14+02:00');
+    const expectedDelivery = { from: '2026-05-06T00:00+02:00', to: '2026-05-06T23:59:59.999+02:00' };
     for (const [shipment, events] of [
-      [{ globalStatus: 'RETURNED', returned: true, calculatedDeliveryDate: '2026-05-06' }, [...history, enquiry]],
-      [{ globalStatus: 'RETURNED' }, history],
-      [{ globalStatus: 'DELIVERED', returned: true }, history],
+      [item({ status: { status: 'DELIVERED', title: 'Return to sender', expectedDelivery }, badges: [{ title: 'Return item' }] }), [...history, enquiry]],
+      [item({ status: { status: 'RETURNED' } }), history],
+      ...['Rücksendung', 'Renvoi', 'Rinvio'].map((title) => [item({ status: { status: 'DELIVERED' }, badges: [{ title: 'International' }, { title }] }), history]),
     ] as Array<[JsonObject, JsonObject[]]>) {
       const result = parseSwissPostShipment(shipment, events);
       expect(result).toMatchObject({ status: 'exception', current_stage: 'returned', expected_delivery: null });
       expect(result).not.toHaveProperty('delivered_at');
     }
+    expect(parseSwissPostShipment(item({ status: { status: 'DELIVERED' }, badges: [{ title: 'International shipment' }] }), history))
+      .toMatchObject({ current_stage: 'delivered' });
   });
 
   it('keeps forwarding scans in transit after loading onto the delivery vehicle', () => {
-    const result = parseSwissPostShipment({ globalStatus: 'IN_DELIVERY' }, [
-      { eventCode: 'PARCEL.*.2.820', timestamp: '2026-09-01T05:00:00+02:00' },
-      { eventCode: 'PARCEL.*.1.1003', timestamp: '2026-09-01T08:00:00+02:00' },
-    ]);
+    const result = parseSwissPostShipment(item(), [scan('820', '2026-09-01T05:00:00+02:00'), scan('1003', '2026-09-01T08:00:00+02:00')]);
     expect(result.current_stage).toBe('out_for_delivery');
     expect(result.events?.map((event) => event.stage)).toEqual(['out_for_delivery', 'in_transit']);
   });
 
-  it('keeps a MyPost24 deposit ready for pickup even if the carrier summary says delivered', () => {
-    const result = parseSwissPostShipment({ globalStatus: 'DELIVERED' }, [
-      { eventCode: 'PARCEL.*.1.2102', timestamp: '2026-09-01T08:00:00+02:00' },
-    ], { 'PARCEL.*.1.2102.INLAND': 'Deposited in the MyPost24 machine' });
-    expect(result).toMatchObject({
-      status: 'in_transit', current_stage: 'ready_for_pickup',
-      events: [{ stage: 'ready_for_pickup' }],
-    });
+  it('keeps a MyPost24 deposit ready for pickup even if the summary says delivered', () => {
+    const result = parseSwissPostShipment(item({ status: { status: 'DELIVERED' } }), [scan('2102', '2026-09-01T08:00:00+02:00')]);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'ready_for_pickup', events: [{ stage: 'ready_for_pickup' }] });
   });
 
   it('keeps a parcel ready at its PickPost point after the point scans its arrival', () => {
-    const scans = [
-      { eventCode: 'PARCEL.*.1.1003', timestamp: '2026-09-01T08:00:00+02:00' },
-      { eventCode: 'PARCEL.*.1.2101', timestamp: '2026-09-01T13:28:00+02:00' },
-      { eventCode: 'PARCEL.*.1.1001', timestamp: '2026-09-01T13:29:00+02:00' },
-    ];
-    const result = parseSwissPostShipment({ globalStatus: 'MISSED_DELIVERY' }, scans,
-      { 'PARCEL.*.1.2101.INLAND': 'Ready for pick-up at PickPost / My Post 24 point' });
+    const scans = [scan('1003', '2026-09-01T08:00:00+02:00'), scan('2101', '2026-09-01T13:28:00+02:00'), scan('1001', '2026-09-01T13:29:00+02:00')];
+    const result = parseSwissPostShipment(item(), scans);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'ready_for_pickup' });
     expect(result.events?.map((event) => event.stage)).toEqual(['in_transit', 'ready_for_pickup', 'out_for_delivery']);
     // A new round or a delivery after the pickup notice takes the parcel out again.
-    const later = (code: string) => parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [
-      ...scans.slice(0, 2),
-      { eventCode: `PARCEL.*.1.${code}`, timestamp: '2026-09-02T08:00:00+02:00' },
-      { eventCode: 'PARCEL.*.1.1001', timestamp: '2026-09-02T09:00:00+02:00' },
+    const later = (code: string) => parseSwissPostShipment(item(), [
+      ...scans.slice(0, 2), scan(code, '2026-09-02T08:00:00+02:00'), scan('1001', '2026-09-02T09:00:00+02:00'),
     ]).current_stage;
     expect(later('1003')).toBe('in_transit');
     expect(later('4000')).toBe('in_transit');
     // An arrival with no pickup notice before it stays in transit.
-    expect(parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED' }, [scans[0]!, scans[2]!]).current_stage).toBe('in_transit');
+    expect(parseSwissPostShipment(item(), [scans[0]!, scans[2]!]).current_stage).toBe('in_transit');
   });
 });
 
 describe('Swiss Post projection', () => {
-  it('keeps an explicit scan country when the city is absent without assuming Switzerland', () => {
-    const locations = (events: JsonObject[]) => parseSwissPostShipment({ globalStatus: 'DELIVERED' }, events)
+  it("names a facility by its name and postcode, else by an explicit country, without assuming Switzerland", () => {
+    const locations = (location: unknown) => parseSwissPostShipment(item(), [scan('3800', '2026-07-12T10:15:00Z', { location })])
       .events?.map((event) => event.location);
-    const scan = { eventCode: 'PARCEL.*.1.3800', timestamp: '2026-07-12T10:15:00Z' };
-    expect(locations([{ ...scan, country: 'CH' }])).toEqual(['CH']);
-    expect(locations([{ ...scan, country: 'DE', zip: '12345' }])).toEqual(['DE']);
-    expect(locations([{ ...scan, country: 'CH', city: 'Example Depot', zip: '100000' }]))
-      .toEqual(['Example Depot 100000']);
+    expect(locations({ country: 'CH' })).toEqual(['CH']);
+    expect(locations({ country: 'DE', zipCode: '12345' })).toEqual(['DE']);
+    expect(locations({ city: 'Example Paketzentrum', zipCode: '9999', country: 'CH' })).toEqual(['Example Paketzentrum 9999']);
+    expect(locations({ city: 'LON E ET BEA' })).toEqual(['LON E ET BEA']);
     for (const country of [undefined, '', 'ZZ', ['CH'], { code: 'CH' }]) {
-      expect(locations([{ ...scan, country }])).toEqual(['']);
-      // A site number or postcode alone is no place.
-      expect(locations([{ ...scan, country, zip: '100000' }])).toEqual(['']);
+      expect(locations({ country })).toEqual(['']);
+      // A postcode alone is no place.
+      expect(locations({ country, zipCode: '9999' })).toEqual(['']);
     }
+    expect(locations(null)).toEqual(['']);
   });
 
   it('ignores structured text without stringifying it into shipment data', () => {
-    const result = parseSwissPostShipment({ globalStatus: ['DELIVERED'], shipmentNumber: ['993412345699999980'],
-      internationalBarcode: ['RA999999987CH'], lastEventDateTime: ['2026-01-01'], calculatedDeliveryDate: ['2026-01-02'] }, [
-      { eventCode: ['PARCEL.*.1.1003'], timestamp: '2026-01-01T12:00:00Z' },
-      { eventCode: 'PARCEL.*.1.1003', timestamp: ['2026-01-01T12:00:00Z'] },
+    const result = parseSwissPostShipment({ status: { status: ['DELIVERED'], expectedDelivery: { from: ['2026-01-02'] } },
+      mailpieceId: [SHIPMENT], internationalMailpieceId: ['RA999999987CH'], lastUpdateTimestamp: ['2026-01-01'] }, [
+      { code: ['1003'], timestamp: '2026-01-01T12:00:00Z' },
+      { code: '1003', timestamp: ['2026-01-01T12:00:00Z'] },
     ]);
     expect(result).toMatchObject({ status: 'in_transit', last_status_text: '', last_update: null, expected_delivery: null, events: [] });
     expect(result.canonical_tracking_number).toBeUndefined();
     expect(result.international_tracking_number).toBeUndefined();
-    const numeric = parseSwissPostShipment({ shipmentNumber: 12345678 }, [
-      { eventCode: 'PARCEL.*.1.1003', timestamp: '2026-01-01T12:00:00Z', city: 'Test  Depot', zip: 1000 },
+    const numeric = parseSwissPostShipment({ mailpieceId: 12345678 }, [
+      scan('1003', '2026-01-01T12:00:00Z', { location: { city: 'Test  Depot', zipCode: 1000 } }),
     ]);
     expect(numeric.canonical_tracking_number).toBe('12345678');
     expect(numeric.events?.[0]?.location).toBe('Test  Depot 1000');
   });
 
+  it('writes back the seconds the tracker leaves out when they are zero', () => {
+    const result = parseSwissPostShipment(item({ status: { status: 'DELIVERED', deliveredTimestamp: '2026-07-23T06:30+02:00' } }), [
+      scan('4001', '2026-07-23T06:30+02:00'), scan('1002', '2026-07-23T01:07:39+02:00'),
+    ]);
+    expect(result).toMatchObject({ delivered_at: '2026-07-23T06:30:00+02:00', last_update: '2026-07-23T06:30:00+02:00' });
+    expect(result.events?.map((event) => event.time)).toEqual(['2026-07-23T06:30:00+02:00', '2026-07-23T01:07:39+02:00']);
+  });
+
   it('reads the weight in grams and the measurements in millimetres', () => {
-    const parse = (physicalProperties: unknown, extra: JsonObject = {}) =>
-      parseSwissPostShipment({ globalStatus: 'TO_BE_DELIVERED', physicalProperties, ...extra }, []);
-    expect(parse({ weight: 42, dimension1: 195, dimension2: 195 })).toMatchObject({
-      weight_kg: 0.042, dimensions_text: '19.5 × 19.5 cm',
-    });
-    expect(parse({ weight: 11580, dimension1: 570, dimension2: 400, dimension3: 145 })).toMatchObject({
+    const parse = (details: unknown) => parseSwissPostShipment(item({ physicalDimensions: { details } }), []);
+    expect(parse({ weight: 42, length: 195, width: 195 })).toMatchObject({ weight_kg: 0.042, dimensions_text: '19.5 × 19.5 cm' });
+    expect(parse({ weight: 11580, length: 570, width: 400, height: 145 })).toMatchObject({
       weight_kg: 11.58, dimensions_text: '57 × 40 × 14.5 cm',
     });
-    for (const unmeasured of [{ weight: 0, dimension1: 236 }, { weight: '', dimension1: null }, null, 'heavy']) {
+    for (const unmeasured of [{ weight: 0, length: 236 }, { weight: '', length: null }, null, 'heavy', {}]) {
       const result = parse(unmeasured);
       expect(result).not.toHaveProperty('weight_kg');
       expect(result).not.toHaveProperty('dimensions_text');
     }
-    expect(parse({}, { recipientCountry: 'sv' })).toMatchObject({ destination_country: 'SV' });
-    for (const recipientCountry of ['', 'Switzerland', ['CH'], null]) {
-      expect(parse({}, { recipientCountry })).not.toHaveProperty('destination_country');
+  });
+
+  it('places the item at home by its delivery postcode and abroad by the destination post it links', () => {
+    const country = (extra: JsonObject) => parseSwissPostShipment(item(extra), []).destination_country;
+    const address = (zipCode: unknown) => ({ recipientAddress: { address: ['9999 Example'], details: { zipCode } } });
+    expect(country(address('8000'))).toBe('CH');
+    expect(country(address('9490'))).toBe('LI');
+    expect(country(address('9470'))).toBe('CH');
+    for (const zipCode of ['', '80000', null]) expect(country(address(zipCode))).toBeUndefined();
+    const exported = (exportTrackingUrl: unknown) => ({ ...address('8000'), international: 'EXPORT', exportTrackingUrl });
+    expect(country(exported('https://www.post.at/s/sendungsdetails?snr=RA999999987CH'))).toBe('AT');
+    expect(country(exported('https://www.deutschepost.de/de/s/sendungsverfolgung.html'))).toBe('DE');
+    expect(country(exported('https://tools.usps.com/go/TrackConfirmAction'))).toBe('US');
+    expect(country(exported('https://www.royalmail.co.uk/track'))).toBe('GB');
+    for (const url of ['https://www.dhl.com/track', 'https://www.post.ch/track', 'not a link', null]) {
+      expect(country(exported(url))).toBeUndefined();
     }
   });
 
-  it('dates the delivery from the shipment record, else from the delivery scan', () => {
-    const scan = { eventCode: 'LETTER.*.10.4000', timestamp: '2026-07-28T08:22:56+02:00' };
-    expect(parseSwissPostShipment({ globalStatus: 'DELIVERED', deliveryDate: '2026-07-28T08:23:10+02:00' }, [scan]))
+  it('dates the delivery from the summary, else from the delivery scan', () => {
+    const delivered = scan('4000', '2026-07-28T08:22:56+02:00');
+    const summary = (deliveredTimestamp?: string) => item({ status: { status: 'DELIVERED', deliveredTimestamp } });
+    expect(parseSwissPostShipment(summary('2026-07-28T08:23:10+02:00'), [delivered]))
       .toMatchObject({ delivered_at: '2026-07-28T08:23:10+02:00', expected_delivery: null });
-    expect(parseSwissPostShipment({ globalStatus: 'DELIVERED', deliveryDate: '2026-07-28' }, [scan]))
-      .toMatchObject({ delivered_at: '2026-07-28T08:22:56+02:00' });
-    expect(parseSwissPostShipment({ globalStatus: 'DELIVERED' }, [scan]))
-      .toMatchObject({ delivered_at: '2026-07-28T08:22:56+02:00' });
+    expect(parseSwissPostShipment(summary('2026-07-28'), [delivered])).toMatchObject({ delivered_at: '2026-07-28T08:22:56+02:00' });
+    expect(parseSwissPostShipment(summary(), [delivered])).toMatchObject({ delivered_at: '2026-07-28T08:22:56+02:00' });
   });
 
-  it('keeps the days of a range Swiss Post gives while it names no single day', () => {
-    const scan = { eventCode: 'PARCEL.*.1.1003', timestamp: '2026-11-04T12:36:32+01:00' };
-    const range = { start: '2026-11-04T00:00:00+01:00', end: '2026-11-06T00:00:00+01:00', saturdayIncluded: true };
-    const ranged = parseSwissPostShipment({ globalStatus: 'IN_TRANSPORT', calculatedDeliveryDate: null, deliveryRange: range }, [scan]);
+  it('reads the delivery window as the tracker shows it', () => {
+    const window = (from?: string, to?: string) => swissPostExpectedDelivery({ expectedDelivery: { from, to } });
+    expect(window('2026-11-04T00:00+01:00', '2026-11-06T23:59:59.999+01:00')).toEqual({ from: '2026-11-04', to: '2026-11-06' });
+    expect(window('2026-11-05T00:00+01:00', '2026-11-05T23:59:59.999+01:00')).toEqual({ from: null, to: '2026-11-05' });
+    expect(window('2026-11-05T09:00+01:00', '2026-11-05T12:00:00.000+01:00')).toEqual({ from: null, to: '2026-11-05 09:00–12:00' });
+    expect(window('2026-11-05T09:00+01:00', '2026-11-05T23:59:59.999+01:00')).toEqual({ from: null, to: '2026-11-05 09:00' });
+    expect(window('2026-11-05T00:00+01:00')).toEqual({ from: null, to: '2026-11-05' });
+    expect(window(undefined, '2026-11-05T12:00+01:00')).toEqual({ from: null, to: '2026-11-05 12:00' });
+    expect(window()).toBeNull();
+    expect(swissPostExpectedDelivery({})).toBeNull();
+    const ranged = parseSwissPostShipment(item({ status: { status: 'ON_GOING_DELIVERY',
+      expectedDelivery: { from: '2026-11-04T00:00+01:00', to: '2026-11-06T23:59:59.999+01:00' } } }), [scan('1202', '2026-11-03T20:00:00+01:00')]);
     expect(ranged).toMatchObject({ expected_delivery_from: '2026-11-04', expected_delivery: '2026-11-06' });
-    const oneDay = parseSwissPostShipment({ globalStatus: 'IN_TRANSPORT', deliveryRange: { start: '2026-11-05', end: '2026-11-05' } }, [scan]);
-    expect(oneDay.expected_delivery).toBe('2026-11-05');
-    expect(oneDay).not.toHaveProperty('expected_delivery_from');
-    const named = parseSwissPostShipment({ globalStatus: 'IN_TRANSPORT', calculatedDeliveryDate: '2026-11-05', deliveryRange: range }, [scan]);
-    expect(named.expected_delivery).toBe('2026-11-05');
-    expect(named).not.toHaveProperty('expected_delivery_from');
-    const delivered = { eventCode: 'PARCEL.*.1.4001', timestamp: '2026-11-05T10:41:00+01:00' };
-    expect(parseSwissPostShipment({ globalStatus: 'DELIVERED', deliveryRange: range }, [delivered, scan]))
-      .not.toHaveProperty('expected_delivery_from');
+    expect(parseSwissPostShipment(item({ status: { status: 'DELIVERED',
+      expectedDelivery: { from: '2026-11-04T00:00+01:00', to: '2026-11-06T23:59:59.999+01:00' } } }), [scan('4001', '2026-11-05T10:41:00+01:00')]))
+      .toMatchObject({ expected_delivery: null });
   });
 
   it('covers every capability declared in carrier.json', () => {
-    expect(capabilities).toEqual(['history', 'location', 'eta', 'pickup_point', 'provider_code', 'weight', 'dimensions', 'delivered_at']);
-    const { shipment, events, translations } = outForDelivery();
-    const result = parseSwissPostShipment(shipment, events, translations);
+    expect(capabilities).toEqual(['history', 'location', 'eta', 'provider_code', 'weight', 'dimensions', 'delivered_at']);
+    const { detail, events } = outForDelivery();
+    const result = parseSwissPostShipment(detail, events);
     expect(result).toMatchObject({ weight_kg: 0.72, dimensions_text: '23 × 16 × 11.5 cm', destination_country: 'CH' });
     expect(result).not.toHaveProperty('delivered_at');
-    const delivered = parseSwissPostShipment({ ...shipment, globalStatus: 'DELIVERED' }, [
-      { eventCode: 'PARCEL.*.1.4001', timestamp: '2026-09-12T10:41:00+02:00' },
-      ...events,
-    ], translations);
+    const delivered = parseSwissPostShipment({ ...detail, status: { status: 'DELIVERED' } }, [scan('4001', '2026-09-12T10:41:00+02:00'), ...events]);
     expect(delivered).toMatchObject({
       status: 'delivered', current_stage: 'delivered', delivered_at: '2026-09-12T10:41:00+02:00', expected_delivery: null,
     });
-    expect(result.events?.length).toBeGreaterThan(0);
-    expect(result.events?.some((event) => event.location)).toBe(true);
-    expect(result.events?.some((event) => event.provider_code)).toBe(true);
-    expect(result.expected_delivery).toBe('2026-09-12 09:00–12:00');
+    expect(result.events).toEqual([
+      { time: '2026-09-12T08:00:00+02:00', location: 'Zurich 8000', description: 'Loading into delivery vehicle',
+        provider_code: 'PARCEL.*.1.1003', stage: 'out_for_delivery' },
+      { time: '2026-09-11T21:30:00+02:00', location: 'Härkingen Paketzentrum 4622', description: 'Sorted for delivery',
+        provider_code: 'PARCEL.*.1.1201', stage: 'in_transit' },
+      { time: '2026-09-10T17:05:00+02:00', location: 'CH',
+        description: 'Shipment data transmitted – Shipment not yet handed over to Swiss Post', provider_code: 'PARCEL.*.1.600', stage: 'registered' },
+    ]);
     expect(result).toMatchObject({
       status: 'out_for_delivery',
       current_stage: 'out_for_delivery',
       last_status_text: 'Loading into delivery vehicle',
-      canonical_tracking_number: '993412345699999980',
-      international_tracking_number: 'RA999999987CH',
+      expected_delivery: '2026-09-12 09:00–12:00',
+      canonical_tracking_number: SHIPMENT,
+      global_status: 'ON_GOING_DELIVERY',
       timezone: 'Europe/Zurich',
     });
+    expect(result).not.toHaveProperty('international_tracking_number');
+    expect(parseSwissPostShipment({ ...detail, internationalMailpieceId: 'RA 999 999 987 CH' }, events))
+      .toMatchObject({ international_tracking_number: 'RA999999987CH' });
   });
 
-  it('reads the addressee’s name and address and discards the signature and contact fields', () => {
-    const { shipment, events, translations } = outForDelivery();
-    const result = parseSwissPostShipment(shipment, events, translations);
-    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET 7\n8000 Zurich' });
-    // An anonymous lookup gets the postcode and town alone.
-    expect(parseSwissPostShipment({ ...shipment, addressee: { name1: null, street: null, number: null, zip: '8000', city: 'Zurich',
-      streetAndNumber: '' } }, events, translations)).toMatchObject({ receiver_address: '8000 Zurich' });
-    expect(parseSwissPostShipment({ ...shipment, addressee: null }, events, translations)).not.toHaveProperty('receiver_address');
-    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
-    const serialized = JSON.stringify(rest);
-    for (const privateValue of [
-      'PRIVATE RECIPIENT',
-      'PRIVATE STREET 7',
-      'PRIVATE SIGNATURE',
-      'private@example.test',
-      'private-summary-id',
-    ]) expect(serialized).not.toContain(privateValue);
+  it("reads the delivery address an anonymous lookup gets, and drops the sender's and the documents", () => {
+    const { detail, events } = outForDelivery();
+    const result = parseSwissPostShipment(detail, events);
+    expect(result).toMatchObject({ receiver_address: '8000 Zurich' });
+    expect(result).not.toHaveProperty('receiver_name');
+    expect(parseSwissPostShipment({ ...detail, recipientAddress: { address: ['', ' '] } }, events)).not.toHaveProperty('receiver_address');
+    expect(parseSwissPostShipment({ ...detail, recipientAddress: null }, events)).not.toHaveProperty('receiver_address');
+    const serialized = JSON.stringify(result);
+    for (const privateValue of ['PRIVATE SENDER', '3000 Bern', 'private-document-id', 'synthetic-mailpiece-key']) {
+      expect(serialized).not.toContain(privateValue);
+    }
   });
 });
 
-describe('Swiss Post pickup point', () => {
-  const OFFICE = {
-    zip: '999973', zip4: '9999', postOffice: false, postAgency: false, street: 'MP Example', streetNumber: null,
-    addressCity: 'Example Town', addressZip: '999900', description: 'My Post 24 9999 Example Town Station',
-    descriptionName: null, city: 'Example Town',
-  };
-  const waiting = {
-    identity: 'private-summary-id', shipmentNumber: WRONG_SWISS_POST_NUMBER, globalStatus: 'MISSED_DELIVERY',
-    addresseeType: 'MY_POST_24', deliveryPostOfficeZip: '999973',
-    addressee: { name1: 'PRIVATE RECIPIENT', street: 'PRIVATE STREET', number: '7', zip: '9998', city: 'PRIVATE TOWN' },
-    avis: { deliveryPostOfficeZip: '999973', arrivalPostOfficeZip: null, deadline: '2026-09-11T00:00:00+02:00', isMyPost24: true },
-  };
-  const deposited = { eventCode: 'PARCEL.*.1.2102', timestamp: '2026-08-31T14:03:17+02:00', zip: '999973',
-    city: 'Example Town Station My Post 24', country: 'CH' };
-  const collected = { eventCode: 'PARCEL.*.1.4000', timestamp: '2026-09-01T15:05:01+02:00', zip: null, city: null, country: 'CH' };
-
-  function lookup(item: JsonObject, events: JsonObject[], office: (init?: RequestInit) => Response | Promise<Response> = () =>
-    new Response(JSON.stringify(OFFICE))) {
-    const urls: string[] = [];
-    const fetcher: typeof fetch = async (input, init) => {
-      const url = String(input);
-      urls.push(url);
-      if (url.endsWith('/user')) {
-        return new Response(JSON.stringify({ userIdentifier: 'unit-test-user' }), { headers: { 'x-csrf-token': 'unit-test-csrf' } });
-      }
-      if (url.includes('/history?')) return new Response(JSON.stringify({ hash: 'unit-test-hash' }));
-      if (url.includes('/history/not-included/')) return new Response(JSON.stringify([item]));
-      if (url.endsWith('/events')) return new Response(JSON.stringify(events));
-      if (url.includes('/autocomplete/postoffice/id/')) return office(init);
-      return new Response(JSON.stringify({ 'shipment-text--': { 'PARCEL.*.1.2102.INLAND': 'Deposited in the MyPost24 machine' } }));
-    };
-    return { urls, tracker: new SwissPostTracker({ fetcher }) };
-  }
-
-  it('names the office or terminal holding the parcel and its address only while it waits there', async () => {
-    const app = lookup(waiting, [deposited]);
-    const result = await app.tracker.fetch(WRONG_SWISS_POST_NUMBER);
-    expect(result).toMatchObject({ current_stage: 'ready_for_pickup',
-      pickup_point: 'My Post 24 9999 Example Town Station\nMP Example\n9999 Example Town' });
-    expect(app.urls.filter((url) => url.includes('/autocomplete/'))).toEqual([
-      'https://service.post.ch/ekp-web/api/autocomplete/postoffice/id/999973']);
-    // The addressee is the recipient, not the pickup point; the notice's deadline is not kept.
-    expect(result).toMatchObject({ receiver_name: 'PRIVATE RECIPIENT', receiver_address: 'PRIVATE STREET 7\n9998 PRIVATE TOWN' });
-    const rest = { ...result, receiver_name: undefined, receiver_address: undefined };
-    expect(JSON.stringify(rest)).not.toMatch(/PRIVATE|9998|2026-09-11/);
-    const done = lookup(waiting, [deposited, collected]);
-    const delivered = await done.tracker.fetch(WRONG_SWISS_POST_NUMBER);
-    expect(delivered).toMatchObject({ current_stage: 'delivered' });
-    expect(delivered.pickup_point).toBeUndefined();
-    expect(done.urls.some((url) => url.includes('/autocomplete/'))).toBe(false);
+describe('Swiss Post lookup', () => {
+  it('searches the number, then asks for the item by the key the search gives', async () => {
+    const app = tracker();
+    await expect(app.tracker.fetch('99.34.123456.99999980')).resolves.toMatchObject({
+      status: 'out_for_delivery', canonical_tracking_number: SHIPMENT, events: [expect.anything(), expect.anything(), expect.anything()],
+    });
+    expect(app.calls.map((call) => call.url)).toEqual([
+      'https://mys.post.ch/mailpiece-tracking-api/logistics/mailpiece/tracking/v2/mailpieces/compact/'
+        + `?mailpieceId=${SHIPMENT}&includeAvailableServices=false`,
+      'https://mys.post.ch/mailpiece-tracking-api/logistics/mailpiece/tracking/v2/mailpieces/compact/synthetic-mailpiece-key/detail',
+    ]);
   });
 
-  it('asks for the arrival office first, as the tracker page does, and only for a site number', async () => {
-    const forwarded = lookup({ ...waiting, avis: { ...waiting.avis, arrivalPostOfficeZip: '999950' } }, [deposited],
-      () => new Response(JSON.stringify({ ...OFFICE, zip: '999950' })));
-    await forwarded.tracker.fetch(WRONG_SWISS_POST_NUMBER);
-    expect(forwarded.urls.filter((url) => url.includes('/autocomplete/'))).toEqual([
-      'https://service.post.ch/ekp-web/api/autocomplete/postoffice/id/999950']);
-    for (const avis of [undefined, { deliveryPostOfficeZip: '9999' }, { deliveryPostOfficeZip: ['999973'] }]) {
-      const app = lookup({ ...waiting, avis }, [deposited]);
-      expect((await app.tracker.fetch(WRONG_SWISS_POST_NUMBER)).pickup_point).toBeUndefined();
-      expect(app.urls.some((url) => url.includes('/autocomplete/'))).toBe(false);
-    }
-  });
-
-  it('reads a branch, a partner shop and a terminal as their records give them', () => {
-    const branch = { zip: '999901', zip4: '9998', postOffice: true, street: 'Example Street', streetNumber: '9B',
-      city: 'Example Town', addressZip: '999800', description: 'Filiale 9999 Example Town 1', descriptionName: 'Die Post Example Town 1' };
-    expect(swissPostPickupPoint(branch, '999901')).toBe('Filiale 9999 Example Town 1\nExample Street 9B\n9998 Example Town');
-    expect(swissPostPickupPoint({ ...branch, description: 'My Post Service 9999 Example Town Kiosk', descriptionName: 'My Post Service' },
-      '999901')).toBe('My Post Service 9999 Example Town Kiosk\nExample Street 9B\n9998 Example Town');
-    // A terminal's record can name it again in place of a street.
-    expect(swissPostPickupPoint({ ...OFFICE, street: OFFICE.description }, '999973'))
-      .toBe('My Post 24 9999 Example Town Station\n9999 Example Town');
-    expect(swissPostPickupPoint({ ...OFFICE, street: null }, '999973')).toBe('My Post 24 9999 Example Town Station\n9999 Example Town');
-  });
-
-  it('keeps the name alone without a town, and nothing without a name', () => {
-    expect(swissPostPickupPoint({ ...OFFICE, zip4: '999900' }, '999973')).toBe('My Post 24 9999 Example Town Station');
-    expect(swissPostPickupPoint({ ...OFFICE, city: null }, '999973')).toBe('My Post 24 9999 Example Town Station');
-    expect(swissPostPickupPoint({ ...OFFICE, description: ['Example'] }, '999973')).toBe('');
-    expect(swissPostPickupPoint([OFFICE], '999973')).toBe('');
+  it('maps an empty search to a clean 404', async () => {
+    const app = tracker({ search: () => Response.json({ mailpieces: [] }) });
+    await expect(app.tracker.fetch(SHIPMENT)).rejects.toMatchObject({
+      name: 'NotFoundError', status: 404, message: 'Swiss Post could not locate the shipment',
+    });
+    expect(app.calls).toHaveLength(1);
   });
 
   it.each([
-    ['another site', () => new Response(JSON.stringify({ ...OFFICE, zip: '999974' }))],
-    ['an empty record', () => new Response('{}')],
-    ['a blocked reply', () => new Response('<html>sorry</html>', { headers: { 'Content-Type': 'text/html' } })],
-    ['an outage', () => new Response('', { status: 503 })],
-    ['the outage page', () => new Response(OUTAGE_PAGE, { headers: { 'Content-Type': 'text/html' } })],
-  ])('keeps the parcel without a pickup point after %s', async (_, reply) => {
-    const result = await lookup(waiting, [deposited], reply).tracker.fetch(WRONG_SWISS_POST_NUMBER);
-    expect(result).toMatchObject({ current_stage: 'ready_for_pickup', events: [{ provider_code: 'PARCEL.*.1.2102' }] });
-    expect(result.pickup_point).toBeUndefined();
+    ['no list', {}],
+    ['a list of something else', { mailpieces: ['x'] }],
+    ['an array', []],
+  ])('keeps a search answering %s malformed, not missing', async (_, body) => {
+    const error = await failure(tracker({ search: () => Response.json(body) }).tracker.fetch(SHIPMENT));
+    expect(error).not.toBeInstanceOf(NotFoundError);
+    expect(error).toMatchObject({ message: 'Swiss Post returned an invalid shipment response' });
   });
 
-  it('ends a lookup cancelled during the office request', async () => {
-    const controller = new AbortController();
-    const app = lookup(waiting, [deposited], () => {
-      controller.abort(new Error('Cancelled'));
-      return new Response('', { status: 503 });
-    });
-    await expect(app.tracker.fetch(WRONG_SWISS_POST_NUMBER, { signal: controller.signal })).rejects.toThrow('Cancelled');
+  it('selects the matching item rather than accepting the first', async () => {
+    const { summary } = outForDelivery();
+    const other = { ...summary, mailpieceId: '993412345699999981', mailpieceKey: 'other-key' };
+    const app = tracker({ search: () => Response.json({ mailpieces: [other, summary] }) });
+    await expect(app.tracker.fetch(SHIPMENT)).resolves.toMatchObject({ canonical_tracking_number: SHIPMENT });
+    expect(app.calls[1]?.url).toContain('/synthetic-mailpiece-key/detail');
   });
-});
 
-describe('Swiss Post translation table', () => {
-  it('is requested again after a lookup cancelled while it loaded', async () => {
-    const { shipment, events, translations } = outForDelivery();
-    const controller = new AbortController();
-    let tableRequests = 0;
-    const fetcher: typeof fetch = async (input, init) => {
-      const url = String(input);
-      if (url.endsWith('/user')) {
-        return new Response(JSON.stringify({ userIdentifier: 'unit-test-user' }), { headers: { 'x-csrf-token': 'unit-test-csrf' } });
-      }
-      if (url.includes('/history?')) return new Response(JSON.stringify({ hash: 'unit-test-hash' }));
-      if (url.includes('/history/not-included/')) return new Response(JSON.stringify([shipment]));
-      if (url.endsWith('/events')) return new Response(JSON.stringify(events));
-      tableRequests += 1;
-      if (tableRequests > 1) return new Response(JSON.stringify({ 'shipment-text--': translations }));
-      const signal = init!.signal!;
-      return new Promise<Response>((_, reject) => {
-        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
-        controller.abort(new Error('caller cancelled'));
+  it('finds a parcel from or to abroad by its international number', async () => {
+    const { summary } = outForDelivery();
+    const app = tracker({ search: () => Response.json({ mailpieces: [{ ...summary, internationalMailpieceId: 'RA999999987CH' }] }) });
+    await expect(app.tracker.fetch('RA999999987CH')).resolves.toMatchObject({ canonical_tracking_number: SHIPMENT });
+  });
+
+  it.each([
+    ['another item', () => [{ mailpieceId: '993412345699999981', mailpieceKey: 'k' }], 'Swiss Post returned a different shipment'],
+    ['two items under the number', () => {
+      const { summary } = outForDelivery();
+      return [summary, { ...summary, mailpieceKey: 'other-key' }];
+    }, 'Swiss Post returned an ambiguous shipment'],
+    ['items without a number', () => [{ mailpieceKey: 'k' }], 'Swiss Post did not return a shipment identifier'],
+  ])('refuses %s', async (_, mailpieces, message) => {
+    await expect(tracker({ search: () => Response.json({ mailpieces: mailpieces() }) }).tracker.fetch(SHIPMENT))
+      .rejects.toMatchObject({ message });
+  });
+
+  it("refuses an item detail of another item", async () => {
+    const { detail } = outForDelivery();
+    const app = tracker({ step: /\/detail$/, reply: () => Response.json({ ...detail, mailpieceId: '993412345699999981' }) });
+    await expect(app.tracker.fetch(SHIPMENT)).rejects.toMatchObject({ message: 'Swiss Post returned a different shipment' });
+  });
+
+  it('keeps the summary, marked summary only, when the item detail fails or has no scans', async () => {
+    for (const reply of [() => new Response('unavailable', { status: 500 }), () => new Response(OUTAGE_PAGE), () => Response.json({ mailpieceId: SHIPMENT })]) {
+      await expect(tracker({ step: /\/detail$/, reply }).tracker.fetch(SHIPMENT)).resolves.toMatchObject({
+        status: 'in_transit', current_stage: 'in_transit', global_status: 'ON_GOING_DELIVERY', canonical_tracking_number: SHIPMENT,
+        last_status_text: 'ON_GOING_DELIVERY', last_update: '2026-09-12T08:00:00+02:00', expected_delivery: '2026-09-12 09:00–12:00',
+        summary_only: true, events: [],
       });
-    };
-    const tracker = new SwissPostTracker({ fetcher });
-
-    await expect(tracker.fetch('993412345699999980', { signal: controller.signal })).rejects.toThrow('unreachable');
-    const result = await tracker.fetch('993412345699999980');
-
-    expect(tableRequests).toBe(2);
-    expect(result.events?.[1]?.description).toBe('Shipment is being forwarded');
-  });
-
-  it('is requested again after a lookup whose budget ran out while it loaded', async () => {
-    const { translations } = outForDelivery();
-    const fetcher = vi.fn<typeof fetch>()
-      .mockRejectedValueOnce(new DOMException('The operation timed out', 'TimeoutError'))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ 'shipment-text--': translations })));
-    const tracker = new SwissPostTracker();
-    // The request's own timer fired just ahead of the budget's signal.
-    const spent: LookupBudget = { signal: new AbortController().signal, budgetMs: 40, deadline: 0, remainingMs: () => 3 };
-
-    await expect(tracker.loadTranslations(fetcher, spent)).rejects.toThrow('unreachable');
-    await expect(tracker.loadTranslations(fetcher)).resolves.toEqual(translations);
-  });
-
-  it('is requested again ten minutes after a load that failed or came back empty', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    try {
-      const { translations } = outForDelivery();
-      const fetcher = vi.fn<typeof fetch>()
-        .mockRejectedValueOnce(new TypeError('fetch failed'))
-        .mockResolvedValueOnce(new Response(JSON.stringify({ unexpected: true })))
-        .mockResolvedValueOnce(new Response(JSON.stringify({ 'shipment-text--': translations })));
-      const tracker = new SwissPostTracker();
-
-      await expect(tracker.loadTranslations(fetcher)).resolves.toEqual({});
-      vi.advanceTimersByTime(9 * 60_000);
-      await expect(tracker.loadTranslations(fetcher)).resolves.toEqual({});
-      expect(fetcher).toHaveBeenCalledTimes(1);
-
-      vi.advanceTimersByTime(60_000);
-      await expect(tracker.loadTranslations(fetcher)).resolves.toEqual({});
-      expect(fetcher).toHaveBeenCalledTimes(2);
-
-      vi.advanceTimersByTime(10 * 60_000);
-      await expect(tracker.loadTranslations(fetcher)).resolves.toEqual(translations);
-      await expect(tracker.loadTranslations(fetcher)).resolves.toEqual(translations);
-      expect(fetcher).toHaveBeenCalledTimes(3);
-    } finally {
-      vi.useRealTimers();
     }
-  });
-});
-
-describe('Swiss Post no-data response', () => {
-  it('runs the anonymous search flow and maps an empty result to a clean 404', async () => {
-    const fetcher = vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({
-        userIdentifier: '<[anonymous]>unit-test-user',
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': 'unit-test-csrf',
-        },
-      }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ hash: 'unit-test-hash' }), {
-        headers: { 'Content-Type': 'application/json' },
-      }))
-      .mockResolvedValueOnce(new Response('[]', {
-        headers: { 'Content-Type': 'application/json' },
-      }));
-
-    await expect(new SwissPostTracker().fetch(WRONG_SWISS_POST_NUMBER))
-      .rejects.toBeInstanceOf(NotFoundError);
-
-    expect(fetcher).toHaveBeenCalledTimes(3);
-    const historyRequest = fetcher.mock.calls[1]!;
-    expect(String(historyRequest[0])).toContain('/ekp-web/api/history?userId=');
-    expect(historyRequest[1]).toMatchObject({
-      method: 'POST',
-      body: JSON.stringify({ searchQuery: WRONG_SWISS_POST_NUMBER }),
-    });
-    expect(String(fetcher.mock.calls[2]?.[0])).toContain('/history/not-included/unit-test-hash?');
+    const { summary } = outForDelivery();
+    const keyless = tracker({ search: () => Response.json({ mailpieces: [{ ...summary, mailpieceKey: null }] }) });
+    await expect(keyless.tracker.fetch(SHIPMENT)).resolves.toMatchObject({ summary_only: true });
+    expect(keyless.calls).toHaveLength(1);
   });
 
-  it('keeps malformed non-array results distinct from no data', async () => {
-    vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ userIdentifier: 'unit-test-user' }), {
-        headers: { 'x-csrf-token': 'unit-test-csrf' },
-      }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ hash: 'unit-test-hash' })))
-      .mockResolvedValueOnce(new Response('{}'));
-
-    await expect(new SwissPostTracker().fetch(WRONG_SWISS_POST_NUMBER))
-      .rejects.toThrow('Swiss Post returned an invalid shipment response');
-  });
-
-  it('selects the matching shipment rather than accepting the first result', async () => {
-    const fetcher = mockSearchResult([
-      { shipmentNumber: 'OTHER-SHIPMENT-ID', globalStatus: 'DELIVERED' },
-      { shipmentNumber: '989.999.999.999.999.999', globalStatus: 'REGISTERED' },
-    ]);
-
-    await expect(new SwissPostTracker().fetch(WRONG_SWISS_POST_NUMBER)).resolves.toMatchObject({
-      status: 'pending',
-      global_status: 'REGISTERED',
-    });
-    expect(fetcher).toHaveBeenCalledTimes(3);
-  });
-
-  it('resolves an exact international barcode to the domestic delivery number', async () => {
-    mockSearchResult([{ shipmentNumber: WRONG_SWISS_POST_NUMBER, internationalBarcode: '12345678901', globalStatus: 'IN_DELIVERY' }]);
-    await expect(new SwissPostTracker().fetch('12345678901')).resolves.toMatchObject({
-      status: 'out_for_delivery', canonical_tracking_number: WRONG_SWISS_POST_NUMBER,
-      international_tracking_number: '12345678901',
-    });
-  });
-
-  it('rejects ambiguous international references even when one domestic number matches', async () => {
-    mockSearchResult([
-      { shipmentNumber: WRONG_SWISS_POST_NUMBER, globalStatus: 'IN_DELIVERY' },
-      { shipmentNumber: '990000000000000001', internationalBarcode: WRONG_SWISS_POST_NUMBER, globalStatus: 'DELIVERED' },
-    ]);
-    await expect(new SwissPostTracker().fetch(WRONG_SWISS_POST_NUMBER)).rejects.toThrow('ambiguous shipment');
-  });
-
-  it('rejects mismatched and non-identifying result arrays', async () => {
-    mockSearchResult([{ shipmentNumber: 'OTHER-SHIPMENT-ID', globalStatus: 'DELIVERED' }]);
-    await expect(new SwissPostTracker().fetch(WRONG_SWISS_POST_NUMBER))
-      .rejects.toThrow('Swiss Post returned a different shipment');
-
-    vi.restoreAllMocks();
-    mockSearchResult([{ identity: 'private-summary-id', globalStatus: 'REGISTERED' }]);
-    await expect(new SwissPostTracker().fetch(WRONG_SWISS_POST_NUMBER))
-      .rejects.toThrow('Swiss Post did not return a shipment identifier');
-  });
-});
-
-describe('Swiss Post network failure recovery', () => {
   it('sends a call that hangs once more, inside the budget', async () => {
     fakeBudgetClock();
-    const { shipment, events, translations } = outForDelivery();
-    const search = delayedFetcher([{ afterMs: Infinity }, { afterMs: 300, reply: () => Response.json({ hash: 'unit-test-hash' }) }]);
-    const fetcher: typeof fetch = async (input, init) => {
-      const url = String(input);
-      if (url.endsWith('/user')) {
-        return new Response(JSON.stringify({ userIdentifier: 'unit-test-user' }), { headers: { 'x-csrf-token': 'unit-test-csrf' } });
-      }
-      if (url.includes('/history?')) return search.fetcher(input, init);
-      if (url.includes('/history/not-included/')) return new Response(JSON.stringify([shipment]));
-      if (url.endsWith('/events')) return new Response(JSON.stringify(events));
-      return new Response(JSON.stringify({ 'shipment-text--': translations }));
-    };
-    const lookup = new SwissPostTracker({ fetcher }).fetch('993412345699999980', { budgetMs: 12_000 });
+    const { detail, summary } = outForDelivery();
+    const search = delayedFetcher([{ afterMs: Infinity }, { afterMs: 300, reply: () => Response.json({ mailpieces: [summary] }) }]);
+    const fetcher: typeof fetch = async (input, init) => String(input).endsWith('/detail') ? Response.json(detail) : search.fetcher(input, init);
+    const lookup = new SwissPostTracker({ fetcher }).fetch(SHIPMENT, { budgetMs: 12_000 });
     await vi.advanceTimersByTimeAsync(6_300);
     await expect(lookup).resolves.toMatchObject({ status: 'out_for_delivery' });
     // Half of the 12-second budget, then the retry within the rest.
     expect(search.ended).toEqual([6_000, 6_300]);
     expect(search.fetcher).toHaveBeenCalledTimes(2);
   });
-});
 
-describe("Swiss Post in the reader's language", () => {
-  const SHIPMENT = '993412345699999980';
-  // Swiss Post's wording of the fixture's newest scan in its four languages.
-  const LOADING: Record<string, string> = { en: 'Loading into delivery vehicle', de: 'Verlad in Zustellfahrzeug',
-    fr: 'Chargement dans le véhicule de livraison ', it: 'Caricamento nel veicolo di consegna' };
-
-  function lookup() {
-    const { shipment, events } = outForDelivery();
-    const urls: string[] = [];
-    const fetcher: typeof fetch = async (input) => {
-      const url = String(input);
-      urls.push(url);
-      if (url.endsWith('/user')) return Response.json({ userIdentifier: 'unit-test-user' }, { headers: { 'x-csrf-token': 'unit-test-csrf' } });
-      if (url.includes('/history?')) return Response.json({ hash: 'unit-test-hash' });
-      if (url.includes('/history/not-included/')) return Response.json([shipment]);
-      if (url.endsWith('/events')) return Response.json(events);
-      const language = /\/translations\/(\w+)\//.exec(url)?.[1] ?? '';
-      return Response.json({ 'shipment-text--': { 'PARCEL.*.1.1003.INLAND': LOADING[language] } });
-    };
-    return { urls, track: adapter({ fetcher } as AdapterEnvironment).track };
-  }
-  const tables = (urls: string[]) => urls.filter((url) => url.includes('/translations/')).map((url) => url.split('/').at(-2));
-
-  it('words the scans in a language Swiss Post has, else in English, with one table per language', async () => {
-    const app = lookup();
-    for (const [language, wording] of [['fr-CH', 'Chargement dans le véhicule de livraison'], ['de', 'Verlad in Zustellfahrzeug'],
-      ['IT', 'Caricamento nel veicolo di consegna'], ['es', 'Loading into delivery vehicle'], [null, 'Loading into delivery vehicle'],
-      ['fr', 'Chargement dans le véhicule de livraison']] as const) {
-      const result = await app.track({ number: SHIPMENT, language });
+  it("asks in the reader's language when Swiss Post has it, else in English", async () => {
+    const app = tracker();
+    const { track } = adapter({ fetcher: app.fetcher } as AdapterEnvironment);
+    for (const language of ['fr-CH', 'de', 'IT', 'es', null]) {
       // The stage comes from the code, whatever the wording.
-      expect(result).toMatchObject({ current_stage: 'out_for_delivery', last_status_text: wording });
-      expect(result.events?.[0]).toMatchObject({ description: wording, provider_code: 'PARCEL.*.1.1003' });
+      await expect(track({ number: SHIPMENT, language })).resolves.toMatchObject({ current_stage: 'out_for_delivery' });
     }
-    expect(tables(app.urls)).toEqual(['fr', 'de', 'it', 'en']);
+    expect(app.calls.map((call) => call.language)).toEqual(['fr', 'fr', 'de', 'de', 'it', 'it', 'en', 'en', 'en', 'en']);
   });
 });
 
 describe('Swiss Post outage page', () => {
-  const SHIPMENT = '993412345699999980';
   const html = (body: string, status = 200) => new Response(body, { status, headers: { 'Content-Type': 'text/html' } });
+  const search = /\/compact\/\?/;
 
-  /** A lookup whose calls matching `step` get `reply`; every other call answers as usual. */
-  function lookup(step: RegExp, reply: () => Response) {
-    const { shipment, events, translations } = outForDelivery();
-    const urls: string[] = [];
-    const fetcher: typeof fetch = async (input) => {
-      const url = String(input);
-      urls.push(url);
-      if (step.test(url)) return reply();
-      if (url.endsWith('/user')) {
-        return new Response(JSON.stringify({ userIdentifier: 'unit-test-user' }), { headers: { 'x-csrf-token': 'unit-test-csrf' } });
-      }
-      if (url.includes('/history?')) return Response.json({ hash: 'unit-test-hash' });
-      if (url.includes('/history/not-included/')) return Response.json([shipment]);
-      if (url.endsWith('/events')) return Response.json(events);
-      return Response.json({ 'shipment-text--': translations });
-    };
-    return { urls, tracker: new SwissPostTracker({ fetcher }) };
-  }
-
-  const failure = (promise: Promise<unknown>) => promise.then(() => expect.unreachable('the lookup succeeded'), (error: unknown) => error);
-
-  it.each([
-    ['the anonymous user', /\/user$/],
-    ['the search', /\/history\?/],
-    ['the search result', /\/history\/not-included\//],
-  ])('reads it in place of %s as inconclusive, not as a malformed reply or a missing parcel', async (_, step) => {
-    const app = lookup(step, () => html(OUTAGE_PAGE));
+  it('reads it in place of the search as inconclusive, not as a malformed reply or a missing parcel', async () => {
+    const app = tracker({ step: search, reply: () => html(OUTAGE_PAGE) });
     const error = await failure(app.tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(IndeterminateError);
     expect(error).not.toBeInstanceOf(NotFoundError);
@@ -816,7 +542,7 @@ describe('Swiss Post outage page', () => {
     expect(error).toMatchObject({ kind: 'indeterminate', provider: 'Swiss Post', cause: expect.any(TypeError) });
     expect(carrierErrorKind(error)).toBe('indeterminate');
     // An answer, not a failure to reach Swiss Post: it is not asked again.
-    expect(app.urls.filter((url) => step.test(url))).toHaveLength(1);
+    expect(app.calls).toHaveLength(1);
   });
 
   it.each([
@@ -826,7 +552,7 @@ describe('Swiss Post outage page', () => {
     ['unquoted attributes without url=', '<meta http-equiv=refresh content=0,https://sorry.post.ch/>'],
     ['the indented 2024 page', OUTAGE_PAGE.replace('2025', '2024').replaceAll('\t', '  ')],
   ])('knows it by its refresh to sorry.post.ch: %s', async (_, body) => {
-    await expect(lookup(/\/user$/, () => html(body)).tracker.fetch(SHIPMENT)).rejects.toBeInstanceOf(IndeterminateError);
+    await expect(tracker({ step: search, reply: () => html(body) }).tracker.fetch(SHIPMENT)).rejects.toBeInstanceOf(IndeterminateError);
   });
 
   it.each([
@@ -837,13 +563,13 @@ describe('Swiss Post outage page', () => {
     ['a link to the outage site', '<html><body><a href="https://sorry.post.ch">sorry</a></body></html>'],
     ['a named meta, not a refresh', '<meta name="refresh" content="0; url=https://sorry.post.ch">'],
   ])('keeps %s a malformed reply', async (_, body) => {
-    const error = await failure(lookup(/\/history\/not-included\//, () => html(body)).tracker.fetch(SHIPMENT));
+    const error = await failure(tracker({ step: search, reply: () => html(body) }).tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(TypeError);
     expect(error).toMatchObject({ message: 'Swiss Post returned an invalid tracking response' });
   });
 
   it('keeps the HTTP 502 it comes with when the backend is degraded', async () => {
-    const error = await failure(lookup(/\/user$/, () => html(OUTAGE_PAGE, 502)).tracker.fetch(SHIPMENT));
+    const error = await failure(tracker({ step: search, reply: () => html(OUTAGE_PAGE, 502) }).tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(UpstreamHttpError);
     expect(error).toMatchObject({ kind: 'indeterminate', status: 502 });
   });
@@ -851,15 +577,14 @@ describe('Swiss Post outage page', () => {
   const redirect = (location: string, status = 302) => () => new Response(null, { status, headers: { location } });
 
   it.each([
-    ['the anonymous user', /\/user$/, 'https://www.post.ch/en/pages/maintenance'],
-    ['the anonymous user, in German', /\/user$/, 'https://www.post.ch/de/pages/maintenance/'],
-    ['the search', /\/history\?/, 'https://www.post.ch/fr/pages/maintenance'],
-  ])('reads a redirect of %s to the maintenance page as maintenance, asked once', async (_, step, location) => {
-    const app = lookup(step, redirect(location));
+    ['in English', 'https://www.post.ch/en/pages/maintenance'],
+    ['in German', 'https://www.post.ch/de/pages/maintenance/'],
+  ])('reads a redirect to the maintenance page, %s, as maintenance, asked once', async (_, location) => {
+    const app = tracker({ step: search, reply: redirect(location) });
     const error = await failure(app.tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(MaintenanceError);
     expect(error).toMatchObject({ kind: 'maintenance', provider: 'Swiss Post' });
-    expect(app.urls.filter((url) => step.test(url))).toHaveLength(1);
+    expect(app.calls).toHaveLength(1);
   });
 
   it.each([
@@ -867,35 +592,8 @@ describe('Swiss Post outage page', () => {
     ['the maintenance path on another host', 'https://example.test/en/pages/maintenance'],
     ['no address', ''],
   ])('reads a redirect to %s as no tracking answer', async (_, location) => {
-    const error = await failure(lookup(/\/user$/, redirect(location, 301)).tracker.fetch(SHIPMENT));
+    const error = await failure(tracker({ step: search, reply: redirect(location, 301) }).tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(TransportError);
     expect(error).toMatchObject({ kind: 'transport', message: 'Swiss Post redirected its tracking service' });
-  });
-
-  it('keeps the shipment summary when only the event call returns it', async () => {
-    await expect(lookup(/\/events$/, () => html(OUTAGE_PAGE)).tracker.fetch(SHIPMENT)).resolves.toMatchObject({
-      status: 'out_for_delivery', global_status: 'IN_DELIVERY', canonical_tracking_number: SHIPMENT, events: [],
-    });
-  });
-
-  it('marks the summary as summary only when the event call fails, so a provider may still supply the history', async () => {
-    await expect(lookup(/\/events$/, () => new Response('unavailable', { status: 500 })).tracker.fetch(SHIPMENT)).resolves.toMatchObject({
-      status: 'out_for_delivery', global_status: 'IN_DELIVERY', canonical_tracking_number: SHIPMENT, summary_only: true, events: [],
-    });
-    // No call matches the step, so the shipment comes with its events.
-    const answered = await lookup(/^$/, () => html(OUTAGE_PAGE)).tracker.fetch(SHIPMENT);
-    expect(answered.events?.length).toBeGreaterThan(0);
-    expect(answered).not.toHaveProperty('summary_only');
-  });
-
-  it('keeps the scans in their own wording when the wording table returns it, and asks for the table later', async () => {
-    const app = lookup(/\/translations\//, () => html(OUTAGE_PAGE));
-    const first = await app.tracker.fetch(SHIPMENT);
-    const second = await app.tracker.fetch(SHIPMENT);
-    for (const result of [first, second]) {
-      expect(result).toMatchObject({ status: 'out_for_delivery' });
-      expect(result.events?.length).toBeGreaterThan(0);
-    }
-    expect(app.urls.filter((url) => url.includes('/translations/'))).toHaveLength(1);
   });
 });

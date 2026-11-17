@@ -1,9 +1,9 @@
 /**
  * Swiss Post status classification.
  *
- * Two independent vocabularies meet here. `globalStatus` is the shipment-level
- * summary the portal shows at the top of the page. Event codes are the last
- * segment of a dotted `eventCode` such as `PARCEL.*.1.1003`, and they are the
+ * Two independent vocabularies meet here. `status.status` is the item-level
+ * summary the tracker shows at the top of its page. Event codes, bare or as the
+ * last segment of a stored dotted code such as `PARCEL.*.1.1003`, are the
  * authority for the current stage: the summary lags behind (a MyPost24 deposit
  * reads `DELIVERED` while the parcel is still waiting in the locker).
  *
@@ -14,20 +14,16 @@ import type { CarrierStatus } from '../../core/result/index.js';
 import type { Stage } from '../../generated/catalog.js';
 import type { CarrierStatusMap } from '../../core/status/statusMap.js';
 
-/** Shipment-level `globalStatus` → status. The event codes below refine it. */
+/** Item-level `status.status` → status. The event codes below refine it. */
 export const STATUS_MAP = new Map<string, CarrierStatus>([
-  ['REPORTED', 'pending'],
-  ['REGISTERED', 'pending'],
-  ['TO_BE_DELIVERED', 'in_transit'],
-  ['IN_DELIVERY', 'out_for_delivery'],
+  ['NOT_YET_SENT', 'pending'],
+  ['ON_GOING_DELIVERY', 'in_transit'],
+  ['WAITING_FOR_PICKUP', 'in_transit'],
   ['DELIVERED', 'delivered'],
-  ['MISSED_DELIVERY', 'exception'],
-  ['NOT_DELIVERED', 'exception'],
   ['RETURNED', 'exception'],
-  ['CUSTOMS', 'in_transit'],
 ]);
 
-/** Wording for codes the translation service does not resolve. */
+/** Wording for scans that come without any. */
 export const FALLBACK_EVENT_LABELS: Record<string, string> = {
   '600': 'Your shipment will shortly be handed over to Swiss Post',
   '1003': 'Loading into delivery vehicle',
@@ -125,32 +121,35 @@ export const STAGE_STATUS: Record<string, CarrierStatus> = {
 };
 
 /**
- * The stage for a full dotted event code, or undefined when the code is not
- * mapped. A sub-event starting `CAN` revokes the scan it qualifies ("Delivered
- * — Revocation" in the carrier's wording), so it never takes the code's stage.
+ * The stage for an event code, bare or dotted, or undefined when the code is
+ * not mapped. A revoked scan takes none: the caller checks its wording
+ * (`swissPostRevoked`).
  */
-export function swissPostEventStage(eventCode: string, subEventId = ''): Stage | undefined {
-  if (/^CAN/i.test(subEventId)) return undefined;
+export function swissPostEventStage(eventCode: string): Stage | undefined {
   return EVENT_STAGE_BY_CODE[eventCode.split('.').at(-1) ?? ''];
 }
 
-/** The stage the shipment-level `globalStatus` implies, used when the newest scan has none. */
+/** The stage the item-level `status.status` implies, used when the newest scan has none. */
 export const GLOBAL_STATUS_STAGE: Record<string, Stage> = {
-  REPORTED: 'registered',
-  REGISTERED: 'registered',
-  TO_BE_DELIVERED: 'in_transit',
-  IN_DELIVERY: 'out_for_delivery',
+  NOT_YET_SENT: 'registered',
+  ON_GOING_DELIVERY: 'in_transit',
+  WAITING_FOR_PICKUP: 'ready_for_pickup',
   DELIVERED: 'delivered',
-  MISSED_DELIVERY: 'failed_attempt',
-  NOT_DELIVERED: 'failed_attempt',
   RETURNED: 'returned',
-  CUSTOMS: 'customs',
 };
 
-/** The `globalStatus` codes with a known meaning. A status-only answer carries its code as the status text. */
-export const SWISS_POST_GLOBAL_STATUSES: readonly string[] = Object.freeze(Object.keys(GLOBAL_STATUS_STAGE));
+/** The former tracker's summary codes, which status-only answers stored before carry as their text. */
+const FORMER_GLOBAL_STATUSES = ['REPORTED', 'REGISTERED', 'TO_BE_DELIVERED', 'IN_DELIVERY', 'MISSED_DELIVERY', 'NOT_DELIVERED', 'CUSTOMS'];
 
-/** The languages the tracker words its scans in; it answers any other with German. */
+/**
+ * The summary codes a status-only answer carries as its status text: the tracker's, its
+ * `UNKNOWN`, and the former tracker's.
+ */
+export const SWISS_POST_GLOBAL_STATUSES: readonly string[] = Object.freeze([
+  ...Object.keys(GLOBAL_STATUS_STAGE), 'UNKNOWN', ...FORMER_GLOBAL_STATUSES,
+]);
+
+/** The languages the tracker words its scans in; it answers any other in German. */
 export const SWISS_POST_LANGUAGES = ['en', 'de', 'fr', 'it'] as const;
 export type SwissPostLanguage = (typeof SWISS_POST_LANGUAGES)[number];
 

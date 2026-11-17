@@ -26,7 +26,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "mode": "automatic",
       "adapter": "swiss-post"
     },
-    "canaryUrl": "https://service.post.ch/",
+    "canaryUrl": "https://mys.post.ch/my-consignments/",
     "trackingUrlTemplate": "https://www.post.ch/swisspost-tracking?formattedParcelCodes={trackingNumber}",
     "trackingSearchUrl": "https://www.post.ch/de/empfangen/sendung-verfolgen",
     "helpUrl": "https://www.post.ch/de/hilfe-und-kontakt/empfangen",

@@ -175,7 +175,7 @@ const BRACKETED_MAX_KM = 100;
 // a hub such as Doha between China and Europe.
 const AIRPORT_DETOUR_KM = 3000;
 
-// Swiss Post scans end in the site's six-digit number: "Zürich Briefzentrum 801050".
+// Swiss Post's former tracker, and relays, end a scan in the site's six-digit number: "Zürich Briefzentrum 801050".
 const FACILITIES = new Map(facilityList.map((facility) => [`${facility.country}:${facility.code}`, facility]));
 interface Hub {
   country: string;

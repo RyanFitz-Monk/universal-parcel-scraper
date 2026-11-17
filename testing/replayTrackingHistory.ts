@@ -44,10 +44,13 @@ export async function replayAuditedScan(scan: AuditedScan, translatedDescription
         event: [{ date: TIME, label: description, group, code: eventCode }],
       } }], NUMBER);
     }
-    case 'swiss-post':
-      return code ? parseSwissPostShipment({ globalStatus: 'DELIVERED' }, [{
-        eventCode: code, timestamp: TIME, externalMetadata: { description },
+    case 'swiss-post': {
+      // Stored codes are dotted: the item's type, a star, its product and the scan's own code.
+      const [type, , product, own] = code?.split('.') ?? [];
+      return code ? parseSwissPostShipment(own ? { type, product: { code: product }, status: { status: 'DELIVERED' } } : { status: { status: 'DELIVERED' } }, [{
+        code: own ?? code, timestamp: TIME, title: description,
       }]) : { status: 'delivered', events };
+    }
     case 'gls-de':
       return parseGLSSwitzerlandTrackingResponse({
         tuNo: '12345678901', progressBar: { statusInfo: 'DELIVERED', statusText: 'Delivered' },

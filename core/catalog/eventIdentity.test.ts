@@ -212,6 +212,22 @@ describe('same-instant identity policies', () => {
     }
   });
 
+  it("lets a Swiss Post scan naming its facility by postcode take over the row the former tracker stored with the site's number", () => {
+    const policy = sameInstantIdentityPolicy('swiss-post', { supportsScanMatching: true });
+    const stored = { stage: 'in_transit', description: 'Sorted for delivery', location: 'Example Paketzentrum 999950', providerCode: 'PARCEL.*.2.1201' };
+    const incoming = { ...stored, description: 'Sortiert für Zustellung', location: 'Example Paketzentrum 9999' };
+    expect(policy?.matches?.(incoming, stored)).toBe(true);
+    expect(policy?.matches?.({ ...incoming, location: 'example paketzentrum 9998' }, stored)).toBe(true);
+    for (const different of [
+      { ...stored, location: 'Another Paketzentrum 999950' },
+      { ...stored, location: 'Example Paketzentrum 99995' },
+      { ...stored, location: 'Example Paketzentrum' },
+      { ...stored, description: 'Sorted for delivery — Revocation' },
+    ]) expect(policy?.matches?.(incoming, different)).toBe(false);
+    // The former tracker's name never takes over a scan of the tracker's.
+    expect(policy?.matches?.(stored, incoming)).toBe(false);
+  });
+
   it('lets a Poczta Polska scan worded in the other language take over its stored row at the same office', () => {
     const policy = sameInstantIdentityPolicy('poczta-polska', { supportsScanMatching: true });
     const stored = { stage: 'delivered', description: 'Final delivery', location: 'Placówka Pocztowa Example Town', providerCode: 'P_D' };
