@@ -117,7 +117,19 @@ function deliveringDepot($: ReturnType<typeof load>): { number: number; point: E
   return { number: Number(number), point };
 }
 
-export function parseDPDFranceTrackingHtml(html: string, rawTrackingNumber: string): CarrierResult {
+/** A number the page shows, in the form the trace page takes: a `250` label's fifteen digits without its check digit. */
+function shownNumber(digits: string): string {
+  return /^250\d{13}$/.test(digits) && hasGs1CheckDigit(digits) ? digits.slice(0, 15) : digits;
+}
+
+/**
+ * The trace page for one number. Another DPD unit's number for a parcel DPD France delivers is
+ * answered under DPD France's own: the page binds the requested number to its outbound tab
+ * (`#btnOngletAller[data-colis]`) and shows the parcel's `250` number. With `aliases`, that one
+ * parcel answers and names its number as `canonical_tracking_number`; recognition, which claims the
+ * number, does not take it.
+ */
+export function parseDPDFranceTrackingHtml(html: string, rawTrackingNumber: string, { aliases = false } = {}): CarrierResult {
   const trackingNumber = normalizeDPDFranceTrackingNumber(rawTrackingNumber);
   if (!html.trim()) throw new SchemaError('DPD France', 'DPD France returned an empty tracking response');
   if (/Just a moment|Performing security verification|Enable JavaScript and cookies/i.test(html)) {
@@ -126,12 +138,12 @@ export function parseDPDFranceTrackingHtml(html: string, rawTrackingNumber: stri
 
   const $ = load(html);
   const displayedNumbers = (selector: string) => $(selector).map((_, element) => (
-    clean($(element).text(), 64).replace(/\D/g, '')
+    shownNumber(clean($(element).text(), 64).replace(/\D/g, ''))
   )).get().filter(Boolean);
   const detailsNumbers = (selector: string) => $(`${selector} .tableInfosAR`).map((_, element) => {
     const row = $(element);
     return comparableText(row.find('strong').text()) === 'n colis'
-      ? clean(row.find('.tdInfos').text(), 64).replace(/\D/g, '')
+      ? shownNumber(clean(row.find('.tdInfos').text(), 64).replace(/\D/g, ''))
       : '';
   }).get().filter(Boolean);
   const outboundNumbers = [
@@ -150,7 +162,10 @@ export function parseDPDFranceTrackingHtml(html: string, rawTrackingNumber: stri
     }
     throw new SchemaError('DPD France', 'DPD France did not return tracking details');
   }
-  if (!responseNumbers.includes(trackingNumber)) {
+  const outbound = [...new Set(outboundNumbers)];
+  const alias = aliases && !responseNumbers.includes(trackingNumber) && outbound.length === 1
+    && clean($('#btnOngletAller').attr('data-colis') ?? '', 64).replace(/\D/g, '') === trackingNumber ? outbound[0] : undefined;
+  if (!responseNumbers.includes(trackingNumber) && !alias) {
     throw new SchemaError('DPD France', 'DPD France returned a different shipment');
   }
   const isReturn = !outboundNumbers.includes(trackingNumber) && returnNumbers.includes(trackingNumber);
@@ -239,6 +254,7 @@ export function parseDPDFranceTrackingHtml(html: string, rawTrackingNumber: stri
     ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
     ...(weight !== null ? { weight_kg: weight } : {}),
     timezone: TIMEZONE,
+    ...(alias ? { canonical_tracking_number: alias } : {}),
     events,
   };
 }
@@ -274,7 +290,8 @@ export class DPDFranceTracker {
     this.recorder = options.recorder;
   }
 
-  async fetch(rawTrackingNumber: string, context: TrackingContext = {}): Promise<CarrierResult> {
+  /** `aliases` takes another DPD unit's number for the parcel; recognition, which claims the number, does not. */
+  async fetch(rawTrackingNumber: string, context: TrackingContext = {}, aliases = false): Promise<CarrierResult> {
     const number = normalizeDPDFranceTrackingNumber(rawTrackingNumber);
     const url = dpdFranceTrackingUrl(number);
     const trawl = this.trawl;
@@ -319,7 +336,7 @@ export class DPDFranceTracker {
         },
       },
     ]);
-    const result = parseDPDFranceTrackingHtml(html, number);
+    const result = parseDPDFranceTrackingHtml(html, number, { aliases });
     result.tracking_url = url;
     result.tracking_source = 'rendered-page';
     return result;
@@ -362,7 +379,7 @@ export const adapter: AdapterFactory = (environment) => {
     id: 'dpd-fr',
     // The browser service's native scrape API, or a direct HTML GET without one.
     steps: ['direct', 'retry', 'trawl'],
-    track: (input, context) => tracker.fetch(input.number, context),
+    track: (input, context) => tracker.fetch(input.number, context, true),
     // Cloudflare challenges every plain GET, so only the browser phase can ask DPD France. The trace page
     // shows only the requested parcel, on Paris time: its dated rows confirm the number.
     recognizeWithBrowser: (number, context) => (accepted(() => normalizeDPDFranceTrackingNumber(number))

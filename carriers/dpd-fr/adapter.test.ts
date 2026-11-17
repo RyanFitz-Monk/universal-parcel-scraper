@@ -57,13 +57,17 @@ function trackingFixture(overrides: {
   outboundNumber?: string;
   outboundRows?: Row[];
   outboundDetails?: Detail[];
+  /** The number the page binds to its outbound tab, the one it was asked for. */
+  tab?: string;
 } = {}): string {
   const outboundNumber = overrides.outboundNumber ?? TEST_TRACKING_NUMBER;
   const outboundDetails = (overrides.outboundDetails ?? FIXTURE.outboundDetails)
     .map(([label, value]): Detail => (label === 'N° colis' ? [label, outboundNumber] : [label, value]));
   const privateSections = Object.entries(FIXTURE.privateSections)
     .map(([id, value]) => `<div id="${id}">${value}</div>`).join('');
+  const tab = overrides.tab ? `<div id="btnOngletAller" class="ongletInfo ongletInfoActif" data-colis="${overrides.tab}">Informations</div>` : '';
   return `<!doctype html><html><body>
+    ${tab}
     <div id="iconsAller">
       <span class="infosTitle parcelNumberAller">Votre colis ${outboundNumber}</span>
     </div>
@@ -343,6 +347,26 @@ describe('DPD France rendered tracking', () => {
     )).toThrow('different shipment');
   });
 
+  it('reads the label form of the requested number, which some pages show', () => {
+    // The fifteen digits and the GS1 check digit, as a parcel's page shows them.
+    const result = parseDPDFranceTrackingHtml(trackingFixture({ outboundNumber: '2509999999999801' }), TEST_TRACKING_NUMBER);
+    expect(result.events?.length).toBeGreaterThan(0);
+    expect(result.canonical_tracking_number).toBeUndefined();
+  });
+
+  it("answers another DPD unit's number under DPD France's own when tracking, never when recognizing", () => {
+    // Synthetic: another unit's fourteen digits, which the page binds to its outbound tab beside DPD France's label.
+    const other = '07200000000001';
+    const html = trackingFixture({ outboundNumber: '2509999999999801', tab: other });
+    expect(parseDPDFranceTrackingHtml(html, other, { aliases: true })).toMatchObject({
+      canonical_tracking_number: TEST_TRACKING_NUMBER, events: parseDPDFranceTrackingHtml(html, TEST_TRACKING_NUMBER).events,
+    });
+    expect(() => parseDPDFranceTrackingHtml(html, other)).toThrow('different shipment');
+    // A page bound to another number answers for none.
+    expect(() => parseDPDFranceTrackingHtml(trackingFixture({ tab: '07200000000002' }), other, { aliases: true })).toThrow('different shipment');
+    expect(() => parseDPDFranceTrackingHtml(trackingFixture(), other, { aliases: true })).toThrow('different shipment');
+  });
+
   it('selects the requested return leg without mixing outbound events', () => {
     const html = `<!doctype html><html><body>
       <span class="parcelNumberAller">Votre colis 10612345678900</span>
@@ -528,6 +552,14 @@ describe('DPD France adapter factory', () => {
     // A number DPD France does not issue is not asked.
     await expect(instance.recognizeWithBrowser!('ABC', { budgetMs: 30_000 })).resolves.toEqual({ known: false, lastActivityAt: null });
     expect(fetcher).toHaveBeenCalledTimes(2);
+
+    // Another unit's number answered under DPD France's own tracks the parcel; recognition still finds no parcel of that number.
+    const other = '07200000000001';
+    const aliased = () => scraped(trackingFixture({ outboundNumber: '2509999999999801', tab: other }));
+    fetcher.mockResolvedValueOnce(aliased());
+    await expect(instance.track({ number: other }, { budgetMs: 30_000 })).resolves.toMatchObject({ canonical_tracking_number: TEST_TRACKING_NUMBER });
+    fetcher.mockResolvedValueOnce(aliased());
+    await expect(instance.recognizeWithBrowser!(other, { budgetMs: 30_000 })).rejects.toThrow('different shipment');
   });
 
   it('is a browser recognition candidate for the ex-Exapaq depots\' fourteen digits only, never an HTTP one', () => {

@@ -33,8 +33,9 @@ non-2xx statuses are indeterminate.
   carriers'. The trace page's dated rows for the requested number confirm it.
 - Labels print the `250` number with a GS1 check digit as a sixteenth digit, and
   links often carry that form. When the check digit matches, detection lists DPD
-  France first and the adapter looks the parcel up by its fifteen digits, the
-  number the trace page shows. Other sixteen-digit numbers are refused.
+  France first and the adapter looks the parcel up by its fifteen digits. The
+  trace page shows those, or for some parcels the label form, which the adapter
+  reads as the same number. Other sixteen-digit numbers are refused.
 - DPD France also tracks eighteen-digit numbers beginning `1660`; universal
   providers read their history from it, and the adapter takes them. Detection
   does not offer DPD France for them, as other carriers' numbers share the length.
@@ -44,7 +45,12 @@ non-2xx statuses are indeterminate.
 - One page can show an outbound parcel (`#infos1`, `tr.tabTraceColisAller`) and
   its return (`#infos2`, `tr.tabTraceColisRetour`). The requested number picks
   the leg; the other leg's rows are never read. A page without the requested
-  number is a `SchemaError`.
+  number is a `SchemaError`, except when tracking another DPD unit's number for
+  a parcel DPD France delivers: the page binds that number to its outbound tab
+  (`#btnOngletAller[data-colis]`) and shows the parcel's `250` number, which the
+  result names as `canonical_tracking_number`. Its rows are the same scans a
+  universal provider relays for the other number. Browser recognition does not
+  take such a page, since it claims the number itself.
 - No status codes, only French prose, compared lowercase without accents or
   punctuation (DPD varies them between rows; a spacing accent such as
   "l´expéditeur" counts as an apostrophe). Earlier trace pages used shorter rows
