@@ -95,6 +95,56 @@ describe('PostNL transient failures', () => {
     expect(await result).toMatchObject({ kind: 'rate_limited', status: 429, message: `PostNL tracking refused the request with HTTP 429 ${wording}` });
     expect(fetcher).toHaveBeenCalledTimes(waits.length + 1);
   });
+
+  const tracked = () => jsonResponse({ data: { items: [{ item: POSTNL_WRONG_NUMBER, events: [{ category: 'Processing', datetime_local: '2026-08-30T12:00:00Z', country_code: 'NL' }] }] } });
+
+  // The quota is the same for every visitor, so a call refused on every try rests the lookups that follow it.
+  it('sends nothing until the soonest wait PostNL gave a call it refused on every try', async () => {
+    const responses = [jsonResponse({ access_token: 'visitor-token' }), ...['46', '38', '52', '25', '31'].map(refusal),
+      jsonResponse({ access_token: 'visitor-token' }), tracked()];
+    const fetcher = vi.fn<typeof fetch>(async () => responses.shift()!);
+    const tracker = new PostNLTracker({ fetcher });
+    const refused = tracker.fetch(POSTNL_WRONG_NUMBER).catch((caught: unknown) => caught);
+    await vi.advanceTimersByTimeAsync(8_000);
+    expect(await refused).toMatchObject({ kind: 'rate_limited', status: 429 });
+    expect(fetcher).toHaveBeenCalledTimes(6);
+    await expect(tracker.fetch(POSTNL_WRONG_NUMBER, { budgetMs: 10_000 }))
+      .rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced', retryAfterMs: 25_000 });
+    expect(fetcher).toHaveBeenCalledTimes(6);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const waited = new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER);
+    await vi.advanceTimersByTimeAsync(19_999);
+    expect(fetcher).toHaveBeenCalledTimes(6);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(waited).resolves.toMatchObject({ status: 'in_transit' });
+    expect(fetcher).toHaveBeenCalledTimes(8);
+  });
+
+  it('lets one lookup at a time ask PostNL through a transport', async () => {
+    const responses = [jsonResponse({ access_token: 'visitor-token' }), refusal('2'), tracked(),
+      jsonResponse({ access_token: 'visitor-token' }), tracked()];
+    const fetcher = vi.fn<typeof fetch>(async () => responses.shift()!);
+    const first = new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER);
+    const second = new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER);
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(first).resolves.toMatchObject({ status: 'in_transit' });
+    await expect(second).resolves.toMatchObject({ status: 'in_transit' });
+    expect(fetcher).toHaveBeenCalledTimes(5);
+  });
+
+  it('fails as its own pacing, sending nothing, when a lookup cannot wait for its turn', async () => {
+    const responses = [jsonResponse({ access_token: 'visitor-token' }), refusal('2'), tracked()];
+    const fetcher = vi.fn<typeof fetch>(async () => responses.shift()!);
+    const first = new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER);
+    const second = new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER, { budgetMs: 4_000 }).catch((caught: unknown) => caught);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(await second).toMatchObject({ kind: 'rate_limited', reason: 'self_paced' });
+    await vi.advanceTimersByTimeAsync(1_000);
+    await expect(first).resolves.toMatchObject({ status: 'in_transit' });
+    expect(fetcher).toHaveBeenCalledTimes(3);
+  });
 });
 
 describe('PostNL wrong-number handling', () => {

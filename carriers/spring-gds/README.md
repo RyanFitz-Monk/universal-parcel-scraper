@@ -39,6 +39,13 @@ it; everything user-facing says PostNL.
      A 429 left standing is a rate limit whose message names the call, the try it met and the
      wait PostNL asked for, or that it named none, so a host's log shows whether a replay met
      it and whether waiting longer would have served the lookup.
+   - Lookups that send through one transport take turns at the tracking endpoint, one call and
+     its replays at a time, so two lookups do not replay into the same full minute. After a
+     call whose five requests were all refused, no call goes out until the soonest
+     `Retry-After` they named (at least 2 s, at most a minute, 30 s when none named one). A
+     lookup that cannot wait for its turn or that rest and keep 3 s for its own calls fails at
+     once as a rate limit with the reason `self_paced` and the wait, without a request. A
+     restart forgets the turns and the rest.
    - Unknown barcode: an ordinary item with no events and "barcode was not found" in
      `message`. "Barcode was incorrect" means the same only for a 15-character `3S` barcode
      with a four-letter customer code, the layout the endpoint reads, where it marks a code
@@ -130,7 +137,8 @@ it; everything user-facing says PostNL.
   keeps its own minute: the `Retry-After` of calls a few seconds apart jumps by tens of
   seconds, and a call refused with a long wait can go through two seconds later. Waiting
   out the wait mostly meets another full backend, so the tracking call pauses briefly
-  instead. A lookup whose five requests all meet a full backend fails as a rate limit.
+  instead. A lookup whose five requests all meet a full backend fails as a rate limit, and
+  the lookups after it rest (see `direct`).
 - A `3S` parcel sent within the Netherlands is only on PostNL's domestic tracker, which shows
   it only with its delivery postcode. Without one, the lookup asks for it and other sources
   are asked. The domestic tracker also shows parcels PostNL delivers abroad, under the

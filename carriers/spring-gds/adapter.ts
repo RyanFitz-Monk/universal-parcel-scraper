@@ -40,6 +40,7 @@ import { classifyWording, languageStageStatus, type ClassifiedWording } from '..
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { countryTimeZone, explicitOffsetTime, firstOccurrence, mislabeledWallTime, settleGuessedClocks, type FeedClock, type ParsedTime } from '../../core/time/index.js';
 import { fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
+import { transportOf } from '../../core/transport/transportOf.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
 import { postNLCode, postNLDomesticStage, postNLStatus } from './status.js';
 
@@ -60,6 +61,14 @@ const LOOKUP_TIMEOUT_MS = 25_000;
  */
 const QUOTA_PAUSE_MS = 2_000;
 const TRACKING_TRIES = 5;
+/**
+ * A tracking call whose every try PostNL refused met the quota full on each backend it reached. No call goes out after
+ * it until the soonest `Retry-After` its tries were given, `QUOTA_REST_MS` without one, and at most `QUOTA_REST_MAX_MS`.
+ */
+const QUOTA_REST_MS = 30_000;
+const QUOTA_REST_MAX_MS = 60_000;
+/** The time a lookup that waited for its turn or the rest keeps for its own calls. */
+const TURN_RESERVE_MS = 3_000;
 /** A request in a call: its first try and its replays. */
 const TRIES = ['on the first try', 'on its replay', 'on its second replay', 'on its third replay', 'on its fourth replay'];
 const MAX_TOKEN_LENGTH = 16_384;
@@ -360,6 +369,42 @@ function withoutPostcode(error: unknown): unknown {
   return error;
 }
 
+/**
+ * PostNL's quota as one transport meets it: until when no tracking call goes out, and the turn of the lookup whose
+ * calls go out now. The quota is shared with every visitor whatever their address, so the lookups that send through
+ * one transport take turns, a call and its replays at a time, rather than replay into the same full minute; a call
+ * every try of which was refused rests the others. A lookup that cannot wait for its turn or the rest within its time
+ * fails as our own pacing (rate_limited, self_paced) with the wait, and sends nothing. A restart forgets it.
+ */
+interface PostNLQuota { restUntil: number; turn: Promise<void>; lookups: number }
+const quotas = new WeakMap<object, PostNLQuota>();
+
+/** Without a fetcher of its own, a lookup sends through the global fetch as it stands. */
+function postNLQuota(fetcher: typeof fetch | undefined): PostNLQuota {
+  const key = transportOf(fetcher) ?? globalThis.fetch;
+  let quota = quotas.get(key);
+  if (!quota) quotas.set(key, quota = { restUntil: 0, turn: Promise.resolve(), lookups: 0 });
+  return quota;
+}
+
+function selfPaced(waitMs: number | undefined, message: string): RateLimitedError {
+  return new RateLimitedError(PROVIDER, waitMs, message, { reason: 'self_paced' });
+}
+
+/** Whether `promise` settled before `ms` passed and `signal` ended. */
+async function settledWithin(promise: Promise<unknown>, ms: number, signal: AbortSignal): Promise<boolean> {
+  if (ms <= 0 || signal.aborted) return false;
+  const timer = new AbortController();
+  const stop = () => timer.abort();
+  signal.addEventListener('abort', stop, { once: true });
+  try {
+    return await Promise.race([promise.then(() => true, () => true), paused(ms, timer.signal).then(() => false)]);
+  } finally {
+    signal.removeEventListener('abort', stop);
+    timer.abort();
+  }
+}
+
 export class PostNLTracker {
   private readonly fetcher: typeof fetch | undefined;
   private readonly now: () => Date;
@@ -423,6 +468,7 @@ export class PostNLTracker {
    */
   private async track(trackingNumber: string, accessToken: string, signal: AbortSignal, deadline: number): Promise<Uint8Array> {
     const counted = counting(this.fetcher);
+    let soonest: number | undefined;
     for (;;) {
       let reply: { response: Response; bytes: Uint8Array };
       try {
@@ -450,7 +496,12 @@ export class PostNLTracker {
       }
       if (reply.response.status !== 429) return reply.bytes;
       const refusal = new UpstreamHttpError('PostNL tracking', 429, retryAfterOf(reply.response.headers.get('retry-after')));
+      if (refusal.retryAfterMs !== undefined) soonest = Math.min(soonest ?? Infinity, refusal.retryAfterMs);
       const pause = refusal.retryAfterMs === undefined ? undefined : Math.min(QUOTA_PAUSE_MS, Math.max(1_000, refusal.retryAfterMs));
+      if (counted.tries() >= TRACKING_TRIES) {
+        const quota = postNLQuota(this.fetcher);
+        quota.restUntil = Math.max(quota.restUntil, Date.now() + Math.min(QUOTA_REST_MAX_MS, Math.max(QUOTA_PAUSE_MS, soonest ?? QUOTA_REST_MS)));
+      }
       if (pause === undefined || counted.tries() >= TRACKING_TRIES || performance.now() + pause >= deadline || !await paused(pause, signal)) {
         throw rateLimited(refusal, counted.tries());
       }
@@ -481,6 +532,7 @@ export class PostNLTracker {
 
   /** The international tracker's answer, with the visitor token it needs. */
   private async international(trackingNumber: string, signal: AbortSignal, deadline: number): Promise<CarrierResult> {
+    const release = await this.turn(signal, deadline);
     try {
       const token = await this.visitorToken(signal, deadline);
       let bytes: Uint8Array;
@@ -497,6 +549,45 @@ export class PostNLTracker {
       if (error instanceof UpstreamHttpError && [404, 410].includes(error.status)) {
         throw new TransportError(PROVIDER, 'PostNL tracking endpoint is unavailable', { cause: error });
       }
+      throw error;
+    } finally {
+      release();
+    }
+  }
+
+  /**
+   * This lookup's turn at PostNL's quota (`PostNLQuota`): once the lookups ahead have had theirs and any rest is over.
+   * Gives the function that ends it.
+   */
+  private async turn(signal: AbortSignal, deadline: number): Promise<() => void> {
+    const quota = postNLQuota(this.fetcher);
+    const ahead = quota.turn;
+    const waits = quota.lookups > 0;
+    let resolve!: () => void;
+    const mine = new Promise<void>((done) => { resolve = done; });
+    quota.turn = ahead.then(() => mine);
+    quota.lookups += 1;
+    let ended = false;
+    const release = () => {
+      if (ended) return;
+      ended = true;
+      quota.lookups -= 1;
+      resolve();
+    };
+    try {
+      if (waits && !await settledWithin(ahead, deadline - performance.now() - TURN_RESERVE_MS, signal)) {
+        signal.throwIfAborted();
+        throw selfPaced(QUOTA_PAUSE_MS * TRACKING_TRIES, 'PostNL is being asked for another parcel; no request until its turn ends');
+      }
+      const rest = quota.restUntil - Date.now();
+      if (rest > 0) {
+        const message = 'PostNL refused every try of a recent request; no request until its quota frees up';
+        if (rest > deadline - performance.now() - TURN_RESERVE_MS) throw selfPaced(rest, message);
+        if (!await paused(rest, signal)) signal.throwIfAborted();
+      }
+      return release;
+    } catch (error) {
+      release();
       throw error;
     }
   }
