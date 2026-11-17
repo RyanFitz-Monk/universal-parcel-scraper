@@ -790,6 +790,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // the local warehouse (255).
   if (/^(?:the |your )?parcel (?:has been |was )?sent to (?:the )?local [a-z][a-z&' ]{0,40} warehouse for delivery$/.test(text)
     || /^(?:the |your )?parcel (?:has been |was )?assigned to (?:a |the |your )?delivery driver$/.test(text)) return 'in_transit';
+  // A carrier's receipt of a request about the parcel takes up the request, not the parcel, and moves nothing:
+  // Mondial Relay's "Nous avons bien pris en charge de votre demande, une réponse vous sera apportée …".
+  if (/\bprise? en charge (?:de )?votre demande\b/.test(text)) return undefined;
   // A pickup still to come ("will be picked up") is not one either.
   if (/accepted|(?<!\b(?:be|being) )picked up|pick up was successful|^drop off$|pick ?up scan|prepared the package for return to ups or pickup by ups|handed (?:over )?to (?:dpd|gls)|package received at dhl|item booked|consignment was mailed|posted at (?:a |the )?(?:postal point|post office)|pris en charge|prise en charge|collecte.*(?:reussi|effectue)|recupere.*boite aux lettres|depose.*point postal|remis a (?:dpd|gls)|envoi.*depose|abholung.*erfolgreich|^(?:die sendung wurde )?erfolgreich abgeholt$|eingeliefert|an (?:dpd|gls) ubergeben|paket.*(?:angenommen|ubernommen)|ritiro.*(?:riuscito|effettuato)|pres[oa] in carico|affidat[oa] a (?:dpd|gls)|depositat.*punto postale|spedizione.*impostata/.test(text)) return 'accepted';
   // Taken in by the carrier: Royal Mail's "Item received by Royal Mail", a parcel shop's or a warehouse's

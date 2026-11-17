@@ -12,7 +12,8 @@ import {
   normalizeMondialRelayCredential,
   parseMondialRelayTrackingResponse,
 } from './adapter.js';
-import { classifyStatus } from './status.js';
+import { normalizeStatusWording, statusGapNote } from '../../core/status/statusMap.js';
+import { classifyStatus, statusMap } from './status.js';
 
 // Public fixture provenance:
 // - 17185966 is the shipment in Mondial Relay's official Permalinks v2.1 PDF:
@@ -360,6 +361,22 @@ describe('Mondial Relay response normalization', () => {
       { Date: '2026-08-30T12:00:00', Libelle: 'Colis pris en charge en Point Relais' },
     ];
     expect(parseMondialRelayTrackingResponse(fixture, PUBLIC_CREDENTIAL)).toMatchObject({ current_stage: 'in_transit' });
+  });
+
+  it('reads the receipt of a request about the parcel as moving nothing', () => {
+    const fixture = syntheticSuccessFixture();
+    const expedition = fixture.Expedition as Record<string, unknown>;
+    expedition.SuiviContextuel = 'En transit vers notre agence';
+    const receipt = { Date: '2026-09-02T15:18:17', Libelle: 'Nous avons bien pris en charge de votre demande, une réponse vous sera apportée prochainement sur votre suivi/ici.' };
+    expedition.Evenements = [receipt, { Date: '2026-08-31T08:00:00', Libelle: 'Colis expédié depuis le site HUB EXEMPLE' }];
+    const result = parseMondialRelayTrackingResponse(fixture, PUBLIC_CREDENTIAL);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+    expect(result.events![0]).not.toHaveProperty('stage');
+    // Before any scan of the leg to the agency, the drop-off's stage still stays.
+    expedition.Evenements = [receipt, { Date: '2026-08-30T12:00:00', Libelle: 'Colis pris en charge en Point Relais' }];
+    expect(parseMondialRelayTrackingResponse(fixture, PUBLIC_CREDENTIAL)).toMatchObject({ current_stage: 'accepted' });
+    expect(statusMap.stage(null, normalizeStatusWording(receipt.Libelle))).toBeUndefined();
+    expect(statusGapNote(statusMap, null, normalizeStatusWording(receipt.Libelle))).toMatch(/request/);
   });
 
   it('uses reached official milestones only when contextual history is inconclusive', () => {

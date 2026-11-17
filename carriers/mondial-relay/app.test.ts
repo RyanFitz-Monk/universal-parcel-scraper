@@ -203,6 +203,23 @@ describe('Mondial Relay app service', () => {
     expect(parseMondialRelayApp(dropped, UID)).toMatchObject({ current_stage: 'in_transit' });
   });
 
+  it('reads the receipt of a request about the parcel as moving nothing', () => {
+    const parcel = detail(UID, 'En transit vers notre agence');
+    const receipt = { label: 'Nous avons bien pris en charge de votre demande, une réponse vous sera apportée prochainement sur votre suivi/ici.', date: '2026-01-04T09:00:00Z' };
+    const steps = (events: typeof receipt[]) => [
+      { number: 3, status: "Colis sur l'agence de livraison", date: null, events: [] },
+      { number: 2, status: 'Colis pris en charge', date: '2026-01-02T15:00:00Z', events },
+    ];
+    parcel[0]!.detail.steps = steps([receipt, { label: 'Colis expédié depuis le site logistique', date: '2026-01-03T06:00:00Z' }]);
+    const result = parseMondialRelayApp(parcel, UID);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+    expect(result.events![0]).toMatchObject({ description: receipt.label });
+    expect(result.events![0]).not.toHaveProperty('stage');
+    // Before any scan of the leg to the agency, the drop-off's stage still stays.
+    parcel[0]!.detail.steps = steps([receipt, { label: 'Colis pris en charge en Point Relais', date: '2026-01-02T15:00:00Z' }]);
+    expect(parseMondialRelayApp(parcel, UID)).toMatchObject({ current_stage: 'accepted' });
+  });
+
   it('reads the merchant\'s receipt as the end of a return the scans started', () => {
     const back = detail(UID, "Votre colis a été livré à l'enseigne.");
     back[0]!.detail.steps = [{ number: 2, status: 'Colis pris en charge', date: '2026-01-02T15:00:00Z', events: [

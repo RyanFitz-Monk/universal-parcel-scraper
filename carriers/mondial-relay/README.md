@@ -115,6 +115,9 @@ shipment → `SchemaError`.
   drop-off's `accepted` stays, so the result is never a step ahead of every scan. The app's
   `stepHint` is read as the website's headline is, here and below. The headline has no clock
   of its own: the app's `tracingDate` is that of the newest event, and `tracingCode` its kind.
+- The history can list the receipt of a request about the parcel ("Nous avons bien pris en charge
+  de votre demande, …"). Its "pris en charge" is the request's, not the parcel's: the row has no
+  stage and leaves the status to the scans.
 - The headline "Votre colis a été livré à l'enseigne." is the merchant receiving the parcel. A
   return has its own number, addressed to the merchant, and there it is the delivery. On a parcel
   whose own scans started a return ("retour à l'expéditeur") it is the parcel back with its

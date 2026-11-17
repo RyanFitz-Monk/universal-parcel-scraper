@@ -103,9 +103,18 @@ export const MONDIAL_RELAY_WORDING: readonly { phrases: readonly string[]; class
   },
 ];
 
+/**
+ * Mondial Relay's receipt of a request about the parcel, listed among its scans: "Nous avons bien pris
+ * en charge de votre demande, une réponse vous sera apportée prochainement sur votre suivi/ici." It
+ * takes up the request, not the parcel, and moves nothing.
+ */
+const REQUEST_RECEIPT = 'pris en charge de votre demande';
+export const isRequestReceipt = (description: string): boolean => comparableText(description).includes(REQUEST_RECEIPT);
+
 /** The status and stage a Mondial Relay label denotes. */
 export function classifyStatus(description: string): ClassifiedStatus {
   const value = comparableText(description);
+  if (value.includes(REQUEST_RECEIPT)) return { status: 'unknown', stage: 'in_transit' };
   for (const rule of MONDIAL_RELAY_WORDING) {
     if (rule.phrases.some((phrase) => value.includes(phrase))) return rule.classified;
   }
@@ -246,4 +255,6 @@ export const statusMap: CarrierStatusMap = {
     wording: LAST_LEG,
     note: 'Out for delivery when the out-for-delivery milestone is dated at it, as on a home delivery, else movement: the stored scan does not keep the milestone.',
   }],
+  gapNote: (code, wording) => (!code && isRequestReceipt(wording)
+    ? 'The receipt of a request about the parcel: it takes up the request, not the parcel, and moves nothing.' : undefined),
 };

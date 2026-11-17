@@ -17,7 +17,7 @@ import { cleanScalar, TRAWL_TRANSPORT_ALLOWANCE_MS, trawlBody, type TrawlClient,
 import { isRecord, type JsonObject } from '../../core/types.js';
 import { MondialRelayAppClient } from './app.js';
 import { inpostSpainTrackingUrl, isInpostSpainNumber, readInpostSpain } from './inpostSpain.js';
-import { classifyScan, classifyStatus, headlineStatus, milestoneNumberStatus, scanSite, scanWording } from './status.js';
+import { classifyScan, classifyStatus, headlineStatus, isRequestReceipt, milestoneNumberStatus, scanSite, scanWording } from './status.js';
 
 // Protocol provenance (inspected 2026-08-30):
 // https://www.mondialrelay.fr/versioned-assets/2nMAiuVI9Rv9J3kZacblPYCfCABwzS-qZ3m7eFBQn4A/Scripts/vue/tracking/js/app.js
@@ -271,7 +271,8 @@ function parseEvents(expedition: JsonObject): ParsedEvent[] {
         time: time.iso,
         location: scanSite(description),
         description,
-        stage: classified.stage,
+        // The receipt of a request about the parcel moves nothing.
+        ...(isRequestReceipt(description) ? {} : { stage: classified.stage }),
       },
       classified,
       timestamp: time.timestamp,
@@ -332,7 +333,7 @@ function parseTrackingResponse(payload: unknown, credential: MondialRelayCredent
   const events = parsedEvents.map(({ event }) => event);
   const contextual = plainText(expedition.SuiviContextuel);
   const statusText = contextual || events[0]?.description || 'Tracking information received';
-  const headline = headlineStatus(statusText, parsedEvents.map(({ classified }) => classified));
+  const headline = headlineStatus(statusText, parsedEvents.filter(({ event }) => event.stage).map(({ classified }) => classified));
   const current = headline.status !== 'unknown'
     ? headline
     : parsedEvents.find((event) => event.classified.status !== 'unknown')?.classified

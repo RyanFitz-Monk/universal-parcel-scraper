@@ -42,6 +42,9 @@ describe('classifyWording', () => {
       expect(trackingLanguageStage(wording), wording).toBeUndefined();
     }
     for (const wording of ['Picked up', 'Shipment has been picked up by the courier']) expect(trackingLanguageStage(wording), wording).toBe('accepted');
+    // A request about the parcel taken up is not the parcel.
+    expect(trackingLanguageStage('Nous avons bien pris en charge de votre demande, une réponse vous sera apportée prochainement sur votre suivi/ici.')).toBeUndefined();
+    expect(trackingLanguageStage('Colis pris en charge en Point Relais')).toBe('accepted');
     // One the recipient can make now is the parcel waiting for them, unless the courier is to make it.
     expect(trackingLanguageStage('Item can be picked up at the Post Office')).toBe('ready_for_pickup');
     expect(trackingLanguageStage('Parcel can be collected by the courier')).toBeUndefined();
