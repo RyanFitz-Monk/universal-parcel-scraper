@@ -283,6 +283,14 @@ describe('UPS structured response', () => {
     ], { progressBarType: 'Delivered' }), TRACKING_NUMBER, TODAY))
       .toMatchObject({ status: 'exception', current_stage: 'exception', current_stage_source: 'carrier_map' });
 
+    // The return the receiver asked for, after the round out for delivery: the parcel goes back to the sender.
+    expect(parseUPSTrackingResponse(withScans([
+      scan('UA', 'Package was returned to the sender', '20260907 15:20:00'),
+      scan('OF', 'Out For Delivery', '20260907 11:02:00'),
+      scan('ZC', 'As requested, the UPS My Choice&#174; delivery change was completed. / The package will be returned to the sender.', '20260906 14:31:00'),
+    ], { progressBarType: 'OutForDelivery' }), TRACKING_NUMBER, TODAY))
+      .toMatchObject({ status: 'exception', current_stage: 'returned', current_stage_source: 'carrier_map' });
+
     // A code the map does not know leaves the stage to the shared classifier.
     const unmapped = parseUPSTrackingResponse(withScans([
       scan('X9', 'Wording UPS has not used before', '20260806 15:50:00'),

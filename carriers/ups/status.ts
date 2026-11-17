@@ -124,6 +124,8 @@ const ACTIVITY_STAGES: ReadonlyMap<string, Stage> = new Map<string, Stage>([
   ['2Q', 'ready_for_pickup'], ['ZP', 'ready_for_pickup'], ['5G', 'ready_for_pickup'],
   // Held for pickup at a UPS facility at the receiver's request.
   ['S7', 'ready_for_pickup'],
+  // Returned to the sender, seen at the destination facility after the receiver asked for the return.
+  ['UA', 'returned'],
   // Delivered, including collection from an access point and delivery by the
   // post office after a hand-off.
   ['9E', 'delivered'], ['FS', 'delivered'], ['KB', 'delivered'], ['KD', 'delivered'], ['KE', 'delivered'],
