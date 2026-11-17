@@ -476,8 +476,18 @@
       "code": "2226",
       "wording": "Митний догляд завершено. Відправлення буде передане на доставку",
       "language": "uk",
-      "stage": "in_transit",
-      "confirmedBy": "documentation"
+      "stage": "customs",
+      "confirmedBy": "documentation",
+      "note": "Meest Post's documentation words it as the inspection finished, but its tracker's English says the parcel was submitted for clearance, between 2225 and 2227."
+    },
+    {
+      "code": "2226",
+      "wording": "Your parcel has been processed and applied for customs clearance",
+      "language": "en",
+      "stage": "customs",
+      "confirmedBy": "live",
+      "firstSeen": "2026-10-30",
+      "note": "Submitted for clearance: the clearance is done at 2227."
     },
     {
       "code": "2230",

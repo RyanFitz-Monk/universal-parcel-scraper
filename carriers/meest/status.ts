@@ -66,7 +66,9 @@ const STAGES: ReadonlyMap<string, Stage> = new Map([
   ['2000', 'customs'],
   ['2220', 'in_transit'],
   ['2225', 'customs'],
-  ['2226', 'in_transit'],
+  // Submitted for clearance, between the preparation (2225) and the clearance done (2227), as the tracker's
+  // English words it; Meest Post's documentation calls it the inspection finished.
+  ['2226', 'customs'],
   ['2227', 'in_transit'],
   ['2230', 'customs'],
   // Handed from customs clearance to Meest's delivery network.

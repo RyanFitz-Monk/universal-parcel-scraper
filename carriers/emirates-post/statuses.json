@@ -2,6 +2,7 @@
   "carrier": "emirates-post",
   "entries": [
     {"code": "P-58", "wording": "Received at counter", "stage": "accepted", "language": "en", "confirmedBy": "live", "note": "Posted at an Emirates Post branch."},
+    {"code": "P-58", "wording": "Shipment Created", "stage": "accepted", "language": "en", "confirmedBy": "live", "note": "The same intake code, worded so after a collection was booked or the posting was recorded, before the hub: the item taken in, not a label."},
     {"code": "P-1", "wording": "Shipped to", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "The next office follows the wording, such as the sorting centre."},
     {"code": "P-61", "wording": "Shipment under Processing", "stage": "in_transit", "language": "en", "confirmedBy": "live"},
     {"code": "P-139", "wording": "Item presented to export Customs/Security", "stage": "customs", "language": "en", "confirmedBy": "live"},
