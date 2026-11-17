@@ -64,6 +64,25 @@ const TURN_MS = 1_100;
 const turns = new WeakMap<object, { next: number }>();
 const GLOBAL_FETCH = {};
 
+/** How long Cainiao's answer that it has no record of a number spares the number Cainiao's read. */
+export const CAINIAO_UNKNOWN_MS = 24 * 3_600_000;
+/** The most numbers one transport keeps Cainiao's answer for; the oldest answer goes first. */
+const CAINIAO_UNKNOWN_KEPT = 10_000;
+
+/**
+ * Until when each number Cainiao answered it has no record of goes unasked, by transport: most iMile
+ * parcels never passed through Cainiao, and every answered check asked it again within Cainiao's pace,
+ * which AliExpress's lookups share. A restart forgets them.
+ */
+const cainiaoUnknown = new WeakMap<object, Map<string, number>>();
+
+function unknownToCainiao(fetcher: typeof fetch | undefined): Map<string, number> {
+  const key = transportOf(fetcher) ?? GLOBAL_FETCH;
+  let numbers = cainiaoUnknown.get(key);
+  if (!numbers) cainiaoUnknown.set(key, numbers = new Map<string, number>());
+  return numbers;
+}
+
 function selfPaced(waitMs: number): RateLimitedError {
   return new RateLimitedError(PROVIDER, waitMs, 'iMile was asked less than a second ago; no lookup until its turn', { reason: 'self_paced' });
 }
@@ -210,6 +229,12 @@ export class ImileTracker {
       errorType: error === undefined ? null : errorTypeOf(error), durationMs: Math.max(0, performance.now() - started),
       fallbackFrom: null, fallbackReason: null, fallbackErrorType: null, ...(error === undefined ? {} : { error }),
     });
+    // A number Cainiao had no record of in the last day is not asked again.
+    const unknown = unknownToCainiao(this.options.fetcher);
+    const now = (this.options.now ?? Date.now)();
+    const until = unknown.get(number);
+    if (until !== undefined && until > now) return result;
+    unknown.delete(number);
     const budgetMs = Math.min(CAINIAO_MS, Math.floor(remainingMs / 2));
     try {
       if (budgetMs < CAINIAO_MIN_MS) throw new BudgetExceededError(CAINIAO, budgetMs);
@@ -218,6 +243,10 @@ export class ImileTracker {
       return merged;
     } catch (error) {
       record(error);
+      if (error instanceof NotFoundError) {
+        unknown.set(number, now + CAINIAO_UNKNOWN_MS);
+        if (unknown.size > CAINIAO_UNKNOWN_KEPT) unknown.delete(unknown.keys().next().value!);
+      }
       return result;
     }
   }

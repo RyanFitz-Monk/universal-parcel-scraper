@@ -6,7 +6,7 @@ import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
-import { adapter, IMILE_API, IMILE_PAGE, IMILE_SIGNING, ImileTracker, imileSignature, scriptSigning, type ImileSigning } from './adapter.js';
+import { adapter, CAINIAO_UNKNOWN_MS, IMILE_API, IMILE_PAGE, IMILE_SIGNING, ImileTracker, imileSignature, scriptSigning, type ImileSigning } from './adapter.js';
 import { cainiaoScans, withCainiaoLeg } from './cainiao.js';
 import { imileReceiver, imileSummary, imileWording, normalizeImileNumber, parseImile } from './parser.js';
 import { imileStage, statusMap } from './status.js';
@@ -645,6 +645,30 @@ describe('Cainiao’s leg in front of iMile’s history', () => {
     const { result, step } = lookup(answer);
     await expect(result).resolves.toEqual(parseImile(fixture('delivered'), DELIVERED));
     expect(step()).toMatchObject({ step: 'cainiao', outcome: kind });
+  });
+
+  it('leaves a number Cainiao had no record of unasked there for a day', async () => {
+    let now = Date.now();
+    const cainiao = vi.fn((number: string) => reply(cainiaoUnknown(number)));
+    const recorder = { ...NOOP_RECORDER, step: vi.fn<(step: Step) => void>(), lookup: vi.fn() };
+    const fetcher = site(FIRST, { [DELIVERED]: fixture('delivered') }, { cainiao });
+    const tracker = () => new ImileTracker({ fetcher, recorder, signing: FIRST.signing, now: () => now });
+    const cainiaoSteps = () => recorder.step.mock.calls.filter(([recorded]) => recorded.step === 'cainiao').length;
+    await expect(tracker().fetch(DELIVERED)).resolves.toEqual(parseImile(fixture('delivered'), DELIVERED));
+    expect(cainiao).toHaveBeenCalledTimes(1);
+    // The next check reads iMile alone, and records no Cainiao step.
+    await expect(tracker().fetch(DELIVERED)).resolves.toEqual(parseImile(fixture('delivered'), DELIVERED));
+    expect(cainiao).toHaveBeenCalledTimes(1);
+    expect(cainiaoSteps()).toBe(1);
+    // A day later Cainiao is asked again.
+    now += CAINIAO_UNKNOWN_MS + 1;
+    await tracker().fetch(DELIVERED);
+    expect(cainiao).toHaveBeenCalledTimes(2);
+    // Another failure, such as its slider, leaves the number to ask on the next check.
+    const sliders = vi.fn(() => new Response('', { status: 429 }));
+    const other = site(FIRST, { [DELIVERED]: fixture('delivered') }, { cainiao: sliders });
+    for (let check = 0; check < 2; check += 1) await new ImileTracker({ fetcher: other, signing: FIRST.signing }).fetch(DELIVERED);
+    expect(sliders).toHaveBeenCalledTimes(2);
   });
 
   it('gives Cainiao half of the time iMile left, and nothing when that is too short to ask', async () => {
