@@ -3309,6 +3309,10 @@ describe('ParcelsApp result parsing', () => {
     // Its own scans at home stay on Yerevan's clock.
     expect(clocks([{ date: '2026-11-16T10:00:00Z', status: 'Receive item at office of exchange (Inb)', carrier: 2, location: '375010 Armenia' }]))
       .toEqual([['Receive item at office of exchange (Inb)', '2026-11-16T06:00:00.000Z', 'Asia/Yerevan', 'carrier']]);
+    // So does its despatch from the sending post's data, at the Russian office: read on Moscow's clock it came an hour
+    // after HayPost listed it.
+    expect(clocks([{ date: '2026-11-16T17:10:00Z', status: 'Send item abroad (EDI-received)', carrier: 2, location: '100000 Russian Federation (the)' }]))
+      .toEqual([['Send item abroad (EDI-received)', '2026-11-16T13:10:00.000Z', 'Asia/Yerevan', 'carrier']]);
   });
 
   it("reads the US post's copies of Russian Post's scans on their office's clock and Russian Post's export copy as UTC", () => {

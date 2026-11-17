@@ -595,7 +595,9 @@ step exists for future protocol changes.
   HayPost (Armenia Post) names an office abroad by its postcode and IPS's name of its country
   ("Russian Federation"): read on Yerevan's clock, its copy of Russian Post's acceptance came an
   hour before Russian Post's own row of it. Such a copy from a country of several clocks takes
-  the zone of the origin post's scans at its minute, when the origin keeps that zone.
+  the zone of the origin post's scans at its minute, when the origin keeps that zone. Its
+  despatch from the sending post's data ("Send item abroad (EDI-received)") is on Yerevan's clock,
+  as HayPost's own tracker dates it ([HayPost](../../carriers/haypost/README.md)).
 - Russian Post's own scans have Moscow time's digits wherever they were, but the US post's copies
   that ParcelsApp files under Russian Post, the country after USPS's words ("Acceptance, RUSSIAN
   FEDERATION"), have the scanning office's. Those at a town in Moscow's or Kaliningrad's zone take

@@ -28,7 +28,9 @@ through the lookup its tracking page at haypost.am makes.
 - Each scan gives the scanning office's wall clock, without a zone, twice: as the page shows it
   and in ISO form. A scan in Armenia reads on Yerevan time; a relay that gives the same scans
   with offsets puts HayPost's at +04:00. A scan abroad, or in a country the row does not settle,
-  keeps its wall clock.
+  keeps its wall clock. A despatch from the sending post's data, "(EDI-received)", is on Yerevan
+  time wherever its row places it: HayPost dates it when the data arrives. Read on Moscow time,
+  Russian Post's despatch came an hour after the tracker listed it.
 - IPS names countries in ISO's style, "Netherlands (the)". The adapter drops the article.
 - The country of an inward scan becomes the destination.
 - A scan's extra information carries the reason an item was not delivered and what happens

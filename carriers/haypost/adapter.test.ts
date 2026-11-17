@@ -43,7 +43,7 @@ describe('HayPost tracking adapter', () => {
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
   });
 
-  it('reads mail from abroad delivered in Armenia, with Yerevan instants for HayPost’s scans and wall clocks for the sending post’s', () => {
+  it('reads mail from abroad delivered in Armenia, with Yerevan instants for HayPost’s scans and its despatch data, and wall clocks for the sending post’s', () => {
     const result = parseHaypost(payload('inbound-delivered'), INBOUND);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map',
       last_status_text: 'Deliver item (Inb)', last_update: '2026-08-21T14:30:05+04:00', delivered_at: '2026-08-21T14:30:05+04:00',
@@ -57,10 +57,11 @@ describe('HayPost tracking adapter', () => {
       ['2026-08-17T15:12:47+04:00', 'YEREVAN, Armenia', 'Return item from customs (Inb)', 'in_transit'],
       ['2026-08-17T11:31:02+04:00', 'YEREVAN, Armenia', 'Send item to customs (Inb)', 'customs'],
       ['2026-08-17T11:20:31+04:00', 'YEREVAN, Armenia', 'Receive item at office of exchange (Inb)', 'in_transit'],
-      ['2026-08-11T22:05:00', 'SAMPLE A IMPC, Netherlands', 'Send item abroad (EDI-received)', 'in_transit'],
+      // HayPost dates the sending post's despatch when its data arrives, on its own clock.
+      ['2026-08-11T22:05:00+04:00', 'SAMPLE A IMPC, Netherlands', 'Send item abroad (EDI-received)', 'in_transit'],
       ['2026-08-10T07:15:00', 'SAMPLE A IMPC, Netherlands', 'Insert item into bag (Otb)', 'in_transit'],
     ]);
-    expect(result.events!.slice(-2).every(event => event.time === undefined)).toBe(true);
+    expect(result.events!.at(-1)!.time).toBeUndefined();
     expect(result.events!.every(event => event.stage_source === 'carrier_map')).toBe(true);
     expect(JSON.stringify(result)).not.toMatch(/\(the\)|Measure/);
   });
@@ -90,6 +91,24 @@ describe('HayPost tracking adapter', () => {
     expect(result.events!.at(-1)).toEqual({ local_time: '2026-10-01T16:38:00', location: 'SAMPLE ISC, China',
       description: 'Receive item at office of exchange (Otb)', stage: 'in_transit', stage_source: 'carrier_map' });
     expect(result).not.toHaveProperty('delivered_at');
+  });
+
+  it('reads the sending post’s despatch from its data on HayPost’s clock, wherever the row places it', () => {
+    // Live shape: Russian Post's office of exchange scans on Moscow's clock, and the despatch HayPost has from its
+    // data at a minute that, read on Moscow's clock, came an hour after HayPost listed it.
+    const result = parseHaypost(edited('in-transit', (_reply, rows) => {
+      rows.splice(3);
+      for (const row of rows) Object.assign(row, { country: 'Russian Federation (the)', location: '100000' });
+      ['2026-11-16T08:49:00', '2026-11-16T09:00:00', '2026-11-16T17:10:00'].forEach((clock, at) => { rows[at]!.eventDate = clock; });
+    }), IN_TRANSIT);
+    expect(result.events!.map(event => [event.time ?? event.local_time, event.location, event.description])).toEqual([
+      ['2026-11-16T17:10:00+04:00', 'Russian Federation', 'Send item abroad (EDI-received)'],
+      ['2026-11-16T09:00:00', 'Russian Federation', 'Insert item into bag (Otb)'],
+      ['2026-11-16T08:49:00', 'Russian Federation', 'Receive item at office of exchange (Otb)'],
+    ]);
+    expect(result).toMatchObject({ last_update: '2026-11-16T17:10:00+04:00', status: 'in_transit' });
+    expect(result).not.toHaveProperty('last_update_local');
+    expect(result).not.toHaveProperty('destination_country');
   });
 
   it('reads a missed delivery, unknown wordings and places, and keeps only the reason from a row’s extra information', () => {

@@ -6,13 +6,13 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, firstOccurrence } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
+import { HAYPOST_ZONE, haypostEdiReceived } from './clock.js';
 import { haypostStage } from './status.js';
 
 export const PROVIDER = 'HayPost';
 // A long history is a few kilobytes.
 export const HAYPOST_MAX_BYTES = 512 * 1024;
 
-const ZONE = 'Asia/Yerevan';
 const MAX_SCANS = 500;
 // The scanning office's wall clock, without a zone: "2026-10-02T10:34:54".
 const CLOCK = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
@@ -65,7 +65,9 @@ interface Scan { event: CarrierEvent; wording: string; country: string | null }
  * One row. Its `eventDate`, the same clock as its `local_Date`, is the wall
  * clock of the office that scanned the item: HayPost's offices read on Yerevan
  * time, and an office abroad, or in a country the row does not settle, keeps
- * its wall clock. IPS names countries in ISO's style, "Netherlands (the)".
+ * its wall clock. A despatch HayPost has from the sending post's data is on
+ * HayPost's clock (`haypostEdiReceived`). IPS names countries in ISO's style,
+ * "Netherlands (the)".
  */
 function scanOf(row: unknown): Scan {
   if (!isRecord(row)) throw new SchemaError(PROVIDER, 'HayPost returned an invalid scan');
@@ -79,7 +81,8 @@ function scanOf(row: unknown): Scan {
   const location = office.toLowerCase() === countryName.toLowerCase() ? countryName : [office, countryName].filter(Boolean).join(', ');
   const reason = reasonOf(text(row, 'extraInformation', 300));
   const description = reason ? `${wording}: ${reason}` : wording;
-  const time = country === 'AM' ? firstOccurrence(DateTime.fromISO(local, { zone: ZONE })).toISO({ suppressMilliseconds: true })! : null;
+  const time = country === 'AM' || haypostEdiReceived(wording)
+    ? firstOccurrence(DateTime.fromISO(local, { zone: HAYPOST_ZONE })).toISO({ suppressMilliseconds: true })! : null;
   const staged = haypostStage(description);
   const event: CarrierEvent = {
     ...(time ? { time } : { local_time: local }),

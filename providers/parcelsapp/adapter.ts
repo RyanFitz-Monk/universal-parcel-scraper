@@ -43,6 +43,7 @@ import { EMIRATES_POST_ZONE, UAE_PLACE } from '../../carriers/emirates-post/cloc
 import { epostGlobalCopyZone } from '../../carriers/epost-global/status.js';
 import { FIRST_LINE_CHINA_ZONE, firstLineInChina } from '../../carriers/first-line/clock.js';
 import { juxiExpressAbroadZone } from '../../carriers/juxi-express/clock.js';
+import { HAYPOST_ZONE, haypostEdiReceived } from '../../carriers/haypost/clock.js';
 import { hrvatskaPostaForeignZone } from '../../carriers/hrvatska-posta/parser.js';
 import { imileCountryClock } from '../../carriers/imile/clock.js';
 import { jsExpressChinaClock } from '../../carriers/js-express/clock.js';
@@ -1275,7 +1276,8 @@ function placeClockLine(carrier: string, status: string, location: string, date:
  * delivering partner's own scan of it.
  * HayPost names an office abroad by its postcode and IPS's name of its country
  * (`IPS_OFFICE`): read on Yerevan's clock, its copy of Russian Post's
- * acceptance came an hour before Russian Post's own row of it.
+ * acceptance came an hour before Russian Post's own row of it. Its despatch
+ * from the sending post's data is on its own clock (`haypostEdiReceived`).
  */
 const RELAYING_POSTS: Readonly<Record<string, string>> = {
   azerpost: 'AZ', 'correios-br': 'BR', 'correo-uruguayo': 'UY', dhl: 'DE', haypost: 'AM', 'la-poste': 'FR', 'slovenska-posta': 'SK',
@@ -1414,6 +1416,8 @@ function carrierClock(payload: Record<string, unknown>, state: Record<string, un
   // Correos relays an origin post's scans on an item from abroad on that post's clock, or keeps their wall clock (null).
   const sent = carrier === 'correos-spain' ? correosOriginZone(number, { wording: status }) : undefined;
   if (sent !== undefined) return sent;
+  // HayPost dates the despatch it has from the sending post's data on its own clock, as its tracker does.
+  if (carrier === 'haypost' && haypostEdiReceived(status)) return HAYPOST_ZONE;
   const relayed = relayedPostZone(carrier, scanLocation(name, state.location));
   if (relayed !== undefined) return relayed;
   if (carrier && PLACE_CLOCK_LINES.has(carrier)) return placeClockLine(carrier, status, scanLocation(name, state.location), state.date);
