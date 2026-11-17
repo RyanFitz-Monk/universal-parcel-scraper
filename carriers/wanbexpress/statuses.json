@@ -392,6 +392,14 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-10",
       "note": "InPost's note on a parcel to the UK that the recipient's account settings apply: not a scan."
+    },
+    {
+      "wording": "Parcel handed to DPD",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The handover to DPD for the last mile, without a code, the day after the destination's customs clearance: in transit, not DPD's acceptance of a new parcel."
     }
   ]
 }
