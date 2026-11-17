@@ -22,6 +22,7 @@
     {"wording": "Item in process in office of exchange.", "language": "en", "stage": "in_transit", "confirmedBy": "fixture", "firstSeen": "2026-10-04"},
     {"wording": "The item is on its way to the destination country.", "language": "en", "stage": "in_transit", "confirmedBy": "fixture", "firstSeen": "2026-10-04"},
     {"wording": "Item received for transport", "language": "en", "stage": "accepted", "confirmedBy": "fixture", "firstSeen": "2026-10-04"},
-    {"wording": "Item is in delivery transportation.", "language": "en", "stage": "out_for_delivery", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Its reason says the item is in the vehicle on its way to the recipient."}
+    {"wording": "Item is in delivery transportation.", "language": "en", "stage": "out_for_delivery", "confirmedBy": "live", "firstSeen": "2026-11-03", "note": "Its reason says the item is in the vehicle on its way to the recipient."},
+    {"wording": "Remember to clear customs and pay Posti's processing fee.", "language": "en", "stage": "customs", "confirmedBy": "live", "firstSeen": "2026-11-04", "note": "A reminder while the item waits on customs clearance, as the declaration request is."}
   ]
 }

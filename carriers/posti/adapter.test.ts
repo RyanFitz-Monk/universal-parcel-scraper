@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { PostiTracker, adapter, normalizePostiTrackingNumber, parse } from './adapter.js';
-import { postiEventStage, postiStatus } from './status.js';
+import { postiEventStage, postiStatus, statusMap } from './status.js';
 
 const NUMBER = 'CW123456785FR';
 const fixture = (name = 'delivered') => JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8'));
@@ -208,6 +208,8 @@ describe('Posti projection', () => {
     expect(postiStatus('RETURN_DELIVERED', [])?.stage).toBe('returned');
     expect(postiEventStage('Item has been released for delivery.')).toBe('in_transit');
     expect(postiEventStage('We sent the recipient an email about the item.')).toBe('pending');
+    expect(postiEventStage("Remember to clear customs and pay Posti's processing fee. If some of the customs information is still missing, wait.")).toBe('customs');
+    expect(statusMap.stage('', "Remember to clear customs and pay Posti's processing fee. Customs clearance will only be possible later.")).toBe('customs');
   });
 
   it.each([

@@ -57,7 +57,8 @@ Bootstrap, lookup and refresh share one cancellable 15-second budget.
   ("Item has departed from country of origin"). There the newest scan that shows movement
   (acceptance, transit or customs) sets the current stage.
 - Pickup availability is not delivery; transport back to the sender is not a completed
-  return. Notification and pre-advice rows prove no movement.
+  return. Notification and pre-advice rows prove no movement, but the request to declare the
+  item and the reminder to clear customs read as customs: the item waits on them.
 - `reasonDescription` follows the event's label as a sentence of its own and is never used to
   classify. A scan stored with the two run together keeps its row. The parcel app's review
   (`statusMap`) reads the label at the start of a stored wording, never the reason.

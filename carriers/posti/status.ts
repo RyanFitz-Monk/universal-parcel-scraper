@@ -31,7 +31,8 @@ export function postiEventStage(description: string): string {
   if (/^(?:the )?item is ready for (?:a )?pick ?up\.?$/.test(text)) return 'ready_for_pickup';
   if (/^(?:the )?item is (?:out for|in) delivery(?: transportation)?\.?$/.test(text)) return 'out_for_delivery';
   if (/^(?:the )?item has been returned to (?:the )?sender\.?$/.test(text)) return 'returned';
-  if (/^declare the item|^the item has been declared|^handling fee for item/.test(text)) return 'customs';
+  // The declaration, its fee, and the reminder to clear customs and pay the fee: the item waits on customs.
+  if (/^declare the item|^the item has been declared|^handling fee for item|^remember to clear customs/.test(text)) return 'customs';
   if (/^(?:the )?item (?:has been registered|has arrived to destination country|is on the way to the recipient|is ready for delivery in destination country|in process in office of exchange|is on its way to the destination country)\.?$/.test(text)) return 'in_transit';
   if (/^(?:the )?item (?:is in (?:sorting|transport)|accepted from transport|has been released for delivery|arrived in the destination country|has departed from country of origin)/.test(text)) return 'in_transit';
   if (/^(?:the )?item (?:has been received|has been accepted)/.test(text)) return 'accepted';
