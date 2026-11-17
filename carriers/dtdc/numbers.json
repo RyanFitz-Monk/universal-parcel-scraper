@@ -10,13 +10,13 @@
         "date": "2026-09-26"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "dtdc",
         "confidence": "high"
       },
-      "note": "Publicly reported shipment number; the attribution was not independently verified."
+      "note": "Publicly reported shipment number; DTDC's tracking page returns its history."
     },
     {
       "number": "N95614372",
@@ -44,7 +44,7 @@
         "date": "2026-09-06"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -54,7 +54,7 @@
           "gls-it"
         ]
       },
-      "note": "Publicly reported shipment number; the attribution was not independently verified. The source attributes it to DTDC, which stays one candidate among several."
+      "note": "Publicly reported shipment number that its source attributes to DTDC; DTDC's tracking page returns its history."
     },
     {
       "number": "v34336783",
@@ -65,7 +65,7 @@
         "date": "2016-12-24"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -74,7 +74,7 @@
           "dtdc"
         ]
       },
-      "note": "Publicly reported shipment number; carrier attribution was not independently verified. Preserve the published lowercase input; normalization uppercases the consignment number."
+      "note": "Publicly reported shipment number; DTDC's tracking page returns its history. Preserve the published lowercase input; normalization uppercases the consignment number."
     },
     {
       "number": "N20527879",
@@ -85,13 +85,13 @@
         "date": "2023-05-30"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "dtdc",
         "confidence": "high"
       },
-      "note": "Publicly reported shipment number; carrier attribution was not independently verified. The review excerpt labels it as the DTDC AWB and separately mentions a FedEx partner number."
+      "note": "Publicly reported shipment number. The review excerpt labels it as the DTDC AWB and separately mentions a FedEx partner number; DTDC's tracking page returns its history."
     },
     {
       "number": "7D135709646",
@@ -104,13 +104,13 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "dtdc",
         "confidence": "high"
       },
-      "note": "Tracking ID from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Tracking ID from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "7X117947645",
@@ -123,13 +123,13 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "dtdc",
         "confidence": "high"
       },
-      "note": "Waybill from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Waybill from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "B5001412134",
@@ -142,7 +142,7 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -152,7 +152,7 @@
           "gls-it"
         ]
       },
-      "note": "Domestic consignment number from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Domestic consignment number from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "D3009327142",
@@ -165,7 +165,7 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -175,7 +175,7 @@
           "gls-it"
         ]
       },
-      "note": "Waybill from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Waybill from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "H5002649686",
@@ -188,7 +188,7 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -198,7 +198,7 @@
           "gls-it"
         ]
       },
-      "note": "Consignment number from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Consignment number from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "V1002277851",
@@ -211,7 +211,7 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "unknown",
@@ -221,7 +221,7 @@
           "gls-it"
         ]
       },
-      "note": "Tracking number from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Tracking number from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "Z5001186697",
@@ -234,13 +234,13 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "packeta",
         "confidence": "high"
       },
-      "note": "Z waybill from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Z waybill from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "Z1003896203",
@@ -253,13 +253,13 @@
         "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "packeta",
         "confidence": "high"
       },
-      "note": "Z consignment number from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Z consignment number from a review of DTDC. DTDC's tracking page returns its history."
     },
     {
       "number": "A26344563",
@@ -583,7 +583,7 @@
           "dtdc"
         ]
       },
-      "note": "Waybill from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Waybill from a review of DTDC. DTDC's tracking page no longer finds it."
     },
     {
       "number": "Z29527178",
@@ -605,7 +605,7 @@
           "dtdc"
         ]
       },
-      "note": "Waybill from a review of DTDC. Not confirmed live: DTDC's feed answered every lookup with a generic failure."
+      "note": "Waybill from a review of DTDC. DTDC's tracking page no longer finds it."
     },
     {
       "number": "W17514447",
