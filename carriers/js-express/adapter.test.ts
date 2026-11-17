@@ -377,6 +377,16 @@ describe('JS Express tracking adapter', () => {
     }
   });
 
+  it("reads Canada Post's records abroad, relayed after JS Express's own acceptance, and a transfer station as transit", () => {
+    for (const description of [
+      'International item mailed in originating country', 'International item processed in originating country',
+      'International item has left originating country and is en route to Canada', '中转站转运中',
+    ]) {
+      expect(jsExpressStage(description, 'OIT'), description).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+      expect(statusMapAnswer({ carrier: 'js-express', providerCode: 'OIT', description }), description).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    }
+  });
+
   it("reads FedEx's status between its facilities on the line it delivers", () => {
     expect(jsExpressStage('On the way', 'OIT')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     expect(statusMapAnswer({ carrier: 'js-express', providerCode: 'OIT', description: 'On the way' })).toEqual({ kind: 'mapped', stage: 'in_transit' });
