@@ -9,6 +9,8 @@ const codes: Record<string, ClassifiedStatus> = {
   'BDI/01': { status: 'delivered', stage: 'delivered' },
   'BDE/10': { status: 'exception', stage: 'failed_attempt' },
   'BDE/20': { status: 'exception', stage: 'failed_attempt' },
+  // The postman found no such address on the delivery run.
+  'BDE/99': { status: 'exception', stage: 'failed_attempt' },
   'BDE/23': { status: 'exception', stage: 'returned' },
   'BDE/34': { status: 'exception', stage: 'exception' },
   'BDE/47': { status: 'exception', stage: 'exception' },
@@ -23,6 +25,8 @@ const codes: Record<string, ClassifiedStatus> = {
   'FC/82': { status: 'pending', stage: 'registered' },
   // A missorted item Correios has caught and will forward again.
   'FC/03': { status: 'in_transit', stage: 'in_transit' },
+  // A unit found the address wrong before any delivery run: an address problem, not an attempt.
+  'FC/04': { status: 'exception', stage: 'exception' },
   'DO/01': { status: 'in_transit', stage: 'in_transit' },
   'RO/01': { status: 'in_transit', stage: 'in_transit' },
   'PAR/10': { status: 'in_transit', stage: 'in_transit' },

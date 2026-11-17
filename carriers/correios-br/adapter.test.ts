@@ -48,7 +48,7 @@ describe('Correios parser', () => {
     expect(result.events?.[5]!.stage).toBe('in_transit');
     expect(JSON.stringify(result)).not.toContain('PRIVATE_SYNTHETIC');
     for (const row of statuses.entries) expect((row.code ? classifyCorreiosStatus(row.code) : classifyCorreiosWording(row.wording))?.stage, row.wording).toBe(row.stage);
-    expect(classifyCorreiosStatus('BDE/99')).toBeUndefined();
+    expect(classifyCorreiosStatus('BDE/98')).toBeUndefined();
   });
 
   it('reads a universal provider\'s copy by the wording Correios gives a recorded code', () => {
@@ -57,7 +57,7 @@ describe('Correios parser', () => {
     expect(answer(null, 'Objeto recebido na unidade de exportação no país de origem')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer(null, 'Objeto entregue ao destinatário')).toEqual({ kind: 'mapped', stage: 'delivered' });
     // Correios's own code decides, even an unrecorded one.
-    expect(answer('BDE/99', 'Objeto postado')).toEqual({ kind: 'unknown' });
+    expect(answer('BDE/98', 'Objeto postado')).toEqual({ kind: 'unknown' });
     expect(answer(null, 'Synthetic wording')).toEqual({ kind: 'unknown' });
     // A wording Correios documents without a code reads alike in a copy and under a code not recorded.
     expect(answer(null, 'Aguardando pagamento')).toEqual({ kind: 'mapped', stage: 'customs' });
@@ -114,11 +114,11 @@ describe('Correios parser', () => {
 
   it('keeps newest unknown, malformed and missing clocks before older delivery scans', () => {
     for (const clock of [null, { date: 'Not supplied' }, { date: '2026-02-30 15:00:00.000000', timezone_type: 3, timezone: 'America/Sao_Paulo' }]) {
-      const result = parseCorreios({ ...fixture, eventos: [scan('BDE', '99', 'New unmapped scan', clock), ...fixture.eventos] }, NUMBER);
+      const result = parseCorreios({ ...fixture, eventos: [scan('BDE', '98', 'New unmapped scan', clock), ...fixture.eventos] }, NUMBER);
       expect(result).toMatchObject({ status: 'unknown', last_status_text: 'New unmapped scan', last_update: null });
       expect(result.current_stage).toBeUndefined();
       expect(result.delivered_at).toBeUndefined();
-      expect(result.events?.[0]!.provider_code).toBe('BDE/99');
+      expect(result.events?.[0]!.provider_code).toBe('BDE/98');
       expect(result.events?.[0]!.time).toBeUndefined();
       if (clock?.date) expect(result.events?.[0]!.provider_time_text).toBe(clock.date);
     }
@@ -145,6 +145,8 @@ describe('Correios parser', () => {
       ['OEC', '09', 'Objeto saiu para entrega ao remetente', 'exception', 'returned'],
       ['PAR', '24', 'Devolução determinada pela autoridade competente', 'exception', 'returned'],
       ['BDE', '20', 'Objeto não entregue - carteiro não atendido', 'exception', 'failed_attempt'],
+      ['BDE', '99', 'Objeto não entregue - Endereço inexistente', 'exception', 'failed_attempt'],
+      ['FC', '04', 'Objeto não entregue - endereço incorreto', 'exception', 'exception'],
       ['LDI', '02', 'Objeto aguardando retirada na Caixa Postal', 'in_transit', 'ready_for_pickup'],
       ['LDI', '01', 'Objeto aguardando retirada no endereço indicado', 'in_transit', 'ready_for_pickup'],
       ['BDI', '01', 'Objeto entregue ao destinatário', 'delivered', 'delivered'],
