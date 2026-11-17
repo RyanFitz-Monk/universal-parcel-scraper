@@ -50,7 +50,10 @@ UPS for exports to North America. Tracked through the lookup its tracking page m
 
 Nova Global's own express waybills end in NPG. Archived lookups on its tracker show two
 letters, nine to sixteen digits and NPG, with NP, WB, OG and YW in front. Rule nova-global-1
-claims that shape with high confidence because no other carrier ends its numbers with NPG.
+claims that shape with high confidence because no other carrier ends its numbers with NPG. A
+shop's orders it carries take five letters, ten digits and NPG: its tracker answers iHerb's with
+their history, naming the shop. The adapter takes them; no rule claims them, since no public
+sample shows one.
 
 ## Links
 

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
+import { InvalidInputError } from '../../core/errors/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { createTracker } from '../../facade/index.js';
 import { adapter, NOVA_GLOBAL_API, NovaGlobalTracker } from './adapter.js';
@@ -252,6 +253,12 @@ describe('Nova Global numbers', () => {
       expect(detectCarrierMatch(number), number).toMatchObject({ carrier: 'nova-global', confidence: 'high' });
       expect(normalizeNovaGlobalNumber(number)).toBe(number);
     }
+  });
+
+  it("takes a shop's order of five letters, ten digits and NPG", () => {
+    // Synthetic, in the layout of the iHerb orders Nova Global's tracker answers.
+    expect(normalizeNovaGlobalNumber('abcde 00000 00001 npg')).toBe('ABCDE0000000001NPG');
+    for (const number of ['ABCDE000000001NPG', 'ABCDEF0000000001NPG']) expect(() => normalizeNovaGlobalNumber(number)).toThrow(InvalidInputError);
   });
 });
 
