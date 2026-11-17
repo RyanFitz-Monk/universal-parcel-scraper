@@ -29,6 +29,9 @@ const WORDINGS: ReadonlyMap<string, Stage> = new Map(ENTRIES.filter((entry) => !
 const PATTERNS: readonly [RegExp, Stage][] = [
   [/^[a-z0-9]{1,12}[，,] ?申报过港中$/, 'in_transit'],
   [/^(?:二程)?预计\d{1,2}号的航班$/, 'in_transit'],
+  // The partner's sort and departure in China after its collection, naming the facility's town.
+  [/^arrived at sort facility [a-z][a-z .-]{1,60}$/, 'in_transit'],
+  [/^departed facility in [a-z][a-z .-]{1,60}$/, 'in_transit'],
   // The Italian last mile's return of a parcel it could not deliver, whatever the reason it names:
   // on its way back, not yet with the sender.
   [/^back to sender for reason: \S/, 'exception'],

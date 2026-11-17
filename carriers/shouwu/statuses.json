@@ -173,6 +173,22 @@
       "note": "Shouwu's partner collecting the parcel from the seller, the first scan after the order data."
     },
     {
+      "wording": "Arrived at Sort Facility SHENZHEN",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The partner's sort in China after its collection. Its pattern covers any facility's town."
+    },
+    {
+      "wording": "Departed Facility in SHENZHEN",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The partner's departure from its sort facility in China. Its pattern covers any facility's town."
+    },
+    {
       "wording": "TRNSIT HUB",
       "stage": "in_transit",
       "language": "en",

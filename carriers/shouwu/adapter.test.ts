@@ -489,7 +489,9 @@ describe('Shouwu International status vocabulary', () => {
         .toEqual({ kind: 'mapped', stage: entry.stage });
     }
     // Shouwu's rows on a batch or a flight's day read alike whatever the batch or the day.
-    for (const wording of ['0927A，申报过港中', '1101B,申报过港中', '预计3号的航班', '二程预计27号的航班']) {
+    for (const wording of ['0927A，申报过港中', '1101B,申报过港中', '预计3号的航班', '二程预计27号的航班',
+      // And the partner's sort and departure in China, whatever the facility's town.
+      'Arrived at Sort Facility GUANGZHOU', 'Departed Facility in HONG KONG']) {
       expect(shouwuStage(wording), wording).toEqual({ stage: 'in_transit', source: 'carrier_map' });
       expect(statusMapAnswer({ carrier: 'shouwu', providerCode: null, description: wording }), wording).toEqual({ kind: 'mapped', stage: 'in_transit' });
     }
