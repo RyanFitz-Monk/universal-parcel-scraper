@@ -251,6 +251,9 @@ function sourceEventStage(description: string, includeBroadMovement = true): Sta
   // or delivery without making either the event's stage.
   if (/^(?:the )?item (?:accepted from transport(?:[.!]?$|[.!]? this is a transportation marking\b)|has arrived to destination country(?:[.!]?$|[.!]? the item has reached (?:the target country|finland)\b)|is ready for delivery in destination country[.!]?$|in process in office of exchange(?:[.!]?$|[.!]? the item is being processed\b))/i.test(description)
     || /^(?:the )?item has been registered(?:[.!]?$| the item can be registered several times during delivery\b)/i.test(description)) return 'in_transit';
+  // Intelcom's round (300), as its own map reads the title, before an explanation that says the parcel
+  // "will be delivered today".
+  if (/^on our way to you!(?:\s|$)/i.test(description)) return 'out_for_delivery';
   // A delivery still to come is no movement; only the rest of the text counts.
   const reported = deliveryForecastRemainder(description);
   if (reported !== undefined) return reported ? sourceEventStage(reported, includeBroadMovement) : undefined;
@@ -367,6 +370,10 @@ function providerWordingStage(description: string): Stage | undefined {
   // the explanation providers relay after them.
   if (/^your package will be in good hands with (?:intelcom|dragonfly)!(?:\s|$)/i.test(value)) return 'registered';
   if (/^(?:intelcom|dragonfly) has your package!(?:\s|$)/i.test(value)) return 'accepted';
+  // Its station preparing the delivery (108 and 155) and the delivery (601), each with the explanation after
+  // it, as its own map reads the titles. The round (300) is read before delivery forecasts.
+  if (/^your package is being prepared for delivery!(?:\s|$)/i.test(value)) return 'in_transit';
+  if (/^hooray! your package is here[.!]?(?:\s|$)/i.test(value)) return 'delivered';
   // Spring GDS recording the parcel's data, as Postal Ninja relays it after the parcel was created there.
   if (/^information\. parcel recorded successfully[.!]?$/i.test(value)) return 'registered';
   // Cainiao's warehouse packing the order, between the order it received and the parcel leaving it, in
