@@ -750,9 +750,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   if (/^(?:receive item|item received) at (?:the )?office of exchange \((?:inb|otb)\)$|^send item to domestic location \(inb\)$/.test(text)
     || /^insert item into bag \((?:inb|otb)\)(?: and send item abroad)?$/.test(text)) return 'in_transit';
   // Correos de México's scans as ParcelsApp words them, read as its own map reads them: the posting at a post
-  // office ("Depósito en Oficina de Correos"), then an office receiving the item on its way and the item bagged for the
-  // destination's office. Not a delivery.
-  if (/^post office drop ?off$/.test(text)) return 'accepted';
+  // office ("Depósito en Oficina de Correos", which 17TRACK relays as it is), then an office receiving the item on
+  // its way and the item bagged for the destination's office. Not a delivery.
+  if (/^post office drop ?off$|^deposito en oficina de correos$/.test(text)) return 'accepted';
   if (/^received at (?:the |a )?post office$/.test(text)
     || /^(?:piece|item) deposited in a bag and sent to (?:the )?destination country(?:'s)? office$/.test(text)) return 'in_transit';
   // Sent on to another country: "Sent abroad".
