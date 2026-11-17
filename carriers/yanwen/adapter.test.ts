@@ -277,6 +277,14 @@ describe('Yanwen result projection', () => {
     expect(result).toMatchObject({ status: 'exception', current_stage: 'failed_attempt' });
   });
 
+  it("reads a postal leg's posting as a handover, its arrival awaiting customs, and its delivery office", () => {
+    for (const [wording, stage] of [['Item posted over the counter', 'in_transit'], ['International arrival - awaiting clearance', 'customs'],
+      ['Dispatch out to domestic location', 'in_transit'], ['Item arrived at delivery office', 'in_transit']] as const) {
+      expect(yanwenStatus(wording)?.stage, wording).toBe(stage);
+      expect(statusMap.stage(null, normalizeStatusWording(wording)), wording).toBe(stage);
+    }
+  });
+
   it("reads China Post's domestic scans as China Post's map does, its receipt as Yanwen's hand-over and the security check's return as an exception", () => {
     for (const [wording, stage] of [['中国邮政已收取邮件', 'in_transit'], ['邮件到达【示例市处理中心】', 'in_transit'],
       ['邮件离开【示例市处理中心】，正在发往下一站', 'in_transit'], ['【示例市处理中心】退回，备注:安检退回', 'exception'],

@@ -153,6 +153,13 @@ const WORDING = new Map<string, ClassifiedStatus>([
   ['TASK ASSIGNED', { status: 'in_transit', stage: 'in_transit' }],
   ['ORDER SORTED', { status: 'in_transit', stage: 'in_transit' }],
   ['First parcel scan along Poste Italiane’s logistic network', { status: 'in_transit', stage: 'in_transit' }],
+  // A postal leg after the pickup at the destination port: the partner posting the item at a post office, which is a
+  // handover rather than the parcel's acceptance, the destination post's arrival awaiting customs weeks later, and its
+  // dispatch to and arrival at the delivery office minutes before the delivery scan.
+  ['Item posted over the counter', { status: 'in_transit', stage: 'in_transit' }],
+  ['International arrival - awaiting clearance', { status: 'in_transit', stage: 'customs' }],
+  ['Dispatch out to domestic location', { status: 'in_transit', stage: 'in_transit' }],
+  ['Item arrived at delivery office', { status: 'in_transit', stage: 'in_transit' }],
 ]);
 
 // Yanwen files each parcel under a category its status filter names:

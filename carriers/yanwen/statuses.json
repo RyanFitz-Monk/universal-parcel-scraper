@@ -1038,6 +1038,38 @@
       "note": "Poste Italiane's first scan after Yanwen's batch handover at the destination port: a handover, not the parcel's acceptance."
     },
     {
+      "wording": "Item posted over the counter",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Two days after the pickup at the destination port: the partner posting the item at a post office, a handover rather than the parcel's acceptance."
+    },
+    {
+      "wording": "International arrival - awaiting clearance",
+      "language": "en",
+      "stage": "customs",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The destination post's arrival weeks later, waiting for customs."
+    },
+    {
+      "wording": "Dispatch out to domestic location",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The destination post sending the item on to its delivery office, minutes before the delivery scan."
+    },
+    {
+      "wording": "Item arrived at delivery office",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The destination post's delivery office receiving the item, a minute before the delivery scan."
+    },
+    {
       "code": "LM40",
       "stage": "delivered",
       "confirmedBy": "live",
