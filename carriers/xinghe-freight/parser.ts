@@ -10,5 +10,5 @@ export const PROVIDER = 'Xinghe Freight';
  */
 export const XINGHE_FREIGHT: HualeiTenant = {
   carrier: 'xinghe-freight', provider: PROVIDER, origin: GZYL_ORIGIN, stage: xingheFreightStage, split: splitGzylRow,
-  scriptedDelivery: true,
+  scriptedDelivery: true, oneBatch: true,
 };

@@ -189,7 +189,10 @@ A carrier that keeps other rows names those clocks in the result's `written_ahea
 `fillPartialAnswer` sets a fallback's copies of them aside before comparing histories. The
 rows themselves stay in the carrier's words as `planned_events` on the result, or
 `plannedEvents` on the error (`plannedEventsOf`), and a fallback that wins keeps them beside
-its scans. They are steps the carrier announced, not scans: hosts may show them apart.
+its scans. They are steps the carrier announced, not scans: hosts may show them apart. A
+provider's copies of a carrier that writes a record's whole feed as one script carry no
+creation times: every one but the order's registration is set aside as the provider's answer
+is read, and an answer left with nothing has no history (`written_ahead`).
 An answer without history can name the hand-over in the error's `deliveryCarrier` and
 `deliveryTrackingNumber`, as a result's `delivery_carrier` and `delivery_tracking_number` would:
 a record can name the delivery carrier's number before any scan, or after it drops its own rows

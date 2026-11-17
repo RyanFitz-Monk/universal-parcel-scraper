@@ -100,6 +100,12 @@ export interface HualeiTenant {
    */
   readonly scriptedDelivery?: true;
   /**
+   * The tenant writes a record's whole feed at once, on Beijing's clock, as a script (`ONE_BATCH_SCRIPTS`): in a
+   * second in which the platform wrote a row more than half an hour before its own clock, every row but the
+   * order's registration is the script's, however soon its clock.
+   */
+  readonly oneBatch?: true;
+  /**
    * The code of the tenant's origin warehouse departure. The parcel leaves it before any delivery,
    * so such a row dated a day or more after a delivery row is a stray written late, not movement,
    * and goes.
@@ -132,9 +138,12 @@ const CLOCK = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/;
 // row is the same script's when it was written more than six hours before its own clock, on
 // whichever clock it is read. On Beijing's clock no destination's lead applies: there the six
 // hours keep the rows a script dates within hours of its writing, GZYL's order row and
-// Meiteshun's collection, which a shorter margin would hold back with the rest.
+// Meiteshun's collection, which a shorter margin would hold back with the rest. A tenant whose
+// whole feed is the script (`oneBatch`) keeps only the order's registration from it: half an hour
+// ahead of its writing is enough to tell its second from a scan's.
 const WRITTEN_AHEAD_MS = 12 * 3_600_000;
 const SCRIPT_BATCH_MS = 6 * 3_600_000;
+const ONE_BATCH_LEAD_MS = 30 * 60_000;
 // The kind of the rows the platform's custom track product (轨迹定制) writes to a script: they
 // can have a parcel abroad before it reaches the airport.
 const CUSTOM_TRACK = 'CO_C_CR';
@@ -258,6 +267,16 @@ function forecasts(rows: readonly HualeiRow[], clocks: readonly string[]): boole
     || script.has(row.written) && writtenAhead(row, clocks[index]!, SCRIPT_BATCH_MS));
 }
 
+/**
+ * The same for a tenant whose whole feed is the script (`oneBatch`): a row written more than twelve
+ * hours before its own clock, or in a second in which a row was written more than half an hour before
+ * its own, unless it registers the order.
+ */
+function oneBatchForecasts(rows: readonly HualeiRow[], clocks: readonly string[], registrations: readonly boolean[]): boolean[] {
+  const script = new Set(rows.filter((row, index) => writtenAhead(row, clocks[index]!, ONE_BATCH_LEAD_MS)).map((row) => row.written));
+  return rows.map((row, index) => writtenAhead(row, clocks[index]!) || !registrations[index] && script.has(row.written));
+}
+
 function stageOf(tenant: HualeiTenant, code: string, description: string): { stage: Stage; source: string } | undefined {
   const mapped = tenant.stage(code || null, normalizeStatusWording(description));
   if (mapped) return { stage: mapped, source: 'carrier_map' };
@@ -286,23 +305,27 @@ function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number,
   const held: { clock: string; index: number; step: PlannedEvent }[] = [];
   const kept: { clock: string; index: number; event: CarrierEvent; english?: string }[] = [];
   const clocks = rows.map((row) => wallClock(row.clock, tenant.provider));
+  const read = rows.map((row) => {
+    const parts = tenant.split?.(row.content, row.location) ?? row;
+    const place = hualeiPlace(parts.location);
+    const wording = hualeiWording(parts.content, parts.location);
+    const description = wording || place;
+    return { wording, description, location: wording ? place : '', staged: description ? stageOf(tenant, row.code, description) : undefined };
+  });
+  const forecast = tenant.oneBatch
+    ? oneBatchForecasts(rows, clocks, read.map(({ staged }) => staged?.stage === 'registered')) : forecasts(rows, clocks);
   // The page shows no creation times, so it cannot tell a script's delivery row from a scan: there
   // every delivery row of such a tenant is held back, as the track interface holds a script's.
-  const forecast = forecasts(rows, clocks);
   const scripted = tenant.scriptedDelivery === true && (page || forecast.some(Boolean));
   rows.forEach((row, index) => {
     const local = clocks[index]!;
     const placed = isoTime(local, HUALEI_ZONE)!;
     const reading = tenant.clock?.(row) ?? (tenant.wallClocks ? 'wall' : 'platform');
-    const parts = tenant.split?.(row.content, row.location) ?? row;
-    const place = hualeiPlace(parts.location);
-    const wording = hualeiWording(parts.content, parts.location);
-    const description = wording || place;
-    const location = wording ? place : '';
+    const { wording, description, location, staged } = read[index]!;
     const english = wording ? tenant.english?.(row.code || null, normalizeStatusWording(wording), wording) : undefined;
     // A row held back is named by its clock as the tenant reads it, and listed as a step at that same clock,
     // in the words a scan would show.
-    const hold = (staged = description ? stageOf(tenant, row.code, description) : undefined) => {
+    const hold = () => {
       const clock = reading === 'platform' ? placed.iso : local;
       ahead.add(clock);
       const step = plannedEvent({ ...(reading === 'platform' ? { time: clock } : { local_time: clock }), description: english ?? description,
@@ -318,9 +341,8 @@ function scans(rows: readonly HualeiRow[], tenant: HualeiTenant, readAt: number,
     const key = JSON.stringify([local, description, location, row.code]);
     if (seen.has(key)) return;
     seen.add(key);
-    const staged = stageOf(tenant, row.code, description);
     if (scripted && staged?.stage === 'delivered') {
-      hold(staged);
+      hold();
       return;
     }
     const written = writtenAt(row);

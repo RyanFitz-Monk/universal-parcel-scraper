@@ -111,7 +111,8 @@ describe('Hualei track interface', () => {
       for (const row of record.trackDetails) row.track_createdate = row.track_date;
       record.trackDetails.unshift({ ...airport(record), track_date: clock, track_createdate: written });
     });
-    const times = (payload: Reply) => parseHualeiTrack(payload, NUMBER, GZYL, READ_AT)!.events!
+    // On a tenant whose rows are written as they happen, as meso-global's DHL rows.
+    const times = (payload: Reply) => parseHualeiTrack(payload, NUMBER, { ...GZYL, oneBatch: undefined }, READ_AT)!.events!
       .filter((event) => event.description === 'Item arrives at destination airport').map((event) => event.time);
     expect(times(rewritten('2026-03-05 20:00:00'))).toEqual(['2026-03-04T14:40:05+08:00']);
     // Written before the first, the copy is the one kept.
@@ -134,7 +135,7 @@ describe('Hualei track interface', () => {
     expect(parseHualeiTrack(script(), NUMBER, GZYL, after)?.written_ahead).toEqual(expect.arrayContaining(['2026-03-06T15:10:42+08:00']));
     expect(parseHualeiTrack(fixture('track'), NUMBER, GZYL, after)).not.toHaveProperty('written_ahead');
     // Where the delivery row is no script's, it came with the delivery.
-    const unscripted = { ...GZYL, scriptedDelivery: undefined };
+    const unscripted = { ...GZYL, scriptedDelivery: undefined, oneBatch: undefined };
     expect(parseHualeiTrack(script('2026-03-07 18:30:00'), NUMBER, unscripted, after)).toMatchObject({ current_stage: 'delivered',
       events: [expect.objectContaining({ description: 'Delivered' }), expect.objectContaining({ description: 'Order information received' })] });
     // A destination clock up to twelve hours ahead of the platform's is still a scan written as it happened.
@@ -142,8 +143,10 @@ describe('Hualei track interface', () => {
     expect(parseHualeiTrack(script('2026-03-02 10:00:00'), NUMBER, unscripted, after)).toMatchObject({ current_stage: 'registered' });
     // A row written in the same second as the script, more than six hours before its own clock, is the script's too.
     const batch = edited((record) => { for (const row of record.trackDetails) row.track_createdate = '2026-03-01 12:00:00'; });
-    expect(() => parseHualeiTrack(batch, NUMBER, GZYL, after)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'written_ahead',
+    expect(() => parseHualeiTrack(batch, NUMBER, unscripted, after)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'written_ahead',
       writtenAhead: expect.arrayContaining(['2026-03-01T22:36:51+08:00']) }));
+    // A tenant whose whole feed is the script keeps the order's registration from it, unless written more than twelve hours ahead.
+    expect(parseHualeiTrack(batch, NUMBER, GZYL, after)?.events?.map((event) => event.description)).toEqual(['Order information received']);
     // Written alone, a row less than twelve hours before its own clock stands.
     const alone = edited((record) => { for (const row of record.trackDetails) row.track_createdate = ''; record.trackDetails.at(-1).track_createdate = '2026-03-01 12:00:00'; });
     expect(parseHualeiTrack(alone, NUMBER, GZYL, after)?.events).toHaveLength(7);
@@ -158,6 +161,45 @@ describe('Hualei track interface', () => {
     for (const unread of ['soon', 7, null]) {
       expect(parseHualeiTrack(edited((record) => { for (const row of record.trackDetails) row.track_createdate = unread; }), NUMBER, GZYL, after)?.events).toHaveLength(7);
     }
+  });
+
+  it('holds back every row of a one-batch script but the order’s registration, however soon its clock', () => {
+    const after = Date.parse('2026-03-10T00:00:00Z');
+    const descriptions = (payload: Reply, tenant = GZYL, readAt = after) => parseHualeiTrack(payload, NUMBER, tenant, readAt)?.events?.map((event) => event.description);
+    const scanned = { ...GZYL, oneBatch: undefined };
+    // The script written a day after the order's clock: the receiving row it dates three hours after its writing is the script's.
+    const late = edited((record) => { for (const row of record.trackDetails) row.track_createdate = '2026-03-02 12:00:00'; });
+    expect(descriptions(late)).toEqual(['Order information received']);
+    expect(parseHualeiTrack(late, NUMBER, GZYL, after)).toMatchObject({ current_stage: 'registered',
+      written_ahead: expect.arrayContaining(['2026-03-02T15:07:14+08:00']),
+      planned_events: expect.arrayContaining([expect.objectContaining({ description: 'Arrive at the cross border receiving point' })]) });
+    expect(descriptions(late, XINGHE_FREIGHT)).toEqual(['Order information received']);
+    // A tenant that writes its scans as they happen keeps a row written less than six hours ahead.
+    expect(descriptions(late, scanned)).toEqual(['Arrive at the cross border receiving point', 'Order information received']);
+    // A script with no registration row has nothing to show, its first row three hours ahead of its writing included.
+    const unregistered = edited((record) => {
+      for (const row of record.trackDetails) row.track_createdate = '2026-03-01 19:30:00';
+      record.trackDetails.at(-1).track_content = 'Sample Processing Center has received it';
+    });
+    expect(() => parseHualeiTrack(unregistered, NUMBER, GZYL, after)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'written_ahead',
+      writtenAhead: expect.arrayContaining(['2026-03-01T22:36:51+08:00']) }));
+    // Before any row of the script is twelve hours ahead, its second is known by a row half an hour ahead.
+    const fresh = edited((record) => {
+      record.trackDetails = record.trackDetails.slice(-2);
+      for (const row of record.trackDetails) row.track_createdate = '2026-03-02 14:00:00';
+    });
+    expect(descriptions(fresh, GZYL, Date.parse('2026-03-02T08:00:00Z'))).toEqual(['Order information received']);
+    expect(descriptions(fresh, scanned, Date.parse('2026-03-02T08:00:00Z'))).toEqual(['Arrive at the cross border receiving point', 'Order information received']);
+    // A second whose rows are not ahead of their clocks is no script's: rows written later, as they happened, stay.
+    const followed = edited((record) => {
+      for (const row of record.trackDetails) row.track_createdate = row.track_date;
+      for (const row of record.trackDetails.slice(-2)) row.track_createdate = '2026-03-02 14:00:00';
+    });
+    expect(descriptions(followed)).toEqual(['The import customs keep it for inspection', 'local carrier Agent Import customs clearance', 'Item arrives at destination airport',
+      'Departing from the airport', 'Goods leave the operation center', 'Order information received']);
+    expect(descriptions(fixture('track'))).toHaveLength(7);
+    // A creation time it cannot read is no evidence either way.
+    expect(descriptions(edited((record) => { for (const row of record.trackDetails) row.track_createdate = ''; }))).toHaveLength(7);
   });
 
   it("holds back the delivery row GZYL's script ends in, written on its day, and names its clock", () => {

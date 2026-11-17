@@ -28,10 +28,12 @@ export function splitGzylRow(content: string, location: string): { content: stri
 /**
  * GZYL's scripts end in a delivery row the platform writes in an evening batch, the day after the
  * script's last row and at Beijing's office hours whatever the destination: readers who got no
- * parcel marked it wrong, so it is held back with the rows written ahead.
+ * parcel marked it wrong, so it is held back with the rows written ahead. The rest of a script is
+ * written at once, the order's registration with it, and no later scan followed one: every row of
+ * that batch but the registration is held back too (`oneBatch`).
  */
 export const GZYL: HualeiTenant = {
-  carrier: 'gzyl', provider: PROVIDER, origin: GZYL_ORIGIN, stage: gzylStage, split: splitGzylRow, scriptedDelivery: true,
+  carrier: 'gzyl', provider: PROVIDER, origin: GZYL_ORIGIN, stage: gzylStage, split: splitGzylRow, scriptedDelivery: true, oneBatch: true,
 };
 
 export const normalizeGzylNumber = (raw: string): string => normalizeHualeiNumber(raw, PROVIDER);

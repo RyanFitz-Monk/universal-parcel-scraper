@@ -38,6 +38,7 @@ import { adapter as track123Adapter } from './track123/adapter.js';
 import { adapter as upuAdapter } from './upu/adapter.js';
 import { numberOf, type UniversalSource as Source } from './shared/result.js';
 import { withScopedWording } from './shared/scoped.js';
+import { withoutScriptCopies } from './shared/scripts.js';
 
 export { parse17TrackResponse, SeventeenTrackLookupError, SeventeenTrackNoHistoryError, SeventeenTrackQuotaError, SeventeenTrackVerificationError } from './seventeentrack/adapter.js';
 export { parseParcelsAppHtml, parseParcelsAppResponse } from './parcelsapp/adapter.js';
@@ -200,7 +201,7 @@ export class UniversalTracker {
     if (number.length <= SHORT_NUMBER_LENGTH && !carriersParcel(result, carrier!, number)) {
       throw new NoHistoryError(source, `${source} names another carrier, or none, for a number this short`, { reason: 'unattributed_history' });
     }
-    return readLateRegistrations(withoutRepeatedScans(withoutMinuteCopies(withScopedWording(result, source))));
+    return readLateRegistrations(withoutRepeatedScans(withoutMinuteCopies(withoutScriptCopies(withScopedWording(result, source), source))));
   }
 
   /** One provider adapter, built from this tracker's environment. */

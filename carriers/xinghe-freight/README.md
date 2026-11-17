@@ -21,7 +21,9 @@ adapter is GZYL's with this carrier's id: the same requests, steps and not-found
   Kong processing centre's acceptance with its city in brackets; universal providers relay the
   same rows. GZYL's status map reads them, and its splitting of a town written after a wording
   gives the place.
-- GZYL's rows written ahead, and the delivery row its script ends in, are held back here too.
+- GZYL's rows written ahead, and the delivery row its script ends in, are held back here too, as
+  is every row written with the script but the order's registration, and a universal provider's
+  copies of them.
 - A not-found leaves the enabled universal providers to answer.
 
 ## Limitations
