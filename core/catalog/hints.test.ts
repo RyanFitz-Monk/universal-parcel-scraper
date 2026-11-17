@@ -92,6 +92,7 @@ describe('national postal lookup candidates', () => {
     ['IS', 'posturinn'], ['Iceland', 'posturinn'],
     ['KE', 'posta-kenya'], ['Kenya', 'posta-kenya'],
     ['UY', 'correo-uruguayo'], ['Uruguay', 'correo-uruguayo'],
+    ['CO', '4-72'], ['Colombia', '4-72'],
     ['FO', 'posta-faroe'], ['Faroe Islands', 'posta-faroe'],
     ['SV', 'correos-el-salvador'], ['El Salvador', 'correos-el-salvador'],
     ['IE', 'an-post'], ['Ireland', 'an-post'], ['BE', 'bpost'], ['Belgium', 'bpost'],

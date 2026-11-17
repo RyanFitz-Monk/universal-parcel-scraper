@@ -43,7 +43,8 @@ other posts send to Colombia, through the two requests its tracking page makes.
 
 4-72's guías are UPU S10 numbers with the `CO` suffix, and it also tracks inbound S10 items
 from other posts. Generic postal detection keeps S10 numbers, and a code ending `CO` with a
-valid check digit only suggests 4-72, which recognition asks first.
+valid check digit only suggests 4-72, which recognition asks first. Mail from abroad reaches
+4-72 when a caller names it, or as the hand-off for an S10 item from abroad bound for Colombia.
 
 ## Links
 
