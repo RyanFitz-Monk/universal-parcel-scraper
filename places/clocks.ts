@@ -23,9 +23,11 @@ const WALL_CLOCK = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/;
 
 const text = (value: unknown): string => typeof value === 'string' ? value.trim() : '';
 // Wording that says the parcel came off a crossing: it landed, reached its destination or
-// an import office, or arrived in the country. Not a forecast, nor the country of origin.
+// an import office, or arrived in the country. Not a forecast, nor the country of origin, nor a
+// flight that took off and awaits its arrival (HuaHan's "航班，待抵达。—The flight has taken off and
+// is awaiting arrival", written in China).
 const LANDED = /\b(?:landed|landing|import(?:ed)?|inward)\b|\bflight\b.*\barriv|\barriv(?:e|ed|es|al)\b.*\b(?:destination|clearance port|discharge port|in country)\b|到达境外|寄达|目的地|目的国|进口|落地/i;
-const NOT_LANDED = /\b(?:estimated|expected|scheduled|planned|eta|will arrive|origin|export)\b|预计|出口|始发/i;
+const NOT_LANDED = /\b(?:estimated|expected|scheduled|planned|eta|will arrive|origin|export)\b|\bawait(?:s|ing)?(?: the| its)? arrival\b|\b(?:taken|took|takes) off\b|预计|出口|始发|待抵达|起飞/i;
 const landed = (event: CarrierEvent): boolean => {
   const description = text(event.description);
   return LANDED.test(description) && !NOT_LANDED.test(description);

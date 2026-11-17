@@ -202,6 +202,21 @@ describe('dateLocalClocks', () => {
     expect(scans().map((event) => event![1])).toEqual(['Asia/Shanghai', 'Asia/Shanghai', 'Asia/Shanghai']);
   });
 
+  it('keeps a flight that took off and awaits its arrival on the clock of the leg it left', () => {
+    // HuaHan's US line in its words, a synthetic history: the takeoff is no landing; the arrival is.
+    const result = dateLocalClocks('huahan', { status: 'in_transit', destination_country: 'US', events: [
+      { local_time: '2026-11-04T02:27:21', description: 'Departed from origin facility', location: 'Shenzhen' },
+      { local_time: '2026-11-08T22:40:00', description: '预计10号航班。—Departed from warehouse & Outbound customs declaration（in progress）' },
+      { local_time: '2026-11-10T22:33:00', description: '航班，待抵达。—The flight has taken off and is awaiting arrival' },
+      { local_time: '2026-11-12T10:13:00', description: '航班已抵达，待拆板。—The flight has arrived and is awaiting unloading' },
+    ] });
+    expect(result.events!.map(dated).slice(1)).toEqual([
+      ['2026-11-08T22:40:00+08:00', 'Asia/Shanghai', 'neighbour'],
+      ['2026-11-10T22:33:00+08:00', 'Asia/Shanghai', 'neighbour'],
+      ['2026-11-12T10:13:00-05:00', 'America/New_York', 'destination'],
+    ]);
+  });
+
   it('dates a scan filed where the parcel was not on the clock of the office that filed it, and lends that clock to no other', () => {
     // The label registered in the United States before the parcel leaves China, newest first.
     const result = dateLocalClocks('jcex', { status: 'in_transit', destination_country: 'US', events: [
