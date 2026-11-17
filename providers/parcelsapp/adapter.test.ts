@@ -3166,6 +3166,17 @@ describe('ParcelsApp result parsing', () => {
     ]);
   });
 
+  it("leaves out the markup of a relayed label and keeps the text it marks", () => {
+    // Bring Denmark's hand-in links the parcel shop it names; ParcelsApp relays the link as HTML.
+    const result = parseParcelsAppResponse({ carriers: ['Bring'], originCode: 'DK', destinationCode: 'DK', states: [{
+      date: '2026-11-13T17:43:18Z', carrier: 0, location: 'Example Town',
+      status: 'Shipment has been handed in to <a title="see where you may find Example parcel shop and kiosk" '
+        + 'href="https://www.example.com/shop?id=1" >Example parcel shop and kiosk</a>.',
+    }] }, number, identity());
+    expect(result.events?.[0]).toMatchObject({ description: 'Shipment has been handed in to Example parcel shop and kiosk.', stage: 'accepted' });
+    expect(result.current_stage).toBe('accepted');
+  });
+
   it("reads Correos de México's copies of 4-72's scans in Colombia back to 4-72's clock", () => {
     // Correos de México shows 4-72's wall clock as UTC on Mexico City's clock: its arrival and customs inspection
     // came six hours before UPU's copies of them, which carry 4-72's digits.

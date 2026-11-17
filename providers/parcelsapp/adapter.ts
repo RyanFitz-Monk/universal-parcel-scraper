@@ -2156,12 +2156,18 @@ function guessedAhead(event: CarrierEvent, location: string, zone: string | null
 const PEKAES_SUMMARY = /^transferred data$/i;
 const summaryRow = (name: unknown, status: string) => nameKey(name) === 'pekaes' && PEKAES_SUMMARY.test(status);
 
+// An HTML tag: Bring Denmark's label links the parcel shop it names, which ParcelsApp relays as markup.
+const MARKUP = /<\/?[a-z][a-z0-9]*(?:\s[^<>]*)?\/?>/gi;
+
 /**
  * ParcelsApp relays some carriers' labels twice over, TIPSA's as
  * "ENTREGADOENTREGADO". Only a label made of two identical halves is collapsed.
+ * A label's markup is left out and the text it marks kept.
  */
 function relayedLabel(value: unknown): string {
-  const label = typeof value === 'string' ? value.trim() : '';
+  const text = typeof value === 'string' ? value : '';
+  const unmarked = text.replace(MARKUP, '');
+  const label = (unmarked === text ? text : unmarked.replace(/\s+/g, ' ')).trim();
   const half = label.length / 2;
   return Number.isInteger(half) && label.slice(0, half) === label.slice(half) ? label.slice(0, half) : label;
 }
