@@ -43,8 +43,9 @@ destination's, the clearance fell after the hand-over TopYou scans next, or afte
 first found it, and the arrival in the destination country came after the lookup that found it,
 hours after 17TRACK's and ParcelsApp's copies of it. A reply with no
 scans and no destination is the page's "查询不到" (not found); one with a destination and no scans
-is an order announced but not received, and `success: "false"` is the page's "暂无轨迹信息" (no
-tracking yet): both are known numbers without history.
+is an order announced but not received, and the number's own entry with `success: "false"` is the
+page's "暂无轨迹信息" (no tracking yet): both are known numbers without history. A reply whose
+envelope says `success` is false did not complete the lookup and is inconclusive.
 
 A scan's wording in [statuses.json](statuses.json) gives its stage first; a delivered (30) or
 returned (40) code settles it next, then the shared wording rules, then the code. Code 15 covers
@@ -57,11 +58,12 @@ own map stages the sentence. DPD's scans in Austria come in DPD Austria's Englis
 its notice that a parcel left at a Pickup parcelshop was not collected, a problem before DPD sends
 it back. On a line a post delivers, the first-mile warehouse's outbound scan
 ends with ", Lastmile Number:" and the post's number, which the wording shown leaves aside: the
-result gives the number as the hand-off. The tracker's
+result gives it as the hand-off when the reply has no `transferNo`. The tracker's
 summary code settles a delivered or returned parcel.
 
 TopYou's own scans name the destination country even at the origin airport, so a place that is
-only countries, by name, code or both ("France,FRA"), is left out of them. A wording loses a closing "of" whose country the tracker left
+only countries, by name, code or both ("France,FRA", "PRT"), is left out of them. The destination
+can come by name or by a two- or three-letter code. A wording loses a closing "of" whose country the tracker left
 empty. `transferNo` is the delivery carrier's number, reported as `delivery_tracking_number`.
 `carrierCode` names TopYou's own line rather than that carrier (a parcel USPS delivered came under
 "DHL Paket"), so the adapter names no delivery carrier. The tracker also finds a parcel by its

@@ -6,7 +6,8 @@ import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { countryCode, explicitOffsetTime } from '../../core/time/index.js';
 import { clean, cleanScalar } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { isImileRelay, topyouStage, withoutLastmile } from './status.js';
+import { alpha3Country } from '../../places/alpha3.js';
+import { isImileRelay, lastmileNumber, topyouStage, withoutLastmile } from './status.js';
 
 export const PROVIDER = 'TopYou';
 // A long history is a few kilobytes.
@@ -73,8 +74,11 @@ function scanClock(row: Record<string, unknown>, description: string, imile: boo
   return zone ? { time: instant.iso } : { time: instant.iso, local_time: local, time_zone: OWN_ZONE, time_zone_basis: 'carrier' };
 }
 
-// A country's three-letter code, which TopYou writes after its name: "France,FRA".
+// A country's three-letter code, which TopYou writes after its name ("France,FRA") or alone ("PRT").
 const ALPHA3 = /^[A-Z]{3}$/;
+
+/** A country TopYou names by its name, its two-letter code or its three-letter one. */
+const namedCountry = (value: string): string | null => countryCode(value) ?? (ALPHA3.test(value) ? alpha3Country(value) : null);
 
 /**
  * A scan's place. TopYou's own scans name the destination country, the
@@ -84,7 +88,7 @@ const ALPHA3 = /^[A-Z]{3}$/;
 function place(row: Record<string, unknown>, own: boolean): string {
   const location = text(row, 'location', 120);
   const parts = location.split(',').map((part) => part.trim());
-  if (own && parts.some((part) => countryCode(part)) && parts.every((part) => countryCode(part) || ALPHA3.test(part))) return '';
+  if (own && parts.some((part) => namedCountry(part)) && parts.every((part) => countryCode(part) || ALPHA3.test(part))) return '';
   return location;
 }
 
@@ -153,8 +157,10 @@ export function parseTopyou(payload: unknown, raw: string): CarrierResult {
 
   const seen = new Set<string>();
   const scans: ReturnType<typeof projectRow>[] = [];
+  let lastmile: string | undefined;
   for (const row of rows) {
     if (!isRecord(row)) throw new SchemaError(PROVIDER, 'TopYou returned an invalid scan');
+    lastmile ??= lastmileNumber(text(row, 'record'));
     const scan = projectRow(row);
     if (seen.has(scan.key)) continue;
     seen.add(scan.key);
@@ -170,8 +176,9 @@ export function parseTopyou(payload: unknown, raw: string): CarrierResult {
   const stage = (summary ?? scanned?.stage) as Stage | undefined;
   const source = summary && summary !== scanned?.stage ? 'carrier_map' : scanned?.stage_source;
   const deliveredAt = stage === 'delivered' ? events.find((event) => event.stage === 'delivered')?.time : undefined;
-  const country = countryCode(destination);
-  const transfer = normalizeTrackingNumber(text(track, 'transferNo', 64)).toUpperCase();
+  const country = namedCountry(destination);
+  // The delivery carrier's number, else the one the first-mile warehouse's outbound scan names.
+  const transfer = normalizeTrackingNumber(text(track, 'transferNo', 64)).toUpperCase() || lastmile || '';
   const kilograms = weight(track);
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',

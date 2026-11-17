@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { sameInstantIdentityPolicy } from '../../core/catalog/eventIdentity.js';
+import { deliveryHandoff } from '../../core/catalog/handoff.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { detectCarrierMatch } from '../../core/detection/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
@@ -110,6 +111,11 @@ describe('TopYou HTTP adapter', () => {
     expect(policy.matches!({ ...stored, description: 'Outbound in sorting center', providerCode: '15' }, stored)).toBe(false);
     expect(policy.matches!({ ...stored, description: 'Outbound in sorting center' }, { ...stored, description: 'Outbound in sorting center' })).toBe(false);
     expect(topyouStage('10', 'Outbound in sorting center, Lastmile Number:LM000000006CN')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+    // Without the transfer number, the post's number on the outbound scan is the hand-off; a destination by its
+    // three-letter code is that country, whose post the hand-off asks.
+    const named = parseTopyou(changed('post-line', (track) => { track.transferNo = null; track.dCountry = 'POL'; }), 'TYZRZ0000000004YQ');
+    expect(named).toMatchObject({ destination_country: 'PL', delivery_tracking_number: 'LM000000005CN' });
+    expect(deliveryHandoff('topyou', 'TYZRZ0000000004YQ', named)).toMatchObject({ carrier: 'poczta-polska', number: 'LM000000005CN', basis: 'destination' });
   });
 
   it('keeps a relayed scan’s place that is only a country, and leaves it out of TopYou’s own', () => {
@@ -126,6 +132,13 @@ describe('TopYou HTTP adapter', () => {
     const namedPlaces = new Map(parseTopyou(named, 'TYZRZ0000000003YQ').events!.map((event) => [event.time ?? event.local_time, event.location ?? null]));
     expect(namedPlaces.get('2026-10-30T05:23:17Z')).toBe('France,FRA');
     expect(namedPlaces.get('2026-10-26T21:26:40+08:00')).toBeNull();
+    // Nor does a country's three-letter code alone.
+    const coded = changed('relayed-europe', (track) => {
+      for (const row of track.trackInfo!) row.location = 'PRT';
+    });
+    const codedPlaces = new Map(parseTopyou(coded, 'TYZRZ0000000003YQ').events!.map((event) => [event.time ?? event.local_time, event.location ?? null]));
+    expect(codedPlaces.get('2026-10-30T05:23:17Z')).toBe('PRT');
+    expect(codedPlaces.get('2026-10-26T21:26:40+08:00')).toBeNull();
   });
 
   it('reads iMile’s scans it relays stated +08:00 on UTC wall clocks, and TopYou’s own on China’s', () => {
