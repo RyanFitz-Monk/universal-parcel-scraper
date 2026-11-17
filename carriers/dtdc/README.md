@@ -1,13 +1,27 @@
 # DTDC
 
-Tracks shipments available in the official MyDTDC consumer feed.
+Tracks DTDC shipments through the official MyDTDC consumer feed, and through DTDC's
+tracking page when the feed fails.
 
 ## How it works
 
-One anonymous GET returns the current state and scan history. The returned
-consignment must contain the requested booking reference or waybill. Related
-forward and return scans stay on their own legs, and the current state remains
-a separate dated snapshot when it is absent from the scan list.
+The MyDTDC feed comes first: one anonymous GET returns the current state and scan
+history. The returned consignment must contain the requested booking reference or
+waybill. Related forward and return scans stay on their own legs, and the current
+state remains a separate dated snapshot when it is absent from the scan list.
+
+When the feed fails, the adapter asks the tracking page on www.dtdc.com as its script
+does. `GET /wp-json/custom/v1/generate-captcha` returns a key and a picture of six
+capital letters and digits, sealed with AES-GCM under a key the page gives every visitor.
+The shared text model reads the picture with a white margin, as the letters reach its
+sides, and `POST /wp-json/custom/v1/captcha/validate` exchanges the answer for a token. A
+refused or misread picture is replaced up to three times. `POST
+/wp-json/custom/v1/tracking/pull-details` with the token in `X-DTDC-Track-Token` returns a
+sealed payload for `POST /trackshipment`, whose page must name the requested waybill or
+reference. The page keeps a copy of the history for each of its states; the active one
+is read, with its current scan, since a delivery appears only there. Its clocks are India's.
+The page's "Shipment Details Not Found" notice, which repeats the number, is a missing
+shipment; a web page in place of a JSON reply is not.
 
 Return booking and movement keep active stages so later progress can be synced.
 Only delivery on the return leg completes the return; it does not set a recipient
@@ -38,9 +52,10 @@ The adapter does not ask it: the reply does not repeat the number, the notes car
 addresses and staff names, and the clocks name no zone. Deliveries abroad fall in working
 hours only when read as UTC.
 
-The tracking page on www.dtdc.com asks `POST /wp-json/custom/v1/domestic/track` and related routes
-with an `X-DTDC-Track-Token` header its CAPTCHA check issues; without one they answer HTTP 403
-"Security verification failed", so the adapter does not use them.
+The feed can answer every number with its generic failure for long periods. The tracking
+page shows no scan location, and a return travels under its own waybill, which the page
+links and the adapter does not follow. Pictures and lookups in quick succession get
+HTTP 403, which stays a challenge.
 
 ## Testing
 

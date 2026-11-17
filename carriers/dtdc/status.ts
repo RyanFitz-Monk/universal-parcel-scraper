@@ -12,13 +12,31 @@ const STATUS = new Map<string, ClassifiedStatus>([
   ['Out For Delivery', { status: 'out_for_delivery', stage: 'out_for_delivery' }],
   ['Delivered', { status: 'delivered', stage: 'delivered' }],
   ['RTO Booked', { status: 'exception', stage: 'exception' }],
+  // The tracking page's labels.
+  ['Pickup requested', { status: 'pending', stage: 'registered' }],
+  ['Pickup rescheduled', { status: 'pending', stage: 'registered' }],
+  ['Not picked', { status: 'pending', stage: 'registered' }],
+  ['On The Way', { status: 'in_transit', stage: 'in_transit' }],
+  ['At Processing Centre', { status: 'in_transit', stage: 'in_transit' }],
+  ['At Destination', { status: 'in_transit', stage: 'in_transit' }],
+  ['Undelivered', { status: 'exception', stage: 'failed_attempt' }],
+  ['Reattempt Initiated', { status: 'in_transit', stage: 'in_transit' }],
+  ['Return Approval awaited', { status: 'exception', stage: 'exception' }],
+  ['Return Initiated', { status: 'exception', stage: 'exception' }],
+  ['Return - Initiated', { status: 'exception', stage: 'exception' }],
 ]);
 
+const STAGE_BY_WORDING = new Map<string, Stage>([...STATUS].map(([label, status]) => [normalizeStatusWording(label), status.stage]));
+const STATUS_BY_WORDING = new Map([...STATUS].map(([label, status]) => [normalizeStatusWording(label), status]));
+// The page names the hub a parcel reaches or leaves: "Arrived at DELHI", "Dispatched from MATHURA".
+const HUB_MOVEMENT = /^(?:arrived at|dispatched from) \S/;
+
+/** A status label of the feed or the tracking page, in any case. */
 export function dtdcStatus(wording: string): ClassifiedStatus | undefined {
-  return STATUS.get(wording);
+  const normal = normalizeStatusWording(wording);
+  return STATUS_BY_WORDING.get(normal) ?? (HUB_MOVEMENT.test(normal) ? { status: 'in_transit', stage: 'in_transit' } : undefined);
 }
 
-const STAGE_BY_WORDING = new Map<string, Stage>([...STATUS].map(([label, status]) => [normalizeStatusWording(label), status.stage]));
 const DELIVERED = normalizeStatusWording('Delivered');
 
 /**

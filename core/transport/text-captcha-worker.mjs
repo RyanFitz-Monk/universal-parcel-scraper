@@ -9,6 +9,8 @@ const profiles = {
   'viettel-post': { width: 200, height: 50, format: 'png' },
   'chunghwa-post': { width: 162, height: 54, format: 'jpeg' },
   'ecms-express': { width: 200, height: 45, format: 'png', cropWidth: 145, characters: arithmeticCharacters },
+  // DTDC's letters reach the picture's sides, where the model drops them without a margin.
+  dtdc: { width: 180, height: 60, format: 'png', margin: 20 },
 };
 const profile = profiles[workerData?.profile ?? 'viettel-post'];
 
@@ -23,12 +25,15 @@ import { decodeTextCaptchaLogits } from './text-captcha-decode.mjs';
 async function solve(bytes) {
   if (!(bytes instanceof Uint8Array) || !bytes.length || bytes.length > 50_000) throw new Error('unsupported-image');
   if (!profile) throw new Error('unsupported-image');
-  const image = sharp(bytes, { limitInputPixels: 10_000, pages: 1, failOn: 'warning' });
+  const image = sharp(bytes, { limitInputPixels: profile.width * profile.height, pages: 1, failOn: 'warning' });
   const metadata = await image.metadata().catch(() => { throw new Error('unsupported-image'); });
   if (metadata.format !== profile.format || metadata.width !== profile.width || metadata.height !== profile.height || (metadata.pages ?? 1) !== 1) throw new Error('unsupported-image');
   // ECMS places the equals sign in the fourth column; it is not part of the expression.
   if (profile.cropWidth) image.extract({ left: 0, top: 0, width: profile.cropWidth, height: profile.height });
-  const pixels = await image.flatten({ background: '#ffffff' }).greyscale().resize(256, 64).raw().toBuffer();
+  // Sharp widens a picture after resizing it, so the margin is drawn first.
+  const framed = profile.margin ? sharp(await image.flatten({ background: '#ffffff' })
+    .extend({ left: profile.margin, right: profile.margin, background: '#ffffff' }).png().toBuffer()) : image;
+  const pixels = await framed.flatten({ background: '#ffffff' }).greyscale().resize(256, 64).raw().toBuffer();
   if (pixels.length !== 256 * 64) throw new Error('unsupported-image');
   if (!session) session = await ort.InferenceSession.create(new Uint8Array(await readFile(new URL('./text-captcha-model/captcha.onnx', import.meta.url))),
     { executionProviders: ['wasm'], graphOptimizationLevel: 'all', logSeverityLevel: 3 });

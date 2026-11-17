@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { parseTrackingInput } from '../../core/detection/index.js';
 import { normalizeCarrierResult } from '../../core/result/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
+import type { StepRecord } from '../../core/telemetry/index.js';
 import { adapter, DtdcTracker } from './adapter.js';
+import { parseDtdcPage } from './page.js';
 import { normalizeDtdcNumber, parseDtdc } from './parser.js';
 
 const NUMBER = 'N00000001';
@@ -170,11 +172,126 @@ describe('DTDC parser', () => {
   });
 });
 
+const FEED = 'https://ebookingbackend.dtdc.in/trackConsignment';
+// The tracking page's own picture key, the same for every visitor.
+const PICTURE_KEY = 'TlY5pUTfHG1cec/Ei4XNJNQb1tpoTvUx+9lqENUXegY='; // gitleaks:allow
+const scan = (label: string, time: string, line: string) => '<div class="timeline-item-middle success timeline-event-main"><div class="timeline-icon"></div>'
+  + `<div class="timeline-content-middle"><div class="timeline-header-middle"><span class="timeline-status-middle">${label}</span><span class="timeline-date-middle">${time}</span></div>`
+  + `<div class="timeline-description-middle">${line}</div></div></div>`;
+const current = (label: string, time: string, line: string) => '<div class="timeline-item success"><div class="timeline-icon"></div><div class="timeline-content"><div class="timeline-header">'
+  + `<span class="timeline-status">${label}</span><span class="timeline-date">${time}</span><span class="status current">Current</span></div><div class="timeline-description">${line} </div></div></div>`;
+const remark = (time: string, line: string) => '<div class="timeline-item-middle success duplicate-remark timeline-event-remark"><div class="timeline-icon"></div><div class="timeline-content-middle">'
+  + `<div class="timeline-description-middle">${line}</div><div class="timeline-header-middle timeline-header-remark"><span class="timeline-date-middle">${time}</span></div></div></div>`;
+const page = (timeline: string, { awb = NUMBER, active = 'active' } = {}) => '<!doctype html><html><body><div class="mainshipment-tracking"><div class="mainframe-shipment container-custom">'
+  + `<div class="tracking-header"><div class="awb-section"><span class="dtdc-text">DTDC</span><span class="awb-text"><i>AWB:</i> ${awb}</span></div>`
+  + '<div class="booking-info"><div class="booking-item"><div class="ref-label">Ref. No.</div><div class="ref-number">#SYNREF0001</div></div></div></div><div class="shipment-main">'
+  + `<div class="state-container" id="state-intransit"><div class="timeline">${scan('Booked', 'Aug 01, 2026 9:00AM', 'Stale copy')}</div></div>`
+  + `<div class="state-container ${active}" id="state-delivered"><div class="timeline" id="showHistory">${timeline}</div></div></div></div></div></body></html>`;
+const notFound = (echo: string) => '<!doctype html><html><body><div class="tracking-header"><div class="ref-number"></div></div><div class="shipment-not-found mt-4">'
+  + `<div class="notfound"><div class="shipment-not-found"><h3>Shipment Details Not Found</h3><p>Shipment details not found</p></div> : ${echo} </div></div></body></html>`;
+const delivered = () => page(current('Delivered', 'Aug 27, 2026 3:33PM', 'Delivered')
+  + scan('Out for Delivery', 'Aug 27, 2026 12:47PM', 'Shipment is out for Delivery') + remark('Aug 27, 2026 12:03PM', 'Received at Example Delivery Centre')
+  + '<div class="additional-events-batch" data-batch="1">' + scan('At Processing Centre', 'Aug 26, 2026 8:20AM', 'Undelivered due to')
+  + scan('Dispatched from EXAMPLE', 'Aug 25, 2026 10:28PM', 'On its way between EXAMPLE and SAMPLE') + scan('', 'Aug 25, 2026 9:00PM', 'Undelivered due to')
+  + scan('Picked up', 'Aug 25, 2026 4:46PM', 'Pick up done') + '</div>');
+
+describe('DTDC tracking page', () => {
+  it('reads the shown history with its current scan, remarks and later batches, on India\'s clock', () => {
+    const result = normalizeCarrierResult(parseDtdcPage(delivered(), NUMBER));
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', timezone: 'Asia/Kolkata',
+      last_status_text: 'Delivered', last_update: '2026-08-27T15:33:00+05:30', delivered_at: '2026-08-27T15:33:00+05:30' });
+    expect(result.events?.map(event => [event.description, event.stage])).toEqual([
+      ['Delivered', 'delivered'], ['Shipment is out for Delivery', 'out_for_delivery'], ['Received at Example Delivery Centre', undefined],
+      // The label goes first: this scan's line names an earlier failed delivery.
+      ['Undelivered due to', 'in_transit'], ['On its way between EXAMPLE and SAMPLE', 'in_transit'], ['Undelivered due to', undefined], ['Pick up done', 'accepted']]);
+    expect(JSON.stringify(result)).not.toContain('Stale copy');
+  });
+
+  it('keeps one copy of a current scan the list repeats', () => {
+    const line = 'Shipment return is initiated for EXAMPLE';
+    const result = parseDtdcPage(page(current('Return Initiated', 'Sep 28, 2026 11:49AM', line) + scan('Return - Initiated', 'Sep 28, 2026 11:49AM', line)
+      + scan('Undelivered', 'Sep 25, 2026 5:48PM', 'Undelivered due to ADDRESS INCOMPLETE OR WRONG')), NUMBER);
+    expect(result).toMatchObject({ status: 'exception', current_stage: 'exception', last_status_text: line });
+    expect(result.events?.map(event => event.stage)).toEqual(['exception', 'failed_attempt']);
+  });
+
+  it('binds the waybill or the reference, and reads a missing shipment only when the page names the number', () => {
+    expect(parseDtdcPage(delivered(), 'SYNREF0001').events).toHaveLength(7);
+    expect(() => parseDtdcPage(page(scan('Booked', 'Aug 01, 2026 9:00AM', 'Booked'), { awb: 'N00000002' }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    expect(() => parseDtdcPage(notFound(NUMBER), NUMBER)).toThrow(expect.objectContaining({ kind: 'not_found' }));
+    expect(() => parseDtdcPage(notFound('N00000002'), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    expect(() => parseDtdcPage(page(scan('Booked', 'Aug 01, 2026 9:00AM', 'Booked'), { active: '' }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    expect(() => parseDtdcPage(page(''), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    expect(() => parseDtdcPage(page(scan('Booked', 'Yesterday', 'Booked')), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+  });
+});
+
+/** A guest lookup on www.dtdc.com: a sealed picture, its check, the shipment lookup and the shipment page. */
+async function website(options: { answers?: string[]; accepted?: string; page?: string; opened?: unknown } = {}) {
+  const plain = new Uint8Array([137, 80, 78, 71, 1, 2, 3]);
+  const key = await crypto.subtle.importKey('raw', Buffer.from(PICTURE_KEY, 'base64'), { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = new Uint8Array(12).fill(7);
+  const sealed = Buffer.concat([iv, Buffer.from(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plain))]).toString('base64');
+  const answers = [...(options.answers ?? ['ABC123'])];
+  const solveCaptcha = vi.fn(async (bytes: Uint8Array) => { expect([...bytes]).toEqual([...plain]); return answers.shift() ?? ''; });
+  const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+    const target = String(url);
+    if (target.startsWith(FEED)) return new Response('Failure', { status: 400 });
+    if (target.startsWith('https://www.dtdc.com/wp-json/custom/v1/generate-captcha?t=')) {
+      return Response.json({ data: Buffer.from(JSON.stringify({ k: 'synthetic-key-0001', i: sealed })).toString('base64') });
+    }
+    if (target === 'https://www.dtdc.com/wp-json/custom/v1/captcha/validate') {
+      const { captchaKey, captchaValue } = JSON.parse(String(init?.body)) as Record<string, string>;
+      expect(captchaKey).toBe('synthetic-key-0001');
+      return Response.json(captchaValue === (options.accepted ?? 'ABC123') ? { success: true, token: 'synthetic.token-0001' } : { success: false, message: 'Invalid captcha' });
+    }
+    if (target === 'https://www.dtdc.com/wp-json/custom/v1/tracking/pull-details') {
+      expect(new Headers(init?.headers).get('X-DTDC-Track-Token')).toBe('synthetic.token-0001');
+      expect(JSON.parse(String(init?.body))).toEqual({ trackNumbers: [NUMBER] });
+      if (typeof options.opened === 'string') return new Response(options.opened, { headers: { 'Content-Type': 'text/html' } });
+      return Response.json(options.opened ?? { success: true, redirect: 'https://www.dtdc.com/trackshipment', payload: 'sealed_shipment-0001' });
+    }
+    if (target === 'https://www.dtdc.com/trackshipment') {
+      expect(String(init?.body)).toBe('d=sealed_shipment-0001');
+      return new Response(options.page ?? delivered(), { headers: { 'Content-Type': 'text/html' } });
+    }
+    throw new Error(`unexpected request ${target}`);
+  });
+  const steps: StepRecord[] = [];
+  const tracker = new DtdcTracker({ fetcher, solveCaptcha, recorder: { step: record => steps.push(record), lookup: () => undefined } });
+  return { fetcher, solveCaptcha, steps, track: () => tracker.fetch(NUMBER) };
+}
+
+describe('DTDC tracking page retrieval', () => {
+  it('opens the page with a read picture when the feed fails', async () => {
+    const lookup = await website({ answers: ['ABCD', 'XYZ789', 'ABC123'] });
+    await expect(lookup.track()).resolves.toMatchObject({ status: 'delivered', delivered_at: '2026-08-27T15:33:00+05:30' });
+    // A misread picture is not sent; a refused answer gets a fresh picture.
+    expect(lookup.solveCaptcha).toHaveBeenCalledTimes(3);
+    expect(lookup.fetcher.mock.calls.filter(([url]) => String(url).endsWith('/captcha/validate'))).toHaveLength(2);
+    expect(lookup.steps.map(step => [step.step, step.outcome])).toEqual([['direct', 'indeterminate'], ['website', 'ok']]);
+  });
+
+  it('says the picture check stopped it after three refused answers', async () => {
+    const lookup = await website({ answers: ['XYZ789', 'XYZ789', 'XYZ789', 'ABC123'] });
+    await expect(lookup.track()).rejects.toMatchObject({ kind: 'challenge' });
+    expect(lookup.solveCaptcha).toHaveBeenCalledTimes(3);
+  });
+
+  it('keeps a refused lookup, a moved page and a web page in place of JSON apart from parcel absence', async () => {
+    await expect((await website({ opened: { success: false, errorMessage: 'Failure' } })).track()).rejects.toMatchObject({ kind: 'indeterminate' });
+    await expect((await website({ opened: { success: true, redirect: 'https://example.com/trackshipment', payload: 'sealed_shipment-0001' } })).track())
+      .rejects.toMatchObject({ kind: 'schema' });
+    await expect((await website({ opened: '<!doctype html><title>Example</title>' })).track()).rejects.toMatchObject({ kind: 'indeterminate' });
+    await expect((await website({ page: notFound(NUMBER) })).track()).rejects.toMatchObject({ kind: 'not_found' });
+  });
+});
+
 describe('DTDC retrieval', () => {
   it('uses one anonymous bounded request for each lookup and preserves the environment seam', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => new Response(JSON.stringify(fixture())));
     const instance = adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
-    expect(instance.id).toBe('dtdc'); expect(instance.steps).toEqual(['direct']);
+    expect(instance.id).toBe('dtdc'); expect(instance.steps).toEqual(['direct', 'website']);
     expect(normalizeDtdcNumber('n-0000 0001')).toBe(NUMBER);
     await instance.track({ number: NUMBER }); await instance.track({ number: NUMBER });
     expect(fetcher).toHaveBeenCalledTimes(2);
@@ -194,10 +311,15 @@ describe('DTDC retrieval', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it.each([[400, 'indeterminate'], [401, 'challenge'], [403, 'challenge'], [404, 'transport'], [410, 'transport'], [429, 'rate_limited'], [503, 'maintenance']])('keeps HTTP %s separate from parcel absence', async (status, kind) => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response('Failure', { status: Number(status) }));
-    await expect(new DtdcTracker({ fetcher }).fetch(NUMBER)).rejects.toMatchObject({ kind });
-    expect(fetcher).toHaveBeenCalledTimes(1);
+  it.each([[400, 'indeterminate'], [401, 'challenge'], [403, 'challenge'], [404, 'transport'], [410, 'transport'], [429, 'rate_limited'], [503, 'maintenance']])('keeps the feed\'s HTTP %s separate from parcel absence', async (status, kind) => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async url => new Response('Failure', { status: String(url).startsWith(FEED) ? Number(status) : 503 }));
+    const steps: StepRecord[] = [];
+    // A rate limit or maintenance is not asked again on the tracking page, here under maintenance.
+    const final = ['rate_limited', 'maintenance'].includes(String(kind));
+    await expect(new DtdcTracker({ fetcher, recorder: { step: record => steps.push(record), lookup: () => undefined } }).fetch(NUMBER))
+      .rejects.toMatchObject({ kind: final ? kind : 'maintenance' });
+    expect(steps[0]).toMatchObject({ step: 'direct', outcome: kind });
+    expect(fetcher).toHaveBeenCalledTimes(final ? 1 : 2);
   });
 
   it('propagates cancellation, fractional deadlines and response limits', async () => {
@@ -209,7 +331,7 @@ describe('DTDC retrieval', () => {
       init?.signal?.throwIfAborted(); return new Response(JSON.stringify(fixture()));
     });
     await expect(new DtdcTracker({ fetcher: slow }).fetch(NUMBER, { budgetMs: 20.5 })).rejects.toThrow();
-    const oversized = vi.fn<typeof fetch>().mockResolvedValue(new Response('x'.repeat(1_000_001)));
+    const oversized = vi.fn<typeof fetch>().mockImplementation(async () => new Response('x'.repeat(1_000_001)));
     await expect(new DtdcTracker({ fetcher: oversized }).fetch(NUMBER)).rejects.toThrow('unexpectedly large');
   });
 });

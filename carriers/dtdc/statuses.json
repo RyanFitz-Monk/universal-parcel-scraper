@@ -60,6 +60,94 @@
       "language": "en",
       "stage": "exception",
       "confirmedBy": "live"
+    },
+    {
+      "wording": "Pickup requested",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The tracking page's label."
+    },
+    {
+      "wording": "Pickup rescheduled",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The tracking page's label."
+    },
+    {
+      "wording": "Not picked",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "A pickup that did not happen; the page's next label is another pickup."
+    },
+    {
+      "wording": "On The Way",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The tracking page's label."
+    },
+    {
+      "wording": "At Processing Centre",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The label stays read first: its line can still name an earlier failed delivery."
+    },
+    {
+      "wording": "At Destination",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The tracking page's label."
+    },
+    {
+      "wording": "Undelivered",
+      "language": "en",
+      "stage": "failed_attempt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The page's line gives the reason."
+    },
+    {
+      "wording": "Reattempt Initiated",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "A further delivery attempt is arranged after a failed one."
+    },
+    {
+      "wording": "Return Approval awaited",
+      "language": "en",
+      "stage": "exception",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The page's line asks the sender for instructions before a return."
+    },
+    {
+      "wording": "Return Initiated",
+      "language": "en",
+      "stage": "exception",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The return to the sender starts under its own waybill."
+    },
+    {
+      "wording": "Return - Initiated",
+      "language": "en",
+      "stage": "exception",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The return to the sender starts under its own waybill."
     }
   ]
 }
