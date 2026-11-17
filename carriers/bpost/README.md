@@ -34,7 +34,8 @@ twenty-two digits, selects bpost too.
 Scans on the way to a locker and at it name the locker `{{bboxRebrand}}`.
 bpost's tracker puts there the name of the item's `bboxRebrandCategory` from
 its translations, such as "bbox locker", and so does the adapter, in English.
-An item available at the locker is ready for pickup.
+An item available at the locker is ready for pickup. A locker out of order
+sends the item to a pick-up point the next working day, which stays in transit.
 
 The receiver's country code becomes `destination_country`. The sender's
 barcode becomes `international_tracking_number` only when it is a valid S10

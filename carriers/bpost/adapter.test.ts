@@ -6,6 +6,7 @@ import { adapter, BpostTracker } from './adapter.js';
 import { bpostPlaceName, normalizeBpostNumber, parseBpost } from './parser.js';
 import { sameInstantIdentityPolicy } from '../../app.js';
 import { classifyBpostStatus } from './status.js';
+import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { InvalidInputError } from '../../core/errors/index.js';
 
 const NUMBER = '000000000000000000000001';
@@ -218,6 +219,14 @@ describe('bpost direct history', () => {
     expect(parseBpost(locker, NUMBER).events?.[0]).toMatchObject({ description: "Item on it's way to Parcel Locker", stage: 'in_transit' });
     delete locker.items[0].bboxRebrandCategory;
     expect(parseBpost(locker, NUMBER).events?.[0]).toMatchObject({ description: "Item on it's way to parcel locker", stage: 'in_transit' });
+    // An out-of-order locker sends the item to a pick-up point the next working day.
+    locker.items[0].events[0].key.EN.description = '{{bboxRebrand}} defect : delivery next working day to a Pick-up point';
+    for (const category of ['bbox', 'parcelLocker', undefined]) {
+      locker.items[0].bboxRebrandCategory = category;
+      expect(parseBpost(locker, NUMBER)).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+    }
+    expect(statusMapAnswer({ carrier: 'bpost', description: 'bbox locker defect : delivery next working day to a Pick-up point' }))
+      .toMatchObject({ stage: 'in_transit' });
     locker.items[0].events[0].key.EN.description = 'Item available at the {{bboxRebrand}}';
     for (const [category, name] of [['bbox', 'bbox locker'], ['parcelLocker', 'Parcel Locker'], [undefined, 'parcel locker']] as const) {
       locker.items[0].bboxRebrandCategory = category;

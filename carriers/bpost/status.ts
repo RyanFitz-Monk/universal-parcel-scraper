@@ -17,6 +17,10 @@ const WORDINGS: Record<string, ClassifiedStatus> = {
   'Item available at the Parcel Locker': { status: 'in_transit', stage: 'ready_for_pickup' },
   'Item available at the bbox locker': { status: 'in_transit', stage: 'ready_for_pickup' },
   'Item available at the parcel locker': { status: 'in_transit', stage: 'ready_for_pickup' },
+  // The locker is out of order: the item goes to a pick-up point the next working day instead.
+  'bbox locker defect : delivery next working day to a Pick-up point': { status: 'in_transit', stage: 'in_transit' },
+  'Parcel Locker defect : delivery next working day to a Pick-up point': { status: 'in_transit', stage: 'in_transit' },
+  'parcel locker defect : delivery next working day to a Pick-up point': { status: 'in_transit', stage: 'in_transit' },
   "The postman's delivery round for your item has started": { status: 'out_for_delivery', stage: 'out_for_delivery' },
   // The round stopped before it reached the item, then a new delivery day set: a delay on
   // bpost's side, not an attempt at the door. The item waits for the next round.

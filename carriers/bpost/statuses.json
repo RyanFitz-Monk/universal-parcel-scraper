@@ -88,6 +88,14 @@
       "note": "The same scan for the parcelLocker category, named from bpost's tracker translations."
     },
     {
+      "wording": "bbox locker defect : delivery next working day to a Pick-up point",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "bpost's {{bboxRebrand}} defect, hours after the scan on its way to the locker: the locker is out of order and the item goes to a pick-up point the next working day."
+    },
+    {
       "wording": "The postman's delivery round for your item has started",
       "language": "en",
       "stage": "out_for_delivery",
