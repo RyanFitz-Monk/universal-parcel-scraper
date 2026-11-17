@@ -102,6 +102,11 @@ describe('Starlinks Global HTTP adapter', () => {
     }), PARCEL);
     expect(attempted).toMatchObject({ current_stage: 'failed_attempt', current_stage_source: 'carrier_map', last_status_text: 'Delivery Attempted at US' });
     expect(attempted.events![0]).not.toHaveProperty('location');
+    // The code the text appends after a place's own country does not move the place.
+    const appended = parseStarlinksGlobal(edited((parcel) => {
+      parcel.events[0] = { ...parcel.events[0], title: 'In Transit', description: 'Arrived at partner hub at VOORBEELD, ZUID-HOLLAND, NL, FR' };
+    }), PARCEL);
+    expect(appended.events![0]).toMatchObject({ location: 'VOORBEELD, ZUID-HOLLAND, NL' });
   });
 
   it('hands off only to a courier its link names, for the number in the link', () => {
@@ -254,6 +259,12 @@ describe('Starlinks Global status vocabulary', () => {
     // A country alone, and a wording that holds "at" itself.
     expect(starlinksGlobalPlace('Delivery Attempted at US')).toEqual({ wording: 'Delivery Attempted', country: 'US' });
     expect(starlinksGlobalPlace('Arrived at Post Office at Sampleville, US')).toEqual({ wording: 'Arrived at Post Office', place: 'Sampleville', country: 'US' });
+    // A place that names its own country before the appended code is in its own; a state before its country stays the place.
+    expect(starlinksGlobalPlace('Arrived at partner hub at VOORBEELD, ZUID-HOLLAND, NL, FR'))
+      .toEqual({ wording: 'Arrived at partner hub', place: 'VOORBEELD, ZUID-HOLLAND', country: 'NL' });
+    expect(starlinksGlobalPlace('Arrived at Post Office at Sampleville, FL, US')).toEqual({ wording: 'Arrived at Post Office', place: 'Sampleville, FL', country: 'US' });
+    expect(starlinksGlobalPlace('Arrived at Post Office at Sampleville, Sample County, FL, US'))
+      .toEqual({ wording: 'Arrived at Post Office', place: 'Sampleville, Sample County, FL', country: 'US' });
     expect(statusMapAnswer({ carrier: 'starlinks-global', providerCode: null, description: 'Arrived at Post Office at US' }))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'starlinks-global', providerCode: null, description: 'Delivered at Sampleville, US' }))

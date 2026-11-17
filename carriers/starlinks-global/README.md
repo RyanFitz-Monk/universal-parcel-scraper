@@ -27,7 +27,8 @@ Starlinks. Tracked through its tracking page.
 - Each event has a title from a short list and a text beside it. The text is kept, or the title
   when the text is empty, and the title decides the stage before the text.
 - A text can end with `at` the place and its country, or the country alone. The place and its
-  country become the location; a country alone names none.
+  country become the location; a country alone names none. A place that ends with its own country
+  before the code the text appends keeps its own country, unless that code is a state's.
 - Event clocks are wall clocks to the second with no zone, so they stay `local_time`. Node
   lookups date them on the zone of their place or leg, else London.
 - The courier the tracking link's address names becomes the delivery carrier, with the
