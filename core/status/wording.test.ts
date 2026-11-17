@@ -1056,6 +1056,8 @@ describe('classifyWording', () => {
       ['Post Office Drop-off', 'accepted'], ['Depósito en Oficina de Correos', 'accepted'], ['Received at Post Office', 'in_transit'],
       ['In the international exchange area towards the destination country, prior to Customs', 'in_transit'],
       ['Piece deposited in a bag and sent to the destination country office.', 'in_transit'],
+      // wnDirect's manifest, its container scan and a misroute, as Ship24 relays them.
+      ['Manifest received', 'registered'], ['Scanned to Container', 'in_transit'], ['Misroute', 'in_transit'], ['Mis-routed', 'in_transit'],
       // YunExpress's export declaration in China, as its own map reads it.
       ['The country of origin commences customs declaration.', 'in_transit'],
       // An export clearance started or under way is a routine step before the flight; a hold there is customs.

@@ -21,6 +21,8 @@ export const DPD_DE_APP_SCANS: Readonly<Record<string, Stage>> = {
   'In transit.': 'in_transit',
   'At parcel delivery centre.': 'in_transit',
   'Transfer to DPD Pickup station by DPD driver.': 'in_transit',
+  // The driver taking the parcel on to a Pickup shop, which the drop-off at the shop follows.
+  'Transfer to Pickup parcelshop by DPD driver.': 'in_transit',
   'Out for delivery.': 'out_for_delivery',
   'Unfortunately we have not been able to deliver your parcel.': 'failed_attempt',
   'Back at parcel delivery centre after an unsuccessful delivery attempt.': 'failed_attempt',

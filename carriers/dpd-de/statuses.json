@@ -105,6 +105,14 @@
       "note": "Seen in the German app's scan list, which carries wording only."
     },
     {
+      "wording": "Transfer to Pickup parcelshop by DPD driver.",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Seen in the German app's scan list, which carries wording only. The driver takes the parcel on to a Pickup shop, like the transfer to a Pickup station; the drop-off at the shop follows."
+    },
+    {
       "wording": "Out for delivery.",
       "language": "en",
       "stage": "out_for_delivery",
