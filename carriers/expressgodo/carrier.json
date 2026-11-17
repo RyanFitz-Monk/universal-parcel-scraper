@@ -1,0 +1,45 @@
+{
+  "id": "expressgodo",
+  "displayName": "Expressgodo Logistics",
+  "aliases": [
+    "Expressgodo Logistics, Inc."
+  ],
+  "region": {
+    "countries": [
+      "US"
+    ]
+  },
+  "brand": {
+    "color": "#2a7ba6"
+  },
+  "selectable": true,
+  "timezone": "America/Chicago",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://expressgodo.com/track.php?order_track={trackingNumber}",
+    "searchUrl": "https://expressgodo.com/track.php",
+    "canaryUrl": "https://expressgodo.com/track.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "expressgodo.com",
+        "www.expressgodo.com"
+      ],
+      "pathPattern": "^/track\\.php$",
+      "params": [
+        "order_track"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,34 @@
+{
+  "id": "walkers-transport",
+  "displayName": "Walkers Transport",
+  "aliases": [
+    "George Walkers Transport Limited"
+  ],
+  "region": {
+    "countries": [
+      "GB",
+      "IE"
+    ]
+  },
+  "brand": {
+    "color": "#053775"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.walkers-transport.co.uk/",
+    "canaryUrl": "https://tracking.walkers-transport.co.uk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

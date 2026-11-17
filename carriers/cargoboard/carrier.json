@@ -1,0 +1,33 @@
+{
+  "id": "cargoboard",
+  "displayName": "Cargoboard",
+  "aliases": [
+    "Cargoboard GmbH & Co. KG"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#03070b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://my.cargoboard.com/tracking",
+    "canaryUrl": "https://my.cargoboard.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

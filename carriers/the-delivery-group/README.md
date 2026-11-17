@@ -3,8 +3,8 @@
 The Delivery Group parcels use enabled universal providers. There is no dedicated adapter.
 
 The Delivery Group (TDG) is a UK managed mail, packet and parcel company based in Warrington. It
-delivers mail, packets, parcels and pallets across the UK and sends items abroad. Its site is
-thedeliverygroup.co.uk.
+delivers mail, packets, parcels and pallets across the UK and sends items abroad, as ETrak for
+international parcels. Its site is thedeliverygroup.co.uk.
 
 ## Numbers
 

@@ -1,0 +1,44 @@
+{
+  "id": "transnet-couriers",
+  "displayName": "Transnet Couriers",
+  "aliases": [
+    "Transnet Couriers Ltd"
+  ],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#08ce13"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://30584626.courier-bookings.com/trackit.aspx?AWB={trackingNumber}",
+    "searchUrl": "https://www.transnetservices.co.uk/login.html",
+    "canaryUrl": "https://30584626.courier-bookings.com/trackit.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "30584626.courier-bookings.com"
+      ],
+      "pathPattern": "^/trackit\\.aspx$",
+      "params": [
+        "AWB"
+      ]
+    }
+  ],
+  "detection": []
+}

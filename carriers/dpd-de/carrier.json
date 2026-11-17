@@ -2,7 +2,9 @@
   "id": "dpd-de",
   "displayName": "DPD Germany",
   "aliases": [
-    "DPD Deutschland"
+    "DPD Deutschland",
+    "iloxx",
+    "iloxx GmbH"
   ],
   "region": {
     "countries": [

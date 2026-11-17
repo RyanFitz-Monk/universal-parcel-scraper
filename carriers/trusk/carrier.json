@@ -1,0 +1,38 @@
+{
+  "id": "trusk",
+  "displayName": "Trusk",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "FR"
+    ]
+  },
+  "brand": {
+    "color": "#ff4d00"
+  },
+  "selectable": true,
+  "timezone": "Europe/Paris",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://track.trusk.com/fr/{trackingNumber}",
+    "canaryUrl": "https://track.trusk.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "track.trusk.com"
+      ],
+      "path": "^/[a-z]{2}/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

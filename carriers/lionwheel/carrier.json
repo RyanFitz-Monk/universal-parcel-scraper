@@ -1,0 +1,43 @@
+{
+  "id": "lionwheel",
+  "displayName": "LionWheel",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "IL"
+    ]
+  },
+  "brand": {
+    "color": "#6640ff"
+  },
+  "selectable": true,
+  "timezone": "Asia/Jerusalem",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.lionwheel.com/tracking?code={trackingNumber}",
+    "searchUrl": "https://www.lionwheel.com/en/tracking",
+    "canaryUrl": "https://www.lionwheel.com/en/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "lionwheel.com",
+        "www.lionwheel.com"
+      ],
+      "pathPattern": "^/(?:[a-z]{2}/)?tracking/?$",
+      "params": [
+        "code"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,31 @@
+{
+  "id": "palletforce",
+  "displayName": "Palletforce",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#ff5900"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.palletforce.com/en/track-my-pallet/",
+    "canaryUrl": "https://www.palletforce.com/en/track-my-pallet/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

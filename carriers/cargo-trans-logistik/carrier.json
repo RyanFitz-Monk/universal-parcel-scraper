@@ -23,6 +23,7 @@
   },
   "capabilities": [],
   "portal": {
+    "url": "https://ctl-partner.net/CTL-Onlineplattform/Tracking/Default.aspx?snr={trackingNumber}",
     "searchUrl": "https://ctl-partner.net/CTL-Onlineplattform/Tracking/Default.aspx",
     "canaryUrl": "https://ctl-partner.net/CTL-Onlineplattform/Tracking/Default.aspx",
     "shows": [],
@@ -30,6 +31,16 @@
     "discarded": [],
     "unavailable": []
   },
-  "links": [],
+  "links": [
+    {
+      "domains": [
+        "ctl-partner.net"
+      ],
+      "pathPattern": "^/CTL-Onlineplattform/Tracking/Default\\.aspx$",
+      "params": [
+        "snr"
+      ]
+    }
+  ],
   "detection": []
 }

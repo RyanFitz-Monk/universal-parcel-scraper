@@ -1,0 +1,28 @@
+{
+  "carrier": "schaeflein",
+  "records": [
+    {
+      "number": "00343177845170952648",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://my.schaeflein.de/Track/00343177845170952648?language=en&culture=GB",
+        "access": "indexed_excerpt"
+      },
+      "context": {
+        "reportedRole": "colli number",
+        "assessment": "candidate"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "swiss-post-cargo",
+          "usps",
+          "nz-post"
+        ]
+      },
+      "note": "A search engine indexes Schäflein's own tracking page for this colli number, an NVE (SSCC) with its 00 identifier, in English and German."
+    }
+  ]
+}

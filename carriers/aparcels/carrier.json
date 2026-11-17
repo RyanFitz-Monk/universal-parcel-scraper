@@ -1,0 +1,40 @@
+{
+  "id": "aparcels",
+  "displayName": "AParcels",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#1a56db"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.aparcels.com/track/{trackingNumber}",
+    "searchUrl": "https://www.aparcels.com/",
+    "canaryUrl": "https://www.aparcels.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "aparcels.com",
+        "www.aparcels.com"
+      ],
+      "path": "^/track/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

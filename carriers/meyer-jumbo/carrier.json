@@ -1,0 +1,34 @@
+{
+  "id": "meyer-jumbo",
+  "displayName": "Meyer-Jumbo",
+  "aliases": [
+    "MEYER-JUMBO Logistics GmbH & Co. KG",
+    "Meyer-Jumbo Logistics"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#204497"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.meyer-jumbo.de/",
+    "canaryUrl": "https://tracking.meyer-jumbo.de/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "ec-courier-network",
+  "displayName": "EC Express Courier Network",
+  "aliases": [
+    "EC Express Courier Network Ltd",
+    "EC Network",
+    "EC Express"
+  ],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#007ac5"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.ecnetwork.co.uk/order-list/{trackingNumber}",
+    "searchUrl": "https://www.ecnetwork.co.uk/order-tracking-shortcode",
+    "canaryUrl": "https://www.ecnetwork.co.uk/order-tracking-shortcode",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "ecnetwork.co.uk",
+        "www.ecnetwork.co.uk"
+      ],
+      "path": "^/order-list/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

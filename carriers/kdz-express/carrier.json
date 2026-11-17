@@ -1,0 +1,45 @@
+{
+  "id": "kdz-express",
+  "displayName": "KDZ Express",
+  "aliases": [
+    "KDZ Express B.V."
+  ],
+  "region": {
+    "countries": [
+      "NL"
+    ]
+  },
+  "brand": {
+    "color": "#e41f39"
+  },
+  "selectable": true,
+  "timezone": "Europe/Amsterdam",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://kdz.com/track-trace/?nr={trackingNumber}",
+    "searchUrl": "https://kdz.com/track-trace/",
+    "canaryUrl": "https://kdz.com/track-trace/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "kdz.com",
+        "www.kdz.com"
+      ],
+      "pathPattern": "^/(?:[a-z]{2}/)?track-trace/?$",
+      "params": [
+        "nr"
+      ]
+    }
+  ],
+  "detection": []
+}

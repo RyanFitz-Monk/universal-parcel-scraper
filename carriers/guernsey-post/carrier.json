@@ -1,0 +1,33 @@
+{
+  "id": "guernsey-post",
+  "displayName": "Guernsey Post",
+  "aliases": [
+    "Guernsey Post Limited"
+  ],
+  "region": {
+    "countries": [
+      "GG"
+    ]
+  },
+  "brand": {
+    "color": "#034ea2"
+  },
+  "selectable": true,
+  "timezone": "Europe/Guernsey",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.guernseypost.com/track-trace",
+    "canaryUrl": "https://www.guernseypost.com/track-trace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

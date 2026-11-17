@@ -1,0 +1,33 @@
+{
+  "id": "multidrop",
+  "displayName": "Multidrop",
+  "aliases": [
+    "Multidrop Assist"
+  ],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#20b2ff"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://multidrop.link/",
+    "canaryUrl": "https://multidrop.link/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

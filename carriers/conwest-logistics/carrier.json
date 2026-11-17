@@ -1,0 +1,35 @@
+{
+  "id": "conwest-logistics",
+  "displayName": "Conwest Logistics",
+  "aliases": [
+    "Conwest Logistics GmbH"
+  ],
+  "region": {
+    "countries": [
+      "DE",
+      "BE",
+      "PL"
+    ]
+  },
+  "brand": {
+    "color": "#293d72"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://conwest-logistics.com/",
+    "canaryUrl": "https://conwest-logistics.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,43 @@
+{
+  "id": "colis-gros-volume",
+  "displayName": "Colis Gros Volume",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "FR"
+    ]
+  },
+  "brand": {
+    "color": "#08367c"
+  },
+  "selectable": true,
+  "timezone": "Europe/Paris",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://colisgrosvolume.fr/?suivino={trackingNumber}",
+    "searchUrl": "https://colisgrosvolume.fr/",
+    "canaryUrl": "https://colisgrosvolume.fr/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "colisgrosvolume.fr",
+        "www.colisgrosvolume.fr"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "suivino"
+      ]
+    }
+  ],
+  "detection": []
+}

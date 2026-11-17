@@ -1,0 +1,42 @@
+{
+  "id": "cargo-international",
+  "displayName": "Cargo International",
+  "aliases": [
+    "Cargo International GmbH"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#003664"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.cargointernational.de/versandrechner/tracking/{trackingNumber}",
+    "searchUrl": "https://www.cargointernational.de/versandrechner/tracking",
+    "canaryUrl": "https://www.cargointernational.de/versandrechner/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "cargointernational.de",
+        "www.cargointernational.de"
+      ],
+      "path": "^/versandrechner/tracking/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

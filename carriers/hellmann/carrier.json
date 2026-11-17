@@ -1,0 +1,41 @@
+{
+  "id": "hellmann",
+  "displayName": "Hellmann Worldwide Logistics",
+  "aliases": [
+    "Hellmann"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#004c99"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://public.tracking.hellmann.net/search/{trackingNumber}",
+    "searchUrl": "https://www.hellmann.com/en/track-trace",
+    "canaryUrl": "https://www.hellmann.com/en/track-trace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "public.tracking.hellmann.net"
+      ],
+      "path": "^/search/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

@@ -72,6 +72,7 @@ Italiane for a number issued abroad.
   neither a matching shape nor an expired reply confirms issuance.
 - Aggregators name SDA's parcels "SDA", "Italy SDA" or "SDA Express Courier". Those names are
   aliases, so a provider's naming points to Poste's tracker, which still has to know the number.
+  Nexive, a private post that merged into Poste Italiane, is an alias too.
 - Poste's own scans are instants. Its catalog clock is Rome's for the providers: Ship24 relays
   SDA's distribution-center scans as wall clocks without an offset, and they read on that clock
   as the same moments Poste's own copies give.

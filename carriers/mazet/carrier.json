@@ -1,0 +1,43 @@
+{
+  "id": "mazet",
+  "displayName": "Mazet",
+  "aliases": [
+    "Groupe Mazet",
+    "Transports Mazet"
+  ],
+  "region": {
+    "countries": [
+      "FR",
+      "AD",
+      "MC",
+      "BE",
+      "NL",
+      "DE",
+      "CH",
+      "ES",
+      "IT",
+      "PT"
+    ]
+  },
+  "brand": {
+    "color": "#056d3c"
+  },
+  "selectable": true,
+  "timezone": "Europe/Paris",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://extranet.mazet.fr/suiviexpedition?lang=fr",
+    "canaryUrl": "https://extranet.mazet.fr/suiviexpedition",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

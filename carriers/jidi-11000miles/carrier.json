@@ -1,0 +1,42 @@
+{
+  "id": "jidi-11000miles",
+  "displayName": "11000Miles",
+  "aliases": [
+    "Jidi International Logistics (Shenzhen) Co., Ltd.",
+    "Jidi International Logistics",
+    "基地国际物流(深圳)有限公司",
+    "基地国际物流"
+  ],
+  "region": {
+    "countries": [
+      "CN",
+      "NL",
+      "DE",
+      "BE",
+      "FR",
+      "US"
+    ]
+  },
+  "brand": {
+    "color": "#ffd21f"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://mms.intelink.net.cn/oms/#/logisticsTracking?companyId=10355&nos={trackingNumber}",
+    "searchUrl": "https://www.11000miles.com/",
+    "canaryUrl": "https://mms.intelink.net.cn/oms/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

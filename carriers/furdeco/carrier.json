@@ -1,0 +1,33 @@
+{
+  "id": "furdeco",
+  "displayName": "Furdeco",
+  "aliases": [
+    "Furdeco 2-Person Home Delivery"
+  ],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#5ace58"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://furdeco.co.uk/track-your-order",
+    "canaryUrl": "https://furdeco.co.uk/track-your-order",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

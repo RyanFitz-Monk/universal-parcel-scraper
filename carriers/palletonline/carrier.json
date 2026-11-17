@@ -1,0 +1,45 @@
+{
+  "id": "palletonline",
+  "displayName": "PalletOnline",
+  "aliases": [
+    "Browns Distribution Services Limited"
+  ],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#04213e"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://palletonline.co.uk/track?tn={trackingNumber}",
+    "searchUrl": "https://palletonline.co.uk/track",
+    "canaryUrl": "https://palletonline.co.uk/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "palletonline.co.uk",
+        "www.palletonline.co.uk"
+      ],
+      "pathPattern": "^/track/?$",
+      "params": [
+        "tn"
+      ]
+    }
+  ],
+  "detection": []
+}

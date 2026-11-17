@@ -1,0 +1,34 @@
+{
+  "id": "ader",
+  "displayName": "ADER",
+  "aliases": [
+    "Servicios Empresariales ADER, S.A.",
+    "ADER Transporte Dedicado"
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#24a740"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://aderonline.com/contacto/informacion-de-pedidos/",
+    "canaryUrl": "https://aderonline.com/contacto/informacion-de-pedidos/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

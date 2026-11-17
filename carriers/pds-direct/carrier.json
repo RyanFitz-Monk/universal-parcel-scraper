@@ -1,0 +1,43 @@
+{
+  "id": "pds-direct",
+  "displayName": "PDS Direct",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "GB",
+      "IE"
+    ]
+  },
+  "brand": {
+    "color": "#103174"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://webportal.pdsdirect.co.uk/tracktrace?reference={trackingNumber}",
+    "searchUrl": "https://webportal.pdsdirect.co.uk/tracktrace",
+    "canaryUrl": "https://webportal.pdsdirect.co.uk/tracktrace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "webportal.pdsdirect.co.uk"
+      ],
+      "pathPattern": "^/tracktrace/?$",
+      "params": [
+        "reference"
+      ]
+    }
+  ],
+  "detection": []
+}

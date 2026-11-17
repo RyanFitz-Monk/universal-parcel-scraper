@@ -1,0 +1,44 @@
+{
+  "id": "kleine-spedition",
+  "displayName": "Kleine Spedition",
+  "aliases": [
+    "Kleine Spedition GmbH"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#001950"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tt.kleine.eu/tracking/anon/anondetail.seam?colliScanNumber={trackingNumber}",
+    "searchUrl": "https://tt.kleine.eu/tracking/home.jsf",
+    "canaryUrl": "https://tt.kleine.eu/tracking/home.jsf",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tt.kleine.eu"
+      ],
+      "pathPattern": "^/tracking/anon/anondetail\\.seam$",
+      "params": [
+        "colliScanNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

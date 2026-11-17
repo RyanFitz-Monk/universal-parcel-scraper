@@ -1,0 +1,34 @@
+{
+  "id": "hintzen",
+  "displayName": "Hintzen Logistik",
+  "aliases": [
+    "Hintzen Logistik GmbH",
+    "Hintzen"
+  ],
+  "region": {
+    "countries": [
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#164194"
+  },
+  "selectable": true,
+  "timezone": "Europe/Berlin",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.hintzen.de/orderx/aordata.aspx",
+    "canaryUrl": "https://tracking.hintzen.de/orderx/aordata.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

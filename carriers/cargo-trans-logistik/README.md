@@ -8,19 +8,20 @@ ctl-ag.de.
 
 ## Numbers
 
-No public page shows one of its shipment numbers, so there is no rule.
+The tracking box on ctl-ag.de asks for a 20-digit CTL shipment number. Twenty digits fit many
+other carriers' numbers, and no public page shows one, so there is no rule.
 
 The short name "CTL" is not an alias, because other companies, such as the Polish rail freight group
 CTL Logistics, use it too.
 
 ## Why there is no adapter
 
-Its tracker is an ASP.NET form that posts the shipment number with the page's state, and no public
-number has been found to check a found reply with.
+Its tracker is an ASP.NET page, and no public number has been found to check a found reply with.
 
 ## Links
 
-Its tracker has no address for a single number, so no link names it.
+The tracking box on ctl-ag.de opens the tracker with the number in `snr`, and the library reads
+the number from that address.
 
 ## Testing
 

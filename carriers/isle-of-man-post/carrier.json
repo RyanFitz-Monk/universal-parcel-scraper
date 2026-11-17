@@ -1,0 +1,45 @@
+{
+  "id": "isle-of-man-post",
+  "displayName": "Isle of Man Post",
+  "aliases": [
+    "Isle of Man Post Office"
+  ],
+  "region": {
+    "countries": [
+      "IM"
+    ]
+  },
+  "brand": {
+    "color": "#1d1160"
+  },
+  "selectable": true,
+  "timezone": "Europe/Isle_of_Man",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.iompost.com/tools-services/track-your-mail?barcode={trackingNumber}",
+    "searchUrl": "https://www.iompost.com/tools-services/track-your-mail",
+    "canaryUrl": "https://www.iompost.com/tools-services/track-your-mail",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "iompost.com",
+        "www.iompost.com"
+      ],
+      "pathPattern": "^/tools-services/track-your-mail/?$",
+      "params": [
+        "barcode"
+      ]
+    }
+  ],
+  "detection": []
+}

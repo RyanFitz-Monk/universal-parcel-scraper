@@ -1,0 +1,40 @@
+{
+  "id": "tdv-group",
+  "displayName": "TDV Group",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "PT",
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#d32737"
+  },
+  "selectable": true,
+  "timezone": "Europe/Lisbon",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://portal.tdv-group.com/tracktrace/{trackingNumber}",
+    "searchUrl": "https://portal.tdv-group.com/tracktrace",
+    "canaryUrl": "https://portal.tdv-group.com/tracktrace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "portal.tdv-group.com"
+      ],
+      "path": "^/tracktrace/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

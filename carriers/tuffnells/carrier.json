@@ -1,0 +1,42 @@
+{
+  "id": "tuffnells",
+  "displayName": "Tuffnells",
+  "aliases": [
+    "TF Trading Limited"
+  ],
+  "region": {
+    "countries": [
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#2da844"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.tuffnells.co.uk/track/{trackingNumber}",
+    "searchUrl": "https://www.tuffnells.co.uk/track",
+    "canaryUrl": "https://www.tuffnells.co.uk/track",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tuffnells.co.uk",
+        "www.tuffnells.co.uk"
+      ],
+      "path": "^/track/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

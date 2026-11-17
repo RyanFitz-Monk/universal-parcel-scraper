@@ -1,0 +1,33 @@
+{
+  "id": "poste-san-marino",
+  "displayName": "Poste San Marino",
+  "aliases": [
+    "Poste San Marino S.p.A."
+  ],
+  "region": {
+    "countries": [
+      "SM"
+    ]
+  },
+  "brand": {
+    "color": "#0b6fae"
+  },
+  "selectable": true,
+  "timezone": "Europe/San_Marino",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.poste.sm/tracking/",
+    "canaryUrl": "https://www.poste.sm/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

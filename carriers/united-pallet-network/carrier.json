@@ -1,0 +1,35 @@
+{
+  "id": "united-pallet-network",
+  "displayName": "United Pallet Network",
+  "aliases": [
+    "The United Pallet Network",
+    "UPN"
+  ],
+  "region": {
+    "countries": [
+      "GB",
+      "IE"
+    ]
+  },
+  "brand": {
+    "color": "#0071ce"
+  },
+  "selectable": true,
+  "timezone": "Europe/London",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.upn.co.uk/",
+    "canaryUrl": "https://www.upn.co.uk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

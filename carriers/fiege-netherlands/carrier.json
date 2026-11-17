@@ -1,0 +1,42 @@
+{
+  "id": "fiege-netherlands",
+  "displayName": "Fiege Netherlands",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "NL"
+    ]
+  },
+  "brand": {
+    "color": "#f20a34"
+  },
+  "selectable": true,
+  "timezone": "Europe/Amsterdam",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://websped-netherlands.fiege.com/TrackAndTrace/Search?SearchExpression={trackingNumber}",
+    "searchUrl": "https://websped-netherlands.fiege.com/",
+    "canaryUrl": "https://websped-netherlands.fiege.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "websped-netherlands.fiege.com"
+      ],
+      "pathPattern": "^/TrackAndTrace/Search/?$",
+      "params": [
+        "SearchExpression"
+      ]
+    }
+  ],
+  "detection": []
+}
