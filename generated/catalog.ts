@@ -41083,7 +41083,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
   },
   "omgo": {
     "displayName": "OMGO",
-    "color": "#8e8e93",
+    "color": "#ea7e19",
     "aliases": [
       "OMGO Express"
     ],
@@ -41318,7 +41318,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
   },
   "onlog-express": {
     "displayName": "Onlog Express",
-    "color": "#ed6d28",
+    "color": "#1a345d",
     "aliases": [
       "ONLOG",
       "ONLOG Express",
@@ -52806,7 +52806,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
   },
   "stone3pl": {
     "displayName": "Stone3PL",
-    "color": "#0066b3",
+    "color": "#003d98",
     "aliases": [
       "STONE3PL.COM",
       "Stone 3PL"
