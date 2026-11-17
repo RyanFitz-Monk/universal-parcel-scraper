@@ -80,7 +80,7 @@ const generated = lines.join('\n');
 const freeRanksNear = (rank, taken) => {
   const free = [];
   for (let step = 1; free.length < 4 && step <= rank + 1000; step++) {
-    for (const candidate of [rank - step, rank + step]) if (candidate > 0 && !taken.has(candidate) && free.length < 4) free.push(candidate);
+    for (const candidate of [rank - step, rank + step]) if (candidate > 0 && candidate <= 1000 && !taken.has(candidate) && free.length < 4) free.push(candidate);
   }
   return free.sort((left, right) => left - right).join(', ');
 };
