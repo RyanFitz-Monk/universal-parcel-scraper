@@ -40909,6 +40909,10 @@
       {
         "pattern": "^[A-Z]{2}\\d{9,16}NPG$",
         "confidence": "high"
+      },
+      {
+        "pattern": "^[A-Z]{5}\\d{10}NPG$",
+        "confidence": "high"
       }
     ]
   },

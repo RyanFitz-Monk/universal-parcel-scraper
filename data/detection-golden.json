@@ -77298,6 +77298,14 @@
     ]
   },
   {
+    "input": "ABCDE0000000017NPG",
+    "carrier": "nova-global",
+    "confidence": "high",
+    "candidates": [
+      "nova-global"
+    ]
+  },
+  {
     "input": "ABSINE1031240022",
     "carrier": "unknown",
     "confidence": "none",

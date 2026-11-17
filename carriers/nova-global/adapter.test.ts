@@ -259,6 +259,11 @@ describe('Nova Global numbers', () => {
     // Synthetic, in the layout of the iHerb orders Nova Global's tracker answers.
     expect(normalizeNovaGlobalNumber('abcde 00000 00001 npg')).toBe('ABCDE0000000001NPG');
     for (const number of ['ABCDE000000001NPG', 'ABCDEF0000000001NPG']) expect(() => normalizeNovaGlobalNumber(number)).toThrow(InvalidInputError);
+    // Detection names Nova Global for that shape alone, by its NPG.
+    expect(detectCarrierMatch('ABCDE0000000001NPG')).toMatchObject({ carrier: 'nova-global', confidence: 'high' });
+    for (const number of ['ABCDE000000001NPG', 'ABCDEF0000000001NPG', 'ABC1D0000000001NPG']) {
+      expect(detectCarrierMatch(number).carrier, number).not.toBe('nova-global');
+    }
   });
 });
 

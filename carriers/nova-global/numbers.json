@@ -247,6 +247,18 @@
         "confidence": "high"
       },
       "note": "An archived lookup on Nova Poshta Global's own tracker address; the capture was not opened, so the history was not visible."
+    },
+    {
+      "number": "ABCDE0000000017NPG",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "donated_real",
+      "shapeConfirmed": "2026-11-17",
+      "expect": {
+        "carrier": "nova-global",
+        "confidence": "high"
+      },
+      "note": "Made-up number in the shape of a shop's order the app tracked, which Nova Global's own tracker answered with its history: five letters, ten digits and Nova Global's NPG."
     }
   ]
 }

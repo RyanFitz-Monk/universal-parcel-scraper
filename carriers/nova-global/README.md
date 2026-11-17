@@ -52,8 +52,8 @@ Nova Global's own express waybills end in NPG. Archived lookups on its tracker s
 letters, nine to sixteen digits and NPG, with NP, WB, OG and YW in front. Rule nova-global-1
 claims that shape with high confidence because no other carrier ends its numbers with NPG. A
 shop's orders it carries take five letters, ten digits and NPG: its tracker answers iHerb's with
-their history, naming the shop. The adapter takes them; no rule claims them, since no public
-sample shows one.
+their history, naming the shop. `nova-global-2` claims them with high confidence on the same
+ground, from parcels the app tracked that Nova Global's tracker answered.
 
 ## Links
 
