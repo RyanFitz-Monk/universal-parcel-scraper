@@ -1,0 +1,35 @@
+{
+  "id": "western-post",
+  "displayName": "Western Post",
+  "aliases": [
+    "西邮物流",
+    "Western Post Logistics"
+  ],
+  "region": {
+    "countries": [
+      "US",
+      "DE"
+    ]
+  },
+  "brand": {
+    "color": "#f0845d"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.wpglb.com/",
+    "canaryUrl": "https://www.wpglb.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

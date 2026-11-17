@@ -829,7 +829,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "displayName": "UPS",
     "color": "#351c15",
     "aliases": [
-      "United Parcel Service"
+      "United Parcel Service",
+      "UPS Mail Innovations",
+      "Mail Innovations"
     ],
     "selectable": true,
     "timezone": "UTC",
@@ -8061,6 +8063,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       }
     ]
+  },
+  "aloha-freight": {
+    "displayName": "Aloha Freight",
+    "color": "#2c96d2",
+    "aliases": [
+      "Aloha Freight Forwarders"
+    ],
+    "countries": [
+      "US",
+      "GU"
+    ],
+    "selectable": true,
+    "timezone": "America/Los_Angeles",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.alohafreight.com/portal/",
+    "trackingSearchUrl": "https://www.alohafreight.com/portal/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "alphastline": {
     "displayName": "Alphastline",
@@ -56392,7 +56415,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "TooExpress",
       "TOOEXPRESS",
-      "TOO EXPRESS"
+      "TOO EXPRESS",
+      "EPARCEL EXPRESS",
+      "Eparcel Express"
     ],
     "countries": [
       "US"
@@ -58376,6 +58401,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/WebTrack$",
         "params": [
           "bills"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "two-day-transportation": {
+    "displayName": "2 Day Transportation",
+    "color": "#282d65",
+    "countries": [
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/New_York",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.2daytranspo.com/",
+    "trackingUrlTemplate": "https://www.2daytranspo.com/admin/code/PopUp/PopUp_ShippingTrackingItem.aspx?ProNumber={trackingNumber}",
+    "trackingSearchUrl": "https://www.2daytranspo.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.2daytranspo.com"
+        ],
+        "pathPattern": "^/admin/code/PopUp/PopUp_ShippingTrackingItem\\.aspx$",
+        "params": [
+          "ProNumber"
         ]
       }
     ],
@@ -60925,6 +60978,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "low"
       }
     ]
+  },
+  "western-post": {
+    "displayName": "Western Post",
+    "color": "#f0845d",
+    "aliases": [
+      "西邮物流",
+      "Western Post Logistics"
+    ],
+    "countries": [
+      "US",
+      "DE"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.wpglb.com/",
+    "trackingSearchUrl": "https://www.wpglb.com/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "westweg": {
     "displayName": "Westweg",
@@ -63907,6 +63982,7 @@ export const CARRIER_IDS = [
   "alliance-air-freight",
   "allied-express",
   "alljoy",
+  "aloha-freight",
   "alphastline",
   "altcamp-express",
   "altex-curier",
@@ -65378,6 +65454,7 @@ export const CARRIER_IDS = [
   "tusass",
   "tusk-logistics",
   "tusou",
+  "two-day-transportation",
   "tws-express",
   "u-envios",
   "u-post",
@@ -65455,6 +65532,7 @@ export const CARRIER_IDS = [
   "wepost",
   "west-postal",
   "western-bid",
+  "western-post",
   "westweg",
   "whatsship",
   "whistl",
@@ -65724,6 +65802,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "alliance-air-freight": [],
   "allied-express": [],
   "alljoy": ["alljoy-1","alljoy-2"],
+  "aloha-freight": [],
   "alphastline": ["alphastline-1"],
   "altcamp-express": [],
   "altex-curier": [],
@@ -67195,6 +67274,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "tusass": [],
   "tusk-logistics": ["tusk-logistics-1"],
   "tusou": [],
+  "two-day-transportation": [],
   "tws-express": ["tws-express-1"],
   "u-envios": [],
   "u-post": [],
@@ -67272,6 +67352,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "wepost": [],
   "west-postal": [],
   "western-bid": ["western-bid-1"],
+  "western-post": [],
   "westweg": [],
   "whatsship": ["whatsship-1"],
   "whistl": ["whistl-1"],

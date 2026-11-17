@@ -3,7 +3,8 @@
 Too Express parcels use enabled universal providers. There is no dedicated adapter.
 
 Too Express (TOOEXPRESS), based in New York, delivers online orders over the last mile. Its site is
-too.express.
+too.express. EPARCEL EXPRESS, a last-mile brand in Sierra Madre, California, sends its tracking
+buttons to the same tracker, so its name points here.
 
 ## Numbers
 

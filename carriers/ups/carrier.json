@@ -2,7 +2,9 @@
   "id": "ups",
   "displayName": "UPS",
   "aliases": [
-    "United Parcel Service"
+    "United Parcel Service",
+    "UPS Mail Innovations",
+    "Mail Innovations"
   ],
   "region": {
     "countries": []

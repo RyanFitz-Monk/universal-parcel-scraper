@@ -1,0 +1,42 @@
+{
+  "id": "two-day-transportation",
+  "displayName": "2 Day Transportation",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "US"
+    ]
+  },
+  "brand": {
+    "color": "#282d65"
+  },
+  "selectable": true,
+  "timezone": "America/New_York",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.2daytranspo.com/admin/code/PopUp/PopUp_ShippingTrackingItem.aspx?ProNumber={trackingNumber}",
+    "searchUrl": "https://www.2daytranspo.com/",
+    "canaryUrl": "https://www.2daytranspo.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.2daytranspo.com"
+      ],
+      "pathPattern": "^/admin/code/PopUp/PopUp_ShippingTrackingItem\\.aspx$",
+      "params": [
+        "ProNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

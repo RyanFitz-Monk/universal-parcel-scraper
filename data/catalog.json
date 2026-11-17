@@ -825,7 +825,9 @@
     "displayName": "UPS",
     "color": "#351c15",
     "aliases": [
-      "United Parcel Service"
+      "United Parcel Service",
+      "UPS Mail Innovations",
+      "Mail Innovations"
     ],
     "selectable": true,
     "timezone": "UTC",
@@ -8057,6 +8059,27 @@
         "confidence": "low"
       }
     ]
+  },
+  "aloha-freight": {
+    "displayName": "Aloha Freight",
+    "color": "#2c96d2",
+    "aliases": [
+      "Aloha Freight Forwarders"
+    ],
+    "countries": [
+      "US",
+      "GU"
+    ],
+    "selectable": true,
+    "timezone": "America/Los_Angeles",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.alohafreight.com/portal/",
+    "trackingSearchUrl": "https://www.alohafreight.com/portal/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "alphastline": {
     "displayName": "Alphastline",
@@ -56388,7 +56411,9 @@
     "aliases": [
       "TooExpress",
       "TOOEXPRESS",
-      "TOO EXPRESS"
+      "TOO EXPRESS",
+      "EPARCEL EXPRESS",
+      "Eparcel Express"
     ],
     "countries": [
       "US"
@@ -58372,6 +58397,34 @@
         "pathPattern": "^/WebTrack$",
         "params": [
           "bills"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "two-day-transportation": {
+    "displayName": "2 Day Transportation",
+    "color": "#282d65",
+    "countries": [
+      "US"
+    ],
+    "selectable": true,
+    "timezone": "America/New_York",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.2daytranspo.com/",
+    "trackingUrlTemplate": "https://www.2daytranspo.com/admin/code/PopUp/PopUp_ShippingTrackingItem.aspx?ProNumber={trackingNumber}",
+    "trackingSearchUrl": "https://www.2daytranspo.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "www.2daytranspo.com"
+        ],
+        "pathPattern": "^/admin/code/PopUp/PopUp_ShippingTrackingItem\\.aspx$",
+        "params": [
+          "ProNumber"
         ]
       }
     ],
@@ -60921,6 +60974,28 @@
         "confidence": "low"
       }
     ]
+  },
+  "western-post": {
+    "displayName": "Western Post",
+    "color": "#f0845d",
+    "aliases": [
+      "西邮物流",
+      "Western Post Logistics"
+    ],
+    "countries": [
+      "US",
+      "DE"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.wpglb.com/",
+    "trackingSearchUrl": "https://www.wpglb.com/",
+    "linkRules": [],
+    "detectionRules": []
   },
   "westweg": {
     "displayName": "Westweg",

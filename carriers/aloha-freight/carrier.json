@@ -1,0 +1,34 @@
+{
+  "id": "aloha-freight",
+  "displayName": "Aloha Freight",
+  "aliases": [
+    "Aloha Freight Forwarders"
+  ],
+  "region": {
+    "countries": [
+      "US",
+      "GU"
+    ]
+  },
+  "brand": {
+    "color": "#2c96d2"
+  },
+  "selectable": true,
+  "timezone": "America/Los_Angeles",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.alohafreight.com/portal/",
+    "canaryUrl": "https://www.alohafreight.com/portal/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}
