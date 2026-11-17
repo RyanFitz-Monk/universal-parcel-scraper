@@ -1,0 +1,28 @@
+{
+  "code": 0,
+  "data": {
+    "id": 999001,
+    "transfer_no": "NUDE9999999980EX",
+    "customer_order_number": "PRIVATE_REFERENCE",
+    "days": 9,
+    "destination_country": "US",
+    "sending_name": "PRIVATE_SENDER",
+    "sending_address": "PRIVATE_SENDER_ADDRESS",
+    "receiving_name": "PRIVATE_RECIPIENT",
+    "receiving_address": "PRIVATE_RECIPIENT_ADDRESS",
+    "receiving_postcode": "PRIVATE_POSTCODE",
+    "created_at": "2026-01-02T09:00:00+08:00",
+    "events": [
+      { "id": 9010, "content": "Delivered", "event_time": "2026-01-12T03:15:00+08:00", "location": "Los Angeles, CA", "order": 999001 },
+      { "id": 9009, "content": "Parcel currently being delivered", "event_time": "2026-01-11T21:40:00+08:00", "location": "Los Angeles, CA", "order": 999001 },
+      { "id": 9008, "content": "The courier has received this parcel for delivery and will set a delivery time shortly", "event_time": "2026-01-10T22:05:00+08:00", "location": "Los Angeles, CA", "order": 999001 },
+      { "id": 9007, "content": "Arriving at the destination city, about to distribute to the post office", "event_time": "2026-01-10T08:30:00+08:00", "location": "", "order": 999001 },
+      { "id": 9006, "content": "Released and the package is being transferred", "event_time": "2026-01-08T14:00:00+08:00", "location": "", "order": 999001 },
+      { "id": 9005, "content": "Arrived at destination transportation center", "event_time": "2026-01-07T23:10:00+08:00", "location": "", "order": 999001 },
+      { "id": 9004, "content": "Departed from origin transportation center", "event_time": "2026-01-05T02:20:00+08:00", "location": "Shenzhen", "order": 999001 },
+      { "id": 9003, "content": "Hand over to transportation company", "event_time": "2026-01-04T18:00:00+08:00", "location": "Shenzhen", "order": 999001 },
+      { "id": 9002, "content": "Departed from sorting center", "event_time": "2026-01-03T20:45:00+08:00", "location": "Shenzhen", "order": 999001 },
+      { "id": 9001, "content": "Shipment inbound in sorting center", "event_time": "2026-01-03T11:05:00+08:00", "location": "Shenzhen", "order": 999001 }
+    ]
+  }
+}

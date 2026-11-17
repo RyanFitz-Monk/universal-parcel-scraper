@@ -63386,9 +63386,10 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "xyl-ships"
     },
     "canaryUrl": "https://xylships.com/",
+    "trackingSearchUrl": "https://xylships.com/",
     "linkRules": [],
     "detectionRules": [
       {

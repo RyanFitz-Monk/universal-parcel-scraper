@@ -16,16 +16,36 @@
   "timezone": "Asia/Shanghai",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "xyl-ships",
+    "steps": [
+      "direct",
+      "retry"
+    ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location"
+  ],
   "portal": {
+    "searchUrl": "https://xylships.com/",
     "canaryUrl": "https://xylships.com/",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location"
+    ],
+    "discarded": [
+      "sender and recipient addresses",
+      "customer reference"
+    ],
+    "unavailable": [
+      "eta"
+    ]
   },
   "links": [],
   "detection": [

@@ -1,4 +1,23 @@
 {
   "carrier": "xyl-ships",
-  "entries": []
+  "entries": [
+    {"wording":"Delivered","language":"en","stage":"delivered","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Parcel currently being delivered","language":"en","stage":"out_for_delivery","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"The courier has received this parcel for delivery and will set a delivery time shortly","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17","note":"Handed to the delivering courier with no round set yet; the round itself follows, a day later on the history read."},
+    {"wording":"Arriving at the destination city, about to distribute to the post office","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Leave the transit hub, transport to the destination city","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Arriving at the transit hub, waiting for distribution","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Leaving transportation partner department, sent to the transit hub","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Arrival at transportation partner department, waiting for processing","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Transfer again, send to the transportation partner department","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Package is being transferred locally","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Released and the package is being transferred","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Arrived at destination transportation center","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Departed from origin transportation center","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Hand over to transportation company","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Leaving warehouse","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Arrived at sorting warehouse","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Departed from sorting center","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"},
+    {"wording":"Shipment inbound in sorting center","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-17"}
+  ]
 }
