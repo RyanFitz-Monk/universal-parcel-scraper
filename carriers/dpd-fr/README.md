@@ -66,7 +66,9 @@ non-2xx statuses are indeterminate.
   scan before it (`stage_source: 'none'`) and gives no result status; the acceptance's own row is
   `accepted`. The same-day delivery notice follows the round's scan and stays `out_for_delivery`.
   The notice of the delivery's current step ("… de l'étape actuelle de sa livraison") names no
-  step, so it also keeps the stage of the scan before it.
+  step, so it also keeps the stage of the scan before it. The notice that the delivery is put off
+  ("… du report de sa livraison") names no reason, so it reads `in_transit`: the parcel waits in the
+  network for its new day.
 - Unrecognized wording keeps the row with no `stage`; the result status comes
   from the newest recognized row. `statusMap` in [status.ts](status.ts) answers the app's
   review queue by the same wording.

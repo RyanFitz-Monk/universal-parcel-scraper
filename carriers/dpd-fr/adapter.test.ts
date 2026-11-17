@@ -213,6 +213,15 @@ describe('DPD France rendered tracking', () => {
     expect(statusMap.gapNote?.(null, notice)).toMatch(/current step.*keeps the stage/);
   });
 
+  it('reads the notice of a put-off delivery as the parcel waiting in the network for its new day', () => {
+    const result = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: [
+      ['05/03/2026', '18:10', 'Le destinataire est informé par SMS du report de sa livraison', ''],
+      ['05/03/2026', '06:58', 'Votre colis est en cours de livraison', 'Agence DPD de Exemple (998)'],
+    ] }), TEST_TRACKING_NUMBER);
+    expect(result.status).toBe('in_transit');
+    expect(statusMap.stage(null, normalizeStatusWording('Le destinataire est informé par SMS du report de sa livraison'))).toBe('in_transit');
+  });
+
   it('returns every declared capability from one fixture', () => {
     const result = parseDPDFranceTrackingHtml(trackingFixture({
       outboundRows: FIXTURE.outboundRows.slice(2),

@@ -139,6 +139,9 @@ export function classifyStatus(description: string): ClassifiedStatus {
     'colis en agence',
     // The recipient booked a later day: the parcel waits in the network.
     'suite a une prise de rendez vous',
+    // The recipient told the delivery is put off, which names no reason, the recipient's own booking or a round
+    // that could not deliver: either way the parcel waits in the network for its new day.
+    'du report de sa livraison',
   ])) return { status: 'in_transit', stage: 'in_transit' };
 
   // Wording this map does not recognize keeps the row visible without claiming
