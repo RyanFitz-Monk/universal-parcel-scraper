@@ -147,7 +147,7 @@ for Pickup shops.
 A link to DPD's group site, `www.dpdgroup.com` or `www.dpd.com`, with the number in
 `?parcelNumber=` names the network of the country its path starts with: `/ch/` names this
 carrier, and the other countries with a DPD network in the catalog name theirs. Any other
-country's path names none.
+country's path names none and leaves the number to detection, as a number typed alone.
 
 ## Testing
 

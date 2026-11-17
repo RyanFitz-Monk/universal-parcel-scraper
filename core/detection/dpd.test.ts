@@ -63,9 +63,13 @@ describe('DPD group site links', () => {
     }
   });
 
-  it('names no network for a country the catalog has none for', () => {
-    const url = 'https://www.dpdgroup.com/sk/mydpd/my-parcels/search?parcelNumber=01234567890123';
-    expect(parseTrackingInput(url).carrier).toBe('unknown');
-    expect(carrierIdFromPartner('', url)).toBeUndefined();
+  it('names no network for a country the catalog has none for, and keeps the number for detection', () => {
+    for (const country of ['sk', 'es']) {
+      const url = `https://www.dpdgroup.com/${country}/mydpd/my-parcels/search?parcelNumber=01234567890123`;
+      expect(parseTrackingInput(url)).toEqual({ ...detectCarrierMatch('01234567890123'), trackingNumber: '01234567890123', source: 'link' });
+      expect(parseTrackingInput(url)).toMatchObject({ carrier: 'unknown', confidence: 'low' });
+      expect(parseTrackingInput(url).candidates).toContain('dpd');
+      expect(carrierIdFromPartner('', url)).toBeUndefined();
+    }
   });
 });

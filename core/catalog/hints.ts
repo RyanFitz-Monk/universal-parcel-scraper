@@ -270,8 +270,9 @@ function carriersFromUrl(raw: string, byPath: boolean): string[] {
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return [];
   // Arrival notices also use the Swiss Post homepage instead of its tracking subdomain.
   if (['post.ch', 'www.post.ch'].includes(url.hostname)) return ['swiss-post'];
+  // A link no carrier owns names no partner by its path.
   const rules = TRACKING_LINK_RULES.filter((rule) => rule.domains.some((domain) => matchesDomain(url.hostname, domain))
-    && (!byPath || !rule.pathPattern || rule.pathPattern.test(url.pathname)));
+    && (!byPath || ((!rule.pathPattern || rule.pathPattern.test(url.pathname)) && rule.carrier !== 'unknown')));
   if (!byPath) return [...new Set(rules.map((rule) => rule.carrier))];
   // A rule that reads its number from the query covers a link without one only when no other rule does.
   const reading = rules.filter((rule) => rule.query?.test(query));

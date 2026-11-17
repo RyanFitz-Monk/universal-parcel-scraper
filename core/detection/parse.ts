@@ -165,8 +165,8 @@ function numberEnteredWhole(input: string): { number: string; labelled: boolean 
  * Pull a tracking number and carrier out of a number, carrier URL, or pasted
  * shipping message. Number shape disambiguates links shared by multiple brands,
  * a link to the host of another carrier's tracking page names that carrier for
- * a number only it issues, and a link marked `ownNumbersOnly` names its
- * carrier only for that carrier's own numbers.
+ * a number only it issues, a link marked `ownNumbersOnly` names its carrier
+ * only for that carrier's own numbers, and a link no carrier owns names none.
  */
 export function parseTrackingInput(raw: string): TrackingInputMatch {
   const input = raw.trim();
@@ -196,6 +196,9 @@ export function parseTrackingInput(raw: string): TrackingInputMatch {
       for (const firstRule of rules) {
         const trackingNumber = numberFromRule(url, firstRule);
         if (trackingNumber) {
+          // A link no carrier owns, an aggregator's or the DPD group site's for a country no
+          // network here serves, leaves its number to the number's own detection.
+          if (firstRule.carrier === 'unknown') return trackingMatch(trackingNumber, 'link');
           const detected = detectCarrierMatch(trackingNumber);
           const suggestedRules = rules.filter((candidate) => detected.candidates.includes(candidate.carrier));
           const suggestedCarriers = new Set(suggestedRules.map((candidate) => candidate.carrier));

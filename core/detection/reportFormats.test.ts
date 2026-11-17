@@ -300,6 +300,10 @@ describe('evidence-backed tracking formats', () => {
     expect(parseTrackingInput('Tracking number: PENDING').source).toBe('none');
     expect(parseTrackingInput('Your parcel AALZJR is on its way').source).toBe('none');
     expect(parseTrackingInput('thank you').source).toBe('none');
+    // An aggregator's link names no carrier: a number several carriers share stays theirs to recognize.
+    for (const link of ['https://t.17track.net/en#nums=aalzjr', 'https://parcelsapp.com/en/tracking/aalzjr']) {
+      expect(parseTrackingInput(link)).toMatchObject({ trackingNumber: 'aalzjr', carrier: 'unknown', confidence: 'low', candidates: ['gls-ch', 'gls-de'], source: 'link' });
+    }
     // A carrier's own link can carry one. GLS's group-wide links go to GLS Germany, its Swiss ones to GLS Switzerland.
     expect(parseTrackingInput('https://gls-group.eu/EU/en/parcel-tracking?match=AALZJR'))
       .toMatchObject({ trackingNumber: 'AALZJR', carrier: 'gls-de', source: 'link' });

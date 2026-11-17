@@ -2308,6 +2308,17 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ],
         "path": "^/(?:[a-z]{2}/)?tracking/([^/?#]+)",
         "detectFromNumber": true
+      },
+      {
+        "domains": [
+          "dpdgroup.com",
+          "dpd.com"
+        ],
+        "params": [
+          "parcelNumber",
+          "parcelnumber"
+        ],
+        "detectFromNumber": true
       }
     ],
     "detectionRules": []
