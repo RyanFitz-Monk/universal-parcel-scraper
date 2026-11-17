@@ -66,6 +66,8 @@ const SCAN_STAGES: readonly [RegExp, Stage][] = [
   // A parcel sent abroad: its first terminal, named without a delivery day, then the way out.
   [/^The shipment has reached DHL terminal in [^.]{0,80}\.$/i, 'accepted'],
   [/^The shipment left the origin country\.?$/i, 'in_transit'],
+  // A parcel leaving the gateway, on its way out or coming back after a failed delivery abroad.
+  [/^The shipment has left the gateway in origin country\.$/i, 'in_transit'],
   [/^The shipment has arrived at gateway in destination country\.$/i, 'in_transit'],
   [/^The shipment has arrived at delivery depot\.$/i, 'in_transit'],
   // Sorting on the way, at a hub and again at the delivery depot.
