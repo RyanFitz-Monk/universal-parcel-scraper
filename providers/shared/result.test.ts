@@ -312,8 +312,9 @@ describe('shared provider result', () => {
     for (const [wording, stage] of customs) {
       expect(event('2026-01-07T12:45:00+03:00', wording)).toMatchObject({ stage, stage_source: 'wording:language' });
     }
-    // The delivery office is another step.
-    expect(event('2026-01-07T12:45:00+03:00', 'Обработка, Прибыло в место вручения')).toMatchObject({ stage_source: 'none' });
+    // The delivery office is another step, which the shared rules read as Russian Post's map reads its 8.2.
+    expect(event('2026-01-07T12:45:00+03:00', 'Обработка, Прибыло в место вручения'))
+      .toMatchObject({ stage: 'ready_for_pickup', stage_source: 'wording:language' });
   });
 
   it("reads the US post's scan abroad, the country in capitals after it, by its wording", () => {

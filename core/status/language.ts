@@ -144,6 +144,26 @@ const CYRILLIC_CUSTOMS = String.raw`${CYRILLIC_START}(?:митн|мытн|там
  * there it may await pickup.
  */
 const CYRILLIC_MOVED = new RegExp(String.raw`^(?:прибул[оаи]?|прибув|прибыл[оаи]?) (?:до|в|у|на) (?:[а-яієґ']+ ){0,2}(?:центр|термінал|терминал|хаб)|^(?:виіхал[оаи]?|виіхав|выехал[оаи]?|убыл[оаи]?|отправлен[оаы]?|відправлен[оаі]?) (?:з|із|зі|из|с|со) |^(?:оброблено|обработано|опрацьовано) (?:на|в|у) `);
+/**
+ * Russian Post's scans as universal providers relay them, "operation, attribute": processing ("Обработка"),
+ * international processing, and the import or export of international mail, which move the item whatever
+ * their attribute. A processing attribute is read only when it is listed, by Russian Post's operation list
+ * (lapaygroup/RussianPost): arrival at or departure from a sorting centre, receipt by the office of exchange,
+ * the hand-over to the carrier, arrival where the item is handed out, and the hand-over to the postman.
+ */
+const RUSSIAN_POST_OPERATION = /^(?:(?:международная )?обработка, ?|(?:импорт|экспорт) международнои почты(?:, ?|$))/;
+const RUSSIAN_POST_ATTRIBUTES: ReadonlyMap<string, Stage> = new Map<string, Stage>([
+  ['прибыло в сортировочныи центр', 'in_transit'], ['покинуло сортировочныи центр', 'in_transit'],
+  ['поступило приписано', 'in_transit'], ['поступило не приписано', 'in_transit'], ['передано перевозчику', 'in_transit'],
+  ['прибыло в место вручения', 'ready_for_pickup'], ['передано почтальону', 'out_for_delivery'],
+]);
+
+function russianPostRelayStage(text: string): Stage | undefined {
+  const operation = RUSSIAN_POST_OPERATION.exec(text)?.[0];
+  if (!operation) return undefined;
+  const listed = RUSSIAN_POST_ATTRIBUTES.get(text.slice(operation.length).replace(/[.\s]+$/, ''));
+  return listed ?? (operation.includes('почты') ? 'in_transit' : undefined);
+}
 /** Shipment data received from the sender, in Russian or Ukrainian: "Данные … получены", "Дані отримано". */
 const CYRILLIC_DATA_RECEIVED = new RegExp(String.raw`${CYRILLIC_START}(?:данные|дані)(?: [а-яієґ']+){0,4}? (?:получены|отримано|отримані)`);
 /** Customs or clearance named in any language. */
@@ -435,7 +455,7 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   if (/^(?:package|parcel) shipment$/.test(text)) return 'in_transit';
   // Carrier-reported problems that are neither a missed attempt nor a return.
   if (/\b(?:damaged|broken in transit)\b|endommag|avarie|deterior|beschadigt|danneggiat|danad[oa]|danificad|uszkodzon/.test(text)) return 'exception';
-  if (/\blost (?:in transit|package|parcel|shipment)?\b|colis perdu|envoi perdu|egare|verloren|verlust der sendung|smarrit|(?:paquete|envio) perdid|extraviad|zagubion|zaginion/.test(text)) return 'exception';
+  if (/\blost (?:in transit|package|parcel|shipment)?\b|colis perdu|envoi perdu|\begare(?:e|s|es)?\b|verloren|verlust der sendung|smarrit|(?:paquete|envio) perdid|extraviad|zagubion|zaginion/.test(text)) return 'exception';
   if (/refused by (?:the )?(?:recipient|consignee)|\brefused\b|rejected by (?:the )?recipient|refus(?:e|ee)? par le destinataire|refus du destinataire|(?:colis|envoi|pli) refuse|annahme verweigert|verweigert|rifiutat|rechazad|recusad|odmowa przyjecia|odmowiono przyjecia/.test(text)) return 'exception';
   if (/address (?:incomplete|incorrect|invalid|insufficient|unknown)|(?:incorrect|incomplete|insufficient|wrong|invalid|non[- ]?existent) addres|(?:updated|correct(?:ed)?|complete) (?:delivery )?address (?:is )?(?:required|needed)|address(?:ee)? (?:unknown|cannot be located)|recipient unknown|adresse (?:incorrecte|incomplete|erronee|invalide|inconnue)|destinataire inconnu|(?:adresse|anschrift) (?:unvollstandig|falsch|unbekannt)|empfanger unbekannt|indirizzo (?:errato|incompleto|insufficiente|sconosciuto)|destinatario sconosciuto|direccion (?:incorrecta|incompleta|erronea|desconocida)|destinatario desconocido|endereco (?:incorreto|incompleto|errado|desconhecido)|destinatario desconhecido|adres (?:niepelny|nieprawidlowy|bledny)|nieznany adresat/.test(text)) return 'exception';
   if (CUSTOMS_PROBLEM_ENDED.test(text)) return 'in_transit';
@@ -873,6 +893,10 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // Accepted by a post, the whole scan, in Ukrainian ("Прийнято") or Russian ("Принято").
   if (/^(?:приинято|принято)$/.test(text)) return 'accepted';
   if (CYRILLIC_MOVED.test(text)) return 'in_transit';
+  const relayed = russianPostRelayStage(text);
+  if (relayed) return relayed;
+  // Russian Post's import or export of international mail as a provider translates it: "International mail import: …".
+  if (/^international mail (?:import|export)\b/.test(text)) return 'in_transit';
   return undefined;
 }
 

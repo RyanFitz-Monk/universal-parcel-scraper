@@ -1281,6 +1281,27 @@ describe('classifyWording', () => {
     }
   });
 
+  it('reads a parcel égaré as lost, but not a promise to deliver it', () => {
+    for (const wording of ['Colis égaré', 'Votre colis est égaré', 'Colis égarés', 'Envoi égaré, enquête ouverte']) {
+      expect(trackingLanguageStage(wording), wording).toBe('exception');
+    }
+    for (const wording of ['Te lo entregaremos muy pronto.', 'Te entregaremos tu envío lo antes posible.', 'Para entregarem a encomenda']) {
+      expect(trackingLanguageStage(wording), wording).not.toBe('exception');
+    }
+  });
+
+  it("reads Russian Post's operation and attribute as universal providers relay them", () => {
+    for (const [wording, stage] of [
+      ['Обработка, Прибыло в сортировочный центр', 'in_transit'], ['Обработка, Покинуло сортировочный центр', 'in_transit'],
+      ['Международная обработка, Передано перевозчику', 'in_transit'], ['Обработка, Поступило приписано.', 'in_transit'],
+      ['Импорт международной почты', 'in_transit'], ['Экспорт международной почты, Неизвестный атрибут', 'in_transit'],
+      ['International mail import: Example', 'in_transit'],
+      ['Обработка, Прибыло в место вручения', 'ready_for_pickup'], ['Обработка, Передано почтальону', 'out_for_delivery'],
+    ] as const) expect(trackingLanguageStage(wording), wording).toBe(stage);
+    // A processing attribute Russian Post's list doesn't give stays unread.
+    expect(trackingLanguageStage('Обработка, Неизвестный атрибут')).toBeUndefined();
+  });
+
   it('falls back without a rule id when nothing matches', () => {
     expect(classifyWording('Estado interno 99', 'pending')).toEqual({ stage: 'pending', source: 'none' });
     expect(wordingStage('Estado interno 99')).toBe('in_transit');
