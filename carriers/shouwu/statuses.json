@@ -360,6 +360,14 @@
       "firstSeen": "2026-11-17"
     },
     {
+      "wording": "Arrived at origin facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Two hours after the pickup: the parcel reaching the facility it leaves China from."
+    },
+    {
       "wording": "Departed from the origin facility",
       "stage": "in_transit",
       "language": "en",
