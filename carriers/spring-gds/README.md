@@ -31,14 +31,14 @@ it; everything user-facing says PostNL.
      (`expires_in`). An empty or implausibly long token is refused.
    - `postnl.post/api/v1/tracking-items` takes the barcode with that token. The answer echoes
      a batch; only the item whose `item` equals the requested number is read.
-   - Each call replays once after a transport failure or HTTP 502/503/504, and after a 429
-     only when it carries a short, valid `Retry-After` that ends before the lookup does;
-     a longer wait fails the lookup at once, leaving the rest of the host's budget to other
-     sources. A tracking call whose replay meets a 429 asking for 2 s or less replays once
-     more. Both calls share a cancellable deadline; other errors are not retried. A 429 left
-     standing is a rate limit whose message names the call, the try it met and the wait PostNL
-     asked for, or that it named none, so a host's log shows whether a replay met it and
-     whether waiting longer would have served the lookup.
+   - Each call replays once after a transport failure or HTTP 502/503/504. The token call
+     replays after a 429 only when it carries a valid `Retry-After` that ends before the
+     lookup does. The tracking call replays a 429 after its `Retry-After` or 2 s, whichever
+     is shorter, up to five requests while the lookup has time left; a 429 without a wait
+     is left standing. Both calls share a cancellable deadline; other errors are not retried.
+     A 429 left standing is a rate limit whose message names the call, the try it met and the
+     wait PostNL asked for, or that it named none, so a host's log shows whether a replay met
+     it and whether waiting longer would have served the lookup.
    - Unknown barcode: an ordinary item with no events and "barcode was not found" in
      `message`. "Barcode was incorrect" means the same only for a 15-character `3S` barcode
      with a four-letter customer code, the layout the endpoint reads, where it marks a code
@@ -125,10 +125,12 @@ it; everything user-facing says PostNL.
 - The endpoint answers "The shipment barcode was incorrect." for 13- and 14-character `3S`
   barcodes, which are PostNL's (Parcel EU among them), and for 15-character ones without a
   four-letter customer code. The lookup then stays inconclusive.
-- The tracking endpoint enforces a per-minute call quota shared beyond one client, so a
-  lookup can meet HTTP 429 at a low request rate. The replay after its one-second
-  `Retry-After` can meet the same quota, and so can the second replay; the lookup then fails
-  as a rate limit.
+- The tracking endpoint admits 20 calls a minute on each of several backends, shared with
+  every visitor of the site, so a lookup meets HTTP 429 whatever its own rate. Each backend
+  keeps its own minute: the `Retry-After` of calls a few seconds apart jumps by tens of
+  seconds, and a call refused with a long wait can go through two seconds later. Waiting
+  out the wait mostly meets another full backend, so the tracking call pauses briefly
+  instead. A lookup whose five requests all meet a full backend fails as a rate limit.
 - A `3S` parcel sent within the Netherlands is only on PostNL's domestic tracker, which shows
   it only with its delivery postcode. Without one, the lookup asks for it and other sources
   are asked. The domestic tracker also shows parcels PostNL delivers abroad, under the

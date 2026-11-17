@@ -10,10 +10,12 @@
  * `postnl.post` hands out a visitor token that lasts a day to anyone who asks,
  * then accepts a batch tracking request with it. The tracker keeps the token
  * for its later lookups. Both calls replay once after a transport failure or an
- * HTTP 502/503/504, and an HTTP 429 only when it supplies a short, valid
- * `Retry-After` that ends before the lookup does. The tracking call replays a
- * second time when its replay meets a 429 asking for 2 s or less. A 429 left
- * standing names the try it met and the wait PostNL asked for.
+ * HTTP 502/503/504. The token call replays after an HTTP 429 only when it
+ * supplies a short, valid `Retry-After` that ends before the lookup does. The
+ * tracking call's quota is kept by several backends and shared with every
+ * visitor, so a 429 there is replayed after its `Retry-After` or 2 s, whichever
+ * is shorter, up to five requests. A 429 left standing names the try it met and
+ * the wait PostNL asked for.
  *
  * The response echoes the requested barcodes, so the item whose `item` equals
  * the requested number is the only one read. PostNL answers an unknown barcode
@@ -50,10 +52,16 @@ const TOKEN_TIMEOUT_MS = 10_000;
 const DOMESTIC_TIMEOUT_MS = 10_000;
 const TRACK_TIMEOUT_MS = 15_000;
 const LOOKUP_TIMEOUT_MS = 25_000;
-/** The longest wait PostNL may ask for after the tracking call's replay for it to be replayed once more. */
-const SHORT_WAIT_MS = 2_000;
-/** A request in a call: its first try, its replay and the tracking call's second replay. */
-const TRIES = ['on the first try', 'on its replay', 'on its second replay'];
+/**
+ * The tracking call's quota of 20 calls a minute is kept by each of several backends and shared with every visitor of
+ * the site. A refusal's `Retry-After` names the window of the backend that refused, which jumps by tens of seconds
+ * between calls a few seconds apart, while another backend often has room: a refused call is replayed after its wait
+ * or this pause, whichever is shorter, up to `TRACKING_TRIES` requests.
+ */
+const QUOTA_PAUSE_MS = 2_000;
+const TRACKING_TRIES = 5;
+/** A request in a call: its first try and its replays. */
+const TRIES = ['on the first try', 'on its replay', 'on its second replay', 'on its third replay', 'on its fourth replay'];
 const MAX_TOKEN_LENGTH = 16_384;
 // Visitor tokens last a day (`expires_in: 86400`); one is renewed this long before it expires.
 const MAX_TOKEN_LIFETIME_MS = 86_400_000;
@@ -301,8 +309,7 @@ export function parsePostNLDomesticResponse(value: unknown, trackingNumber: stri
 
 /**
  * PostNL's refusal of a request for being too many, with the try it met and the wait it asked for in its wording, so
- * a host's log shows whether a replay met it and whether waiting longer would have served the lookup. A wait of up to
- * a minute was waited once.
+ * a host's log shows whether a replay met it and whether waiting longer would have served the lookup.
  */
 function rateLimited(error: UpstreamHttpError, tries: number): RateLimitedError {
   const wait = error.retryAfterMs === undefined ? 'without saying how long to wait'
@@ -310,6 +317,14 @@ function rateLimited(error: UpstreamHttpError, tries: number): RateLimitedError 
   const attempt = TRIES[tries - 1];
   return new RateLimitedError(PROVIDER, error.retryAfterMs,
     `${error.provider} refused the request with HTTP 429${attempt ? ` ${attempt}` : ''}, ${wait}`, { cause: error, status: 429 });
+}
+
+/** A `Retry-After` header's wait in milliseconds, given in seconds or as a date; undefined when absent or unreadable. */
+function retryAfterOf(header: string | null): number | undefined {
+  const value = header?.trim();
+  if (!value) return undefined;
+  const wait = /^\d+$/.test(value) ? Number(value) * 1_000 : Date.parse(value) - Date.now();
+  return Number.isFinite(wait) ? Math.max(0, wait) : undefined;
 }
 
 /** A fetcher that counts the requests it makes, so a refusal can say which try met it. */
@@ -402,46 +417,44 @@ export class PostNLTracker {
   }
 
   /**
-   * The tracking request. A token PostNL refuses with HTTP 401 is not kept. Its quota often lets a request through a
-   * second or two after refusing the replay, so a replay refused with a wait of 2 s or less is replayed once more.
+   * The tracking request. A token PostNL refuses with HTTP 401 is not kept. A refusal as too many is replayed after its
+   * `Retry-After` or `QUOTA_PAUSE_MS`, whichever is shorter, while the lookup has time left, up to `TRACKING_TRIES`
+   * requests; one without a wait is left standing.
    */
   private async track(trackingNumber: string, accessToken: string, signal: AbortSignal, deadline: number): Promise<Uint8Array> {
     const counted = counting(this.fetcher);
-    const request = async (retryTransient: boolean) => (await fetchBounded(
-      TRACK_URL,
-      {
-        method: 'POST',
-        headers: { ...this.headers, Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ items: [trackingNumber], language_code: 'en' }),
-        signal,
-      },
-      {
-        provider: 'PostNL tracking',
-        timeoutMs: TRACK_TIMEOUT_MS,
-        maxBytes: 1_000_000,
-        retryTransient,
-        deadline,
-        fetcher: counted.fetcher,
-      },
-    )).bytes;
-    let refusal: UpstreamHttpError;
-    try {
-      return await request(true);
-    } catch (error) {
-      if (error instanceof UpstreamHttpError && error.status === 401 && this.cachedToken?.value === accessToken) this.cachedToken = null;
-      if (!(error instanceof UpstreamHttpError) || error.status !== 429) throw error;
-      refusal = error;
-    }
-    const wait = Math.max(1_000, refusal.retryAfterMs ?? Infinity);
-    if (counted.tries() === 2 && wait <= SHORT_WAIT_MS && performance.now() + wait < deadline && await paused(wait, signal)) {
+    for (;;) {
+      let reply: { response: Response; bytes: Uint8Array };
       try {
-        return await request(false);
+        reply = await fetchBounded(
+          TRACK_URL,
+          {
+            method: 'POST',
+            headers: { ...this.headers, Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({ items: [trackingNumber], language_code: 'en' }),
+            signal,
+          },
+          {
+            provider: 'PostNL tracking',
+            timeoutMs: TRACK_TIMEOUT_MS,
+            maxBytes: 1_000_000,
+            retryTransient: counted.tries() === 0,
+            allowHttpStatuses: [429],
+            deadline,
+            fetcher: counted.fetcher,
+          },
+        );
       } catch (error) {
-        if (!(error instanceof UpstreamHttpError) || error.status !== 429) throw error;
-        refusal = error;
+        if (error instanceof UpstreamHttpError && error.status === 401 && this.cachedToken?.value === accessToken) this.cachedToken = null;
+        throw error;
+      }
+      if (reply.response.status !== 429) return reply.bytes;
+      const refusal = new UpstreamHttpError('PostNL tracking', 429, retryAfterOf(reply.response.headers.get('retry-after')));
+      const pause = refusal.retryAfterMs === undefined ? undefined : Math.min(QUOTA_PAUSE_MS, Math.max(1_000, refusal.retryAfterMs));
+      if (pause === undefined || counted.tries() >= TRACKING_TRIES || performance.now() + pause >= deadline || !await paused(pause, signal)) {
+        throw rateLimited(refusal, counted.tries());
       }
     }
-    throw rateLimited(refusal, counted.tries());
   }
 
   /** The domestic tracker's answer for a 3S barcode and the country and postcode of its delivery address. */
@@ -538,7 +551,7 @@ export const adapter: AdapterFactory = (environment) => {
     recordsSteps: true,
     // The domestic tracker runs only for a 3S barcode with a postcode it can take. The
     // international visitor token and lookup are one step: both are keyless HTTP
-    // on the same host, and each replays once inside the step, the tracking call twice after a short 429.
+    // on the same host, and each replays inside the step, the tracking call up to four times after a 429.
     steps: ['domestic', 'direct'],
     track: (input, context) => tracker.fetch(input.number, context, input.postcode, input.postcodeCountry),
     // Only the series the catalog's recognition pattern names: a 3S barcode PostNL

@@ -33,7 +33,8 @@ afterEach(() => {
 describe('PostNL transient failures', () => {
   beforeEach(() => vi.useFakeTimers());
 
-  it.each(['authentication', 'tracking'])('recovers from a rate-limited %s request', async (step) => {
+  // The token call waits the 6 s PostNL asks for; the tracking call pauses 2 s, since another backend may have room.
+  it.each([['authentication', 6_000], ['tracking', 2_000]] as const)('recovers from a rate-limited %s request', async (step, pause) => {
     const responses = [
       jsonResponse({ access_token: 'visitor-token' }),
       jsonResponse({ data: { items: [{ item: POSTNL_WRONG_NUMBER, events: [{ category: 'Processing', datetime_local: '2026-08-30T12:00:00Z', country_code: 'NL' }] }] } }),
@@ -43,7 +44,7 @@ describe('PostNL transient failures', () => {
     }));
     const fetcher = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => responses.shift()!);
     const result = fetchPostNL(POSTNL_WRONG_NUMBER);
-    await vi.advanceTimersByTimeAsync(5_999);
+    await vi.advanceTimersByTimeAsync(pause - 1);
     expect(fetcher).toHaveBeenCalledTimes(step === 'authentication' ? 1 : 2);
     await vi.advanceTimersByTimeAsync(1);
     await expect(result).resolves.toMatchObject({ status: 'in_transit', events: [{ stage: 'accepted' }] });
@@ -57,7 +58,7 @@ describe('PostNL transient failures', () => {
 
   const refusal = (wait: string) => new Response('', { status: 429, headers: { 'Retry-After': wait } });
 
-  it('replays the tracking call a second time when PostNL refuses its replay with a wait of 2 s or less', async () => {
+  it('replays a refused tracking call after the wait PostNL asks for when it is shorter than 2 s', async () => {
     const responses = [jsonResponse({ access_token: 'visitor-token' }), refusal('1'), refusal('2'),
       jsonResponse({ data: { items: [{ item: POSTNL_WRONG_NUMBER, events: [{ category: 'Processing', datetime_local: '2026-08-30T12:00:00Z', country_code: 'NL' }] }] } })];
     const fetcher = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => responses.shift()!);
@@ -69,9 +70,23 @@ describe('PostNL transient failures', () => {
     expect(fetcher).toHaveBeenCalledTimes(4);
   });
 
+  // Several backends keep the quota, each with its own minute: one asks for 46 s while the next has room.
+  it('replays a tracking call refused with a long wait after 2 s', async () => {
+    const responses = [jsonResponse({ access_token: 'visitor-token' }), refusal('46'), refusal('38'), refusal('52'),
+      jsonResponse({ data: { items: [{ item: POSTNL_WRONG_NUMBER, events: [{ category: 'Processing', datetime_local: '2026-08-30T12:00:00Z', country_code: 'NL' }] }] } })];
+    const fetcher = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => responses.shift()!);
+    const result = fetchPostNL(POSTNL_WRONG_NUMBER);
+    await vi.advanceTimersByTimeAsync(5_999);
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(result).resolves.toMatchObject({ status: 'in_transit', events: [{ stage: 'accepted' }] });
+    expect(fetcher).toHaveBeenCalledTimes(5);
+  });
+
   it.each([
-    [['1', '1', '1'], 'on its second replay, asking to wait 1 s'],
-    [['1', '3'], 'on its replay, asking to wait 3 s'],
+    [['1', '1', '1', '1', '1'], 'on its fourth replay, asking to wait 1 s'],
+    [['46', '38', '52', '25', '31'], 'on its fourth replay, asking to wait 31 s'],
+    [['46', ''], 'on its replay, without saying how long to wait'],
   ])('says which try met the 429 it leaves standing (Retry-After %j)', async (waits, wording) => {
     const responses = [jsonResponse({ access_token: 'visitor-token' }), ...waits.map(refusal)];
     const fetcher = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => responses.shift()!);
@@ -578,11 +593,11 @@ describe('PostNL complete lookup budget', () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
-  it('fails at once when PostNL asks for a wait longer than the lookup has left', async () => {
+  it('fails at once when the lookup has no time left for a pause', async () => {
     const fetcher = vi.fn<typeof fetch>(async (url) => String(url).endsWith('/tracking-items')
       ? new Response('', { status: 429, headers: { 'Retry-After': '46' } }) : jsonResponse({ access_token: 'visitor-token' }));
     const started = performance.now();
-    const error = await new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER, { budgetMs: 25_000 }).catch((caught: unknown) => caught);
+    const error = await new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER, { budgetMs: 1_500 }).catch((caught: unknown) => caught);
     expect(error).toMatchObject({ kind: 'rate_limited', message: 'PostNL tracking refused the request with HTTP 429 on the first try, asking to wait 46 s', retryAfterMs: 46_000 });
     expect(performance.now() - started).toBeLessThan(5_000);
     expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/tracking-items'))).toHaveLength(1);
@@ -595,7 +610,7 @@ describe('PostNL complete lookup budget', () => {
     const refusal = () => new Response('', { status: 429, headers: header === null ? {} : { 'Retry-After': header } });
     const fetcher = vi.fn<typeof fetch>(async (url) => step === 'authentication' || String(url).endsWith('/tracking-items')
       ? refusal() : jsonResponse({ access_token: 'visitor-token' }));
-    const error = await new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER).catch((caught: unknown) => caught);
+    const error = await new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER, { budgetMs: 1_500 }).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(RateLimitedError);
     expect(error).toMatchObject({ kind: 'rate_limited', status: 429, message, retryAfterMs: wait });
     expect(retryAfterMsOf(error)).toBe(wait);
