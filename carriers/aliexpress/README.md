@@ -117,13 +117,17 @@ activity confirms the Cainiao tracking leg; an empty internal pending module doe
   a stage; the sync classifies the wording and records it, with the code, for review. `statusMap`
   answers the review by code, and by wording for the four codes the queue held before events kept
   theirs.
-- Cainiao's notices keep the stage of the scan before them, or pending before any: its advance
-  notice to the courier that delivers the parcel ("Last-mile delivery forecast", sent seconds
-  after a scan and naming no delivery date, so no planned step), a changed order and a transit
-  sorting center's failed inbound. When one is the newest row, the parcel's status is that of its
-  newest scan with a moving stage, and the notice stays the last update. A notice worded only by
-  the placeholder "Carrier update" leaves that scan's wording as the headline. The advance notice
-  worded so shows Cainiao's wording for it, "Last-mile delivery forecast".
+- Cainiao's notices have no stage of their own (`pending`, `stage_source: none`), so they add no
+  step: its advance notice to the courier that delivers the parcel ("Last-mile delivery forecast",
+  sent seconds after a scan and naming no delivery date, so no planned step), a changed order and
+  a transit sorting center's failed inbound. When one is the newest row, the parcel's status is
+  that of its newest scan with a moving stage, and the notice stays the last update. A notice
+  worded only by the placeholder "Carrier update" leaves that scan's wording as the headline. The
+  advance notice worded so shows Cainiao's wording for it, "Last-mile delivery forecast".
+- On the line into Brazil Cainiao copies Correios' receipt at its international centre twice at
+  the same second: as the local carrier's acceptance and as an import clearance start, even when
+  Correios cleared the parcel hours before. That start has no stage of its own either; the
+  acceptance carries the step.
 - The global feed has no place field. It writes a scan's town in brackets before the standard
   wording, `[Town] Out for delivery`, in every language. That town becomes the location and the
   wording keeps the rest, and the event's `original_description` the wording as it came. A

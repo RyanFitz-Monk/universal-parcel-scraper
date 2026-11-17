@@ -27,7 +27,6 @@ import { normalizeTrackingNumber } from '../../core/detection/normalize.js';
 import { validTrackingNumber } from '../../core/detection/valid.js';
 import { ChallengeError, IndeterminateError, NotFoundError, RateLimitedError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
-import type { Stage } from '../../core/status/index.js';
 import { paused } from '../../core/runner/pause.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
 import { decodeText, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
@@ -261,10 +260,16 @@ export function parseCainiaoTrackingResponse(value: unknown, trackingNumber: str
   // A token the map does not know reads as moving only once Cainiao has a
   // scan; before one it states nothing.
   const scanned = details.length > 0 || Object.keys(latest).length > 0;
+  // On the line into Brazil Cainiao copies Correios' receipt at its international centre twice at the same
+  // second, as the local carrier's acceptance and as an import clearance start, even when Correios cleared the
+  // parcel hours before: that start is the receipt, not customs, and moves nothing of its own.
+  const acceptedAt = new Set(details.filter((scan) => cainiaoActionCode(scan.actionCode) === 'GTMS_ACCEPT').map((scan) => text(scan.timeStr)));
+  const movesNothing = (scan: Record<string, unknown>): boolean => CAINIAO_NOTICE_ACTIONS.has(cainiaoActionCode(scan.actionCode))
+    || (cainiaoActionCode(scan.actionCode) === 'CC_IM_START' && Boolean(text(scan.timeStr)) && acceptedAt.has(text(scan.timeStr)));
   // A notice moves nothing: the parcel stands at its newest scan that has a stage,
   // while the notice stays the newest update.
-  const standing = CAINIAO_NOTICE_ACTIONS.has(cainiaoActionCode(latest.actionCode))
-    ? details.find((event) => cainiaoActionStage(cainiaoActionCode(event.actionCode))) ?? latest
+  const standing = movesNothing(latest)
+    ? details.find((event) => !movesNothing(event) && cainiaoActionStage(cainiaoActionCode(event.actionCode))) ?? latest
     : latest;
   const standingAction = cainiaoActionCode(standing.actionCode);
   // A notice worded only by the placeholder says nothing: the headline stays its standing scan's.
@@ -290,13 +295,10 @@ export function parseCainiaoTrackingResponse(value: unknown, trackingNumber: str
       ...(stage ? { stage } : {}),
     };
   });
-  // Oldest first: a notice keeps the stage of the scan before it, and pending before any.
-  let previous: Stage = 'pending';
-  for (let index = events.length - 1; index >= 0; index -= 1) {
-    const event = events[index]!;
-    if (CAINIAO_NOTICE_ACTIONS.has(cainiaoActionCode(details[index]!.actionCode))) Object.assign(event, { stage: previous, stage_source: 'none' });
-    else if (event.stage) previous = event.stage as Stage;
-  }
+  // A row that moves nothing has no stage of its own, so it adds no step: the parcel stays at the scan before it.
+  events.forEach((event, index) => {
+    if (movesNothing(details[index]!)) Object.assign(event, { stage: 'pending', stage_source: 'none' });
+  });
   // The estimate's bounds, epoch milliseconds as a number or as digits; a window
   // with one bound is that day.
   const eta = record(trackingModule.globalEtaInfo);
