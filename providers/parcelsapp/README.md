@@ -255,6 +255,12 @@ step exists for future protocol changes.
   GOFO's. It still lends its zone to 4PX's own scans in the reply. A second of :00 can be a
   minute-only clock's, so it matches nothing. A 4PX site code the adapter knows, the country
   and the city's code ("USHOUA", its Houston operation point), places its scan in that town.
+- The postal feeds, UPU's and EMS's, and the post they relay can each give the same UPU event at
+  an office of exchange or import customs, in their own words and with their own place: on a
+  parcel from Mexico to Colombia each such scan came two or three times at one minute. Rows of
+  two sources at one instant that word one event (arrival at or departure from an office of
+  exchange, presentation to import customs, a customs hold) are one scan: the post's own row,
+  else the first with a place. Two events at one minute stay two scans.
 - Wall clocks: the dates of USPS, Canada Post, GOFO's US scans, SpeedPAK, EMS, Cainiao,
   EcoScooting, 4PX, MailAmericas, Australia Post and FIRST LINE abroad are each scan's local clock under a label that is
   never its instant (checked 2026-10-10 scan for scan: USPS's page and the "at 8:25 am" in

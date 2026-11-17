@@ -2006,6 +2006,45 @@ function timedTwins(carried: readonly { event: CarrierEvent; carrier: string }[]
       && other.stage_source !== 'none' && clockOf(other).slice(0, 10) === day.local_time)).map(({ event }) => event);
 }
 
+/**
+ * The UPU's events at an office of exchange and at import customs, in the words of the postal
+ * feeds and of the posts ParcelsApp relays them for. On a parcel from Mexico to Colombia, UPU's,
+ * EMS's and Correos de México's copies of each came at the same minute, with their own places.
+ */
+const POSTAL_EVENTS: readonly RegExp[] = [
+  /^(?:arrived at export office|arrived at international sorting center in country of origin|arrival at outward office of exchange|in the international exchange area towards the destination country\b.*)$/,
+  /^(?:departed from export office|departed country of origin|(?:departure|dispatch) from outward office of exchange|piece deposited in a bag and sent to the destination country office)$/,
+  /^(?:arrived at destination import office|arrived at sorting center in destination(?: country)?|arrival at inward office of exchange)$/,
+  /^(?:item )?presented to import customs$/,
+  /^(?:held by customs|held for customs inspection)$/,
+];
+const postalEvent = (description: string | undefined) => {
+  const text = (description ?? '').replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
+  return POSTAL_EVENTS.findIndex((words) => words.test(text));
+};
+
+/**
+ * One UPU event that two sources ParcelsApp files apart give at the same instant
+ * (`POSTAL_EVENTS`) is one scan. The post's own row is kept, else the first with a place.
+ */
+function dropPostalCopies(events: CarrierEvent[], names: ReadonlyMap<CarrierEvent, unknown>): void {
+  const groups = new Map<string, CarrierEvent[]>();
+  for (const event of events) {
+    const kind = postalEvent(event.description);
+    if (kind < 0 || !event.time) continue;
+    const key = `${Date.parse(event.time)}|${kind}`;
+    groups.set(key, [...groups.get(key) ?? [], event]);
+  }
+  const copies = new Set<CarrierEvent>();
+  for (const group of groups.values()) {
+    if (new Set(group.map((event) => nameKey(names.get(event)))).size < 2) continue;
+    const kept = group.find((event) => !POSTAL_FEEDS.has(nameKey(names.get(event))))
+      ?? group.find((event) => event.location) ?? group[0]!;
+    for (const event of group) if (event !== kept) copies.add(event);
+  }
+  if (copies.size) events.splice(0, events.length, ...events.filter((event) => !copies.has(event)));
+}
+
 // Russian Post's summary of a delivery, "Вручено 22 октября" (delivered on 22 October).
 const RUSSIAN_POST_SUMMARY = /^вручено \d{1,2} \p{L}+[.!]?$/iu;
 
@@ -2411,6 +2450,7 @@ function parseHistory(payload: unknown, trackingNumber: string, timezone: string
   markHandovers(carried);
   dropPassed(events, carried, steps);
   dropRussianPostSummaries(events, summaries);
+  dropPostalCopies(events, names);
   latest.check();
   if (!events.length) {
     const gates = payload.states.filter((raw: unknown): raw is Record<string, unknown> => isRecord(raw)

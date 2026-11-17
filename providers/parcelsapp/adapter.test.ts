@@ -3114,15 +3114,41 @@ describe('ParcelsApp result parsing', () => {
       ['Held at destination import office', '2026-07-20T21:58:00.000Z'],
       ['Presented to import customs', '2026-07-20T21:55:00.000Z'],
       ['Held for customs inspection', '2026-07-20T21:55:00.000Z'],
+      // EMS's copies of the post's own office of exchange scans at their instant are those scans.
       ['Arrival at inward office of exchange', '2026-07-20T21:54:00.000Z'],
-      ['Arrived at destination import office', '2026-07-20T21:54:00.000Z'],
       ['Item Received', '2026-07-20T21:54:00.000Z'],
       ['Item Leaving the UK', '2026-07-16T00:48:06.000Z'],
       ['Departure from outward office of exchange', '2026-07-16T00:48:00.000Z'],
-      ['Departed from export office', '2026-07-16T00:48:00.000Z'],
     ]);
     // ParcelsApp's forecast is no scan: it neither dates the reply nor names its status.
     expect(parsed.last_status_text).toBe('Departed from destination import office');
+  });
+
+  it("keeps one scan of a UPU event that the postal feeds and the post give at the same instant", () => {
+    // Live shape: a parcel from Mexico to Colombia, its exchange office scans from UPU, EMS and Correos de México.
+    const scan = (date: string, status: string, carrier: number, location?: string) => ({ date, status, carrier, ...(location ? { location } : {}) });
+    const events = parseParcelsAppResponse({ carriers: ['Universal Postal Union', 'EMS', 'Mexico Post'], originCode: 'MX', destinationCode: 'CO', states: [
+      scan('2026-11-13T20:15:00Z', 'Held by customs', 0, 'EXAMPLE OFFICE, Colombia'),
+      scan('2026-11-13T20:15:00Z', 'Item presented to import Customs', 0, 'EXAMPLE OFFICE, Colombia'),
+      scan('2026-11-13T20:15:00+00:00', 'Presented to import customs', 1, 'Bogotá'),
+      scan('2026-11-13T20:15:00+00:00', 'Held for customs inspection', 1),
+      scan('2026-11-13T20:10:00Z', 'Arrived at sorting center in destination country', 0, 'EXAMPLE OFFICE, Colombia'),
+      scan('2026-11-13T20:10:00+00:00', 'Arrived at destination import office', 1, 'Bogotá'),
+      scan('2026-10-23T08:36:00Z', 'Piece deposited in a bag and sent to the destination country office.', 2, 'Example Office, Mexico City'),
+      scan('2026-10-23T08:36:00+00:00', 'Departed from export office', 1, 'Ciudad de México'),
+      scan('2026-10-23T08:36:00Z', 'Departed country of origin', 0, 'EXAMPLE EMS, Mexico'),
+      scan('2026-10-22T07:33:00Z', 'In the international exchange area towards the destination country, processing', 2, 'Example Office, Mexico City'),
+      scan('2026-10-22T07:33:00Z', 'Arrived at international sorting center in country of origin', 0, 'EXAMPLE EMS, Mexico'),
+      scan('2026-10-22T07:33:00+00:00', 'Arrived at export office', 1, 'Ciudad de México'),
+    ] }, number, identity()).events?.map(({ description, time }) => [description, time]);
+    // The post's own row stands for its event, else the first placed; another event at the minute stays.
+    expect(events).toEqual([
+      ['Held by customs', '2026-11-14T01:15:00.000Z'],
+      ['Item presented to import Customs', '2026-11-14T01:15:00.000Z'],
+      ['Arrived at sorting center in destination country', '2026-11-14T01:10:00.000Z'],
+      ['Piece deposited in a bag and sent to the destination country office.', '2026-10-23T14:36:00.000Z'],
+      ['In the international exchange area towards the destination country, processing', '2026-10-22T13:33:00.000Z'],
+    ]);
   });
 
   it('reads EMS\'s office of exchange in a country of several clocks on the one most of its people live on', () => {
@@ -3140,8 +3166,13 @@ describe('ParcelsApp result parsing', () => {
       ?.map((event) => [event.description, event.time, event.time_zone]);
     expect(times('Chile', 'EXAMPLE EMS')).toEqual([
       ['Item presented to import Customs', '2026-11-06T04:36:00.000Z', 'America/Santiago'],
-      ['Presented to import customs', '2026-11-06T04:36:00.000Z', 'America/Santiago'],
       ['Arrived at sorting center in destination', '2026-11-06T03:59:00.000Z', 'America/Santiago'],
+    ]);
+    // EMS's copies alone keep their place's clock.
+    expect(parseParcelsAppResponse({ carriers: ['Universal Postal Union', 'EMS'], origin: 'Netherlands', destination: 'Chile',
+      states: states('Chile', 'EXAMPLE EMS').filter(({ carrier }) => carrier === 1) }, number, identity()).events
+      ?.map((event) => [event.description, event.time, event.time_zone])).toEqual([
+      ['Presented to import customs', '2026-11-06T04:36:00.000Z', 'America/Santiago'],
       ['Arrived at destination import office', '2026-11-06T03:59:00.000Z', 'America/Santiago'],
     ]);
     // A country whose states keep their own clocks names no office's clock.
@@ -3409,7 +3440,9 @@ describe('ParcelsApp result parsing', () => {
     ];
     // Sydney keeps +10:00 in July, Riyadh +03:00.
     for (const timezone of [null, 'Asia/Riyadh']) {
-      expect(times([spl('SYDNEY'), ...departed], timezone)?.map(([time]) => time)).toEqual(Array(3).fill('2026-07-07T19:12:00.000Z'));
+      // UPU's and EMS's copies of the departure are one scan.
+      expect(times([spl('SYDNEY'), ...departed], timezone)).toEqual([['2026-07-07T19:12:00.000Z', 'Your Shipment Is On Its Way To Destination'],
+        ['2026-07-07T19:12:00.000Z', 'Departed country of origin']]);
     }
     // With no copy at its place, its home clock stays the guess; a location abroad rules it out.
     expect(times([spl('SYDNEY')])).toEqual([['2026-07-08T02:12:00.000Z', 'Your Shipment Is On Its Way To Destination']]);
