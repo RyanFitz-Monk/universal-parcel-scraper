@@ -130,6 +130,15 @@
       "note": "Label the open-source lapaygroup/RussianPost client's operation list (src/StatusList.php) gives this operation; the tracking page's English wording was not seen. Arrived in Russia."
     },
     {
+      "code": "9.0",
+      "wording": "Passed registration in …",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Import of international mail without an attribute, on an item Russian Post sent abroad: written the day after it left Russia, at the minute the destination post's office of exchange received it, and before the destination's customs."
+    },
+    {
       "code": "9.1",
       "wording": "Поступило приписано",
       "stage": "in_transit",

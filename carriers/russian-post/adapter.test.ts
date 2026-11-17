@@ -56,6 +56,8 @@ describe('Russian Post anonymous tracking', () => {
       ['33.1', 'in_transit', 'carrier_map'], ['10.0', 'in_transit', 'carrier_map'], ['8.5', 'customs', 'carrier_map']]);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'russian-post', providerCode: '11.0', description: 'Прием на таможню' })).toEqual({ kind: 'mapped', stage: 'customs' });
+    // The destination's office of exchange receiving an item Russian Post sent abroad.
+    expect(statusMapAnswer({ carrier: 'russian-post', providerCode: '9.0', description: 'Passed registration in Example' })).toEqual({ kind: 'mapped', stage: 'in_transit' });
   });
 
   it('drops the minute-rounded copy of a scan that writes UTC\'s wall clock under the local offset', () => {

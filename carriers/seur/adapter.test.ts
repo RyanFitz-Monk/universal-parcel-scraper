@@ -157,6 +157,9 @@ describe('SEUR simplified anonymous tracking', () => {
     expect(parseSeur(body, NUMBER)).toMatchObject({ status: 'exception', current_stage: 'failed_attempt' });
     body.situaciones.unshift(scan('LJ105', '2026-01-23T09:58:00Z') as never);
     expect(parseSeur(body, NUMBER).events?.map(e => e.stage)).toEqual(['in_transit', 'failed_attempt', 'out_for_delivery']);
+    // The same notice on a parcel from abroad, after its international round.
+    body.situaciones = [scan('LI570', '2026-01-23T10:38:00Z'), scan('LC860', '2026-01-23T03:08:00Z')] as typeof body.situaciones;
+    expect(parseSeur(body, NUMBER)).toMatchObject({ status: 'exception', current_stage: 'failed_attempt' });
   });
 
   it('requires exact identity, nonempty single-piece history and the supported numeric shapes', () => {

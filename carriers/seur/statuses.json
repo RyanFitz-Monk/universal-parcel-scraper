@@ -295,6 +295,15 @@
       "note": "In the EN INCIDENCIA group, an hour into the delivery round to the SEUR Pickup point asked for: the point could not take the parcel, and a minute later SEUR changed the delivery to another SEUR Pickup point (LJ105)."
     },
     {
+      "code": "LI570",
+      "wording": "NO SE HA PODIDO DEPOSITAR EL ENVÍO EN EL PUNTO SOLICITADO",
+      "language": "es",
+      "stage": "failed_attempt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "In the EN INCIDENCIA group, LI503's wording on a parcel from abroad, hours after its international delivery round (LC860) started: the Pickup point asked for could not take the parcel."
+    },
+    {
       "code": "LI524",
       "wording": "EL ENVÍO NO SE HA ENTREGADO PORQUE NO ES LA DIRECCIÓN ACTUAL DEL DESTINATARIO.",
       "language": "es",
