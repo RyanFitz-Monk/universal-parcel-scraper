@@ -405,6 +405,11 @@ describe('Shouwu International stored scans', () => {
       traces.splice(0, traces.length, trace(1775900000, 'Package processing completed', 'CN,SWE Sample Sort Facility'));
     });
     expect(parseShouwu(coded, DELIVERED).events!.map((event) => event.location)).toEqual(['SWE Sample Sort Facility']);
+    // The last mile's rows give an empty code before their town.
+    const town = changed((traces) => {
+      traces.splice(0, traces.length, trace(1775900000, 'arrival city', ',Sample Town'));
+    });
+    expect(parseShouwu(town, DELIVERED).events!.map((event) => event.location)).toEqual(['Sample Town']);
     const policy = sameInstantIdentityPolicy('shouwu', { supportsScanMatching: true });
     const scan = { stage: 'accepted', description: 'Package processing completed', location: 'SWE Sample Sort Facility', providerCode: '' };
     expect(policy?.matches?.(scan, { ...scan, location: 'CN,SWE Sample Sort Facility' })).toBe(true);
@@ -450,6 +455,10 @@ describe('Shouwu International status vocabulary', () => {
     expect(shouwuStage('TRNSIT HUB')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     expect(shouwuStage('DESTIN HUB')).toEqual({ stage: 'in_transit', source: 'carrier_map' });
     expect(shouwuStage('STATIONED SHIPMENT')).toBeNull();
+    // The import released in the destination, and the delivering partner's towns on its way.
+    for (const wording of ['Import Released', 'arrival city', 'leave the city']) {
+      expect(shouwuStage(wording), wording).toEqual({ stage: 'in_transit', source: 'carrier_map' });
+    }
   });
 
   it('reads the last mile\'s return as on its way back, whatever reason it names', () => {

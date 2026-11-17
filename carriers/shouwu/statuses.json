@@ -237,6 +237,14 @@
       "note": "China's export release before the flight; the parcel is not held in customs."
     },
     {
+      "wording": "Import Released",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Customs in the destination released the import after \"Under Clearance\"; the parcel is no longer held."
+    },
+    {
       "wording": "Flight Departed",
       "stage": "in_transit",
       "language": "en",
@@ -963,6 +971,22 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-11",
       "note": "DPD's delivery round."
+    },
+    {
+      "wording": "arrival city",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The delivering partner's arrival in a town after the import release, under the town's name."
+    },
+    {
+      "wording": "leave the city",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The delivering partner leaving a town on its way, between its arrivals."
     },
     {
       "wording": "Unfortunately we have not been able to deliver your parcel. Consignee address not correct.",

@@ -72,7 +72,7 @@ numbers `shouwu-1` offers.
   delivery.
 - A scan's place is `traceLocation`, which the page leaves out and Shouwu's own back office shows
   before the wording. A country's code it opens with, as in `CN,` before a sort facility, is left
-  out. Anything with a digit, as an address or a postcode has, is dropped.
+  out, and so is the empty one, the bare comma, before a last mile's town. Anything with a digit, as an address or a postcode has, is dropped.
 - FedEx's rows in the United States open their wording with the town, state, country and
   postcode (`SAMPLE TOWN, CA, US, 00000, Arrived at FedEx location`), a delivery's the
   recipient's. The wording is read without them, as the place is `traceLocation`, and a row
