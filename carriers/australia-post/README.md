@@ -19,7 +19,14 @@ refusal there leaves the number unchecked instead of starting the browser.
      see [`trawl/README.md`](../../trawl/README.md)) reads the current public API key
      from the page's app module and makes that GET inside the browser session with
      `AP_CHANNEL_NAME: WEB_DETAIL`. The key is never pinned here, and browser state is never replayed
-     over plain HTTP.
+     over plain HTTP. The browser service remembers the key per module path, so the module is not
+     downloaded twice.
+   - The GET waits until DataDome's tag has had its first report answered (at most half the page's
+     budget, 8 s): sent earlier, it is refused.
+   - Through a proxy, which is paid by the byte, the page loads only its document, DataDome's
+     requests, the GET and an app module whose key is not yet known. Images, styles, fonts,
+     analytics, chat and account frames are refused, which cuts a read from about 4 MB to about
+     0.1 MB.
    - Each lookup gets a fresh browser context that is closed afterwards.
 
 `AUSTRALIA_POST_FALLBACK_PROXY_URL` opts into one more browser read through an HTTP(S)

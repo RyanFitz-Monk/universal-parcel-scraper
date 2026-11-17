@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { australiaPostBrowserRequest, runAustraliaPostBrowser } from './australia-post-browser.mjs';
+import { australiaPostBrowserRequest, australiaPostProxyAllows, runAustraliaPostBrowser } from './australia-post-browser.mjs';
 
 const number = '7T0000000000000000001';
 const url = `https://auspost.com.au/mypost/track/details/${number}`;
@@ -20,14 +20,17 @@ test('dedicated context only serves the exact Australia Post page and one query'
 
 function fixture() {
   const handlers = {};
-  const state = { closed: 0, counted: 0, replacements: 0, policy: 0, detached: 0, options: undefined };
+  const emit = async (event, value) => { for (const handler of handlers[event] ?? []) await handler(value); };
+  const state = { closed: 0, counted: 0, replacements: 0, policy: 0, detached: 0, options: undefined, routes: [], evaluated: [] };
   const body = JSON.stringify([{ trackingIds: [number], status: 200, shipment: { articles: [{ articleId: number }] } }]);
   const page = {
-    on(event, handler) { handlers[event] = handler; }, off() { state.detached++; },
+    on(event, handler) { (handlers[event] ??= []).push(handler); }, off() { state.detached++; },
+    route: async (pattern, handler) => { state.routes.push({ pattern, handler }); },
     goto: async () => ({ status: () => 200 }), content: async () => '<html>Australia Post</html>', url: () => url,
     evaluate: async (_callback, args) => {
       if (!args) return 'synthetic-browser';
-      await handlers.response({ url: () => api, status: () => 200, request: () => ({ method: () => 'GET' }),
+      state.evaluated.push(args);
+      await emit('response', { url: () => api, status: () => 200, request: () => ({ method: () => 'GET' }),
         headers: () => ({ 'content-type': 'application/json' }), body: async () => Buffer.from(body) });
     },
   };
@@ -36,7 +39,7 @@ function fixture() {
     noteTemporaryContext: () => { state.counted++; }, requestBrowserReplacement: () => { state.replacements++; } };
   const options = { url, handle, tier: 3, maxTimeout: 1000, capture,
     locale: 'de-DE', installPolicy: async () => { state.policy++; } };
-  return { options, context, page, handle, state };
+  return { options, context, page, handle, state, emit };
 }
 
 test('uses a fresh scoped locale context, preserves outbound policy, returns actual capture and closes', async () => {
@@ -52,6 +55,7 @@ test('uses a fresh scoped locale context, preserves outbound policy, returns act
   assert.equal(result.capturedResponses[0].url, api);
   assert.deepEqual(result.cookies, []);
   assert.equal(result.statusCode, 200);
+  assert.equal(state.routes.length, 0);
 });
 
 test('cached and fresh tiers use the same isolated context path', async () => {
@@ -108,6 +112,55 @@ test('injected proxy context keeps its options and owns the temporary-context co
   assert.equal(state.closed, 1);
   assert.equal(state.policy, 1);
   assert.equal(state.replacements, 0);
+  assert.equal(state.routes.length, 1);
+  const routed = [];
+  const route = (address, type) => ({ request: () => request(address, type),
+    fallback: async () => { routed.push('fallback'); }, abort: async reason => { routed.push(reason); } });
+  await state.routes[0].handler(route(url, 'document'));
+  await state.routes[0].handler(route('https://auspost.com.au/content/logo.png', 'image'));
+  assert.deepEqual(routed, ['fallback', 'blockedbyclient']);
+});
+
+const request = (address, type, navigation = type === 'document') => ({
+  url: () => address, resourceType: () => type, isNavigationRequest: () => navigation });
+
+test('a proxied page loads only its document, the bot check, the tracking request and an unread module', () => {
+  const module = 'https://auspost.com.au/mypost/track/assets/index-unread.js';
+  for (const [address, type, navigation] of [[url, 'document'], ['https://dd.auspost.com.au/tags.js', 'script'],
+    ['https://dd.auspost.com.au/js/', 'xhr'], ['https://ct.captcha-delivery.com/i.js', 'script'],
+    ['https://geo.captcha-delivery.com/interstitial/', 'document', false], [api, 'fetch'], [module, 'script']]) {
+    assert.equal(australiaPostProxyAllows(request(address, type, navigation), url), true, address);
+  }
+  for (const [address, type, navigation] of [[url, 'document', false], [url + '/', 'document'],
+    ['https://welcome.auspost.com.au/authorize', 'document'], ['https://geo.captcha-delivery.com:8443/captcha/', 'document'],
+    ['https://captcha-delivery.com.other.test/i.js', 'script'], ['https://othercaptcha-delivery.com/i.js', 'script'],
+    ['https://auspost.com.au/mypost/track/assets/index-71370bcf.css', 'stylesheet'],
+    ['https://auspost.com.au/mypost/auspoststaticassets/assets/fonts/APTypeProText-Bold.woff2', 'font'],
+    ['https://auspost.com.au/auth0-ui-integration-module/module.js', 'script'], [module + '?v=1', 'script'],
+    [module.replace('https:', 'http:'), 'script'], ['https://assets.adobedtm.com/satelliteLib.js', 'script'],
+    ['https://auspost.my.site.com/ESWReceiverWeb/chat.js', 'script'], ['https://bam.nr-data.net/events', 'xhr'],
+    ['https://digitalapi.auspost.com.au/other', 'fetch'], ['https://user:pass@dd.auspost.com.au/tags.js', 'script'], ['not a url', 'script']]) {
+    assert.equal(australiaPostProxyAllows(request(address, type, navigation), url), false, address);
+  }
+});
+
+test('a proxied page stops loading the application module once its key has been read', async () => {
+  const { options, handle, emit, page, state } = fixture();
+  const modulePath = '/mypost/track/assets/index-read-once.js';
+  const module = `https://auspost.com.au${modulePath}`;
+  page.goto = async () => {
+    await emit('response', { url: () => module, status: () => 200, request: () => ({ method: () => 'GET' }),
+      headers: () => ({ 'content-type': 'application/javascript' }), body: async () => Buffer.from('a={shipmentsGateway:"synthetic-public-client-config"}') });
+    return { status: () => 200 };
+  };
+  assert.equal(australiaPostProxyAllows(request(module, 'script'), url), true);
+  const result = await runAustraliaPostBrowser({ ...options, openContext: async () => {
+    handle.noteTemporaryContext(); return handle.browser.newContext({ viewport: null });
+  } });
+  assert.equal(result.status, 'success');
+  assert.equal(state.evaluated[0].clients[modulePath], 'synthetic-public-client-config');
+  assert.equal(australiaPostProxyAllows(request(module, 'script'), url), false);
+  assert.equal(australiaPostProxyAllows(request(module.replace('read-once', 'next-release'), 'script'), url), true);
 });
 
 test('a rejected factory cannot open a direct context or expose its message', async () => {

@@ -17,10 +17,38 @@ export function reserveDeadline(capture, reserveMs) {
     settle: budgetMs => capture.settle(early(budgetMs)) };
 }
 
+/** Australia Post's application module, whose public client configuration names the tracking API's key. */
+const AUSTRALIA_POST_MODULE = /^\/mypost\/track\/assets\/index-[\w-]+\.js$/;
+/** DataDome's tag reports the browser here; the answer carries the cookie the tracking request needs. */
+function australiaPostReport(request) {
+  try {
+    const url = new URL(request.url());
+    return url.origin === 'https://dd.auspost.com.au' && url.pathname.startsWith('/js/');
+  } catch { return false; }
+}
+const AUSTRALIA_POST_CLIENT = /\bshipmentsGateway:"([A-Za-z0-9._-]{16,200})"/g;
+// The key of each module this process has read, by the module's path. The module
+// is served uncacheable, so a page that knows its key need not load it again.
+const australiaPostClients = new Map();
+
+/** Whether this process has read the public key of the Australia Post module at this path. */
+export function australiaPostClientKnown(pathname) {
+  return australiaPostClients.has(pathname);
+}
+
+function rememberAustraliaPostClient(pathname, source) {
+  const matches = [...source.matchAll(AUSTRALIA_POST_CLIENT)];
+  if (matches.length !== 1) return;
+  australiaPostClients.delete(pathname);
+  australiaPostClients.set(pathname, matches[0][1]);
+  while (australiaPostClients.size > 4) australiaPostClients.delete(australiaPostClients.keys().next().value);
+}
+
 // Run inside the carrier page: its anonymous tracking API is independent of
 // the optional account iframe, which can be challenged while tracking works.
-// Public client configuration stays in this context and is never returned.
-export async function requestAustraliaPostInPage({ number, budgetMs }) {
+// Public client configuration is taken from the module this process already
+// read, else from the page's module, and is never returned.
+export async function requestAustraliaPostInPage({ number, budgetMs, clients = {} }) {
   if (location.origin !== 'https://auspost.com.au' || !/^[A-Z0-9]{10,34}$/.test(number)) {
     throw new Error('Australia Post lookup context is invalid');
   }
@@ -33,34 +61,38 @@ export async function requestAustraliaPostInPage({ number, budgetMs }) {
       .filter(url => url.origin === location.origin && /^\/mypost\/track\/assets\/index-[\w-]+\.js$/.test(url.pathname)
         && !url.search && !url.hash);
     if (modules.length !== 1) throw new Error('Australia Post application module is missing or ambiguous');
-    const bundle = await fetch(modules[0].href, { signal: controller.signal, credentials: 'same-origin', redirect: 'error' });
-    if (!bundle.ok || !bundle.body || Number(bundle.headers.get('content-length')) > 4_000_000) {
-      await bundle.body?.cancel();
-      throw new Error('Australia Post application module is unavailable');
-    }
-    const reader = bundle.body.getReader();
-    const decoder = new TextDecoder();
-    let source = '';
-    let size = 0;
-    try {
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        size += value.byteLength;
-        if (size > 4_000_000) {
-          await reader.cancel();
-          throw new Error('Australia Post application module exceeds its size limit');
-        }
-        source += decoder.decode(value, { stream: true });
+    const known = Object.hasOwn(clients, modules[0].pathname) ? clients[modules[0].pathname] : undefined;
+    const key = typeof known === 'string' && /^[A-Za-z0-9._-]{16,200}$/.test(known) ? known : await (async () => {
+      const bundle = await fetch(modules[0].href, { signal: controller.signal, credentials: 'same-origin', redirect: 'error' });
+      if (!bundle.ok || !bundle.body || Number(bundle.headers.get('content-length')) > 4_000_000) {
+        await bundle.body?.cancel();
+        throw new Error('Australia Post application module is unavailable');
       }
-      source += decoder.decode();
-    } finally { reader.releaseLock(); }
-    const matches = [...source.matchAll(/\bshipmentsGateway:"([A-Za-z0-9._-]{16,200})"/g)];
-    if (matches.length !== 1) throw new Error('Australia Post anonymous client configuration changed');
+      const reader = bundle.body.getReader();
+      const decoder = new TextDecoder();
+      let source = '';
+      let size = 0;
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          size += value.byteLength;
+          if (size > 4_000_000) {
+            await reader.cancel();
+            throw new Error('Australia Post application module exceeds its size limit');
+          }
+          source += decoder.decode(value, { stream: true });
+        }
+        source += decoder.decode();
+      } finally { reader.releaseLock(); }
+      const matches = [...source.matchAll(/\bshipmentsGateway:"([A-Za-z0-9._-]{16,200})"/g)];
+      if (matches.length !== 1) throw new Error('Australia Post anonymous client configuration changed');
+      return matches[0][1];
+    })();
     const api = new URL('https://digitalapi.auspost.com.au/shipments-gateway/v1/watchlist/shipments');
     api.searchParams.set('trackingIds', number);
     await fetch(api.href, { credentials: 'include', redirect: 'error', signal: controller.signal,
-      headers: { 'api-key': matches[0][1], 'Content-Type': 'application/json', AP_CHANNEL_NAME: 'WEB_DETAIL' } });
+      headers: { 'api-key': key, 'Content-Type': 'application/json', AP_CHANNEL_NAME: 'WEB_DETAIL' } });
   } finally { clearTimeout(timer); }
 }
 
@@ -224,8 +256,48 @@ const SITES = [
     settled(data, number) {
       return Array.isArray(data) && data.some(item => Array.isArray(item?.trackingIds) && item.trackingIds.includes(number));
     },
-    async prepare(page, number, budgetMs) {
-      await page.evaluate(requestAustraliaPostInPage, { number, budgetMs });
+    // Reads the key from the module the page loads, so preparation need not download it again.
+    async setup(page, number, state) {
+      state.onModule = response => {
+        let url;
+        try { url = new URL(response.url()); } catch { return; }
+        if (url.origin !== 'https://auspost.com.au' || !AUSTRALIA_POST_MODULE.test(url.pathname) || url.search
+          || response.status() !== 200 || australiaPostClients.has(url.pathname)) return;
+        state.moduleRead = Promise.resolve().then(() => response.body()).then(body => {
+          if (body.length <= 4_000_000) rememberAustraliaPostClient(url.pathname, body.toString('utf8'));
+        }).catch(() => {});
+      };
+      page.on('response', state.onModule);
+      state.reported = new Promise(resolve => {
+        state.onReport = request => { if (australiaPostReport(request)) resolve(); };
+      });
+      page.on('requestfinished', state.onReport);
+      page.on('requestfailed', state.onReport);
+      state.page = page;
+    },
+    cleanup(state) {
+      state.page?.off('response', state.onModule);
+      state.page?.off('requestfinished', state.onReport);
+      state.page?.off('requestfailed', state.onReport);
+    },
+    // A tracking request sent before DataDome's first report is answered is refused, so it waits
+    // for that answer, briefly, as the page's own requests do while the application starts.
+    async prepare(page, number, budgetMs, { state }) {
+      const deadline = Date.now() + budgetMs;
+      const timers = [];
+      let waited = false;
+      const wait = ms => new Promise(resolve => { if (!waited) timers.push(setTimeout(resolve, ms)); else resolve(); });
+      try {
+        await Promise.race([
+          Promise.all([state.moduleRead, state.reported?.then(() => wait(500))]),
+          wait(Math.min(budgetMs / 2, 8_000)),
+        ]);
+      } finally {
+        waited = true;
+        timers.forEach(clearTimeout);
+      }
+      await page.evaluate(requestAustraliaPostInPage,
+        { number, budgetMs: Math.max(0, deadline - Date.now()), clients: Object.fromEntries(australiaPostClients) });
     },
   },
   {

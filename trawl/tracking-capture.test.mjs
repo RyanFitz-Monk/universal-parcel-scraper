@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runInNewContext } from 'node:vm';
-import { attachTrackingCapture, requestAustraliaPostInPage, reserveDeadline } from './tracking-capture.mjs';
+import { attachTrackingCapture, australiaPostClientKnown, requestAustraliaPostInPage, reserveDeadline } from './tracking-capture.mjs';
 import { swiftxDropPhoneFragment, swiftxEnterPhoneDigits } from './swiftx-slider.mjs';
 const api = 'https://t.17track.net/track/restapi';
 const number = 'ZZ12345678900';
@@ -457,7 +457,7 @@ test('Australia Post stops on a matched negative or challenge instead of accepti
 });
 
 function australiaBrowser({ source = 'api:{shipmentsGateway:"synthetic-public-client-config"}', scripts,
-  origin = 'https://auspost.com.au', fetcher, budgetMs = 1000 } = {}) {
+  origin = 'https://auspost.com.au', fetcher, budgetMs = 1000, clients } = {}) {
   const calls = [];
   const globals = { URL, AbortController, TextDecoder, setTimeout, clearTimeout,
     location: { origin, href: australiaUrl },
@@ -466,7 +466,7 @@ function australiaBrowser({ source = 'api:{shipmentsGateway:"synthetic-public-cl
       calls.push({ url, options });
       return fetcher ? fetcher(url, options) : new Response(url.includes('/assets/') ? source : australiaReply());
     },
-    args: { number: australiaNumber, budgetMs },
+    args: { number: australiaNumber, budgetMs, ...(clients ? { clients } : {}) },
   };
   return { calls, run: () => runInNewContext(`(${requestAustraliaPostInPage.toString()})(args)`, globals) };
 }
@@ -483,6 +483,20 @@ test('Australia Post reads current public configuration and submits only the ano
   assert.equal(options.headers.AP_CHANNEL_NAME, 'WEB_DETAIL');
   assert.equal(options.headers.Authorization, undefined);
   assert.equal(options.signal.aborted, false);
+});
+
+test('Australia Post uses a key already read for the page\'s module without downloading the module again', async () => {
+  const known = australiaBrowser({ clients: { '/mypost/track/assets/index-example.js': 'synthetic-known-client-config' } });
+  assert.equal(await known.run(), undefined);
+  assert.deepEqual(known.calls.map(call => call.url), [australiaApi]);
+  assert.equal(known.calls[0].options.headers['api-key'], 'synthetic-known-client-config');
+  for (const clients of [{ '/mypost/track/assets/index-other.js': 'synthetic-known-client-config' },
+    { '/mypost/track/assets/index-example.js': 'not a key' }]) {
+    const unknown = australiaBrowser({ clients });
+    await unknown.run();
+    assert.equal(unknown.calls.length, 2);
+    assert.equal(unknown.calls[1].options.headers['api-key'], 'synthetic-public-client-config');
+  }
 });
 
 test('Australia Post refuses foreign or ambiguous modules and changed public configuration', async () => {
@@ -511,16 +525,77 @@ test('Australia Post bounds bootstrap bytes and aborts a hanging bootstrap', asy
   await assert.rejects(hanging.run(), /Aborted/);
 });
 
+const australiaReport = { url: () => 'https://dd.auspost.com.au/js/' };
+
 test('Australia Post preparation captures history before the generic CAPTCHA solver runs', async () => {
-  const { page, capture, respond } = await fixture(australiaUrl, australiaApi);
+  const { page, capture, respond, handlers } = await fixture(australiaUrl, australiaApi);
   page.evaluate = async (callback, args) => {
     assert.equal(callback, requestAustraliaPostInPage);
     assert.equal(args.number, australiaNumber);
     assert.ok(args.budgetMs > 0);
     await respond(australiaReply());
   };
+  await handlers.requestfinished(australiaReport);
   await capture.prepare(1000);
   assert.equal(capture.hasResponse(), true);
+  await capture.drain();
+});
+
+test('Australia Post reads the public key from the module the page loaded and remembers it by path', async () => {
+  const modulePath = '/mypost/track/assets/index-loaded.js';
+  const { page, capture, respond, handlers, detachedEvents } = await fixture(australiaUrl, australiaApi);
+  const source = 'a={shipmentsGateway:"synthetic-loaded-client-config"}';
+  await respond(source, { url: `https://auspost.com.au${modulePath}?v=1`, method: 'GET' });
+  await respond(source, { url: `https://other.test${modulePath}`, method: 'GET' });
+  await respond(source, { url: `https://auspost.com.au${modulePath}`, method: 'GET', status: 304 });
+  await respond(source + source, { url: `https://auspost.com.au${modulePath}`, method: 'GET' });
+  await capture.prepare(0).catch(() => {});
+  assert.equal(australiaPostClientKnown(modulePath), false);
+  await respond(source, { url: `https://auspost.com.au${modulePath}`, method: 'GET' });
+  page.evaluate = async (callback, args) => {
+    assert.equal(callback, requestAustraliaPostInPage);
+    assert.equal(args.clients[modulePath], 'synthetic-loaded-client-config');
+    await respond(australiaReply());
+  };
+  await handlers.requestfinished(australiaReport);
+  await capture.prepare(1000);
+  assert.equal(australiaPostClientKnown(modulePath), true);
+  await capture.drain();
+  assert.ok(detachedEvents.includes('response'));
+});
+
+test('Australia Post sends the tracking request only once DataDome has answered its first report', async () => {
+  const { page, capture, respond, handlers, detachedEvents } = await fixture(australiaUrl, australiaApi);
+  let asked = false;
+  page.evaluate = async (_callback, args) => {
+    asked = true;
+    assert.ok(args.budgetMs > 15_000);
+    await respond(australiaReply());
+  };
+  const preparing = capture.prepare(20_000);
+  await handlers.requestfinished({ url: () => 'https://dd.auspost.com.au/tags.js' });
+  await handlers.requestfinished({ url: () => 'https://dd.auspost.com.au.other.test/js/' });
+  await handlers.requestfinished({ url: () => 'not a URL' });
+  await new Promise(resolve => setTimeout(resolve, 50));
+  assert.equal(asked, false);
+  const reported = Date.now();
+  await handlers.requestfailed(australiaReport);
+  await preparing;
+  assert.equal(asked, true);
+  assert.ok(Date.now() - reported >= 450);
+  await capture.drain();
+  for (const event of ['requestfinished', 'requestfailed']) assert.ok(detachedEvents.includes(event));
+});
+
+test('Australia Post sends the tracking request without DataDome\'s report once half the budget is spent', async () => {
+  const { page, capture, respond } = await fixture(australiaUrl, australiaApi);
+  page.evaluate = async (_callback, args) => {
+    assert.ok(args.budgetMs > 0 && args.budgetMs <= 200);
+    await respond(australiaReply());
+  };
+  const started = Date.now();
+  await capture.prepare(400);
+  assert.ok(Date.now() - started >= 190);
   await capture.drain();
 });
 

@@ -83,6 +83,8 @@ Australia Post, DHL Express, SF Express, WanbExpress, XPO, Asendia, Correios Bra
 Australia Post also uses its capture helper through a request's proxy, keeping that route's
 browser settings. Its exact guest query starts without the generic page's challenge waits;
 custom session state or explicit page-readiness options keep the ordinary browser path.
+Through a proxy its page loads only the document, DataDome's requests, the tracking request and
+an app module whose key the process has not read; everything else is refused to save proxy bytes.
 A request's proxy carries WanbExpress's whole fresh context; through it the helper runs only
 the page's passive check and leaves a visible checkbox unsolved.
 Veho's helper opens the tracker's home page, with no tracking number, in a fresh context and
