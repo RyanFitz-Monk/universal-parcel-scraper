@@ -1,0 +1,16 @@
+{
+  "carrier": "pwb",
+  "entries": [
+    {"wording": "货物电子信息已经收到", "language": "zh", "stage": "registered", "confirmedBy": "live", "note": "The platform's own row for an order without scans."},
+    {"code": "ARRIVAL", "wording": "Package received and scanned at warehouse到达收货点", "language": "en", "stage": "accepted", "confirmedBy": "live", "note": "PWB's Shenzhen warehouse takes the parcel in, the English and the platform's Chinese run together. The kind code groups other arrivals."},
+    {"code": "SHIPMENT", "wording": "Package departed from the warehouse", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "The parcel leaves the warehouse. The kind code groups other departures."},
+    {"wording": "Order information has been transmitted to DPD.", "language": "en", "stage": "pending", "confirmedBy": "live", "note": "PWB sends the order to DPD, its last-mile partner abroad, dated back to the day it did. It moves nothing, and names no DPD number."},
+    {"wording": "Customs export clearance completed", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "预计配载航班…月…日,Expected flight on …", "language": "zh", "stage": "in_transit", "confirmedBy": "live", "note": "The flight the parcel is loaded for, naming its day in both halves (\"11月11日\", \"November 11th\"); the map reads each day as an ellipsis. The flight is still to come."},
+    {"wording": "Package in transit to destination country", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "The flight left."},
+    {"wording": "Package arrived at destination country", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "The flight landed."},
+    {"wording": "目的港已提货 Delivery has been made at the destination port", "language": "zh", "stage": "in_transit", "confirmedBy": "live", "note": "Collected from the airline at the destination airport, before import clearance: not a delivery to the recipient."},
+    {"wording": "Customs import clearance completed, awaiting pickup by local carrier", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Package picked up by last-mile carrier", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "The last-mile partner took the parcel over; its own tracking takes it from there."}
+  ]
+}

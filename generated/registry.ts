@@ -564,6 +564,7 @@ import { adapter as ptsWorldwideExpress } from '../carriers/pts-worldwide-expres
 import { adapter as ptt } from '../carriers/ptt/adapter.js';
 import { adapter as pullmanCargo } from '../carriers/pullman-cargo/adapter.js';
 import { adapter as purolator } from '../carriers/purolator/adapter.js';
+import { adapter as pwb } from '../carriers/pwb/adapter.js';
 import { adapter as qatarPost } from '../carriers/qatar-post/adapter.js';
 import { adapter as qtExpress } from '../carriers/qt-express/adapter.js';
 import { adapter as quantiumSolutions } from '../carriers/quantium-solutions/adapter.js';
@@ -1359,6 +1360,7 @@ export const REGISTRY: RegistryDefinition = {
     "ptt": ptt,
     "pullman-cargo": pullmanCargo,
     "purolator": purolator,
+    "pwb": pwb,
     "qatar-post": qatarPost,
     "qt-express": qtExpress,
     "quantium-solutions": quantiumSolutions,
@@ -2867,6 +2869,7 @@ export const REGISTRY: RegistryDefinition = {
     "puntopost": "universal",
     "purolator": "purolator",
     "pushpak-courier": "universal",
+    "pwb": "pwb",
     "pxc-pacific": "universal",
     "qatar-post": "qatar-post",
     "qls-quince": "universal",

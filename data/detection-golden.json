@@ -100316,6 +100316,14 @@
     ]
   },
   {
+    "input": "PWB999999970CN",
+    "carrier": "pwb",
+    "confidence": "high",
+    "candidates": [
+      "pwb"
+    ]
+  },
+  {
     "input": "PX0000000013",
     "carrier": "poczta-polska",
     "confidence": "high",

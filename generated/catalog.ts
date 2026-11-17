@@ -46850,6 +46850,32 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "pwb": {
+    "displayName": "PWB",
+    "color": "#2da0f8",
+    "aliases": [
+      "Paiwanbang",
+      "派万邦",
+      "深圳市派万邦科技物流有限公司"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "pwb"
+    },
+    "canaryUrl": "https://t.17track.net/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^PWB\\d{9}CN$",
+        "confidence": "high"
+      }
+    ]
+  },
   "pxc-pacific": {
     "displayName": "PXC Pacific Global",
     "color": "#1c4b8c",
@@ -64795,6 +64821,7 @@ export const CARRIER_IDS = [
   "pullman-cargo",
   "puntopost",
   "pushpak-courier",
+  "pwb",
   "pxc-pacific",
   "qatar-post",
   "qls-quince",
@@ -66604,6 +66631,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pullman-cargo": [],
   "puntopost": [],
   "pushpak-courier": [],
+  "pwb": ["pwb-1"],
   "pxc-pacific": [],
   "qatar-post": ["qatar-post-ems-s10"],
   "qls-quince": [],

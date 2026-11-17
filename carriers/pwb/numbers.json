@@ -1,0 +1,17 @@
+{
+  "carrier": "pwb",
+  "records": [
+    {
+      "number": "PWB999999970CN",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "donated_real",
+      "shapeConfirmed": "2026-11-17",
+      "expect": {
+        "carrier": "pwb",
+        "confidence": "high"
+      },
+      "note": "Made-up number in the shape of a waybill PWB's own tracker answered with its history: PWB, nine digits and CN. Its serial sits far beyond the range in use."
+    }
+  ]
+}

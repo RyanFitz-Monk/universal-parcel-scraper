@@ -577,6 +577,7 @@ import { statusMap as ptsWorldwideExpress } from '../../carriers/pts-worldwide-e
 import { statusMap as ptt } from '../../carriers/ptt/status.js';
 import { statusMap as pullmanCargo } from '../../carriers/pullman-cargo/status.js';
 import { statusMap as purolator } from '../../carriers/purolator/status.js';
+import { statusMap as pwb } from '../../carriers/pwb/status.js';
 import { statusMap as quantiumSolutions } from '../../carriers/quantium-solutions/status.js';
 import { statusMap as quickRabbit } from '../../carriers/quick-rabbit/status.js';
 import { statusMap as quicksilverSa } from '../../carriers/quicksilver-sa/status.js';
@@ -902,7 +903,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'posta-shqiptare': postaShqiptare,
   xcargo, skladusa, 'seino-super-express': seinoSuperExpress, 'post-one': postOne, 'posta-slovenije': postaSlovenije, 'posta-srbije': postaSrbije, 'poste-italiane': posteItaliane, postex, posti, postlogistics, 'postmedia-parcel-services': postmediaParcelServices,
   postnord, posturinn, ppl, 'precision-deliveries': precisionDeliveries,
-  'pro-carrier': proCarrier, 'prompt-xpress': promptXpress, proships, 'pts-worldwide-express': ptsWorldwideExpress, ptt, 'pullman-cargo': pullmanCargo, purolator, 'quantium-solutions': quantiumSolutions,
+  'pro-carrier': proCarrier, 'prompt-xpress': promptXpress, proships, 'pts-worldwide-express': ptsWorldwideExpress, ptt, 'pullman-cargo': pullmanCargo, purolator, pwb, 'quantium-solutions': quantiumSolutions,
   'quick-rabbit': quickRabbit, 'quicksilver-sa': quicksilverSa, quiqup, qwintry, raben, 'ram-hand-to-hand': ramHandToHand, redpack, redur, 'rex-indonesia': rexIndonesia, redx, 'relais-colis': relaisColis, relaytech,
   rincos, rivigo, 'rl-carriers': rlCarriers, roadrunner, 'rozetka-delivery': rozetkaDelivery, 'royal-express-mm': royalExpressMm, 'royal-mail': royalMail,
   'rpx-indonesia': rpxIndonesia, 'safeway-express-cargo': safewayExpressCargo, sagawa, safexpress, 'sagawa-global': sagawaGlobal, saia, sailpost, sameday, 'sapx-express': sapxExpress,
