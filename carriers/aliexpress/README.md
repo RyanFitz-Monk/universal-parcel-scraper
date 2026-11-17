@@ -45,10 +45,12 @@ a consumer can keep a parcel filed under it and show Cainiao's answer as the ear
 1. `direct`: one keyless GET to `https://global.cainiao.com/global/detail.json?mailNos={number}&lang=en-US`,
    the JSON behind the consumer page, with that page as its Referer: the feed refuses a request
    another site refers. No session, cookie or token. 10 s budget, no fallback tier.
-   A `DOFR…HD` or `CNFR…HD` number that feed does not know is asked again, in the same budget, at
+   A `DOFR…HD` or `CNFR…HD` number that feed does not know, or holds without a scan, is asked
+   again, in the same budget, at
    `https://track.cainiao.com/coe/trace/queryDetail?mailNos={number}&lang=en-US&language=en-US`,
    Cainiao Express's own tracker behind `track.cainiao.com/orderTrack`. It answers the same module
-   shape inside `data`.
+   shape inside `data`. Its scans win; without any, or when it fails, the first feed's answer
+   stands.
 
 HTTP recognition uses that same feed for ambiguous references. Matching shipment
 activity confirms the Cainiao tracking leg; an empty internal pending module does not.
@@ -91,7 +93,8 @@ activity confirms the Cainiao tracking leg; an empty internal pending module doe
   before any scan comes with a time, so a consumer that dates stages dates it when it first sees it.
   The status text is then Cainiao's wording of the token (`statusDesc`), else the token.
 - `DOFR…HD` and `CNFR…HD` are Cainiao Express's home-delivery numbers in France. Partners such as
-  4PX hand their own parcels over under them, and AliExpress's feed does not hold those. Cainiao
+  4PX hand their own parcels over under them, and AliExpress's feed does not hold those, or holds
+  only a seller's record awaiting dispatch while Cainiao Express delivers the parcel. Cainiao
   Express's tracker holds them from the moment it receives the parcel; before that only the partner
   knows the number. So a home-delivery number neither tracker knows is `indeterminate` with the
   reason `portal_not_found`, not not-found. Cainiao Express's history starts at its own hub, without

@@ -16,9 +16,10 @@
  * That feed holds AliExpress's parcels. Partners such as 4PX hand theirs to
  * Cainiao Express for home delivery in France under the same `DOFR…HD` and
  * `CNFR…HD` numbers, and only Cainiao Express's own tracker
- * (`track.cainiao.com/coe/trace/queryDetail`, same module shape) holds those,
- * once it has the parcel. Before that only the partner knows the number, so
- * one neither feed knows is inconclusive, not missing.
+ * (`track.cainiao.com/coe/trace/queryDetail`, same module shape) holds their
+ * scans, once it has the parcel; the first feed may hold only a seller's record
+ * of the number. Before that only the partner knows the number, so one neither
+ * feed knows is inconclusive, not missing.
  */
 import { lookupBudget, recognizeFromLookup, type AdapterFactory, type LookupBudget, type TrackingContext } from '../../core/adapter/index.js';
 import { detectCarrierMatch } from '../../core/detection/detect.js';
@@ -399,17 +400,27 @@ export class CainiaoTracker {
 
   async fetch(trackingNumber: string, context: TrackingContext = {}): Promise<CarrierResult> {
     const budget = lookupBudget(context, this.timeoutMs);
+    const homeDelivery = HOME_DELIVERY.test(comparableIdentifier(trackingNumber));
+    // AliExpress's feed can hold a seller's record of a home-delivery number, awaiting dispatch,
+    // while Cainiao Express has scanned, even delivered, the parcel: its answer without a scan
+    // asks Cainiao Express too, and stands only when that has no scan either.
+    let unscanned: CarrierResult | undefined;
     try {
       // The feed refuses a request another site refers ("uri is null or empty").
-      return parseCainiaoTrackingResponse(await this.payload(`${DETAIL_URL}?${new URLSearchParams({ mailNos: trackingNumber, lang: 'en-US' })}`,
+      const result = parseCainiaoTrackingResponse(await this.payload(`${DETAIL_URL}?${new URLSearchParams({ mailNos: trackingNumber, lang: 'en-US' })}`,
         DETAIL_PAGE, budget), trackingNumber);
+      if (!homeDelivery || (result.events?.length ?? 0) > 0) return result;
+      unscanned = result;
     } catch (error) {
-      if (!(error instanceof NotFoundError) || !HOME_DELIVERY.test(comparableIdentifier(trackingNumber))) throw error;
+      if (!(error instanceof NotFoundError) || !homeDelivery) throw error;
     }
     try {
-      return await this.read(`${EXPRESS_URL}?${new URLSearchParams({ mailNos: trackingNumber, lang: 'en-US', language: 'en-US' })}`,
+      const express = await this.read(`${EXPRESS_URL}?${new URLSearchParams({ mailNos: trackingNumber, lang: 'en-US', language: 'en-US' })}`,
         'https://track.cainiao.com/orderTrack', trackingNumber, budget);
+      return unscanned && (express.events?.length ?? 0) === 0 ? unscanned : express;
     } catch (error) {
+      // The first feed's answer stands when the second cannot add to it, unless the caller gave up.
+      if (unscanned && !context.signal?.aborted) return unscanned;
       if (!(error instanceof NotFoundError)) throw error;
       throw new IndeterminateError(PROVIDER, 'Cainiao has no record of the shipment yet', { reason: 'portal_not_found' });
     }
@@ -462,7 +473,7 @@ export const adapter: AdapterFactory = (environment) => {
   const tracker = new CainiaoTracker({ fetcher: environment.fetcher, userAgent: environment.userAgent });
   return {
     id: 'aliexpress',
-    // Keyless GETs, a second only for a home-delivery number the first does not know.
+    // Keyless GETs, a second only for a home-delivery number the first does not know or has not seen scanned.
     steps: ['direct'],
     track: (input, context) => tracker.fetch(input.number, context),
     recognize: (number, context) => recognizeFromLookup(() => tracker.fetch(number, context), () => validTrackingNumber(number)),

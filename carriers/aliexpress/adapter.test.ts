@@ -266,16 +266,44 @@ describe('Cainiao Express home-delivery numbers', () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
-  it('asks only AliExpress\'s feed when it answers, and for any other number', async () => {
+  it('asks only AliExpress\'s feed when it has scans, and for any other number', async () => {
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse(fixture('delivered-dofr.json')))
-      .mockResolvedValueOnce(empty('INTERNAL', 'DOFR9999999999980HD'))
       .mockResolvedValueOnce(empty('EXTERNAL', CAINIAO_WRONG_NUMBER));
     const tracker = new CainiaoTracker({ fetcher });
     await expect(tracker.fetch('DOFR9999999999980HD')).resolves.toMatchObject({ status: 'delivered' });
-    await expect(tracker.fetch('DOFR9999999999980HD')).resolves.toMatchObject({ status: 'pending' });
     await expect(tracker.fetch(CAINIAO_WRONG_NUMBER)).rejects.toMatchObject({ kind: 'not_found' });
-    expect(fetcher.mock.calls.map(endpoint)).toEqual(Array(3).fill('https://global.cainiao.com/global/detail.json'));
+    expect(fetcher.mock.calls.map(endpoint)).toEqual(Array(2).fill('https://global.cainiao.com/global/detail.json'));
+  });
+
+  it('takes Cainiao Express\'s scans over a seller\'s record awaiting dispatch', async () => {
+    // AliExpress's feed can still await the seller's dispatch of a parcel Cainiao Express has scanned.
+    const awaiting = () => jsonResponse({ module: [{
+      mailNo: HOME_DELIVERY, mailNoSource: 'OTHER', status: 'SELLER_PREPARING', statusDesc: 'Awaiting seller dispatch', detailList: [],
+    }] });
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(awaiting())
+      .mockResolvedValueOnce(jsonResponse(fixture('express-in-transit.json')));
+    await expect(new CainiaoTracker({ fetcher }).fetch(HOME_DELIVERY)).resolves.toMatchObject({
+      status: 'in_transit', current_stage: 'in_transit', last_status_text: 'Transfer Departure',
+    });
+    expect(fetcher.mock.calls.map(endpoint)).toEqual([
+      'https://global.cainiao.com/global/detail.json',
+      'https://track.cainiao.com/coe/trace/queryDetail',
+    ]);
+    // Without a scan there, or when it cannot answer, the first feed's answer stands.
+    for (const second of [() => empty('INTERNAL', 'DOFR9999999999980HD'), () => new Response('<!DOCTYPE html><html><body><punish-component />\n<!--rgv587_flag:sm-->\n</body></html>', { headers: { 'Content-Type': 'text/html' } })]) {
+      const quiet = vi.fn<typeof fetch>().mockResolvedValueOnce(empty('INTERNAL', 'DOFR9999999999980HD')).mockResolvedValueOnce(second());
+      await expect(new CainiaoTracker({ fetcher: quiet }).fetch('DOFR9999999999980HD')).resolves.toMatchObject({ status: 'pending', current_stage: 'registered' });
+      expect(quiet).toHaveBeenCalledTimes(2);
+    }
+    // A caller that gives up gets no answer.
+    const controller = new AbortController();
+    const cancelled = vi.fn<typeof fetch>().mockResolvedValueOnce(awaiting()).mockImplementationOnce(async () => {
+      controller.abort();
+      throw new DOMException('aborted', 'AbortError');
+    });
+    await expect(new CainiaoTracker({ fetcher: cancelled }).fetch(HOME_DELIVERY, { signal: controller.signal })).rejects.toBeDefined();
   });
 
   it('keeps either feed\'s slider and a stranger\'s module from reading as an answer', async () => {
