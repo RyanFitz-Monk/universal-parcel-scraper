@@ -125,6 +125,14 @@
       "note": "CNE's own hand-over to the destination network, written on Beijing time, coded 2 (Shipping); the network's acceptance follows."
     },
     {
+      "wording": "The shipment has been processed in the parcel center of origin.",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-16",
+      "note": "DHL's sort in Germany relayed after the hand-over, coded 2 (Shipping)."
+    },
+    {
       "wording": "The shipment is picked up by customs broker",
       "language": "en",
       "stage": "customs",

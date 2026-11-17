@@ -32,6 +32,8 @@ const WORDING: Readonly<Record<string, Stage>> = {
   'Arrived at destination': 'in_transit',
   // CNE's hand-over to the destination network, before that network's own acceptance.
   'Handled by local carrier': 'in_transit',
+  // DHL's sort in Germany as CNE relays it after the hand-over, under its shipping code.
+  'The shipment has been processed in the parcel center of origin.': 'in_transit',
 };
 // CNE capitalises the same labels differently ("Arrived At" and "Arrived at").
 const WORDING_ANY_CASE: ReadonlyMap<string, Stage> = new Map(Object.entries(WORDING).map(([wording, stage]) => [wording.toLowerCase(), stage]));

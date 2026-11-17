@@ -97,7 +97,7 @@ describe('CNE response projection', () => {
     for (const details of ['Arrived at destination', 'Arrived At Destination', 'ARRIVED AT CNE FACILITY', 'your shipment has arrived at sorting center',
       'Your shipment is in process at sorting center', 'Handled by local carrier',
       'Your shipment has been processed at sorting center and ready for shipping', 'Your shipment has departed from the transit origin',
-      'Your shipment has arrived at the transit destination']) {
+      'Your shipment has arrived at the transit destination', 'The shipment has been processed in the parcel center of origin.']) {
       const payload = handoffFixture();
       payload.trackingEventList.push({ date: '2026-02-11 09:00:00', details, place: 'Example City', state: '2' });
       expect(parseCne(payload, HANDOFF_NUMBER).events?.[0]).toMatchObject({ stage: 'in_transit', stage_source: 'carrier_map' });
