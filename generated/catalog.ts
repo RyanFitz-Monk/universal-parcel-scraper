@@ -5941,7 +5941,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "472",
       "Servicios Postales Nacionales",
-      "SPN"
+      "SPN",
+      "Colombia Post",
+      "Columbia Post"
     ],
     "countries": [
       "CO"

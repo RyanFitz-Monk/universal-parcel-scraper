@@ -32,6 +32,9 @@ describe('brand networks', () => {
     }
     // Providers also name Correios by the English name of the country's post.
     expect(carrierIdFromName('Brazil Post')).toBe('correios-br');
+    // Providers name Colombia's post after the country, sometimes misspelt.
+    expect(carrierIdFromName('Columbia Post')).toBe('4-72');
+    expect(carrierIdFromName('Colombia Post')).toBe('4-72');
     // ParcelsApp names South Africa's post after the country.
     expect(carrierIdFromName('South Africa Post Office')).toBe('south-african-post-office');
     // Universal providers name Z-Leading after its Chinese name.
