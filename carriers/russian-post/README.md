@@ -50,8 +50,11 @@ shared with several carriers. Russian postcodes never start with 8, yet the numb
 80 that users and providers report are Russian Post's, so `russian-post-1` puts Russian Post
 first for those when the check digit passes. It stays a suggestion: the other carriers' numbers of
 that length are not ruled out. The adapter accepts other domestic barcodes with a passing
-check digit when Russian Post is explicitly selected. International items use UPU S10; an `RU`
-issuer proposes Russian Post for HTTP recognition, without assigning carrier ownership.
+check digit when Russian Post is explicitly selected. Russian Post's tracker returns the journey
+of the parcels, EMS, letter and registered items it sends abroad, so detection names it for
+[UPU S10](https://www.upu.int/UPU/media/upu/files/postalSolutions/programmesAndServices/standards/S10-12.pdf)
+codes ending RU that start C, E, L or R, as for the neighbouring posts. For the other RU codes the
+suffix names the issuing country, not the deliverer: they stay with the generic postal carrier.
 
 ## Other official routes
 

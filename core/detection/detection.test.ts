@@ -242,6 +242,21 @@ describe('Ukrainian S10 items', () => {
   });
 });
 
+describe('Russian S10 items', () => {
+  it.each(['RA123456785RU', 'LS200000010RU', 'EA300000026RU', 'CR400000032RU'])('names Russian Post, which tracks %s abroad', (number) => {
+    expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'russian-post', confidence: 'high', candidates: ['russian-post'] });
+    expect(recognitionAskedCarriers(number)).toEqual([]);
+  });
+
+  it('leaves its other items to international mail', () => {
+    expect(detectCarrierMatch('UA500000049RU')).toMatchObject({ carrier: 'intl-post', confidence: 'high', candidates: ['intl-post'] });
+  });
+
+  it('names nobody for a failed check digit', () => {
+    expect(detectCarrierMatch('RA123456784RU').candidates ?? []).not.toContain('russian-post');
+  });
+});
+
 describe('Italian S10 items', () => {
   it.each(['CE999999987IT', 'CP123456785IT', 'EE999999987IT', 'LC999999987IT', 'RN999999987IT'])('names Poste Italiane, which tracks %s', (number) => {
     expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'poste-italiane', confidence: 'high', candidates: ['poste-italiane'] });

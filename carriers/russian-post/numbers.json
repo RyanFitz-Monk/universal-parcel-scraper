@@ -13,7 +13,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "An AnyBalance tutorial for Russian Post's tracker uses it as its worked example and says it was found published online."
@@ -32,7 +32,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "Looked up on Russian Post's own tracker, as an archived address shows; the capture was not opened."
@@ -51,7 +51,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "Looked up on Russian Post's own tracker, as an archived address shows; the capture was not opened."
@@ -70,7 +70,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "ParcelPanel's Russian Post page offered it as a sample to try on 11 Oct 2026; it is not described as a live shipment."
@@ -89,7 +89,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "ParcelPanel's Russian Post page offered it as a sample to try on 11 Oct 2026; it is not described as a live shipment."
@@ -108,7 +108,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "ParcelPanel's Russian Post page offered it as a sample to try on 11 Oct 2026; it is not described as a live shipment."

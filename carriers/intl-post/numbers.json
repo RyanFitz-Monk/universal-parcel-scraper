@@ -599,7 +599,7 @@
         "assessment": "candidate"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "Archived ParcelsApp lookup. Russian item. No universal provider was checked."

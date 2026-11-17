@@ -58,6 +58,12 @@
       "checksum": "gs1"
     },
     {
+      "id": "russian-post-own",
+      "pattern": "^[CELR][A-Z]\\d{9}RU$",
+      "confidence": "high",
+      "checksum": "s10"
+    },
+    {
       "id": "russian-post-s10",
       "pattern": "^[CELR][A-Z]\\d{9}RU$",
       "confidence": "low",

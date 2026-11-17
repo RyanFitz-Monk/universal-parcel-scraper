@@ -53,7 +53,7 @@
         "assessment": "confirmed"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "A question on TrackRu's Kyrgyz Post page about a Russian Post parcel sent to Kyrgyzstan by rail. Kyrgyz Post's tracker shows the sending post's scans, then its own up to the delivery."
@@ -72,7 +72,7 @@
         "assessment": "confirmed"
       },
       "expect": {
-        "carrier": "intl-post",
+        "carrier": "russian-post",
         "confidence": "high"
       },
       "note": "A question on TrackRu's Kyrgyz Post page about a Russian Post parcel sent from Orenburg to Kyrgyzstan. Kyrgyz Post's tracker shows it reaching the post office that delivers it."
