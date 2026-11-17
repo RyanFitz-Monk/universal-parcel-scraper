@@ -163,6 +163,11 @@ describe('partner numbers Cainiao follows', () => {
       // Cainiao's own numbers and another carrier's alone list no origin.
       expect(detectCarrierMatch('CNG00000000000001')).not.toHaveProperty('origins');
       expect(detectCarrierMatch('GF0000000000001')).not.toHaveProperty('origins');
+      // UniUni's UUSC numbers, which Cainiao follows from China on AliExpress parcels, likewise.
+      expect(detectCarrierMatch('UUSC999999999901')).toEqual({
+        carrier: 'uniuni', confidence: 'high', candidates: ['uniuni'], preferred: [], origins: ['aliexpress'],
+      });
+      expect(recognitionAskedCarriers('UUSC999999999901')).toEqual([]);
     });
 
     it("files one Cainiao follows under AliExpress while GOFO shows only the label, proposing GOFO", async () => {

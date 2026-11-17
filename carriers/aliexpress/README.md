@@ -21,7 +21,9 @@ number. Detection suggests AliExpress for the partner shapes with such a lookup 
 example SDA's thirteen-character waybills in Italy, and recognition asks Cainiao beside the
 partner. GOFO's `GFUS` waybills in the United States are GOFO's from the label, so detection
 names GOFO and lists AliExpress in `origins`; while GOFO holds only the label, the tracker asks
-Cainiao, and its movement files the parcel under AliExpress with GOFO proposed. Detection also
+Cainiao, and its movement files the parcel under AliExpress with GOFO proposed. UniUni's `UUSC`
+numbers list AliExpress in `origins` the same way: Cainiao's tracker follows them from China, and
+UniUni lists one it has not received as invalid. Detection also
 suggests AliExpress for `HRBC` and ten digits, numbers universal providers file under YFH and Cainiao: Cainiao's tracker answered
 one, YFH's did not know it and Ekart's knew neither. The rules are in [`carrier.json`](carrier.json)
 and their evidence in [`numbers.json`](numbers.json).

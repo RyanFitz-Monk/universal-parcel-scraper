@@ -44,7 +44,9 @@ open but for that notice, since a stored row does not say whose scan it is. The 
 country, the United States or Canada, is the destination.
 Detection claims the `UUS`, `UUSC`, `4C…US` and `U9999` formats, and `UR` with
 seventeen digits, the tracking ID of UniUni's seller platform, which its tracker
-follows; a `URB` batch ID names no parcel. It suggests UniUni for other `U` and
+follows; a `URB` batch ID names no parcel. Cainiao follows the `UUSC` numbers of AliExpress
+parcels from China, before UniUni has them, so detection lists AliExpress as an
+origin beside UniUni. It suggests UniUni for other `U` and
 fifteen-digit references, which Canadian parcels carry.
 Cross-border shippers' references of two letters, two digits, `CAA0`, a letter
 and nine digits only suggest UniUni: Intelcom's tracker accepts them too. Detection

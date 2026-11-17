@@ -141,6 +141,11 @@
       "confidence": "low"
     },
     {
+      "id": "aliexpress-uusc",
+      "pattern": "^UUSC\\d{12}$",
+      "confidence": "low"
+    },
+    {
       "id": "aliexpress-hrbc",
       "pattern": "^HRBC\\d{10}$",
       "confidence": "low"

@@ -1131,6 +1131,44 @@
         ]
       },
       "note": "Made-up number in the shape of an AliExpress parcel to Italy that Cainiao's tracker answered with its line-haul, customs and hand-over to the local delivery company, and that a universal provider also attributed to Cainiao. As after RTZ, the thirteen characters after FMP have the layout of Poste Italiane's 5P codes; Vinted Go's FMP numbers carry UW there instead. The shape only suggests AliExpress. Its serial sits far beyond the range in use."
+    },
+    {
+      "number": "UUSC000019638703",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.trustpilot.com/reviews/6a9c981600b86f86c0b46985",
+        "date": "2026-09-06"
+      },
+      "context": {
+        "assessment": "confirmed",
+        "service": "Cainiao tracking leg"
+      },
+      "expect": {
+        "carrier": "uniuni",
+        "confidence": "high"
+      },
+      "note": "A UniUni number made public with its parcel. Cainiao's tracker returns its history too, from China to UniUni's delivery: an AliExpress parcel UniUni delivers in the United States."
+    },
+    {
+      "number": "UUSC000019441251",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260820100251/https://www.uniuni.com/tracking/?no=UUSC000019441251",
+        "date": "2026-08-20",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed",
+        "service": "Cainiao tracking leg"
+      },
+      "expect": {
+        "carrier": "uniuni",
+        "confidence": "high"
+      },
+      "note": "A UniUni number made public with its parcel. Cainiao's tracker returns its history too, from China to UniUni's delivery: an AliExpress parcel UniUni delivers in the United States."
     }
   ]
 }
