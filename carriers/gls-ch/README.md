@@ -71,6 +71,10 @@ upstream error.
 - The estimate is the first date of the `arrivalTime` text, dropped once the parcel is
   delivered or in exception. A text with more dates, a range whose end the adapter does not
   read yet, is named in `unread_estimates`.
+- GLS keeps showing a slot it missed, such as "20-Jun-2026, 11:00 - 12:00" while the parcel
+  reaches a parcel centre that evening. A scan after the slot's end, or after its day while the
+  parcel is out for delivery, withdraws the estimate (`expected_delivery_withdrawn`). A date
+  without a slot holds through its day.
 - While the parcel waits at a ParcelShop, its `parcelShop` object, the one the
   tracking page prints, gives the pickup point: the shop's name, then its
   street and town on their own lines. Without it, the scan that names the shop

@@ -211,6 +211,29 @@ describe('GLS Switzerland response normalization', () => {
     expect(parse({ ...detailedFixture(), arrivalTime })).toMatchObject({ expected_delivery: null, unread_estimates: ['arrivalTime'] });
   });
 
+  // GLS keeps showing a slot it missed: here the parcel reaches a parcel centre hours after the slot ends.
+  it('withdraws an arrival slot a later scan shows GLS missed, and keeps one the scans leave open', () => {
+    const parse = (payload: JsonObject) => parseGLSSwitzerlandTrackingResponse(payload, OFFICIAL_TEST_PARCEL_NUMBER);
+    const parcel = (time: string, status = 'INTRANSIT', evtDscr = 'The parcel has reached the parcel center.'): JsonObject => ({
+      tuNo: OFFICIAL_TEST_PARCEL_NUMBER,
+      progressBar: { statusInfo: status, statusBar: [{ status, imageStatus: 'CURRENT', statusText: 'The parcel is on its way to the final parcel center.' }] },
+      arrivalTime: { name: 'Expected delivery:', value: '20-Jun-2026, 11:00 - 12:00' },
+      history: [{ date: '20-Jun-2026', time, evtDscr, evtNo: '1.0', status, address: { countryName: 'Switzerland', city: 'Zurich' } }],
+    });
+    const early = parse(parcel('09:30'));
+    expect(early).toMatchObject({ expected_delivery: '2026-06-20' });
+    expect(early).not.toHaveProperty('expected_delivery_withdrawn');
+    expect(parse(parcel('17:11'))).toMatchObject({ status: 'in_transit', expected_delivery: null, expected_delivery_withdrawn: true });
+    // Out for delivery after the slot, the round can still come that day; a scan the next day ends it.
+    const late = parse({ ...parcel('13:05', 'INDELIVERY', 'The parcel is expected to be delivered during the day.') });
+    expect(late).toMatchObject({ current_stage: 'out_for_delivery', expected_delivery: '2026-06-20' });
+    const nextDay = parcel('08:10', 'INDELIVERY', 'The parcel is expected to be delivered during the day.');
+    (nextDay.history as JsonObject[])[0]!.date = '21-Jun-2026';
+    expect(parse(nextDay)).toMatchObject({ expected_delivery: null, expected_delivery_withdrawn: true });
+    // A date without a slot holds through its day.
+    expect(parse({ ...parcel('17:11'), arrivalTime: { name: 'Expected delivery:', value: '20-Jun-2026' } })).toMatchObject({ expected_delivery: '2026-06-20' });
+  });
+
   it('names the ParcelShop alone without its street and town, and from the history without the shop', () => {
     const shop = parcelShopFixture();
     const address = (shop.parcelShop as { address: JsonObject }).address;

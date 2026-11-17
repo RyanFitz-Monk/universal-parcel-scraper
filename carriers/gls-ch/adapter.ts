@@ -361,15 +361,36 @@ function arrivalText(parcel: JsonObject): string {
   return isRecord(parcel.arrivalTime) ? plainText(parcel.arrivalTime.value, 128) : '';
 }
 
-function expectedDelivery(parcel: JsonObject): string | null {
-  const match = arrivalText(parcel).match(ARRIVAL_DATE);
+// The slot after that date: "17-Nov-2026, 11:00 - 12:00".
+const ARRIVAL_SLOT = /^\s*,?\s*\d{1,2}:\d{2}\s*[-–]\s*(\d{1,2}):(\d{2})\b/;
+
+/** The arrival text's first date, and when its slot ends, or its day without one. */
+interface ArrivalEstimate { day: string; slotEndsAt: number; dayEndsAt: number }
+
+function expectedDelivery(parcel: JsonObject): ArrivalEstimate | null {
+  const text = arrivalText(parcel);
+  const match = text.match(ARRIVAL_DATE);
   if (!match) return null;
   const raw = paddedDate(match[0]);
   for (const format of ['d-MMM-yyyy', 'd/MM/yyyy', 'd.MM.yyyy']) {
     const parsed = firstOccurrence(DateTime.fromFormat(raw, format, { zone: 'Europe/Zurich', locale: 'en' }));
-    if (parsed.isValid) return parsed.toISODate();
+    if (!parsed.isValid) continue;
+    const dayEndsAt = parsed.plus({ days: 1 }).startOf('day').toMillis();
+    const slot = text.slice((match.index ?? 0) + match[0].length).match(ARRIVAL_SLOT);
+    const slotEnd = slot ? parsed.startOf('day').plus({ hours: Number(slot[1]), minutes: Number(slot[2]) }).toMillis() : dayEndsAt;
+    return { day: parsed.toISODate(), slotEndsAt: Math.min(slotEnd, dayEndsAt), dayEndsAt };
   }
   return null;
+}
+
+/**
+ * GLS keeps showing a slot it has missed. A scan after the slot's end shows the parcel was not delivered in it, and so
+ * does a scan after its day while out for delivery: the round can still come later the same day.
+ */
+function missedArrival(estimate: ArrivalEstimate, newestScan: string | undefined, stage: string | undefined): boolean {
+  const scanned = newestScan ? DateTime.fromISO(newestScan, { setZone: true }) : null;
+  if (!scanned?.isValid) return false;
+  return scanned.toMillis() > (stage === 'out_for_delivery' ? estimate.dayEndsAt : estimate.slotEndsAt);
 }
 
 /**
@@ -416,6 +437,8 @@ export function parseGLSSwitzerlandTrackingResponse(
   const stage = isReturnParcel(parcel)
     ? 'returned'
     : headingStage ?? latestKnownEvent?.event.stage ?? 'in_transit';
+  const estimate = ['delivered', 'exception'].includes(status) ? null : expectedDelivery(parcel);
+  const missed = estimate !== null && missedArrival(estimate, events[0]?.time ?? undefined, stage);
   const shop = parcelShop(parcel) ?? parcelShopName(parcel);
   const weight = parcelWeight(parcel);
   const pickup = stage === 'ready_for_pickup' && shop ? { pickup_point: shop } : {};
@@ -427,9 +450,8 @@ export function parseGLSSwitzerlandTrackingResponse(
     current_stage: stage,
     last_status_text: newestDescription,
     last_update: events[0]?.time ?? null,
-    expected_delivery: ['delivered', 'exception'].includes(status)
-      ? null
-      : expectedDelivery(parcel),
+    expected_delivery: missed ? null : estimate?.day ?? null,
+    ...(missed ? { expected_delivery_withdrawn: true as const } : {}),
     ...unreadArrival(parcel),
     timezone: 'Europe/Zurich',
     ...pickup,
