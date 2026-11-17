@@ -222,6 +222,18 @@ describe('DPD France rendered tracking', () => {
     expect(statusMap.stage(null, normalizeStatusWording('Le destinataire est informé par SMS du report de sa livraison'))).toBe('in_transit');
   });
 
+  it('reads the driver\'s collection from the sender, beside the acceptance into the network, as accepted', () => {
+    const result = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: [
+      ['05/03/2026', '14:48', 'Votre colis a été pris en charge dans notre réseau', 'Agence DPD de Exemple (998)'],
+      ['05/03/2026', '14:48', 'Votre colis a été pris en charge par notre livreur', 'Agence DPD de Exemple (998)'],
+      ['05/03/2026', '03:55', "Votre colis est en préparation chez l'expéditeur", ''],
+    ] }), TEST_TRACKING_NUMBER);
+    expect(result.events?.map((event) => event.stage)).toEqual(['accepted', 'accepted', 'registered']);
+    expect(statusMap.stage(null, normalizeStatusWording('Votre colis a été pris en charge par notre livreur'))).toBe('accepted');
+    // The round's own wording stays the round.
+    expect(statusMap.stage(null, normalizeStatusWording('Le chauffeur a pris en charge votre colis'))).toBe('out_for_delivery');
+  });
+
   it('returns every declared capability from one fixture', () => {
     const result = parseDPDFranceTrackingHtml(trackingFixture({
       outboundRows: FIXTURE.outboundRows.slice(2),

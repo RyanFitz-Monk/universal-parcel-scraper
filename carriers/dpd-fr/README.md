@@ -64,7 +64,9 @@ non-2xx statuses are indeterminate.
 - The notice that the recipient was told of the acceptance ("Le destinataire est informé par SMS
   de la prise en charge…") can come hours after a sort centre's scan, so it keeps the stage of the
   scan before it (`stage_source: 'none'`) and gives no result status; the acceptance's own row is
-  `accepted`. The same-day delivery notice follows the round's scan and stays `out_for_delivery`.
+  `accepted`, and so is the driver's collection from the sender ("… pris en charge par notre
+  livreur"), scanned beside it at the same instant. The round's own wording is "Le chauffeur a pris
+  en charge…". The same-day delivery notice follows the round's scan and stays `out_for_delivery`.
   The notice of the delivery's current step ("… de l'étape actuelle de sa livraison") names no
   step, so it also keeps the stage of the scan before it. The notice that the delivery is put off
   ("… du report de sa livraison") names no reason, so it reads `in_transit`: the parcel waits in the

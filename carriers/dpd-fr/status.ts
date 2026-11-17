@@ -124,8 +124,8 @@ export function classifyStatus(description: string): ClassifiedStatus {
   // delivery's current step, which DPD sends during the round and names no step.
   if (isRecipientNotice(value)) return { status: 'unknown', stage: 'in_transit' };
 
-  // Acceptance into the network.
-  if (includesAny(value, ['pris en charge dans notre reseau'])) return { status: 'in_transit', stage: 'accepted' };
+  // Acceptance into the network, and the driver's collection from the sender, scanned at the same instant beside it.
+  if (includesAny(value, ['pris en charge dans notre reseau', 'pris en charge par notre livreur'])) return { status: 'in_transit', stage: 'accepted' };
 
   if (includesAny(value, [
     'remis a dpd',

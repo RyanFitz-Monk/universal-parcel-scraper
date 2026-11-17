@@ -314,6 +314,14 @@
       "note": "Acceptance into the network; the result status becomes in_transit."
     },
     {
+      "wording": "pris en charge par notre livreur",
+      "language": "fr",
+      "stage": "accepted",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "\"Votre colis a été pris en charge par notre livreur\": the driver collecting the parcel from the sender, scanned at the agency at the same instant as the acceptance into the network, after the sender's preparation. The round's own wording is \"chauffeur a pris en charge\"."
+    },
+    {
       "wording": "de la prise en charge de son colis",
       "language": "fr",
       "stage": null,
