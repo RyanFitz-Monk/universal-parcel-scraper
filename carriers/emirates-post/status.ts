@@ -11,6 +11,8 @@ const CODES = new Map<string, Stage>([
   // in its country, import customs, the onward dispatch and the delivery depot holding it.
   ['CLC0', 'registered'], ['CLC55', 'in_transit'],
   ['P-10', 'in_transit'], ['P-78', 'customs'], ['P-65', 'in_transit'], ['P-143', 'in_transit'],
+  // The destination's delivery hub taking the item in, after its dispatch abroad: no round yet.
+  ['P-62', 'in_transit'],
 ]);
 
 export function emiratesPostStage(code: string, description: string): ClassifiedWording | null {
