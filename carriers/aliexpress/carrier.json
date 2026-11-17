@@ -156,6 +156,11 @@
       "confidence": "low"
     },
     {
+      "id": "aliexpress-sk0sczd",
+      "pattern": "^SK0SCZD\\d{10}N$",
+      "confidence": "low"
+    },
+    {
       "id": "aliexpress-pa",
       "pattern": "^PA0{2}\\d{8}$",
       "confidence": "low"

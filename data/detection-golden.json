@@ -104810,6 +104810,17 @@
     ]
   },
   {
+    "input": "SK0SCZD9999999980N",
+    "carrier": "unknown",
+    "confidence": "low",
+    "candidates": [
+      "aliexpress"
+    ],
+    "asked": [
+      "aliexpress"
+    ]
+  },
+  {
     "input": "SK1003769022UA",
     "carrier": "unknown",
     "confidence": "low",

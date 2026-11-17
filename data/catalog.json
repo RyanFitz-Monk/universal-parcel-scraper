@@ -306,6 +306,10 @@
         "confidence": "low"
       },
       {
+        "pattern": "^SK0SCZD\\d{10}N$",
+        "confidence": "low"
+      },
+      {
         "pattern": "^PA0{2}\\d{8}$",
         "confidence": "low"
       },

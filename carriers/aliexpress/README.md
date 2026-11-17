@@ -25,7 +25,8 @@ Cainiao, and its movement files the parcel under AliExpress with GOFO proposed. 
 numbers list AliExpress in `origins` the same way: Cainiao's tracker follows them from China, and
 UniUni lists one it has not received as invalid. Detection also
 suggests AliExpress for `HRBC` and ten digits, numbers universal providers file under YFH and Cainiao: Cainiao's tracker answered
-one, YFH's did not know it and Ekart's knew neither. The rules are in [`carrier.json`](carrier.json)
+one, YFH's did not know it and Ekart's knew neither. It suggests AliExpress for `SK0SCZD`, ten
+digits and N as well: Cainiao's tracker followed such a number from its warehouse in China. The rules are in [`carrier.json`](carrier.json)
 and their evidence in [`numbers.json`](numbers.json).
 
 Once the parcel has crossed the border both know the number. It is one journey, so recognition
