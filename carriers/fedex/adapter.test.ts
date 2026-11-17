@@ -190,6 +190,9 @@ describe('FedEx structured response', () => {
     // The same wording under the in-transit code, staged by the code.
     expect(cutoff(['2026-06-05', 'AR', 'Arrived at FedEx location', ''], '', 'IT'))
       .toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map' });
+    // Under a code the map does not know, the newest scan leads: FedEx has the parcel at one of its locations.
+    expect(cutoff(['2026-06-05', 'IP', 'In FedEx possession', 'At FedEx location'], '', 'IP'))
+      .toMatchObject({ status: 'in_transit', current_stage: 'accepted', current_stage_source: 'carrier_map' });
     // A delay the wording names, or the flag on any other newest scan, stays an exception.
     expect(cutoff(pickup, 'Delay: weather')).toMatchObject({ status: 'exception', current_stage: 'exception' });
     expect(cutoff(['2026-06-05', 'DP', 'Left FedEx origin facility', ''])).toMatchObject({ status: 'exception', current_stage: 'exception' });

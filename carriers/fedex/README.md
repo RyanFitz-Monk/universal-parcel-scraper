@@ -102,7 +102,8 @@ fallback')`.
 - Opt-in browser recognition uses the same lookup and requires dated shipment activity.
   It returns the history with its confirmation so callers can reuse it after identification.
 - Status uses `keyStatusCD` / scan `statusCD` first, then substring matches on the prose. A
-  `DL` code is terminal and outranks the wording. A scan's `provider_code` is its code, the
+  `DL` code is terminal and outranks the wording. A summary whose code and wording name no stage,
+  such as "We have your package" beside an "In FedEx possession" scan, takes the newest scan's. A scan's `provider_code` is its code, the
   page's `statusCD` or the API's `eventType`, which share one vocabulary. The app's review
   (`statusMap`) reads that code first, then the wording, as the parser does; a scan stored
   without a code is staged by its wording. The code is not part of a stored scan's identity,

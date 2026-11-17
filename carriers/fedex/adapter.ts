@@ -454,7 +454,9 @@ function shipmentResult(shipment: FedExShipment, number: string): CarrierResult 
   const dateMoved = keyStatusCD === 'DY' && DATE_MOVED.test(keyStatus) && !namesProblem;
   // The newest scan's stage, where the package's flag says nothing more.
   const standing = afterCutoff ? 'accepted' : dateMoved ? STAGES.find((value) => value === newest?.stage) : undefined;
-  const stage = standing ?? FEDEX_CODE_STAGE[keyStatusCD] ?? wording ?? undefined;
+  // A summary whose code and wording the map does not know leaves the newest scan to lead: "We have your package"
+  // beside an "In FedEx possession" scan, before the pickup.
+  const stage = standing ?? FEDEX_CODE_STAGE[keyStatusCD] ?? wording ?? STAGES.find((value) => value === newest?.stage);
   const status = standing ? statusForStage(standing) : fedexStatus(keyStatusCD, `${keyStatus} ${statusDetails}`, trimmed.length > 0);
   const delivered = stage === 'delivered';
   const estimate = delivered ? null : shipment.estimate;
