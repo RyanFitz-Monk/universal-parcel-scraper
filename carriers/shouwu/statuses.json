@@ -292,6 +292,96 @@
       "note": "On the way to the airline, written with the export declaration and before the flight."
     },
     {
+      "wording": "The goods have been sent to the next station",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The facility sending the parcel on, after the forwarder's first scan."
+    },
+    {
+      "wording": "The shipment is waiting for transit",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Waiting at a facility for its next leg, before the flight and again after it."
+    },
+    {
+      "wording": "Barcode scanning",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "A facility's scan in China after the forwarder took the parcel in."
+    },
+    {
+      "wording": "Packaged",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Packed in China for the flight, before the leaving scan."
+    },
+    {
+      "wording": "Leaving Scan",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Leaving the facility in China before the export declaration."
+    },
+    {
+      "wording": "Hand over to airline",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "Shipment is in transit to next facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "Next stop, airport of destination",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "In transit, normal transfer ongoing",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "Departed from the origin facility",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "In transit, next stop shortly",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "End of shipment",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The newest row on a parcel the page still showed as In Transit (TRACE_STATUS_ON_THE_WAY), the day after a facility departure: it names no delivery."
+    },
+    {
       "wording": "Abnormal delivery",
       "stage": "failed_attempt",
       "language": "en",
