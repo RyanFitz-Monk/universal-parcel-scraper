@@ -37,7 +37,8 @@ a first notice registers the shipment. Agreed redeliveries, address changes and 
 redirects resume delivery, as does the agency's handling of an incident that warns of a
 delay ("Gestión de servicio, posible demora"); requests to contact the agency and incidents
 closed without success are problems. A parenthetical agency or pickup point code after
-a label is dropped.
+a label is dropped. A history row with no text at all, an empty label NACEX can print between
+two scans, is skipped; a label that is present but malformed still fails the page.
 
 Only status labels and depot localities of movement scans are retained. A
 platform's locality is its town after "PLAT", cut to twelve letters

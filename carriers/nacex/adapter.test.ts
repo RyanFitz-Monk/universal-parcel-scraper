@@ -230,6 +230,10 @@ describe('NACEX direct tracking', () => {
       expect(() => parseNacex(body, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     }
     expect(() => parseNacex(edit($ => $('#table_historico').empty()), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
+    // An empty row between two scans records nothing; a history of empty rows has no scan.
+    const blank = parseNacex(edit($ => $('.sg_hist_desc').eq(1).parent().after('<tr><td class="sg_hist_desc"><b></b></td></tr>')), NUMBER);
+    expect(blank.events).toEqual(parseNacex(html, NUMBER).events);
+    expect(() => parseNacex(edit($ => $('#table_historico').html('<tr><td class="sg_hist_desc"><b></b></td></tr>')), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
     expect(() => parseNacex(edit($ => $('#table_historico').html('<tr><td class="sg_hist_desc"><b>Sin estado</b>: TEST NOTE</td></tr>')), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
     expect(parseNacex(edit($ => $('#table_historico').append('<tr><td class="sg_hist_desc"><b>En reparto</b></td></tr>'.repeat(120))), NUMBER).events).toHaveLength(100);
   });

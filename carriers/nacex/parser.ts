@@ -134,6 +134,8 @@ export function parseNacex(html: string, raw: string): CarrierResult {
       continue;
     }
     if (!cell.hasClass('sg_hist_desc')) throw new SchemaError('NACEX', 'NACEX history scan layout changed');
+    // A row whose cell holds no text at all, an empty `<b></b>`, can stand between two scans: it records nothing.
+    if (!clean(cell.text(), 300)) continue;
     const labels = cell.children('b, font.fuente_titulo_green');
     // Comments, signatures and contact instructions follow this label as
     // separate text nodes. A parenthetical agency or pickup point is routing
