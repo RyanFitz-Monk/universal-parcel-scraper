@@ -7,8 +7,9 @@ const WORDINGS = statusWordings(statuses.entries);
 // A flight row names the day it expects the flight as month-day: "预计10-22飞".
 const FLIGHT_DAY = /(预计)\d{1,2}-\d{1,2}(飞)$/u;
 
-// The depot hand-over row starts with a month-day: "10-31 已交仓 留意官网更新".
-const HANDED_OVER_DAY = /^\d{1,2}-\d{1,2}( 已交仓 留意官网更新)$/u;
+// The depot hand-over row starts with a month-day: "10-31 已交仓 留意官网更新", or "11-17 已全部交仓 留意官网更新"
+// once every parcel of the shipment is there.
+const HANDED_OVER_DAY = /^\d{1,2}-\d{1,2}( 已(?:全部)?交仓 留意官网更新)$/u;
 
 // DHL's row from the destination country ends with the destination post's tracking link in brackets:
 // "… destination area. (Homepage / online shipment tracking: https://…)".

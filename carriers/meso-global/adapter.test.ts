@@ -98,6 +98,8 @@ describe('Meso-global tracking adapter', () => {
     }
     expect(statusMap.stage(null, '10-31 已交仓 留意官网更新')).toBe('in_transit');
     expect(mesoGlobalEnglish(null, '1-5 已交仓 留意官网更新')).toBe("Handed over to the delivery carrier's depot; watch its website for updates");
+    expect(statusMap.stage(null, '11-17 已全部交仓 留意官网更新')).toBe('in_transit');
+    expect(mesoGlobalEnglish(null, '1-5 已全部交仓 留意官网更新')).toBe("All handed over to the delivery carrier's depot; watch its website for updates");
     for (const wording of ['预计10-22飞', '预计1-5飞']) {
       expect(statusMap.stage(null, wording), wording).toBe('in_transit');
       expect(mesoGlobalEnglish(null, wording), wording).toBe('Flight booked');
