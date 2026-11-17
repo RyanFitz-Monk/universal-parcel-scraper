@@ -26,7 +26,7 @@ refusal there leaves the number unchecked instead of starting the browser.
    - Through a proxy, which is paid by the byte, the page loads only its document, DataDome's
      requests, the GET and an app module whose key is not yet known. Images, styles, fonts,
      analytics, chat and account frames are refused, which cuts a read from about 4 MB to about
-     0.1 MB.
+     0.1 MB. `AUSTRALIA_POST_PROXY_FILTER=off` on the browser service loads whole pages again.
    - Each lookup gets a fresh browser context that is closed afterwards.
 
 `AUSTRALIA_POST_DATACENTER_PROXY_URLS` (HTTP(S) proxies separated by spaces or commas) and

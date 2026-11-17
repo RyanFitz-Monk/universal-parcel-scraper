@@ -34,7 +34,8 @@ export function australiaPostBrowserRequest(rawUrl, capture = {}, { proxied = fa
 
 /** A fresh context on the leased browser; an injected context retains its proxy and fingerprint. */
 export async function runAustraliaPostBrowser({ url, handle, tier, maxTimeout, capture, installPolicy, openContext, signal,
-  locale = process.env.AUSTRALIA_POST_BROWSER_LOCALE || 'de-DE' }) {
+  locale = process.env.AUSTRALIA_POST_BROWSER_LOCALE || 'de-DE',
+  filterProxied = process.env.AUSTRALIA_POST_PROXY_FILTER !== 'off' }) {
   const start = Date.now();
   let context;
   let pageCapture;
@@ -68,7 +69,7 @@ export async function runAustraliaPostBrowser({ url, handle, tier, maxTimeout, c
         context = created;
         const page = await context.newPage();
         await installPolicy(page);
-        if (openContext) {
+        if (openContext && filterProxied) {
           await page.route('**/*', route => australiaPostProxyAllows(route.request(), url)
             ? route.fallback() : route.abort('blockedbyclient'));
         }

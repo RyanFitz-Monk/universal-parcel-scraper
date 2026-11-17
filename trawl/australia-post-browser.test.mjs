@@ -121,6 +121,15 @@ test('injected proxy context keeps its options and owns the temporary-context co
   assert.deepEqual(routed, ['fallback', 'blockedbyclient']);
 });
 
+test('a proxied page loads everything when its filter is switched off', async () => {
+  const { options, handle, state } = fixture();
+  const result = await runAustraliaPostBrowser({ ...options, filterProxied: false,
+    openContext: async () => handle.browser.newContext({ viewport: null, proxy: { server: 'http://proxy.example' } }) });
+  assert.equal(result.status, 'success');
+  assert.equal(state.routes.length, 0);
+  assert.equal(state.closed, 1);
+});
+
 const request = (address, type, navigation = type === 'document') => ({
   url: () => address, resourceType: () => type, isNavigationRequest: () => navigation });
 

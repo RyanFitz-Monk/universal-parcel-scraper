@@ -208,7 +208,8 @@ Keep the service on a private network. Pass its URL as `trawlUrl` to the library
 separate local Chromium transport.
 
 `REDIS_URL` configures the session cache. `AUSTRALIA_POST_BROWSER_LOCALE` overrides the
-browser locale for Australia Post, and `FFMPEG_PATH` selects SF Express's PNG decoder.
+browser locale for Australia Post, `AUSTRALIA_POST_PROXY_FILTER=off` lets its proxied pages load
+everything, and `FFMPEG_PATH` selects SF Express's PNG decoder.
 
 `BROWSER_SHUTDOWN_DRAIN_MS` lets accepted lookups finish when the container stops; by default
 TRAWL interrupts them. It exits by force 30 seconds after the drain, so give the container a
