@@ -168,6 +168,11 @@ export interface CarrierAdapter {
    * at its schedule: a scan dated after the lookup is held back until it is due.
    */
   readonly plannedScans?: boolean;
+  /**
+   * The carrier's answer as the adapter reads it. `trackCarrier()` and `createTracker()` finish it
+   * as every lookup leaves the package: local clocks dated, repeats read once, late registrations
+   * and an unstaged newest scan read as no step back (core/adapter/run.ts).
+   */
   track(input: TrackingInput, context?: TrackingContext): Promise<CarrierResult>;
   /**
    * Required when carrier.json declares `tracking.recognition`: whether the
@@ -292,12 +297,33 @@ function refusingPlaceholders(adapter: CarrierAdapter): CarrierAdapter {
 }
 
 /**
+ * The adapter for `carrier`, its browser confirmation's retained history finished as that
+ * carrier's lookups are, since a consumer reuses it as one.
+ */
+function finishingBrowserHistory(adapter: CarrierAdapter, carrier: string): CarrierAdapter {
+  const confirm = adapter.recognizeWithBrowser?.bind(adapter);
+  if (!confirm) return adapter;
+  return {
+    ...adapter,
+    recognizeWithBrowser: async (...args: Parameters<typeof confirm>) => {
+      const answer = await confirm(...args);
+      if (!answer.result) return answer;
+      // Loaded on use: adapters import this module, and the finishing reads every carrier's map.
+      const { finishAdapterAnswer } = await import('./run.js');
+      return { ...answer, result: finishAdapterAnswer(carrier, answer.result, adapter.plannedScans) };
+    },
+  };
+}
+
+/**
  * One adapter instance per adapter id for the process lifetime, created on
  * first use so a broken provider module cannot prevent unrelated carriers
- * from syncing. Each refuses placeholder numbers.
+ * from syncing. Each refuses placeholder numbers, and a browser confirmation's
+ * history comes finished for the carrier asked.
  */
 export class AdapterRegistry {
   private readonly instances = new Map<string, CarrierAdapter>();
+  private readonly carriers = new Map<string, CarrierAdapter>();
 
   constructor(private readonly definition: RegistryDefinition, private readonly environment: AdapterEnvironment) {}
 
@@ -322,7 +348,12 @@ export class AdapterRegistry {
       instance = refusingPlaceholders(factory(this.environment));
       this.instances.set(adapterId, instance);
     }
-    return instance;
+    let view = this.carriers.get(carrierId);
+    if (!view) {
+      view = finishingBrowserHistory(instance, carrierId);
+      this.carriers.set(carrierId, view);
+    }
+    return view;
   }
 
   /** Every dedicated adapter id, for canaries and documentation. */

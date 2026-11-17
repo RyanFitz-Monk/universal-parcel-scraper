@@ -367,7 +367,9 @@ the recipient's input knows the number: the adapter's `input_required` error car
 reason `parcel_found`, and recognition answers known without an activity date. A carrier whose HTTP recognition cannot bind every number
 its rules offer names the ones it can, and is only suggested for the rest: Saia's service never
 sees a PRO's twelfth digit. Browser confirmation requires dated shipment activity
-and returns its tracking result for reuse, normalized like any other. An ambiguous ten-digit number includes DHL Express among its direct candidates when its waybill check passes. Its
+and returns its tracking result for reuse. Through an `AdapterRegistry`, that result is finished
+for the carrier asked as `trackCarrier` finishes a lookup; an adapter's own `track()` answer is
+not, and goes through `trackCarrier` or `createTracker()`. An ambiguous ten-digit number includes DHL Express among its direct candidates when its waybill check passes. Its
 facility clocks are dated where the scan's location settles a zone and stay unresolved
 elsewhere; Ship24 relays them with DHL's own offsets.
 DHL Express's HTTP path uses its mobile guest API and includes the shared

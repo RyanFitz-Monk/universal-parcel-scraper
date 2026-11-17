@@ -47,6 +47,27 @@ describe('consumer dispatch', () => {
     expect((await trackCarrier('test', { number: 'TEST0001' }, { registry: registry(false), universal: {} as UniversalTracker })).events).toHaveLength(2);
   });
 
+  it("finishes a browser confirmation's retained history as the carrier's lookups are, for each carrier asked", async () => {
+    // A partner's label written after the parcel moved, and a scan the carrier enters at its planned time.
+    const soon = new Date(Date.now() + 2 * 3_600_000).toISOString();
+    const result = { status: 'registered', current_stage: 'registered', events: [
+      { time: soon, description: 'Departed facility', stage: 'in_transit' },
+      { time: '2026-01-03T09:00:00Z', description: 'Shipping label created', stage: 'registered' },
+      { time: '2026-01-02T09:00:00Z', description: 'Arrived at facility', stage: 'in_transit' },
+    ] };
+    const recognizeWithBrowser = vi.fn().mockResolvedValue({ known: true, lastActivityAt: '2026-01-03T09:00:00Z', result });
+    const registry = new AdapterRegistry({ factories: { test: () => ({ id: 'test', steps: ['direct'], plannedScans: true,
+      track: vi.fn(), recognizeWithBrowser }) }, carriers: { test: 'test', alias: 'test' } }, environment);
+    const answer = await registry.for('alias')!.recognizeWithBrowser!('TEST0001');
+    expect(answer).toMatchObject({ known: true, lastActivityAt: '2026-01-03T09:00:00Z', result: { current_stage: 'in_transit' } });
+    expect(answer.result!.events!.map((event) => [event.description, event.stage])).toEqual([
+      ['Shipping label created', 'in_transit'], ['Arrived at facility', 'in_transit']]);
+    // A confirmation without a history, or a carrier's adapter without one, is passed on as is.
+    recognizeWithBrowser.mockResolvedValueOnce({ known: false, lastActivityAt: null });
+    await expect(registry.for('test')!.recognizeWithBrowser!('TEST0001')).resolves.toEqual({ known: false, lastActivityAt: null });
+    expect(registry.for('test')).toBe(registry.for('test'));
+  });
+
   it('gives the adapter and the universal chain the normalized number, as createTracker() does', async () => {
     // A letter O typed in an S10 serial is the zero its check digit asks for.
     const track = vi.fn().mockResolvedValue({ status: 'in_transit' });

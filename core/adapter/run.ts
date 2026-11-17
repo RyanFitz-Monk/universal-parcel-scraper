@@ -31,7 +31,7 @@ export interface AdapterLookup {
  * they are due, lost letters restored, local clocks dated, repeats read once, late registrations
  * and an unstaged newest scan read as no step back.
  */
-function finishAdapterAnswer(carrier: string, result: unknown, plannedScans = false): CarrierResult {
+export function finishAdapterAnswer(carrier: string, result: unknown, plannedScans = false): CarrierResult {
   const answer = normalizeCarrierResult(result);
   return readNewestStage(readLateRegistrations(withoutRepeatedScans(dateLocalClocks(carrier,
     restoreLostLetters(plannedScans ? dueScans(answer, carrier) : answer), Date.now()))));
