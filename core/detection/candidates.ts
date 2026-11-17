@@ -6,6 +6,7 @@
  * What it is not: no carrier decision of its own (it defers to the detection
  * engine) and no provider I/O.
  */
+import { isKnownCarrierName } from '../catalog/hints.js';
 import { AMAZON_NUMBER_PATTERN } from './amazon.js';
 import { detectCarrierMatch } from './detect.js';
 import { validTrackingNumberInText } from './valid.js';
@@ -88,12 +89,18 @@ export function recognizedNumberInText(raw: string): string | undefined {
 const LABEL_SUFFIX = String.raw`(?:numbers?(?!\p{L})|no\.|(?:no|id)(?![\p{L}0-9.]))`;
 // Other languages name the parcel or its tracking, with a word for its number
 // before or after: "numéro de suivi", "Sendung Nr.", "número de envío", "numer
-// przesyłki", or join the two: "Sendungsnummer", "zendingnummer". A courier's
-// label names its waybill: "Waybill No.", "AWB", "número de guía". A customer
-// service line is no label: "Service colis : 01 23 45 67 89".
-const PARCEL_WORDS = String.raw`suivi|colis|envoi|sendung|paket|pakket|zending|seguimiento|rastreo|env[ií]o|paquete|gu[ií]a`
+// przesyłki", "numéro d'expédition", or join the two: "Sendungsnummer", "zendingnummer".
+// A courier's label names its waybill: "Waybill No.", "AWB", "número de guía". A
+// customer service line is no label: "Service colis : 01 23 45 67 89".
+const PARCEL_WORDS = String.raw`suivi|colis|envoi|exp[eé]dition|sendung|paket|pakket|zending|seguimiento|rastreo|env[ií]o|paquete|gu[ií]a`
   + String.raw`|tracciamento|spedizione|pacco|rastreio|rastreamento|encomenda|przesy[lł]k[ai]|paczk[ai]`;
 const NUMBER_WORDS = String.raw`num[eé]ro|n[uú]mero|numer|nummer|nr\.?|n\.?\s?[°º]`;
+// A carrier's name can stand between a label and its number, before the word for the number
+// or the separator: "N° de suivi DPD :", "Votre colis DPD n°", "Sendungsnummer DHL:". Up to
+// three words of letters, read as few as the label needs; `keywordNumberInText` keeps only
+// a name the catalog knows.
+const NAME_WORD = String.raw`\p{L}[\p{L}'’&-]{0,19}`;
+const CARRIER_NAME = String.raw`(?:\s+(?<carrier>${NAME_WORD}(?:\s+${NAME_WORD}){0,2}?)(?:\s*(?:${NUMBER_WORDS}))?)??`;
 // Russian: "трек-номер", "номер отправления", "почтовый идентификатор", "ШПИ".
 const RUSSIAN_LABEL = String.raw`(?<!\p{L})(?:трек(?:инг)?[-\s]?(?:номер|код)[а-яё]{0,3}`
   + String.raw`|номер[а-яё]{0,2}\s+(?:для\s+)?(?:отслеживания|отправления|посылки|почтового\s+отправления)`
@@ -110,12 +117,13 @@ const LABELLED_NUMBER = new RegExp(
   + String.raw`|${RUSSIAN_LABEL}|${CHINESE_LABEL}`
   // A joined word is read from its start: a later start in the same word reads no more, and would try every letter.
   + String.raw`|(?<!\p{L})\p{L}*(?:sendungs|paket|tracking|zending)nummer)`
+  + CARRIER_NAME
   // An email's template can print its separator twice: "Tracking Number: : 1234567899". Chinese and
   // Japanese text print a full-width colon.
   + String.raw`(?:\s+(?:is|est|es|ist|lautet|è|é|jest)(?:\s+(?:le|el|il|o))?(?![\p{L}0-9]))?\s*(?:[:：#-]\s*){0,2}`
   // The token holds a digit, so a label followed by a plain word does not end the search. Groups
   // printed apart may follow it: "1Z 999 AA1 01 2345 6784".
-  + String.raw`((?=[A-Z0-9.-]{0,39}\d)(?:[A-Z0-9][A-Z0-9.-]{3,39}|[A-Z0-9][A-Z0-9.-]{1,2}(?=\s[A-Z0-9]*\d))`
+  + String.raw`(?<number>(?=[A-Z0-9.-]{0,39}\d)(?:[A-Z0-9][A-Z0-9.-]{3,39}|[A-Z0-9][A-Z0-9.-]{1,2}(?=\s[A-Z0-9]*\d))`
   + String.raw`(?:\s[A-Z0-9]{2,6}(?![\p{L}0-9]))*)`,
   'giu',
 );
@@ -143,9 +151,17 @@ export function isDateToken(token: string): boolean {
  * characters or more: "0034 0434 1234 5678".
  */
 export function keywordNumberInText(raw: string): string | undefined {
-  for (const match of raw.matchAll(LABELLED_NUMBER)) {
+  const labels = new RegExp(LABELLED_NUMBER);
+  for (let match = labels.exec(raw); match; match = labels.exec(raw)) {
+    const { carrier, number } = match.groups!;
+    // Words the catalog names no carrier by are the message's ("Suivi de votre colis :",
+    // "Suivi Commande :"): the search goes on from the label's next character.
+    if (carrier !== undefined && !isKnownCarrierName(carrier)) {
+      labels.lastIndex = match.index + 1;
+      continue;
+    }
     // Each later group holds a digit, but for the two capitals that close an S10 code: "RR 123 456 789 FR".
-    const [first, ...rest] = match[1]!.split(/\s/);
+    const [first, ...rest] = number!.split(/\s/);
     const groups = [first!];
     for (const group of rest) {
       const digits = /\d/.test(group);
@@ -153,7 +169,7 @@ export function keywordNumberInText(raw: string): string | undefined {
       groups.push(group);
       if (!digits) break;
     }
-    const start = match.index + match[0].length - match[1]!.length;
+    const start = match.index + match[0].length - number!.length;
     const end = start + groups.join(' ').length;
     if (ALTERNATIVE_NUMBER.test(raw.slice(end))) return undefined;
     // A sentence can end right after its number.

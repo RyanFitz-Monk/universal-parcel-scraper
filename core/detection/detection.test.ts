@@ -669,6 +669,23 @@ describe('the detection engine', () => {
     expect(parseTrackingInput(text)).toMatchObject({ trackingNumber: '12345678', source: 'text', confidence: 'low' });
   });
 
+  it('reads the number after a label that names its carrier', () => {
+    // Synthetic number.
+    for (const text of [
+      'N° de suivi DPD : 12345678901234', 'Numéro de colis DPD : 12345678901234', 'Votre numéro de suivi DPD est le 12345678901234',
+      'Suivi DPD : 12345678901234', 'Votre colis DPD n° 12345678901234', 'Numéro de colis GLS : 12345678901234',
+      'Numéro de suivi Mondial Relay : 12345678901234', 'Numéro de suivi Colis Privé : 12345678901234',
+      'Sendungsnummer DHL: 12345678901234', 'Tracking number UPS: 12345678901234', "Numéro d'expédition : 12345678901234",
+      // Words the catalog names no carrier by leave the search to a later label.
+      'Suivi de votre colis : 12345678901234', 'Numéro de suivi de votre colis : 12345678901234',
+    ]) expect(keywordNumberInText(text), text).toBe('12345678901234');
+    for (const text of [
+      'Suivi Commande : 12345678901234', 'Numéro de colis suivant : 12345678901234', 'Votre colis Commande n° 12345678901234',
+      "Frais d'expédition : 4,90 €", "Date d'expédition : 12/11/2026", "Date d'expédition : 2026-11-12", 'Expédition du 12.11.2026',
+      "Adresse d'expédition : 12 rue des Lilas", "Délai d'expédition : 2 à 3 jours", 'Service colis DPD : 01 23 45 67 89',
+    ]) expect(keywordNumberInText(text), text).toBeUndefined();
+  });
+
   it('reads the number after a Russian or Chinese label', () => {
     for (const text of ['Трек-номер: 1234567899', 'трек номер 1234567899', 'Номер отслеживания: 1234567899', 'Номер отправления: 1234567899',
       'ШПИ: 1234567899', 'Почтовый идентификатор 1234567899', '运单号：1234567899', '快递单号: 1234567899', '物流单号 1234567899',
