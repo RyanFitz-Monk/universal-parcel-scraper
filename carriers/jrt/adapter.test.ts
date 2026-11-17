@@ -524,6 +524,9 @@ describe('JRT tracking adapter', () => {
     // The road line's row that names only the region of Russia the parcel reached, shown in English.
     expect(answer('俄罗斯下诺夫哥德洲')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(jrtEnglish(null, normalizeStatusWording('俄罗斯下诺夫哥德洲'))).toBe('Nizhny Novgorod region, Russia');
+    // The landing on the line into Canada, with the import clearance under way, shown in English.
+    expect(answer('落地清关中')).toEqual({ kind: 'mapped', stage: 'customs' });
+    expect(jrtEnglish(null, normalizeStatusWording('落地清关中'))).toBe('Landed, customs clearance in progress');
     expect(answer('预计配载航班11月11日,Expected flight on November 11th')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('预计配载航班12月2日，Expected flight on December 2nd')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     // On the line into Latin America the booked flight and the flight name the destination and the day.

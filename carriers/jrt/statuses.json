@@ -1290,6 +1290,15 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-17",
       "note": "On JRT's road line, three days after the Kazakhstan–Russia border: the region of Russia the parcel has reached, 州 misspelt 洲."
+    },
+    {
+      "wording": "落地清关中",
+      "language": "zh",
+      "english": "Landed, customs clearance in progress",
+      "stage": "customs",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "On the line into Canada, after the flight: landed, with the import clearance under way."
     }
   ]
 }
