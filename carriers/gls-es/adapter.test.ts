@@ -81,6 +81,22 @@ describe('GLS Spain direct tracking', () => {
     expect(toDoor).not.toHaveProperty('pickup_point');
   });
 
+  it('turns the scans of one minute, which the reply lists oldest first, newest first', () => {
+    const result = normalizeCarrierResult(parseGLSSpain(shipment((found) => {
+      const [delivered, received, redirect, absent, round, depot, again, picked, label] = found.tracking;
+      absent!.at = redirect!.at;
+      depot!.at = again!.at = round!.at;
+      found.tracking = [delivered!, received!, absent!, redirect!, depot!, again!, round!, picked!, label!];
+    }), NUMBER));
+    expect(result.events!.map((event) => [event.description, event.tie_order ?? null])).toEqual([
+      ['Delivered', null], ['Received in Example Point Shop', null],
+      ['Shipment redirected to GLS Point Example Point Shop', 1], ['Absent', 0],
+      ['Out for delivery', 1], ['At delivery agency', 0],
+      ['Parcel picked up by GLS. Pending to arrive to final destination', null],
+      ['Label created. The shipment has not yet been delivered to GLS by the sender', null],
+    ]);
+  });
+
   it('reads incidences by their sentence and takes the current stage from the shipment state', () => {
     const absent = parseGLSSpain(shipment((found) => {
       found.tracking.splice(0, 3);

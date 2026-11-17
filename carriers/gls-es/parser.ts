@@ -115,15 +115,23 @@ export function parseGLSSpain(payload: unknown, raw: string): CarrierResult {
   const rows = found.tracking ?? [];
   if (!Array.isArray(rows) || rows.length > MAX_SCANS) throw new SchemaError(PROVIDER, 'GLS Spain returned an invalid scan list');
 
-  // The reply lists the scans newest first.
-  const events: CarrierEvent[] = [];
+  // The reply lists the scans newest first, but those of one minute oldest first: the depot's scan
+  // above the round that leaves it, an absence above the redirect to a GLS Point it led to.
+  const listed: CarrierEvent[] = [];
   const seen = new Set<string>();
   for (const row of rows) {
     const event = scan(row);
     const key = JSON.stringify([event.time, event.provider_code, event.description]);
     if (seen.has(key)) continue;
     seen.add(key);
-    events.push(event);
+    listed.push(event);
+  }
+  const events: CarrierEvent[] = [];
+  for (let start = 0; start < listed.length;) {
+    let end = start + 1;
+    while (listed[start]!.time && end < listed.length && listed[end]!.time === listed[start]!.time) end += 1;
+    events.push(...listed.slice(start, end).reverse());
+    start = end;
   }
   const newest = events[0];
   // The shipment's state is what the app heads its page with; the newest scan

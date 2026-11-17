@@ -39,6 +39,9 @@ carrier of its own on Lisbon's clock would also split the clock the GLS networks
   left to the shared wording rules.
 - Clocks carry `Z`, and the page shows them in the reader's zone, so they are kept as
   instants.
+- The reply lists the scans newest first, but scans of one minute oldest first: the depot's
+  scan above the round that leaves it, an absence above the redirect to a GLS point it led to.
+  The adapter turns those newest first, so their tie order follows the parcel.
 - The weight, the estimated delivery day and the GLS point a parcel waits at are kept. The
   point is named only when the scan that left the parcel there names it too; otherwise the
   reply's point is the destination depot.
