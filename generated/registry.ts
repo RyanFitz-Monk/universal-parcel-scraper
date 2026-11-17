@@ -60,6 +60,7 @@ import { adapter as aymakan } from '../carriers/aymakan/adapter.js';
 import { adapter as bangladeshPost } from '../carriers/bangladesh-post/adapter.js';
 import { adapter as baridAlMaghrib } from '../carriers/barid-al-maghrib/adapter.js';
 import { adapter as belpost } from '../carriers/belpost/adapter.js';
+import { adapter as bestFreightCn } from '../carriers/best-freight-cn/adapter.js';
 import { adapter as bestOverniteExpress } from '../carriers/best-overnite-express/adapter.js';
 import { adapter as bestfulfill } from '../carriers/bestfulfill/adapter.js';
 import { adapter as betterTrucks } from '../carriers/better-trucks/adapter.js';
@@ -852,6 +853,7 @@ export const REGISTRY: RegistryDefinition = {
     "bangladesh-post": bangladeshPost,
     "barid-al-maghrib": baridAlMaghrib,
     "belpost": belpost,
+    "best-freight-cn": bestFreightCn,
     "best-overnite-express": bestOverniteExpress,
     "bestfulfill": bestfulfill,
     "better-trucks": betterTrucks,
@@ -1741,6 +1743,7 @@ export const REGISTRY: RegistryDefinition = {
     "best-express-sg": "universal",
     "best-express-th": "universal",
     "best-express-vn": "universal",
+    "best-freight-cn": "best-freight-cn",
     "best-overnite-express": "best-overnite-express",
     "best-transport": "universal",
     "bestfulfill": "bestfulfill",

@@ -1,0 +1,67 @@
+{
+  "code": 200,
+  "success": true,
+  "errorCode": null,
+  "message": null,
+  "data": [
+    {
+      "billCode": "97468251036",
+      "sendTime": "2026-11-13 16:00:00",
+      "sendAddress": "PRIVATE_ADDRESS",
+      "destination": "PRIVATE_DESTINATION",
+      "count": 13,
+      "fileList": [
+        "PRIVATE_ATTACHMENT"
+      ],
+      "detailList": [
+        {
+          "time": "2026-11-17 07:54:13",
+          "scanType": "发件",
+          "memo": "快件运输活动 0"
+        },
+        {
+          "time": "2026-11-16 17:52:01",
+          "scanType": "装车",
+          "memo": "快件运输活动 1"
+        },
+        {
+          "time": "2026-11-16 14:28:22",
+          "scanType": "到件",
+          "memo": "快件运输活动 2"
+        },
+        {
+          "time": "2026-11-16 05:05:26",
+          "scanType": "发件",
+          "memo": "快件运输活动 3"
+        },
+        {
+          "time": "2026-11-15 19:54:05",
+          "scanType": "装车",
+          "memo": "快件运输活动 4"
+        },
+        {
+          "time": "2026-11-15 18:56:22",
+          "scanType": "到件",
+          "memo": "快件运输活动 5"
+        },
+        {
+          "time": "2026-11-13 18:30:29",
+          "scanType": "发件",
+          "memo": "快件运输活动 6"
+        },
+        {
+          "time": "2026-11-13 17:45:22",
+          "scanType": "揽收",
+          "memo": "快件运输活动 7"
+        }
+      ],
+      "traceList": [
+        {
+          "time": "2026-11-17 07:54:22",
+          "scanType": "发件",
+          "memo": "全部货物正在运输"
+        }
+      ]
+    }
+  ]
+}

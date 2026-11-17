@@ -789,6 +789,7 @@ import { statusMap as zheldor } from '../../carriers/zheldor/status.js';
 import { statusMap as costcoLogistics } from '../../carriers/costco-logistics/status.js';
 import { statusMap as kargoturk } from '../../carriers/kargoturk/status.js';
 import { statusMap as profitFields } from '../../carriers/profit-fields/status.js';
+import { statusMap as bestFreightCn } from '../../carriers/best-freight-cn/status.js';
 import { statusMap as lhtex } from '../../carriers/lhtex/status.js';
 import { statusMap as lmParcel } from '../../carriers/lm-parcel/status.js';
 import { statusMap as znlogic } from '../../carriers/znlogic/status.js';
@@ -829,7 +830,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'j-and-t-br': jAndTBr,
   zheldor,
   'costco-logistics': costcoLogistics,
-  lhtex, polonez, 'v-xpress': vXpress, airspeed, topdelivery, kargoturk, expedico, 'profit-fields': profitFields, 'lm-parcel': lmParcel, znlogic, 'freightways-global': freightwaysGlobal, 'fxdc-post': fxdcPost, 'frontier-ca': frontierCa,
+  'best-freight-cn': bestFreightCn, lhtex, polonez, 'v-xpress': vXpress, airspeed, topdelivery, kargoturk, expedico, 'profit-fields': profitFields, 'lm-parcel': lmParcel, znlogic, 'freightways-global': freightwaysGlobal, 'fxdc-post': fxdcPost, 'frontier-ca': frontierCa,
   'fez-delivery': fezDelivery,
   'junfeng-international': junfengInternational,
   'shipglobal-us': shipglobalUs,

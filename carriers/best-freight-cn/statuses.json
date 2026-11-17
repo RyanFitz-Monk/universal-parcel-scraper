@@ -1,0 +1,29 @@
+{
+  "carrier": "best-freight-cn",
+  "entries": [
+    {
+      "wording": "揽收",
+      "stage": "accepted",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "发件",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "到件",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "装车",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    }
+  ]
+}

@@ -4664,5 +4664,11 @@
     "pattern": "^\\d{12}$",
     "kind": "by_design",
     "reason": "LHT Express shares twelve-digit waybills with other carriers; the shape alone cannot establish ownership."
+  },
+  {
+    "carrier": "best-freight-cn",
+    "pattern": "^\\d{11}$",
+    "kind": "by_design",
+    "reason": "BEST China freight shares eleven-digit waybills with other carriers; shape alone cannot establish ownership."
   }
 ]

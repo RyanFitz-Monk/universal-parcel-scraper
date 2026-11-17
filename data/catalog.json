@@ -10735,6 +10735,30 @@
     ],
     "detectionRules": []
   },
+  "best-freight-cn": {
+    "displayName": "BEST Freight China",
+    "color": "#d50032",
+    "aliases": [
+      "百世快运",
+      "百世物流",
+      "BEST Inc CN",
+      "BEST Freight (China)"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "best-freight-cn",
+      "localClocks": true
+    },
+    "canaryUrl": "https://www.800best.com/freight/track",
+    "trackingSearchUrl": "https://www.800best.com/freight/track",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "best-overnite-express": {
     "displayName": "Best Overnite Express",
     "color": "#1e3b91",

@@ -1,0 +1,53 @@
+{
+  "id": "best-freight-cn",
+  "displayName": "BEST Freight China",
+  "aliases": [
+    "百世快运",
+    "百世物流",
+    "BEST Inc CN",
+    "BEST Freight (China)"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#d50032"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "best-freight-cn",
+    "steps": [
+      "direct"
+    ],
+    "localClocks": true
+  },
+  "capabilities": [
+    "history"
+  ],
+  "portal": {
+    "searchUrl": "https://www.800best.com/freight/track",
+    "canaryUrl": "https://www.800best.com/freight/track",
+    "shows": [
+      "status",
+      "history"
+    ],
+    "scraped": [
+      "status",
+      "history"
+    ],
+    "discarded": [
+      "address fields",
+      "piece count",
+      "attachments"
+    ],
+    "unavailable": [
+      "eta"
+    ]
+  },
+  "links": [],
+  "detection": []
+}

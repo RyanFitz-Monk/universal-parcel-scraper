@@ -8493,5 +8493,26 @@
       "paquetexpress"
     ],
     "reason": "A passing Identcode check digit adds DHL, the mod 7 check that Japan Post, Sagawa and Yamato share adds all three, and the 20 prefix adds J&T Cargo, to the carriers that accept any twelve digits; a check digit does not establish ownership, so the number stays a low-confidence suggestion."
+  },
+  {
+    "shape": "Eleven digits sharing numeric layouts and passing their check-digit filters",
+    "carriers": [
+      "postlogistics",
+      "gls-ch",
+      "gls-fr",
+      "gls-de",
+      "old-dominion",
+      "blue-dart",
+      "japan-post",
+      "aramex",
+      "coordinadora",
+      "dpd-ro",
+      "gls-at",
+      "gls-pl",
+      "mainfreight",
+      "paquetexpress",
+      "ppl"
+    ],
+    "reason": "These numeric waybill layouts overlap for the public BEST China freight reference; their lengths and check digits do not establish shipment ownership."
   }
 ]

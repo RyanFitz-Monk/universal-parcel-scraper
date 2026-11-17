@@ -1,0 +1,39 @@
+{
+  "carrier": "best-freight-cn",
+  "records": [
+    {
+      "number": "82874367590",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.kdso.net/kdso/B0FCB9FCD7B7D7D9BCC7C2BC/130/1/c.htm",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "postlogistics",
+          "gls-ch",
+          "gls-fr",
+          "gls-de",
+          "old-dominion",
+          "blue-dart",
+          "japan-post",
+          "aramex",
+          "coordinadora",
+          "dpd-ro",
+          "gls-at",
+          "gls-pl",
+          "mainfreight",
+          "paquetexpress",
+          "ppl"
+        ]
+      },
+      "note": "Public query archive attributed to BEST China freight; the official guest tracker confirms the whole waybill and dated main and child-consignment scans."
+    }
+  ]
+}

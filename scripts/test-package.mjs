@@ -66,6 +66,19 @@ try {
     assert.equal(lhtex.result.status, 'delivered');
     assert.equal(lhtex.result.events.length, 8);
     assert.equal(lhtexCalls, 1);
+    // Dispatch the CPU-verification carrier without starting an optional OCR peer.
+    let bestFreightCalls = 0;
+    try {
+      await createTracker({ providers: [], fetcher: async (url, init) => {
+        bestFreightCalls += 1;
+        assert.equal(String(url), 'https://www.800best.com/api/general/imageverifycode');
+        assert(init.signal instanceof AbortSignal);
+        return new Response('rate limited', { status: 429 });
+      } }).track({ number: '97468251036', carrier: 'best-freight-cn' });
+      assert.fail('The refused guest request must not produce history');
+    } catch { assert.equal(bestFreightCalls, 1); }
+    assert(existsSync(new URL('./carriers/best-freight-cn/ocr-worker.mjs', import.meta.resolve('universal-parcel-scraper/node'))));
+    assert(existsSync(new URL('./carriers/best-freight-cn/ocr-consensus.mjs', import.meta.resolve('universal-parcel-scraper/node'))));
     // Read DPD Germany's forecast through the installed adapter and result facade.
     const dpdAppReplies = ${JSON.stringify(dpdAppReplies)};
     const dpd = await createTracker({ providers: [], fetcher: async (url, init) => {

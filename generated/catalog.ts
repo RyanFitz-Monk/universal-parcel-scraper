@@ -10739,6 +10739,30 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "best-freight-cn": {
+    "displayName": "BEST Freight China",
+    "color": "#d50032",
+    "aliases": [
+      "百世快运",
+      "百世物流",
+      "BEST Inc CN",
+      "BEST Freight (China)"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "best-freight-cn",
+      "localClocks": true
+    },
+    "canaryUrl": "https://www.800best.com/freight/track",
+    "trackingSearchUrl": "https://www.800best.com/freight/track",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "best-overnite-express": {
     "displayName": "Best Overnite Express",
     "color": "#1e3b91",
@@ -62533,6 +62557,7 @@ export const CARRIER_IDS = [
   "best-express-sg",
   "best-express-th",
   "best-express-vn",
+  "best-freight-cn",
   "best-overnite-express",
   "best-transport",
   "bestfulfill",
@@ -64297,6 +64322,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "best-express-sg": [],
   "best-express-th": ["best-express-th-1"],
   "best-express-vn": [],
+  "best-freight-cn": [],
   "best-overnite-express": [],
   "best-transport": [],
   "bestfulfill": ["bestfulfill-1"],
