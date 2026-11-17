@@ -4658,5 +4658,11 @@
     "carrier": "ane-logistics",
     "kind": "by_design",
     "reason": "The supported numeric form is shared by other carriers; use explicit selection or a named handoff."
+  },
+  {
+    "carrier": "lhtex",
+    "pattern": "^\\d{12}$",
+    "kind": "by_design",
+    "reason": "LHT Express shares twelve-digit waybills with other carriers; the shape alone cannot establish ownership."
   }
 ]

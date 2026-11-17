@@ -1,4 +1,41 @@
 {
   "carrier": "lhtex",
-  "entries": []
+  "entries": [
+    {
+      "wording": "已签收",
+      "stage": "delivered",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "派送中",
+      "stage": "out_for_delivery",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "运输中",
+      "stage": "in_transit",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "已揽收",
+      "stage": "accepted",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "已接单",
+      "stage": "registered",
+      "language": "zh",
+      "confirmedBy": "portal"
+    },
+    {
+      "wording": "下单成功",
+      "stage": "registered",
+      "language": "zh",
+      "confirmedBy": "portal"
+    }
+  ]
 }

@@ -1,24 +1,15 @@
 # LHT Express
 
-LHT Express parcels use enabled universal providers. There is no dedicated adapter.
+Tracks Guangdong LHT Express waybills through the guest lookup on its official homepage.
 
-LHT Express (联昊通速递), based in Dongguan, delivers business parcels across Guangdong, with same-day
-delivery in the Pearl River Delta. Its site is lhtex.com.cn.
+`direct` reads `orderquery.php` with the whole waybill in `waybillNo`. `retry` repeats
+only a network failure within the lookup budget. No account, phone or CAPTCHA is needed.
 
-## Numbers
+The response must contain exactly one matching waybill. Scan clocks stay local because
+the carrier states no offset. An empty successful list remains inconclusive so enabled
+providers can still answer. Signature images are omitted.
 
-No public page shows one of its numbers, so there is no rule.
+The supported numeric shape overlaps other carriers, so it does not establish ownership
+or enter automatic recognition. The homepage renders results in place and has no tracking link.
 
-## Why there is no adapter
-
-Its home page looks a waybill up without a login or CAPTCHA and shows the scans in place. No public number is
-known to see a found reply.
-
-## Links
-
-Its home page looks numbers up in place, so no address names one.
-
-## Testing
-
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+`LHTEX_TRACKING_NUMBER=<public sample> npm run test:carriers:live -- carriers/lhtex`

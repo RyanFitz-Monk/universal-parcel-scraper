@@ -1,0 +1,68 @@
+{
+  "code": 200,
+  "msg": "成功",
+  "requestId": "SYNTHETIC_REQUEST",
+  "data": [
+    {
+      "waybillNo": "974682510368",
+      "details": [
+        {
+          "scanTime": "2026-11-15 10:50:45",
+          "scanType": "已签收",
+          "desc": "【清远市】快件已签收",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-15 08:24:44",
+          "scanType": "派送中",
+          "desc": "【清远市】正在为您派件",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-15 08:13:06",
+          "scanType": "运输中",
+          "desc": "【清远市】已到达派送网点",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-14 23:09:45",
+          "scanType": "运输中",
+          "desc": "【东莞市】已离开集散中心",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-14 22:57:49",
+          "scanType": "运输中",
+          "desc": "【东莞市】已到达集散中心",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-14 17:56:53",
+          "scanType": "已揽收",
+          "desc": "【广州市】已揽收",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-14 16:12:57",
+          "scanType": "已接单",
+          "desc": "即将上门揽收",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        },
+        {
+          "scanTime": "2026-11-14 16:12:45",
+          "scanType": "下单成功",
+          "desc": "订单下单成功",
+          "signImage": "PRIVATE_IMAGE",
+          "receiptSignImage": "PRIVATE_RECEIPT"
+        }
+      ]
+    }
+  ]
+}

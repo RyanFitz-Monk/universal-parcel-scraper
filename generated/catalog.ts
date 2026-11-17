@@ -35259,7 +35259,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Shanghai",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "lhtex",
+      "localClocks": true
     },
     "canaryUrl": "https://www.lhtex.com.cn/",
     "trackingSearchUrl": "https://www.lhtex.com.cn/",

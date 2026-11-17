@@ -20,6 +20,7 @@ import { isRoyaleInternationalReference } from '../detection/royaleInternational
 import { isTopdeliveryReference } from '../detection/topdelivery.js';
 import { isKargoturkReference } from '../detection/kargoturk.js';
 import { isProfitFieldsReference } from '../detection/profitFields.js';
+import { isLhtexReference } from '../detection/lhtex.js';
 import { isLmParcelReference } from '../detection/lmParcel.js';
 import { isZnlogicReference } from '../detection/znlogic.js';
 import { isPolonezReference } from '../detection/polonez.js';
@@ -73,7 +74,7 @@ const REFERENCES_LOOKED_UP: Readonly<Record<string, (number: string) => boolean>
   'post-one': isPostOneReference,
   polonez: isPolonezReference, 'v-xpress': isVXpressReference, airspeed: isAirspeedReference, 'freightways-global': isFreightwaysGlobalReference, 'fxdc-post': isFxdcPostReference, 'frontier-ca': isFrontierCaReference,
   topdelivery: isTopdeliveryReference, kargoturk: isKargoturkReference, expedico: isExpedicoReference, 'fan-courier': isFanCourierReference,
-  'profit-fields': isProfitFieldsReference, 'lm-parcel': isLmParcelReference, znlogic: isZnlogicReference,
+  lhtex: isLhtexReference, 'profit-fields': isProfitFieldsReference, 'lm-parcel': isLmParcelReference, znlogic: isZnlogicReference,
   'fez-delivery': isFezDeliveryReference,
   'junfeng-international': isJunfengInternationalReference,
   'shipglobal-us': isShipglobalUsReference,

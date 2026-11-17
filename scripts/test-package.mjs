@@ -22,6 +22,7 @@ try {
     JSON.parse(readFileSync(path.join(root, `carriers/gofo-${region}/fixtures/delivered.json`), 'utf8'))]));
   const omgoReplies = Object.fromEntries(['tracking-page.html', 'tracking.json'].map(file => [file,
     readFileSync(path.join(root, 'carriers/omgo/fixtures', file), 'utf8')]));
+  const lhtexReply = JSON.parse(readFileSync(path.join(root, 'carriers/lhtex/fixtures/tracking.json'), 'utf8'));
   const ninjaReply = JSON.parse(readFileSync(path.join(root, 'carriers/ninja-van/fixtures/delivered.json'), 'utf8'));
   writeFileSync(path.join(scratch,'smoke.mjs'), `
     import assert from 'node:assert/strict';
@@ -52,6 +53,19 @@ try {
     } }).track({ number: chronopostNumber, carrier: 'chronopost' });
     assert.equal(chronopost.source, 'chronopost');
     assert.equal(chronopost.result.events[0].instant, '2026-01-03T15:01:15+01:00');
+    // The installed registry must dispatch LHT to its own guest adapter.
+    const lhtexReply = ${JSON.stringify(lhtexReply)};
+    let lhtexCalls = 0;
+    const lhtex = await createTracker({ providers: [], fetcher: async (url, init) => {
+      lhtexCalls += 1;
+      assert.equal(String(url), 'https://www.lhtex.com.cn/orderquery.php?waybillNo=' + lhtexReply.data[0].waybillNo);
+      assert(init.signal instanceof AbortSignal);
+      return Response.json(lhtexReply);
+    } }).track({ number: lhtexReply.data[0].waybillNo, carrier: 'lhtex' });
+    assert.equal(lhtex.source, 'lhtex');
+    assert.equal(lhtex.result.status, 'delivered');
+    assert.equal(lhtex.result.events.length, 8);
+    assert.equal(lhtexCalls, 1);
     // Read DPD Germany's forecast through the installed adapter and result facade.
     const dpdAppReplies = ${JSON.stringify(dpdAppReplies)};
     const dpd = await createTracker({ providers: [], fetcher: async (url, init) => {
