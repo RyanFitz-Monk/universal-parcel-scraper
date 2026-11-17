@@ -1,0 +1,41 @@
+{
+  "id": "atc-express",
+  "displayName": "ATC Express",
+  "aliases": [
+    "ООО «ТРАНС АТЛАНТИК»"
+  ],
+  "region": {
+    "countries": [
+      "RU"
+    ]
+  },
+  "brand": {
+    "color": "#3858ad"
+  },
+  "selectable": true,
+  "timezone": "Europe/Moscow",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://atc.express/search/{trackingNumber}",
+    "searchUrl": "https://atc.express/search",
+    "canaryUrl": "https://atc.express/search",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "atc.express"
+      ],
+      "path": "^/search/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

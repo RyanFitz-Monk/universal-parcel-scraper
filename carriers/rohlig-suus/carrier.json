@@ -1,0 +1,43 @@
+{
+  "id": "rohlig-suus",
+  "displayName": "Rohlig SUUS Logistics",
+  "aliases": [
+    "Rohlig SUUS",
+    "SUUS",
+    "Rohlig Suus Logistics S.A."
+  ],
+  "region": {
+    "countries": [
+      "PL"
+    ]
+  },
+  "brand": {
+    "color": "#003f8a"
+  },
+  "selectable": true,
+  "timezone": "Europe/Warsaw",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://portal.suus.com/order-details/{trackingNumber}",
+    "searchUrl": "https://portal.suus.com/visibility",
+    "canaryUrl": "https://portal.suus.com/visibility",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "portal.suus.com"
+      ],
+      "path": "^/order-details/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

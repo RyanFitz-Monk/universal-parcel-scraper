@@ -1,0 +1,43 @@
+{
+  "id": "viapost",
+  "displayName": "Viapost",
+  "aliases": [
+    "Via Post",
+    "ВИА ПОСТ",
+    "ДУТП ВИА ПОСТ увоз-извоз ДООЕЛ Скопје"
+  ],
+  "region": {
+    "countries": [
+      "MK"
+    ]
+  },
+  "brand": {
+    "color": "#f3cb13"
+  },
+  "selectable": true,
+  "timezone": "Europe/Skopje",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.viapost.solutions/Order/Track/{trackingNumber}",
+    "searchUrl": "https://viapost.com.mk/",
+    "canaryUrl": "https://viapost.com.mk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "viapost.solutions"
+      ],
+      "path": "^/Order/Track/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

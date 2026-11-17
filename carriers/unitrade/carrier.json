@@ -1,0 +1,35 @@
+{
+  "id": "unitrade",
+  "displayName": "Unitrade",
+  "aliases": [
+    "Юнитрейд",
+    "АО «Юнитрейд»",
+    "UNI DIGITAL LOGISTICS"
+  ],
+  "region": {
+    "countries": [
+      "RU"
+    ]
+  },
+  "brand": {
+    "color": "#1e3ebc"
+  },
+  "selectable": true,
+  "timezone": "Europe/Moscow",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://unitrade.youtrack.info/",
+    "canaryUrl": "https://unitrade.youtrack.info/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

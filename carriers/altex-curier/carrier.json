@@ -1,0 +1,33 @@
+{
+  "id": "altex-curier",
+  "displayName": "Altex Curier",
+  "aliases": [
+    "Altex Romania S.R.L."
+  ],
+  "region": {
+    "countries": [
+      "RO"
+    ]
+  },
+  "brand": {
+    "color": "#d71440"
+  },
+  "selectable": true,
+  "timezone": "Europe/Bucharest",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://curier.altex.ro/",
+    "canaryUrl": "https://curier.altex.ro/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

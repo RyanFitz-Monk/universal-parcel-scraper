@@ -1,0 +1,48 @@
+{
+  "id": "gbs-broker",
+  "displayName": "GBS",
+  "aliases": [
+    "ГБС",
+    "GBS-Broker",
+    "ГБС-Брокер",
+    "ООО «ГБС-Брокер»",
+    "ООО «Глобальные Брокерские Решения»"
+  ],
+  "region": {
+    "countries": [
+      "RU"
+    ]
+  },
+  "brand": {
+    "color": "#1041ae"
+  },
+  "selectable": true,
+  "timezone": "Europe/Moscow",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://gbs.ru/track/?numbers={trackingNumber}",
+    "searchUrl": "https://gbs.ru/track/",
+    "canaryUrl": "https://gbs.ru/track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "gbs.ru"
+      ],
+      "pathPattern": "^/track/?$",
+      "params": [
+        "numbers"
+      ]
+    }
+  ],
+  "detection": []
+}

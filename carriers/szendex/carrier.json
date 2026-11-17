@@ -1,0 +1,44 @@
+{
+  "id": "szendex",
+  "displayName": "Szendex",
+  "aliases": [
+    "Szendex, S.L."
+  ],
+  "region": {
+    "countries": [
+      "ES"
+    ]
+  },
+  "brand": {
+    "color": "#13294b"
+  },
+  "selectable": true,
+  "timezone": "Europe/Madrid",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://erp.szendex.com/DlWebTrackingVWE/?seg={trackingNumber}",
+    "searchUrl": "https://erp.szendex.com/DlWebTrackingVWE/",
+    "canaryUrl": "https://erp.szendex.com/DlWebTrackingVWE/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "erp.szendex.com"
+      ],
+      "pathPattern": "^/DlWebTrackingVWE/?$",
+      "params": [
+        "seg"
+      ]
+    }
+  ],
+  "detection": []
+}

@@ -17,6 +17,7 @@ describe('brand networks', () => {
     expect(carrierIdFromName('GOFO Spain')).toBe('gofo-es');
     // Early Bird's former name, and the 3PL brand that tracks through Shree Maruti's tracker.
     expect(carrierIdFromName('Morgontidig Distribution')).toBe('early-bird');
+    expect(carrierIdFromName('MTD KB')).toBe('early-bird');
     expect(carrierIdFromName('MTD')).toBeUndefined();
     expect(carrierIdFromName('Innofulfill')).toBe('shree-maruti');
     expect(carrierIdFromName('Nova Poshta Global')).toBe('nova-global');

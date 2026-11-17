@@ -2675,7 +2675,13 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       "Direct Link",
       "Direct Link Worldwide",
       "Døgnposten",
-      "Dognposten"
+      "Dognposten",
+      "PostNord Sweden",
+      "PostNord Sverige",
+      "PostNord Norway",
+      "PostNord AS",
+      "PostNord Finland",
+      "PostNord Oy"
     ],
     "countries": [
       "SE",
@@ -8107,6 +8113,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "altex-curier": {
+    "displayName": "Altex Curier",
+    "color": "#d71440",
+    "aliases": [
+      "Altex Romania S.R.L."
+    ],
+    "countries": [
+      "RO"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Bucharest",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://curier.altex.ro/",
+    "trackingSearchUrl": "https://curier.altex.ro/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "am-home-delivery": {
     "displayName": "AM Home Delivery",
     "color": "#013e81",
@@ -9803,6 +9829,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "params": [
           "trackingno"
         ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "atc-express": {
+    "displayName": "ATC Express",
+    "color": "#3858ad",
+    "aliases": [
+      "ООО «ТРАНС АТЛАНТИК»"
+    ],
+    "countries": [
+      "RU"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Moscow",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://atc.express/search",
+    "trackingUrlTemplate": "https://atc.express/search/{trackingNumber}",
+    "trackingSearchUrl": "https://atc.express/search",
+    "linkRules": [
+      {
+        "domains": [
+          "atc.express"
+        ],
+        "path": "^/search/([^/?#]+)/?$"
       }
     ],
     "detectionRules": []
@@ -20819,7 +20873,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "Earlybird",
       "Early Bird AB",
-      "Morgontidig Distribution"
+      "Morgontidig Distribution",
+      "MTD KB"
     ],
     "countries": [
       "SE"
@@ -26269,6 +26324,41 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
           "gati.com"
         ],
         "path": "^/track-by-docket/(\\d{9})/?$"
+      }
+    ],
+    "detectionRules": []
+  },
+  "gbs-broker": {
+    "displayName": "GBS",
+    "color": "#1041ae",
+    "aliases": [
+      "ГБС",
+      "GBS-Broker",
+      "ГБС-Брокер",
+      "ООО «ГБС-Брокер»",
+      "ООО «Глобальные Брокерские Решения»"
+    ],
+    "countries": [
+      "RU"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Moscow",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://gbs.ru/track/",
+    "trackingUrlTemplate": "https://gbs.ru/track/?numbers={trackingNumber}",
+    "trackingSearchUrl": "https://gbs.ru/track/",
+    "linkRules": [
+      {
+        "domains": [
+          "gbs.ru"
+        ],
+        "pathPattern": "^/track/?$",
+        "params": [
+          "numbers"
+        ]
       }
     ],
     "detectionRules": []
@@ -35608,7 +35698,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "color": "#0c72ba",
     "aliases": [
       "Latvian Post",
-      "Latvia Post"
+      "Latvia Post",
+      "Eksprespasts"
     ],
     "countries": [
       "LV"
@@ -48455,6 +48546,36 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "rohlig-suus": {
+    "displayName": "Rohlig SUUS Logistics",
+    "color": "#003f8a",
+    "aliases": [
+      "Rohlig SUUS",
+      "SUUS",
+      "Rohlig Suus Logistics S.A."
+    ],
+    "countries": [
+      "PL"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Warsaw",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://portal.suus.com/visibility",
+    "trackingUrlTemplate": "https://portal.suus.com/order-details/{trackingNumber}",
+    "trackingSearchUrl": "https://portal.suus.com/visibility",
+    "linkRules": [
+      {
+        "domains": [
+          "portal.suus.com"
+        ],
+        "path": "^/order-details/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
+  },
   "rojas-express": {
     "displayName": "Rojas Express",
     "color": "#cc0000",
@@ -54243,6 +54364,37 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "szendex": {
+    "displayName": "Szendex",
+    "color": "#13294b",
+    "aliases": [
+      "Szendex, S.L."
+    ],
+    "countries": [
+      "ES"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Madrid",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://erp.szendex.com/DlWebTrackingVWE/",
+    "trackingUrlTemplate": "https://erp.szendex.com/DlWebTrackingVWE/?seg={trackingNumber}",
+    "trackingSearchUrl": "https://erp.szendex.com/DlWebTrackingVWE/",
+    "linkRules": [
+      {
+        "domains": [
+          "erp.szendex.com"
+        ],
+        "pathPattern": "^/DlWebTrackingVWE/?$",
+        "params": [
+          "seg"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "t-cat": {
     "displayName": "T-CAT",
     "color": "#009481",
@@ -58710,6 +58862,28 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "unitrade": {
+    "displayName": "Unitrade",
+    "color": "#1e3ebc",
+    "aliases": [
+      "Юнитрейд",
+      "АО «Юнитрейд»",
+      "UNI DIGITAL LOGISTICS"
+    ],
+    "countries": [
+      "RU"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Moscow",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://unitrade.youtrack.info/",
+    "trackingSearchUrl": "https://unitrade.youtrack.info/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "uof-express": {
     "displayName": "UOF International",
     "color": "#e66814",
@@ -59031,7 +59205,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "aliases": [
       "UTEC",
       "UTEC Express",
-      "UTEC Group"
+      "UTEC Group",
+      "EasyGet"
     ],
     "countries": [
       "UA"
@@ -59678,6 +59853,36 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "viapost": {
+    "displayName": "Viapost",
+    "color": "#f3cb13",
+    "aliases": [
+      "Via Post",
+      "ВИА ПОСТ",
+      "ДУТП ВИА ПОСТ увоз-извоз ДООЕЛ Скопје"
+    ],
+    "countries": [
+      "MK"
+    ],
+    "selectable": true,
+    "timezone": "Europe/Skopje",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://viapost.com.mk/",
+    "trackingUrlTemplate": "https://www.viapost.solutions/Order/Track/{trackingNumber}",
+    "trackingSearchUrl": "https://viapost.com.mk/",
+    "linkRules": [
+      {
+        "domains": [
+          "viapost.solutions"
+        ],
+        "path": "^/Order/Track/([^/?#]+)/?$"
+      }
+    ],
+    "detectionRules": []
   },
   "viaxpress": {
     "displayName": "ViaXpress",
@@ -63699,6 +63904,7 @@ export const CARRIER_IDS = [
   "alljoy",
   "alphastline",
   "altcamp-express",
+  "altex-curier",
   "am-home-delivery",
   "amalgamated-distribution",
   "amazon-order",
@@ -63745,6 +63951,7 @@ export const CARRIER_IDS = [
   "asiafly",
   "asigna",
   "asyad-express",
+  "atc-express",
   "athinaiki",
   "ativa-logistica",
   "atlantic-courier",
@@ -64222,6 +64429,7 @@ export const CARRIER_IDS = [
   "garantpost",
   "garudavega",
   "gati",
+  "gbs-broker",
   "gcx",
   "gdex",
   "gebrueder-weiss",
@@ -64875,6 +65083,7 @@ export const CARRIER_IDS = [
   "rocket-shipping",
   "rodonaves",
   "rohlig",
+  "rohlig-suus",
   "rojas-express",
   "ross-express",
   "route1-fulfilment",
@@ -65041,6 +65250,7 @@ export const CARRIER_IDS = [
   "sxw-express",
   "syd",
   "szami-group",
+  "szendex",
   "t-cat",
   "t-group",
   "takesend",
@@ -65178,6 +65388,7 @@ export const CARRIER_IDS = [
   "united-delivery-service",
   "united-pallet-network",
   "united-worldwide-couriers",
+  "unitrade",
   "uof-express",
   "uparcel",
   "upaya",
@@ -65208,6 +65419,7 @@ export const CARRIER_IDS = [
   "via-cargo",
   "via-pajucara",
   "viadireta",
+  "viapost",
   "viaxpress",
   "vichare",
   "victorian-freight-specialists",
@@ -65509,6 +65721,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "alljoy": ["alljoy-1","alljoy-2"],
   "alphastline": ["alphastline-1"],
   "altcamp-express": [],
+  "altex-curier": [],
   "am-home-delivery": [],
   "amalgamated-distribution": [],
   "amazon-order": [],
@@ -65555,6 +65768,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "asiafly": [],
   "asigna": [],
   "asyad-express": [],
+  "atc-express": [],
   "athinaiki": [],
   "ativa-logistica": [],
   "atlantic-courier": [],
@@ -66032,6 +66246,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "garantpost": [],
   "garudavega": [],
   "gati": [],
+  "gbs-broker": [],
   "gcx": [],
   "gdex": ["gdex-1"],
   "gebrueder-weiss": [],
@@ -66685,6 +66900,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "rocket-shipping": [],
   "rodonaves": [],
   "rohlig": [],
+  "rohlig-suus": [],
   "rojas-express": [],
   "ross-express": [],
   "route1-fulfilment": [],
@@ -66851,6 +67067,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "sxw-express": ["sxw-express-1"],
   "syd": [],
   "szami-group": [],
+  "szendex": [],
   "t-cat": [],
   "t-group": ["t-group-1"],
   "takesend": ["takesend-1"],
@@ -66988,6 +67205,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "united-delivery-service": ["united-delivery-service-1"],
   "united-pallet-network": [],
   "united-worldwide-couriers": [],
+  "unitrade": [],
   "uof-express": [],
   "uparcel": [],
   "upaya": ["upaya-1"],
@@ -67018,6 +67236,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "via-cargo": [],
   "via-pajucara": [],
   "viadireta": ["viadireta-1","viadireta-2"],
+  "viapost": [],
   "viaxpress": [],
   "vichare": [],
   "victorian-freight-specialists": [],
