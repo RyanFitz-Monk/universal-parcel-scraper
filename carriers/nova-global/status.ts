@@ -33,6 +33,7 @@ const CODES: ReadonlyMap<string, Stage> = new Map([
   ['553', 'exception'], // Lost.
   ['63-4', 'in_transit'], // Released from the hub's area for parcels without an order.
   ['76', 'in_transit'], // The consignment reached the airport.
+  ['78', 'in_transit'], // Left the airport.
   ['247', 'in_transit'], // Processed and ready for the flight.
 ]);
 

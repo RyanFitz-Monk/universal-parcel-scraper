@@ -67,6 +67,7 @@
     {"code": "63-4", "wording": "IEW released from the \"Unregistered\" area", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "Released from the hub's area for parcels that arrived without an order."},
     {"code": "76", "wording": "The batch of cargo arrived at the airport", "stage": "in_transit", "language": "en", "confirmedBy": "live"},
     {"code": "76", "wording": "Партія вантажу прибула в аеропорт", "stage": "in_transit", "language": "uk", "confirmedBy": "live"},
+    {"code": "78", "wording": "Вибуло з аеропорту", "stage": "in_transit", "language": "uk", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The departure from an airport, its code before the wording, before code 76 at the next one."},
     {"code": "247", "wording": "Shipment processed - ready for further shipment on the flight", "stage": "in_transit", "language": "en", "confirmedBy": "live"},
     {"code": "247", "wording": "Відправлення оброблено - готово до подальшого відвантаження на рейс", "stage": "in_transit", "language": "uk", "confirmedBy": "live"}
   ]

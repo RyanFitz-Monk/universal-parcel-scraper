@@ -277,6 +277,9 @@ describe('Nova Global status vocabulary', () => {
     }
     expect(statusMapAnswer({ carrier: 'nova-global', providerCode: '303', description: 'Delivered to the locker' }))
       .toEqual({ kind: 'mapped', stage: 'ready_for_pickup' });
+    // The departure from an airport, before the next airport's arrival (76).
+    expect(statusMapAnswer({ carrier: 'nova-global', providerCode: '78', description: 'Left the airport' }))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'nova-global', providerCode: '999', description: 'Synthetic note' })).toEqual({ kind: 'unknown' });
     // A code the map does not know falls to the shared wording rules.
     expect(novaGlobalStage('999', 'Delivered')).toEqual({ stage: 'delivered', source: 'wording:language' });
