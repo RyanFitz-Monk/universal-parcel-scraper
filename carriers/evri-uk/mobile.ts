@@ -8,12 +8,21 @@ import { normalizeEvriUkNumber, parseEvriUk } from './parser.js';
 export const EVRI_UK_MOBILE_API = 'https://tracking.platform-apis.evri.com/v1';
 /** The history service answered and confirmed no domestic parcel activity; the page asks the same service. */
 export const EVRI_UK_UNCONFIRMED = 'parcel_unconfirmed';
+/**
+ * The reference lookup answered and holds no parcel under the barcode: Evri has not scanned the label yet,
+ * or dropped the parcel as old, so the answer does not make it absent. The page asks the same service.
+ */
+export const EVRI_UK_UNKNOWN = 'portal_not_found';
 const MAX_BYTES = 2_000_000;
 // Shared guest-tracking application key, distributed with the maintainer's approval.
 const APPLICATION_KEY = 'NpxtibhIgliySB4JRfjAQq2vytmiWGUQ';
 
 function unconfirmed(): never {
   throw new IndeterminateError('Evri UK', 'Evri UK could not confirm a domestic parcel', { reason: EVRI_UK_UNCONFIRMED });
+}
+
+function unknown(): never {
+  throw new IndeterminateError('Evri UK', 'Evri UK holds no parcel under the barcode', { reason: EVRI_UK_UNKNOWN });
 }
 
 type MobileOptions = { fetcher?: typeof fetch; userAgent?: string; signal: AbortSignal; timeoutMs: number };
@@ -71,6 +80,7 @@ export function readEvriUkMobile(raw: string, options: MobileOptions): Promise<C
     const reference = await request(new URL(`${EVRI_UK_MOBILE_API}/parcels/reference/${number}`), options, deadline);
     if (reference.status !== 200) unconfirmed();
     const identifiers = identifiersOf(reference.payload);
+    if (!identifiers.length) unknown();
     // Several parcels or an international redirect do not settle one domestic parcel.
     const identifier: unknown = identifiers.length === 1 ? identifiers[0] : undefined;
     if (identifiers.length !== 1 || (isRecord(identifier) && identifier.redirectUrl)) unconfirmed();

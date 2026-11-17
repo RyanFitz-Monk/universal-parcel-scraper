@@ -6,8 +6,11 @@ import { TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from '../../core/trans
 import { readEvriUkTrawl } from './trawl.js';
 import { withLocalBrowser } from '../../core/transport/localBrowser.js';
 import { requestEvriUkInPage } from './browser.js';
-import { EVRI_UK_UNCONFIRMED, readEvriUkMobile, recognizeEvriUkMobile } from './mobile.js';
+import { EVRI_UK_UNCONFIRMED, EVRI_UK_UNKNOWN, readEvriUkMobile, recognizeEvriUkMobile } from './mobile.js';
 import { normalizeEvriUkNumber, parseEvriUk } from './parser.js';
+
+/** The history service answered about the parcel: the page asks the same service, so its answer would not differ. */
+const answered = (error: unknown) => error instanceof CarrierError && (error.reason === EVRI_UK_UNCONFIRMED || error.reason === EVRI_UK_UNKNOWN);
 
 /** How long the guest API may take while the page can still answer. */
 const DIRECT_TIMEOUT_MS = 10_000;
@@ -30,13 +33,12 @@ export class EvriUkTracker {
       }),
     }, {
       id: 'trawl', enabled: Boolean(this.options.trawl),
-      recovers: error => recoverableByDefault(error) && !(error instanceof CarrierError && error.reason === EVRI_UK_UNCONFIRMED),
+      recovers: error => recoverableByDefault(error) && !answered(error),
       run: ({ signal, remainingMs }) => readEvriUkTrawl(number, this.options.trawl!, { fetcher: this.options.fetcher, signal, remainingMs }),
     }, {
       id: 'browser', enabled: browser,
-      // The page reads the same history service, so its answer about the parcel would not differ.
       recovers: error => (recoverableByDefault(error) || (Boolean(this.options.trawl) && carrierErrorKind(error) === 'budget'))
-        && !(error instanceof CarrierError && error.reason === EVRI_UK_UNCONFIRMED),
+        && !answered(error),
       run: ({ signal, remainingMs: remaining }) => withLocalBrowser({ provider: 'Evri UK',
         executablePath: this.options.executablePath!, signal, timeoutMs: Math.max(1, Math.floor(remaining)),
         args: ['--disable-blink-features=AutomationControlled'],

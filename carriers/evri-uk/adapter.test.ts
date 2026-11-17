@@ -247,8 +247,13 @@ describe('Evri UK guest API', () => {
     expect(JSON.stringify(result)).not.toMatch(/PRIVATE|SYNTHETIC/);
   });
 
+  it('reads a reference with no parcel as the history service holding none, without asking for history', async () => {
+    const { calls, fetcher } = service([reference([])]);
+    await expect(read(fetcher)).rejects.toMatchObject({ kind: 'indeterminate', reason: 'portal_not_found' });
+    expect(calls).toHaveLength(1);
+  });
+
   it.each([
-    ['no parcel', () => reference([])],
     ['several parcels', () => reference([{ urn: URN, redirectUrl: null }, { urn: URN, redirectUrl: null }])],
     ['an international redirect', () => reference([{ urn: URN, redirectUrl: 'https://private.example/opaque' }])],
     ['a rejected reference', () => rejected(400)],
@@ -364,12 +369,14 @@ describe('Evri UK tiers', () => {
     expect(seen).toEqual([{ step: 'direct', outcome: 'ok' }]);
   });
 
-  it('does not open the page for a parcel the history service did not confirm', async () => {
-    const { seen, recorder } = steps();
-    const tracker = new EvriUkTracker({ recorder, executablePath: '/nonexistent/chromium',
-      fetcher: (() => Promise.resolve(Response.json({ parcelIdentifiers: [] }))) });
-    await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'indeterminate', reason: 'parcel_unconfirmed' });
-    expect(seen).toEqual([{ step: 'direct', outcome: 'indeterminate' }]);
+  it('does not open the page for a parcel the history service did not confirm or does not hold', async () => {
+    for (const [identifiers, reason] of [[[], 'portal_not_found'], [[{ urn: URN }, { urn: URN }], 'parcel_unconfirmed']] as const) {
+      const { seen, recorder } = steps();
+      const tracker = new EvriUkTracker({ recorder, executablePath: '/nonexistent/chromium',
+        fetcher: (() => Promise.resolve(Response.json({ parcelIdentifiers: identifiers }))) });
+      await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'indeterminate', reason });
+      expect(seen).toEqual([{ step: 'direct', outcome: 'indeterminate' }]);
+    }
   });
 
   it('lets the page recover a refused key', async () => {

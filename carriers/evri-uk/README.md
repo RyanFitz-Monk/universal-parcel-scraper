@@ -65,8 +65,11 @@ caller's deadline and cancellation signal.
 
 - The reference or search must identify one Evri parcel with the requested
   barcode. International redirects are inconclusive and are never followed.
-- A reference the guest API rejects or does not know is inconclusive. Evri
-  drops old parcels, so an empty answer does not establish that none existed.
+- A reference the guest API rejects is inconclusive. One that holds no parcel
+  is inconclusive as `portal_not_found`, the carrier not knowing the barcode
+  yet, rather than as an unconfirmed parcel: Evri lists a label only once it is
+  scanned and drops old parcels, so an empty answer does not establish that
+  none existed.
 - Both the history barcode and URN must match. Progress rails and estimates
   do not become scans; only dated tracking events establish activity.
 - The event's rail code sets its stage. A few tracking points refine it: a

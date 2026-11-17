@@ -2,7 +2,7 @@ import { BudgetExceededError, ChallengeError, IndeterminateError, SchemaError, T
 import type { CarrierResult } from '../../core/result/index.js';
 import { TRAWL_TRANSPORT_ALLOWANCE_MS, type TrawlClient } from '../../core/transport/trawl.js';
 import { isRecord } from '../../core/types.js';
-import { EVRI_UK_UNCONFIRMED } from './mobile.js';
+import { EVRI_UK_UNCONFIRMED, EVRI_UK_UNKNOWN } from './mobile.js';
 import { evriUkTrackingUrl, parseEvriUk } from './parser.js';
 
 const SEARCH = 'https://api.evri.com/customer-tracking/v1/search/';
@@ -24,6 +24,7 @@ function searchIdentity(payload: unknown, number: string): string {
   if (!isRecord(payload) || !Array.isArray(payload.parcels) || payload.parcels.length > 50) {
     throw new SchemaError('Evri UK', 'Evri UK returned invalid parcel search data');
   }
+  if (!payload.parcels.length) throw new IndeterminateError('Evri UK', 'Evri UK holds no parcel under the barcode', { reason: EVRI_UK_UNKNOWN });
   if (payload.parcels.length !== 1) throw unconfirmed();
   const parcel: unknown = payload.parcels[0];
   if (!isRecord(parcel) || !isRecord(parcel.brand) || typeof parcel.brand.name !== 'string'
@@ -95,7 +96,7 @@ export async function readEvriUkTrawl(number: string, trawl: TrawlClient, option
       result = parseEvriUk(payload, number, urn); failure = undefined;
     } catch (error) {
       if (error instanceof SchemaError) throw error;
-      failure = error instanceof IndeterminateError ? unconfirmed()
+      failure = error instanceof IndeterminateError ? (error.reason === EVRI_UK_UNKNOWN ? error : unconfirmed())
         : error instanceof Error ? error : new TransportError('Evri UK', 'Evri UK tracking could not be read');
     }
   }

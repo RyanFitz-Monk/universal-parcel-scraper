@@ -69,7 +69,9 @@ describe('Evri UK configured TRAWL recovery', () => {
 
   it('requires search ownership before accepting history and preserves ambiguous/empty scope', async () => {
     await expect(site([entry(historyUrl, history())]).instance.track({ number: NUMBER })).rejects.toMatchObject({ kind: 'transport' });
-    for (const payload of [{ parcels: [] }, { parcels: [search().parcels[0], search().parcels[0]] },
+    await expect(site([entry(searchUrl, { parcels: [] })]).instance.track({ number: NUMBER }))
+      .rejects.toMatchObject({ kind: 'indeterminate', reason: 'portal_not_found' });
+    for (const payload of [{ parcels: [search().parcels[0], search().parcels[0]] },
       { parcels: [{ ...search().parcels[0], brand: { name: 'EVRI_INTERNATIONAL' } }] },
       { parcels: [{ ...search().parcels[0], externalRedirectUrl: 'redirected' }] }]) {
       await expect(site([entry(searchUrl, payload)]).instance.track({ number: NUMBER })).rejects.toMatchObject({ kind: 'indeterminate' });
