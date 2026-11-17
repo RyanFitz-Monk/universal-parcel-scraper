@@ -35,7 +35,8 @@ DPD parcels tracked through the German business unit. DPD Switzerland remains
    direct HTTP. A unit's clocks without a zone are dated as its own lookup
    dates them, so DPD Portugal's scans, which name no place, are on Lisbon's
    clock and SEUR's on Madrid's rather than Germany's. Scans an earlier release dated on Germany's clock keep their rows
-   (`matchWallClock`).
+   (`matchWallClock`). The status map reads DPD Portugal's scans by their code and wording, and DPD Austria's by
+   myDPD's name for their state, after DPD's own codes.
 
 Either German service answers when the other fails, except for a parcel the
 guest API does not know (a 404, or a 400 typed `PARCEL_NOT_FOUND` without a

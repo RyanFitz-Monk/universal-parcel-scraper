@@ -1,6 +1,7 @@
 import type { Stage } from '../../core/status/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
 import { statusMap as dpd } from '../dpd/status.js';
+import { statusMap as dpdAt } from '../dpd-at/status.js';
 import { isDpdPtNotice, statusMap as dpdPt } from '../dpd-pt/status.js';
 import dpdPtStatuses from '../dpd-pt/statuses.json' with { type: 'json' };
 
@@ -68,6 +69,11 @@ const PORTUGUESE_SCANS = new Set(dpdPtStatuses.entries.filter((entry) => entry.c
 const portugueseScanStage = (code: string, wording: string): Stage | undefined =>
   PORTUGUESE_SCANS.has(`${code} ${normalizeStatusWording(wording)}`) ? dpdPt.stage(code, wording) ?? undefined : undefined;
 
+// DPD Austria's scans on the parcels it delivers, which the German lookup takes from DPD Austria's own with myDPD's
+// names for their state as codes: read by DPD Austria's map, after DPD's own codes, which keep their reading.
+const austrianScanStage = (code: string, wording: string): Stage | undefined => dpdAt.stage(code, wording) ?? undefined;
+const AUSTRIAN_GAPS = dpdAt.gaps.map((gap) => ({ ...gap, note: `DPD Austria's scan: ${gap.note}` }));
+
 // DPD's newer English recorded without its code: the sender's drop-off at a Pickup point, after the data exchange and
 // before the depot's first scan.
 const UNCODED_SCANS: Readonly<Record<string, Stage>> = { 'Your parcel has been dropped off in the retrieval point': 'accepted' };
@@ -80,12 +86,15 @@ const NORMALIZED_SCANS = new Map(Object.entries({ ...DPD_DE_APP_SCANS, ...UNCODE
  * codes. The guest API's codes left unmapped on purpose stay so; the Swiss page's labels do not
  * apply, since German lookups never read that page. A shop's collections take their stage from
  * the scans before them, so the map leaves them without one. DPD Portugal's scans and notices on a
- * parcel it delivers keep their code and wording.
+ * parcel it delivers keep their code and wording, and DPD Austria's their state's name.
  */
 export const statusMap: CarrierStatusMap = {
-  stage: (code, wording) => code ? dpd.stage(code, wording) ?? portugueseScanStage(code, wording) : NORMALIZED_SCANS.get(dpdDeScanKey(wording)),
+  stage: (code, wording) => code
+    ? dpd.stage(code, wording) ?? portugueseScanStage(code, wording) ?? austrianScanStage(code, wording)
+    : NORMALIZED_SCANS.get(dpdDeScanKey(wording)),
   gaps: [
     ...dpd.gaps.filter(gap => gap.code !== undefined),
+    ...AUSTRIAN_GAPS,
     ...[NOT_COLLECTED, DRIVER_PICKUP].map(wording => ({ wording: normalizeStatusWording(wording), note: SHOP_COLLECTION_NOTE })),
     ...PORTUGUESE_NOTICES,
   ],

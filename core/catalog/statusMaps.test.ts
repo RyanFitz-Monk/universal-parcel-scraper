@@ -75,6 +75,13 @@ describe('status map answers', () => {
     expect(answer('dpd-de', 'DEX', "We couldn't deliver your parcel, it will soon be available at a retrieval point")).toEqual(mapped('failed_attempt'));
     expect(answer('dpd-de', 'DEHDY', 'Your parcel has been delivered to the retrieval point')).toEqual(mapped('ready_for_pickup'));
     expect(answer('dpd-de', 'DODEYY', 'We received the proof of delivery')).toEqual(gap);
+    // DPD Austria's scans on a parcel it delivers, by myDPD's names for their state; DPD's own codes keep their reading.
+    expect(answer('dpd-de', 'IN_DEPOT', 'In parcel delivery center')).toEqual(mapped('in_transit'));
+    expect(answer('dpd-de', 'ON_THE_WAY', 'Parcel on the way')).toEqual(mapped('in_transit'));
+    expect(answer('dpd-de', 'IN_DELIVERY', 'In delivery')).toEqual(mapped('out_for_delivery'));
+    expect(answer('dpd-de', 'ORDER_DATA', 'Order data transmitted')).toEqual(mapped('registered'));
+    expect(answer('dpd-de', 'HANDOVER/BOX', 'Handed over to a Pickup station')).toEqual(mapped('ready_for_pickup'));
+    expect(answer('dpd-de', 'RETURN_TO_SENDER', 'Return to sender')).toEqual(mapped('returned'));
     // The Swiss page's labels are not read for German lookups.
     expect(answer('dpd-de', null, 'Your parcel is on its way')).toEqual(unknown);
     expect(answer('dpd-de', null, 'Picked up')).toEqual(unknown);
