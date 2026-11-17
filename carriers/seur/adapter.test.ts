@@ -145,6 +145,8 @@ describe('SEUR simplified anonymous tracking', () => {
     body.situaciones = [scan('LI521', '2026-01-23T15:00:00Z'), scan('LC003', '2026-01-23T08:00:00Z')] as typeof body.situaciones;
     expect(parseSeur(body, NUMBER)).toMatchObject({ status: 'exception', current_stage: 'failed_attempt' });
     expect(parseSeur(body, NUMBER).events?.map(e => e.stage)).toEqual(['failed_attempt', 'out_for_delivery']);
+    body.situaciones = [scan('LC006', '2026-01-24T08:00:00Z'), ...body.situaciones] as typeof body.situaciones;
+    expect(parseSeur(body, NUMBER)).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery' });
   });
 
   it('reads a SEUR Pickup point that could not take the parcel on the round as a failed attempt, and the new point after it as transit', () => {

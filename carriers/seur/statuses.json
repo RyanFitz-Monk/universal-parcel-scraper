@@ -261,6 +261,15 @@
       "note": "Its group is the one a provider relayed with the scan."
     },
     {
+      "code": "LC006",
+      "wording": "EL ENVÍO ESTÁ EN REPARTO.",
+      "language": "es",
+      "stage": "out_for_delivery",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Group EN REPARTO: LC001's and LC003's delivery round under another code."
+    },
+    {
       "code": "LI521",
       "wording": "EL ENVÍO NO SE HA ENTREGADO PORQUE LA DIRECCIÓN DE ENTREGA ESTÁ INCOMPLETA O ERRÓNEA.",
       "language": "es",
