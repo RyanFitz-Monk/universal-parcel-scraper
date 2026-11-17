@@ -3854,6 +3854,12 @@
     "reason": "Urvaam's sixteen-digit numbers share their length with the low rules of several carriers and carry no check digit, so no rule claims them."
   },
   {
+    "carrier": "usea-express",
+    "pattern": "^USEA\\d{14}$",
+    "kind": "open",
+    "reason": "Two examples in the number field of USEA's own tracker; the family is not established."
+  },
+  {
     "carrier": "vasp-expresso",
     "pattern": "^\\d{13}$",
     "kind": "by_design",

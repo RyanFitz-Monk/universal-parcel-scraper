@@ -55,6 +55,7 @@ export const carriersWithoutSearchPage: Partial<Record<CarrierId, string>> = {
 /** Search pages the weekly check cannot open, and why. Each was seen working in a regular browser. */
 export const uncheckedSearchPages: Partial<Record<CarrierId, string>> = {
   'aaa-cooper': 'www.aaacooper.com refuses connections from many networks; an archived copy of the home page shows its Action Trac number field',
+  'airways-courier-in': 'the AWB field stays hidden until the track button in the page header opens it; the only field shown before that is the sign-in user id',
   'aloha-freight': 'the Quick Shipment Search names its field keyword, which the check reads as a site search',
   'asyad-express': 'www.asyadexpress.om answers only Omani networks; an archived copy of the page shows its tracking number field',
   azerpost: 'www.azerpost.az does not answer connections from the United States; to European networks it shows its item-number field',

@@ -1,0 +1,45 @@
+{
+  "id": "qiantong-hk",
+  "displayName": "Qiantong Logistics",
+  "aliases": [
+    "乾通物流",
+    "香港乾通物流有限公司",
+    "Hong Kong Qiantong Logistics Co., Limited"
+  ],
+  "region": {
+    "countries": [
+      "HK",
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#e3393c"
+  },
+  "selectable": true,
+  "timezone": "Asia/Hong_Kong",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://chintongex.com/#/track?number={trackingNumber}",
+    "searchUrl": "https://chintongex.com/",
+    "canaryUrl": "https://chintongex.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "chintongex.com"
+      ],
+      "pathPattern": "^/$",
+      "fragment": "^/track\\?(?:[^#]*&)?number=([^&]+)"
+    }
+  ],
+  "detection": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "wyngs",
+  "displayName": "Wyngs",
+  "aliases": [
+    "Wyngs Sdn Bhd"
+  ],
+  "region": {
+    "countries": [
+      "MY"
+    ]
+  },
+  "brand": {
+    "color": "#1d6cb3"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kuala_Lumpur",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://wyngs-my.com/trackingDetails",
+    "canaryUrl": "https://wyngs-my.com/trackingDetails",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "chemcouriers",
+  "displayName": "Chemcouriers",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "NZ",
+      "AU"
+    ]
+  },
+  "brand": {
+    "color": "#cc2d30"
+  },
+  "selectable": true,
+  "timezone": "Pacific/Auckland",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.chemcouriers.com/tracking?trackingnumber={trackingNumber}",
+    "searchUrl": "https://www.chemcouriers.com/tracking",
+    "canaryUrl": "https://www.chemcouriers.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "chemcouriers.com",
+        "www.chemcouriers.com"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "trackingnumber"
+      ]
+    }
+  ],
+  "detection": []
+}

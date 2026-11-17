@@ -1,0 +1,43 @@
+{
+  "id": "cristao-shipping",
+  "displayName": "Cristao Shipping & Marine Logistics",
+  "aliases": [
+    "Cristao Shipping & Marine Logistics Ltd",
+    "Cristao Shipping"
+  ],
+  "region": {
+    "countries": [
+      "TT"
+    ]
+  },
+  "brand": {
+    "color": "#002a46"
+  },
+  "selectable": true,
+  "timezone": "America/Port_of_Spain",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.frontierforce.com/go/plm-tracking?cn={trackingNumber}&stid=cristao",
+    "searchUrl": "https://tracking.frontierforce.com/go/plm-tracking_search?stid=cristao",
+    "canaryUrl": "https://tracking.frontierforce.com/go/plm-tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.frontierforce.com"
+      ],
+      "pathPattern": "^/go/plm-tracking/?$",
+      "query": "^(?=(?:[^&]*&)*stid=cristao(?:&|$))(?:[^&]*&)*?cn=([^&]+)"
+    }
+  ],
+  "detection": []
+}

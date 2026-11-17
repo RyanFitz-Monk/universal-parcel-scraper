@@ -1,0 +1,31 @@
+{
+  "id": "gk-global-kr",
+  "displayName": "GK Global",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#3cc4f3"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://gkglobal.co.kr/invoice/invoice.php",
+    "canaryUrl": "https://gkglobal.co.kr/invoice/invoice.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

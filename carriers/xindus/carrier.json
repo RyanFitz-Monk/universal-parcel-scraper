@@ -1,0 +1,45 @@
+{
+  "id": "xindus",
+  "displayName": "Xindus",
+  "aliases": [
+    "Xindus Trade Networks"
+  ],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#1262af"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.xindus.net/tracking?awb={trackingNumber}",
+    "searchUrl": "https://www.xindus.net/tracking",
+    "canaryUrl": "https://www.xindus.net/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "xindus.net",
+        "www.xindus.net"
+      ],
+      "pathPattern": "^/tracking/?$",
+      "params": [
+        "awb"
+      ]
+    }
+  ],
+  "detection": []
+}

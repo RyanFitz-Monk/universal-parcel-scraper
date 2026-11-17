@@ -1,0 +1,46 @@
+{
+  "id": "khubani-air-pack",
+  "displayName": "Khubani Air Pack",
+  "aliases": [
+    "KHUBANI Air Pack",
+    "KAP"
+  ],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#e31f25"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.khubaniairpack.com/tracking.html?awbno={trackingNumber}",
+    "searchUrl": "https://www.khubaniairpack.com/tracking.html",
+    "canaryUrl": "https://www.khubaniairpack.com/tracking.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "khubaniairpack.com",
+        "www.khubaniairpack.com"
+      ],
+      "pathPattern": "^/tracking\\.html$",
+      "params": [
+        "awbno"
+      ]
+    }
+  ],
+  "detection": []
+}

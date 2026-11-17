@@ -1,0 +1,46 @@
+{
+  "id": "delibox",
+  "displayName": "Delibox",
+  "aliases": [
+    "딜리박스",
+    "딜리박스중앙 주식회사"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#f04e23"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.dbox.co.kr/delivery.php?laasInvcNo={trackingNumber}",
+    "searchUrl": "https://www.dbox.co.kr/delivery.php",
+    "canaryUrl": "https://www.dbox.co.kr/delivery.php",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "dbox.co.kr",
+        "www.dbox.co.kr"
+      ],
+      "pathPattern": "^/delivery\\.php$",
+      "params": [
+        "laasInvcNo"
+      ]
+    }
+  ],
+  "detection": []
+}

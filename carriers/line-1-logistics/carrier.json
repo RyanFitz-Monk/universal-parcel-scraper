@@ -1,0 +1,33 @@
+{
+  "id": "line-1-logistics",
+  "displayName": "Line-1 Logistics",
+  "aliases": [
+    "Line-1 Logistics Pty Ltd"
+  ],
+  "region": {
+    "countries": [
+      "AU"
+    ]
+  },
+  "brand": {
+    "color": "#e3302c"
+  },
+  "selectable": true,
+  "timezone": "Australia/Perth",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.line-1.com.au/tracking",
+    "canaryUrl": "https://www.line-1.com.au/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

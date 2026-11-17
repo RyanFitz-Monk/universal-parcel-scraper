@@ -1,0 +1,34 @@
+{
+  "id": "pml-tw",
+  "displayName": "PML",
+  "aliases": [
+    "遠達國際",
+    "遠達國際企業有限公司"
+  ],
+  "region": {
+    "countries": [
+      "TW"
+    ]
+  },
+  "brand": {
+    "color": "#002892"
+  },
+  "selectable": true,
+  "timezone": "Asia/Taipei",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.pml-intl.com/PML/pc/search/search.html",
+    "canaryUrl": "https://www.pml-intl.com/PML/pc/search/search.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

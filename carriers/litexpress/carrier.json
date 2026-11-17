@@ -1,0 +1,33 @@
+{
+  "id": "litexpress",
+  "displayName": "LiteXpress",
+  "aliases": [
+    "LiteXpress International Inc."
+  ],
+  "region": {
+    "countries": [
+      "PH"
+    ]
+  },
+  "brand": {
+    "color": "#72166c"
+  },
+  "selectable": true,
+  "timezone": "Asia/Manila",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://litexpress.com.ph/track-and-trace/",
+    "canaryUrl": "https://litexpress.com.ph/track-and-trace/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

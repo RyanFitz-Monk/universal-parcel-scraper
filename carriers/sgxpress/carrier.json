@@ -1,0 +1,42 @@
+{
+  "id": "sgxpress",
+  "displayName": "SGXpress",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "JP"
+    ]
+  },
+  "brand": {
+    "color": "#ec6d40"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tokyo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.sgxpress.com/query/?logic_num={trackingNumber}",
+    "searchUrl": "https://www.sgxpress.com/query/",
+    "canaryUrl": "https://www.sgxpress.com/query/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "www.sgxpress.com"
+      ],
+      "pathPattern": "^/query/?$",
+      "params": [
+        "logic_num"
+      ]
+    }
+  ],
+  "detection": []
+}

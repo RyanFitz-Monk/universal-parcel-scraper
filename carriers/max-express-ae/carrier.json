@@ -1,0 +1,33 @@
+{
+  "id": "max-express-ae",
+  "displayName": "MAX Express",
+  "aliases": [
+    "MAX Express Courier Services LLC"
+  ],
+  "region": {
+    "countries": [
+      "AE"
+    ]
+  },
+  "brand": {
+    "color": "#ca171e"
+  },
+  "selectable": true,
+  "timezone": "Asia/Dubai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://maxexuae.com/tracking/",
+    "canaryUrl": "https://maxexuae.com/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

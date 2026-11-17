@@ -1,0 +1,40 @@
+{
+  "id": "fast-express-tr",
+  "displayName": "Fast Express",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "TR"
+    ]
+  },
+  "brand": {
+    "color": "#0273b1"
+  },
+  "selectable": true,
+  "timezone": "Europe/Istanbul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.fast-express.com/en/action/tracking/{trackingNumber}",
+    "searchUrl": "https://www.fast-express.com/en/",
+    "canaryUrl": "https://www.fast-express.com/en/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "fast-express.com",
+        "www.fast-express.com"
+      ],
+      "path": "^/(?:tr|en|de|es|fr|ru)/action/tracking/([^/?#]+)/?$"
+    }
+  ],
+  "detection": []
+}

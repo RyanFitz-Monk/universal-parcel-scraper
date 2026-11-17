@@ -1,0 +1,33 @@
+{
+  "id": "act-logistics",
+  "displayName": "ACT Logistics",
+  "aliases": [
+    "ACT Logistics Pty Ltd"
+  ],
+  "region": {
+    "countries": [
+      "ZA"
+    ]
+  },
+  "brand": {
+    "color": "#e31836"
+  },
+  "selectable": true,
+  "timezone": "Africa/Johannesburg",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://actlogistics.pperfect.com/",
+    "canaryUrl": "https://actlogistics.pperfect.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

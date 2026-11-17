@@ -1,0 +1,34 @@
+{
+  "id": "neway-transport",
+  "displayName": "Neway Transport",
+  "aliases": [
+    "Neway",
+    "Transport Aus Pty Ltd"
+  ],
+  "region": {
+    "countries": [
+      "AU"
+    ]
+  },
+  "brand": {
+    "color": "#0061bc"
+  },
+  "selectable": true,
+  "timezone": "Australia/Brisbane",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://newaytransport.com.au/track/",
+    "canaryUrl": "https://newaytransport.com.au/track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "movicarga",
+  "displayName": "Movicarga",
+  "aliases": [
+    "Movicarga Bajío"
+  ],
+  "region": {
+    "countries": [
+      "MX"
+    ]
+  },
+  "brand": {
+    "color": "#002e87"
+  },
+  "selectable": true,
+  "timezone": "America/Mexico_City",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking-ca.fareye.co/universal-search?encodedString=kyPd3DxzWOLuBmsT2unwGrN0GE2EX1gHltF6ATHwGaqxK0GP1g==",
+    "canaryUrl": "https://tracking-ca.fareye.co/universal-search",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

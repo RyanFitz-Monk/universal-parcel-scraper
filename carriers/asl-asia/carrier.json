@@ -1,0 +1,39 @@
+{
+  "id": "asl-asia",
+  "displayName": "ASL",
+  "aliases": [
+    "Advanced & Simple Logistics",
+    "ASL Global Logistics",
+    "ASL Asia Limited"
+  ],
+  "region": {
+    "countries": [
+      "HK",
+      "CN",
+      "VN",
+      "US",
+      "GB"
+    ]
+  },
+  "brand": {
+    "color": "#ff5c00"
+  },
+  "selectable": true,
+  "timezone": "Asia/Hong_Kong",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://asl-global.net/track-trace",
+    "canaryUrl": "https://asl-global.net/track-trace",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

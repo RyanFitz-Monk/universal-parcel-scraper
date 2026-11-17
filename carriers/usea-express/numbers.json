@@ -1,0 +1,43 @@
+{
+  "carrier": "usea-express",
+  "records": [
+    {
+      "number": "USEA38270400484097",
+      "role": "shipment",
+      "evidence": "official_documentation_example",
+      "source": {
+        "url": "https://nxclient.usea56.com/tracking",
+        "date": "2026-11-17",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "candidate"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "Placeholder of the number field on USEA's own tracking page, beside another of the same layout; it was not looked up."
+    },
+    {
+      "number": "USEA61727189496419",
+      "role": "shipment",
+      "evidence": "official_documentation_example",
+      "source": {
+        "url": "https://nxclient.usea56.com/tracking",
+        "date": "2026-11-17",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "candidate"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "Placeholder of the number field on USEA's own tracking page, beside another of the same layout; it was not looked up."
+    }
+  ]
+}

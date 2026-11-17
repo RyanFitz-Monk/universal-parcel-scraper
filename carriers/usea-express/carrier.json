@@ -1,0 +1,34 @@
+{
+  "id": "usea-express",
+  "displayName": "USEA EXPRESS",
+  "aliases": [
+    "USEA EXPRESS LIMITED",
+    "USEA"
+  ],
+  "region": {
+    "countries": [
+      "HK"
+    ]
+  },
+  "brand": {
+    "color": "#ce0010"
+  },
+  "selectable": true,
+  "timezone": "Asia/Hong_Kong",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://nxclient.usea56.com/tracking",
+    "canaryUrl": "https://nxclient.usea56.com/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

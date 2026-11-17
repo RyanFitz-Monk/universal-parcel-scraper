@@ -1,0 +1,46 @@
+{
+  "id": "intras-jp",
+  "displayName": "INTRAS",
+  "aliases": [
+    "INTRAS CORPORATION",
+    "INTRAS EXPRESS"
+  ],
+  "region": {
+    "countries": [
+      "JP",
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#e95518"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tokyo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://intras.co.jp/delivery/tracking?number={trackingNumber}",
+    "searchUrl": "https://intras.co.jp/",
+    "canaryUrl": "https://intras.co.jp/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "intras.co.jp"
+      ],
+      "pathPattern": "^/delivery/tracking/?$",
+      "params": [
+        "number"
+      ]
+    }
+  ],
+  "detection": []
+}

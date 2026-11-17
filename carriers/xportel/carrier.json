@@ -1,0 +1,44 @@
+{
+  "id": "xportel",
+  "displayName": "Xportel",
+  "aliases": [
+    "Boggletree Technologies"
+  ],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#ea580c"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.xportel.com/?trackingNumber={trackingNumber}",
+    "searchUrl": "https://tracking.xportel.com/",
+    "canaryUrl": "https://tracking.xportel.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.xportel.com"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "trackingNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

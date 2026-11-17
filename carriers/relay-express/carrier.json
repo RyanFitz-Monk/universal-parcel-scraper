@@ -1,0 +1,31 @@
+{
+  "id": "relay-express",
+  "displayName": "Relay Express",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#002c56"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://scm.relayexpress.in/DocketTrack",
+    "canaryUrl": "https://scm.relayexpress.in/DocketTrack",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

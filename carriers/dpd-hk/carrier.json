@@ -1,0 +1,46 @@
+{
+  "id": "dpd-hk",
+  "displayName": "DPD Hong Kong",
+  "aliases": [
+    "DPD HK"
+  ],
+  "region": {
+    "countries": [
+      "HK"
+    ]
+  },
+  "brand": {
+    "color": "#dc0032"
+  },
+  "selectable": true,
+  "timezone": "Asia/Hong_Kong",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.dpd.hk/?trackNo={trackingNumber}",
+    "searchUrl": "https://tracking.dpd.hk/",
+    "canaryUrl": "https://tracking.dpd.hk/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.dpd.hk"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "trackNo",
+        "trackingNumber"
+      ],
+      "fragment": "^/\\?(?:[^#]*&)?(?:trackNo|trackingNumber)=([^&]+)"
+    }
+  ],
+  "detection": []
+}

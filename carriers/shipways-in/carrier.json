@@ -1,0 +1,47 @@
+{
+  "id": "shipways-in",
+  "displayName": "ShipWays",
+  "aliases": [
+    "Shipways Supply Chain"
+  ],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#625cf5"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://app.shipways.in/track?awb={trackingNumber}",
+    "searchUrl": "https://app.shipways.in/track/",
+    "canaryUrl": "https://app.shipways.in/track/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "shipways.in",
+        "app.shipways.in"
+      ],
+      "pathPattern": "^/track/?$",
+      "params": [
+        "awb",
+        "tracking",
+        "order"
+      ]
+    }
+  ],
+  "detection": []
+}

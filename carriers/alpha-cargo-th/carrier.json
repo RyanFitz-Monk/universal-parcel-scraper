@@ -1,0 +1,44 @@
+{
+  "id": "alpha-cargo-th",
+  "displayName": "Alpha Cargo",
+  "aliases": [
+    "Alpha Cargo Solutions"
+  ],
+  "region": {
+    "countries": [
+      "TH"
+    ]
+  },
+  "brand": {
+    "color": "#fe541b"
+  },
+  "selectable": true,
+  "timezone": "Asia/Bangkok",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://prod.alphacargo.io/en/tracking?waybill={trackingNumber}",
+    "searchUrl": "https://prod.alphacargo.io/en/tracking",
+    "canaryUrl": "https://prod.alphacargo.io/en/tracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "prod.alphacargo.io"
+      ],
+      "pathPattern": "^/(?:en|th|zh)/tracking/?$",
+      "params": [
+        "waybill"
+      ]
+    }
+  ],
+  "detection": []
+}

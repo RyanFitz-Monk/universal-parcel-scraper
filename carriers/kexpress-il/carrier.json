@@ -1,0 +1,33 @@
+{
+  "id": "kexpress-il",
+  "displayName": "K-Express",
+  "aliases": [
+    "Kexpress Delivery"
+  ],
+  "region": {
+    "countries": [
+      "IL"
+    ]
+  },
+  "brand": {
+    "color": "#d22527"
+  },
+  "selectable": true,
+  "timezone": "Asia/Jerusalem",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://run10.kexpress.co.il/RunCom.Server/www/pub/pub_random_form.htm",
+    "canaryUrl": "https://run10.kexpress.co.il/RunCom.Server/www/pub/pub_random_form.htm",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

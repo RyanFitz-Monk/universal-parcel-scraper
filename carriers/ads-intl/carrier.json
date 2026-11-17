@@ -1,0 +1,43 @@
+{
+  "id": "ads-intl",
+  "displayName": "ADS International",
+  "aliases": [
+    "ADS International Express Sdn Bhd"
+  ],
+  "region": {
+    "countries": [
+      "MY"
+    ]
+  },
+  "brand": {
+    "color": "#dd333a"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kuala_Lumpur",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://ads-intl.com/track-shipment/?type=waybill&number={trackingNumber}",
+    "searchUrl": "https://ads-intl.com/track-shipment/",
+    "canaryUrl": "https://ads-intl.com/track-shipment/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "ads-intl.com",
+        "www.ads-intl.com"
+      ],
+      "pathPattern": "^/track-shipment/?$",
+      "query": "^(?=(?:.*&)?type=waybill(?:&|$))(?:.*&)?number=([^&]+)(?=&|$)"
+    }
+  ],
+  "detection": []
+}

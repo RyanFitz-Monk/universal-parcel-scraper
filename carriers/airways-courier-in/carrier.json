@@ -1,0 +1,43 @@
+{
+  "id": "airways-courier-in",
+  "displayName": "Airways Courier",
+  "aliases": [
+    "Airways Courier (I) Pvt. Ltd."
+  ],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#ff3c28"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://airwayscourier.co.in/Tracking_new.aspx?awb_no={trackingNumber}&type=w",
+    "searchUrl": "https://airwayscourier.co.in/Tracking_new.aspx",
+    "canaryUrl": "https://airwayscourier.co.in/Tracking_new.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "airwayscourier.co.in",
+        "www.airwayscourier.co.in"
+      ],
+      "pathPattern": "^/Tracking_new\\.aspx$",
+      "query": "^(?=(?:.*&)?type=w(?:&|$))(?:.*&)?awb_no=([^&]+)(?=&|$)"
+    }
+  ],
+  "detection": []
+}

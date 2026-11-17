@@ -1,0 +1,44 @@
+{
+  "id": "deleo",
+  "displayName": "deleo",
+  "aliases": [
+    "델레오"
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#00c1de"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://tracking.deleo.co.kr/?trackingNo={trackingNumber}",
+    "searchUrl": "https://tracking.deleo.co.kr/",
+    "canaryUrl": "https://tracking.deleo.co.kr/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "tracking.deleo.co.kr"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "trackingNo"
+      ]
+    }
+  ],
+  "detection": []
+}

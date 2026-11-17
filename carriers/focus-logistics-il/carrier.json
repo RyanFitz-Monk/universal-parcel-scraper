@@ -1,0 +1,33 @@
+{
+  "id": "focus-logistics-il",
+  "displayName": "Focus Logistics",
+  "aliases": [
+    "פוקוס לוגיסטיקה"
+  ],
+  "region": {
+    "countries": [
+      "IL"
+    ]
+  },
+  "brand": {
+    "color": "#3e90a6"
+  },
+  "selectable": true,
+  "timezone": "Asia/Jerusalem",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://focusdelivery.co.il/RunCom.Server/www/pub/pub_random_form.htm",
+    "canaryUrl": "https://focusdelivery.co.il/RunCom.Server/www/pub/pub_random_form.htm",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

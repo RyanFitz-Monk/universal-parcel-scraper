@@ -1,0 +1,45 @@
+{
+  "id": "fast-express-cargo",
+  "displayName": "Fast Express Cargo",
+  "aliases": [
+    "Fast Express Cargo Pvt. Ltd.",
+    "FastExpress Courier & Cargo Pvt Ltd."
+  ],
+  "region": {
+    "countries": [
+      "IN"
+    ]
+  },
+  "brand": {
+    "color": "#deba28"
+  },
+  "selectable": true,
+  "timezone": "Asia/Kolkata",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://lms.fastexpresscargo.com/WebTracking/WebTracking.aspx?AwbNo={trackingNumber}",
+    "searchUrl": "https://www.fastexpresscargo.com/tracking.html",
+    "canaryUrl": "https://lms.fastexpresscargo.com/WebTracking/WebTracking.aspx",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "lms.fastexpresscargo.com"
+      ],
+      "pathPattern": "^/WebTracking/WebTracking\\.aspx$",
+      "params": [
+        "AwbNo"
+      ]
+    }
+  ],
+  "detection": []
+}

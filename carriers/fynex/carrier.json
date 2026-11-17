@@ -1,0 +1,35 @@
+{
+  "id": "fynex",
+  "displayName": "FyNEX",
+  "aliases": [
+    "F Y N Express Couriers LLC",
+    "FYN Express Couriers",
+    "FYNEX Express"
+  ],
+  "region": {
+    "countries": [
+      "AE"
+    ]
+  },
+  "brand": {
+    "color": "#00afec"
+  },
+  "selectable": true,
+  "timezone": "Asia/Dubai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://fynexcourierdubai.com/tracking/",
+    "canaryUrl": "https://fynexcourierdubai.com/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

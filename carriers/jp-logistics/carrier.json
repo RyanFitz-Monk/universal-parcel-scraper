@@ -1,0 +1,39 @@
+{
+  "id": "jp-logistics",
+  "displayName": "JP Logistics",
+  "aliases": [
+    "JPロジスティクス",
+    "JPロジスティクス株式会社",
+    "JP LOGISTICS Co.,Ltd.",
+    "Toll Express Japan",
+    "トールエクスプレスジャパン",
+    "Footwork Express",
+    "フットワークエクスプレス"
+  ],
+  "region": {
+    "countries": [
+      "JP"
+    ]
+  },
+  "brand": {
+    "color": "#c7002f"
+  },
+  "selectable": true,
+  "timezone": "Asia/Tokyo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.jp-logistics.jp/fwexphp/inquiry/chase/init",
+    "canaryUrl": "https://www.jp-logistics.jp/fwexphp/inquiry/chase/init",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

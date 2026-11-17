@@ -1,0 +1,34 @@
+{
+  "id": "shiva-innovatrix",
+  "displayName": "SHIVA",
+  "aliases": [
+    "SHIVA INNOVATRIX",
+    "SHIVA INNOVATRIX Co., Ltd."
+  ],
+  "region": {
+    "countries": [
+      "KR"
+    ]
+  },
+  "brand": {
+    "color": "#e31837"
+  },
+  "selectable": true,
+  "timezone": "Asia/Seoul",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.shivaicl.net/track.html",
+    "canaryUrl": "https://www.shivaicl.net/track.html",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}
