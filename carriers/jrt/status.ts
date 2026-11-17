@@ -7,8 +7,8 @@ import statuses from './statuses.json' with { type: 'json' };
 const WORDINGS = statusWordings(statuses.entries);
 // The airport row names the day of the booked flight in both halves.
 const FLIGHT_DAY = /^(货物已交机场,预计)\d{1,2}(号的航班 goods delivered to airport, scheduled on flight of the )\d{1,2}(?:st|nd|rd|th)$/;
-// Its later wording waits for that flight: "等待23号的航班起飞 … pending departure on the flight on the 23rd.".
-const AWAITED_FLIGHT_DAY = /^(货物已交机场,等待)\d{1,2}(号的航班起飞 goods have been delivered to the airport, pending departure on the flight on the )\d{1,2}(?:st|nd|rd|th)\.?$/;
+// Its later wording waits for that flight: "等待23号的航班起飞 … pending departure on the flight on the 23rd.", also without 的.
+const AWAITED_FLIGHT_DAY = /^(货物已交机场,等待)\d{1,2}(号的?航班起飞 goods have been delivered to the airport, pending departure on the flight on the )\d{1,2}(?:st|nd|rd|th)\.?$/;
 
 // So does the export clearance row, in both halves: "等待27号航班起飞 … on flight of the 27th".
 const CLEARED_FLIGHT_DAY = /^(报关已放行等待)\d{1,2}(号航班起飞 customs released,awaiting departure on flight of the )\d{1,2}(?:st|nd|rd|th)$/;
@@ -31,8 +31,9 @@ const EXPECTED_FLIGHT_DAY = /^(预计)\d{1,2}[./]\d{1,2}(号航班飞)$/;
 // The English rows of a booked flight name its departure and arrival days: "Estimated departure is October 23th".
 const ESTIMATED_DAY = /^(estimated (?:departure|arrival date) is )[a-z]+ \d{1,2}(?:st|nd|rd|th)$/;
 
-// The bilingual row of a booked flight names its day in both halves: "预计10.29航班/Flight scheduled for October 29th".
-const SCHEDULED_FLIGHT = /^(预计)\d{1,2}\.\d{1,2}(航班\/flight scheduled for )[a-z]+ \d{1,2}(?:st|nd|rd|th)$/;
+// The bilingual row of a booked flight names its day in both halves: "预计10.29航班/Flight scheduled for October 29th",
+// or "预计11.21航班/Scheduled flight on November 21st".
+const SCHEDULED_FLIGHT = /^(预计)\d{1,2}\.\d{1,2}(航班\/(?:flight scheduled for|scheduled flight on) )[a-z]+ \d{1,2}(?:st|nd|rd|th)$/;
 // So does the row of the flight the parcel is loaded for, the day as month and day: "预计配载航班11月11日,Expected flight on November 11th".
 const LOADED_FLIGHT = /^(预计配载航班)\d{1,2}月\d{1,2}日[,，] ?(expected flight on )[a-z]+ \d{1,2}(?:st|nd|rd|th)$/;
 

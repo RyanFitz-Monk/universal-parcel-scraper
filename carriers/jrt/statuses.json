@@ -165,6 +165,13 @@
       "note": "Handed to the airport to wait for the flight whose day both halves name (\"等待23号\", \"on the 23rd.\"); the map reads each day as an ellipsis."
     },
     {
+      "wording": "货物已交机场,等待…号航班起飞 Goods have been delivered to the airport, pending departure on the flight on the …",
+      "language": "zh",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
       "wording": "报关已放行等待…号航班起飞 Customs released,Awaiting departure on flight of the …",
       "language": "zh",
       "stage": "in_transit",
@@ -580,6 +587,13 @@
       "confirmedBy": "live",
       "firstSeen": "2026-10-28",
       "note": "The flight booked, naming its day in both halves (\"预计10.29航班\", \"October 29th\"); the map reads each day as an ellipsis. The flight is still to come."
+    },
+    {
+      "wording": "预计…航班/Scheduled flight on …",
+      "language": "zh",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
     },
     {
       "wording": "预计配载航班…月…日,Expected flight on …",
@@ -1189,6 +1203,28 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-16",
       "note": "On the line into Canada, after the booked flight: UniUni, the delivering courier, has the shipment's data while the parcel travels on to it."
+    },
+    {
+      "wording": "Picked Up By Shipping Partner, USPS Awaiting Item",
+      "language": "en",
+      "stage": "accepted",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "USPS's row on the line into the United States: the partner carrying the parcel there collects it in China, before JRT's export clearance. USPS does not have it yet."
+    },
+    {
+      "wording": "Arrived Shipping Partner Facility, USPS Awaiting Item",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "Departed Shipping Partner Facility, USPS Awaiting Item",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17"
     }
   ]
 }

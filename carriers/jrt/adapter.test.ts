@@ -473,6 +473,8 @@ describe('JRT tracking adapter', () => {
     // The airport row that waits for the booked flight names its day in both halves.
     expect(answer('货物已交机场,等待23号的航班起飞 Goods have been delivered to the airport, pending departure on the flight on the 23rd.'))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(answer('货物已交机场,等待3号航班起飞 Goods have been delivered to the airport, pending departure on the flight on the 3rd.'))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
     // DHL's sorting scan, as JRT copies it, is one of DHL's rows, on DHL's clock.
     expect(answer('sorted')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(isJrtDhlRow('sorted')).toBe(true);
@@ -503,6 +505,11 @@ describe('JRT tracking adapter', () => {
     // The bilingual row of a booked flight reads alike whatever its day.
     expect(answer('预计10.29航班/Flight scheduled for October 29th')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('预计11.3航班/Flight scheduled for November 3rd')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(answer('预计11.21航班/Scheduled flight on November 21st')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    // The US partner's scans while USPS waits for the item: the pickup accepts it, the rest carry it on.
+    expect(answer('Picked Up By Shipping Partner, USPS Awaiting Item')).toEqual({ kind: 'mapped', stage: 'accepted' });
+    expect(answer('Arrived Shipping Partner Facility, USPS Awaiting Item')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(answer('Departed Shipping Partner Facility, USPS Awaiting Item')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('预计配载航班11月11日,Expected flight on November 11th')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('预计配载航班12月2日，Expected flight on December 2nd')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     // On the line into Latin America the booked flight and the flight name the destination and the day.
