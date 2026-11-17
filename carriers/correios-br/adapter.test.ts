@@ -6,7 +6,7 @@ import { normalizeCarrierResult } from '../../core/result/index.js';
 import { dateLocalClocks } from '../../places/clocks.js';
 import { DIRECT_REST_MS } from '../../core/runner/directRest.js';
 import type { TrawlCapturedResponse, TrawlClient } from '../../core/transport/trawl.js';
-import { CorreiosTracker } from './adapter.js';
+import { CORREIOS_BROWSER_READS, CORREIOS_BROWSER_WINDOW_MS, CorreiosTracker } from './adapter.js';
 import { isCorreiosCaptchaError, normalizeCorreiosNumber, parseCorreios } from './parser.js';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { classifyCorreiosStatus, classifyCorreiosWording } from './status.js';
@@ -370,6 +370,26 @@ describe('Correios session and transport', () => {
     const throttled = vi.fn(async () => new Response('busy', { status: 429 })) as unknown as typeof fetch;
     await expect(new CorreiosTracker({ fetcher: throttled, trawl: unused as unknown as TrawlClient }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited' });
     expect(unused.scrape).not.toHaveBeenCalled();
+  });
+
+  it('sends Correios at most seven browser reads in ten minutes from one browser service', async () => {
+    const API = 'https://rastreamento.correios.com.br/app/resultado.php';
+    const browser = (service: string) => ({ endpoint: new URL(`https://browser.example.test/${service}`), scrape: vi.fn(async () => ({ statusCode: 200,
+      capturedResponses: [{ url: API, status: 200, headers: {}, body: JSON.stringify(fixture), truncated: false, base64Encoded: false, error: null,
+        trackingNumberSubmitted: NUMBER }] })) });
+    const turnstile = vi.fn(async () => new Response('<div id="captcha" class="cf-turnstile"></div>')) as unknown as typeof fetch;
+    const paced = browser('paced'), other = browser('other');
+    const tracker = (trawl: typeof paced) => new CorreiosTracker({ fetcher: turnstile, trawl: trawl as unknown as TrawlClient });
+    for (let read = 0; read < CORREIOS_BROWSER_READS; read += 1) await tracker(paced).fetch(NUMBER);
+    // The next read would wait minutes: it fails as our own pacing and sends nothing.
+    await expect(tracker(paced).fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced' });
+    expect(paced.scrape).toHaveBeenCalledTimes(CORREIOS_BROWSER_READS);
+    // Another browser service is another address.
+    await tracker(other).fetch(NUMBER);
+    expect(other.scrape).toHaveBeenCalledTimes(1);
+    const later = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + CORREIOS_BROWSER_WINDOW_MS + 1);
+    try { await tracker(paced).fetch(NUMBER); } finally { later.mockRestore(); }
+    expect(paced.scrape).toHaveBeenCalledTimes(CORREIOS_BROWSER_READS + 1);
   });
 
   it('goes straight to the browser for a while after Turnstile refused the direct read, and not after a misread CAPTCHA', async () => {

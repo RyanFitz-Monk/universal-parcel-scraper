@@ -20,7 +20,11 @@ JSON the direct query read. After a page showing Turnstile, lookups go straight 
 `trawl` step for a few hours, then the direct step looks again; an unreadable or rejected text
 CAPTCHA starts no such rest. Without a browser service, Turnstile is a challenge and lookups
 fall back to the providers. The portal answers a burst of lookups from one address with HTTP
-429, a rate limit rather than a missing parcel. Fixed `correios.verification` diagnostics
+429, a rate limit rather than a missing parcel, and does so more often the denser an address
+asks: a few in a hundred reads at seven or fewer in ten minutes, one in five at ten or more. So
+one browser service sends Correios at most seven reads in any ten minutes, shared by every
+tracker in the process; a read past that waits for its turn when the lookup has the time, and
+otherwise fails as our own pacing (`rate_limited`, `self_paced`) with the wait. Fixed `correios.verification` diagnostics
 record token receipt, submission, response counts, HTTP statuses, widget clicks and when the
 page loaded, the token arrived and the reply came, without the number, token or response body. A response diagnostic is not a claim that its history parsed.
 

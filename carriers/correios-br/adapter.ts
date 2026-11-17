@@ -3,6 +3,7 @@ import { CookieJar } from 'tough-cookie';
 import type { AdapterFactory, TrackingContext } from '../../core/adapter/index.js';
 import { BudgetExceededError, ChallengeError, IndeterminateError, SchemaError } from '../../core/errors/index.js';
 import { DirectRest } from '../../core/runner/directRest.js';
+import { ReadWindow } from '../../core/runner/readWindow.js';
 import { runSteps } from '../../core/runner/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { fetchBounded, parseJsonBytes } from '../../core/transport/index.js';
@@ -16,6 +17,14 @@ const HOME = CORREIOS_PAGE;
 const IMAGE = `${ORIGIN}/core/securimage/securimage_show.php`;
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
 type Solver = (bytes: Uint8Array, signal: AbortSignal) => Promise<string>;
+
+/**
+ * How many browser reads one browser service sends Correios in any ten minutes. Correios answers HTTP 429
+ * more often the denser an address asks: a few in a hundred reads at seven or fewer in ten minutes, one in
+ * five at ten or more.
+ */
+export const CORREIOS_BROWSER_READS = 7;
+export const CORREIOS_BROWSER_WINDOW_MS = 10 * 60_000;
 
 export class CorreiosTracker {
   private readonly ocr = new CorreiosOcr();
@@ -76,7 +85,13 @@ export class CorreiosTracker {
       }
       throw new ChallengeError('Correios', 'Correios rejected the text CAPTCHA');
     } }, { id: 'trawl', enabled: !!trawl, recovers: error => error instanceof ChallengeError,
-      run: ({ signal, remainingMs }) => correiosBrowser(trawl!, number, signal, remainingMs) }]);
+      run: async ({ signal, remainingMs }) => {
+        const service = trawl!.endpoint?.href;
+        if (!service) return correiosBrowser(trawl!, number, signal, remainingMs);
+        const started = performance.now();
+        await new ReadWindow('Correios', `correios-br ${service}`, CORREIOS_BROWSER_READS, CORREIOS_BROWSER_WINDOW_MS).take(remainingMs, signal);
+        return correiosBrowser(trawl!, number, signal, remainingMs - (performance.now() - started));
+      } }]);
   }
 
   close() { return this.ocr.close(); }
