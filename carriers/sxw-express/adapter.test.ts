@@ -88,6 +88,11 @@ describe('SXW Express tracking adapter', () => {
       .toEqual({ kind: 'mapped', stage: 'accepted' });
     expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Parcel is leaving Airport, Parcel Leaving Port' }))
       .toEqual({ kind: 'mapped', stage: 'in_transit' });
+    // Another line's rows: its first scan is the collection from SXW, after the parcel left SXW's operation centre.
+    expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Item has been collected' }))
+      .toEqual({ kind: 'mapped', stage: 'accepted' });
+    expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Item outbound in sorting center.' }))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'sxw-express', providerCode: null, description: 'Synthetic wording' })).toEqual({ kind: 'unknown' });
     // The platform's Chinese rows show the English its other tenants give them, which the map reads too.
     expect(sxwEnglish(null, normalizeStatusWording('到达收货点'))).toBe('Arrived at the receiving point');

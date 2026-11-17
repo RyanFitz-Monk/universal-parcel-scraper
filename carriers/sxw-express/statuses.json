@@ -24,6 +24,10 @@
     {"wording": "Shipment is in transit to next facility", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "On the way to the next facility."},
     {"wording": "Departed from facility", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "Leaving one of the line's facilities on the way."},
     {"wording": "Clearance processing completed - Import", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The destination's import clearance done, an hour after it started: the parcel goes on."},
-    {"wording": "Arrived at the warehouse of Customs Broker", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The customs broker's warehouse, after the import clearance is done and the parcel collected from the cargo terminal, before the sorting facility: not held."}
+    {"wording": "Arrived at the warehouse of Customs Broker", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The customs broker's warehouse, after the import clearance is done and the parcel collected from the cargo terminal, before the sorting facility: not held."},
+    {"wording": "Electronic notification of order creation received.", "language": "en", "stage": "registered", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "Another line's order row, beside the platform's: the shop's order data, before the line has the parcel."},
+    {"wording": "Item has been collected", "language": "en", "stage": "accepted", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "That line's first scan, hours after the parcel left SXW's operation centre: the line collected it, as \"Parcel picked up\" reads on SXW's other line."},
+    {"wording": "Item inbound in sorting center.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-15", "note": "That line's sorting centre, after the collection."},
+    {"wording": "Item outbound in sorting center.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-15", "note": "Leaving that line's sorting centre."}
   ]
 }
