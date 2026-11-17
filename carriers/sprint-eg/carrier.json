@@ -1,0 +1,31 @@
+{
+  "id": "sprint-eg",
+  "displayName": "Sprint",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "EG"
+    ]
+  },
+  "brand": {
+    "color": "#ff007d"
+  },
+  "selectable": true,
+  "timezone": "Africa/Cairo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://portal.sprint.xyz/orderTracking",
+    "canaryUrl": "https://portal.sprint.xyz/orderTracking",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

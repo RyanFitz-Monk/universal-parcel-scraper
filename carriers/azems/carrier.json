@@ -1,0 +1,46 @@
+{
+  "id": "azems",
+  "displayName": "Azer Express Post",
+  "aliases": [
+    "AZEMS",
+    "Azərekspresspoçt"
+  ],
+  "region": {
+    "countries": [
+      "AZ"
+    ]
+  },
+  "brand": {
+    "color": "#f79122"
+  },
+  "selectable": true,
+  "timezone": "Asia/Baku",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.azems.az/az/gonderis-izle?package_id={trackingNumber}",
+    "searchUrl": "https://www.azems.az/az/gonderis-izle",
+    "canaryUrl": "https://www.azems.az/az/gonderis-izle",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "azems.az",
+        "www.azems.az"
+      ],
+      "pathPattern": "^/(?:az/gonderis-izle|en/track-shipment|ru/otsledit-posylku)/?$",
+      "params": [
+        "package_id"
+      ]
+    }
+  ],
+  "detection": []
+}

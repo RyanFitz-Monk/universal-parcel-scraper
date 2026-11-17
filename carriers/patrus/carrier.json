@@ -1,0 +1,33 @@
+{
+  "id": "patrus",
+  "displayName": "Patrus Transportes",
+  "aliases": [
+    "Patrus"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#c60c35"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://patrus.com.br/rastreie-sua-carga/",
+    "canaryUrl": "https://patrus.com.br/rastreie-sua-carga/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "via-pajucara",
+  "displayName": "Via Pajuçara",
+  "aliases": [
+    "Empresa de Transportes Pajuçara"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#003e83"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cliente.viapajucara.com.br/rastrear",
+    "canaryUrl": "https://cliente.viapajucara.com.br/rastrear",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

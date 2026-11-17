@@ -9860,6 +9860,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "atual-cargas": {
+    "displayName": "Atual Cargas",
+    "color": "#0d3b70",
+    "aliases": [
+      "Atual Cargas Transportes"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cliente.atualcargas.com.br/rastreamento",
+    "trackingSearchUrl": "https://cliente.atualcargas.com.br/rastreamento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "auexpress": {
     "displayName": "AuExpress",
     "color": "#ff6634",
@@ -10009,6 +10029,39 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "confidence": "high"
       }
     ]
+  },
+  "azems": {
+    "displayName": "Azer Express Post",
+    "color": "#f79122",
+    "aliases": [
+      "AZEMS",
+      "Azərekspresspoçt"
+    ],
+    "countries": [
+      "AZ"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Baku",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.azems.az/az/gonderis-izle",
+    "trackingUrlTemplate": "https://www.azems.az/az/gonderis-izle?package_id={trackingNumber}",
+    "trackingSearchUrl": "https://www.azems.az/az/gonderis-izle",
+    "linkRules": [
+      {
+        "domains": [
+          "azems.az",
+          "www.azems.az"
+        ],
+        "pathPattern": "^/(?:az/gonderis-izle|en/track-shipment|ru/otsledit-posylku)/?$",
+        "params": [
+          "package_id"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "azerpost": {
     "displayName": "Azerpost",
@@ -19170,6 +19223,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "domina": {
+    "displayName": "Domina",
+    "color": "#1722ff",
+    "aliases": [
+      "Domina Entrega Total",
+      "Domina Entrega Total S.A.S."
+    ],
+    "countries": [
+      "CO"
+    ],
+    "selectable": true,
+    "timezone": "America/Bogota",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.domina.com.co/",
+    "trackingSearchUrl": "https://tracking.domina.com.co/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "dongdu": {
     "displayName": "Dongdu Logistics",
     "color": "#5b9a68",
@@ -25669,6 +25743,27 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "g4s-kenya": {
+    "displayName": "G4S Courier Kenya",
+    "color": "#ef3e42",
+    "aliases": [
+      "G4S Kenya",
+      "G4S Kenya Limited"
+    ],
+    "countries": [
+      "KE"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Nairobi",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.g4s.com/en-ke/track-my-shipment",
+    "trackingSearchUrl": "https://www.g4s.com/en-ke/track-my-shipment",
+    "linkRules": [],
     "detectionRules": []
   },
   "gaash": {
@@ -33672,6 +33767,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "khazenly": {
+    "displayName": "Khazenly",
+    "color": "#0073ff",
+    "countries": [
+      "EG"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Cairo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://track.khazenly.com/",
+    "trackingUrlTemplate": "https://track.khazenly.com/?referenceNumber={trackingNumber}",
+    "trackingSearchUrl": "https://track.khazenly.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "track.khazenly.com"
+        ],
+        "pathPattern": "^/?$",
+        "params": [
+          "referenceNumber"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "kilbourne": {
     "displayName": "Kilbourne",
     "color": "#2c8068",
@@ -37222,6 +37345,38 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         "pathPattern": "^/tracking/?$",
         "params": [
           "t"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "maldives-post": {
+    "displayName": "Maldives Post",
+    "color": "#c02f34",
+    "aliases": [
+      "Maldives Post Limited"
+    ],
+    "countries": [
+      "MV"
+    ],
+    "selectable": true,
+    "timezone": "Indian/Maldives",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.maldivespost.com/tracker",
+    "trackingUrlTemplate": "https://www.maldivespost.com/tracker?tracking_number={trackingNumber}",
+    "trackingSearchUrl": "https://www.maldivespost.com/tracker",
+    "linkRules": [
+      {
+        "domains": [
+          "maldivespost.com",
+          "www.maldivespost.com"
+        ],
+        "pathPattern": "^/tracker/?$",
+        "params": [
+          "tracking_number"
         ]
       }
     ],
@@ -42776,6 +42931,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "patrus": {
+    "displayName": "Patrus Transportes",
+    "color": "#c60c35",
+    "aliases": [
+      "Patrus"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://patrus.com.br/rastreie-sua-carga/",
+    "trackingSearchUrl": "https://patrus.com.br/rastreie-sua-carga/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "patuen": {
     "displayName": "Patuen",
     "color": "#990000",
@@ -47032,6 +47207,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ]
   },
+  "reunidas-cargas": {
+    "displayName": "Reunidas Cargas",
+    "color": "#273e74",
+    "aliases": [
+      "Reunidas Transportadora Rodoviária de Cargas"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://reunidas.com.br/cargas",
+    "trackingSearchUrl": "https://reunidas.com.br/cargas",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "rex-indonesia": {
     "displayName": "REX Indonesia",
     "color": "#ee4336",
@@ -50357,6 +50552,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "linkRules": [],
     "detectionRules": []
   },
+  "silpo-pack": {
+    "displayName": "Silpo Pack",
+    "color": "#16163f",
+    "aliases": [
+      "Silpo Systems SRL"
+    ],
+    "countries": [
+      "DO"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://silposystems.com/tracking/",
+    "trackingSearchUrl": "https://silposystems.com/tracking/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "sinapseria": {
     "displayName": "Sinapseria",
     "color": "#2b988b",
@@ -51731,6 +51946,23 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "sprint-eg": {
+    "displayName": "Sprint",
+    "color": "#ff007d",
+    "countries": [
+      "EG"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Cairo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://portal.sprint.xyz/orderTracking",
+    "trackingSearchUrl": "https://portal.sprint.xyz/orderTracking",
+    "linkRules": [],
     "detectionRules": []
   },
   "spt-logistics": {
@@ -58441,6 +58673,26 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "via-pajucara": {
+    "displayName": "Via Pajuçara",
+    "color": "#003e83",
+    "aliases": [
+      "Empresa de Transportes Pajuçara"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cliente.viapajucara.com.br/rastrear",
+    "trackingSearchUrl": "https://cliente.viapajucara.com.br/rastrear",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "viadireta": {
     "displayName": "ViaDireta",
     "color": "#0d3a6d",
@@ -62531,10 +62783,12 @@ export const CARRIER_IDS = [
   "ativa-logistica",
   "atlantic-courier",
   "ats-healthcare",
+  "atual-cargas",
   "auexpress",
   "averitt",
   "avis-logistics",
   "aymakan",
+  "azems",
   "azerpost",
   "azul-cargo",
   "baikal-service",
@@ -62804,6 +63058,7 @@ export const CARRIER_IDS = [
   "domesa",
   "domex",
   "domex-do",
+  "domina",
   "dongdu",
   "doobalhero",
   "doora-logistics",
@@ -62986,6 +63241,7 @@ export const CARRIER_IDS = [
   "fukuyama",
   "furniture-logis",
   "fxdc-post",
+  "g4s-kenya",
   "gaash",
   "gaaubesi",
   "garantpost",
@@ -63218,6 +63474,7 @@ export const CARRIER_IDS = [
   "kerry-tj",
   "kex",
   "kex-express-hk",
+  "khazenly",
   "kilbourne",
   "king-kong-express",
   "king-solutions",
@@ -63323,6 +63580,7 @@ export const CARRIER_IDS = [
   "major-express",
   "makati-express",
   "makesend",
+  "maldives-post",
   "maltapost",
   "mandae",
   "maple-logistics",
@@ -63490,6 +63748,7 @@ export const CARRIER_IDS = [
   "pasarex",
   "passport",
   "pathao-courier",
+  "patrus",
   "patuen",
   "pavan-courier",
   "paxel",
@@ -63610,6 +63869,7 @@ export const CARRIER_IDS = [
   "redur",
   "redx",
   "relaytech",
+  "reunidas-cargas",
   "rex-indonesia",
   "rgw-express",
   "rhenus-de",
@@ -63708,6 +63968,7 @@ export const CARRIER_IDS = [
   "shree-nandan",
   "shunbang-express",
   "sicepat",
+  "silpo-pack",
   "sinapseria",
   "sitra-es",
   "siuntos-autobusais",
@@ -63747,6 +64008,7 @@ export const CARRIER_IDS = [
   "speedy",
   "spfly",
   "spourgitis",
+  "sprint-eg",
   "spt-logistics",
   "sptexp",
   "spx-br",
@@ -63947,6 +64209,7 @@ export const CARRIER_IDS = [
   "vert-chez-vous",
   "vestovoy",
   "via-cargo",
+  "via-pajucara",
   "viadireta",
   "viaxpress",
   "vichare",
@@ -64296,10 +64559,12 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "ativa-logistica": [],
   "atlantic-courier": [],
   "ats-healthcare": [],
+  "atual-cargas": [],
   "auexpress": [],
   "averitt": [],
   "avis-logistics": [],
   "aymakan": ["aymakan-1"],
+  "azems": [],
   "azerpost": [],
   "azul-cargo": [],
   "baikal-service": [],
@@ -64569,6 +64834,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "domesa": [],
   "domex": [],
   "domex-do": [],
+  "domina": [],
   "dongdu": ["dongdu-1"],
   "doobalhero": [],
   "doora-logistics": [],
@@ -64751,6 +65017,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "fukuyama": [],
   "furniture-logis": [],
   "fxdc-post": [],
+  "g4s-kenya": [],
   "gaash": [],
   "gaaubesi": [],
   "garantpost": [],
@@ -64983,6 +65250,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "kerry-tj": [],
   "kex": [],
   "kex-express-hk": [],
+  "khazenly": [],
   "kilbourne": [],
   "king-kong-express": [],
   "king-solutions": [],
@@ -65088,6 +65356,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "major-express": [],
   "makati-express": ["makati-express-1"],
   "makesend": [],
+  "maldives-post": [],
   "maltapost": ["maltapost-s10","maltapost-sengi"],
   "mandae": [],
   "maple-logistics": [],
@@ -65255,6 +65524,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pasarex": ["pasarex-1"],
   "passport": ["passport-1"],
   "pathao-courier": ["pathao-courier-1"],
+  "patrus": [],
   "patuen": [],
   "pavan-courier": [],
   "paxel": ["paxel-1"],
@@ -65375,6 +65645,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "redur": [],
   "redx": ["redx-1"],
   "relaytech": ["relaytech-1"],
+  "reunidas-cargas": [],
   "rex-indonesia": ["rex-indonesia-1"],
   "rgw-express": [],
   "rhenus-de": [],
@@ -65473,6 +65744,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "shree-nandan": [],
   "shunbang-express": [],
   "sicepat": [],
+  "silpo-pack": [],
   "sinapseria": [],
   "sitra-es": [],
   "siuntos-autobusais": [],
@@ -65512,6 +65784,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "speedy": ["speedy-1","speedy-2"],
   "spfly": [],
   "spourgitis": [],
+  "sprint-eg": [],
   "spt-logistics": [],
   "sptexp": ["sptexp-1"],
   "spx-br": ["spx-br-1","spx-br-2"],
@@ -65712,6 +65985,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "vert-chez-vous": [],
   "vestovoy": [],
   "via-cargo": [],
+  "via-pajucara": [],
   "viadireta": ["viadireta-1","viadireta-2"],
   "viaxpress": [],
   "vichare": [],

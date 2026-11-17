@@ -9856,6 +9856,26 @@
     ],
     "detectionRules": []
   },
+  "atual-cargas": {
+    "displayName": "Atual Cargas",
+    "color": "#0d3b70",
+    "aliases": [
+      "Atual Cargas Transportes"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cliente.atualcargas.com.br/rastreamento",
+    "trackingSearchUrl": "https://cliente.atualcargas.com.br/rastreamento",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "auexpress": {
     "displayName": "AuExpress",
     "color": "#ff6634",
@@ -10005,6 +10025,39 @@
         "confidence": "high"
       }
     ]
+  },
+  "azems": {
+    "displayName": "Azer Express Post",
+    "color": "#f79122",
+    "aliases": [
+      "AZEMS",
+      "Azərekspresspoçt"
+    ],
+    "countries": [
+      "AZ"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Baku",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.azems.az/az/gonderis-izle",
+    "trackingUrlTemplate": "https://www.azems.az/az/gonderis-izle?package_id={trackingNumber}",
+    "trackingSearchUrl": "https://www.azems.az/az/gonderis-izle",
+    "linkRules": [
+      {
+        "domains": [
+          "azems.az",
+          "www.azems.az"
+        ],
+        "pathPattern": "^/(?:az/gonderis-izle|en/track-shipment|ru/otsledit-posylku)/?$",
+        "params": [
+          "package_id"
+        ]
+      }
+    ],
+    "detectionRules": []
   },
   "azerpost": {
     "displayName": "Azerpost",
@@ -19166,6 +19219,27 @@
     ],
     "detectionRules": []
   },
+  "domina": {
+    "displayName": "Domina",
+    "color": "#1722ff",
+    "aliases": [
+      "Domina Entrega Total",
+      "Domina Entrega Total S.A.S."
+    ],
+    "countries": [
+      "CO"
+    ],
+    "selectable": true,
+    "timezone": "America/Bogota",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://tracking.domina.com.co/",
+    "trackingSearchUrl": "https://tracking.domina.com.co/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "dongdu": {
     "displayName": "Dongdu Logistics",
     "color": "#5b9a68",
@@ -25665,6 +25739,27 @@
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "g4s-kenya": {
+    "displayName": "G4S Courier Kenya",
+    "color": "#ef3e42",
+    "aliases": [
+      "G4S Kenya",
+      "G4S Kenya Limited"
+    ],
+    "countries": [
+      "KE"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Nairobi",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.g4s.com/en-ke/track-my-shipment",
+    "trackingSearchUrl": "https://www.g4s.com/en-ke/track-my-shipment",
+    "linkRules": [],
     "detectionRules": []
   },
   "gaash": {
@@ -33668,6 +33763,34 @@
     ],
     "detectionRules": []
   },
+  "khazenly": {
+    "displayName": "Khazenly",
+    "color": "#0073ff",
+    "countries": [
+      "EG"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Cairo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://track.khazenly.com/",
+    "trackingUrlTemplate": "https://track.khazenly.com/?referenceNumber={trackingNumber}",
+    "trackingSearchUrl": "https://track.khazenly.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "track.khazenly.com"
+        ],
+        "pathPattern": "^/?$",
+        "params": [
+          "referenceNumber"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
   "kilbourne": {
     "displayName": "Kilbourne",
     "color": "#2c8068",
@@ -37218,6 +37341,38 @@
         "pathPattern": "^/tracking/?$",
         "params": [
           "t"
+        ]
+      }
+    ],
+    "detectionRules": []
+  },
+  "maldives-post": {
+    "displayName": "Maldives Post",
+    "color": "#c02f34",
+    "aliases": [
+      "Maldives Post Limited"
+    ],
+    "countries": [
+      "MV"
+    ],
+    "selectable": true,
+    "timezone": "Indian/Maldives",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.maldivespost.com/tracker",
+    "trackingUrlTemplate": "https://www.maldivespost.com/tracker?tracking_number={trackingNumber}",
+    "trackingSearchUrl": "https://www.maldivespost.com/tracker",
+    "linkRules": [
+      {
+        "domains": [
+          "maldivespost.com",
+          "www.maldivespost.com"
+        ],
+        "pathPattern": "^/tracker/?$",
+        "params": [
+          "tracking_number"
         ]
       }
     ],
@@ -42772,6 +42927,26 @@
       }
     ]
   },
+  "patrus": {
+    "displayName": "Patrus Transportes",
+    "color": "#c60c35",
+    "aliases": [
+      "Patrus"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://patrus.com.br/rastreie-sua-carga/",
+    "trackingSearchUrl": "https://patrus.com.br/rastreie-sua-carga/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "patuen": {
     "displayName": "Patuen",
     "color": "#990000",
@@ -47028,6 +47203,26 @@
       }
     ]
   },
+  "reunidas-cargas": {
+    "displayName": "Reunidas Cargas",
+    "color": "#273e74",
+    "aliases": [
+      "Reunidas Transportadora Rodoviária de Cargas"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://reunidas.com.br/cargas",
+    "trackingSearchUrl": "https://reunidas.com.br/cargas",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "rex-indonesia": {
     "displayName": "REX Indonesia",
     "color": "#ee4336",
@@ -50353,6 +50548,26 @@
     "linkRules": [],
     "detectionRules": []
   },
+  "silpo-pack": {
+    "displayName": "Silpo Pack",
+    "color": "#16163f",
+    "aliases": [
+      "Silpo Systems SRL"
+    ],
+    "countries": [
+      "DO"
+    ],
+    "selectable": true,
+    "timezone": "America/Santo_Domingo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://silposystems.com/tracking/",
+    "trackingSearchUrl": "https://silposystems.com/tracking/",
+    "linkRules": [],
+    "detectionRules": []
+  },
   "sinapseria": {
     "displayName": "Sinapseria",
     "color": "#2b988b",
@@ -51727,6 +51942,23 @@
         ]
       }
     ],
+    "detectionRules": []
+  },
+  "sprint-eg": {
+    "displayName": "Sprint",
+    "color": "#ff007d",
+    "countries": [
+      "EG"
+    ],
+    "selectable": true,
+    "timezone": "Africa/Cairo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://portal.sprint.xyz/orderTracking",
+    "trackingSearchUrl": "https://portal.sprint.xyz/orderTracking",
+    "linkRules": [],
     "detectionRules": []
   },
   "spt-logistics": {
@@ -58435,6 +58667,26 @@
         "path": "^/(?:api/)?(?:tracking|seguimiento)/(\\d+)/?$"
       }
     ],
+    "detectionRules": []
+  },
+  "via-pajucara": {
+    "displayName": "Via Pajuçara",
+    "color": "#003e83",
+    "aliases": [
+      "Empresa de Transportes Pajuçara"
+    ],
+    "countries": [
+      "BR"
+    ],
+    "selectable": true,
+    "timezone": "America/Sao_Paulo",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://cliente.viapajucara.com.br/rastrear",
+    "trackingSearchUrl": "https://cliente.viapajucara.com.br/rastrear",
+    "linkRules": [],
     "detectionRules": []
   },
   "viadireta": {

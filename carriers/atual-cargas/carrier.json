@@ -1,0 +1,33 @@
+{
+  "id": "atual-cargas",
+  "displayName": "Atual Cargas",
+  "aliases": [
+    "Atual Cargas Transportes"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#0d3b70"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://cliente.atualcargas.com.br/rastreamento",
+    "canaryUrl": "https://cliente.atualcargas.com.br/rastreamento",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

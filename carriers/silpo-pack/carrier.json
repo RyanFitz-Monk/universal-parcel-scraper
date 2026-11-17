@@ -1,0 +1,33 @@
+{
+  "id": "silpo-pack",
+  "displayName": "Silpo Pack",
+  "aliases": [
+    "Silpo Systems SRL"
+  ],
+  "region": {
+    "countries": [
+      "DO"
+    ]
+  },
+  "brand": {
+    "color": "#16163f"
+  },
+  "selectable": true,
+  "timezone": "America/Santo_Domingo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://silposystems.com/tracking/",
+    "canaryUrl": "https://silposystems.com/tracking/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

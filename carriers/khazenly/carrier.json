@@ -1,0 +1,42 @@
+{
+  "id": "khazenly",
+  "displayName": "Khazenly",
+  "aliases": [],
+  "region": {
+    "countries": [
+      "EG"
+    ]
+  },
+  "brand": {
+    "color": "#0073ff"
+  },
+  "selectable": true,
+  "timezone": "Africa/Cairo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://track.khazenly.com/?referenceNumber={trackingNumber}",
+    "searchUrl": "https://track.khazenly.com/",
+    "canaryUrl": "https://track.khazenly.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "track.khazenly.com"
+      ],
+      "pathPattern": "^/?$",
+      "params": [
+        "referenceNumber"
+      ]
+    }
+  ],
+  "detection": []
+}

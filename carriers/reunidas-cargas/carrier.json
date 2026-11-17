@@ -1,0 +1,33 @@
+{
+  "id": "reunidas-cargas",
+  "displayName": "Reunidas Cargas",
+  "aliases": [
+    "Reunidas Transportadora Rodoviária de Cargas"
+  ],
+  "region": {
+    "countries": [
+      "BR"
+    ]
+  },
+  "brand": {
+    "color": "#273e74"
+  },
+  "selectable": true,
+  "timezone": "America/Sao_Paulo",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://reunidas.com.br/cargas",
+    "canaryUrl": "https://reunidas.com.br/cargas",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

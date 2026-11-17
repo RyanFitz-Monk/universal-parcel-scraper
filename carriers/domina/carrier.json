@@ -1,0 +1,34 @@
+{
+  "id": "domina",
+  "displayName": "Domina",
+  "aliases": [
+    "Domina Entrega Total",
+    "Domina Entrega Total S.A.S."
+  ],
+  "region": {
+    "countries": [
+      "CO"
+    ]
+  },
+  "brand": {
+    "color": "#1722ff"
+  },
+  "selectable": true,
+  "timezone": "America/Bogota",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://tracking.domina.com.co/",
+    "canaryUrl": "https://tracking.domina.com.co/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

@@ -1,0 +1,34 @@
+{
+  "id": "g4s-kenya",
+  "displayName": "G4S Courier Kenya",
+  "aliases": [
+    "G4S Kenya",
+    "G4S Kenya Limited"
+  ],
+  "region": {
+    "countries": [
+      "KE"
+    ]
+  },
+  "brand": {
+    "color": "#ef3e42"
+  },
+  "selectable": true,
+  "timezone": "Africa/Nairobi",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://www.g4s.com/en-ke/track-my-shipment",
+    "canaryUrl": "https://www.g4s.com/en-ke/track-my-shipment",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [],
+  "detection": []
+}

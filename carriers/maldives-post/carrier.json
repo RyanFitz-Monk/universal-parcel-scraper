@@ -1,0 +1,45 @@
+{
+  "id": "maldives-post",
+  "displayName": "Maldives Post",
+  "aliases": [
+    "Maldives Post Limited"
+  ],
+  "region": {
+    "countries": [
+      "MV"
+    ]
+  },
+  "brand": {
+    "color": "#c02f34"
+  },
+  "selectable": true,
+  "timezone": "Indian/Maldives",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.maldivespost.com/tracker?tracking_number={trackingNumber}",
+    "searchUrl": "https://www.maldivespost.com/tracker",
+    "canaryUrl": "https://www.maldivespost.com/tracker",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "maldivespost.com",
+        "www.maldivespost.com"
+      ],
+      "pathPattern": "^/tracker/?$",
+      "params": [
+        "tracking_number"
+      ]
+    }
+  ],
+  "detection": []
+}
