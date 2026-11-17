@@ -518,6 +518,45 @@
         ]
       },
       "note": "Customer complaint on Şikayetvar's Sürat Kargo page calls it the tracking number of a parcel a Sürat Kargo courier handled, but eleven digits is also the shape of Trendyol order numbers, so its role is unclear."
+    },
+    {
+      "number": "18022407171682",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.sikayetvar.com/surat-kargo/takip-numarali-kargonun-duraklamasi-ve-iletisim-eksikligi",
+        "date": "2026-11-14",
+        "dateKind": "publication",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "low",
+        "candidates": [
+          "dpd",
+          "dpd-fr",
+          "mondial-relay",
+          "chronopost",
+          "ciblex",
+          "seur",
+          "brt",
+          "delhivery",
+          "dhl-ecommerce-uk",
+          "dpd-be",
+          "dpd-de",
+          "dpd-hu",
+          "dpd-nl",
+          "dpd-pt",
+          "dpd-uk",
+          "gls-nl",
+          "jadlog",
+          "xpressbees"
+        ]
+      },
+      "note": "Public customer complaint identifies it as a Sürat Kargo tracking number. The current whole-number merchant link opens a matching masked identifier, whose guest piece history returns dated native scans."
     }
   ]
 }

@@ -9,6 +9,7 @@ import { unreadEstimates } from '../../core/result/unread.js';
 import { languageStageStatus, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import { clean } from '../../core/transport/index.js';
 import { aaaCooperStage } from './status.js';
+import { aaaCooperChallengeState } from './challenge.js';
 
 export const PROVIDER = 'AAA Cooper';
 // A shipment's page is about 110 kB, most of it the site around the tracking.
@@ -55,11 +56,11 @@ function control(scope: Cheerio<Element>, name: string, maxLength = 200): string
 }
 
 /** The notice the page shows instead of a shipment. */
-function noticePage(panel: Cheerio<Element>): never {
+function noticePage(panel: Cheerio<Element>, rejected: boolean): never {
   const captcha = panel.find(`#${ID}trTimedButton`);
   const notice = clean(panel.find('.ErrorText').text(), 200).toUpperCase();
   // The panel carries an image CAPTCHA in a hidden row; shown, it stands between the lookup and the answer.
-  if ((captcha.length && !/display\s*:\s*none/i.test(captcha.attr('style') ?? '')) || CAPTCHA.test(notice)) {
+  if (rejected || (captcha.length && !/display\s*:\s*none/i.test(captcha.attr('style') ?? '')) || CAPTCHA.test(notice)) {
     throw new ChallengeError(PROVIDER, 'AAA Cooper asked for the code of its image CAPTCHA');
   }
   if (notice === NOT_FOUND) throw new NotFoundError(PROVIDER);
@@ -124,11 +125,13 @@ export function parseAaaCooper(html: string, rawNumber: string): CarrierResult {
   const $ = load(html);
   const content = $(`#${ID}ContentPanel`);
   const notice = $(`#${ID}ErrorPanel`);
-  if (notice.length === 1 && !content.length) noticePage(notice);
+  const challenge = aaaCooperChallengeState($);
+  if (notice.length === 1 && !content.length) noticePage(notice, challenge.rejected || challenge.invalidVisible);
   if (content.length !== 1 || notice.length) {
     if (BLOCKED.test(html.slice(0, 64_000))) throw new ChallengeError(PROVIDER, 'AAA Cooper answered with a block page');
     throw new SchemaError(PROVIDER, 'AAA Cooper did not return a tracking page');
   }
+  if (challenge.rowVisible || challenge.rejected || challenge.invalidVisible) throw new ChallengeError(PROVIDER, 'AAA Cooper text verification is still required');
   if (control(content, 'lblProNumber', 40) !== pro) throw new SchemaError(PROVIDER, 'AAA Cooper answered for another shipment');
 
   const status = control(content, 'lblDeliveryStatus', 120);

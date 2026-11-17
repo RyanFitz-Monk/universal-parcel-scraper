@@ -16,7 +16,8 @@
     "mode": "automatic",
     "adapter": "dtdc",
     "steps": [
-      "direct"
+      "direct",
+      "website"
     ]
   },
   "capabilities": [

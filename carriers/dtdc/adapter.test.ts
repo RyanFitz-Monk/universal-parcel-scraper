@@ -5,11 +5,18 @@ import { normalizeCarrierResult } from '../../core/result/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import type { StepRecord } from '../../core/telemetry/index.js';
 import { adapter, DtdcTracker } from './adapter.js';
+import carrier from './carrier.json' with { type: 'json' };
 import { parseDtdcPage } from './page.js';
 import { normalizeDtdcNumber, parseDtdc } from './parser.js';
 
 const NUMBER = 'N00000001';
 const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/delivered.json', import.meta.url), 'utf8'));
+
+it('declares the recovery steps the DTDC adapter actually runs', () => {
+  expect(carrier.tracking.steps).toEqual(adapter({
+    trawl: null, browserExecutablePath: null, recorder: NOOP_RECORDER, env: {},
+  }).steps);
+});
 
 describe('DTDC parser', () => {
   it('binds the booking reference and returns dated completed history', () => {

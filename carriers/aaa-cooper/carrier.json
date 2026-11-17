@@ -20,7 +20,8 @@
     "adapter": "aaa-cooper",
     "steps": [
       "direct",
-      "retry"
+      "retry",
+      "captcha"
     ],
     "localClocks": true
   },

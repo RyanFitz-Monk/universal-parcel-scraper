@@ -23746,6 +23746,38 @@
     ]
   },
   {
+    "input": "18022407171682",
+    "carrier": "unknown",
+    "confidence": "low",
+    "candidates": [
+      "dpd",
+      "dpd-fr",
+      "mondial-relay",
+      "chronopost",
+      "ciblex",
+      "seur",
+      "brt",
+      "delhivery",
+      "dhl-ecommerce-uk",
+      "dpd-be",
+      "dpd-de",
+      "dpd-hu",
+      "dpd-nl",
+      "dpd-pt",
+      "dpd-uk",
+      "gls-nl",
+      "jadlog",
+      "xpressbees"
+    ],
+    "asked": [
+      "dpd-be",
+      "dpd",
+      "dpd-nl",
+      "dpd-de",
+      "chronopost"
+    ]
+  },
+  {
     "input": "18047A000264492",
     "carrier": "apc-postal-logistics",
     "confidence": "high",
