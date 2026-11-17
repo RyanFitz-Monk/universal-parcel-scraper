@@ -25,19 +25,19 @@
       "role": "shipment",
       "evidence": "public_shipment_report",
       "source": {
-        "url": "https://web.archive.org/web/20230511003821/https://www.posta.md/en/track-trace/mailing/RC800583970MD",
+        "url": "https://web.archive.org/web/20230511003829/https://trimiteri-api.posta.md/public/track/RC800583970MD",
         "date": "2023-05-11",
         "dateKind": "capture",
-        "access": "indexed_excerpt"
+        "access": "full_page"
       },
       "context": {
-        "assessment": "candidate"
+        "assessment": "confirmed"
       },
       "expect": {
         "carrier": "intl-post",
         "confidence": "high"
       },
-      "note": "Looked up on Poșta Moldovei's tracker, as an archived address shows; the capture was not opened."
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans in Moldova on its way abroad."
     },
     {
       "number": "RL330279383MD",
@@ -253,6 +253,215 @@
         ]
       },
       "note": "Poșta Moldovei's tracking page gives it as the example of a thirteen-character Curier Rapid number."
+    },
+    {
+      "number": "RV506878135GB",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20220526105921/https://trimiteri-api.posta.md/public/track/RV506878135GB",
+        "date": "2022-05-26",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "royal-mail",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from the United Kingdom to Moldova."
+    },
+    {
+      "number": "CY295232113DE",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20220629151744/https://trimiteri-api.posta.md/public/track/CY295232113DE",
+        "date": "2022-06-29",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "dhl",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from Germany to Moldova."
+    },
+    {
+      "number": "CE456296727US",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20220901190110/https://trimiteri-api.posta.md/public/track/CE456296727US",
+        "date": "2022-09-01",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "intl-post",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from the United States to Moldova."
+    },
+    {
+      "number": "RN756791785GB",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20221026162835/https://trimiteri-api.posta.md/public/track/RN756791785GB",
+        "date": "2022-10-26",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "royal-mail",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from the United Kingdom to Moldova."
+    },
+    {
+      "number": "UC159812925EE",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20221104182748/https://trimiteri-api.posta.md/public/track/UC159812925EE",
+        "date": "2022-11-04",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "intl-post",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from Estonia to Moldova."
+    },
+    {
+      "number": "RX185939235DE",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20221207124123/https://trimiteri-api.posta.md/public/track/RX185939235DE",
+        "date": "2022-12-07",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "dhl",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from Germany to Moldova."
+    },
+    {
+      "number": "RN840565563GB",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20230314134659/https://trimiteri-api.posta.md/public/track/RN840565563GB",
+        "date": "2023-03-14",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "royal-mail",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from the United Kingdom to Moldova."
+    },
+    {
+      "number": "CT507133481DE",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20230502195528/https://trimiteri-api.posta.md/public/track/CT507133481DE",
+        "date": "2023-05-02",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "dhl",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from Germany to Moldova."
+    },
+    {
+      "number": "CG013166525DE",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20240103150029/https://trimiteri-api.posta.md/public/track/CG013166525DE",
+        "date": "2024-01-03",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "dhl",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from Germany to Moldova."
+    },
+    {
+      "number": "CG017568073DE",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20240816123904/https://trimiteri-api.posta.md/public/track/CG017568073DE",
+        "date": "2024-08-16",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "dhl",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from Germany to Moldova."
+    },
+    {
+      "number": "LX033513688NL",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20260707210427/https://trimiteri-api.posta.md/public/track/LX033513688NL",
+        "date": "2026-07-07",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "spring-gds",
+        "confidence": "high"
+      },
+      "note": "An archived reply of Poșta Moldovei's tracking API holds this item's scans from the Netherlands to Moldova."
     }
   ]
 }

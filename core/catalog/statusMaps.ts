@@ -551,6 +551,7 @@ import { statusMap as postHaste } from '../../carriers/post-haste/status.js';
 import { statusMap as postLuxembourg } from '../../carriers/post-luxembourg/status.js';
 import { statusMap as postaFaroe } from '../../carriers/posta-faroe/status.js';
 import { statusMap as postaKenya } from '../../carriers/posta-kenya/status.js';
+import { statusMap as postaMoldovei } from '../../carriers/posta-moldovei/status.js';
 import { statusMap as postaNorthMacedonia } from '../../carriers/posta-north-macedonia/status.js';
 import { statusMap as postaRomana } from '../../carriers/posta-romana/status.js';
 import { statusMap as postaShqiptare } from '../../carriers/posta-shqiptare/status.js';
@@ -897,7 +898,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'pathao-courier': pathaoCourier, pbt, 'pcp-express': pcpExpress, 'pcs-logistics-vn': pcsLogisticsVn, 'pdn-express': pdnExpress,
   'pdq-chile': pdqChile, pecom, pengyou, 'peninsula-truck-lines': peninsulaTruckLines, 'pfc-express': pfcExpress, phlpost, pflogistics, 'pilot-freight': pilotFreight, 'pin-ag': pinAg,
   'pitney-bowes': pitneyBowes, 'pitt-ohio': pittOhio, planzer, 'poczta-polska': pocztaPolska, 'pos-indonesia': posIndonesia,
-  'pos-malaysia': posMalaysia, 'post-haste': postHaste, 'post-luxembourg': postLuxembourg, 'posta-faroe': postaFaroe, 'posta-kenya': postaKenya, 'posta-north-macedonia': postaNorthMacedonia, 'posta-romana': postaRomana,
+  'pos-malaysia': posMalaysia, 'post-haste': postHaste, 'post-luxembourg': postLuxembourg, 'posta-faroe': postaFaroe, 'posta-kenya': postaKenya, 'posta-moldovei': postaMoldovei, 'posta-north-macedonia': postaNorthMacedonia, 'posta-romana': postaRomana,
   'posta-shqiptare': postaShqiptare,
   xcargo, skladusa, 'seino-super-express': seinoSuperExpress, 'post-one': postOne, 'posta-slovenije': postaSlovenije, 'posta-srbije': postaSrbije, 'poste-italiane': posteItaliane, postex, posti, postlogistics, 'postmedia-parcel-services': postmediaParcelServices,
   postnord, posturinn, ppl, 'precision-deliveries': precisionDeliveries,

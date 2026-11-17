@@ -18,18 +18,45 @@
   "timezone": "Europe/Chisinau",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "posta-moldovei",
+    "steps": [
+      "trawl"
+    ],
+    "browser": true,
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "location"
+  ],
   "portal": {
     "url": "https://posta.md/en/track-trace/mailing/{trackingNumber}",
     "searchUrl": "https://posta.md/ro/track-trace",
     "canaryUrl": "https://posta.md/ro/track-trace",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "location",
+      "weight",
+      "sender_name",
+      "recipient_name"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "location"
+    ],
+    "discarded": [
+      "weight",
+      "sender_name",
+      "recipient_name"
+    ],
+    "unavailable": [
+      "eta",
+      "service_name",
+      "offset_timestamps",
+      "proof_of_delivery"
+    ]
   },
   "links": [
     {

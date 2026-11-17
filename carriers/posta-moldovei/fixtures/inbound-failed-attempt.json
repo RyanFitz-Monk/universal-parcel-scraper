@@ -1,0 +1,78 @@
+{
+  "shipping_number": null,
+  "total_weight": null,
+  "shipping_logs": [
+    {
+      "id": null,
+      "created_at": "2026-07-07T09:23:26Z",
+      "action": "status_changed",
+      "description": "Receive item at delivery office (Inb)",
+      "additional_description": "Moldova (the Republic of) - Post Terminal",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-07-06T22:00:00Z",
+      "action": "status_changed",
+      "description": "Unsuccessful item delivery attempt (Inb)",
+      "additional_description": "Moldova (the Republic of) - Post Terminal",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-07-06T08:51:04Z",
+      "action": "status_changed",
+      "description": "Departure from inward Office of Exchange",
+      "additional_description": "Moldova (the Republic of) - CNT CHISINAU",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-07-06T06:49:10Z",
+      "action": "status_changed",
+      "description": "Arrival at inward Office of Exchange",
+      "additional_description": "Moldova (the Republic of) - CNT CHISINAU",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-07-01T09:40:00Z",
+      "action": "status_changed",
+      "description": "Send item abroad (EDI-received)",
+      "additional_description": "Netherlands (the) - DEN HAAG A POSTNL IMEC",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-06-30T09:09:00Z",
+      "action": "status_changed",
+      "description": "Arrival at outward Office of Exchange",
+      "additional_description": "Netherlands (the) - DEN HAAG A POSTNL IMEC",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-06-30T09:09:00Z",
+      "action": "status_changed",
+      "description": "Insert item into bag",
+      "additional_description": "Netherlands (the) - DEN HAAG A POSTNL IMEC",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-06-30T06:53:00Z",
+      "action": "status_changed",
+      "description": "Posting/collection",
+      "additional_description": "Netherlands (the) - DEN HAAG A POSTNL IMEC",
+      "additional_data": {}
+    },
+    {
+      "id": null,
+      "created_at": "2026-06-29T03:39:00Z",
+      "action": "status_changed",
+      "description": "Posting/collection",
+      "additional_description": "Netherlands (the) - AMSTERDAM E INTERNATIONAL MAIL",
+      "additional_data": {}
+    }
+  ]
+}

@@ -541,6 +541,7 @@ import { adapter as postLuxembourg } from '../carriers/post-luxembourg/adapter.j
 import { adapter as postOne } from '../carriers/post-one/adapter.js';
 import { adapter as postaFaroe } from '../carriers/posta-faroe/adapter.js';
 import { adapter as postaKenya } from '../carriers/posta-kenya/adapter.js';
+import { adapter as postaMoldovei } from '../carriers/posta-moldovei/adapter.js';
 import { adapter as postaNorthMacedonia } from '../carriers/posta-north-macedonia/adapter.js';
 import { adapter as postaRomana } from '../carriers/posta-romana/adapter.js';
 import { adapter as postaShqiptare } from '../carriers/posta-shqiptare/adapter.js';
@@ -1335,6 +1336,7 @@ export const REGISTRY: RegistryDefinition = {
     "post-one": postOne,
     "posta-faroe": postaFaroe,
     "posta-kenya": postaKenya,
+    "posta-moldovei": postaMoldovei,
     "posta-north-macedonia": postaNorthMacedonia,
     "posta-romana": postaRomana,
     "posta-shqiptare": postaShqiptare,
@@ -2801,7 +2803,7 @@ export const REGISTRY: RegistryDefinition = {
     "posta-e-kosoves": "universal",
     "posta-faroe": "posta-faroe",
     "posta-kenya": "posta-kenya",
-    "posta-moldovei": "universal",
+    "posta-moldovei": "posta-moldovei",
     "posta-north-macedonia": "posta-north-macedonia",
     "posta-panduri": "universal",
     "posta-romana": "posta-romana",

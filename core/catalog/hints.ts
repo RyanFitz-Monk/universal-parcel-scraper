@@ -93,8 +93,10 @@ const CATALOG_NAMES = new Set([
 // number; its own scans carry UTC instants, and it relays the origin post's on
 // Auckland's reading, which its adapter gives back. Israel Post's tracker says
 // it follows EMS and ECO POST items sent from abroad, and dates scans to the
-// day. The host also checks adapter availability and required inputs before
-// making a request.
+// day. Poșta Moldovei follows mail from abroad under the sending post's number,
+// relays that post's scans beside its own, and keeps each office's wall clock;
+// its lookup opens a browser. The host also checks adapter availability and
+// required inputs before making a request.
 const NATIONAL_POSTS: ReadonlyMap<string, CarrierId> = new Map([
   ['AM', 'haypost'], ['AR', 'correo-argentino'], ['AT', 'austrian-post'], ['AU', 'australia-post'], ['BD', 'bangladesh-post'],
   ['BE', 'bpost'], ['BG', 'bulgarian-posts'], ['BR', 'correios-br'], ['BY', 'belpost'], ['CA', 'canada-post'],
@@ -102,7 +104,7 @@ const NATIONAL_POSTS: ReadonlyMap<string, CarrierId> = new Map([
   ['EE', 'omniva'], ['EG', 'egypt-post'], ['ES', 'correos-spain'], ['FI', 'posti'], ['FO', 'posta-faroe'], ['FR', 'la-poste'],
   ['GB', 'royal-mail'], ['GR', 'elta'], ['HR', 'hrvatska-posta'], ['HU', 'magyar-posta'], ['ID', 'pos-indonesia'], ['IE', 'an-post'], ['IL', 'israel-post'], ['IS', 'posturinn'],
   ['IT', 'poste-italiane'], ['JO', 'jordan-post'], ['JP', 'japan-post'], ['KE', 'posta-kenya'], ['KG', 'kyrgyz-post'], ['LT', 'lietuvos-pastas'],
-  ['LU', 'post-luxembourg'], ['LV', 'latvijas-pasts'], ['MA', 'barid-al-maghrib'], ['MK', 'posta-north-macedonia'], ['MT', 'maltapost'],
+  ['LU', 'post-luxembourg'], ['LV', 'latvijas-pasts'], ['MA', 'barid-al-maghrib'], ['MD', 'posta-moldovei'], ['MK', 'posta-north-macedonia'], ['MT', 'maltapost'],
   ['NL', 'spring-gds'],
   ['NO', 'bring-posten'], ['NZ', 'nz-post'], ['PE', 'serpost'], ['PH', 'phlpost'], ['PK', 'pakistan-post'], ['PL', 'poczta-polska'], ['PT', 'ctt'], ['QA', 'qatar-post'], ['RO', 'posta-romana'], ['RS', 'posta-srbije'],
   ['SA', 'saudi-post'], ['SE', 'postnord'], ['SI', 'posta-slovenije'], ['SK', 'slovenska-posta'], ['SV', 'correos-el-salvador'], ['TW', 'chunghwa-post'], ['UA', 'ukrposhta'],

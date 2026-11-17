@@ -44991,7 +44991,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Europe/Chisinau",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "posta-moldovei",
+      "localClocks": true,
+      "browser": true
     },
     "canaryUrl": "https://posta.md/ro/track-trace",
     "trackingUrlTemplate": "https://posta.md/en/track-trace/mailing/{trackingNumber}",
