@@ -510,6 +510,20 @@ describe('JRT tracking adapter', () => {
     expect(answer('Picked Up By Shipping Partner, USPS Awaiting Item')).toEqual({ kind: 'mapped', stage: 'accepted' });
     expect(answer('Arrived Shipping Partner Facility, USPS Awaiting Item')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('Departed Shipping Partner Facility, USPS Awaiting Item')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    // On the line into Europe: the order data sent to DPD, the landing with the clearance under way, the cargo
+    // collected at the airport, worded as a delivery, the completed clearance and the hand-over to the delivering carrier.
+    expect(answer('Order information has been transmitted to DPD.')).toEqual({ kind: 'mapped', stage: 'registered' });
+    expect(answer('航班已到达,清关拆板中 The flight has arrived, customs clearance and unpacking are underway'))
+      .toEqual({ kind: 'mapped', stage: 'customs' });
+    expect(answer('目的港已提货 Delivery has been made at the destination port')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(answer('货物已清关完成，Import customs clearance complete')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(answer('包裹交接给本地物流商处理，Received by local delivery company')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    // The sender still preparing the parcel, and the port of departure after the export clearance.
+    expect(answer('Your package is being prepared by the sender and will be handed over to us soon')).toEqual({ kind: 'mapped', stage: 'registered' });
+    expect(answer('Arrived At The Port Of Origin')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    // The road line's row that names only the region of Russia the parcel reached, shown in English.
+    expect(answer('俄罗斯下诺夫哥德洲')).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(jrtEnglish(null, normalizeStatusWording('俄罗斯下诺夫哥德洲'))).toBe('Nizhny Novgorod region, Russia');
     expect(answer('预计配载航班11月11日,Expected flight on November 11th')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(answer('预计配载航班12月2日，Expected flight on December 2nd')).toEqual({ kind: 'mapped', stage: 'in_transit' });
     // On the line into Latin America the booked flight and the flight name the destination and the day.

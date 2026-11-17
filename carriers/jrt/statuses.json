@@ -1225,6 +1225,71 @@
       "stage": "in_transit",
       "confirmedBy": "live",
       "firstSeen": "2026-11-17"
+    },
+    {
+      "wording": "航班已到达,清关拆板中 The flight has arrived, customs clearance and unpacking are underway",
+      "language": "zh",
+      "stage": "customs",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "Landed on the line into Europe: the pallets are broken down while import clearance is under way."
+    },
+    {
+      "wording": "目的港已提货 Delivery has been made at the destination port",
+      "language": "zh",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The cargo collected at the destination airport, worded as a delivery, before the import clearance completes: the recipient does not have it."
+    },
+    {
+      "wording": "货物已清关完成，Import customs clearance complete",
+      "language": "zh",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The completed import clearance of the row with a slash, worded with a comma."
+    },
+    {
+      "wording": "包裹交接给本地物流商处理，Received by local delivery company",
+      "language": "zh",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The hand-over to the delivering carrier after the import clearance, before its own scans."
+    },
+    {
+      "wording": "Order information has been transmitted to DPD.",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The order data sent to DPD, which delivers on the line into Europe, minutes after the shipment's data came in: a record of data, not a movement."
+    },
+    {
+      "wording": "Your package is being prepared by the sender and will be handed over to us soon",
+      "language": "en",
+      "stage": "registered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The sender still preparing the parcel, before JRT's receipt."
+    },
+    {
+      "wording": "Arrived At The Port Of Origin",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "At the port the flight leaves from, after the export clearance in China."
+    },
+    {
+      "wording": "俄罗斯下诺夫哥德洲",
+      "language": "zh",
+      "english": "Nizhny Novgorod region, Russia",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "On JRT's road line, three days after the Kazakhstan–Russia border: the region of Russia the parcel has reached, 州 misspelt 洲."
     }
   ]
 }
