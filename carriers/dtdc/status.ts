@@ -28,8 +28,10 @@ const STATUS = new Map<string, ClassifiedStatus>([
 
 const STAGE_BY_WORDING = new Map<string, Stage>([...STATUS].map(([label, status]) => [normalizeStatusWording(label), status.stage]));
 const STATUS_BY_WORDING = new Map([...STATUS].map(([label, status]) => [normalizeStatusWording(label), status]));
-// The page names the hub a parcel reaches or leaves: "Arrived at DELHI", "Dispatched from MATHURA".
-const HUB_MOVEMENT = /^(?:arrived at|dispatched from) \S/;
+// The page names the hub a parcel reaches or leaves: "Arrived at DELHI", "Dispatched from MATHURA". Its remarks, lines
+// without a label, name a centre receiving the parcel on its way, "Received at DELHI Processing Centre" or "… Delivery
+// Centre", and the way between two hubs. A booking's "Received at Origin Processing Center" comes with its label.
+const HUB_MOVEMENT = /^(?:arrived at|dispatched from) \S|^received at (?!origin\b)\S.* (?:processing|delivery) cent(?:re|er)$|^on its way between \S.* and \S/;
 
 /** A status label of the feed or the tracking page, in any case. */
 export function dtdcStatus(wording: string): ClassifiedStatus | undefined {
@@ -41,11 +43,12 @@ const DELIVERED = normalizeStatusWording('Delivered');
 
 /**
  * What the map says about one scan: its wording, when that is one of the status labels the
- * parser reads. The scan's own label, which the parser reads first, is not stored; a scan worded
- * with a label carries the same step in it. A delivery is a return on the return leg, which the
- * map is not asked by.
+ * parser reads, or a line it reads without a label: a hub's arrival or departure, a centre's
+ * receipt and the way between two hubs. The scan's own label, which the parser reads first, is
+ * not stored; a scan worded with a label carries the same step in it. A delivery is a return on
+ * the return leg, which the map is not asked by.
  */
 export const statusMap: CarrierStatusMap = {
-  stage: (_code, wording) => (wording === DELIVERED ? undefined : STAGE_BY_WORDING.get(wording)),
+  stage: (_code, wording) => (wording === DELIVERED ? undefined : STAGE_BY_WORDING.get(wording) ?? (HUB_MOVEMENT.test(wording) ? 'in_transit' : undefined)),
   gaps: [{ wording: DELIVERED, note: "Delivered on the forward leg, or returned to the sender on the return leg: the map is not asked by the scan's leg." }],
 };

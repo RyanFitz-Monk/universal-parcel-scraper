@@ -27,8 +27,11 @@ Return booking and movement keep active stages so later progress can be synced.
 Only delivery on the return leg completes the return; it does not set a recipient
 delivery time.
 The stored scan does not keep the status label the parser reads first, so the parcel
-app's review (`statusMap`) stages a scan only when its wording is such a label, and
-gives a delivery no stage there, since it is not asked by the leg.
+app's review (`statusMap`) stages a scan only when its wording is such a label or a line
+the parser reads without one, and gives a delivery no stage there, since it is not asked
+by the leg. The page's remarks, lines without a label, repeat a scan's line a minute
+later: a centre receiving the parcel on its way or the way between two hubs, read
+`in_transit`. A booking's "Received at Origin Processing Center" comes with its label.
 
 ## Limitations
 

@@ -3,11 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { parseTrackingInput } from '../../core/detection/index.js';
 import { normalizeCarrierResult } from '../../core/result/index.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
+import { normalizeStatusWording } from '../../core/status/statusMap.js';
 import type { StepRecord } from '../../core/telemetry/index.js';
 import { adapter, DtdcTracker } from './adapter.js';
 import carrier from './carrier.json' with { type: 'json' };
 import { parseDtdcPage } from './page.js';
 import { normalizeDtdcNumber, parseDtdc } from './parser.js';
+import { statusMap } from './status.js';
 
 const NUMBER = 'N00000001';
 const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/delivered.json', import.meta.url), 'utf8'));
@@ -208,10 +210,23 @@ describe('DTDC tracking page', () => {
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', timezone: 'Asia/Kolkata',
       last_status_text: 'Delivered', last_update: '2026-08-27T15:33:00+05:30', delivered_at: '2026-08-27T15:33:00+05:30' });
     expect(result.events?.map(event => [event.description, event.stage])).toEqual([
-      ['Delivered', 'delivered'], ['Shipment is out for Delivery', 'out_for_delivery'], ['Received at Example Delivery Centre', undefined],
+      // A remark has no label: its line names the centre receiving the parcel on its way.
+      ['Delivered', 'delivered'], ['Shipment is out for Delivery', 'out_for_delivery'], ['Received at Example Delivery Centre', 'in_transit'],
       // The label goes first: this scan's line names an earlier failed delivery.
       ['Undelivered due to', 'in_transit'], ['On its way between EXAMPLE and SAMPLE', 'in_transit'], ['Undelivered due to', undefined], ['Pick up done', 'accepted']]);
     expect(JSON.stringify(result)).not.toContain('Stale copy');
+  });
+
+  it('reads the remarks of a centre\'s receipt and of the way between hubs as the parcel on its way, as the map does', () => {
+    const result = parseDtdcPage(page(scan('At Processing Centre', 'Aug 26, 2026 8:20AM', 'Received at SAMPLE Processing Centre')
+      + remark('Aug 26, 2026 8:21AM', 'Received at SAMPLE Processing Centre') + remark('Aug 25, 2026 7:16PM', 'On its way between EXAMPLE and SAMPLE')
+      + scan('Booked', 'Aug 25, 2026 9:19AM', 'Received at Origin Processing Center')), NUMBER);
+    expect(result.events?.map(event => event.stage)).toEqual(['in_transit', 'in_transit', 'in_transit', 'registered']);
+    for (const wording of ['Received at SAMPLE Processing Centre', 'Received at SAMPLE Delivery Centre', 'On its way between EXAMPLE and SAMPLE', 'Arrived at SAMPLE']) {
+      expect(statusMap.stage(null, normalizeStatusWording(wording))).toBe('in_transit');
+    }
+    // The booking's receipt at origin comes with its label, which the map is not asked by.
+    expect(statusMap.stage(null, normalizeStatusWording('Received at Origin Processing Center'))).toBeUndefined();
   });
 
   it('keeps one copy of a current scan the list repeats', () => {
