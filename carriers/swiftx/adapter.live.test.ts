@@ -5,16 +5,18 @@ import { SwiftxTracker } from './adapter.js';
 const trawl = TrawlClient.fromEnvironment();
 const number = process.env.SWIFTX_TRACKING_NUMBER;
 const unknown = process.env.SWIFTX_UNKNOWN_NUMBER;
+const phoneDigits = process.env.SWIFTX_PHONE_DIGITS;
 
 describe('SwiftX live public tracking', () => {
-  it.skipIf(!trawl || !number)('returns the parcel\'s history on its sites\' offsets through the browser service, or says the phone check withholds it', async () => {
-    const read = await new SwiftxTracker({ trawl }).fetch(number!, { budgetMs: 45_000 })
+  it.skipIf(!trawl || !number)('returns the parcel\'s history on its sites\' offsets through the browser service, or asks for the recipient\'s phone digits', async () => {
+    const read = await new SwiftxTracker({ trawl }).fetch(number!, { budgetMs: 45_000 }, phoneDigits)
       .then((result) => ({ result }), (error: unknown) => ({ error }));
-    // The page can ask for the recipient's phone digits; once skipped, it keeps the history back.
-    if ('error' in read) {
-      expect(read.error).toMatchObject({ kind: 'input_required', field: 'recipient verification' });
+    // Without the recipient's phone digits the page keeps the history back.
+    if ('error' in read && !phoneDigits) {
+      expect(read.error).toMatchObject({ kind: 'input_required', field: 'phoneDigits' });
       return;
     }
+    if ('error' in read) throw read.error;
     const { result } = read;
     expect(result.last_status_text).toEqual(expect.any(String));
     expect(result.events?.length).toBeGreaterThan(0);

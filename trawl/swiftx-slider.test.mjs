@@ -6,7 +6,8 @@ import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
-import { attachSwiftxSlider, locateSwiftxSlider, swiftxSliderDrag, swiftxIconClicks, swiftxSkipPhonePrompt } from './swiftx-slider.mjs';
+import { attachSwiftxSlider, locateSwiftxSlider, swiftxSliderDrag, swiftxIconClicks, swiftxSkipPhonePrompt, swiftxPhoneDigits,
+  swiftxDropPhoneFragment, swiftxEnterPhoneDigits } from './swiftx-slider.mjs';
 
 const API = 'https://swiftx-express.com/api/graphql';
 const NUMBER = 'SWX000000000000000001';
@@ -24,7 +25,8 @@ function fixture(options = {}) {
   let refreshes = 0, moves = 0, downs = 0, ups = 0;
   const clicks = [];
   const geometry = { x: 30, y: 100, scale: 320 / 600, maxKnob: 276, maxImage: 261 };
-  page.evaluate = async fn => fn === swiftxSkipPhonePrompt ? (options.skipPhone?.() ?? false) : (options.geometry ?? geometry);
+  page.evaluate = async (fn, arg) => fn === swiftxSkipPhonePrompt ? (options.skipPhone?.() ?? false)
+    : fn === swiftxEnterPhoneDigits ? (options.enterPhone?.(arg) ?? false) : (options.geometry ?? geometry);
   page.getByRole = () => ({ locator: () => ({ first: () => ({ evaluate: async () => { refreshes++; await options.refresh?.(); } }) }) });
   page.mouse = { move: async () => { moves++; await options.move?.(); }, down: async () => { downs++; }, up: async () => { ups++; await options.up?.(); } };
   page.mouse.click = async (x, y) => { clicks.push({ x, y }); await options.click?.(clicks.length); };
@@ -68,6 +70,106 @@ test('uses the optional Skip after bound verification and never repeats it', asy
 });
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Synthetic digits.
+const DIGITS = '0042';
+
+test('reads four phone digits from the address\'s fragment only', () => {
+  const url = hash => new URL(`https://swiftx-express.com/track?trackingNumber=${NUMBER}${hash}`);
+  assert.equal(swiftxPhoneDigits(url('')), null);
+  assert.equal(swiftxPhoneDigits(url(`#trawl-phone-digits=${DIGITS}`)), DIGITS);
+  for (const hash of ['#test', '#trawl-phone-digits=042', '#trawl-phone-digits=00042', '#trawl-phone-digits=004a',
+    `#trawl-phone-digits=${DIGITS}&x=1`, `#trawl-postcode=${DIGITS}`]) assert.equal(swiftxPhoneDigits(url(hash)), undefined, hash);
+});
+
+test('drops the digits from SwiftX\'s address before its scripts run, and nothing else', () => {
+  for (const [origin, hash, dropped] of [['https://swiftx-express.com', `#trawl-phone-digits=${DIGITS}`, true],
+    ['https://other.test', `#trawl-phone-digits=${DIGITS}`, false], ['https://swiftx-express.com', '#other', false]]) {
+    const calls = [];
+    const location = { origin, hash, pathname: '/track', search: `?trackingNumber=${NUMBER}` };
+    const history = { state: { page: 1 }, replaceState: (...args) => calls.push(args) };
+    runInNewContext(`(${swiftxDropPhoneFragment})()`, { location, history });
+    assert.deepEqual(calls, dropped ? [[{ page: 1 }, '', `/track?trackingNumber=${NUMBER}`]] : [], `${origin}${hash}`);
+  }
+});
+
+/** The summary card the page shows with its phone field, as plain objects. */
+function phoneCard(invalid, typed = '') {
+  let clicks = 0;
+  const events = [];
+  const visible = width => ({ getBoundingClientRect: () => ({ width }) });
+  const textarea = { value: invalid === 'number' ? 'SWX000000000000000002' : NUMBER };
+  const card = { querySelectorAll: () => [{ textContent: invalid === 'card' ? 'SWX000000000000000002' : NUMBER }],
+    contains: element => invalid === 'root' && element === textarea, parentElement: null };
+  const button = { ...visible(invalid === 'hiddenButton' ? 0 : 100), textContent: invalid === 'verifying' ? 'Verifying...' : ' View full tracking ',
+    disabled: invalid === 'buttonDisabled', click: () => { clicks++; } };
+  const holder = { querySelectorAll: selector => selector === 'button' ? (invalid === 'buttons' ? [button, button] : [button]) : [],
+    parentElement: card };
+  let stored = invalid === 'filled' ? '9999' : typed;
+  const prototype = { get value() { return stored; }, set value(next) { stored = String(next); } };
+  const input = Object.assign(Object.create(prototype), visible(invalid === 'hidden' ? 0 : 100), { disabled: invalid === 'disabled',
+    labels: [{ textContent: invalid === 'label' ? 'Enter a code' : 'Enter the last 4 digits of the recipient\'s phone number to view full tracking' }],
+    parentElement: holder, dispatchEvent: event => events.push(event) });
+  const document = { querySelectorAll: selector => selector === 'textarea' ? [textarea]
+    : selector === 'input[maxlength="4"]' ? (invalid === 'inputs' ? [input, input] : [input]) : [] };
+  class Event { constructor(type, init) { this.type = type; this.bubbles = init?.bubbles; } }
+  const href = `https://${invalid === 'page' ? 'other.test' : 'swiftx-express.com'}/track?trackingNumber=${NUMBER}${invalid === 'query' ? '&other=1' : ''}${invalid === 'hash' ? '#trawl-phone-digits=9999' : ''}`;
+  const run = (digits, submit) => runInNewContext(`(${swiftxEnterPhoneDigits})({ number, digits, submit })`,
+    { URL, location: { href }, document, Event, number: NUMBER, digits, submit });
+  return { run, value: () => stored, events, clicks: () => clicks };
+}
+
+test('types the digits only into the empty phone field on the same number\'s summary, then presses its own button', () => {
+  for (const invalid of ['page', 'query', 'hash', 'number', 'card', 'root', 'filled', 'disabled', 'hidden', 'inputs', 'label', 'verifying',
+    'buttonDisabled', 'hiddenButton', 'buttons']) {
+    const card = phoneCard(invalid);
+    assert.equal(card.run(DIGITS, false), false, invalid);
+    assert.equal(card.value(), invalid === 'filled' ? '9999' : '', invalid);
+    assert.equal(card.events.length + card.clicks(), 0, invalid);
+  }
+  for (const digits of ['042', '00042', '004a', 42]) assert.equal(phoneCard(null).run(digits, false), false, String(digits));
+  const card = phoneCard(null);
+  assert.equal(card.run(DIGITS, false), true);
+  assert.equal(card.value(), DIGITS);
+  assert.deepEqual(card.events.map(event => [event.type, event.bubbles]), [['input', true]]);
+  assert.equal(card.clicks(), 0);
+  assert.equal(card.run(DIGITS, true), true);
+  assert.equal(card.clicks(), 1);
+  // The page reset the field, or it holds other digits: nothing is pressed.
+  assert.equal(phoneCard(null).run(DIGITS, true), false);
+  assert.equal(phoneCard('filled').run(DIGITS, true), false);
+  assert.equal(phoneCard('verifying', DIGITS).run(DIGITS, true), false);
+});
+
+test('submits the phone digits once, after typing them, and calls beforeSubmit just before the press', async () => {
+  const calls = [];
+  let typingAsks = 0;
+  const f = fixture({ enterPhone: ({ number, digits, submit }) => {
+    calls.push([submit ? 'press' : 'type', number, digits]);
+    return submit || ++typingAsks >= 3;
+  } });
+  assert.equal(await f.controller.submitPhoneDigits(DIGITS, 2000, () => calls.push(['before'])), true);
+  assert.deepEqual(calls, [['type', NUMBER, DIGITS], ['type', NUMBER, DIGITS], ['type', NUMBER, DIGITS], ['before'], ['press', NUMBER, DIGITS]]);
+  assert.equal(await f.controller.submitPhoneDigits(DIGITS, 2000, () => calls.push(['again'])), false);
+  assert.equal(calls.length, 5);
+  f.controller.dispose();
+  let pressed = false;
+  const absent = fixture({ enterPhone: ({ submit }) => { pressed ||= submit; return false; } });
+  const started = Date.now();
+  assert.equal(await absent.controller.submitPhoneDigits(DIGITS, 300, () => { throw new Error('must not submit'); }), false);
+  assert.ok(Date.now() - started < 1000);
+  assert.equal(pressed, false);
+  absent.controller.dispose();
+  const failing = fixture({ enterPhone: () => { throw new Error('navigating'); } });
+  assert.equal(await failing.controller.submitPhoneDigits(DIGITS, 200), false);
+  failing.controller.dispose();
+  const disposed = fixture({ enterPhone: () => { throw new Error('must not type'); } });
+  disposed.controller.dispose();
+  assert.equal(await disposed.controller.submitPhoneDigits(DIGITS, 2000), false);
+  const invalid = fixture({ enterPhone: () => { throw new Error('must not type'); } });
+  assert.equal(await invalid.controller.submitPhoneDigits('42', 2000), false);
+  invalid.controller.dispose();
+});
 
 test('skips a phone prompt the page shows before any puzzle, without delaying preparation, once', async () => {
   let asks = 0, shown;

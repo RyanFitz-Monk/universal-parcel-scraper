@@ -3,7 +3,7 @@
 // tracking endpoints, each on its public page with one valid number. Every
 // other capture request keeps TRAWL's stock behaviour.
 import { attachRoyalMailHistoryCapture, ROYAL_MAIL_OPT_OUT } from './royal-mail-history.mjs';
-import { attachSwiftxSlider } from './swiftx-slider.mjs';
+import { attachSwiftxSlider, swiftxDropPhoneFragment, swiftxPhoneDigits } from './swiftx-slider.mjs';
 import { attachUspsTrackingCapture } from './usps-tracking.mjs';
 
 // TRAWL drops a result that arrives at its request deadline. End a capture's
@@ -141,30 +141,43 @@ const SITES = [
   },
   {
     // The page passes Cloudflare's check, then posts one batch GraphQL query
-    // for the number in its address, with its Turnstile token, and gets a
-    // compressed JSON reply.
+    // for the number in its address and gets a compressed JSON reply. Given
+    // the recipient's phone digits in the fragment, the helper types them
+    // into the summary's field, and the page posts the query again with them.
     api: 'https://swiftx-express.com/api/graphql',
     provider: 'SwiftX',
     requestMethod: 'POST',
     number(page) {
-      if (page.origin !== 'https://swiftx-express.com' || page.pathname !== '/track' || page.hash) return null;
+      if (page.origin !== 'https://swiftx-express.com' || page.pathname !== '/track' || swiftxPhoneDigits(page) === undefined) return null;
       const values = [...page.searchParams];
       return values.length === 1 && values[0][0] === 'trackingNumber' && /^SWX\d{18}$/.test(values[0][1]) ? values[0][1] : null;
     },
-    requestMatches(request, number) {
+    requestMatches(request, number, target) {
       try {
         const body = request.postDataJSON();
         const input = body?.variables?.input;
+        const digits = swiftxPhoneDigits(target);
         return typeof body?.query === 'string' && /\bgetOfficialWebsiteTrackingInfoBatch\b/.test(body.query)
           && input && typeof input === 'object' && Object.keys(input).every(key => ['trackingNos', 'humanToken', 'sliderToken',
             'phoneLast4', 'unlockToken', 'unlockScope'].includes(key))
-          && ['phoneLast4', 'unlockToken', 'unlockScope'].every(key => input[key] == null)
+          && ['unlockToken', 'unlockScope'].every(key => input[key] == null)
+          && (input.phoneLast4 == null || (Boolean(digits) && input.phoneLast4 === digits))
           && Array.isArray(input.trackingNos) && input.trackingNos.length === 1 && input.trackingNos[0] === number;
       } catch { return false; }
     },
-    settled() {
+    phoneDigitsSubmitted(request, target) {
+      const digits = swiftxPhoneDigits(target);
+      try { return Boolean(digits) && request.postDataJSON()?.variables?.input?.phoneLast4 === digits; }
+      catch { return false; }
+    },
+    settled(data, number, state) {
       // One query, one final reply. The adapter binds the returned number and
-      // reads the not-found notice itself.
+      // reads the not-found notice itself. A summary for the number is where
+      // the page offers its phone field.
+      const results = data?.data?.getOfficialWebsiteTrackingInfoBatch?.results;
+      const result = Array.isArray(results) && results.length === 1 ? results[0] : undefined;
+      state.phoneOffered = result?.success === true && result.unlockStatus === 'BASIC'
+        && typeof result.trackingNo === 'string' && result.trackingNo.trim().toUpperCase() === number;
       return true;
     },
     sanitize(data) {
@@ -174,9 +187,29 @@ const SITES = [
         delete batch.unlockTokenExpiresInSeconds;
       }
     },
-    setup(page, number, state, options) { state.slider = attachSwiftxSlider(page, number, { signal: options.budget?.signal }); },
+    async setup(page, number, state, options, target) {
+      if (swiftxPhoneDigits(target)) await page.addInitScript(swiftxDropPhoneFragment);
+      state.slider = attachSwiftxSlider(page, number, { signal: options.budget?.signal });
+    },
     async prepare(page, number, budgetMs, { state, hasTrackingRequest, refuse }) {
       await state.slider.prepare(budgetMs, hasTrackingRequest, refuse);
+    },
+    // Settles on the page's first reply. Given the digits, and once, they then
+    // go through the summary's own field, and the page's second reply is the
+    // one that answers them.
+    async unlock(page, number, budgetMs, { state, target, settle, restart, finish }) {
+      const deadline = Date.now() + Math.max(0, budgetMs);
+      await settle(budgetMs);
+      const digits = swiftxPhoneDigits(target);
+      if (!digits || !state.phoneOffered || state.phoneAttempted) return;
+      state.phoneAttempted = true;
+      // Leave the page time to answer the digits.
+      const typing = Math.min(5000, deadline - Date.now() - 2000);
+      if (typing < 500) return;
+      let restarted = false;
+      const submitted = await state.slider.submitPhoneDigits(digits, typing, () => { restarted = true; restart(); });
+      if (submitted) await settle(Math.max(0, deadline - Date.now()));
+      else if (restarted) finish();
     },
     settleAfterPrepare: false,
     cleanup(state) { state.slider?.dispose(); },
@@ -390,7 +423,7 @@ export async function attachTrackingCapture(page, url, options) {
   if (!site) return undefined;
   const number = site.number(target);
   const state = {};
-  if (site.setup && (!site.prepareFor || site.prepareFor(target))) await site.setup(page, number, state, options);
+  if (site.setup && (!site.prepareFor || site.prepareFor(target))) await site.setup(page, number, state, options, target);
   const api = site.apiForNumber ? site.apiForNumber(number)
     : site.api + (site.queryNumber ? `?trackingIds=${number}` : site.perNumber ? number : '');
   if (site.perNumber) {
@@ -423,7 +456,7 @@ export async function attachTrackingCapture(page, url, options) {
   const observesRequests = site.perNumber || site.queryNumber || site.requestMethod;
   const matchesRequest = request => accepting && request.url() === api
     && request.method() === (site.requestMethod ?? 'GET')
-    && (!site.requestMatches || site.requestMatches(request, number));
+    && (!site.requestMatches || site.requestMatches(request, number, target));
   const onRequest = request => { if (matchesRequest(request)) trackingRequested = true; };
   const onRequestFailed = request => {
     if (!matchesRequest(request)) return;
@@ -445,6 +478,7 @@ export async function attachTrackingCapture(page, url, options) {
       headers: headers['retry-after'] ? { 'retry-after': headers['retry-after'].slice(0, 100) } : {},
       truncated: false, base64Encoded: false };
     if (site.postcodeSubmitted?.(response.request(), target)) entry.postcodeSubmitted = true;
+    if (site.phoneDigitsSubmitted?.(response.request(), target)) entry.phoneDigitsSubmitted = true;
     entries.push(entry);
     // UPS retries can arrive after the old capture limit. Keep their arrival
     // order and latest metadata, including refusals whose bodies are private.
@@ -579,6 +613,8 @@ export async function attachTrackingCapture(page, url, options) {
         const deadline = Date.now() + Math.max(0, budgetMs);
         await site.prepare(page, number, budgetMs, { state, target, settle, restart: () => { ready = restart(); } });
         await settle(Math.max(0, deadline - Date.now()));
+      } else if (site.unlock) {
+        await site.unlock(page, number, budgetMs, { state, target, settle, restart: () => { ready = restart(); }, finish: () => finish() });
       } else await settle(budgetMs);
     },
     async drain() {

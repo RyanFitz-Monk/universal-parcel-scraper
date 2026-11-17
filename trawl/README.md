@@ -170,9 +170,14 @@ SwiftX's page clears Cloudflare's managed challenge and offers a slider when Tur
 cannot complete. Its scoped helper matches cutouts, image seams, circular rotations and
 ordered icons offline, rejecting ambiguous matches. It uses the page's pointer handlers,
 with at most two puzzles; verification tokens stay in that context. It skips the optional
-recipient phone prompt, which can come before any puzzle, through the page's Skip control.
+recipient phone dialog, which can come before any puzzle, through the page's Skip control.
 The page then posts one GraphQL query; the helper keeps
 the decoded reply only for the query naming the whole number in the page's address.
+When the address ends in `#trawl-phone-digits=` and four digits, an init script removes that
+fragment before the page's scripts run. Once a summary without scans arrives for the number,
+the helper types the digits into the summary's own field once and presses its View full
+tracking button. It keeps the query that carries those digits as `phoneLast4`, marked
+`phoneDigitsSubmitted`, and refuses one with any other digits.
 
 Redis is optional. It stores cookies, user agents and the audio pause deadline with a TTL, not tracking history, and a
 cached session that fails falls back to a fresh browser. Do not expose Redis.

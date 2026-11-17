@@ -13,19 +13,24 @@ tracking page. Shippers and forwarders hand parcels to SwiftX for the last mile.
    pointer controls. The page verifies the answer and submits tracking. At most two
    puzzles are attempted, with a refresh through the official control when a puzzle
    cannot be read. Ambiguous puzzles keep provider fallback.
-   The page can ask for recipient phone digits before any puzzle or after one. The helper chooses
-   its public Skip control for the same number, without supplying a phone or an unlock token, and
-   watches for that prompt in the background so the service's own Cloudflare check is not delayed.
-   A BASIC summary without scans remains recipient verification required, so providers
-   can supply history; it is not another CAPTCHA failure or a missing parcel. BASIC replies
-   with scans stay partial. Unlock credentials in the reply remain inside the browser.
+   When the page asks for recipient phone digits in a dialog before its query, the helper chooses
+   its public Skip control for the same number and watches for that dialog in the background so
+   the service's own Cloudflare check is not delayed.
    Icon matching preserves proportions when stretching silhouettes to a square makes them ambiguous;
    both comparisons must support the match, with a distinct proportional match required.
    The page then posts one
-   `getOfficialWebsiteTrackingInfoBatch` query to `/api/graphql`, a batch holding the number and its
-   verification tokens, and gets a compressed JSON reply. The service's capture helper keeps that reply
-   only for a batch of exactly the whole number from the page's address; no request is replayed
-   outside the browser.
+   `getOfficialWebsiteTrackingInfoBatch` query to `/api/graphql`, a batch holding the number and
+   any verification tokens, and gets a compressed JSON reply. The service's capture helper keeps
+   that reply only for a batch of exactly the whole number from the page's address; no request is
+   replayed outside the browser. Unlock credentials in the reply remain inside the browser.
+2. Recipient phone digits: the first reply is a BASIC summary, the status and its wordings without
+   clocks or places, under the page's field for the last four digits of the recipient's phone.
+   Given the optional `phoneDigits` input, the adapter puts the digits in the address's fragment,
+   which the browser never sends, and the helper removes the fragment before the page's scripts
+   run. Once that summary arrives, the helper types the digits into the field on the summary for
+   the same whole number and presses the page's View full tracking button, once. The page posts
+   its query again with the digits as `phoneLast4`, and the capture marks that reply; it is the one
+   read.
 
 Without the browser service the adapter fails as challenged before any request: plain HTTP and
 headless Chrome get Cloudflare's checkbox on the page and its API, even from the unchallenged home
@@ -39,6 +44,13 @@ indeterminate, and any other set of results is a schema failure. When the browse
 stopped at a challenge wall, or because the page never sent its query, the lookup fails as
 challenged too, also when the deadline ran out while the next tier was still trying. Any other refusal, a reply naming another number, a GraphQL error, a challenge
 page in place of the reply, rate limits and incomplete captures keep their own failure kinds.
+
+A BASIC summary without scans asks for `phoneDigits`, so a consumer can ask the reader while
+providers supply history; it is not a CAPTCHA failure or a missing parcel. BASIC replies with
+scans stay partial. A BASIC reply to the digits means SwiftX did not accept them and asks for them
+again, unless SwiftX says its phone check failed, which is inconclusive. Given digits the page never
+took, the lookup fails as transport. A parcel SwiftX holds no phone for shows only the summary,
+with no field, and has no history to read.
 
 ## Notes
 
@@ -69,7 +81,8 @@ page in place of the reply, rate limits and incomplete captures keep their own f
 - SwiftX's shipper API at `prod.open.swiftx-express.com` needs a partner's key and a signature on
   each request, and its Android app is for staff and contractors.
 - The reply names no sender, service, weight or delivery estimate.
-- Full history can require recipient phone verification. The adapter accepts no phone input.
+- Scans need the last four digits of the recipient's phone; the summary's wordings without clocks
+  are not read. The helper types only the digits the reader gives, once per lookup.
 
 ## Numbers
 
@@ -78,5 +91,6 @@ The `swiftx-1` rule claims them.
 
 ## Testing
 
-Set `FLARESOLVERR_URL`, plus `SWIFTX_TRACKING_NUMBER` and optionally `SWIFTX_UNKNOWN_NUMBER`
-outside the repository, and run `npm run test:carriers:live -- carriers/swiftx/adapter.live.test.ts`.
+Set `FLARESOLVERR_URL`, plus `SWIFTX_TRACKING_NUMBER` and optionally `SWIFTX_PHONE_DIGITS` (the
+last four digits of that parcel's recipient phone) and `SWIFTX_UNKNOWN_NUMBER` outside the
+repository, and run `npm run test:carriers:live -- carriers/swiftx/adapter.live.test.ts`.

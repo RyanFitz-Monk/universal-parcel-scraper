@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runInNewContext } from 'node:vm';
 import { attachTrackingCapture, requestAustraliaPostInPage, reserveDeadline } from './tracking-capture.mjs';
+import { swiftxDropPhoneFragment, swiftxEnterPhoneDigits } from './swiftx-slider.mjs';
 const api = 'https://t.17track.net/track/restapi';
 const number = 'ZZ12345678900';
 const reply = code => JSON.stringify({ meta: { code: 200 }, shipments: [{ number, code }] });
@@ -15,7 +16,7 @@ const fedexApi = 'https://api.fedex.com/track/v2/shipments';
 const fedexNumber = '999999999999';
 const fedexUrl = `https://www.fedex.com/wtrk/track/?trknbr=${fedexNumber}`;
 const fedexReply = (trackingNbr = fedexNumber) => JSON.stringify({ output: { packages: [{ trackingNbr }] } });
-async function fixture(url = `https://t.17track.net/en#nums=${number}`, endpoint = api, additional = []) {
+async function fixture(url = `https://t.17track.net/en#nums=${number}`, endpoint = api, additional = [], extra = {}) {
   const handlers = {};
   const listeners = new Map();
   let detached = false;
@@ -24,7 +25,7 @@ async function fixture(url = `https://t.17track.net/en#nums=${number}`, endpoint
     if (!listeners.has(event)) listeners.set(event, new Set());
     listeners.get(event).add(fn);
     handlers[event] = value => Promise.all([...listeners.get(event)].map(listener => listener(value)));
-  }, off: (event, fn) => { listeners.get(event)?.delete(fn); detached = true; detachedEvents.push(event); } };
+  }, off: (event, fn) => { listeners.get(event)?.delete(fn); detached = true; detachedEvents.push(event); }, ...extra };
   const capture = await attachTrackingCapture(page, url, { captureResponses: [endpoint, ...additional] });
   const respond = (body, { url = endpoint, headers = {}, status = 200, method = endpoint === api || endpoint === upsApi ? 'POST' : 'GET', read,
     requestBody = endpoint === api ? { data: [{ num: number }] } : endpoint === upsApi ? { TrackingNumber: [upsNumber.toLowerCase()] } : undefined } = {}) => handlers.response({
@@ -312,6 +313,99 @@ test('SwiftX captures the public phone-skip query but refuses supplied phone and
   assert.equal(rows.length, 1);
   assert.equal(rows[0].body, swiftxReply());
   assert.doesNotMatch(JSON.stringify(rows), /PRIVATE_|unlockToken/);
+});
+
+// Synthetic digits.
+const swiftxDigits = '0042';
+const swiftxPhoneUrl = `${swiftxUrl}#trawl-phone-digits=${swiftxDigits}`;
+const swiftxSummary = (trackingNo = swiftxNumber, unlockStatus = 'BASIC') => JSON.stringify({ data: { getOfficialWebsiteTrackingInfoBatch: {
+  success: true, results: [{ success: true, trackingNo, unlockStatus, trackingEventList: [] }] } } });
+
+test('SwiftX takes four phone digits in its address\'s fragment and drops them before the page\'s scripts', async () => {
+  for (const hash of ['#trawl-phone-digits=042', '#trawl-phone-digits=00042', '#trawl-phone-digits=004a', `#trawl-phone-digits=${swiftxDigits}&x=1`,
+    `#trawl-postcode=${swiftxDigits}`]) {
+    assert.equal(await attachTrackingCapture({}, swiftxUrl + hash, { captureResponses: [swiftxApi] }), undefined, hash);
+  }
+  for (const [url, scripts] of [[swiftxPhoneUrl, [swiftxDropPhoneFragment]], [swiftxUrl, []]]) {
+    const added = [];
+    const { capture } = await fixture(url, swiftxApi, [], { addInitScript: async script => { added.push(script); } });
+    assert.ok(capture, url);
+    assert.deepEqual(added, scripts, url);
+  }
+});
+
+test('SwiftX keeps the query carrying the supplied digits, marked, and refuses any other digits', async () => {
+  const { capture, respond } = await fixture(swiftxPhoneUrl, swiftxApi);
+  const input = { trackingNos: [swiftxNumber], phoneLast4: null, unlockToken: null, unlockScope: null };
+  for (const phoneLast4 of ['9999', '', 42, '0042 ']) {
+    await respond(swiftxReply(), { method: 'POST', requestBody: swiftxRequest({ ...input, phoneLast4 }) });
+  }
+  assert.equal(capture.hasResponse(), false);
+  await respond(swiftxSummary(), { method: 'POST', requestBody: swiftxRequest(input) });
+  await respond(swiftxReply(), { method: 'POST', requestBody: swiftxRequest({ ...input, phoneLast4: swiftxDigits }) });
+  const rows = (await capture.drain()).capturedResponses;
+  assert.deepEqual(rows.map(row => row.phoneDigitsSubmitted), [undefined, true]);
+  assert.doesNotMatch(JSON.stringify(rows), new RegExp(swiftxDigits));
+});
+
+/** A SwiftX page whose phone field takes typing and whose button posts the query again. */
+async function swiftxPhonePage({ url = swiftxPhoneUrl, types = () => true, presses = () => true } = {}) {
+  const calls = [];
+  let fixtureRef;
+  const evaluate = async (fn, arg) => {
+    if (fn !== swiftxEnterPhoneDigits) throw new Error('unexpected page script');
+    calls.push([arg.submit ? 'press' : 'type', arg.number, arg.digits]);
+    if (!arg.submit) return types();
+    const pressed = presses();
+    if (pressed) setTimeout(() => fixtureRef.respond(swiftxReply(), { method: 'POST', requestBody: swiftxRequest({ trackingNos: [swiftxNumber],
+      phoneLast4: arg.digits, unlockToken: null, unlockScope: null }) }), 20);
+    return pressed;
+  };
+  fixtureRef = await fixture(url, swiftxApi, [], { evaluate });
+  return { ...fixtureRef, calls };
+}
+
+test('SwiftX types the supplied digits once the summary for the number arrives and settles on the reply to them', { timeout: 5000 }, async () => {
+  const { capture, respond, calls } = await swiftxPhonePage();
+  await respond(swiftxSummary(), { method: 'POST', requestBody: swiftxRequest({ trackingNos: [swiftxNumber], phoneLast4: null }) });
+  await capture.settle(5000);
+  assert.deepEqual(calls, [['type', swiftxNumber, swiftxDigits], ['press', swiftxNumber, swiftxDigits]]);
+  assert.equal(capture.hasResponse(), true);
+  const rows = (await capture.drain()).capturedResponses;
+  assert.deepEqual(rows.map(row => [row.body, row.phoneDigitsSubmitted]), [[swiftxSummary(), undefined], [swiftxReply(), true]]);
+});
+
+test('SwiftX leaves the summary alone without digits, for a full reply or another number, and ends when the field cannot take them', { timeout: 5000 }, async () => {
+  for (const [url, body] of [[swiftxUrl, swiftxSummary()], [swiftxPhoneUrl, swiftxSummary(swiftxNumber, 'FULL')],
+    [swiftxPhoneUrl, swiftxSummary(swiftxNumber, 'NO_PHONE')], [swiftxPhoneUrl, swiftxSummary('SWX000000000000000002')]]) {
+    const { capture, respond, calls } = await swiftxPhonePage({ url });
+    await respond(body, { method: 'POST', requestBody: swiftxRequest({ trackingNos: [swiftxNumber] }) });
+    const started = Date.now();
+    await capture.settle(5000);
+    assert.ok(Date.now() - started < 500, body);
+    assert.deepEqual(calls, [], body);
+    assert.equal((await capture.drain()).capturedResponses.length, 1, body);
+  }
+  // A field that never shows stops typing within the budget, keeping the summary.
+  const absent = await swiftxPhonePage({ types: () => false });
+  await absent.respond(swiftxSummary(), { method: 'POST', requestBody: swiftxRequest({ trackingNos: [swiftxNumber] }) });
+  await absent.capture.settle(2600);
+  assert.ok(absent.calls.length > 1 && absent.calls.every(([step]) => step === 'type'));
+  assert.equal(absent.capture.hasResponse(), true);
+  assert.equal((await absent.capture.drain()).capturedResponses.length, 1);
+  // A button that went away after typing ends the wait at once.
+  const gone = await swiftxPhonePage({ presses: () => false });
+  await gone.respond(swiftxSummary(), { method: 'POST', requestBody: swiftxRequest({ trackingNos: [swiftxNumber] }) });
+  const started = Date.now();
+  await gone.capture.settle(5000);
+  assert.ok(Date.now() - started < 1000);
+  assert.equal(gone.capture.hasResponse(), true);
+  assert.deepEqual(gone.calls.map(([step]) => step), ['type', 'press']);
+  // Too little time left: no typing at all.
+  const late = await swiftxPhonePage();
+  await late.respond(swiftxSummary(), { method: 'POST', requestBody: swiftxRequest({ trackingNos: [swiftxNumber] }) });
+  await late.capture.settle(2200);
+  assert.deepEqual(late.calls, []);
 });
 
 test('SwiftX reports a page that never asked for the number and a failed query', async () => {

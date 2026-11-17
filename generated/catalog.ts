@@ -53282,6 +53282,21 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "tracking": {
       "mode": "automatic",
       "adapter": "swiftx",
+      "requirements": [
+        {
+          "field": "phoneDigits",
+          "validator": "phoneLastFour",
+          "optional": true,
+          "showsMore": true,
+          "label": "Last 4 digits of the recipient's phone",
+          "type": "text",
+          "help": "SwiftX shows the scans only with the last four digits of the recipient's phone. Without them, other sources are asked.",
+          "pattern": "^[0-9]{4}$",
+          "maxLength": 4,
+          "inputMode": "numeric",
+          "autoComplete": "off"
+        }
+      ],
       "browser": true
     },
     "canaryUrl": "https://swiftx-express.com/",

@@ -142,6 +142,62 @@ export function swiftxSkipPhonePrompt({ number }) {
   return true;
 }
 
+/**
+ * The recipient's phone digits a lookup supplies in its address's fragment,
+ * which the browser never sends: null without a fragment, undefined for any
+ * other fragment.
+ */
+export function swiftxPhoneDigits(url) {
+  if (!url.hash) return null;
+  return /^#trawl-phone-digits=(\d{4})$/.exec(url.hash)?.[1];
+}
+
+/**
+ * Runs before the page's scripts in each document: the page and its
+ * analytics never read the digits from the address, only from its field.
+ */
+export function swiftxDropPhoneFragment() {
+  if (location.origin === 'https://swiftx-express.com' && /^#trawl-phone-digits=\d{4}$/.test(location.hash)) {
+    history.replaceState(history.state, '', location.pathname + location.search);
+  }
+}
+
+/**
+ * The page's own field for the last four digits of the recipient's phone, on
+ * its summary for the same whole number. Without `submit` it types the digits
+ * into the empty field; with it, it presses the page's button once the field
+ * holds them.
+ */
+export function swiftxEnterPhoneDigits({ number, digits, submit }) {
+  const url = new URL(location.href);
+  if (url.origin !== 'https://swiftx-express.com' || url.pathname !== '/track' || !/^\d{4}$/.test(digits)
+    || (url.hash && url.hash !== `#trawl-phone-digits=${digits}`)
+    || [...url.searchParams].length !== 1 || url.searchParams.get('trackingNumber') !== number) return false;
+  const visible = element => element.getBoundingClientRect().width > 0;
+  const numbers = [...document.querySelectorAll('textarea')];
+  const inputs = [...document.querySelectorAll('input[maxlength="4"]')].filter(visible);
+  if (numbers.length !== 1 || numbers[0].value.trim().toUpperCase() !== number || inputs.length !== 1) return false;
+  const [input] = inputs;
+  const buttons = [...input.parentElement?.querySelectorAll('button') ?? []];
+  if (input.disabled || buttons.length !== 1 || !visible(buttons[0]) || buttons[0].disabled
+    || !/^view full tracking$/i.test(buttons[0].textContent.trim())
+    || ![...input.labels ?? []].some(label => /\bphone\b/i.test(label.textContent))) return false;
+  // The summary card holding the field names the same whole number.
+  let card = input.parentElement;
+  while (card && ![...card.querySelectorAll('span')].some(element => element.textContent.trim() === number)) card = card.parentElement;
+  if (!card || card.contains(numbers[0])) return false;
+  if (submit) {
+    if (input.value !== digits) return false;
+    buttons[0].click();
+    return true;
+  }
+  if (input.value !== '') return false;
+  // The native setter and an input event, as typing does, so the page's own state holds the digits.
+  Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value').set.call(input, digits);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+}
+
 /** Observe before navigation; only the official UI obtains and submits verification. */
 export function attachSwiftxSlider(page, number, { signal: parent, solve = locateSwiftxSlider, onVerification = reportVerification } = {}) {
   const stopped = new AbortController();
@@ -150,7 +206,8 @@ export function attachSwiftxSlider(page, number, { signal: parent, solve = locat
   let current, generation = 0, verified = false, refusal, disposed = false, reads = 0;
   let deadline = 0, attempted = 0, seen = 0, running, watching, hasRequest = () => false, onRefusal;
   const started = Date.now();
-  let sawImage = false, prepared = false, phonePromptSkipped = false, puzzleType = 'none', outcome = 'not_seen', analysisOutcome = 'not_started';
+  let sawImage = false, prepared = false, phonePromptSkipped = false, phoneDigitsTried = false;
+  let puzzleType = 'none', outcome = 'not_seen', analysisOutcome = 'not_started';
   const remaining = () => Math.max(0, deadline - Date.now());
   const refused = value => { refusal = value; onRefusal?.(value); };
   const pending = new Set();
@@ -286,6 +343,30 @@ export function attachSwiftxSlider(page, number, { signal: parent, solve = locat
     }
   }
   return { dispose,
+    /**
+     * Type the recipient's digits into the page's field on its summary and
+     * press its button, once per page. `beforeSubmit` runs just before the
+     * press. Whether the page took them is its reply's to say.
+     */
+    async submitPhoneDigits(digits, budgetMs, beforeSubmit = () => {}) {
+      if (phoneDigitsTried || disposed || signal.aborted || !/^\d{4}$/.test(digits)) return false;
+      phoneDigitsTried = true;
+      const until = Date.now() + Math.max(0, budgetMs);
+      const left = () => until - Date.now();
+      const wait = () => new Promise(resolve => setTimeout(resolve, Math.max(0, Math.min(100, left()))));
+      const enter = async submit => {
+        try { return await page.evaluate(swiftxEnterPhoneDigits, { number, digits, submit }) === true; }
+        catch { return false; /* The page is navigating. */ }
+      };
+      let typed = false;
+      while (!disposed && !signal.aborted && left() > 0 && !(typed = await enter(false))) await wait();
+      if (!typed) return false;
+      // The page renders the typed digits before its button reads them.
+      await wait();
+      if (disposed || signal.aborted || left() <= 0) return false;
+      beforeSubmit();
+      return enter(true);
+    },
     async prepare(budgetMs, requested = () => false, retainRefusal) {
       prepared = true;
       deadline = Date.now() + Math.max(0, budgetMs - 1000);

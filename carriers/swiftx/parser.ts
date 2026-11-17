@@ -1,5 +1,5 @@
 import { normalizeTrackingNumber } from '../../core/detection/index.js';
-import { ChallengeError, IndeterminateError, InputRequiredError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError } from '../../core/errors/index.js';
+import { ChallengeError, IndeterminateError, InputRequiredError, InvalidInputError, NoHistoryError, NotFoundError, SchemaError, TransportError } from '../../core/errors/index.js';
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
 import { explicitOffsetTime } from '../../core/time/index.js';
@@ -47,6 +47,24 @@ export function normalizeSwiftxNumber(raw: string): string {
 export function swiftxTrackingUrl(raw: string): string {
   return `https://swiftx-express.com/track?trackingNumber=${normalizeSwiftxNumber(raw)}`;
 }
+
+/**
+ * The recipient's phone digits a lookup was given: the last four, as the
+ * tracker's own field takes them. Error messages never repeat them.
+ */
+export function swiftxPhoneDigits(raw: unknown): string | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  const digits = typeof raw === 'string' ? raw.trim() : undefined;
+  if (digits === '') return undefined;
+  if (digits !== undefined && /^\d{4}$/.test(digits)) return digits;
+  throw new InvalidInputError(PROVIDER, 'SwiftX takes the last four digits of the recipient\'s phone');
+}
+
+/**
+ * How a reply relates to the recipient's phone digits: the page sent them
+ * with its query, or the lookup had them and the page did not send them.
+ */
+export type SwiftxPhoneCheck = 'submitted' | 'unsent';
 
 /** The scan's wall clock with the offset the row gives for it. */
 function scanTime(stamp: unknown, offset: unknown): { iso: string; timestamp: number } {
@@ -101,9 +119,10 @@ interface Row { event: CarrierEvent & { time: string; description: string; provi
 /**
  * The tracker's reply for one number, read at `readAt`. Only a reply naming
  * the whole number counts, and only the tracker's own notice for it is a
- * missing parcel.
+ * missing parcel. `phone` says whether the reply answers the recipient's
+ * phone digits.
  */
-export function parseSwiftx(payload: unknown, raw: string, readAt = Date.now()): CarrierResult {
+export function parseSwiftx(payload: unknown, raw: string, readAt = Date.now(), phone?: SwiftxPhoneCheck): CarrierResult {
   const number = normalizeSwiftxNumber(raw);
   if (!isRecord(payload)) throw new SchemaError(PROVIDER);
   if (payload.errors !== undefined && payload.errors !== null) throw new IndeterminateError(PROVIDER, 'SwiftX answered its tracking query with an error');
@@ -119,8 +138,22 @@ export function parseSwiftx(payload: unknown, raw: string, readAt = Date.now()):
   if (!isRecord(info) || typeof info.success !== 'boolean') throw new SchemaError(PROVIDER);
   if (clean(info.trackingNo, 64).toUpperCase() !== number) throw new SchemaError(PROVIDER, 'SwiftX returned a different shipment');
   const list = info.trackingEventList;
-  if (info.success && info.unlockStatus === 'BASIC' && (list === null || (Array.isArray(list) && list.length === 0))) {
-    throw new InputRequiredError(PROVIDER, 'recipient verification', 'SwiftX withholds tracking history without recipient phone verification');
+  const withheld = list === null || (Array.isArray(list) && list.length === 0);
+  // The summary the page shows until the last four digits of the recipient's phone are given.
+  if (info.success && info.unlockStatus === 'BASIC' && (withheld || phone === 'submitted')) {
+    if (phone === 'submitted') {
+      // The page's own words: "We couldn't verify right now", as against "Digits don't match".
+      if (info.phoneCheckFailed === true) throw new IndeterminateError(PROVIDER, 'SwiftX could not check the recipient\'s phone digits');
+      throw new InputRequiredError(PROVIDER, 'phoneDigits', 'SwiftX did not accept the last four digits of the recipient\'s phone',
+        { reason: 'parcel_found' });
+    }
+    if (phone === 'unsent') throw new TransportError(PROVIDER, 'SwiftX\'s tracking page did not take the recipient\'s phone digits');
+    throw new InputRequiredError(PROVIDER, 'phoneDigits', 'SwiftX shows its scans only with the last four digits of the recipient\'s phone',
+      { reason: 'parcel_found' });
+  }
+  // A parcel SwiftX holds no phone for: the page shows the same summary, with no field, and sends the reader to the seller.
+  if (info.success && info.unlockStatus === 'NO_PHONE' && withheld) {
+    throw new NoHistoryError(PROVIDER, 'SwiftX shows only a summary for a parcel it holds no recipient phone for', { reason: 'listed' });
   }
   if (!info.success) {
     if (info.message === NOT_FOUND && (list === null || (Array.isArray(list) && list.length === 0))) throw new NotFoundError(PROVIDER);

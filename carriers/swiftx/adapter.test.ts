@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import { TrawlClient, type TrawlScrapeResponse } from '../../core/transport/trawl.js';
-import { adapter, normalizeSwiftxNumber, parseSwiftx, parseSwiftxCapture, swiftxTrackingUrl, SwiftxTracker, swiftxWording } from './adapter.js';
+import { adapter, normalizeSwiftxNumber, parseSwiftx, parseSwiftxCapture, swiftxPhoneDigits, swiftxTrackingUrl, SwiftxTracker, swiftxWording } from './adapter.js';
 import { SWIFTX_API } from './parser.js';
 import { statusMap, swiftxScanStage, swiftxStage } from './status.js';
 import statuses from './statuses.json' with { type: 'json' };
@@ -20,6 +20,7 @@ const fixture = (name: string) => JSON.parse(text(name)) as { data: { getOfficia
 const answer = (payload: ReturnType<typeof fixture>) => payload.data.getOfficialWebsiteTrackingInfoBatch.results[0]!;
 const reply = (overrides: Record<string, unknown> = {}) => ({ url: SWIFTX_API, status: 200, headers: {}, body: text('delivered'),
   truncated: false, base64Encoded: false, error: null, ...overrides });
+const catching = (run: () => unknown) => { try { run(); } catch (error) { return error; } throw new Error('expected an error'); };
 const page = (capturedResponses: unknown[]) => ({ url: swiftxTrackingUrl(DELIVERED), html: '', cookies: [], userAgent: null, tier: 3,
   statusCode: 200, capturedResponses, raw: {} }) as TrawlScrapeResponse;
 
@@ -37,7 +38,8 @@ describe('SwiftX tracking reply', () => {
   it('keeps a bound BASIC summary without scans as recipient input, not a challenge or missing parcel', () => {
     const basic = fixture('delivered');
     Object.assign(answer(basic), { unlockStatus: 'BASIC', trackingEventList: [] });
-    expect(() => parseSwiftx(basic, DELIVERED, READ_AT)).toThrow(expect.objectContaining({ kind: 'input_required', field: 'recipient verification' }));
+    expect(() => parseSwiftx(basic, DELIVERED, READ_AT)).toThrow(expect.objectContaining({ kind: 'input_required', field: 'phoneDigits',
+      reason: 'parcel_found' }));
     expect(() => parseSwiftx(basic, MOVING, READ_AT)).toThrow(expect.objectContaining({ kind: 'schema' }));
     answer(basic).trackingEventList = null as unknown as Record<string, unknown>[];
     expect(() => parseSwiftx(basic, DELIVERED, READ_AT)).toThrow(expect.objectContaining({ kind: 'input_required' }));
@@ -47,6 +49,42 @@ describe('SwiftX tracking reply', () => {
     const missing = fixture('not-found');
     answer(missing).unlockStatus = 'BASIC';
     expect(() => parseSwiftx(missing, UNKNOWN, READ_AT)).toThrow(expect.objectContaining({ kind: 'not_found' }));
+  });
+
+  it('reads the reply to the recipient\'s phone digits: scans, a refusal, an inconclusive check or digits the page never sent', () => {
+    expect(parseSwiftx(fixture('delivered'), DELIVERED, READ_AT, 'submitted')).toMatchObject({ status: 'delivered' });
+    expect(parseSwiftx(fixture('delivered'), DELIVERED, READ_AT, 'unsent')).toMatchObject({ status: 'delivered' });
+    const basic = fixture('delivered');
+    Object.assign(answer(basic), { unlockStatus: 'BASIC', trackingEventList: [], phoneCheckFailed: null });
+    const refused = (error: unknown) => {
+      expect(error).toMatchObject({ kind: 'input_required', field: 'phoneDigits', reason: 'parcel_found' });
+      expect((error as Error).message).toMatch(/did not accept/);
+    };
+    refused(catching(() => parseSwiftx(basic, DELIVERED, READ_AT, 'submitted')));
+    // A summary that still carries scans after the digits is a refusal too.
+    const partial = fixture('delivered');
+    answer(partial).unlockStatus = 'BASIC';
+    refused(catching(() => parseSwiftx(partial, DELIVERED, READ_AT, 'submitted')));
+    expect(parseSwiftx(partial, DELIVERED, READ_AT, 'unsent')).toMatchObject({ history_truncated: true });
+    expect(() => parseSwiftx(basic, DELIVERED, READ_AT, 'unsent')).toThrow(expect.objectContaining({ kind: 'transport' }));
+    answer(basic).phoneCheckFailed = true;
+    expect(() => parseSwiftx(basic, DELIVERED, READ_AT, 'submitted')).toThrow(expect.objectContaining({ kind: 'indeterminate', name: 'IndeterminateError' }));
+    // A parcel SwiftX holds no phone for shows the summary without a field.
+    const noPhone = fixture('delivered');
+    Object.assign(answer(noPhone), { unlockStatus: 'NO_PHONE', trackingEventList: null });
+    for (const phone of [undefined, 'submitted', 'unsent'] as const) {
+      expect(() => parseSwiftx(noPhone, DELIVERED, READ_AT, phone)).toThrow(expect.objectContaining({ name: 'NoHistoryError', reason: 'listed' }));
+    }
+  });
+
+  it('takes only the last four digits of the recipient\'s phone and never repeats them', () => {
+    expect(swiftxPhoneDigits(' 0042 ')).toBe('0042');
+    for (const empty of [undefined, null, '', '  ']) expect(swiftxPhoneDigits(empty)).toBeUndefined();
+    for (const raw of ['042', '00042', '00 42', '+0042', '004a', 42]) {
+      const error = catching(() => swiftxPhoneDigits(raw));
+      expect(error, String(raw)).toMatchObject({ kind: 'invalid_input' });
+      expect((error as Error).message).not.toContain('42');
+    }
   });
 
   it('reads a delivered parcel newest first on each site\'s own offset, with towns only at SwiftX sites', () => {
@@ -152,6 +190,36 @@ describe('SwiftX tracking reply', () => {
 });
 
 describe('SwiftX browser capture', () => {
+  it('reads the reply to the supplied phone digits, or says the page never sent them', () => {
+    const basic = fixture('delivered');
+    Object.assign(answer(basic), { unlockStatus: 'BASIC', trackingEventList: [] });
+    const summary = reply({ body: JSON.stringify(basic) });
+    expect(parseSwiftxCapture(page([summary, reply({ phoneDigitsSubmitted: true })]), DELIVERED, READ_AT, true)).toMatchObject({ status: 'delivered' });
+    // A later reply without the digits does not replace the one that answers them.
+    expect(parseSwiftxCapture(page([summary, reply({ phoneDigitsSubmitted: true }), summary]), DELIVERED, READ_AT, true)).toMatchObject({ status: 'delivered' });
+    expect(() => parseSwiftxCapture(page([summary, { ...summary, phoneDigitsSubmitted: true }]), DELIVERED, READ_AT, true))
+      .toThrow(expect.objectContaining({ kind: 'input_required', field: 'phoneDigits' }));
+    expect(() => parseSwiftxCapture(page([summary]), DELIVERED, READ_AT, true)).toThrow(expect.objectContaining({ kind: 'transport' }));
+    expect(() => parseSwiftxCapture(page([summary]), DELIVERED, READ_AT)).toThrow(expect.objectContaining({ kind: 'input_required', field: 'phoneDigits' }));
+    // A full first reply needs no digits.
+    expect(parseSwiftxCapture(page([reply()]), DELIVERED, READ_AT, true)).toMatchObject({ status: 'delivered' });
+  });
+
+  it('gives the browser service the digits only in the address\'s fragment and refuses malformed ones before any request', async () => {
+    const scrape = vi.fn().mockResolvedValue(page([reply({ phoneDigitsSubmitted: true })]));
+    const trawl = { scrape } as unknown as TrawlClient;
+    await expect(new SwiftxTracker({ trawl }).fetch(DELIVERED, { budgetMs: 40_000 }, ' 0042 ')).resolves.toMatchObject({ status: 'delivered' });
+    expect(scrape.mock.calls[0]![0]).toMatchObject({ url: `https://swiftx-express.com/track?trackingNumber=${DELIVERED}#trawl-phone-digits=0042` });
+    await expect(new SwiftxTracker({ trawl }).fetch(DELIVERED, { budgetMs: 40_000 }, '42')).rejects.toMatchObject({ kind: 'invalid_input' });
+    expect(scrape).toHaveBeenCalledOnce();
+    scrape.mockClear();
+    const environment = { trawl, fetcher: vi.fn(), browserExecutablePath: null, env: {} } as never;
+    await adapter(environment).track({ number: DELIVERED, phoneDigits: '0042' }, { budgetMs: 40_000 });
+    expect(scrape.mock.calls[0]![0].url).toMatch(/#trawl-phone-digits=0042$/);
+    await adapter(environment).track({ number: DELIVERED }, { budgetMs: 40_000 });
+    expect(scrape.mock.calls[1]![0].url).not.toContain('#');
+  });
+
   it('reads the newest captured reply and keeps refusals, rate limits and gaps distinct', () => {
     const stale = reply({ body: text('not-found') });
     expect(parseSwiftxCapture(page([stale, reply()]), DELIVERED, READ_AT)).toMatchObject({ status: 'delivered' });
