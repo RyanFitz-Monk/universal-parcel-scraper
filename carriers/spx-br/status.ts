@@ -58,6 +58,9 @@ const FLEET: ReadonlyMap<string, Stage> = new Map(([
   ['LMHub_LHUnloading', 'in_transit'], ['LMHub_LHUnloaded', 'in_transit'], ['LMHub_Received', 'in_transit'], // F599.
   // The same unloading at a delivery point (an XPT) the delivery leaves from, without its received scan.
   ['Hub_LHUnloading', 'in_transit'], ['Hub_LHUnloaded', 'in_transit'],
+  // A courier takes the parcel from the last-mile hub to a service point and hands it over ("Pacote entrege"):
+  // the page's milestones stay at sorting, before the courier's delivery and the delivery.
+  ['Transporting_to_sp', 'in_transit'], ['Transported_to_sp', 'in_transit'],
   ['Delivering', 'out_for_delivery'], // F600.
   ['Delivered', 'delivered'], // F980.
   ['3PL_Delivered', 'delivered'], // Delivered by the partner carrier SPX handed the parcel to after its sorting centre.

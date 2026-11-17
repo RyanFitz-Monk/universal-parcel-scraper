@@ -593,6 +593,24 @@
       "note": "Fleet feed: paired with F980. The line names who took the parcel after it, which is dropped."
     },
     {
+      "code": "Transporting_to_sp",
+      "wording": "Pacote coletado pelo transportador.",
+      "language": "pt",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-06",
+      "note": "Fleet feed: a courier collects the parcel at the last-mile hub for a service point. The page's milestones stay at sorting."
+    },
+    {
+      "code": "Transported_to_sp",
+      "wording": "Pacote entrege",
+      "language": "pt",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-06",
+      "note": "Fleet feed: the hand-over at the service point. The page's milestones stay at sorting, before the courier's delivery and the delivery."
+    },
+    {
       "code": "3PL_Delivered",
       "wording": "Pacote foi entregue",
       "language": "pt",

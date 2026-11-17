@@ -375,6 +375,13 @@ describe('SPX Express Brazil HTTP adapter', () => {
     fleet.data.tracking_list = [fleet.data.tracking_list[2]!,
       { timestamp: 1_779_090_000 + 86_401, status: 'SOC_Received', message: '[SoC_SP_Cidade Exemplo] Seu pacote foi recebido pelo centro de triagem' }];
     expect(parseSpxBrFleet(fleet, 'BR2600000000045').events!.map((event) => event.provider_code)).toEqual(['SOC_Received', 'SOC_LHUnloading']);
+    // The hand-over at a service point is no delivery: the page's milestones stay at sorting.
+    fleet.data.tracking_list = [
+      { timestamp: 1_779_150_100, status: 'Transported_to_sp', message: 'Pacote entrege' },
+      { timestamp: 1_779_150_000, status: 'Transporting_to_sp', message: 'Pacote coletado pelo transportador.' },
+    ];
+    expect(parseSpxBrFleet(fleet, 'BR2600000000045')).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map',
+      last_status_text: 'Pacote entrege', events: [{ provider_code: 'Transported_to_sp', stage: 'in_transit' }, { provider_code: 'Transporting_to_sp', stage: 'in_transit' }] });
     // A partner carrier's delivery, with its code first and no receiver's name.
     fleet.data.tracking_list = [{ timestamp: 1_779_200_000, status: '3PL_Delivered', message: '[00000] Pacote foi entregue a ' }];
     expect(parseSpxBrFleet(fleet, 'BR2600000000045')).toMatchObject({ current_stage: 'delivered', current_stage_source: 'carrier_map',
