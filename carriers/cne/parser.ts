@@ -34,6 +34,10 @@ const WORDING: Readonly<Record<string, Stage>> = {
   'Handled by local carrier': 'in_transit',
   // DHL's sort in Germany as CNE relays it after the hand-over, under its shipping code.
   'The shipment has been processed in the parcel center of origin.': 'in_transit',
+  // CTT Express's statuses in Spain as CNE relays them, "label,explanation": its pre-advice, which comes
+  // mid-journey while CNE still carries the parcel, the despatch, the delivery round and the delivery.
+  'Pendiente de recepción en CTT Express': 'in_transit', Enviado: 'in_transit', 'En reparto': 'out_for_delivery',
+  Entregado: 'delivered',
 };
 // CNE capitalises the same labels differently ("Arrived At" and "Arrived at").
 const WORDING_ANY_CASE: ReadonlyMap<string, Stage> = new Map(Object.entries(WORDING).map(([wording, stage]) => [wording.toLowerCase(), stage]));
@@ -83,13 +87,15 @@ function scanClock(value: string, label: string): { time?: string; local_time?: 
   return value ? { provider_time_text: value } : {};
 }
 
-// Last-mile partners write "label；explanation".
+// Last-mile partners write "label；explanation", and CTT Express "label,explanation".
 const labelOf = (description: string) => description.split('；')[0]!.trim() || description;
+const commaLabelOf = (description: string) => description.split(',')[0]!.trim();
 
 export function cneScanStage(description: string, code: string): { stage: Stage; source: string } | undefined {
   // The explanation can announce a later step ("It will be out for delivery"), so only the label is read.
   const label = labelOf(description);
-  const exact = WORDING_ANY_CASE.get(description.toLowerCase()) ?? WORDING_ANY_CASE.get(label.toLowerCase());
+  const exact = WORDING_ANY_CASE.get(description.toLowerCase()) ?? WORDING_ANY_CASE.get(label.toLowerCase())
+    ?? WORDING_ANY_CASE.get(commaLabelOf(description).toLowerCase());
   if (exact) return { stage: exact, source: 'carrier_map' };
   const worded = classifyWording(label, 'pending');
   // CNE codes a partner's acceptance or pre-advice after the hand-off as

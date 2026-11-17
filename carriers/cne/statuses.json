@@ -133,6 +133,38 @@
       "note": "DHL's sort in Germany relayed after the hand-over, coded 2 (Shipping)."
     },
     {
+      "wording": "Pendiente de recepción en CTT Express",
+      "language": "es",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "CTT Express's pre-advice relayed with its explanation after a comma, without a CNE code, two weeks before CTT Express's despatch: CNE still carries the parcel, so it is not read as the start of the journey. The shared rules read the explanation's \"entregaremos\" as a lost parcel."
+    },
+    {
+      "wording": "Enviado",
+      "language": "es",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "CTT Express's despatch relayed with its explanation after a comma, coded 2 (Shipping). The shared rules read the explanation's \"entregaremos\" as a lost parcel."
+    },
+    {
+      "wording": "En reparto",
+      "language": "es",
+      "stage": "out_for_delivery",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "CTT Express's delivery round relayed with its explanation after a comma, coded 2 (Shipping)."
+    },
+    {
+      "wording": "Entregado",
+      "language": "es",
+      "stage": "delivered",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "CTT Express's delivery relayed with its explanation after a comma, coded 3 (Delivered)."
+    },
+    {
       "wording": "The shipment is picked up by customs broker",
       "language": "en",
       "stage": "customs",

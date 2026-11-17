@@ -102,6 +102,17 @@ describe('CNE response projection', () => {
       payload.trackingEventList.push({ date: '2026-02-11 09:00:00', details, place: 'Example City', state: '2' });
       expect(parseCne(payload, HANDOFF_NUMBER).events?.[0]).toMatchObject({ stage: 'in_transit', stage_source: 'carrier_map' });
     }
+    // CTT Express's statuses in Spain, "label,explanation", whose explanation the shared rules must not read.
+    for (const [details, state, stage] of [
+      ['Pendiente de recepción en CTT Express,Ya tenemos todos los detalles de tu envío. Te lo entregaremos muy pronto.', '', 'in_transit'],
+      ['Enviado,Te entregaremos tu envío lo antes posible.', '2', 'in_transit'],
+      ['En reparto,Tu envío está en reparto, se entregará en el día de hoy.', '2', 'out_for_delivery'],
+      ['Entregado,Ya hemos entregado tu envío. ¿Qué te ha parecido nuestro servicio?', '3', 'delivered'],
+    ] as const) {
+      const relayed = handoffFixture();
+      relayed.trackingEventList.push({ date: '2026-02-11 09:00:00', details, place: '', state });
+      expect(parseCne(relayed, HANDOFF_NUMBER).events?.[0], details).toMatchObject({ stage, stage_source: 'carrier_map' });
+    }
     // The courier takes the parcel out under CNE's shipping code.
     const out = handoffFixture();
     out.trackingEventList.push({ date: '2026-02-11 08:00:00', details: 'Your shipment is out for delivery', place: 'Example City', state: '2' });
