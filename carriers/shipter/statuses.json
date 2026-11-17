@@ -9,6 +9,7 @@
     {"wording":"Arrived at destination airport","language":"en","stage":"in_transit","confirmedBy":"live","note":"The flight's arrival, after the departure from the origin airport."},
     {"wording":"Arrived at destination","language":"en","stage":"in_transit","confirmedBy":"live","note":"After the collection from the destination airport's terminal, before the delivery partner's scans."},
     {"wording":"Collected from airport terminal","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-13","note":"The parcel taken from the cargo terminal a day after the flight's arrival, on its way to the last mile."},
+    {"wording":"In transit","language":"en","stage":"in_transit","confirmedBy":"live","firstSeen":"2026-11-16","note":"Shipter's own move after the arrival at destination, before the delivery partner's scans."},
     {"wording":"Parcel received in processing centre (…)","language":"en","stage":"in_transit","confirmedBy":"live","note":"The processing hub is variable."},
     {"wording":"Parcel depart from … depot","language":"en","stage":"in_transit","confirmedBy":"live","note":"The departure depot is variable."},
     {"wording":"The item is ready for shipment…","language":"en","stage":"in_transit","confirmedBy":"live","note":"A partner's dispatch row after processing at its hub; the appended hub name is variable."},
