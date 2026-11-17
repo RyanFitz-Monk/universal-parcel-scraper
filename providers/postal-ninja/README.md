@@ -109,11 +109,15 @@ capture failure.
   clock, and so do the label's creation and the processing record without a place, which PostNL
   stamps in UTC to the minute and Postal Ninja relays in PostNL's words. A stamp to the second
   that falls on a whole minute is written back like PostNL's local scans: Postal Ninja's `dt`
-  has none of the fraction digits that mark it in PostNL's feed.
+  has none of the fraction digits that mark it in PostNL's feed. On a Spring GDS item Postal
+  Ninja names some of those scans "PostNL", an hour ahead alike, and they are written back the
+  same way. Their customs stamps come with their UTC digits, as ParcelsApp gives them: read on
+  Amsterdam's clock, the pre-declaration came an hour before PostNL's own. On a lookup for
+  PostNL itself, its scans keep their digits.
   Cainiao's scans keep its feed's wall clock, each at its site's, as Cainiao's own offsets
   showed on two parcels. Its steps in China, from the seller's to the departing flight, are
   read on China's clock by their wording ([shared with ParcelsApp](../../carriers/aliexpress/clock.ts)),
-  whatever the parcel's carrier: read on the Zurich clock routing passes for a Swiss Post
+  with the sorting centre's town in brackets before some, whatever the parcel's carrier: read on the Zurich clock routing passes for a Swiss Post
   item, they came six hours late. Its later scans, on the transit hub's or the
   destination's clock, borrow no zone from them.
 - A fixed or network clock places its service's scans in any history. A local clock

@@ -32,7 +32,8 @@ export const CAINIAO_CHINA_LEG: readonly string[] = [
 ];
 
 // Postal Ninja follows the step's wording with the scan's own text: "… by the warehouse. Order received successfully".
-const CHINA_LEG = new RegExp(`^(?:${CAINIAO_CHINA_LEG.join('|')})(?:\\.\\s.*)?$`, 'is');
+// Cainiao names the sorting centre's town before some, in brackets: "[Town] Package not accepted by sorting center".
+const CHINA_LEG = new RegExp(`^(?:\\[[^[\\]]{1,60}\\]\\s*)?(?:${CAINIAO_CHINA_LEG.join('|')})(?:\\.\\s.*)?$`, 'is');
 
 /** Whether a Cainiao scan's wording, or the step's wording before the scan's own text, names a step of its leg in China. */
 export function cainiaoInChina(wording: string): boolean {

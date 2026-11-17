@@ -35,6 +35,7 @@ import { countryName, militaryPostOffice } from '../../places/trackingLocation.j
 import { countryZones, hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
 import { captureFailure, capturedBodies, loadCapture, type CaptureSpec } from '../shared/capture.js';
 import { CAINIAO_CHINA_LEG, CAINIAO_CHINA_ZONE } from '../../carriers/aliexpress/clock.js';
+import { POSTNL_CUSTOMS_STAMP } from '../../carriers/spring-gds/clock.js';
 import { chinaPostEnglish, chinaPostLabelPlace } from '../../carriers/china-post/status.js';
 import { correosDeMexicoForeignClock } from '../../carriers/correos-de-mexico/clock.js';
 import { correosOriginZone } from '../../carriers/correos-spain/clock.js';
@@ -1360,8 +1361,6 @@ function russianPostExportCopy(carrier: string | undefined, status: string, date
     && /T\d{2}:\d{2}(?::00(?:\.0+)?)?$/.test(mislabeledWallTime(date) ?? '');
 }
 
-/** PostNL's customs stamps, which its own feed dates as UTC instants wherever it dates its other scans locally. */
-const POSTNL_CUSTOMS_STAMP = /^(?:pre-declaration of the item has been received|item is cleared|duties and taxes confirmed) by customs$/i;
 
 /**
  * The zone a scan's carrier gives it wherever it was: null for a date that is

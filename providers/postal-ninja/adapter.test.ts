@@ -210,6 +210,21 @@ describe('Postal Ninja result parsing', () => {
       'Europe/Amsterdam'))).toEqual(['2026-11-13T14:18:00.000Z']);
   });
 
+  it('reads PostNL\'s scans it names PostNL on a Spring GDS item back on their own clock, and keeps the UTC digits of their customs stamps', () => {
+    // The pre-advice at 09:25 Dutch time came at 10:25, the readiness at 11:25 at 12:25; the pre-declaration at 12:37:33Z at 12:37:33.
+    const scans = [
+      { ds: 'PostNL', dt: '2026-03-04T10:25:00', dsc: 'The item is pre-advised to PostNL' },
+      { ds: 'PostNL', dt: '2026-03-04T12:25:00', dsc: 'The item is ready for shipment' },
+      { ds: 'PostNL', dt: '2026-03-04T12:37:33', dsc: 'Pre-declaration of the item has been received by customs', loc: 'Netherlands' },
+    ];
+    const parsed = parsePostalNinjaResponse(withEvents(scans), number, 'Europe/Amsterdam', 'spring-gds');
+    expect(times(parsed)).toEqual(['2026-03-04T12:37:33.000Z', '2026-03-04T10:25:00.000Z', '2026-03-04T08:25:00.000Z']);
+    expect(parsed.events?.map((scan) => scan.time_zone ?? null)).toEqual([null, 'Europe/Amsterdam', 'Europe/Amsterdam']);
+    // On a lookup for PostNL itself they keep their digits.
+    expect(times(parsePostalNinjaResponse(withEvents(scans), number, 'Europe/Amsterdam', 'postnl')))
+      .toEqual(['2026-03-04T11:37:33.000Z', '2026-03-04T11:25:00.000Z', '2026-03-04T09:25:00.000Z']);
+  });
+
   it('keeps the instant of PostNL\'s label and processing record through Spring GDS, which PostNL stamps in UTC to the minute', () => {
     // The label's 18:13Z came at 19:13 on Amsterdam's clock, the processing record's 09:58Z in July at 11:58.
     const scans = [
@@ -243,6 +258,9 @@ describe('Postal Ninja result parsing', () => {
       '2026-08-10T07:00:00.000Z', '2026-08-08T13:09:00.000Z', '2026-08-07T21:07:00.000Z', '2026-08-07T14:30:00.000Z',
       '2026-08-06T08:39:00.000Z', '2026-08-05T15:37:10.000Z', '2026-08-05T08:46:11.000Z',
     ]);
+    // Cainiao names the sorting centre's town before some steps in China, in brackets.
+    expect(times(parsePostalNinjaResponse(postal(item, 'CH', [{ ds: 'Cainiao', dt: '2026-08-05T10:31:23',
+      dsc: '[Example Town] Package not accepted by sorting center' }]), item, 'Europe/Zurich', 'swiss-post'))).toEqual(['2026-08-05T02:31:23.000Z']);
     // Without a zone from routing, the step in China keeps its clock and the later scan its wall time.
     expect(times(parsePostalNinjaResponse(postal(item, 'CH', reply.track.events.slice(4, 6)), item))).toEqual([
       'local 2026-08-08T15:09:00', '2026-08-07T21:07:00.000Z',

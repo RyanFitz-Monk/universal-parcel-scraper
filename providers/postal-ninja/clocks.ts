@@ -9,6 +9,7 @@
  * a guess, or keep their wall time.
  */
 import { CAINIAO_CHINA_ZONE, cainiaoInChina } from '../../carriers/aliexpress/clock.js';
+import { POSTNL_CUSTOMS_STAMP } from '../../carriers/spring-gds/clock.js';
 import { swissPostDestinationZone } from '../../carriers/swiss-post/clock.js';
 import { uspsMailerLabel, uspsScanZone } from '../../carriers/usps/clock.js';
 import { CARRIER_DEFINITIONS } from '../../core/catalog/definitions.js';
@@ -80,6 +81,13 @@ const BERLIN = 'Europe/Berlin';
  * name no place, and Postal Ninja relays their wording.
  */
 const AMSTERDAM_UTC_READINGS = 'Spring GDS';
+/**
+ * On a Spring GDS item Postal Ninja also names PostNL's scans from that feed "PostNL", an hour ahead
+ * alike: the pre-advice at 09:25 Dutch time came at 10:25. Their customs stamps, which the feed dates
+ * to the fraction of a second in UTC, come with their UTC digits, as ParcelsApp gives them: the
+ * pre-declaration at 12:37:33Z came at 12:37:33.
+ */
+const POSTNL = 'PostNL';
 const AMSTERDAM = 'Europe/Amsterdam';
 const TO_THE_MINUTE = /T\d{2}:\d{2}(?::00(?:\.0+)?)?$/;
 const POSTNL_UTC_RECORDS = /^(?:the shipping label has been created|the item is being processed)[.!]?$/i;
@@ -94,15 +102,18 @@ function berlinCopyZone(service: string, location: string): string | null {
  * A scan's `dt` as its service's wall clock: without the UTC suffix Postal
  * Ninja writes on some, DHL Germany's copies at a European office back on
  * that office's clock, and PostNL's local scans through Spring GDS back in
- * UTC; the `dt` itself otherwise.
+ * UTC; the `dt` itself otherwise. A PostNL customs stamp on a Spring GDS
+ * item is its UTC instant instead.
  */
-export function wallClock(service: string, dt: string, location = '', description = ''): string {
+export function wallClock(service: string, dt: string, location = '', description = '', carrier: string | null = null): string {
   if (berlinCopyZone(service, location)) {
     const written = DateTime.fromISO(dt, { zone: 'UTC' });
     if (written.isValid) return written.setZone(BERLIN).toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
+  const postnlCopy = service === POSTNL && carrier === 'spring-gds';
+  if (postnlCopy && POSTNL_CUSTOMS_STAMP.test(description.trim()) && !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(dt)) return `${dt}Z`;
   const utcRecord = !location.trim() && POSTNL_UTC_RECORDS.test(description.trim());
-  if (service === AMSTERDAM_UTC_READINGS && TO_THE_MINUTE.test(dt) && !utcRecord) {
+  if ((service === AMSTERDAM_UTC_READINGS || postnlCopy) && TO_THE_MINUTE.test(dt) && !utcRecord) {
     const shown = firstOccurrence(DateTime.fromISO(dt, { zone: AMSTERDAM }));
     if (shown.isValid) return shown.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
