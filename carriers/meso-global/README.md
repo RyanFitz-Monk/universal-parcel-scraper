@@ -27,7 +27,9 @@ The tracker answers plain HTTP only. No account, key, cookie, CAPTCHA or browser
   tracker can write that row again with another link. That is one scan, and the copy the reply
   lists as the older one stays.
 - Scan times are wall clocks without an offset on the platform's Beijing clock and are read on
-  it; a row dated after the lookup is held back.
+  it; a row dated after the lookup is held back. DHL's rows from Germany and Austria are on it
+  too: the platform wrote some of them an hour after their clock, before that clock read on
+  Europe's time would have come.
 - 17TRACK names the forwarder Meso-global, and its Chinese name 中际跨境; both are names here.
 
 ## Limitations
