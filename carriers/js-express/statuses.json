@@ -9,6 +9,7 @@
     {"wording": "Item outbound in sorting center.", "stage": "in_transit", "language": "en", "confirmedBy": "live"},
     {"wording": "Domestic allocation has begun", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "At JS Express's Chinese warehouse, after the outbound sorting scan and before the departure from origin."},
     {"wording": "Under domestic allocation", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "The step after the allocation began, still before the departure from origin."},
+    {"code": "OIT", "wording": "Domestic allocation has been completed.", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The allocation's end, two days after the step under way and before the departure from origin."},
     {"wording": "Item departed from origin.", "stage": "in_transit", "language": "en", "confirmedBy": "live"},
     {"code": "OIT", "wording": "Arrived at export center", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-12", "note": "The export centre in China, after the departure from origin and before the port of departure."},
     {"code": "OIT", "wording": "Exports Center Sorting and Packing", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-12", "note": "The same export centre sorting and packing the parcel for its departure."},

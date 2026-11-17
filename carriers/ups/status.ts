@@ -130,7 +130,7 @@ const ACTIVITY_STAGES: ReadonlyMap<string, Stage> = new Map<string, Stage>([
   // Delivered, including collection from an access point and delivery by the
   // post office after a hand-off.
   ['9E', 'delivered'], ['FS', 'delivered'], ['KB', 'delivered'], ['KD', 'delivered'], ['KE', 'delivered'],
-  ['2W', 'delivered'], ['YC', 'delivered'],
+  ['2W', 'delivered'], ['YC', 'delivered'], ['8Q', 'delivered'],
 ]);
 
 /** Duties or taxes due and the parcel held until the receiver pays them, and the importer's identification number awaited. */

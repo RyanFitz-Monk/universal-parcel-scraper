@@ -28,6 +28,10 @@
     {"wording": "Electronic notification of order creation received.", "language": "en", "stage": "registered", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "Another line's order row, beside the platform's: the shop's order data, before the line has the parcel."},
     {"wording": "Item has been collected", "language": "en", "stage": "accepted", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "That line's first scan, hours after the parcel left SXW's operation centre: the line collected it, as \"Parcel picked up\" reads on SXW's other line."},
     {"wording": "Item inbound in sorting center.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-15", "note": "That line's sorting centre, after the collection."},
-    {"wording": "Item outbound in sorting center.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-15", "note": "Leaving that line's sorting centre."}
+    {"wording": "Item outbound in sorting center.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-15", "note": "Leaving that line's sorting centre."},
+    {"wording": "Domestic allocation has begun", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "That line's step after its outbound sorting scan, before the departure from origin."},
+    {"wording": "Under domestic allocation", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The next step of the same line, as JS Express, which relays the same line, shows it: still before the departure from origin."},
+    {"wording": "Domestic allocation has been completed.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The allocation's end on the same line, as JS Express shows it, before the departure from origin."},
+    {"wording": "Item departed from origin.", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "The same line's departure from origin, as JS Express shows it."}
   ]
 }

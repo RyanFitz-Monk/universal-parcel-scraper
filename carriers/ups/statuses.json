@@ -78,6 +78,7 @@
     { "code": "KE", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-09", "note": "actCode: \"DELIVERED\", seen on a Ground Saver parcel UPS delivered itself." },
     { "code": "2W", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-07", "note": "actCode: \"DELIVERED\" after the receiver collected the parcel from an access point." },
     { "code": "YC", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-10-09", "note": "actCode: \"Package delivered by local post office\", USPS's delivery after LX." },
+    { "code": "8Q", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "actCode: \"DELIVERED\", the scan that closed a delivery round hours after OT." },
     { "wording": "Return to Sender", "language": "en", "stage": "returned", "confirmedBy": "prior-art", "firstSeen": "2026-09-12", "note": "Adapter result status: exception." },
     { "wording": "Returned", "language": "en", "stage": "returned", "confirmedBy": "prior-art", "firstSeen": "2026-09-12", "note": "Adapter result status: exception." },
     { "wording": "Delivery Attempted", "language": "en", "stage": "failed_attempt", "confirmedBy": "prior-art", "firstSeen": "2026-09-12", "note": "Adapter result status: exception." },
