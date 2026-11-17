@@ -424,6 +424,30 @@
       "confirmedBy": "live",
       "firstSeen": "2026-11-17",
       "note": "\"Le destinataire est informé par SMS (or par e-mail) du report de sa livraison\", hours after the round's scan: the delivery is put off, without saying whether the recipient asked or the round failed, so the parcel waits in the network."
+    },
+    {
+      "wording": "n a pas pu etre realisee",
+      "language": "fr",
+      "stage": "failed_attempt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "\"Votre livraison n'a pas pu être réalisée ce jour, elle est reprogrammée au prochain jour ouvré\", hours after the round's scan: the round did not deliver. The result status becomes exception."
+    },
+    {
+      "wording": "de la nécessité de reprogrammer sa livraison",
+      "language": "fr",
+      "stage": null,
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "\"Le destinataire est informé par e-mail de la nécessité de reprogrammer sa livraison\", minutes after the round that did not deliver: a notice to the recipient, which keeps the stage of the scan before it."
+    },
+    {
+      "wording": "a programme une nouvelle livraison",
+      "language": "fr",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "\"Les instructions de livraison ont bien été prises en compte. Le destinataire a programmé une nouvelle livraison à son adresse pour le <day>\": the recipient booked a new day, which is read as the expected delivery while the booking is the newest recognized row."
     }
   ]
 }

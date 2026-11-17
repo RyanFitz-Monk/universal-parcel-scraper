@@ -222,6 +222,33 @@ describe('DPD France rendered tracking', () => {
     expect(statusMap.stage(null, normalizeStatusWording('Le destinataire est informé par SMS du report de sa livraison'))).toBe('in_transit');
   });
 
+  it('reads a round that did not deliver, the notice to book again and the booked day', () => {
+    const rows: [string, string, string, string][] = [
+      ['05/03/2026', '17:43', 'Les instructions de livraison ont bien été prises en compte. Le destinataire a programmé une nouvelle livraison à son adresse pour le 09.03.2026', ''],
+      ['05/03/2026', '17:14', 'Le destinataire est informé par e-mail de la nécessité de reprogrammer sa livraison', ''],
+      ['05/03/2026', '17:02', "Votre livraison n'a pas pu être réalisée ce jour, elle est reprogrammée au prochain jour ouvré", 'Agence DPD de Exemple (998)'],
+      ['05/03/2026', '06:58', 'Votre colis est en cours de livraison', 'Agence DPD de Exemple (998)'],
+    ];
+    const booked = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: rows }), TEST_TRACKING_NUMBER);
+    expect(booked).toMatchObject({ status: 'in_transit', expected_delivery: '2026-03-09' });
+    expect(booked.events?.map((event) => [event.stage, event.stage_source])).toEqual([
+      ['in_transit', undefined], ['failed_attempt', 'none'], ['failed_attempt', undefined], ['out_for_delivery', undefined],
+    ]);
+    // Before the booking, the round that did not deliver is the parcel's state, with no day.
+    const failed = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: rows.slice(1) }), TEST_TRACKING_NUMBER);
+    expect(failed).toMatchObject({ status: 'exception', expected_delivery: null });
+    // A newer scan than the booking takes over, and with it the details block's day, if any.
+    const moved = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: [
+      ['09/03/2026', '07:10', 'Votre colis est en cours de livraison', 'Agence DPD de Exemple (998)'], ...rows,
+    ] }), TEST_TRACKING_NUMBER);
+    expect(moved.expected_delivery).not.toBe('2026-03-09');
+    const notice = normalizeStatusWording('Le destinataire est informé par e-mail de la nécessité de reprogrammer sa livraison');
+    expect(statusMap.stage(null, notice)).toBeUndefined();
+    expect(statusMap.gapNote?.(null, notice)).toMatch(/book the delivery again.*keeps the stage/);
+    expect(statusMap.stage(null, normalizeStatusWording(rows[2]![2]))).toBe('failed_attempt');
+    expect(statusMap.stage(null, normalizeStatusWording(rows[0]![2]))).toBe('in_transit');
+  });
+
   it('reads the driver\'s collection from the sender, beside the acceptance into the network, as accepted', () => {
     const result = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: [
       ['05/03/2026', '14:48', 'Votre colis a été pris en charge dans notre réseau', 'Agence DPD de Exemple (998)'],

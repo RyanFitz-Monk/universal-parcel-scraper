@@ -8,10 +8,10 @@ import { runSteps } from '../../core/runner/index.js';
 import type { Stage } from '../../core/status/index.js';
 import { firstAttemptMs, networkRetryStep } from '../../core/runner/networkRetry.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
-import { zonedTime } from '../../core/time/index.js';
+import { calendarDay, zonedTime } from '../../core/time/index.js';
 import { clean, decodeText, fetchBounded, type TrawlClient } from '../../core/transport/index.js';
 import { isDeliveryStatusCell } from './identity.js';
-import { classifyStatus, comparableText, includesAny, isRecipientNotice } from './status.js';
+import { classifyStatus, comparableText, includesAny, isRebooking, isRecipientNotice } from './status.js';
 
 // Protocol provenance:
 // - DPD France publishes a server-rendered recipient page rather than a
@@ -76,6 +76,13 @@ function weightKg(value: string): number | null {
 function expectedDeliveryDate(value: string): string | null {
   const parsed = zonedTime(value, 'dd/MM/yyyy', TIMEZONE, { maxLength: 32 });
   return parsed ? parsed.iso.slice(0, 10) : null;
+}
+
+/** The recipient's booking names its day: "… a programmé une nouvelle livraison à son adresse pour le 09.03.2026". */
+function bookedDeliveryDate(description: string): string | null {
+  const value = comparableText(description);
+  const match = isRebooking(value) ? / pour le (\d{2}) (\d{2}) (\d{4})$/.exec(value) : null;
+  return match ? calendarDay(Number(match[3]), Number(match[2]), Number(match[1])) : null;
 }
 
 /**
@@ -234,7 +241,8 @@ export function parseDPDFranceTrackingHtml(html: string, rawTrackingNumber: stri
     const row = $(element);
     return { label: comparableText(row.find('strong').text()), value: row.find('.tdInfos').text() };
   });
-  const expectedDelivery = details
+  // A booking newer than every other recognized row names the day the recipient chose, over the details block's.
+  const expectedDelivery = (latest ? bookedDeliveryDate(latest.event.description ?? '') : null) ?? details
     .filter(({ label }) => includesAny(label, ['livraison prevue', 'date de livraison prevue']))
     .map(({ value }) => expectedDeliveryDate(value))
     .find(Boolean) ?? null;

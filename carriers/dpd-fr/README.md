@@ -59,8 +59,9 @@ non-2xx statuses are indeterminate.
 - Rule order matters: returns, then incidents, then delivery. "votre colis sera
   retourné à l'expéditeur" would otherwise match a delivery rule, and "nous
   avons reçu une réclamation" would look like movement.
-- "retard" maps to `failed_attempt`; "réclamation" and "enquête est ouverte" to
-  `exception`.
+- "retard" maps to `failed_attempt`, as does a round that did not deliver ("Votre livraison n'a
+  pas pu être réalisée ce jour, elle est reprogrammée au prochain jour ouvré"); "réclamation" and
+  "enquête est ouverte" to `exception`.
 - The notice that the recipient was told of the acceptance ("Le destinataire est informé par SMS
   de la prise en charge…") can come hours after a sort centre's scan, so it keeps the stage of the
   scan before it (`stage_source: 'none'`) and gives no result status; the acceptance's own row is
@@ -68,7 +69,9 @@ non-2xx statuses are indeterminate.
   livreur"), scanned beside it at the same instant. The round's own wording is "Le chauffeur a pris
   en charge…". The same-day delivery notice follows the round's scan and stays `out_for_delivery`.
   The notice of the delivery's current step ("… de l'étape actuelle de sa livraison") names no
-  step, so it also keeps the stage of the scan before it. The notice that the delivery is put off
+  step, so it also keeps the stage of the scan before it, as does the notice asking the recipient
+  to book the delivery again ("… de la nécessité de reprogrammer sa livraison"), which follows the
+  round that did not deliver. The notice that the delivery is put off
   ("… du report de sa livraison") names no reason, so it reads `in_transit`: the parcel waits in the
   network for its new day.
 - Unrecognized wording keeps the row with no `stage`; the result status comes
@@ -84,7 +87,9 @@ non-2xx statuses are indeterminate.
   have no point, and the depot's street address is never read.
 - Rows print naive `dd/MM/yyyy` + `HH:mm` in two cells, read in Europe/Paris.
   The planned delivery date is a calendar day, dropped once delivered or in
-  exception. `delivered_at` is the newest delivery row of a delivered parcel.
+  exception. When the newest recognized row is the recipient's booking of a new
+  day ("… a programmé une nouvelle livraison à son adresse pour le 09.03.2026"),
+  that day is the expected delivery, and the row is `in_transit`. `delivered_at` is the newest delivery row of a delivered parcel.
 - "Poids du colis" in the details block, when the page lists it, is the weight.
 
 ## Rejected approaches

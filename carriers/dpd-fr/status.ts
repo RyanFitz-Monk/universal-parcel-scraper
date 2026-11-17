@@ -48,9 +48,22 @@ function isStepNotice(value: string): boolean {
   return value.includes('de l etape actuelle de sa livraison');
 }
 
-/** A notice to the recipient that names no step of its own: of the acceptance, or of the delivery's current step. */
+/** The notice that the recipient was asked to book the delivery again, by its `comparableText` form. */
+function isRebookNotice(value: string): boolean {
+  return value.includes('de la necessite de reprogrammer sa livraison');
+}
+
+/** The recipient's booking of a new day, by its `comparableText` form. */
+export function isRebooking(value: string): boolean {
+  return value.includes('a programme une nouvelle livraison');
+}
+
+/**
+ * A notice to the recipient that names no step of its own: of the acceptance, of the delivery's current step, or
+ * that the delivery must be booked again, which follows the scan of the round that did not deliver.
+ */
 export function isRecipientNotice(value: string): boolean {
-  return isAcceptanceNotice(value) || isStepNotice(value);
+  return isAcceptanceNotice(value) || isStepNotice(value) || isRebookNotice(value);
 }
 
 export function classifyStatus(description: string): ClassifiedStatus {
@@ -79,6 +92,9 @@ export function classifyStatus(description: string): ClassifiedStatus {
     'livraison impossible',
     'n a pas pu etre livre',
     'tentative de livraison',
+    // "Votre livraison n'a pas pu être réalisée ce jour, elle est reprogrammée au prochain jour ouvré", hours after
+    // the round's scan: the round did not deliver.
+    'n a pas pu etre realisee',
     'retard',
     'prise de rendez vous necessaire',
   ])) return { status: 'exception', stage: 'failed_attempt' };
@@ -137,8 +153,10 @@ export function classifyStatus(description: string): ClassifiedStatus {
     'centre de tri',
     'en cours d acheminement',
     'colis en agence',
-    // The recipient booked a later day: the parcel waits in the network.
+    // The recipient booked a later day: the parcel waits in the network. The booking names the day, which the
+    // adapter reads as the expected delivery.
     'suite a une prise de rendez vous',
+    'a programme une nouvelle livraison',
     // The recipient told the delivery is put off, which names no reason, the recipient's own booking or a round
     // that could not deliver: either way the parcel waits in the network for its new day.
     'du report de sa livraison',
@@ -166,6 +184,7 @@ export const statusMap: CarrierStatusMap = {
     if (code) return undefined;
     const value = comparableText(wording);
     if (isAcceptanceNotice(value)) return 'The recipient told of the acceptance, which can come after the parcel moved on: it keeps the stage it had.';
+    if (isRebookNotice(value)) return 'The recipient asked to book the delivery again, after the round that did not deliver: it keeps the stage it had.';
     return isStepNotice(value) ? "The recipient told of the delivery's current step, during the round: it keeps the stage it had." : undefined;
   },
 };
