@@ -103575,6 +103575,17 @@
     ]
   },
   {
+    "input": "RR999999987MB",
+    "carrier": "unknown",
+    "confidence": "low",
+    "candidates": [
+      "chronopost"
+    ],
+    "asked": [
+      "chronopost"
+    ]
+  },
+  {
     "input": "RR999999987MI",
     "carrier": "unknown",
     "confidence": "low",
