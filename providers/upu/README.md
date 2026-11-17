@@ -44,7 +44,8 @@ curl --fail-with-body --max-time 15 \
   `EMI` "Final delivery".
 - The wire format differs from the documented examples: dates are WCF
   `/Date(ms+offset)/` strings and `State` is numeric. Stages come from known event codes.
-  `State` never proves delivery.
+  `State` never proves delivery. `EDX` "Import terminated" is an exception: the
+  destination ended the import, as after a customs refusal, and the item goes back or waits.
 - The WCF offset is not the event's zone: for one Finnish delivery it was an hour off
   Posti's own timestamp. ISO-shaped replies are treated the same way. The wall time is
   the office's clock: a Sydney office's was Australia Post's own instant on Sydney time.

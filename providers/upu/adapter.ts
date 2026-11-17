@@ -20,6 +20,8 @@ const STAGES: Record<string, Stage> = {
   EMA: 'accepted', EMB: 'in_transit', EMC: 'in_transit', EMD: 'in_transit',
   EDA: 'customs', EDB: 'customs', EDC: 'in_transit',
   EXA: 'customs', EXB: 'customs', EXC: 'in_transit', EMI: 'delivered',
+  // "Import terminated": the destination stopped the import, as after a customs refusal; the item goes back or is held.
+  EDX: 'exception',
 };
 
 /** The wall time: the wire offset was contradicted by a destination operator. */

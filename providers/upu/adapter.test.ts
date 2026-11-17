@@ -19,6 +19,12 @@ describe('UPU postal tracking', () => {
     expect(JSON.stringify(value)).not.toContain('PRIVATE');
   });
 
+  it('reads the destination ending the import as an exception', () => {
+    const value = parseUpuResponse(payload([scan(), scan('EDX', 'Import terminated', '/Date(1789289280000+0200)/')]), number);
+    expect(value.events?.[0]).toMatchObject({ provider_code: 'EDX', stage: 'exception', stage_source: 'carrier_map' });
+    expect(value.current_stage).toBe('exception');
+  });
+
   it('excludes predictions from history, status, estimates and freshness', () => {
     const value = parseUpuResponse(payload([scan(), scan('DLV', 'Estimated delivery', '2026-09-30T00:00:00Z')]), number);
     expect(value.events).toHaveLength(1);
