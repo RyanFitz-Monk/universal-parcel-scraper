@@ -40,17 +40,21 @@ const headers = (language: SwissPostLanguage) => ({
 const OUTAGE_REFRESH = /^\s*\d+(?:\.\d*)?\s*[;,]\s*(?:url\s*=\s*)?(["']?)https?:\/\/sorry\.post\.ch\/?\1\s*$/i;
 
 const REDIRECTS = [301, 302, 303, 307, 308];
+/** The tracker answers an unknown number with an empty list, so a missing page means the API moved. */
+const GONE = [404, 410];
 /** Swiss Post's page for planned maintenance, in any of its languages, where its services redirect while closed. */
 const MAINTENANCE_PAGE = /^https:\/\/www\.post\.ch\/[a-z]{2}\/pages\/maintenance\/?(?:[?#].*)?$/i;
 
 /**
  * One call to the API. It redirects only when Swiss Post sends its visitors elsewhere: to its
  * maintenance page, which says the service is closed, or anywhere else, which is no tracking answer.
+ * A missing page is no answer either: not a missing parcel.
  */
 async function swissPostReply(url: string, init: RequestInit, signal: AbortSignal | null | undefined, timeoutMs: number, fetcher: typeof fetch) {
   const reply = await fetchBounded(url, { ...init, signal }, {
-    provider: 'Swiss Post tracking', timeoutMs, fetcher, redirect: 'manual', allowHttpStatuses: REDIRECTS,
+    provider: 'Swiss Post tracking', timeoutMs, fetcher, redirect: 'manual', allowHttpStatuses: [...REDIRECTS, ...GONE],
   });
+  if (GONE.includes(reply.response.status)) throw new TransportError(PROVIDER, 'Swiss Post no longer serves this tracking call');
   if (!REDIRECTS.includes(reply.response.status)) return reply;
   let target = '';
   try { target = new URL(reply.response.headers.get('location') ?? '', url).href; } catch { /* no address */ }

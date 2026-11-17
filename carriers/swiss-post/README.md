@@ -19,9 +19,11 @@ time left, so the retry fits in the rest.
 
 1. `GET ?mailpieceId={number}&includeAvailableServices=false` searches the number
    and returns `mailpieces`, each item's summary with its `mailpieceKey`. The
-   trailing slash before the query is required. An empty list is the clean not-found.
+   trailing slash before the query and `Accept-Language` are required. An empty
+   list is the clean not-found; HTTP 404 means the API moved, a transport failure.
 2. `GET {mailpieceKey}/detail` returns the item with its scans (`events`).
-   Optional: if it fails, the search's summary is still returned, marked `summary_only`.
+   Optional: if it fails (HTTP 404 for a key it does not know), the search's
+   summary is still returned, marked `summary_only`.
 
 `Accept-Language` sets the wording of the scans and the summary. The tracker has
 English, German, French and Italian, and the lookup's `language` picks one; any

@@ -492,7 +492,9 @@ describe('Swiss Post lookup', () => {
   });
 
   it('keeps the summary, marked summary only, when the item detail fails or has no scans', async () => {
-    for (const reply of [() => new Response('unavailable', { status: 500 }), () => new Response(OUTAGE_PAGE), () => Response.json({ mailpieceId: SHIPMENT })]) {
+    const invalidKey = () => Response.json({ status: 404, title: 'Invalid mailpiece key' }, { status: 404 });
+    for (const reply of [() => new Response('unavailable', { status: 500 }), invalidKey, () => new Response(OUTAGE_PAGE),
+      () => Response.json({ mailpieceId: SHIPMENT })]) {
       await expect(tracker({ step: /\/detail$/, reply }).tracker.fetch(SHIPMENT)).resolves.toMatchObject({
         status: 'in_transit', current_stage: 'in_transit', global_status: 'ON_GOING_DELIVERY', canonical_tracking_number: SHIPMENT,
         last_status_text: 'ON_GOING_DELIVERY', last_update: '2026-09-12T08:00:00+02:00', expected_delivery: '2026-09-12 09:00–12:00',
@@ -566,6 +568,15 @@ describe('Swiss Post outage page', () => {
     const error = await failure(tracker({ step: search, reply: () => html(body) }).tracker.fetch(SHIPMENT));
     expect(error).toBeInstanceOf(TypeError);
     expect(error).toMatchObject({ message: 'Swiss Post returned an invalid tracking response' });
+  });
+
+  it.each([404, 410])('reads a search answering HTTP %i as a moved service, not a missing parcel', async (status) => {
+    const app = tracker({ step: search, reply: () => new Response('Not Found', { status }) });
+    const error = await failure(app.tracker.fetch(SHIPMENT));
+    expect(error).not.toBeInstanceOf(NotFoundError);
+    expect(error).toBeInstanceOf(TransportError);
+    expect(error).toMatchObject({ kind: 'transport', message: 'Swiss Post no longer serves this tracking call' });
+    expect(carrierErrorKind(error)).toBe('transport');
   });
 
   it('keeps the HTTP 502 it comes with when the backend is degraded', async () => {
