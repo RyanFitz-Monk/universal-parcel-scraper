@@ -21,6 +21,7 @@
     {"wording":"Your parcel is currently in transit to …","language":"en","stage":"in_transit","confirmedBy":"live","note":"The repeated depot prefix and destination town are variable."},
     {"wording":"Your parcel is with your local courier and ready for delivery..","language":"en","stage":"out_for_delivery","confirmedBy":"live","note":"The repeated depot prefix is left out of the map key."},
     {"wording":"Out for delivery","language":"en","stage":"out_for_delivery","confirmedBy":"live","firstSeen":"2026-11-17","note":"The last-mile partner's round, hours after Shipter's own in-transit rows at destination."},
+    {"wording":"Your parcel was delivered","language":"en","stage":"delivered","confirmedBy":"live","firstSeen":"2026-11-17","note":"The last-mile partner's delivery, hours after its round."},
     {"wording":"Delivered.","language":"en","stage":"delivered","confirmedBy":"live"}
   ]
 }
