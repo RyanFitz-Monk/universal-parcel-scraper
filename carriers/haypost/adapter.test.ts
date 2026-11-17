@@ -111,6 +111,21 @@ describe('HayPost tracking adapter', () => {
     expect(result).not.toHaveProperty('destination_country');
   });
 
+  it('leaves out the despatch HayPost dates from data ten hours after bagging its own item, until that time comes', () => {
+    // Live shape: the despatch row comes with the bagging, at its clock ten hours on, to the second.
+    const bagged = edited('outbound-delivered', (_reply, rows) => {
+      rows.splice(3);
+      rows.push({ ...rows[2]!, event: 'Send item abroad (EDI-received)', eventDate: '2026-05-19T21:37:25', local_Date: '5/19/2026 21:37:25' });
+    });
+    const at = (clock: string) => parseHaypost(bagged, OUTBOUND, Date.parse(clock)).events!.map((event) => [event.time, event.description]);
+    expect(at('2026-05-19T12:00:00+04:00')).toEqual([
+      ['2026-05-19T11:37:25+04:00', 'Insert item into bag (Otb)'],
+      ['2026-05-19T11:36:29+04:00', 'Receive item at office of exchange (Otb)'],
+      ['2026-05-18T15:09:12+04:00', 'Receive item from customer (Otb)'],
+    ]);
+    expect(at('2026-05-19T21:40:00+04:00')[0]).toEqual(['2026-05-19T21:37:25+04:00', 'Send item abroad (EDI-received)']);
+  });
+
   it('reads a missed delivery, unknown wordings and places, and keeps only the reason from a row’s extra information', () => {
     const missed = parseHaypost(edited('inbound-delivered', (_reply, rows) => { rows.pop(); }), INBOUND);
     expect(missed).toMatchObject({ status: 'exception', current_stage: 'failed_attempt', last_status_text: NOTICE,

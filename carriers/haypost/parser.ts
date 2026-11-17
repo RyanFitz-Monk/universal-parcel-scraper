@@ -98,9 +98,11 @@ function scanOf(row: unknown): Scan {
  * `error`, a `message`, and the item's scans oldest first in `data.result`.
  * It does not echo the code, so its scans are those of the code asked for. A
  * code the tracker does not know comes back as the error "Not Valid Tracking
- * Number Format" with no scans; any other error is no answer.
+ * Number Format" with no scans; any other error is no answer. A despatch from
+ * data dated after `now` is HayPost's plan for it, not a scan, and is left out
+ * until its time comes.
  */
-export function parseHaypost(payload: unknown, rawNumber: string): CarrierResult {
+export function parseHaypost(payload: unknown, rawNumber: string, now = Date.now()): CarrierResult {
   normalizeHaypostNumber(rawNumber);
   if (!isRecord(payload) || typeof payload.error !== 'boolean') throw new SchemaError(PROVIDER, 'HayPost returned an invalid reply');
   const data = isRecord(payload.data) ? payload.data : null;
@@ -116,6 +118,9 @@ export function parseHaypost(payload: unknown, rawNumber: string): CarrierResult
   const scans: Scan[] = [];
   for (const row of rows) {
     const scan = scanOf(row);
+    // HayPost dates the despatch of its own items from data ten hours after their bagging, to the
+    // second, and lists it at once.
+    if (haypostEdiReceived(scan.wording) && scan.event.time && Date.parse(scan.event.time) > now) continue;
     // A row the reply lists twice is kept once.
     const identity = JSON.stringify(scan.event);
     if (seen.has(identity)) continue;

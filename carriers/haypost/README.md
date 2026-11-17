@@ -30,7 +30,9 @@ through the lookup its tracking page at haypost.am makes.
   with offsets puts HayPost's at +04:00. A scan abroad, or in a country the row does not settle,
   keeps its wall clock. A despatch from the sending post's data, "(EDI-received)", is on Yerevan
   time wherever its row places it: HayPost dates it when the data arrives. Read on Moscow time,
-  Russian Post's despatch came an hour after the tracker listed it.
+  Russian Post's despatch came an hour after the tracker listed it. On HayPost's own items the
+  row comes with the bagging and is dated ten hours after it, to the second: a plan, which the
+  adapter leaves out until that time comes.
 - IPS names countries in ISO's style, "Netherlands (the)". The adapter drops the article.
 - The country of an inward scan becomes the destination.
 - A scan's extra information carries the reason an item was not delivered and what happens
@@ -45,8 +47,8 @@ through the lookup its tracking page at haypost.am makes.
 - Orders created through HayPost's business API carry ids of `PAS`, nine digits and `AM`. The
   tracker does not find the public example, so the adapter does not take them.
 - The adapter takes only S10 codes with a valid check digit.
-- HayPost's own items sent abroad were not seen live; the adapter reads them from the same IPS
-  scans.
+- HayPost's own items were seen live only up to their despatch; the adapter reads their scans
+  abroad from the same IPS scans.
 
 ## Numbers
 
