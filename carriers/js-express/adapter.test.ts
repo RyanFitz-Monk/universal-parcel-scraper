@@ -763,6 +763,16 @@ describe('JS Express tracking adapter', () => {
     expect(String(fetcher.mock.calls[0]![0])).toBe(JS_EXPRESS_TRACKER);
     expect(fetcher.mock.calls.filter(([url]) => String(url) === JS_EXPRESS_TRACKER)).toHaveLength(1);
   });
+
+  it('answers a destination courier\'s waybill made after the parcel moved as transit, as the tracker reads every result', async () => {
+    const rows = [row('2026-05-03 10:00:00', '', 'Waybill Generated for ZZ0000000000000'),
+      row('2026-05-02 18:00:00', 'YYZ', 'Delivery to local courier')];
+    // The parser keeps the row's own reading; the tracker's answer reads a registration after a movement as transit.
+    expect(parseJsExpress(withList(rows), DELIVERED)).toMatchObject({ current_stage: 'registered' });
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => reply(JSON.stringify(withList(rows))));
+    const answer = await createTracker({ fetcher, providers: [], env: {} }).track({ number: DELIVERED }, { budgetMs: 3000 });
+    expect(answer).toMatchObject({ carrier: 'js-express', result: { current_stage: 'in_transit', events: [{ stage: 'in_transit' }, {}] } });
+  });
 });
 
 describe('JS Express status vocabulary', () => {

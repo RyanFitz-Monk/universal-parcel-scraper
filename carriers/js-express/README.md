@@ -41,7 +41,9 @@ list names it "JS" (the js-exp.com entry), so that name is an alias.
   country the parcel goes to, and the tracker then asks that carrier's adapter. DHL Paket's
   twelve digits and JJD with sixteen are shapes other couriers use too, GLS Germany's and
   InPost's among them, so such a number names DHL only on a German parcel whose history holds
-  DHL Paket's own rows.
+  DHL Paket's own rows. Elsewhere the result names no courier, and the shared hand-over may still
+  ask the carrier the number alone names at high confidence to confirm it: a Colissimo number on a
+  parcel to Belgium asks La Poste.
 - A row is a clock, a place and a wording. Clocks are wall clocks to the second, with
   no zone, and one history mixes China's with the airports' and the destination courier's, so
   the reply's order stands.
