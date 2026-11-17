@@ -40,6 +40,8 @@ const codes: Record<string, ClassifiedStatus> = {
   'FC/40': { status: 'in_transit', stage: 'customs' },
   // The recipient answered customs (its tax number), and the answer is under review.
   'PAR/12': { status: 'in_transit', stage: 'customs' },
+  // Customs authorized the import, and taxes or the despacho postal fee are due: it is not released until they are paid.
+  'PAR/17': { status: 'in_transit', stage: 'customs' },
   'PAR/24': { status: 'exception', stage: 'returned' },
   // An item posted for abroad sent to Brazil's export customs inspection; a transfer follows its release.
   'PAR/04': { status: 'in_transit', stage: 'customs' },

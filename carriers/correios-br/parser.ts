@@ -54,9 +54,9 @@ const ABROAD = /^(?:PO\/\d{2}|PAR\/18)$/;
 // Post's history shows its dispatch at that wall clock; on Brasília's clock it would lie hours ahead when first listed.
 const TRANSFERS = new Set(['RO/01', 'DO/01']);
 // Customs' review of the declaration: the recipient's tax number asked for or under review, the information sent to
-// customs, the product's classification and the import authorized. Correios does it in Brazil, at the unit it names, while
-// the item may still be with the sending post, so these rows do not show the item reached Brazil.
-const DECLARATION_REVIEW = new Set(['FC/16', 'PAR/12', 'PAR/21', 'FC/40', 'PAR/07']);
+// customs, the product's classification and the import authorized, with or without its taxes due. Correios does it in Brazil,
+// at the unit it names, while the item may still be with the sending post, so these rows do not show the item reached Brazil.
+const DECLARATION_REVIEW = new Set(['FC/16', 'PAR/12', 'PAR/21', 'FC/40', 'PAR/07', 'PAR/17']);
 
 /** The Brazilian unit a row names, as "city, state", or empty. */
 function unitPlace(row: JsonObject): string {

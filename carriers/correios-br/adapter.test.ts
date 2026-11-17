@@ -210,11 +210,16 @@ describe('Correios parser', () => {
     const dispatched = parseCorreios({ ...fixture, codObjeto: 'AA000000005CN', eventos: rows.slice(3) }, 'AA000000005CN');
     expect(dispatched.events![0]).toMatchObject({ provider_code: 'RO/01', time: '2026-11-11T05:43:00+08:00', time_zone: 'Asia/Shanghai' });
     // So is a dispatch after customs began reviewing the recipient's answer at a Brazilian unit, before the item got there.
-    const reviewed = parseCorreios({ ...fixture, codObjeto: 'AA000000005CN', eventos: [rows[3]!,
-      { ...scan('PAR', '12', 'Informações prestadas pelo cliente em análise', brasilia('2026-11-11 04:40:00')), unidade: inBrazil }, ...rows.slice(4)] }, 'AA000000005CN');
-    expect(reviewed.events!.map(({ provider_code: code, time }) => [code, time])).toEqual([
-      ['RO/01', '2026-11-11T05:43:00+08:00'], ['PAR/12', '2026-11-11T04:40:00-03:00'], ['PAR/18', '2026-11-11T03:07:00+08:00'], ['PO/01', '2026-11-10T21:00:00+08:00'],
-    ]);
+    // So is one after the import was authorized with its taxes due.
+    for (const [type, wording] of [['12', 'Informações prestadas pelo cliente em análise'],
+      ['17', 'Importação autorizada pela autoridade competente - aguardando pagamento']] as const) {
+      const reviewed = parseCorreios({ ...fixture, codObjeto: 'AA000000005CN', eventos: [rows[3]!,
+        { ...scan('PAR', type, wording, brasilia('2026-11-11 04:40:00')), unidade: inBrazil }, ...rows.slice(4)] }, 'AA000000005CN');
+      expect(reviewed.events!.map(({ provider_code: code, time }) => [code, time])).toEqual([
+        ['RO/01', '2026-11-11T05:43:00+08:00'], [`PAR/${type}`, '2026-11-11T04:40:00-03:00'], ['PAR/18', '2026-11-11T03:07:00+08:00'], ['PO/01', '2026-11-10T21:00:00+08:00'],
+      ]);
+      expect(reviewed.events![1]).toMatchObject({ stage: 'customs' });
+    }
     // A country of several clocks gives its main clock, the sending post's own, never Brasília's after the shared
     // clock step; Brazil's own mail keeps the zone Correios states.
     for (const [number, zone, offset] of [['AA000000005US', 'America/New_York', '-05:00'], ['AA000000005PT', 'Europe/Lisbon', '+00:00']] as const) {
