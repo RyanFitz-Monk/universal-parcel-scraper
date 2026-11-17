@@ -1113,6 +1113,17 @@ describe('ParcelsApp result parsing', () => {
     expect(result.events?.map((scan) => scan.time)).toEqual(['2026-10-22T01:23:00.000Z', '2026-10-22T01:21:00.000Z']);
   });
 
+  it('keeps the UTC instants ParcelsApp gives PostNL\'s customs stamps in the Netherlands', () => {
+    // PostNL's own feed states these stamps in UTC and its other Dutch scans on Dutch time; read on Dutch
+    // time the clearance came an hour before Cainiao's copy of it. The acceptance stays Dutch.
+    const result = parseParcelsAppResponse({ carriers: ['PostNL'], states: [
+      { date: '2026-03-05T10:15:42Z', status: 'Item is cleared by customs', carrier: 0, location: 'Netherlands' },
+      { date: '2026-03-05T10:10:00Z', status: 'Consignment received at the PostNL Acceptance Centre', carrier: 0, location: 'Netherlands' },
+      { date: '2026-03-03T09:31:18Z', status: 'Pre-declaration of the item has been received by customs', carrier: 0, location: 'Netherlands' },
+    ] }, number, identity(), 'Europe/Amsterdam');
+    expect(result.events?.map((scan) => scan.time)).toEqual(['2026-03-05T10:15:42.000Z', '2026-03-05T09:10:00.000Z', '2026-03-03T09:31:18.000Z']);
+  });
+
   it('reads PostNL\'s scans in the destination country on that country\'s clock', () => {
     // PostNL's own feed dates its scans in Chile at the same digits on Chile's clock; read on
     // PostNL's Amsterdam clock they came out four hours early. Its own records, with no place, stay Dutch.

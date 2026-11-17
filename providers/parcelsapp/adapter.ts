@@ -1360,6 +1360,9 @@ function russianPostExportCopy(carrier: string | undefined, status: string, date
     && /T\d{2}:\d{2}(?::00(?:\.0+)?)?$/.test(mislabeledWallTime(date) ?? '');
 }
 
+/** PostNL's customs stamps, which its own feed dates as UTC instants wherever it dates its other scans locally. */
+const POSTNL_CUSTOMS_STAMP = /^(?:pre-declaration of the item has been received|item is cleared|duties and taxes confirmed) by customs$/i;
+
 /**
  * The zone a scan's carrier gives it wherever it was: null for a date that is
  * its instant, and undefined for a scan its place dates (`siteZone`) or only a
@@ -1388,6 +1391,9 @@ function carrierClock(payload: Record<string, unknown>, state: Record<string, un
   // in another country are that country's wall clock, as in PostNL's own feed: read on the clock most of
   // the country lives on ("Chile"). Spain's and Portugal's, which also keep island clocks, and those of
   // countries whose regions the steps read, are left to their place.
+  // So do its customs stamps, whose own feed states a real UTC instant to the fraction of a second (carriers/spring-gds):
+  // read on Dutch time, the clearance came an hour before Cainiao's copy of it, stated +01:00.
+  if (carrier === 'spring-gds' && POSTNL_CUSTOMS_STAMP.test(status.trim())) return null;
   const postnlPlace = carrier === 'spring-gds' ? lastPlace(scanLocation(name, state.location)) : undefined;
   const postnlCountry = countryCode(postnlPlace);
   if (postnlCountry === 'GB') return null;
