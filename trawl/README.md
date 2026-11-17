@@ -80,6 +80,9 @@ A `fedex.browser-hold` warning records each hold that starts, ends or is decline
 its reason, browser slot, lookups, age and memory share.
 
 Australia Post, DHL Express, SF Express, WanbExpress, XPO, Asendia, Correios Brazil, DHL Poland, Magyar Posta and ZTO use fresh contexts.
+Australia Post also uses its capture helper through a request's proxy, keeping that route's
+browser settings. Its exact guest query starts without the generic page's challenge waits;
+custom session state or explicit page-readiness options keep the ordinary browser path.
 A request's proxy carries WanbExpress's whole fresh context; through it the helper runs only
 the page's passive check and leaves a visible checkbox unsolved.
 Veho's helper opens the tracker's home page, with no tracking number, in a fresh context and

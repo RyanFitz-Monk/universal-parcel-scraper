@@ -77,7 +77,16 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
   if (carrierPage && sfExpressSessionNumber(url, capture)) {
     return await sfExpressSessions.run({ ...carrierRun, signal: budget.signal })
   }
-  if (carrierPage && australiaPostBrowserRequest(url, capture)) return await runAustraliaPostBrowser(carrierRun)
+  if (carrierRequest && australiaPostBrowserRequest(url, capture, { proxied: !!proxyUrl })) {
+    return await runAustraliaPostBrowser({ ...carrierRun, ...(proxyUrl ? {
+      signal: budget.signal,
+      openContext: async () => {
+        const proxy = capture.networkProxy ? await budget.run(async () => capture.networkProxy?.(proxyUrl)) : proxyUrl
+        if (!proxy) throw new Error("Australia Post proxy routing is unavailable")
+        return newWanbContext(handle.browser, { proxy, onCreated: handle.noteTemporaryContext,
+          requestReplacement: handle.requestBrowserReplacement, ignoreHttpsErrors: ${fresh ? 'ignoreCertificateErrors' : 'false'} })
+      } } : {}) })
+  }
   if (carrierPage && track123Number(url, capture)) return await runTrack123Browser(carrierRun)
   if (carrierPage && fedexSessionNumber(url, capture)) return await fedexSessions.run(carrierRun)
   // Through a proxy WanbExpress's helper opens its context there and solves nothing.
