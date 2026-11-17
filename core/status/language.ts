@@ -686,6 +686,18 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // Royal Mail's departure from the destination country's office of exchange, as Postal Ninja relays it without the
   // event code Royal Mail's own map reads it by.
   if (/^item has left the overseas international processing cent(?:er|re)$/.test(text)) return 'in_transit';
+  // A Chinese line's own English, as universal providers relay it for a parcel filed under no carrier: the order's
+  // data sent, the departure from its international processing centre, the pallets broken down at the airport, the
+  // papers for the import inspection, the way on to the destination's warehouse and down to a branch.
+  if (/^(?:\[[^[\]]{1,60}\] )?the order information has been sent$/.test(text)) return 'registered';
+  if (/^the shipment leaves the international processing cent(?:er|re)(?: \[[^[\]]{1,60}\])?$/.test(text)
+    || /^during the panel removal process$|^about to be sent to the (?:\[[^[\]]{1,60}\] )?warehouse$/.test(text)
+    || /^move to the next lower level branch office$/.test(text)) return 'in_transit';
+  if (/^inspection documents are being submitted$/.test(text)) return 'customs';
+  // Bring's hold at its terminal.
+  if (/^(?:the )?shipment has been temporarily placed in (?:a |the )?warehouse$/.test(text)) return 'in_transit';
+  // Take Send's first scan, its distribution centre taking the parcel in, as its own map reads it.
+  if (/^enter the distribution cent(?:er|re)$/.test(text)) return 'accepted';
   // InPost UK's scans as Ship24 relays them: the sender's drop-off in a locker or at a store, then a hub's
   // outbound scan.
   if (/^parcel stored by (?:the )?customer$/.test(text)) return 'accepted';
