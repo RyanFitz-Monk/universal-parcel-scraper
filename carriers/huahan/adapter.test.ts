@@ -36,7 +36,8 @@ describe('HuaHan guest tracking', () => {
     const verify = new URL(String(fetch.mock.calls[2]![0]));
     expect(verify.searchParams.get('token')).toBe('synthetic-token');
     expect(verify.searchParams.get('answer')).toBe('8');
-    expect(String(fetch.mock.calls[3]![0])).toBe('https://www.hh-exp.cn/WebTrack/CargoTrackAction.php');
+    expect(new URL(String(fetch.mock.calls[1]![0])).pathname).toBe('/WebTrack/tncode.php');
+    expect(String(fetch.mock.calls[3]![0])).toBe('https://www.hh-exp.cn/WebTrack/CargoTrackActionPlus.php');
     const request = fetch.mock.calls[3]![1]!;
     expect(request.method).toBe('POST');
     expect(new URLSearchParams(String(request.body)).get('ordernumber')).toBe(NUMBER);
@@ -53,6 +54,16 @@ describe('HuaHan guest tracking', () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(init()).mockResolvedValueOnce(response({ ask: 1, type: 'click', question: '1 + 2 = ?' }));
     await expect(new HuahanTracker({ fetcher: fetch }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('names the picture verification, which it does not solve, and reads the hourly cap as a rate limit', async () => {
+    const picture = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(init())
+      .mockResolvedValueOnce(response({ ask: 1, tip: ['华', '翰'], count: 2, img: 'data:image/webp;base64,AAAA' }));
+    await expect(new HuahanTracker({ fetcher: picture }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge', reason: 'click_captcha' });
+    expect(picture).toHaveBeenCalledTimes(2);
+    const capped = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(response({ ask: 0, msg: '请求次数已达每小时上限，请稍后再试', data: [] }));
+    await expect(new HuahanTracker({ fetcher: capped }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited' });
+    expect(capped).toHaveBeenCalledTimes(1);
   });
 
   it('requires accepted verification before looking up a shipment', async () => {

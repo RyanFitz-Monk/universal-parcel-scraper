@@ -119,17 +119,23 @@ function partnerClock(event: CarrierEvent): CarrierEvent {
   return time ? { ...event, time, time_zone: CTT_ZONE, time_zone_basis: 'carrier' } : event;
 }
 
+/**
+ * A reply with `ask: 0`, from the lookup or from the verification it opens. The hourly cap
+ * ("请求次数已达每小时上限") counts the verification sessions one address opens.
+ */
+export function huahanRefusal(payload: Record<string, unknown>): never {
+  const message = text(payload, 'msg');
+  if (/验证|驗證|captcha|verification/i.test(message)) throw new ChallengeError(PROVIDER, 'HuaHan refused verification');
+  if (/频繁|頻繁|上限|too many|rate limit/i.test(message)) throw new RateLimitedError(PROVIDER);
+  if (message === '没有找到记录' && Array.isArray(payload.data) && payload.data.length === 0) throw new NotFoundError(PROVIDER);
+  throw new IndeterminateError(PROVIDER, 'HuaHan could not answer this lookup');
+}
+
 /** The public form submits one whole waybill; aliases and partner numbers do not bind its reply. */
 export function parseHuahan(payload: unknown, raw: string): CarrierResult {
   const number = normalizeHuahanNumber(raw);
   if (!isRecord(payload)) throw new SchemaError(PROVIDER, 'HuaHan returned an invalid envelope');
-  if (payload.ask === 0) {
-    const message = text(payload, 'msg');
-    if (/验证|驗證|captcha|verification/i.test(message)) throw new ChallengeError(PROVIDER, 'HuaHan refused verification');
-    if (/频繁|頻繁|too many|rate limit/i.test(message)) throw new RateLimitedError(PROVIDER);
-    if (message === '没有找到记录' && Array.isArray(payload.data) && payload.data.length === 0) throw new NotFoundError(PROVIDER);
-    throw new IndeterminateError(PROVIDER, 'HuaHan could not answer this lookup');
-  }
+  if (payload.ask === 0) huahanRefusal(payload);
   if (payload.ask !== 1 || !Array.isArray(payload.data) || payload.data.length !== 1 || !isRecord(payload.data[0])) {
     throw new SchemaError(PROVIDER, 'HuaHan returned no unique tracking result');
   }

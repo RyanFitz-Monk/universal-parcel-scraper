@@ -6,10 +6,14 @@ China to destination delivery partners.
 ## Retrieval
 
 The [public form](https://www.hh-exp.cn/WebTrack/CargoTrack.html) opens verification through
-`init.php`, reads a plain arithmetic question from `textcode.php`, and submits its answer to
-`check.php`. After an explicit acceptance, the adapter posts one complete waybill to
-`CargoTrackAction.php` in the same cookie session. Each lookup opens a fresh session and
-shares one deadline across the four requests. No account, browser or external solver is needed.
+`init.php` and asks `tncode.php` for its challenge. That is a picture whose characters are
+clicked in order (`click_captcha`), which the adapter does not solve, so the lookup ends as a
+challenge. When HuaHan serves its plain arithmetic question instead, the adapter submits the
+answer to `check.php` and, after an explicit acceptance, posts one complete waybill to
+`CargoTrackActionPlus.php` in the same cookie session. The lookup refuses an unverified
+session. Each lookup opens a fresh session and shares one deadline across the four requests.
+HuaHan caps the verification sessions one address opens in an hour; that refusal is a rate
+limit.
 
 The reply must repeat the requested waybill and confirm success. An explicit absence is
 not found; verification failures, changed replies and an empty history remain distinct.
@@ -57,8 +61,8 @@ outside this adapter's scope.
 
 ## Limitations
 
-There is no cheap recognition flow: tracking requires a fresh verification exchange. Changed
-challenge types remain a challenge and enabled universal providers can recover. Provider
+There is no cheap recognition flow: tracking requires a fresh verification exchange. The
+picture and other challenge types remain a challenge and enabled universal providers can recover. Provider
 history can supplement scans whose clocks cannot be placed on a timeline.
 
 The customer API at `api.hh-exp.com/default/svc/web-service` needs account credentials;

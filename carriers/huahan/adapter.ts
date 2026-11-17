@@ -6,7 +6,7 @@ import { runSteps } from '../../core/runner/index.js';
 import { NOOP_RECORDER, type StepRecorder } from '../../core/telemetry/index.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { normalizeHuahanNumber, parseHuahan, PROVIDER } from './parser.js';
+import { huahanRefusal, normalizeHuahanNumber, parseHuahan, PROVIDER } from './parser.js';
 
 const BASE = 'https://www.hh-exp.cn/WebTrack/';
 
@@ -52,18 +52,25 @@ export class HuahanTracker {
       };
       try {
         const init = json(await request('init.php?_=' + Date.now(), 4096));
+        if (isRecord(init) && init.ask === 0) huahanRefusal(init);
         if (!isRecord(init) || init.ask !== 1 || typeof init.token !== 'string' || !/^[a-zA-Z0-9_-]{8,256}$/.test(init.token)) {
           throw new ChallengeError(PROVIDER, 'HuaHan did not open verification');
         }
+        // The form's own challenge: a picture whose characters are clicked in order, or, when
+        // HuaHan switches to it, a plain arithmetic question.
         const params = new URLSearchParams({ token: init.token, _: String(Date.now()) });
-        const challenge = json(await request('textcode.php?' + params.toString(), 4096));
+        const challenge = json(await request('tncode.php?' + params.toString(), 400_000));
+        if (isRecord(challenge) && challenge.ask === 0) huahanRefusal(challenge);
+        if (isRecord(challenge) && challenge.ask === 1 && challenge.type !== 'text' && typeof challenge.img === 'string') {
+          throw new ChallengeError(PROVIDER, 'HuaHan asked for its picture verification', { reason: 'click_captcha' });
+        }
         if (!isRecord(challenge) || challenge.ask !== 1 || challenge.type !== 'text') {
           throw new ChallengeError(PROVIDER, 'HuaHan presented an unsupported verification mode');
         }
         const answer = solveHuahanQuestion(challenge.question);
         const verified = decodeText(await request('check.php?' + new URLSearchParams({ token: init.token, answer }).toString(), 4096));
         if (verified.trim() !== 'ok') throw new ChallengeError(PROVIDER, 'HuaHan refused arithmetic verification');
-        return parseHuahan(json(await request('CargoTrackAction.php', 1_000_000, new URLSearchParams({ ordernumber: number }))), number);
+        return parseHuahan(json(await request('CargoTrackActionPlus.php', 1_000_000, new URLSearchParams({ ordernumber: number }))), number);
       } catch (error) {
         // Verification URLs and session cookies must not enter transport diagnostics.
         if (error instanceof UpstreamHttpError) throw new UpstreamHttpError(error.provider, error.status, error.retryAfterMs);
