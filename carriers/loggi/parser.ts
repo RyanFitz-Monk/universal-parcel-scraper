@@ -68,8 +68,9 @@ export function parseLoggi(html: string, raw: string): CarrierResult {
     let value: unknown;
     try { value = JSON.parse(match[3]!); } catch { throw new SchemaError(PROVIDER, 'Loggi returned incomplete page data'); }
     if (match[2] === 'I') {
+      // Asset filenames change between builds; the export and component reference identify the view.
       if (Array.isArray(value) && value[2] === 'MainContent' && Array.isArray(value[1])
-        && value[1].some(path => typeof path === 'string' && /rastreador\/(?:%5B|\[)tracking-code(?:%5D|\])\/page-/.test(path))) views.add(`$L${match[1]}`);
+        && value[1].length > 0 && value[1].every(asset => typeof asset === 'string' && asset.trim().length > 0)) views.add(`$L${match[1]}`);
     } else {
       models.push(value);
       if (match[1] === '0') root = value;

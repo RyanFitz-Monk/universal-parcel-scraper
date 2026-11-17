@@ -6,6 +6,10 @@ import { TrawlClient } from '../../core/transport/trawl.js';
 import { adapter, LoggiTracker, loggiTrackingUrl, normalizeLoggiNumber, parseLoggi } from './adapter.js';
 
 const NUMBER = 'TEST1234';
+const OLD_ASSETS = ['101', 'static/chunks/app/(public)/rastreador/%5Btracking-code%5D/page-example.js'];
+// Synthetic chunk ids and hashes, without a route-named asset.
+const RENAMED_ASSETS = Array.from({ length: 19 }, (_, index) => [String(index), `static/chunks/${index.toString(16).padStart(8, '0')}.js`]).flat();
+const layouts = [{ name: 'route assets', assets: OLD_ASSETS }, { name: 'renamed assets', assets: RENAMED_ASSETS }];
 const shipment = () => ({ trackingCode: { loggi: NUMBER, correios: '$undefined' }, status: 'Entregue', isPackageDelivered: true,
   details: { receiverName: 'PRIVATE', receiverDocument: 'PRIVATE', deliveryNotes: 'PRIVATE' },
   history: [
@@ -17,10 +21,11 @@ const shipment = () => ({ trackingCode: { loggi: NUMBER, correios: '$undefined' 
   ] });
 
 /** Synthetic component stream split inside a JSON value, as Next's script chunks can be. */
-function html(data: unknown = shipment(), options: { number?: string; failed?: boolean; missing?: boolean; generic404?: boolean } = {}) {
-  const stream = `0:${JSON.stringify({ c: ['', 'rastreador', options.number ?? NUMBER] })}\n`
-    + 'a:I[101,["101","static/chunks/app/(public)/rastreador/%5Btracking-code%5D/page-example.js"],"MainContent"]\n'
-    + `f:${JSON.stringify([['$', '$La', null, data]])}\n`
+function html(data: unknown = shipment(), options: { number?: string; root?: unknown; assets?: unknown; exportName?: string;
+  omitImport?: boolean; components?: unknown[]; failed?: boolean; missing?: boolean; generic404?: boolean } = {}) {
+  const stream = `0:${JSON.stringify(options.root === undefined ? { c: ['', 'rastreador', options.number ?? NUMBER] } : options.root)}\n`
+    + (options.omitImport ? '' : `a:I${JSON.stringify([101, options.assets === undefined ? OLD_ASSETS : options.assets, options.exportName ?? 'MainContent'])}\n`)
+    + `f:${JSON.stringify(options.components ?? [['$', '$La', null, data]])}\n`
     + (options.failed ? 'b:E{"digest":"upstream-failed"}\n' : '');
   const chunks = [stream.slice(0, 75), stream.slice(75)].map(chunk => `<script>self.__next_f.push(${JSON.stringify([1, chunk])})</script>`).join('');
   return `<html><title>Loggi Rastreio</title><h1>${options.missing ? 'Página não encontrada' : 'Entregue'}</h1>`
@@ -28,6 +33,19 @@ function html(data: unknown = shipment(), options: { number?: string; failed?: b
 }
 
 describe('Loggi tracking data', () => {
+  it('reads the unique MainContent view with renamed hashed assets', () => {
+    const data = { ...shipment(), history: Array.from({ length: 10 }, (_, index) => ({
+      date: `${12-index} mar, 2026`, title: index === 0 ? 'Entregue' : 'Em rota',
+    })) };
+    const result = parseLoggi(html(data, { assets: RENAMED_ASSETS }), NUMBER);
+    expect(RENAMED_ASSETS).toHaveLength(38);
+    expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: null, last_update_local: '2026-03-12' });
+    expect(result.events).toHaveLength(10);
+    expect(result.events?.map(event => event.local_time)).toEqual(Array.from({ length: 10 }, (_, index) => `2026-03-${String(12-index).padStart(2, '0')}`));
+    expect(result.events?.every(event => !event.time)).toBe(true);
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
   it('keeps calendar days, same-day scan order and facility towns, dropping recipient details', () => {
     const result = parseLoggi(html(), NUMBER);
     expect(result).toMatchObject({ status: 'delivered', current_stage: 'delivered', last_update: null, last_update_local: '2026-03-12' });
@@ -43,26 +61,46 @@ describe('Loggi tracking data', () => {
     expect(parseLoggi(html(shipment(), { generic404: true }), NUMBER).status).toBe('delivered');
   });
 
-  it('requires a matching route and a matching whole tracking code', () => {
-    for (const document of [html(shipment(), { number: 'OTHER123' }), html({ ...shipment(), trackingCode: { loggi: NUMBER + 'X' } }),
-      html({ ...shipment(), trackingCode: { code: NUMBER } })]) {
+  it.each(layouts)('requires a matching route and whole tracking code with $name', ({ assets }) => {
+    for (const document of [html(shipment(), { assets, number: 'OTHER123' }), html({ ...shipment(), trackingCode: { loggi: NUMBER + 'X' } }, { assets }),
+      html({ ...shipment(), trackingCode: { code: NUMBER } }, { assets }),
+      ...[{}, null, { c: ['', 'another-route', NUMBER] }, { c: ['other-root', 'rastreador', NUMBER] }, { c: ['', 'rastreador', NUMBER, 'extra'] }]
+        .map(root => html(shipment(), { assets, root }))]) {
       expect(() => parseLoggi(document, NUMBER)).toThrow(expect.objectContaining({ kind: expect.stringMatching(/indeterminate|schema/) }));
     }
   });
 
-  it('distinguishes an active missing view from a challenge, incomplete render and empty history', () => {
-    expect(() => parseLoggi(html({}, { missing: true }), NUMBER)).toThrow(expect.objectContaining({ kind: 'not_found' }));
-    expect(() => parseLoggi(html({}, { missing: true, failed: true }), NUMBER)).not.toThrow(expect.objectContaining({ kind: 'not_found' }));
-    expect(() => parseLoggi('<title>Just a moment...</title>', NUMBER)).toThrow(expect.objectContaining({ kind: 'challenge' }));
-    expect(() => parseLoggi('<html>Loading...</html>', NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
-    expect(() => parseLoggi(html({ ...shipment(), history: [] }), NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
-    expect(() => parseLoggi(html({ ...shipment(), history: {} }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+  it('requires an exact MainContent import with nonempty string assets', () => {
+    for (const assets of [[], [''], [' '], [101], ['static/chunks/example.js', null], {}, null]) {
+      expect(() => parseLoggi(html(shipment(), { assets }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    }
+    for (const exportName of ['OtherContent', 'MainContentExtra', 'mainContent']) {
+      expect(() => parseLoggi(html(shipment(), { assets: RENAMED_ASSETS, exportName }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    }
+    expect(() => parseLoggi(html(shipment(), { omitImport: true }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
   });
 
-  it('rejects malformed scan fields and impossible calendar days', () => {
+  it.each(layouts)('requires exactly one object view bound to its import with $name', ({ assets }) => {
+    for (const components of [[], [['$', '$Lb', null, shipment()]], [['$', '$La', null, '$f']],
+      [['$', '$La', null, shipment()], ['$', '$La', null, shipment()]]]) {
+      expect(() => parseLoggi(html(shipment(), { assets, components }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    }
+  });
+
+  it.each(layouts)('preserves missing, challenge, incomplete-render and history semantics with $name', ({ assets }) => {
+    expect(() => parseLoggi(html({}, { assets, missing: true }), NUMBER)).toThrow(expect.objectContaining({ kind: 'not_found' }));
+    expect(() => parseLoggi(html({}, { assets, missing: true, failed: true }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+    expect(() => parseLoggi(html({ ...shipment(), initialTrackingCode: NUMBER }, { assets }), NUMBER)).toThrow(expect.objectContaining({ kind: 'challenge' }));
+    expect(() => parseLoggi('<title>Just a moment...</title>', NUMBER)).toThrow(expect.objectContaining({ kind: 'challenge' }));
+    expect(() => parseLoggi('<html>Loading...</html>', NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+    expect(() => parseLoggi(html({ ...shipment(), history: [] }, { assets }), NUMBER)).toThrow(expect.objectContaining({ kind: 'indeterminate' }));
+    expect(() => parseLoggi(html({ ...shipment(), history: {} }, { assets }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+  });
+
+  it.each(layouts)('rejects malformed scan fields and impossible calendar days with $name', ({ assets }) => {
     for (const scan of [{ date: '31 fev, 2026', title: 'Entregue' }, { date: '12 mar, 2026', title: {} },
       { date: '12 mar, 2026', title: 'Chegou em uma base', description: [] }]) {
-      expect(() => parseLoggi(html({ ...shipment(), history: [scan] }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+      expect(() => parseLoggi(html({ ...shipment(), history: [scan] }, { assets }), NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
     }
   });
 
