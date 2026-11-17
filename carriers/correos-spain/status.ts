@@ -37,6 +37,10 @@ const EVENT_STATUS: Record<string, ClassifiedStatus> = {
   'H020000V': { status: 'out_for_delivery', stage: 'out_for_delivery' },
   'X080000V': { status: 'out_for_delivery', stage: 'out_for_delivery' },
   'H01I350V': { status: 'out_for_delivery', stage: 'ready_for_pickup' },
+  // H01 relays the UPU's unsuccessful-delivery event: C is the measure that holds the item
+  // while its addressee is notified, 12 the addressee being absent. Correos words it "In
+  // delivery", but the item waits at the delivery office for collection.
+  'H01C120V': { status: 'out_for_delivery', stage: 'ready_for_pickup' },
   'X380000V': { status: 'out_for_delivery', stage: 'ready_for_pickup' },
   'X390000V': { status: 'out_for_delivery', stage: 'ready_for_pickup' },
   // Community-integration reconstructions, not yet re-observed: kept, but an
@@ -126,21 +130,11 @@ const UNCODED_SCANS: ReadonlyMap<string, string> = new Map([
   ['a disposición del destinatario', 'G01L020V'],
 ]);
 
-/**
- * Scans in no stage of their own, which keep the stage of the scan before them.
- * H01C120V is worded "In delivery" like the delivery round, but comes while the
- * parcel waits at the destination's post office for collection; Correos' code
- * list calls the H01 codes "En curso".
- */
-export const NOTICE_CODES: ReadonlySet<string> = new Set(['H01C120V']);
-
 /** What the map says about one scan, by its `codEvento`. */
 export const statusMap: CarrierStatusMap = {
   stage: (code, wording) => {
     const key = code ? code.toLocaleUpperCase('en-US') : UNCODED_SCANS.get(wording);
     return key ? classifyCorreosSpainStatus(key)?.stage : undefined;
   },
-  gaps: [
-    { code: 'H01C120V', note: 'Worded like the delivery round, but seen while the parcel waits at a post office for collection: the parcel keeps the stage it had.' },
-  ],
+  gaps: [],
 };

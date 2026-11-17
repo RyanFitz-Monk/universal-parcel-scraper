@@ -63,8 +63,8 @@ Correos de Chile (`correos-chile`) are separate carriers.
   and Basque included. Codes and clocks are the same in each. A scan stored in one language takes
   another's wording in place: at its instant, its code identifies it. In English the failed
   attempt `H06P010V` reads "In delivery", like the out-for-delivery codes. So does `H01C120V`,
-  seen while the parcel waits at a post office for collection: it keeps the stage of the scan
-  before it and never becomes the summary.
+  which relays the destination post's unsuccessful-delivery event (UPU EMH) with the measure that
+  holds the item for collection, so it is `ready_for_pickup`.
   The collection from a pickup request's address, `HI10002V`, has no English summary, so the
   adapter gives it one worded from the Spanish, in any reply that leaves it without one.
 - `A090000V` ("Pre-registered") is the sender's pre-registration and stays `registered`;

@@ -12,7 +12,7 @@ import {
   adapter,
 } from './adapter.js';
 import { correosOriginZone } from './clock.js';
-import { classifyCorreosSpainStatus } from './status.js';
+import { classifyCorreosSpainStatus, statusMap } from './status.js';
 
 // All identifiers and timestamps below are synthetic. Event codes and Spanish
 // wordings reuse the vendor's fixed texts confirmed against a real parcel by
@@ -136,25 +136,22 @@ describe('Correos Spain response parsing', () => {
     expect(unknown.events?.[0]?.stage).toBeUndefined();
   });
 
-  it('keeps the stage of the scan before an "In delivery" notice while the parcel waits for collection', () => {
+  it('reads the relayed "In delivery" hold after a missed delivery as waiting for collection', () => {
     const result = parseCorreosSpainTrackingResponse([envelope({
       nom_codired: 'OFICINA EXAMPLE',
       eventos: [
         event('G200000V', '20/10/2026', '06:15:00', 'Registration in the delivery unit'),
-        event('H01C120V', '20/10/2026', '06:20:00', 'In delivery'),
-        event('H01I350V', '20/10/2026', '10:53:00', 'At recipient’s disposal'),
         event('H01C120V', '20/10/2026', '13:12:00', 'In delivery'),
       ],
     })], TRACKING_NUMBER);
     expect(result.events?.map((item) => [item.provider_code, item.stage, item.stage_source])).toEqual([
-      ['H01C120V', 'ready_for_pickup', 'none'],
-      ['H01I350V', 'ready_for_pickup', undefined],
-      ['H01C120V', 'in_transit', 'none'],
+      ['H01C120V', 'ready_for_pickup', undefined],
       ['G200000V', 'in_transit', undefined],
     ]);
-    // The notice is no summary: the parcel still waits at the office.
     expect(result).toMatchObject({ status: 'out_for_delivery', current_stage: 'ready_for_pickup',
-      last_status_text: 'At recipient’s disposal', pickup_point: 'OFICINA EXAMPLE' });
+      last_status_text: 'In delivery', pickup_point: 'OFICINA EXAMPLE' });
+    expect(statusMap.stage('H01C120V', 'In delivery')).toBe('ready_for_pickup');
+    expect(statusMap.stage('H020000V', 'In delivery')).toBe('out_for_delivery');
   });
 
   it('keeps scans of one instant in the localizador’s order', () => {
