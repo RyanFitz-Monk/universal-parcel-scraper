@@ -295,6 +295,21 @@ describe('ParcelsApp YTO scans', () => {
     expect(parsed).toMatchObject({ current_stage: 'failed_attempt' });
   });
 
+  it("keeps the missed delivery before DPD UK's daily delay notices, which are no scans", () => {
+    const parsed = parseParcelsAppResponse({ carriers: ['DPD UK'], states: [
+      { date: '2026-11-05T05:22:00Z', status: 'There has been a delay with your delivery', carrier: 0 },
+      { date: '2026-11-04T05:31:00Z', status: 'There has been a delay with your delivery', carrier: 0 },
+      { date: '2026-11-03T12:10:00Z', status: 'We were unable to deliver the parcel as there was a query with the address', carrier: 0 },
+      { date: '2026-11-03T05:46:00Z', status: 'The parcel is on the vehicle for delivery', carrier: 0 },
+    ] }, number, identity());
+    expect(parsed.events?.map((event) => [event.stage, event.stage_source])).toEqual([
+      ['failed_attempt', 'none'], ['failed_attempt', 'none'], ['failed_attempt', 'wording:provider'], ['out_for_delivery', 'wording:language'],
+    ]);
+    expect(parsed).toMatchObject({ current_stage: 'failed_attempt' });
+    expect(statusMapAnswer({ carrier: 'unknown', providerCode: null, description: 'There has been a delay with your delivery' }))
+      .toEqual({ kind: 'intentional_gap', note: expect.stringMatching(/keeps the stage/) });
+  });
+
   it("reads Mayi Yinfu's relayed airport hand-over as transit, and its delivery abroad as a delivery", () => {
     const parcel = (states: Record<string, unknown>[]) => parseParcelsAppResponse({ carriers: ['DHL Parcel Spain', 'Mayiyinfu'],
       originCode: 'CN', destinationCode: 'ES', states }, number, identity());

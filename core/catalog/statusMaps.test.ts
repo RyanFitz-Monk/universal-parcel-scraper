@@ -2011,6 +2011,8 @@ describe("universal providers' answers", () => {
       'recipient information updated', 'change of delivery address', 'last-mile delivery forecast']);
     expect(answer('unknown', null, 'EN DEMORA - EL ENVÍO HA SUFRIDO UN RETRASO PROVOCANDO UNA POSIBLE DEMORA EN LA ENTREGA.')).toEqual(gap);
     expect(answer('unknown', null, 'Last-mile delivery forecast')).toEqual(gap);
+    // DPD UK's delay notice, which the shared rules read as transit for the carriers that rely on them.
+    expect(answer('unknown', null, 'There has been a delay with your delivery')).toEqual(gap);
     // A forwarder's stock count, as ParcelsApp relays it after the flight.
     expect(answer('unknown', null, 'Stocktaking delay')).toEqual(gap);
     // Its ground handlers held up after the flight's arrival.

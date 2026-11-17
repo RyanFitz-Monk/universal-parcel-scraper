@@ -110,6 +110,9 @@ export const statusMap: CarrierStatusMap = {
     wording: 'en demora - el envío ha sufrido un retraso provocando una posible demora en la entrega.',
     note: "SEUR's delay notice as Ship24 relays it, group before wording: not a scan, so it keeps the stage the parcel already had.",
   }, {
+    wording: 'there has been a delay with your delivery',
+    note: "DPD UK's delay notice, as ParcelsApp relays it, which DPD UK's own map reads as no scan: it keeps the stage the parcel already had, a missed delivery's among others.",
+  }, {
     wording: 'forecast of last-mile delivery by carrier',
     note: "Cainiao's order data sent ahead to the last-mile carrier, in Postal Ninja's words: not a scan, so it keeps the stage the parcel already had.",
   }, {

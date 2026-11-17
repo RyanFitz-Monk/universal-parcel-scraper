@@ -727,8 +727,14 @@ export function eventStage(description: string): Stage | undefined {
   return classified.stage_source === 'none' ? undefined : classified.stage;
 }
 
+// DPD UK's delay notice, the whole sentence, as providers relay it: no scan, as DPD UK's own map reads it, so it
+// keeps the stage of the scan before it (`keepStages`), a missed delivery's among others. The shared rules read it
+// as transit for the carriers that rely on them.
+const DPD_DELAY_NOTICE = /^there has been a delay with your delivery[.!]?$/i;
+
 /** Retain the decision before delivery wording is redacted or a stage is projected. */
 export function classifyEvent(description: string, declared?: Stage): { stage: Stage; stage_source: string } {
+  if (DPD_DELAY_NOTICE.test(description.trim())) return { stage: 'pending', stage_source: 'none' };
   const specific = sourceEventStage(description, false);
   if (specific) return { stage: specific, stage_source: 'wording:provider' };
   if (declared) return { stage: declared, stage_source: 'carrier_map' };
@@ -970,9 +976,9 @@ const LAST_MILE_NOTICE = /^(?:last-mile delivery forecast|forecast of last-mile 
 // USPS's closing of a customer's missing-mail search, which ParcelsApp follows with the place of the scan.
 const RESEARCH_CASE_CLOSED = /^package research case closed(?:, [^,]{1,60}){0,2}$/i;
 
-/** A notice that keeps the stage of the scan before it: Cainiao's last-mile data, and USPS's redelivery reminder and closed search. */
+/** A notice that keeps the stage of the scan before it: Cainiao's last-mile data, USPS's redelivery reminder and closed search, and DPD UK's delay notice. */
 const keepsStage = (wording: string): boolean => LAST_MILE_NOTICE.test(wording) || isUspsRedeliveryReminder(wording)
-  || RESEARCH_CASE_CLOSED.test(wording.replace(/\s+/g, ' ').trim());
+  || RESEARCH_CASE_CLOSED.test(wording.replace(/\s+/g, ' ').trim()) || DPD_DELAY_NOTICE.test(wording.trim());
 
 /** A notice with no stage of its own takes the stage of the scan before it, newest first. */
 function keepStages(events: CarrierEvent[]): void {
