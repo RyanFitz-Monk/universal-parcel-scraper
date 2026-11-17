@@ -27,6 +27,19 @@ export function envPercent(env: Readonly<Record<string, string | undefined>>, na
   return fallback;
 }
 
+/**
+ * A setting that takes a positive number. Anything else falls back to `fallback` with one warning
+ * naming the setting, as `envChoice` does.
+ */
+export function envPositive(env: Readonly<Record<string, string | undefined>>, name: string, fallback: number): number {
+  const value = env[name]?.trim();
+  if (!value) return fallback;
+  const number = Number(value);
+  if (Number.isFinite(number) && number > 0) return number;
+  warnOnce(name, `${name} must be a positive number; using ${fallback}`);
+  return fallback;
+}
+
 function warnOnce(name: string, message: string): void {
   if (warned.has(name)) return;
   warned.add(name);

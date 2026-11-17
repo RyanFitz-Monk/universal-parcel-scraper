@@ -8,14 +8,14 @@ import { windowEstimate, type WindowEstimate } from '../../core/result/window.js
 import type { ClassifiedStatus } from '../../core/status/index.js';
 import { furtherAlong } from '../../core/status/progress.js';
 import { DirectRest } from '../../core/runner/directRest.js';
-import { recoverableByDefault, runSteps } from '../../core/runner/index.js';
+import { recoverableByDefault, runSteps, type StepContext } from '../../core/runner/index.js';
 import type { StepRecorder } from '../../core/telemetry/index.js';
 import { canadaProvinceTimeZone, countryCode, countryTimeZone, explicitOffsetTime, epochMillisTime, isoTime,
   mislabeledLocalTime, mislabeledWallTime, usStateTimeZone } from '../../core/time/index.js';
 import { clean, fetchBounded, TRAWL_TRANSPORT_ALLOWANCE_MS, TrawlClient } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
-import { envChoice } from '../../core/adapter/envChoice.js';
+import { envChoice, envPositive } from '../../core/adapter/envChoice.js';
 import { budgetWhenOutOfTime, trawlOutOfTime } from '../../core/transport/trawl.js';
 import { australiaPostCode, australiaPostCodeParts, australiaPostStatus } from './status.js';
 
@@ -294,31 +294,89 @@ export interface AustraliaPostTrackerOptions {
   fetcher?: typeof fetch;
   timeoutMs?: number;
   recorder?: StepRecorder;
+  /** A residential HTTP(S) proxy, paid by the byte: the last route, within its daily share. */
   fallbackProxyUrl?: string;
+  /** Datacenter HTTP(S) proxies, as a list or separated by spaces or commas; each read takes one at random. */
+  datacenterProxyUrls?: string | readonly string[];
   /**
-   * Where the first browser read goes: the original route (`default`), the configured proxy
-   * (`residential`), or the proxy for a while after the original route was refused (`adaptive`).
-   * The retry after a challenge takes the other route.
+   * Bytes a day the residential proxy may carry, charged 0.15 MB a read. 33 MB by default, about 1 GB
+   * a month; `Infinity` leaves it unbounded.
+   */
+  residentialDailyBytes?: number;
+  /**
+   * Where the first browser read goes: the original route (`default`), the proxies (`residential`),
+   * or the proxies for a while after the original route was refused (`adaptive`). The datacenter
+   * proxies come before the residential one; a challenge moves the lookup to the next route.
    */
   firstRoute?: 'default' | 'residential' | 'adaptive';
 }
 
 const FIRST_ROUTES: ReadonlySet<unknown> = new Set(['default', 'residential', 'adaptive']);
+type Route = 'default' | 'datacenter' | 'residential';
+/**
+ * What a read through the residential proxy is charged against its daily share. A filtered proxied
+ * page measures about 0.11 MB; a read that also loads the app module or DataDome's device check costs more.
+ */
+const RESIDENTIAL_READ_BYTES = 150_000;
+const RESIDENTIAL_DAILY_BYTES = 33_000_000;
+const DAY_MS = 86_400_000;
+const SPENT_WARNING_MS = 3_600_000;
+
+/**
+ * A daily byte share, refilled continuously and holding at most a quarter of a day's share. It starts
+ * with one read, so a restart adds almost nothing to the day's traffic.
+ */
+class DailyShare {
+  private bytes = RESIDENTIAL_READ_BYTES;
+  private at = Date.now();
+
+  constructor(private readonly daily: number) {}
+
+  affords(): boolean {
+    if (this.daily === Infinity) return true;
+    const now = Date.now();
+    this.bytes = Math.min(Math.max(this.daily / 4, RESIDENTIAL_READ_BYTES), this.bytes + Math.max(0, now - this.at) * this.daily / DAY_MS);
+    this.at = now;
+    return this.bytes >= RESIDENTIAL_READ_BYTES;
+  }
+
+  take(): boolean {
+    if (!this.affords()) return false;
+    if (this.daily !== Infinity) this.bytes -= RESIDENTIAL_READ_BYTES;
+    return true;
+  }
+}
 
 export class AustraliaPostTracker {
   private readonly fallbackProxy: string | null;
+  private readonly datacenterProxies: readonly string[];
+  private readonly share: DailyShare;
   private readonly firstRoute: NonNullable<AustraliaPostTrackerOptions['firstRoute']>;
-  /** Until when, by `Date.now()`, an `adaptive` first read goes through the proxy. */
-  private residentialUntil = 0;
+  /** Until when, by `Date.now()`, an `adaptive` first read goes through the proxies. */
+  private proxiesUntil = 0;
+  private spentWarnedAt = -Infinity;
 
   constructor(private readonly options: AustraliaPostTrackerOptions) {
     const proxy = options.fallbackProxyUrl?.trim() || null;
     if (proxy) browserContextProxy(proxy);
     this.fallbackProxy = proxy;
+    const listed = typeof options.datacenterProxyUrls === 'string' ? options.datacenterProxyUrls.split(/[\s,]+/) : options.datacenterProxyUrls ?? [];
+    this.datacenterProxies = listed.map(value => value.trim()).filter(Boolean);
+    for (const value of this.datacenterProxies) browserContextProxy(value);
+    const daily = options.residentialDailyBytes ?? RESIDENTIAL_DAILY_BYTES;
+    if (typeof daily !== 'number' || !(daily > 0)) throw new TypeError('Australia Post residential daily bytes must be a positive number');
+    this.share = new DailyShare(daily);
     if (options.firstRoute !== undefined && !FIRST_ROUTES.has(options.firstRoute)) {
       throw new TypeError('Australia Post first route must be default, residential or adaptive');
     }
-    this.firstRoute = proxy ? options.firstRoute ?? 'default' : 'default';
+    this.firstRoute = proxy || this.datacenterProxies.length ? options.firstRoute ?? 'default' : 'default';
+  }
+
+  private spent(): void {
+    const now = Date.now();
+    if (now - this.spentWarnedAt < SPENT_WARNING_MS) return;
+    this.spentWarnedAt = now;
+    console.warn('Australia Post: the residential proxy has used its daily share; it carries no read until the share refills');
   }
 
   async fetch(raw: string, context: TrackingContext = {}): Promise<CarrierResult> {
@@ -328,22 +386,42 @@ export class AustraliaPostTracker {
     context.signal?.throwIfAborted();
     const trawl = this.options.trawl;
     const deadline = performance.now() + budgetMs;
-    const proxyFirst = this.firstRoute === 'residential' || (this.firstRoute === 'adaptive' && Date.now() < this.residentialUntil);
-    let route: 'default' | 'residential' = 'default';
+    const proxyFirst = this.firstRoute === 'residential' || (this.firstRoute === 'adaptive' && Date.now() < this.proxiesUntil);
+    // Cheapest first: the original route, then the datacenter proxies, then the residential one while
+    // its share lasts; inside a refusal spell the proxies come first.
+    const proxies: Route[] = [...(this.datacenterProxies.length ? ['datacenter' as const] : []),
+      ...(this.fallbackProxy ? ['residential' as const] : [])];
+    let order: Route[] = proxyFirst ? [...proxies, 'default'] : ['default', ...proxies];
+    if (this.fallbackProxy && !this.share.affords()) {
+      order = order.filter(next => next !== 'residential');
+      this.spent();
+    }
+    let taken = 0;
+    const nextRoute = (): Route | null => {
+      while (taken < order.length) {
+        const next = order[taken++]!;
+        if (next !== 'residential' || this.share.take()) return next;
+        this.spent();
+      }
+      return null;
+    };
+    let route: Route = 'default';
     let reads = 0;
     let history = false;
     const recorder = this.options.recorder;
-    const routed: StepRecorder | undefined = recorder && this.fallbackProxy ? {
+    const routed: StepRecorder | undefined = recorder && proxies.length ? {
       step: record => recorder.step(record.step === 'trawl' ? { ...record, networkRoute: route,
         networkAttempt: reads > 1 ? 'retry' : 'initial', historyAvailable: history } : record),
       lookup: record => recorder.lookup(record),
     } : recorder;
     // The browser service's own server errors: such a read carries no word from Australia Post.
     const serviceFailures = new WeakSet<object>();
-    const browser = async (signal: AbortSignal, remainingMs: number, proxy: string | null): Promise<CarrierResult> => {
+    const browser = async (signal: AbortSignal, remainingMs: number, next: Route): Promise<CarrierResult> => {
       const timeoutMs = Math.floor(remainingMs - TRAWL_TRANSPORT_ALLOWANCE_MS);
       if (timeoutMs < 1) throw new BudgetExceededError(PROVIDER, budgetMs);
-      route = proxy ? 'residential' : 'default'; reads++; history = false;
+      const proxy = next === 'residential' ? this.fallbackProxy
+        : next === 'datacenter' ? this.datacenterProxies[Math.floor(Math.random() * this.datacenterProxies.length)]! : null;
+      route = next; reads++; history = false;
       const apiUrl = australiaPostApiUrl(number);
       const page = await trawl!.scrape({ url: australiaPostTrackingUrl(number), skipHttp: true, maxTier: 3,
         maxTimeout: timeoutMs, captureResponses: [apiUrl], ...(proxy ? { proxy } : {}), settleTimeout: Math.min(timeoutMs, 10_000),
@@ -375,15 +453,27 @@ export class AustraliaPostTracker {
       history = !!result.events?.length;
       return result;
     };
-    const read = async (signal: AbortSignal, remainingMs: number, proxy: string | null): Promise<CarrierResult> => {
+    const read = async (signal: AbortSignal, remainingMs: number, previousError: unknown): Promise<CarrierResult> => {
+      const next = nextRoute();
+      // Only when a concurrent lookup took the residential share this one counted on.
+      if (next === null) throw previousError instanceof Error ? previousError : new ChallengeError(PROVIDER);
       try {
-        return await browser(signal, remainingMs, proxy);
+        return await browser(signal, remainingMs, next);
       } catch (error) {
         // Each refusal on the original route starts the window again.
-        if (!proxy && error instanceof ChallengeError && this.firstRoute === 'adaptive') this.residentialUntil = Date.now() + ADAPTIVE_WINDOW_MS;
+        if (next === 'default' && error instanceof ChallengeError && this.firstRoute === 'adaptive') this.proxiesUntil = Date.now() + ADAPTIVE_WINDOW_MS;
         throw error;
       }
     };
+    // The next route after a challenge. A read through a proxy also moves on when the proxy fails to
+    // carry it or the browser service fails on it, so a proxy outage leaves the other routes.
+    const nextStep = (index: number) => ({
+      id: 'trawl', enabled: trawl !== null && order.length > index,
+      recovers: (error: unknown) => (error instanceof ChallengeError
+        || (route !== 'default' && (carrierErrorKind(error) === 'transport' || (error instanceof Error && serviceFailures.has(error)))))
+        && deadline - performance.now() >= TRAWL_TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
+      run: ({ signal, remainingMs, previousError }: StepContext) => read(signal, remainingMs, previousError),
+    });
     // A gateway that refuses plain HTTP refuses it for days: the browser step reads the parcel meanwhile.
     const rest = new DirectRest('australia-post', trawl);
     return runSteps({ carrier: 'australia-post', budgetMs, signal: context.signal, recorder: routed }, [{
@@ -407,22 +497,16 @@ export class AustraliaPostTracker {
     }, {
       // The browser reads the same gateway, so it cannot improve on an inconclusive entry.
       enabled: trawl !== null, recovers: (error) => recoverableByDefault(error) && !(error instanceof IndeterminateError),
-      id: 'trawl', run: ({ signal, remainingMs }) => read(signal, remainingMs, proxyFirst ? this.fallbackProxy : null),
-    }, {
-      // The other route after a challenge. A first read through the proxy also falls back when the
-      // proxy fails to carry it or the browser service fails on it, so a proxy outage leaves the original route.
-      id: 'trawl', enabled: trawl !== null && this.fallbackProxy !== null,
-      recovers: error => (error instanceof ChallengeError
-        || (proxyFirst && (carrierErrorKind(error) === 'transport' || (error instanceof Error && serviceFailures.has(error)))))
-        && deadline - performance.now() >= TRAWL_TRANSPORT_ALLOWANCE_MS + RETRY_MIN_BROWSER_MS,
-      run: ({ signal, remainingMs }) => read(signal, remainingMs, proxyFirst ? null : this.fallbackProxy),
-    }]);
+      id: 'trawl', run: ({ signal, remainingMs, previousError }) => read(signal, remainingMs, previousError),
+    }, nextStep(1), nextStep(2)]);
   }
 }
 
 export const adapter: AdapterFactory = (environment) => {
   const tracker = new AustraliaPostTracker({ trawl: environment.trawl, fetcher: environment.fetcher, recorder: environment.recorder,
     fallbackProxyUrl: environment.env.AUSTRALIA_POST_FALLBACK_PROXY_URL,
+    datacenterProxyUrls: environment.env.AUSTRALIA_POST_DATACENTER_PROXY_URLS,
+    residentialDailyBytes: envPositive(environment.env, 'AUSTRALIA_POST_FALLBACK_PROXY_DAILY_BYTES', RESIDENTIAL_DAILY_BYTES),
     firstRoute: envChoice(environment.env, 'AUSTRALIA_POST_FIRST_ROUTE', ['default', 'residential', 'adaptive'], 'default') });
   // Recognition is plain HTTP: it asks the gateway alone, and a refusal there fails instead of starting a browser.
   // A recognition budget can be longer than the minute a lookup takes at most.

@@ -569,7 +569,7 @@ describe('Australia Post opt-in browser proxy recovery', () => {
     });
     const recorder = { step: vi.fn(), lookup: vi.fn() };
     const client = new AustraliaPostTracker({ trawl: browserService(browser),
-      fetcher: refused(), recorder, fallbackProxyUrl: proxy, timeoutMs: budgetMs, firstRoute });
+      fetcher: refused(), recorder, fallbackProxyUrl: proxy, timeoutMs: budgetMs, firstRoute, residentialDailyBytes: Infinity });
     return { client, browser, recorder };
   }
   const bodies = (browser: ReturnType<typeof vi.fn<typeof fetch>>) => browser.mock.calls.map(call => JSON.parse(String(call[1]!.body)) as Record<string, unknown>);
@@ -835,5 +835,141 @@ describe('Australia Post opt-in browser proxy recovery', () => {
     expect(bodies(browser).map(body => body.proxy ?? null)).toEqual([proxy, null, null, null]);
     expect(warn.mock.calls).toEqual([['AUSTRALIA_POST_FIRST_ROUTE must be default, residential, adaptive; using default']]);
     warn.mockRestore();
+  });
+});
+
+describe('Australia Post routes, cheapest first', () => {
+  const residential = 'http://test-user:test-pass@residential.example.test:8080';
+  const datacenter = ['http://dc-user:dc-pass@dc-one.example.test:8080', 'http://dc-user:dc-pass@dc-two.example.test:8080'];
+  let now = 0;
+  beforeEach(() => { now = 1_000_000; vi.spyOn(Date, 'now').mockImplementation(() => now); });
+  afterEach(() => { vi.restoreAllMocks(); });
+  function routes(replies: unknown[], options: Partial<AustraliaPostTrackerOptions> = {}) {
+    const browser = vi.fn<typeof fetch>().mockImplementation(async () => {
+      const reply = replies.shift();
+      return typeof reply === 'function' ? reply() : Response.json(reply);
+    });
+    const recorder = { step: vi.fn(), lookup: vi.fn() };
+    const client = new AustraliaPostTracker({ trawl: browserService(browser), fetcher: refused(), recorder,
+      fallbackProxyUrl: residential, datacenterProxyUrls: datacenter, timeoutMs: 60_000, ...options });
+    const proxies = () => browser.mock.calls.map(call => (JSON.parse(String(call[1]!.body)) as { proxy?: string }).proxy ?? null);
+    return { client, browser, recorder, proxies };
+  }
+  const refusal = () => service([capture({}, 403)]);
+
+  it('moves from the original route to a datacenter proxy, then to the residential one, recording each route', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.75);
+    const { client, recorder, proxies } = routes([refusal(), refusal(), service()]);
+    await expect(client.fetch(NUMBER)).resolves.toEqual(parse(fixture(), NUMBER));
+    expect(proxies()).toEqual([null, datacenter[1], residential]);
+    const steps = recorder.step.mock.calls.map(([record]) => record).filter(record => record.step === 'trawl');
+    expect(steps.map(record => [record.networkRoute, record.networkAttempt, record.outcome]))
+      .toEqual([['default', 'initial', 'challenge'], ['datacenter', 'retry', 'challenge'], ['residential', 'retry', 'ok']]);
+    expect(JSON.stringify(recorder.step.mock.calls)).not.toMatch(/pass@/);
+  });
+
+  it('stops at the first route that answers, and keeps a parcel’s own answers', async () => {
+    const answered = routes([refusal(), service()]);
+    await expect(answered.client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    expect(answered.proxies()).toEqual([null, expect.stringMatching(/^http:\/\/dc-user/)]);
+    const limited = routes([refusal(), service([capture({}, 429)]), service()]);
+    await expect(limited.client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited' });
+    expect(limited.browser).toHaveBeenCalledTimes(2);
+  });
+
+  it('takes the proxies first in a refusal spell, the datacenter before the residential one, then the original route', async () => {
+    const { client, proxies } = routes([refusal(), refusal(), refusal(), service()], { firstRoute: 'adaptive' });
+    await expect(client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+    now += 60_000;
+    await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    expect(proxies().map(value => value === residential ? 'residential' : value ? 'datacenter' : 'default'))
+      .toEqual(['default', 'datacenter', 'residential', 'datacenter']);
+  });
+
+  it('moves on when a datacenter proxy fails to carry a read, but not when the original route does', async () => {
+    const carried = routes([refusal(), service([]), service()]);
+    await expect(carried.client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    expect(carried.proxies()).toEqual([null, expect.any(String), residential]);
+    const original = routes([service([]), service()]);
+    await expect(original.client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'transport' });
+    expect(original.browser).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts a third read only when the budget still fits one', async () => {
+    const { client, browser } = routes([refusal(), refusal(), service()], { timeoutMs: 45_000 });
+    let elapsed = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => elapsed);
+    browser.mockImplementation(async () => { elapsed += 12_000; return Response.json(refusal()); });
+    await expect(client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+    expect(browser).toHaveBeenCalledTimes(2);
+    clock.mockRestore();
+  });
+
+  it('reads a datacenter list separated by spaces or commas and validates each entry without exposing it', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    const { client, proxies } = routes([refusal(), service()], { datacenterProxyUrls: ` ${datacenter[0]}, ${datacenter[1]}\n` });
+    await client.fetch(NUMBER);
+    expect(proxies()).toEqual([null, datacenter[1]]);
+    const invalid = () => new AustraliaPostTracker({ trawl: null, datacenterProxyUrls: [datacenter[0]!, 'http://dc-user:PRIVATE_PASSWORD@dc.example.test/path'] });
+    expect(invalid).toThrow('Browser retry proxy must be an HTTP(S) origin');
+    try { invalid(); } catch (error) { expect(String(error)).not.toContain('PRIVATE_PASSWORD'); }
+    // Datacenter proxies alone are enough for a proxy-first route.
+    const alone = routes([service()], { fallbackProxyUrl: undefined, firstRoute: 'residential' });
+    await alone.client.fetch(NUMBER);
+    expect(alone.proxies()).toEqual([expect.stringMatching(/^http:\/\/dc-user/)]);
+  });
+
+  describe('residential daily share', () => {
+    const DAY_MS = 86_400_000;
+
+    it('starts with one read and refills at the daily share, warning at most hourly while it is spent', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { client, proxies } = routes(Array.from({ length: 30 }, () => refusal()), { datacenterProxyUrls: undefined, residentialDailyBytes: 1_500_000 });
+      const lookup = async () => { await expect(client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' }); };
+      await lookup();
+      expect(proxies()).toEqual([null, residential]);
+      // A read's 0.15 MB comes back after a tenth of a day at 1.5 MB a day.
+      now += DAY_MS / 10 - 60_000;
+      await lookup();
+      await lookup();
+      expect(proxies()).toEqual([null, residential, null, null]);
+      expect(warn.mock.calls).toEqual([['Australia Post: the residential proxy has used its daily share; it carries no read until the share refills']]);
+      now += 60_000;
+      await lookup();
+      expect(proxies().slice(4)).toEqual([null, residential]);
+      // The share holds at most a quarter of a day: a long quiet spell does not bank a burst.
+      now += 10 * DAY_MS;
+      for (let index = 0; index < 4; index++) await lookup();
+      expect(proxies().slice(6).filter(value => value === residential)).toHaveLength(2);
+      expect(warn).toHaveBeenCalledTimes(2);
+    });
+
+    it('leaves the datacenter route and the original one to carry reads once the share is spent', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { client, proxies } = routes([refusal(), refusal(), service(), refusal(), refusal(), service()]);
+      await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+      await expect(client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+      expect(proxies().map(value => value === residential ? 'residential' : value ? 'datacenter' : 'default'))
+        .toEqual(['default', 'datacenter', 'residential', 'default', 'datacenter']);
+    });
+
+    it('can be unbounded, refuses a share that is not a positive number, and reads its setting', async () => {
+      const unbounded = routes(Array.from({ length: 6 }, () => refusal()), { datacenterProxyUrls: undefined, residentialDailyBytes: Infinity });
+      for (let index = 0; index < 3; index++) await expect(unbounded.client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+      expect(unbounded.proxies().filter(value => value === residential)).toHaveLength(3);
+      for (const value of [0, -1, Number.NaN, '1' as never]) {
+        expect(() => new AustraliaPostTracker({ trawl: null, residentialDailyBytes: value }))
+          .toThrow('Australia Post residential daily bytes must be a positive number');
+      }
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const browser = vi.fn<typeof fetch>().mockImplementation(async () => Response.json(refusal()));
+      for (const daily of ['300000', 'lots']) {
+        const instance = adapter({ trawl: browserService(browser), fetcher: refused(), recorder: NOOP_RECORDER, browserExecutablePath: null,
+          env: { AUSTRALIA_POST_FALLBACK_PROXY_URL: residential, AUSTRALIA_POST_DATACENTER_PROXY_URLS: datacenter.join(','),
+            AUSTRALIA_POST_FALLBACK_PROXY_DAILY_BYTES: daily } });
+        await expect(instance.track({ number: NUMBER })).rejects.toMatchObject({ kind: 'challenge' });
+      }
+      expect(warn.mock.calls).toContainEqual(['AUSTRALIA_POST_FALLBACK_PROXY_DAILY_BYTES must be a positive number; using 33000000']);
+    });
   });
 });

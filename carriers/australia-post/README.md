@@ -29,25 +29,32 @@ refusal there leaves the number unchecked instead of starting the browser.
      0.1 MB.
    - Each lookup gets a fresh browser context that is closed afterwards.
 
-`AUSTRALIA_POST_FALLBACK_PROXY_URL` opts into one more browser read through an HTTP(S)
-proxy after a captured browser challenge. The primary browser keeps its full budget;
-the retry starts only when the transport allowance and usable browser time remain.
-It sends the whole browser context through the configured proxy. Missing parcels,
-inconclusive replies, rate limits and schema errors do not use it. Step telemetry
-distinguishes the default and configured residential routes; it does not infer an IP family.
-HTTP recognition never uses either browser route.
+`AUSTRALIA_POST_DATACENTER_PROXY_URLS` (HTTP(S) proxies separated by spaces or commas) and
+`AUSTRALIA_POST_FALLBACK_PROXY_URL` (a residential proxy) opt into more browser reads after a
+captured browser challenge, cheapest first: the original route, then one of the datacenter proxies
+at random, then the residential proxy. Each read sends the whole browser context through its proxy.
+The first browser read keeps its full budget; a later one starts only when the transport allowance
+and usable browser time remain. Missing parcels, inconclusive replies, rate limits and schema errors
+take no other route. A read a proxy fails to carry, or the browser service fails on with a server
+error, moves to the next route. Step telemetry names the route (`default`, `datacenter` or
+`residential`), never the proxy, and does not infer an IP family. HTTP recognition never uses a
+browser route.
+
+The residential proxy is paid by the byte, so it carries a read only within a daily share:
+`AUSTRALIA_POST_FALLBACK_PROXY_DAILY_BYTES`, 33 MB by default (about 1 GB a month), charged 0.15 MB a
+read. The share refills continuously, holds at most a quarter of a day's share and starts with one
+read, so restarts add almost nothing. While it is spent the other routes carry the reads, and a
+warning is logged at most hourly.
 
 `AUSTRALIA_POST_FIRST_ROUTE=residential` (the tracker's `firstRoute`) sends the first browser read
-through that proxy instead, and the retry after a challenge takes the original route. DataDome can
-challenge the browser service's own address on every read for hours, so a deployment can keep that
-address for the retry. A first read the proxy fails to carry, or the browser service fails on with a
-server error, also retries on the original route.
-`AUSTRALIA_POST_FIRST_ROUTE=adaptive` reads through the proxy first only for 15 minutes after the
-original route was last refused, and on the original route otherwise. Refusals come in spells, and
-the retry after one starts with what the refusal left of the budget, so it often runs out; outside
-a spell the original route answers sooner and needs no proxy request. The window is kept per
-tracker instance. Without a proxy the setting changes nothing. An unknown value is read as `default`,
-with one warning.
+through the proxies, datacenter first, and keeps the original route for last. DataDome can challenge
+the browser service's own address on every read for hours, so a deployment can keep that address
+for the end. `AUSTRALIA_POST_FIRST_ROUTE=adaptive` puts the proxies first only for 15 minutes after
+the original route was last refused, and the original route first otherwise. Refusals come in
+spells, and a read after one starts with what the refusal left of the budget, so it often runs out;
+outside a spell the original route answers sooner and needs no proxy request. The window is kept
+per tracker instance. Without a proxy the setting changes nothing. An unknown value is read as
+`default`, with one warning.
 
 Budget: 45 s by default (max 60 s). `trawl` keeps a 15 s transport allowance and fails when less
 remains. A browser read TRAWL gives up for lack of time (its deadline passed, or the page step ran
