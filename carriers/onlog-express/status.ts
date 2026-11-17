@@ -8,6 +8,15 @@ const WORDINGS: ReadonlyMap<string, Stage> = new Map(([
   ['OBJETO EM TRANSFERÊNCIA', 'in_transit'],
   ['OBJETO SAIU PARA ENTREGA AO DESTINATÁRIO', 'out_for_delivery'],
   ['OBJETO ENTREGUE AO DESTINATÁRIO', 'delivered'],
+  // The same steps where the tracker names its scans: the collection from the sender, the
+  // network's receipt and dispatch scans, the round's departure and the recipient's signature.
+  ['COLETA DE ENCOMENDA', 'accepted'],
+  ['ENTRADA NO CENTRO DE DISTRIBUIÇÃO', 'in_transit'],
+  ['ENCAMINHADO PARA O OPERADOR LOGÍSTICO', 'in_transit'],
+  ['BIPE DE EXPEDIÇÃO', 'in_transit'],
+  ['BIPE DE RECEBIMENTO', 'in_transit'],
+  ['BIPE DE SAÍDA PARA ENTREGA', 'out_for_delivery'],
+  ['ASSINATURA DE ENCOMENDA', 'delivered'],
 ] as const).map(([wording, stage]) => [normalizeStatusWording(wording), stage]));
 
 export function onlogExpressMappedStage(wording: string): Stage | undefined {

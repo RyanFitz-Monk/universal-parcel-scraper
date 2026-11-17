@@ -127,6 +127,23 @@ describe('Onlog Express guest response parser', () => {
     expect(result.events![0]!.time).toBeUndefined();
   });
 
+  it('reads the rows named by their scans through to the signature', () => {
+    const scans: Scan[] = [
+      { wording: 'OBJETO CRIADO', clock: '10/11/2026 09:57' },
+      { wording: 'COLETA DE ENCOMENDA', clock: '11/11/2026 18:23' },
+      { wording: 'ENTRADA NO CENTRO DE DISTRIBUIÇÃO', clock: '11/11/2026 18:41' },
+      { wording: 'ENCAMINHADO PARA O OPERADOR LOGÍSTICO', clock: '11/11/2026 18:47' },
+      { wording: 'BIPE DE EXPEDIÇÃO', clock: '12/11/2026 05:08' },
+      { wording: 'BIPE DE RECEBIMENTO', clock: '16/11/2026 11:08' },
+      { wording: 'BIPE DE SAÍDA PARA ENTREGA', clock: '16/11/2026 11:13' },
+    ];
+    const signed = parseOnlogExpress(payload([...scans, { wording: 'ASSINATURA DE ENCOMENDA', clock: '16/11/2026 17:04' }]), NUMBER);
+    expect(signed).toMatchObject({ status: 'delivered', current_stage: 'delivered', current_stage_source: 'carrier_map' });
+    expect(signed.events!.map(event => event.stage)).toEqual(
+      ['delivered', 'out_for_delivery', 'in_transit', 'in_transit', 'in_transit', 'in_transit', 'accepted', 'registered']);
+    expect(parseOnlogExpress(payload(scans), NUMBER)).toMatchObject({ status: 'out_for_delivery', current_stage: 'out_for_delivery' });
+  });
+
   it('retains unknown native wording without a guessed stage', () => {
     const result = parseOnlogExpress(payload([{ wording: 'OBJETO COM NOVA FORMULAÇÃO', clock: '01/04/2026 10:00' }]), NUMBER);
     expect(result).toMatchObject({ status: 'unknown', last_status_text: 'OBJETO COM NOVA FORMULAÇÃO' });

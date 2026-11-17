@@ -6,6 +6,13 @@
     { "wording": "OBJETO POSTADO", "stage": "accepted", "language": "pt", "confirmedBy": "live" },
     { "wording": "OBJETO EM TRANSFERÊNCIA", "stage": "in_transit", "language": "pt", "confirmedBy": "live" },
     { "wording": "OBJETO SAIU PARA ENTREGA AO DESTINATÁRIO", "stage": "out_for_delivery", "language": "pt", "confirmedBy": "live" },
-    { "wording": "OBJETO ENTREGUE AO DESTINATÁRIO", "stage": "delivered", "language": "pt", "confirmedBy": "live" }
+    { "wording": "OBJETO ENTREGUE AO DESTINATÁRIO", "stage": "delivered", "language": "pt", "confirmedBy": "live" },
+    { "wording": "COLETA DE ENCOMENDA", "stage": "accepted", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The collection from the sender, minutes before the distribution centre's entry." },
+    { "wording": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO", "stage": "in_transit", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "Entry into a distribution centre." },
+    { "wording": "ENCAMINHADO PARA O OPERADOR LOGÍSTICO", "stage": "in_transit", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "Sent on to the logistics operator that carries the next leg." },
+    { "wording": "BIPE DE EXPEDIÇÃO", "stage": "in_transit", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "A dispatch scan between the network's sites." },
+    { "wording": "BIPE DE RECEBIMENTO", "stage": "in_transit", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "A receipt scan at one of the network's sites." },
+    { "wording": "BIPE DE SAÍDA PARA ENTREGA", "stage": "out_for_delivery", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The scan out for delivery, the same day as the signature." },
+    { "wording": "ASSINATURA DE ENCOMENDA", "stage": "delivered", "language": "pt", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "The recipient's signature for the parcel, hours after the scan out for delivery, as the last row." }
   ]
 }
