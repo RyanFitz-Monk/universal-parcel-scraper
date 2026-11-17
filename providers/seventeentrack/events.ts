@@ -3,7 +3,7 @@ import type { CarrierEvent } from '../../core/result/index.js';
 import { EXPLICIT_OFFSET_PATTERN } from '../../core/time/index.js';
 import type { Stage } from '../../generated/catalog.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
-import { event, place, text } from '../shared/result.js';
+import { event, isMessageRow, place, text } from '../shared/result.js';
 import { SUB_STAGES, subStatusStage } from './status.js';
 import { chineseFinalStage } from '../../core/status/language.js';
 import { chinaPostRelayedStage } from '../../carriers/china-post/status.js';
@@ -54,7 +54,8 @@ export function seventeenTrackEvent(raw: JsonObject, operator: JsonObject, place
   const chinese = code === 'InTransit_Other' && parsed.stage_source === 'carrier_map' && parsed.description
     ? chineseFinalStage(parsed.description) ?? chinaPostRelayedStage(parsed.description) : undefined;
   if (chinese) Object.assign(parsed, { stage: chinese, stage_source: 'wording:language' });
-  const coded = chinese ? undefined : subStatusStage(code, parsed.stage as Stage, parsed.description);
+  // A message has no stage of its own, whatever code 17TRACK files it under.
+  const coded = chinese || isMessageRow(parsed.description ?? '') ? undefined : subStatusStage(code, parsed.stage as Stage, parsed.description);
   // A stage the code gives comes from 17TRACK's map, even where its stage name was not one the wording rules read.
   if (coded) Object.assign(parsed, { stage: coded, stage_source: 'carrier_map' });
   // 17TRACK's generic transit bucket loses Swiss Post's delivery-round scan, and

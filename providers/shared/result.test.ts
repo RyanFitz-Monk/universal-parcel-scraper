@@ -196,6 +196,20 @@ describe('shared provider result', () => {
       .toMatchObject({ description: 'Departed Sunyou Facility' });
   });
 
+  it("reads Česká pošta's alerts to the addressee as messages, not the event they name", () => {
+    for (const alert of ['E-mail alert for the addressee - the consignment was sent for transportation.',
+      'Email alert for the addressee - consignment delivery date.', 'SMS alert for the addressee - the consignment was deposited.']) {
+      expect(event('2026-01-07T12:45:00+01:00', alert), alert).toMatchObject({ description: alert, stage: 'pending', stage_source: 'none' });
+    }
+    expect(event('2026-01-07T12:45:00+01:00', 'The consignment was sent for transportation.')?.stage_source).not.toBe('none');
+  });
+
+  it("reads China Post's notice that the delivery time may stretch as a message", () => {
+    for (const notice of ['受台风天气影响，邮件时限可能有所延长，我们正全力协调资源加快处理，请您耐心等待', '受降雪影响,邮件投递时限可能延长']) {
+      expect(event('2026-01-07T12:45:00+08:00', notice, 'InTransit'), notice).toMatchObject({ stage: 'pending', stage_source: 'none' });
+    }
+  });
+
   it("reads Chronopost's notice to the recipient without the message type and medium appended to it", () => {
     const notice = 'Destinataire informé par SMS ou mail';
     for (const relayed of [`${notice}. Type du message : Retard Média utilisé : E-mail`, `${notice} Type du message : Echec de livraison`]) {

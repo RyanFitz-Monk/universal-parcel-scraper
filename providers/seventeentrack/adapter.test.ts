@@ -88,6 +88,13 @@ describe('17TRACK result parsing', () => {
       expect(parse17TrackResponse(reply(official, [done, moving]), number)).not.toHaveProperty('expected_delivery_from');
     }
   });
+  it("gives China Post's notice of a longer delivery time no stage, though 17TRACK files it under generic transit", () => {
+    const notice = '受台风天气影响，邮件时限可能有所延长，我们正全力协调资源加快处理，请您耐心等待，由此给您带来的不便敬请谅解';
+    const result = parse17TrackResponse(postalHistory([postalScan('InTransit_Other', notice)]), number);
+    expect(result.events?.[0]).toMatchObject({ description: notice, stage: 'pending', stage_source: 'none' });
+    expect(parse17TrackResponse(postalHistory([postalScan('InTransit_Other')]), number).events?.[0]).toMatchObject({ stage: 'in_transit' });
+  });
+
   it('refines Swiss Post vehicle loading without reclassifying other operators or future wording', () => {
     const payload = postalHistory([postalScan('InTransit_Other', 'Loading into delivery vehicle')]);
     const shipment = payload.shipments[0]!.shipment as { tracking: { providers: Array<{ provider: { name: string }; events: unknown[] }> } };

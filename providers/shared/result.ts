@@ -731,10 +731,23 @@ export function eventStage(description: string): Stage | undefined {
 // keeps the stage of the scan before it (`keepStages`), a missed delivery's among others. The shared rules read it
 // as transit for the carriers that rely on them.
 const DPD_DELAY_NOTICE = /^there has been a delay with your delivery[.!]?$/i;
+// Česká pošta's text and email to the recipient, naming the event it reports ("E-mail alert for the addressee - the
+// consignment was sent for transportation."): a message, not a movement, as Česká pošta's own map reads its codes
+// 42 and 43. The event it names has its own row.
+const ADDRESSEE_ALERT = /^(?:sms|e-?mail) alert for the addressee\b/i;
+// China Post's notice that weather or another cause may stretch the item's delivery time ("受台风天气影响，邮件时限可能有所
+// 延长…"): a message dated when it was sent, not a scan, which 17TRACK files under generic transit.
+const DELAY_MESSAGE = /^受[^，,。]{1,30}影响[，,]\s*邮件(?:投递)?时限可能(?:有所)?延长/;
+
+/** A message the shared rules give no stage, whatever code a provider files it under. */
+export function isMessageRow(description: string): boolean {
+  const wording = description.trim();
+  return DPD_DELAY_NOTICE.test(wording) || ADDRESSEE_ALERT.test(wording) || DELAY_MESSAGE.test(wording);
+}
 
 /** Retain the decision before delivery wording is redacted or a stage is projected. */
 export function classifyEvent(description: string, declared?: Stage): { stage: Stage; stage_source: string } {
-  if (DPD_DELAY_NOTICE.test(description.trim())) return { stage: 'pending', stage_source: 'none' };
+  if (isMessageRow(description)) return { stage: 'pending', stage_source: 'none' };
   const specific = sourceEventStage(description, false);
   if (specific) return { stage: specific, stage_source: 'wording:provider' };
   if (declared) return { stage: declared, stage_source: 'carrier_map' };
