@@ -28,5 +28,11 @@
     "unavailable": []
   },
   "links": [],
-  "detection": []
+  "detection": [
+    {
+      "id": "xyl-ships-1",
+      "pattern": "^NUDE\\d{10}EX$",
+      "confidence": "high"
+    }
+  ]
 }

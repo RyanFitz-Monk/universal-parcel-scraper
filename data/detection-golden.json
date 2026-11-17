@@ -97799,6 +97799,14 @@
     "candidates": []
   },
   {
+    "input": "NUDE9999999980EX",
+    "carrier": "xyl-ships",
+    "confidence": "high",
+    "candidates": [
+      "xyl-ships"
+    ]
+  },
+  {
     "input": "NVIDARKZO000000884",
     "carrier": "unknown",
     "confidence": "low",

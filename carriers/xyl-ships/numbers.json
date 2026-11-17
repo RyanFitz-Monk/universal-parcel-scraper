@@ -1,5 +1,18 @@
 {
   "carrier": "xyl-ships",
   "gap": "No public page shows an XYL-Ships number, and its site renders its tracker in the browser.",
-  "records": []
+  "records": [
+    {
+      "number": "NUDE9999999980EX",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "donated_real",
+      "shapeConfirmed": "2026-11-17",
+      "expect": {
+        "carrier": "xyl-ships",
+        "confidence": "high"
+      },
+      "note": "Made-up number in the shape 17TRACK files under FXYL with a full history. Its serial sits far beyond the range in use."
+    }
+  ]
 }

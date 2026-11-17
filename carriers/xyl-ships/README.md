@@ -8,8 +8,9 @@ which the catalog files as [XYL](../xyl/README.md).
 
 ## Numbers
 
-XYL-Ships publishes no number format and no public page shows one of its numbers, so there is
-no rule.
+XYL-Ships publishes no number format and no public page shows one of its numbers. Numbers made
+of NUDE, ten digits and EX are its own: 17TRACK files their histories under FXYL, and no other
+carrier's rule takes the shape, so the rule has high confidence. The corpus holds a synthetic one.
 
 ## Why there is no adapter
 

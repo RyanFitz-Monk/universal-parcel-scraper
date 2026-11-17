@@ -63382,7 +63382,12 @@
     },
     "canaryUrl": "https://xylships.com/",
     "linkRules": [],
-    "detectionRules": []
+    "detectionRules": [
+      {
+        "pattern": "^NUDE\\d{10}EX$",
+        "confidence": "high"
+      }
+    ]
   },
   "yalidine": {
     "displayName": "Yalidine",

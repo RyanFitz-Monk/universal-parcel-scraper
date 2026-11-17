@@ -63386,7 +63386,12 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     },
     "canaryUrl": "https://xylships.com/",
     "linkRules": [],
-    "detectionRules": []
+    "detectionRules": [
+      {
+        "pattern": "^NUDE\\d{10}EX$",
+        "confidence": "high"
+      }
+    ]
   },
   "yalidine": {
     "displayName": "Yalidine",
@@ -68409,7 +68414,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "xuchuan-logistics": ["xuchuan-logistics-1"],
   "xwwt": [],
   "xyl": [],
-  "xyl-ships": [],
+  "xyl-ships": ["xyl-ships-1"],
   "yalidine": ["yalidine-1"],
   "yamato-america": [],
   "yandex-delivery": [],
