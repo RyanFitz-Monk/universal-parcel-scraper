@@ -1039,6 +1039,10 @@ describe('classifyWording', () => {
       ['Send item to domestic location (Inb)', 'in_transit'],
       // Russian Post's bagging as ParcelsApp relays it, and the despatch beside it.
       ['Insert item into bag (Otb)', 'in_transit'], ['Insert item into bag (Otb) and Send item abroad ', 'in_transit'],
+      // Correos de México's posting, receipt, outward office of exchange and bagging, as ParcelsApp words them.
+      ['Post Office Drop-off', 'accepted'], ['Received at Post Office', 'in_transit'],
+      ['In the international exchange area towards the destination country, prior to Customs', 'in_transit'],
+      ['Piece deposited in a bag and sent to the destination country office.', 'in_transit'],
       // YunExpress's export declaration in China, as its own map reads it.
       ['The country of origin commences customs declaration.', 'in_transit'],
       // An export clearance started or under way is a routine step before the flight; a hold there is customs.

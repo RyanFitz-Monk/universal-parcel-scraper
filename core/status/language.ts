@@ -576,6 +576,10 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   if (/^(?:notificado )?(?:el |la |su |tu )?(?:envio|paquete|pedido|encomienda) (?:ha sido|fue) registrad[oa]$/.test(text)
     || /^(?:the |your )?(?:shipment|parcel|package) (?:has been|was) registered$/.test(text)) return 'registered';
 
+  // Correos de México's outward office of exchange, which names the destination's customs ahead of it ("En zona de
+  // intercambio int. hacia el país destino, previo Aduana"), as ParcelsApp words it: in transit, as its own map reads it.
+  if (/^in the international exchange area towards the destination country,? prior to customs$/.test(text)) return 'in_transit';
+
   // A completed clearance or release moves the parcel on; holds, inspections,
   // submissions and clearance still pending or negated stay with customs.
   if (/(?:国内|出口|进口|目的国)?清关中/.test(text)) return 'customs';
@@ -733,6 +737,12 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // office sending it on to its own network.
   if (/^(?:receive item|item received) at (?:the )?office of exchange \((?:inb|otb)\)$|^send item to domestic location \(inb\)$/.test(text)
     || /^insert item into bag \((?:inb|otb)\)(?: and send item abroad)?$/.test(text)) return 'in_transit';
+  // Correos de México's scans as ParcelsApp words them, read as its own map reads them: the posting at a post
+  // office ("Depósito en Oficina de Correos"), then an office receiving the item on its way and the item bagged for the
+  // destination's office. Not a delivery.
+  if (/^post office drop ?off$/.test(text)) return 'accepted';
+  if (/^received at (?:the |a )?post office$/.test(text)
+    || /^(?:piece|item) deposited in a bag and sent to (?:the )?destination country(?:'s)? office$/.test(text)) return 'in_transit';
   // Sent on to another country: "Sent abroad".
   if (/^(?:(?:the )?(?:shipment|parcel|package|item) )?(?:(?:has been|was) )?(?:sent|dispatched|forwarded) abroad$/.test(text)) return 'in_transit';
   // A post's departure from its country, as ParcelsApp words Poczta Polska's:
