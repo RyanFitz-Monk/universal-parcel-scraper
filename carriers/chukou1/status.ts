@@ -1,10 +1,12 @@
 import { classifyWording, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import type { CarrierStatusMap } from '../../core/status/statusMap.js';
+import { chinaPostRelayedStage } from '../china-post/status.js';
 
 /**
  * Chukou1's own scan wordings, as its first leg writes them after the place,
  * with the descriptions of the scan codes its open API lists. Scans carry no
- * code. A partner's wording is left to the shared wording rules.
+ * code. China Post's are read as China Post's relayed scans; another partner's
+ * wording is left to the shared wording rules.
  */
 const WORDINGS: ReadonlyMap<string, Stage> = new Map([
   ['shipment information received', 'registered'], // The seller's order reached Chukou1.
@@ -54,9 +56,14 @@ const SUMMARIES: ReadonlyMap<string, Stage> = new Map([
   ['Delivered', 'delivered'],
 ]);
 
-/** The stage Chukou1's wordings give a scan, if the map knows it. */
+// China Post's scans in its feed, kept whole after the place ("<town>, 航空公司启运"), read as China Post's scans
+// relayed in Chinese are. Its receipt keeps a space after its name: "中国邮政 已收取邮件".
+const chinaPostStage = (wording: string): Stage | undefined => chinaPostRelayedStage(wording.slice(wording.lastIndexOf(',') + 1)
+  .trim().replace(/(?<=\p{Script=Han})\s+(?=\p{Script=Han})/gu, ''));
+
+/** The stage Chukou1's wordings give a scan, or China Post's in its feed, if the map knows it. */
 export function chukou1MappedStage(wording: string): Stage | undefined {
-  return WORDINGS.get(wording.toLocaleLowerCase('en-US').trim().split(/\s+/).join(' '));
+  return WORDINGS.get(wording.toLocaleLowerCase('en-US').trim().split(/\s+/).join(' ')) ?? chinaPostStage(wording);
 }
 
 /** The stage of a shipment's own status, if the page shows one. */

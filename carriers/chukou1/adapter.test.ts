@@ -124,8 +124,10 @@ describe('Chukou1 HTTP adapter', () => {
     ]);
     const unpadded = parseChukou1(changed('in-transit', (shipment) => { shipment.firstLegTrackingDetails[0]!.dateTimeString = 'Sep 7 2026 6:18 AM'; }), IN_TRANSIT);
     expect(unpadded.events!.find((event) => event.description === 'Item was sent out from Logistics Centre')!.local_time).toBe('2026-09-07T06:18:00');
-    // China Post's own wording has no rule; the scans before it stage the parcel.
-    expect(result.events!.slice(0, 6).every((event) => event.stage === undefined)).toBe(true);
+    // China Post's own wording, after the place, reads as China Post's relayed scans do.
+    expect(result.events!.slice(0, 6).map((event) => [event.stage, event.stage_source])).toEqual([
+      ['in_transit', 'carrier_map'], ['in_transit', 'carrier_map'], ['in_transit', 'carrier_map'], ['in_transit', 'carrier_map'],
+      ['customs', 'carrier_map'], ['accepted', 'carrier_map']]);
     expect(JSON.stringify(result)).not.toMatch(/(?<!\d)(?:0000003\d|00000020)(?!\d)|示例省/);
   });
 
@@ -191,8 +193,9 @@ describe('Chukou1 HTTP adapter', () => {
     const unstaged = parseChukou1(changed('in-transit', (shipment) => {
       shipment.orderStatus = 'Synthetic';
       shipment.firstLegTrackingDetails = [];
+      for (const feed of shipment.supplierTrackingDetails ?? []) for (const row of feed.trackingDetails) row.description = `${String(row.description)}，合成`;
     }), IN_TRANSIT);
-    expect(unstaged).toMatchObject({ status: 'unknown', last_status_text: '到达寄达地' });
+    expect(unstaged).toMatchObject({ status: 'unknown', last_status_text: '到达寄达地，合成' });
     expect(unstaged).not.toHaveProperty('current_stage');
   });
 
@@ -381,6 +384,8 @@ describe('Chukou1 status vocabulary', () => {
     }
     expect(statusMapAnswer({ carrier: 'chukou1', providerCode: null, description: 'Item received by Logistics Centre' }))
       .toEqual({ kind: 'mapped', stage: 'accepted' });
-    expect(statusMapAnswer({ carrier: 'chukou1', providerCode: null, description: '示例市, 已交承运商运输' })).toEqual({ kind: 'unknown' });
+    expect(statusMapAnswer({ carrier: 'chukou1', providerCode: null, description: '示例市, 已交承运商运输' })).toEqual({ kind: 'mapped', stage: 'in_transit' });
+    expect(statusMapAnswer({ carrier: 'chukou1', providerCode: null, description: '示例市, 中国邮政 已收取邮件' })).toEqual({ kind: 'mapped', stage: 'accepted' });
+    expect(statusMapAnswer({ carrier: 'chukou1', providerCode: null, description: '示例市, 合成的记录' })).toEqual({ kind: 'unknown' });
   });
 });

@@ -36,7 +36,8 @@ EC-FirstClass platform makes.
   API's scan codes never reach the page, which shows only their wordings.
 - Each carrier the parcel was handed to has its own feed of scans, kept whole because their
   wordings hold commas. The shared wording rules stage the English ones. China Post's Chinese
-  wording has no rule, so the parcel keeps an earlier scan's stage. China Post can come in two
+  wording, after the place, is read as China Post's scans relayed in Chinese are, as the other
+  forwarders that carry them read it. China Post can come in two
   feeds that repeat the same scans with their places written differently; a scan another feed
   gave at the same minute with the same wording is left out.
 - The shipment's `Delivered` stands over an earlier scan, unless a later one says the parcel
