@@ -1,5 +1,6 @@
 import { classifyWording, type ClassifiedWording, type Stage } from '../../core/status/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
+import { countryCode } from '../../core/time/index.js';
 import { regionZone } from '../../places/zones.js';
 
 /**
@@ -47,6 +48,7 @@ const PLACED = /^(.+) at (?:((?:(?! at ).)+), )?([A-Z]{2})$/;
 // A place that ends with its own country before the code the text appends: "VOORBEELD, ZUID-HOLLAND, NL, FR"
 // on a parcel bound for France was scanned in the Netherlands. A state before its country ("Sampleville, FL, US",
 // "Sampleville, Sample County, FL, US") is the place's state.
+const SWISS_CANTONS = new Set('AG AI AR BE BL BS FR GE GL GR JU LU NE NW OW SG SH SO SZ TG TI UR VD VS ZG ZH'.split(' '));
 const OWN_COUNTRY = /^(.+?, .+), ([A-Z]{2})$/;
 
 /** A text split into its wording and, when it ends with them, the place and its country. */
@@ -54,7 +56,8 @@ export function starlinksGlobalPlace(description: string): { wording: string; pl
   const placed = PLACED.exec(description);
   if (!placed) return { wording: description };
   const own = placed[2] ? OWN_COUNTRY.exec(placed[2]) : null;
-  if (own && own[2] !== placed[3] && !regionZone(placed[3]!, own[2]!)) return { wording: placed[1]!, place: own[1]!, country: own[2]! };
+  if (own && own[2] !== placed[3] && countryCode(own[2]) && !(placed[3] === 'CH' && SWISS_CANTONS.has(own[2]!))
+    && !regionZone(placed[3]!, own[2]!)) return { wording: placed[1]!, place: own[1]!, country: own[2]! };
   return { wording: placed[1]!, ...(placed[2] ? { place: placed[2] } : {}), country: placed[3]! };
 }
 

@@ -281,3 +281,11 @@ describe('Starlinks Global status vocabulary', () => {
     expect(statusMapAnswer({ carrier: 'starlinks-global', providerCode: null, description: 'Sample state' })).toEqual({ kind: 'unknown' });
   });
 });
+
+it('keeps the country after a Swiss canton in a facility scan', () => {
+  for (const canton of ['TI', 'GE']) {
+    const place = `Example facility, Example town, ${canton}`;
+    expect(starlinksGlobalPlace(`Processed in carrier facility at ${place}, CH`))
+      .toEqual({ wording: 'Processed in carrier facility', place, country: 'CH' });
+  }
+});
