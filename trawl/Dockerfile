@@ -36,6 +36,7 @@ COPY jd-icon.py /app/packages/tiers/src/utils/jd-icon.py
 COPY asendia-browser.mjs /app/packages/tiers/src/utils/asendia-browser.mjs
 COPY correios-browser.mjs /app/packages/tiers/src/utils/correios-browser.mjs
 COPY onlog-express-browser.mjs /app/packages/tiers/src/utils/onlog-express-browser.mjs
+COPY paxel-browser.mjs /app/packages/tiers/src/utils/paxel-browser.mjs
 COPY viettel-post-browser.mjs /app/packages/tiers/src/utils/viettel-post-browser.mjs
 COPY recaptcha-audio.mjs /app/packages/tiers/src/utils/recaptcha-audio.mjs
 COPY recaptcha-backoff.mjs /app/packages/tiers/src/utils/recaptcha-backoff.mjs

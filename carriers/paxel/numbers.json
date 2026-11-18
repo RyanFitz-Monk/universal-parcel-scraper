@@ -213,6 +213,25 @@
         "confidence": "none"
       },
       "note": "A public complaint attributes this shipment to Paxel; whole-number guest history is unconfirmed."
+    },
+    {
+      "number": "TSPX-00221600507",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.dejavumagnet.com/resi-pengiriman/",
+        "date": "2026-11-05",
+        "dateKind": "shipment",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "A merchant shipping ledger attributes this AWB to Paxel; the carrier’s whole-AWB form returns its shipment timeline. The scan clocks have no year."
     }
   ]
 }

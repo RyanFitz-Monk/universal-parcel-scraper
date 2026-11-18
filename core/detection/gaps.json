@@ -4682,5 +4682,11 @@
     "pattern": "^[A-Z]{3}\\d{6}$",
     "kind": "by_design",
     "reason": "A short reference with three letters and six digits does not establish FTD as its issuer; its official link or whole-bound history identifies the carrier."
+  },
+  {
+    "carrier": "paxel",
+    "pattern": "^TSPX\\d{11}$",
+    "kind": "by_design",
+    "reason": "Paxel’s guest form confirms a merchant TSPX reference, but no issuer specification establishes ownership of the wider prefix. It is accepted only for a parcel filed to Paxel."
   }
 ]

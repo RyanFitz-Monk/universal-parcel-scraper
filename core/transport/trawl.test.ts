@@ -56,6 +56,22 @@ describe('TrawlClient.scrape', () => {
     expect(result.capturedResponses.map((row) => row.phoneDigitsSubmitted)).toEqual([true, undefined]);
   });
 
+  it('retains printed Paxel form binding only for the exact carrier endpoint and layouts', async () => {
+    const page = 'https://paxel.co/id/lacak-pengiriman';
+    const valid = ['TSPX-00000000000', 'EM.ABCDEFGHJK-20261107-1-ZZZZZZ'];
+    const invalid = ['TSPX-0000000000', 'TSPX-000000000000', 'EM-TOO-SHORT', 'TSPX-00000000000\n', 'OTHER-00000000000'];
+    const capturedResponses = [
+      ...valid.map(trackingNumberSubmitted => ({ url: page, trackingNumberSubmitted })),
+      ...invalid.map(trackingNumberSubmitted => ({ url: page, trackingNumberSubmitted })),
+      ...[page + '?x=1', page + '/', page.replace('paxel.co', 'example.test')]
+        .map(url => ({ url, trackingNumberSubmitted: valid[0] })),
+    ].map(row => ({ status: 200, body: '<html/>', ...row }));
+    const client = new TrawlClient('http://trawl:8191', jsonFetcher({ html: '', tier: 3, statusCode: 200, capturedResponses }));
+    const result = await client.scrape({ url: page }, { ...options, requireSolved: false });
+    expect(result.capturedResponses.map(row => row.trackingNumberSubmitted))
+      .toEqual([...valid, ...Array(invalid.length + 3).fill(undefined)]);
+  });
+
   it('can retain the latest bounded capture sequence without changing the default window or service request', async () => {
     const captures = Array.from({ length: 60 }, (_, index) => ({ url: 'https://example.test/api', status: index === 59 ? 429 : 200,
       headers: index === 59 ? { 'retry-after': '60' } : {}, body: String(index) }));

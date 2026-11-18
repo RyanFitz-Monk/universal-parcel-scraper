@@ -23,6 +23,7 @@ try {
   const omgoReplies = Object.fromEntries(['tracking-page.html', 'tracking.json'].map(file => [file,
     readFileSync(path.join(root, 'carriers/omgo/fixtures', file), 'utf8')]));
   const ftdNzReply = readFileSync(path.join(root, 'carriers/ftd-nz/fixtures/tracking.html'), 'utf8');
+  const paxelReply = readFileSync(path.join(root, 'carriers/paxel/fixtures/tracking.html'), 'utf8');
   const lhtexReply = JSON.parse(readFileSync(path.join(root, 'carriers/lhtex/fixtures/tracking.json'), 'utf8'));
   const ninjaReply = JSON.parse(readFileSync(path.join(root, 'carriers/ninja-van/fixtures/delivered.json'), 'utf8'));
   writeFileSync(path.join(scratch,'smoke.mjs'), `
@@ -102,6 +103,28 @@ try {
     assert.equal(ftdNz.result.delivery_tracking_number, '73974682510368');
     assert.equal(ftdNzCalls, 1);
     assert.equal(ftdNzHandoffCalls, 1);
+    // Printed whole-AWB metadata must survive the browser-service/package boundary.
+    const paxelPage = 'https://paxel.co/id/lacak-pengiriman';
+    const paxelNumber = 'TSPX-97468251036';
+    let paxelCalls = 0;
+    const paxel = await createTracker({ providers: [], trawlUrl: 'http://trawl.invalid', fetcher: async (url, init) => {
+      paxelCalls++;
+      assert.equal(String(url), 'http://trawl.invalid/scrape');
+      assert(init.signal instanceof AbortSignal);
+      const request = JSON.parse(init.body);
+      assert.equal(request.url, paxelPage + '?awb_req=' + paxelNumber);
+      assert.deepEqual(request.captureResponses, [paxelPage]);
+      return Response.json({ url: request.url, html: '', tier: 3, statusCode: 200, capturedResponses: [
+        { url: paxelPage, status: 200, headers: { 'content-type': 'text/html' }, body: ${JSON.stringify(paxelReply)}, trackingNumberSubmitted: paxelNumber },
+      ] });
+    } }).track({ number: 'TSPX97468251036', carrier: 'paxel' });
+    assert.equal(paxel.source, 'paxel');
+    assert.equal(paxel.result.status, 'delivered');
+    assert.equal(paxel.result.events.length, 2);
+    assert.equal(paxel.result.events[0].provider_time_text, 'Nov 06 | 21:08');
+    assert.equal(paxel.result.events[0].instant, null);
+    assert.equal(paxel.result.history_truncated, true);
+    assert.equal(paxelCalls, 1);
     // Read DPD Germany's forecast through the installed adapter and result facade.
     const dpdAppReplies = ${JSON.stringify(dpdAppReplies)};
     const dpd = await createTracker({ providers: [], fetcher: async (url, init) => {

@@ -44533,7 +44533,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "Asia/Jakarta",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "paxel",
+      "localClocks": true,
+      "browser": true
     },
     "canaryUrl": "https://paxel.co/id/lacak-pengiriman",
     "trackingUrlTemplate": "https://paxel.co/id/lacak-pengiriman?awb_req={trackingNumber}",

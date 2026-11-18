@@ -163,7 +163,9 @@ function captured(value: unknown, window: 'first' | 'last' = 'first'): TrawlCapt
     error: typeof entry.error === 'string' ? entry.error : entry.error ? 'error' : null,
     ...(entry.postcodeSubmitted === true ? { postcodeSubmitted: true } : {}),
     ...(entry.phoneDigitsSubmitted === true ? { phoneDigitsSubmitted: true } : {}),
-    ...(typeof entry.trackingNumberSubmitted === 'string' && /^[A-Z0-9]{6,40}$/.test(entry.trackingNumberSubmitted)
+    ...(typeof entry.trackingNumberSubmitted === 'string' && (/^[A-Z0-9]{6,40}$/.test(entry.trackingNumberSubmitted)
+      || entry.url === 'https://paxel.co/id/lacak-pengiriman'
+        && /^(?:TSPX-\d{11}|EM\.[A-Z0-9]{10}-20\d{6}-\d-[A-Z0-9]{6})(?![\s\S])/.test(entry.trackingNumberSubmitted))
       ? { trackingNumberSubmitted: entry.trackingNumberSubmitted } : {}),
   }));
 }

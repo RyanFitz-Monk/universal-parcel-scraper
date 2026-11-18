@@ -71,6 +71,7 @@ export function trackingNumberForLink(carrierId: CarrierId, raw: string): string
   if (carrierId === 'paperfly' && PAPERFLY_LAYOUT.test(normalized)) return paperflyRequestNumber(normalized);
   // Paxel's form submits the printed AWB, including its dot and hyphens.
   if (carrierId === 'paxel') {
+    if (/^TSPX\d{11}$/.test(normalized)) return 'TSPX-' + normalized.slice(4);
     const awb = /^EM([A-Z0-9]{10})(20\d{6})(\d)([A-Z0-9]{6})$/.exec(normalized);
     if (awb) return `EM.${awb[1]}-${awb[2]}-${awb[3]}-${awb[4]}`;
   }
