@@ -85,6 +85,11 @@ const HANDED_IN = new Set([
   'your parcel has been dropped off at a dpd pickup shop',
 ]);
 
+// On such a label, a return's or a donation's, the account that booked it is the one DPD UK calls the sender:
+// before a depot has the parcel, its way "back to the sender" is its way there.
+const BACK_TO_SENDER = "we have your parcel and it's on its way back to the sender";
+const BEFORE_DEPOT: ReadonlySet<string | undefined> = new Set([undefined, 'registered', 'accepted']);
+
 // A round that missed the recipient, with the day of the next one.
 const MISSED = /^we missed you\. your driver won't be back today but we'll be back [a-z]{3} \d{1,2} [a-z]+ with your parcel$/;
 
@@ -164,6 +169,16 @@ export function parseDpdUkHistory(detailPayload: unknown, historyPayload: unknow
     return { description, ...clockFields(clock, onUkClock(clean(row.eventLocation, 120), sender)),
       ...(classification.source !== 'none' ? { stage: classification.stage, stage_source: classification.source } : {}) };
   });
+  let handedIn = false;
+  let outbound = false;
+  for (const event of [...events].reverse()) {
+    const wording = dpdUkWording(event.description!);
+    if (handedIn && wording === BACK_TO_SENDER) {
+      Object.assign(event, { stage: 'in_transit', stage_source: 'carrier_map' });
+      outbound = true;
+    } else if (!BEFORE_DEPOT.has(event.stage)) break;
+    handedIn ||= HANDED_IN.has(wording);
+  }
   const seen = new Set<string>();
   const retained = events.filter(event => {
     const key = JSON.stringify(event);
@@ -172,9 +187,10 @@ export function parseDpdUkHistory(detailPayload: unknown, historyPayload: unknow
   }).slice(0, 100);
   const latest = retained[0]!;
   // A parcel handed in by its sender names none: null drops the account an earlier check named.
-  const handedIn = events.some(event => HANDED_IN.has(dpdUkWording(event.description!)));
+  handedIn = events.some(event => HANDED_IN.has(dpdUkWording(event.description!)));
   const summary = publicDescription(detail.trackingStatusCurrent);
-  const summaryClassification = classifyDpdUkWording(summary);
+  const summaryClassification = outbound && dpdUkWording(withoutDriverName(summary)) === BACK_TO_SENDER
+    ? { stage: 'in_transit' as Stage, source: 'carrier_map' } : classifyDpdUkWording(summary);
   const current = summary ? summaryClassification : classifyDpdUkWording(latest.description!);
   return { status: current.source !== 'none' ? languageStageStatus(current.stage) : 'unknown',
     ...(current.source !== 'none' ? { current_stage: current.stage, current_stage_source: current.source } : {}),

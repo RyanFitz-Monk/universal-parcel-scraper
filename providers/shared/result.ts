@@ -742,10 +742,14 @@ const ADDRESSEE_ALERT = /^(?:sms|e-?mail) alert for the addressee\b/i;
 // 延长…"): a message dated when it was sent, not a scan, which 17TRACK files under generic transit.
 const DELAY_MESSAGE = /^受[^，,。]{1,30}影响[，,]\s*邮件(?:投递)?时限可能(?:有所)?延长/;
 
+// DPD Poland's notices to the recipient, in English and Polish, which 17TRACK files under the codes of the scans
+// beside them: messages, not movements, as DPD Poland's own map reads them.
+const DPD_PL_NOTICE = /^(?:(?:mail|sms) notification|sent notification|powiadomienie (?:mail|sms)|wysłano powiadomienie)$/i;
+
 /** A message the shared rules give no stage, whatever code a provider files it under. */
 export function isMessageRow(description: string): boolean {
   const wording = description.trim();
-  return DPD_DELAY_NOTICE.test(wording) || ADDRESSEE_ALERT.test(wording) || DELAY_MESSAGE.test(wording);
+  return DPD_DELAY_NOTICE.test(wording) || ADDRESSEE_ALERT.test(wording) || DELAY_MESSAGE.test(wording) || DPD_PL_NOTICE.test(wording);
 }
 
 /** Retain the decision before delivery wording is redacted or a stage is projected. */

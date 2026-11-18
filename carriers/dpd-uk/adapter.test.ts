@@ -111,6 +111,29 @@ describe('DPD UK public history projection', () => {
     expect(project(payload).sender_name).toBe('Example Merchant');
   });
 
+  it('reads a handed-in label on its way "back to the sender" before any depot as on its way, and a return after one as a return', () => {
+    const BACK = "We have your parcel and it's on its way back to the sender";
+    const payload = fixture();
+    payload.history.data.splice(0, 5,
+      { eventDate: '2026-01-05 17:52:00', eventLocation: 'DPD', eventText: BACK },
+      { eventDate: '2026-01-05 16:54:00', eventLocation: 'DPD', eventText: 'Your parcel has been dropped off at a DPD Pickup Shop' });
+    payload.detail.data.trackingStatusCurrent = `${BACK} at 17:52 on Mon 5 January 2026`;
+    const result = project(payload);
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', current_stage_source: 'carrier_map' });
+    expect(result.events?.map(event => event.stage)).toEqual(['in_transit', 'accepted', 'registered']);
+    // A label the merchant's parcel carries, or a return after a depot had the parcel, goes back to its sender.
+    const sent = fixture();
+    sent.history.data.splice(0, 5, { eventDate: '2026-01-05 17:52:00', eventLocation: 'DPD', eventText: BACK });
+    sent.detail.data.trackingStatusCurrent = BACK;
+    expect(project(sent)).toMatchObject({ current_stage: 'exception' });
+    const returned = fixture();
+    returned.history.data.splice(-1, 0, { eventDate: '2026-01-05 16:54:00', eventLocation: 'DPD', eventText: 'Your parcel has been dropped off at a DPD Pickup Shop' });
+    returned.history.data.splice(0, 2, { eventDate: '2026-01-06 08:15:00', eventLocation: 'DPD', eventText: BACK });
+    returned.detail.data.trackingStatusCurrent = BACK;
+    expect(project(returned)).toMatchObject({ current_stage: 'exception' });
+    expect(project(returned).events?.[0]).toMatchObject({ stage: 'exception' });
+  });
+
   it('files every recorded wording under its stage, and its notices as gaps', () => {
     for (const entry of statuses.entries) {
       const answer = statusMapAnswer({ carrier: 'dpd-uk', providerCode: null, description: entry.wording });

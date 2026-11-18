@@ -94,6 +94,10 @@ describe('17TRACK result parsing', () => {
     expect(result.events?.[0]).toMatchObject({ description: notice, stage: 'pending', stage_source: 'none' });
     expect(parse17TrackResponse(postalHistory([postalScan('InTransit_Other')]), number).events?.[0]).toMatchObject({ stage: 'in_transit' });
   });
+  it("gives DPD Poland's notices to the recipient no stage, though 17TRACK files them under the round's code", () => {
+    const result = parse17TrackResponse(postalHistory([postalScan('OutForDelivery_Other', 'Mail notification')]), number);
+    expect(result.events?.[0]).toMatchObject({ description: 'Mail notification', stage: 'pending', stage_source: 'none' });
+  });
 
   it('refines Swiss Post vehicle loading without reclassifying other operators or future wording', () => {
     const payload = postalHistory([postalScan('InTransit_Other', 'Loading into delivery vehicle')]);

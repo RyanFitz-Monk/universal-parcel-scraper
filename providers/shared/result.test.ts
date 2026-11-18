@@ -204,6 +204,13 @@ describe('shared provider result', () => {
     expect(event('2026-01-07T12:45:00+01:00', 'The consignment was sent for transportation.')?.stage_source).not.toBe('none');
   });
 
+  it("reads DPD Poland's notices to the recipient as messages, whatever code they are filed under", () => {
+    for (const notice of ['Mail notification', 'SMS notification', 'Sent notification', 'Powiadomienie SMS', 'Wysłano powiadomienie']) {
+      expect(event('2026-01-07T12:45:00+01:00', notice, 'InTransit'), notice).toMatchObject({ stage: 'pending', stage_source: 'none' });
+    }
+    expect(event('2026-01-07T12:45:00+01:00', 'Parcel received by DPD depot', 'InTransit')?.stage_source).not.toBe('none');
+  });
+
   it("reads China Post's notice that the delivery time may stretch as a message", () => {
     for (const notice of ['受台风天气影响，邮件时限可能有所延长，我们正全力协调资源加快处理，请您耐心等待', '受降雪影响,邮件投递时限可能延长']) {
       expect(event('2026-01-07T12:45:00+08:00', notice, 'InTransit'), notice).toMatchObject({ stage: 'pending', stage_source: 'none' });

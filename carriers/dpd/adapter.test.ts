@@ -485,9 +485,14 @@ describe('DPD delivery notices', () => {
     expect(result.expected_delivery).toBe('2026-07-16');
     expect(result.events?.map((event) => event.description)).toEqual([SAFE_PLACE, DEPOT].map((scan) => scan[3]));
     // Each notice keeps the stage of the scan before it and is never the summary.
+    // The origin depot's inbound scan, before anything moved the parcel, is DPD taking it over.
     expect(result.events?.map((event) => [event.provider_code, event.stage, event.stage_source])).toEqual([
-      ['MIDLI', 'in_transit', 'none'], ['ORI', undefined, undefined],
+      ['MIDLI', 'accepted', 'none'], ['ORI', 'accepted', undefined],
     ]);
+    expect(result.current_stage).toBe('accepted');
+    // After the driver's collection it moves the parcel on, as its wording reads.
+    expect(notices([['2026-07-14', '17:00:00', 'PKY', 'We have collected your parcel'], DEPOT]).events
+      ?.map((event) => [event.provider_code, event.stage])).toEqual([['ORI', undefined], ['PKY', 'accepted']]);
     expect(result.last_status_text).toBe(DEPOT[3]);
     expect(result.last_update).toBe(SAFE_PLACE.slice(0, 2).join('T') + '+02:00');
     expect(notices([DEPOT, ESTIMATED]).expected_delivery).toBe('2026-07-17');
@@ -515,14 +520,14 @@ describe('DPD delivery notices', () => {
   it('keeps the round a notice follows', () => {
     const result = notices([DEPOT, OUT, ['2026-07-16', '06:30:00', 'MSDLO', UNDATED[3]]]);
     expect(result.events?.map((event) => [event.provider_code, event.stage])).toEqual([
-      ['MSDLO', 'out_for_delivery'], ['DLO', 'out_for_delivery'], ['ORI', undefined],
+      ['MSDLO', 'out_for_delivery'], ['DLO', 'out_for_delivery'], ['ORI', 'accepted'],
     ]);
     expect(result.last_status_text).toBe(OUT[3]);
   });
 
   it('keeps scans of one instant in the carrier\'s order', () => {
     expect(notices([DEPOT, OUT, UNDATED]).events?.map((event) => [event.provider_code, event.stage])).toEqual([
-      ['MSDLO', 'out_for_delivery'], ['DLO', 'out_for_delivery'], ['ORI', undefined],
+      ['MSDLO', 'out_for_delivery'], ['DLO', 'out_for_delivery'], ['ORI', 'accepted'],
     ]);
   });
 

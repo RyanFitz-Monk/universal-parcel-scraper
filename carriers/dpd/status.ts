@@ -107,8 +107,9 @@ export function apiStage(description: unknown): Stage | null {
  * DEXD is a round that ended at a pickup point with no space for the parcel.
  * ORI ("Origin depot - In") stays unmapped like its twin PARCEL_HANDED: the
  * result stage then comes from the same wording as the scan's, and an import
- * that cleared customs does not step back to accepted. Other codes stay
- * unmapped.
+ * that cleared customs does not step back to accepted. Only before anything
+ * moved the parcel does the adapter read it as DPD taking the parcel over.
+ * Other codes stay unmapped.
  */
 const SCAN_STAGES: Readonly<Record<string, Stage>> = {
   CNP: 'registered', // "We received your labelling information", before the parcel moves
@@ -185,7 +186,7 @@ export const statusMap: CarrierStatusMap = {
     { code: 'PARCEL_HANDED', note: MOVES_WITHOUT_MILESTONE },
     { code: 'IN_TRANSIT', note: MOVES_WITHOUT_MILESTONE },
     { code: 'AT_DELIVERY_CENTER', note: MOVES_WITHOUT_MILESTONE },
-    { code: 'ORI', note: "DPD's map leaves it unmapped on purpose, like its twin PARCEL_HANDED, so an import that cleared customs does not step back to accepted." },
+    { code: 'ORI', note: "DPD's map leaves it unmapped on purpose, like its twin PARCEL_HANDED, so an import that cleared customs does not step back to accepted. The adapter reads it as accepted only before anything moved the parcel." },
     { wording: 'parcel handed to dpd', note: "The label of PARCEL_HANDED, which DPD's map leaves unmapped on purpose." },
     { wording: 'your parcel is on its way', note: "The label of IN_TRANSIT, which DPD's map leaves unmapped on purpose." },
     { wording: 'at delivery center', note: "The label of AT_DELIVERY_CENTER, which DPD's map leaves unmapped on purpose." },

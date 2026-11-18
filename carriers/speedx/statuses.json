@@ -19,6 +19,7 @@
     { "code": "57201", "wording": "Delivered", "language": "en", "stage": "delivered", "confirmedBy": "live", "note": "Followed by where the parcel was left, which the adapter drops." },
     { "code": "57701", "wording": "Waiting for collection from Parcelshop", "language": "en", "stage": "ready_for_pickup", "confirmedBy": "live", "firstSeen": "2026-11-11", "note": "At the minute of Delivered to PUDO, after the round out for delivery: the parcel waits at the parcelshop for the recipient." },
     { "code": "57702", "wording": "Self picked up from Parcelshop", "language": "en", "stage": "delivered", "confirmedBy": "live", "firstSeen": "2026-11-11", "note": "The day after 57701: the recipient collected the parcel from the parcelshop." },
+    { "code": "57401", "wording": "Delivery Address is Corrected", "language": "en", "stage": "in_transit", "confirmedBy": "live", "firstSeen": "2026-11-13", "note": "Category LAST_MILE_INTERCEPT, but a fix: written before the parcel landed in the United States, and its transit went on." },
     { "code": "57413", "wording": "Parcel Void", "language": "en", "stage": "exception", "confirmedBy": "live", "note": "Category LAST_MILE_INTERCEPT." },
     { "code": "57504", "wording": "Exception- Parcel not found at the sort facility", "language": "en", "stage": "exception", "confirmedBy": "live", "note": "Category LAST_MILE_UNDELIVERED." },
     { "code": "59116", "wording": "Parcel Disposal", "language": "en", "stage": "exception", "confirmedBy": "live", "note": "Category LAST_MILE_UNDELIVERED." }

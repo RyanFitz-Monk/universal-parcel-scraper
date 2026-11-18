@@ -537,11 +537,15 @@ export function parseDPDTrackingApi(
     return deliveryScanned || stage !== 'delivered' ? [] : [{ ...event, stage: 'delivered' }];
   }));
   // Oldest first, a notice keeps the stage of the scan before it, read as the sync reads
-  // that scan. It never becomes the summary.
+  // that scan. It never becomes the summary. The origin depot's inbound scan, before anything
+  // moved the parcel, is DPD taking it over; after a collection or an import it moves the parcel on.
   let previous: Stage = 'registered';
   for (const event of [...events].reverse()) {
     if (NOTICE_SCANS.has(event.provider_code ?? '')) Object.assign(event, { stage: previous, stage_source: 'none' });
-    else previous = (event.stage as Stage | undefined) ?? classifyWording(event.description ?? '').stage;
+    else {
+      if (event.provider_code === 'ORI' && !event.stage && previous === 'registered') event.stage = 'accepted';
+      previous = (event.stage as Stage | undefined) ?? classifyWording(event.description ?? '').stage;
+    }
   }
   const summary = events.find((event) => !NOTICE_SCANS.has(event.provider_code ?? ''));
   // Without a stage from the enumeration, the summary's own stage is the parcel's: its wording alone

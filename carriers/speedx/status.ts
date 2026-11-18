@@ -39,6 +39,9 @@ const CODES = new Map<string, ClassifiedStatus>([
   // then the recipient collects it.
   ['57701', READY_FOR_PICKUP],
   ['57702', DELIVERED],
+  // The delivery address corrected, filed under LAST_MILE_INTERCEPT: seen before the parcel landed,
+  // and its transit went on. A fix, not a hold.
+  ['57401', IN_TRANSIT],
   ['57413', EXCEPTION],
   ['57504', EXCEPTION],
   ['59116', EXCEPTION],

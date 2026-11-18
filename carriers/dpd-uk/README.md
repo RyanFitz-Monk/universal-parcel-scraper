@@ -22,7 +22,9 @@ before reading history under the returned handle.
   shows. A parcel its sender hands in at a Pickup shop, which its order record
   or its drop-off shows, names none: the account did not send it, and on a
   return or donation label it is the recipient. The result then holds
-  `sender_name: null`, so a name an earlier check gave is dropped.
+  `sender_name: null`, so a name an earlier check gave is dropped. Such a
+  parcel on its way "back to the sender" before any depot scan is on its way to
+  that account, so it reads as in transit rather than as a return.
 - A cancellation by the sender is an exception, and a missed round, which names
   the day of the next, a failed attempt.
 - Scans leave out the driver's name a sentence gives. The round's notice gives

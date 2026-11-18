@@ -67,7 +67,8 @@ signal.
   enumeration, or where DPD's label names one movement: `HUI`, `HUS`, `DLS` and
   `DLQ` are hub and delivery-depot scans. `ORI` and `SPL` read like
   `IN_TRANSIT` and appear on both sides of the origin depot, so they stay
-  unmapped. `statusMap` in [status.ts](status.ts) lists every code and label
+  unmapped. An `ORI` before anything moved the parcel is DPD taking it over, so
+  the adapter reads that one as accepted. `statusMap` in [status.ts](status.ts) lists every code and label
   left unmapped on purpose, for the app's review queue, such as `ENA`, a data
   exchange inside DPD's systems seen before the parcel reached the origin depot.
 - `CRY` confirms a collection the sender booked. The parcel is not with DPD yet, so it reads

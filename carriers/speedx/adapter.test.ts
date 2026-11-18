@@ -92,6 +92,8 @@ describe('SpeedX tracking page', () => {
     expect(speedxStatus('50999', 'PICKUP')).toBeUndefined();
     // On its way from the shipper to SpeedX, after the label.
     expect(speedxStatus('50002', 'PICKUP')).toEqual({ status: 'in_transit', stage: 'in_transit' });
+    // A corrected delivery address is a fix, whatever its intercept category says.
+    expect(speedxStatus('57401', 'LAST_MILE_INTERCEPT')).toEqual({ status: 'in_transit', stage: 'in_transit' });
     // The day's delay note on a parcel not delivered that day goes out again: its code outranks an undelivered category.
     expect(speedxStatus('57409', 'LAST_MILE_UNDELIVERED')).toEqual({ status: 'in_transit', stage: 'in_transit' });
     // At a parcelshop after the round: the parcel waits for the recipient, who then collects it.
