@@ -12,6 +12,8 @@ const GUEST_CODES: ReadonlySet<string> = new Set(Object.keys(API_LABELS));
  */
 export const DPD_PL_SCANS: Readonly<Record<string, Stage>> = {
   'Registered parcel data, parcel not dispatched yet': 'registered',
+  // The sender orders the courier's collection, with the parcel's registration: nothing has moved yet.
+  'Collection request created': 'registered',
   'Parcel dropped-off in pickup point': 'accepted',
   'Parcel received by DPD depot': 'in_transit',
   'Sent outside Poland': 'in_transit',

@@ -59,7 +59,12 @@ const OBSERVED: ReadonlyArray<readonly [code: string, label: string, stage: Chro
   ['TA', 'Colis en cours de livraison', 'out_for_delivery'],
   ['TA', 'Colis en cours de livraison par le livreur', 'out_for_delivery'],
   ['RB', 'Colis en cours de livraison au point de retrait', 'in_transit'],
+  // After a missed delivery, the depot sends the parcel to a pickup point to wait there, written
+  // with the round that carries it: the same drop-off as RB.
+  ['IP', 'Colis en instance au point de retrait', 'in_transit'],
   ['AB', 'Colis mis à disposition au point de retrait', 'ready_for_pickup'],
+  // The pickup point's receipt of the parcel, written with its arrival scan under MD.
+  ['AB', 'Colis réceptionné par le point de retrait.', 'ready_for_pickup'],
   // The courier left the parcel at another pickup point than the one planned, where it waits.
   // Before the parcel has moved, it is the sender's drop-off at another point (see the parser).
   ['AB', 'Colis mis à disposition dans un point de retrait différent de celui prévu', 'ready_for_pickup'],
@@ -100,7 +105,8 @@ export function isReturnToSender(code: string, label: string): boolean {
 
 /** The courier's drop-off scan, which can follow the pickup point's own arrival scan. */
 export function isPickupDropOff(code: string, label: string): boolean {
-  return code === 'RB' && label === 'Colis en cours de livraison au point de retrait';
+  return (code === 'RB' && label === 'Colis en cours de livraison au point de retrait')
+    || (code === 'IP' && label === 'Colis en instance au point de retrait');
 }
 
 /** A pickup point's scan of a parcel at another point than the one planned. */

@@ -227,6 +227,14 @@ describe('bpost direct history', () => {
     }
     expect(statusMapAnswer({ carrier: 'bpost', description: 'bbox locker defect : delivery next working day to a Pick-up point' }))
       .toMatchObject({ stage: 'in_transit' });
+    // Nor can a locker the recipient chose take it: it goes to another pick-up point, still on its way.
+    locker.items[0].events[0].key.EN.description = "Delivery impossible in chosen {{bboxRebrand}} - On it's way to another Pick-up point";
+    for (const category of ['bbox', 'parcelLocker', undefined]) {
+      locker.items[0].bboxRebrandCategory = category;
+      expect(parseBpost(locker, NUMBER)).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
+    }
+    expect(statusMapAnswer({ carrier: 'bpost', description: "Delivery impossible in chosen bbox locker - On it's way to another Pick-up point" }))
+      .toMatchObject({ stage: 'in_transit' });
     locker.items[0].events[0].key.EN.description = 'Item available at the {{bboxRebrand}}';
     for (const [category, name] of [['bbox', 'bbox locker'], ['parcelLocker', 'Parcel Locker'], [undefined, 'parcel locker']] as const) {
       locker.items[0].bboxRebrandCategory = category;

@@ -7,7 +7,7 @@ import { paddedDate } from '../../core/time/fields.js';
 import { zonedTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/index.js';
 import { isRecord } from '../../core/types.js';
-import { postaRomanaStage } from './status.js';
+import { isPostaRomanaProcessing, postaRomanaStage } from './status.js';
 
 export const PROVIDER = 'Poșta Română';
 // A reply of a few dozen scans is under 10 kB.
@@ -75,17 +75,21 @@ export function parsePostaRomana(payload: unknown, rawNumber: string, readAt = D
   scans.sort((left, right) => left.timestamp - right.timestamp || left.index - right.index);
 
   // An acceptance once the item moved is its sender's post taking it back, and
-  // a delivery once it was sent back reaches its sender.
+  // a delivery once it was sent back reaches its sender. The office an item
+  // waits at goes on processing it there: it still waits.
   let moved = false;
   let returning = false;
+  let waitingAt: string | undefined;
   for (const { event } of scans) {
     const classified = postaRomanaStage(event.description!);
     if (!classified) continue;
     let stage: Stage = classified.stage;
     if (stage === 'accepted' && moved) stage = 'in_transit';
     if (stage === 'delivered' && returning) stage = 'returned';
+    if (waitingAt !== undefined && waitingAt === event.location && isPostaRomanaProcessing(event.description!)) stage = 'ready_for_pickup';
     if (stage !== 'accepted') moved = true;
     if (stage === 'returned') returning = true;
+    waitingAt = stage === 'ready_for_pickup' ? event.location : undefined;
     Object.assign(event, { stage, stage_source: classified.source });
   }
   const events = scans.reverse().map(({ event }) => event);

@@ -802,7 +802,9 @@ export class DPDTracker {
     // Labels print a check character after the fourteen digits; the API takes the digits.
     const trackingNumber = dpdParcelNumber(raw);
     if (!trackingNumber) {
-      throw new InvalidInputError('DPD', 'DPD tracking numbers must contain 14 digits, with or without their check character');
+      // Named after the unit, as Jadlog and BRT print their own names on the parcels the group carries.
+      const { name } = UNITS[this.country];
+      throw new InvalidInputError('DPD', `${name.startsWith('DPD') ? 'DPD' : name} tracking numbers must contain 14 digits, with or without their check character`);
     }
     // DPD checks the postcode against the recipient's, and the service this
     // adapter asks also answers for parcels delivered in other countries: any

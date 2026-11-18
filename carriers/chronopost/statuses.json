@@ -376,12 +376,30 @@
       "language": "fr"
     },
     {
+      "code": "IP",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-18",
+      "note": "Chronopost trackSkybillV2; code mapping requires matching wording. After a missed delivery the depot sends the parcel to a pickup point, written with the round (TA) that carries it there. Like RB, it keeps the round's stage, and ready_for_pickup when it follows the arrival scan.",
+      "wording": "Colis en instance au point de retrait",
+      "language": "fr"
+    },
+    {
       "code": "AB",
       "stage": "ready_for_pickup",
       "confirmedBy": "live",
       "firstSeen": "2026-10-08",
       "note": "Chronopost trackSkybillV2; code mapping requires matching wording. Seen with the delivering partner's own pickup-point arrival scan, and staged like La Poste's AG1.",
       "wording": "Colis mis à disposition au point de retrait",
+      "language": "fr"
+    },
+    {
+      "code": "AB",
+      "stage": "ready_for_pickup",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-18",
+      "note": "Chronopost trackSkybillV2; code mapping requires matching wording, its closing full stop included. The pickup point's receipt of the parcel, written with its arrival scan under MD.",
+      "wording": "Colis réceptionné par le point de retrait.",
       "language": "fr"
     },
     {

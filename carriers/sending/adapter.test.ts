@@ -197,6 +197,8 @@ describe('Sending tracking adapter', () => {
     }
     expect(isSendingNotice('DIRECCIÓN CORREGIDA POR EL DESTINATARIO')).toBe(true);
     expect(sendingStage('Direccion corregida por el destinatario')).toBeNull();
+    // A wrong address is an attempt at the door, which the recipient's correction then follows.
+    expect(sendingStage('Dirección incorrecta')).toEqual({ stage: 'failed_attempt', source: 'carrier_map' });
     // Another wording falls to the shared rules.
     expect(sendingStage('Envío entregado')).toMatchObject({ stage: 'delivered' });
     for (const word of ['constructor', 'toString', 'Sin estado']) expect(sendingMappedStage(word)).toBeUndefined();

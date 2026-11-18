@@ -211,6 +211,16 @@ describe('DPD France rendered tracking', () => {
     const notice = normalizeStatusWording("Le destinataire est informé par SMS de l'étape actuelle de sa livraison");
     expect(statusMap.stage(null, notice)).toBeUndefined();
     expect(statusMap.gapNote?.(null, notice)).toMatch(/current step.*keeps the stage/);
+    // So does the notice that the parcel is on its way, which can come during the round.
+    const shipped = parseDPDFranceTrackingHtml(trackingFixture({ outboundRows: [
+      ['05/03/2026', '07:40', "Le destinataire a été notifié par SMS de l'expédition de son colis", ''],
+      ['05/03/2026', '07:29', 'Votre colis est en cours de livraison', 'Agence DPD de Exemple (998)'],
+    ] }), TEST_TRACKING_NUMBER);
+    expect(shipped.status).toBe('out_for_delivery');
+    expect(shipped.events?.[0]).toMatchObject({ stage: 'out_for_delivery', stage_source: 'none' });
+    const shipment = normalizeStatusWording("Le destinataire a été notifié par SMS de l'expédition de son colis");
+    expect(statusMap.stage(null, shipment)).toBeUndefined();
+    expect(statusMap.gapNote?.(null, shipment)).toMatch(/on its way.*keeps the stage/);
   });
 
   it('reads the notice of a put-off delivery as the parcel waiting in the network for its new day', () => {

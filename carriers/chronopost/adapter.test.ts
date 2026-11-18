@@ -252,7 +252,9 @@ describe('Chronopost direct tracking', () => {
     ['TA', 'Colis en cours de livraison', 'out_for_delivery'],
     ['TA', 'Colis en cours de livraison par le livreur', 'out_for_delivery'],
     ['RB', 'Colis en cours de livraison au point de retrait', 'in_transit'],
+    ['IP', 'Colis en instance au point de retrait', 'in_transit'],
     ['AB', 'Colis mis à disposition au point de retrait', 'ready_for_pickup'],
+    ['AB', 'Colis réceptionné par le point de retrait.', 'ready_for_pickup'],
     ['SD', 'Colis mis à disposition au point de retrait', 'ready_for_pickup'],
     ['MD', 'Colis mis à disposition au point de retrait', 'ready_for_pickup'],
     ['D', 'Livraison effectuée', 'delivered'],
@@ -439,6 +441,25 @@ describe('Chronopost direct tracking', () => {
     expect(dropped.events?.[0]).toMatchObject({ provider_code: 'RB', stage: 'out_for_delivery', stage_source: 'none' });
     // Without a round before it, the courier on the way to the point is in transit.
     expect(parseChronopostTrackingXml(history(prepared, sorted, onTheWay), number)).toMatchObject({
+      current_stage: 'in_transit', current_stage_source: 'carrier_map' });
+  });
+
+  it('stages the round that takes a parcel to a pickup point after a missed delivery, and its receipt there', () => {
+    const missed = scan('P', '2026-06-26T11:26:45+02:00', "Echec de livraison suite à l'absence du destinataire.");
+    const round = scan('TA', '2026-06-27T08:16:29+02:00', 'Colis en cours de livraison par le livreur');
+    const held = scan('IP', '2026-06-27T08:16:29+02:00', 'Colis en instance au point de retrait');
+    const received = scan('AB', '2026-06-27T09:05:00+02:00', 'Colis réceptionné par le point de retrait.', relay);
+    const available = scan('MD', '2026-06-27T09:05:00+02:00', 'Colis mis à disposition au point de retrait', relay);
+    const onTheWay = parseChronopostTrackingXml(history(prepared, missed, round, held), number);
+    expect(onTheWay).toMatchObject({ current_stage: 'out_for_delivery', current_stage_source: 'carrier_map' });
+    expect(onTheWay.events?.[0]).toMatchObject({ provider_code: 'IP', stage: 'out_for_delivery', stage_source: 'none' });
+    const waiting = parseChronopostTrackingXml(history(prepared, missed, round, held, received, available), number);
+    expect(waiting).toMatchObject({ current_stage: 'ready_for_pickup', pickup_point: 'EXAMPLE RELAY\n1 EXAMPLE STREET\n00000 EXAMPLE CITY' });
+    expect(waiting.events?.slice(0, 2)).toMatchObject([
+      { provider_code: 'MD', stage: 'ready_for_pickup', stage_source: 'carrier_map' },
+      { provider_code: 'AB', stage: 'ready_for_pickup', stage_source: 'carrier_map' }]);
+    // Without a round before it, the parcel on its way to the point is in transit.
+    expect(parseChronopostTrackingXml(history(prepared, missed, held), number)).toMatchObject({
       current_stage: 'in_transit', current_stage_source: 'carrier_map' });
   });
 

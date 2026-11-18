@@ -96,6 +96,14 @@
       "note": "bpost's {{bboxRebrand}} defect, hours after the scan on its way to the locker: the locker is out of order and the item goes to a pick-up point the next working day."
     },
     {
+      "wording": "Delivery impossible in chosen bbox locker - On it's way to another Pick-up point",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-18",
+      "note": "The courier could not leave the item in the locker the recipient chose and takes it to a pick-up point, where it is made available the same morning. Nothing is asked of the recipient, so it is not a failed attempt."
+    },
+    {
       "wording": "The postman's delivery round for your item has started",
       "language": "en",
       "stage": "out_for_delivery",

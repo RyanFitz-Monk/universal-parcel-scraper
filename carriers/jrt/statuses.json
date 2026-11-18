@@ -1267,6 +1267,14 @@
       "note": "The order data sent to DPD, which delivers on the line into Europe, minutes after the shipment's data came in: a record of data, not a movement."
     },
     {
+      "wording": "Parcel handed to DPD",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-18",
+      "note": "The hand-over to DPD on the line into Europe, a day after the delivering company received the parcel: the parcel moves on, it is not accepted again."
+    },
+    {
       "wording": "Your package is being prepared by the sender and will be handed over to us soon",
       "language": "en",
       "stage": "registered",

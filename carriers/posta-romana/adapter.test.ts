@@ -123,6 +123,28 @@ describe('Poșta Română tracking adapter', () => {
     expect(parsePostaRomana(door, COLLECTED).pickup_point).toBeUndefined();
   });
 
+  it('reads the round, and an item the office goes on processing while it waits there', () => {
+    const office = '- Oficiul Postal Exemplu 5';
+    const waiting = edited('inbound', payload => {
+      payload.details.splice(4, 0, { data: '12.06.2026', ora: '10:15', detaliu: 'Predat la factor', unitatePostala: office });
+      payload.details.push({ data: '12.06.2026', ora: '08:40', detaliu: 'In prelucrare', unitatePostala: office });
+      payload.details.at(-2)!.data = payload.details.at(-1)!.data = '13.06.2026';
+    });
+    const result = parsePostaRomana(waiting, INBOUND);
+    expect(result).toMatchObject({ current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map',
+      last_status_text: 'In prelucrare', pickup_point: 'Oficiul Postal Exemplu 5' });
+    expect(result.events!.slice(0, 4).map(event => [event.description, event.stage])).toEqual([
+      ['In prelucrare', 'ready_for_pickup'], ['Programat pentru predare incepand cu aceasta data', 'ready_for_pickup'],
+      ['Predat la factor', 'out_for_delivery'], ['In prelucrare', 'in_transit']]);
+    // Another office's processing moves the item on.
+    const moved = edited('inbound', payload => {
+      payload.details.push({ data: '13.06.2026', ora: '08:40', detaliu: 'In prelucrare', unitatePostala: '- Oficiul Postal Exemplu 6' });
+    });
+    const elsewhere = parsePostaRomana(moved, INBOUND);
+    expect(elsewhere).toMatchObject({ current_stage: 'in_transit', last_status_text: 'In prelucrare' });
+    expect(elsewhere.pickup_point).toBeUndefined();
+  });
+
   it('holds back the day collection opens until it comes, as a row dated after the read', () => {
     // Live shape: the row came dated the next day, 23.7 hours after the read, while the office still processed the item.
     const scheduled = edited('inbound', payload => { payload.details.at(-1)!.data = '13.06.2026'; });
@@ -254,6 +276,7 @@ describe('Poșta Română status vocabulary', () => {
       expect(statusMap.stage(null, entry.wording.toLowerCase())).toBe(entry.stage);
     }
     expect(postaRomanaScanStage('În prelucrare')).toBe('in_transit');
+    expect(postaRomanaScanStage('Predat la factor')).toBe('out_for_delivery');
     expect(postaRomanaScanStage('Programat pentru predare începând cu această dată')).toBe('ready_for_pickup');
     for (const wording of ['constructor', 'toString', 'In', 'Predat la destinatar - Oficiul Postal Exemplu 1']) {
       expect(postaRomanaScanStage(wording), wording).toBeUndefined();

@@ -13,6 +13,7 @@
     {"wording": "Tu envio esta en reparto", "stage": "out_for_delivery", "language": "es", "confirmedBy": "portal"},
     {"wording": "Has sido ausente", "stage": "failed_attempt", "language": "es", "confirmedBy": "portal", "note": "The recipient was not in."},
     {"wording": "Direccion incorrecta - faltan datos", "stage": "failed_attempt", "language": "es", "confirmedBy": "portal", "note": "The address lacks details; the parcel went out again."},
+    {"wording": "Direccion incorrecta", "stage": "failed_attempt", "language": "es", "confirmedBy": "live", "firstSeen": "2026-11-16", "note": "A delivery the round could not make at the address it had, hours after the parcel went out; the recipient corrected the address and the parcel went out again."},
     {"wording": "Direccion corregida por el destinatario", "language": "es", "confirmedBy": "portal", "note": "The recipient corrected the address; it moves nothing, so the parcel keeps its stage."},
     {"wording": "El envio ha sido entregado", "stage": "delivered", "language": "es", "confirmedBy": "portal"},
     {"wording": "Entregada PDA", "stage": "delivered", "language": "es", "confirmedBy": "live", "firstSeen": "2026-10-26", "note": "A delivery the courier recorded on the handheld, after the delivery round; the progress rail's end phase reads \"Entregada\"."},

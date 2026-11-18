@@ -12,6 +12,8 @@ export const POSTA_ROMANA_SCANS: Readonly<Record<string, Stage>> = {
   'Expediat din Romania': 'in_transit',
   'Sosit in Romania': 'in_transit',
   'Returnat catre expeditor': 'returned',
+  // Handed to the postman for the round; a missed delivery or the delivery follows.
+  'Predat la factor': 'out_for_delivery',
   // A notice follows, and the item can be collected at the office the scan names from that date.
   'Programat pentru predare incepand cu aceasta data': 'ready_for_pickup',
   'Predat la destinatar': 'delivered',
@@ -21,6 +23,11 @@ export const POSTA_ROMANA_SCANS: Readonly<Record<string, Stage>> = {
 const key = (wording: string) => normalizeStatusWording(wording).normalize('NFD').replace(/\p{M}/gu, '');
 
 const SCANS = new Map(Object.entries(POSTA_ROMANA_SCANS).map(([wording, stage]) => [key(wording), stage]));
+
+/** The office's processing scan, which also files an item that waits there for collection. */
+export function isPostaRomanaProcessing(wording: string): boolean {
+  return key(wording) === key('In prelucrare');
+}
 
 /** The stage Poșta Română's own wording gives a scan, if the map knows it. */
 export function postaRomanaScanStage(wording: string): Stage | undefined {

@@ -123,7 +123,8 @@ describe('Jadlog guest tracking', () => {
 
   it('refuses a number Geopost does not issue before any request', async () => {
     const fetcher = vi.fn<typeof fetch>();
-    await expect(jadlog(fetcher).track({ number: '1000000000000' })).rejects.toMatchObject({ kind: 'invalid_input' });
+    await expect(jadlog(fetcher).track({ number: '1000000000000' })).rejects.toMatchObject({ kind: 'invalid_input',
+      message: expect.stringMatching(/^Jadlog tracking numbers must contain 14 digits/) });
     expect(fetcher).not.toHaveBeenCalled();
   });
 });
