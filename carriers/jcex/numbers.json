@@ -38,6 +38,18 @@
         "confidence": "high"
       },
       "note": "ParcelPanel's JCEX page offered it to try. JCEX's tracker answers it as a parcel from China handed to Colissimo in France."
+    },
+    {
+      "number": "JCZ9900000004IN",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "donated_real",
+      "shapeConfirmed": "2026-11-18",
+      "expect": {
+        "carrier": "jcex",
+        "confidence": "high"
+      },
+      "note": "Made-up number in the shape of a parcel a reader looked up: JCZ, ten digits and IN, which JCEX's tracker answered as the waybill and order number of a shipment sent by sea to the United States. No public page shows a whole number in this shape. Its serial sits far beyond the range in use."
     }
   ]
 }

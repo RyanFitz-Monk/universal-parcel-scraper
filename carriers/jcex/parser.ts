@@ -16,7 +16,7 @@ export const PROVIDER = 'JCEX';
 // A long history is a few dozen kilobytes.
 export const JCEX_MAX_BYTES = 512 * 1024;
 // JCZ, ten digits and DH, as JCEX prints its waybills.
-const NUMBER = /^JCZ\d{10}DH$/;
+const NUMBER = /^JCZ\d{10}(?:DH|IN)$/;
 const WALL_CLOCK = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/;
 const OFFSET = /^[+-]\d{2}:\d{2}$/;
 // JCEX works on Hangzhou's clock and writes its own rows on it; a row kept as
@@ -43,7 +43,7 @@ const TIMELINE_START_MS = 60_000;
 /** A JCEX waybill number; anything else is a number its tracker is not asked for. */
 export function normalizeJcexNumber(raw: string): string {
   const number = typeof raw === 'string' && raw.length <= 64 ? normalizeTrackingNumber(raw) : '';
-  if (!NUMBER.test(number)) throw new InvalidInputError(PROVIDER, 'JCEX waybill numbers are JCZ, ten digits and DH');
+  if (!NUMBER.test(number)) throw new InvalidInputError(PROVIDER, 'JCEX waybill numbers are JCZ, ten digits and DH or IN');
   return number;
 }
 

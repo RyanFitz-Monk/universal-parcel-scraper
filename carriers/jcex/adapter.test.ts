@@ -18,6 +18,7 @@ const NUMBER = 'JCZ9900000001DH';
 const HANDED_OVER = 'JCZ9900000002DH';
 const RELAYED = 'JCZ9900000003DH';
 const UNKNOWN = 'JCZ9999999999DH';
+const SEA = 'JCZ9900000004IN';
 const READ = Date.parse('2026-05-01T00:00:00Z');
 
 type Row = Record<string, unknown>;
@@ -35,9 +36,9 @@ const reply = (body: unknown, init: ResponseInit = {}) => new Response(typeof bo
 const carrier = (fetcher: typeof fetch) => adapter({ fetcher, recorder: NOOP_RECORDER, env: {}, trawl: null, browserExecutablePath: null });
 
 describe('JCEX numbers', () => {
-  it('claims JCZ, ten digits and DH, and nothing shorter, longer or under another affix', () => {
-    expect(detectCarrierMatch(NUMBER)).toMatchObject({ carrier: 'jcex', confidence: 'high', candidates: ['jcex'] });
-    for (const other of ['JCZ990000001DH', 'JCZ99000000011DH', 'JCX9900000001DH', 'JCZ9900000001DE', 'XJCZ9900000001DH', 'JCZ9900000001DHX']) {
+  it('claims JCZ, ten digits and DH or IN, and nothing shorter, longer or under another affix', () => {
+    for (const number of [NUMBER, SEA]) expect(detectCarrierMatch(number)).toMatchObject({ carrier: 'jcex', confidence: 'high', candidates: ['jcex'] });
+    for (const other of ['JCZ990000001DH', 'JCZ99000000011DH', 'JCX9900000001DH', 'JCZ9900000001DE', 'JCZ9900000001IM', 'JCZ990000001IN', 'XJCZ9900000001DH', 'JCZ9900000001DHX']) {
       expect(detectCarrierMatch(other).candidates ?? [], other).not.toContain('jcex');
     }
   });
@@ -63,6 +64,12 @@ describe('JCEX HTTP adapter', () => {
     expect(JSON.parse(String(init!.body))).toEqual({ numberList: [NUMBER] });
     expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ carrier: 'jcex', step: 'origin', outcome: 'ok' }));
     expect(recorder.lookup).toHaveBeenCalledTimes(1);
+  });
+
+  it('tracks a waybill ending in IN, which JCEX names as the shipment\'s waybill and order number', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(reply(JSON.stringify(fixture('delivered')).replaceAll(NUMBER, SEA)));
+    await expect(carrier(fetcher).track({ number: SEA.toLowerCase() })).resolves.toMatchObject({ current_stage: 'delivered' });
+    expect(JSON.parse(String(fetcher.mock.calls[0]![1]!.body))).toEqual({ numberList: [SEA] });
   });
 
   it('dates a scan on its place’s clock and keeps the clocks no place settles', () => {
@@ -413,7 +420,7 @@ describe('JCEX HTTP adapter', () => {
 
   it('rejects numbers JCEX does not issue and pre-aborted lookups without a request', async () => {
     const fetcher = vi.fn<typeof fetch>();
-    for (const number of ['JCZ990000001DH', 'JCZ99000000011DH', 'JCZ9900000001D1', 'JCZ9900000001DH-1', 'JCX9900000001DH', '9400100000000000000000']) {
+    for (const number of ['JCZ990000001DH', 'JCZ99000000011DH', 'JCZ9900000001D1', 'JCZ9900000001IM', 'JCZ9900000001DH-1', 'JCX9900000001DH', '9400100000000000000000']) {
       await expect(carrier(fetcher).track({ number })).rejects.toMatchObject({ kind: 'invalid_input' });
     }
     await expect(carrier(fetcher).track({ number: NUMBER }, { signal: AbortSignal.abort(new Error('cancelled')) })).rejects.toThrow('cancelled');

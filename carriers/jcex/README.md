@@ -92,7 +92,8 @@ Tracked through the lookup its tracking page makes.
 ## Numbers
 
 ParcelPanel's JCEX page offers waybills of `JCZ`, ten digits and `DH`, and JCEX's tracker
-answers them. `jcex-1` claims that layout.
+answers them. Waybills of `JCZ`, ten digits and `IN`, sent by sea to the United States, are JCEX's
+too: its tracker names such a number as the shipment's waybill and order number. `jcex-1` claims both layouts.
 
 ## Testing
 
