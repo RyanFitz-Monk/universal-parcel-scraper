@@ -146,9 +146,11 @@ const LABELS: ReadonlyArray<readonly [label: string, english: string]> = [
   ['出口海关/留存待验', 'Held by export customs for inspection'],
   ['送交境外进口海关', 'Presented to import customs abroad'],
   ['境外进口海关留存待验', 'Held by import customs abroad for inspection'],
+  ['境外进口互换局留存', 'Held at the import office of exchange abroad'],
   ['寄达地海关允许进口', 'Import allowed by destination customs'],
   ['到达寄达地处理中心', 'Arrival at processing center in the destination country'],
   ['离开…处理中心', 'Departure from processing center'],
+  ['到达境外经转局', 'Arrived at a transit office abroad'],
   ['离开境外经转局', 'Departed from a transit office abroad'],
   // The origin post's own exchange scans, which China Post mirrors on an item from abroad.
   ['到达境外出口互换局', "Arrival at the origin post's office of exchange"],

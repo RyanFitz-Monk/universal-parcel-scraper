@@ -104,7 +104,7 @@ describe('CNE response projection', () => {
     }
     // CTT Express's statuses in Spain, "label,explanation", whose explanation the shared rules must not read.
     for (const [details, state, stage] of [
-      ['Pendiente de recepción en CTT Express,Ya tenemos todos los detalles de tu envío. Te lo entregaremos muy pronto.', '', 'in_transit'],
+      ['Pendiente de recepción en CTT Express,Ya tenemos todos los detalles de tu envío. Te lo entregaremos muy pronto.', '', 'registered'],
       ['Enviado,Te entregaremos tu envío lo antes posible.', '2', 'in_transit'],
       ['En reparto,Tu envío está en reparto, se entregará en el día de hoy.', '2', 'out_for_delivery'],
       ['Entregado,Ya hemos entregado tu envío. ¿Qué te ha parecido nuestro servicio?', '3', 'delivered'],

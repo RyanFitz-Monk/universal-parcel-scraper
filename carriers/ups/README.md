@@ -119,7 +119,8 @@ rendered status, after that wait.
   as USPS tracking. It becomes `delivery_tracking_number` with `delivery_carrier` `usps` only
   when it reads as a USPS package number; a routing barcode keeps the package number after
   its ZIP code. `LX`, `YH` and `YC` are the hand-off, the post office's receipt and its
-  delivery.
+  delivery. A parcel UPS upgraded ("We have upgraded the package as requested") goes to the
+  door with UPS, which still names the USPS number: it is not handed off.
 - Prose arrives HTML-escaped (`We&#39;re`, `&#174;`) and is decoded.
 - A 402 "Invalid Request" for a number whose check digit fails is `InvalidInputError`, from
   either step. Other refusals stay indeterminate.

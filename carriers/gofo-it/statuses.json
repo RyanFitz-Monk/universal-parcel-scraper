@@ -59,6 +59,15 @@
       "confirmedBy": "live"
     },
     {
+      "code": "206",
+      "wording": "Consegna fallita, tipo: Indirizzo errato",
+      "language": "it",
+      "stage": "failed_attempt",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-13",
+      "note": "A failed delivery under the alert code, tried again the next day: any reason after \"tipo:\" reads as a failed attempt."
+    },
+    {
       "code": "202",
       "wording": "Registrato presso il centro di trasferimento",
       "language": "it",

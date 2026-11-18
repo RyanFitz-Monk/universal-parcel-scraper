@@ -239,7 +239,7 @@
       "language": "en",
       "confirmedBy": "live",
       "firstSeen": "2026-10-08",
-      "note": "Logged just before import clearance starts."
+      "note": "Logged just before import clearance starts. Logged once the clearance completed, it is the broker handing the parcel on: the adapter keeps the stage of the scan before it."
     },
     {
       "wording": "Arrived at sort facility",

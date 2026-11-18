@@ -289,6 +289,12 @@ describe('UPS API reply', () => {
     expect(handed([{ type: 'USPS_PIC', number: POSTAL_PIC }])).toMatchObject({ delivery_carrier: 'usps', delivery_tracking_number: POSTAL_PIC });
     expect(handed([{ type: 'USPS_PIC', number: 'PRIVATE-NOT-A-PIC' }]).delivery_tracking_number).toBeUndefined();
     expect(handed([{ number: '1Z999AA10123456793' }]).delivery_carrier).toBeUndefined();
+    // Nor once UPS upgraded the parcel: it carries it to the door.
+    const upgraded = parseUPSApiResponse(apiFixture((item) => {
+      item.alternateTrackingNumber = [{ type: 'USPS_PIC', number: POSTAL_PIC }];
+      (item.activity as Item[]).push(activity('ZC', 'We have upgraded the package as requested by the receiver.'));
+    }), TRACKING_NUMBER);
+    expect(upgraded.delivery_tracking_number).toBeUndefined();
   });
 
   it('reads the recipient and their address, and keeps the origin, signature, payments and references out of the result', () => {

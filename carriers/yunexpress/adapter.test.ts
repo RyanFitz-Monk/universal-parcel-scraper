@@ -70,6 +70,26 @@ describe('YunExpress captured response projection', () => {
       .map((wording) => yunExpressStatus(wording)?.stage)).toEqual(['in_transit', 'in_transit', 'customs', 'customs']);
   });
 
+  it("reads the customs broker's warehouse after a completed import clearance as no new clearance", () => {
+    const payload = (cleared: string) => {
+      const reply = fixture();
+      const item = reply.ResultList[0];
+      const scan = (date: string, content: string) => ({ ProcessDetailList: [{ ProcessDate: date, ProcessContent: `${content}----Example facility`, IsSignature: false, Comments: [], marks: [] }] });
+      // The fixture's own import customs and clearance go: the history reaches the broker after the flight.
+      item.TrackData.ProcessGroupList.splice(0, 3, scan('2026-03-21T10:00:30', 'Arrived at the warehouse of Customs Broker'),
+        scan('2026-03-21T10:00:00', 'Collected at Cargo Terminal'), scan('2026-03-21T03:00:00', cleared));
+      Object.assign(item.TrackInfo.LastTrackEvent, { ProcessDate: '2026-03-21T10:00:30', ProcessContent: 'Arrived at the warehouse of Customs Broker' });
+      return reply;
+    };
+    const afterClearance = parse(payload('Clearance processing completed - Import'), NUMBER);
+    expect(afterClearance).toMatchObject({ current_stage: 'in_transit' });
+    expect(afterClearance.events![0]).toMatchObject({ stage: 'in_transit', stage_source: 'none' });
+    // Before the clearance completes, the broker's warehouse is where it starts.
+    const beforeClearance = parse(payload('Start Customs Clearence'), NUMBER);
+    expect(beforeClearance).toMatchObject({ current_stage: 'customs' });
+    expect(beforeClearance.events![0]!.stage).toBe('customs');
+  });
+
   it('stages the destination leg, and a hand-over to the local carrier is no delivery', () => {
     expect(yunExpressStatus('Delivered to local carrier')).toEqual({ status: 'in_transit', stage: 'in_transit' });
     expect(yunExpressStatus('Package accepted at courier partner')).toEqual({ status: 'in_transit', stage: 'in_transit' });

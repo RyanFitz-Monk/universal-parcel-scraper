@@ -18,7 +18,7 @@ import { hasSeveralClocks, keepsZone, mainZone } from '../../places/zones.js';
 import { chinaPostAirline, chinaPostDestinationScan } from '../china-post/status.js';
 import { jAndTAuRelayedStage, relaysJAndTAu } from '../j-and-t-au/status.js';
 import { YUNEXPRESS_IMPORT_CUSTOMS, YUNEXPRESS_ORIGIN_ZONE as ORIGIN_ZONE, yunExpressOriginLeg } from './clock.js';
-import { chinaPostOffice, chinaPostRelayEnglish, isYunExpressNotice, withoutMarkup, withoutRepeatedParts, yunExpressCodeStatus, yunExpressStatus } from './status.js';
+import { chinaPostOffice, chinaPostRelayEnglish, isYunExpressNotice, keepBrokerAfterClearance, withoutMarkup, withoutRepeatedParts, yunExpressCodeStatus, yunExpressStatus } from './status.js';
 
 const API = 'https://services.yuntrack.com/Track/Query';
 const MAX_BYTES = 1_000_000;
@@ -298,6 +298,8 @@ export function parse(payload: unknown, trackingNumber: string): CarrierResult {
     }
   }
   if (!events.length) throw new IndeterminateError('YunExpress');
+  keepBrokerAfterClearance(events);
+  if (decider?.stage_source === 'none' && current) current = { status: current.status, stage: decider.stage as ClassifiedStatus['stage'] };
   if (Array.isArray(info.TrackEventDetails) && info.TrackEventDetails.length > scans) {
     throw new IndeterminateError('YunExpress', 'YunExpress returned incomplete parcel history');
   }

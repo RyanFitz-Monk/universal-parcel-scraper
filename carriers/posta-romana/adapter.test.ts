@@ -133,9 +133,9 @@ describe('Poșta Română tracking adapter', () => {
     const result = parsePostaRomana(waiting, INBOUND);
     expect(result).toMatchObject({ current_stage: 'ready_for_pickup', current_stage_source: 'carrier_map',
       last_status_text: 'In prelucrare', pickup_point: 'Oficiul Postal Exemplu 5' });
-    expect(result.events!.slice(0, 4).map(event => [event.description, event.stage])).toEqual([
-      ['In prelucrare', 'ready_for_pickup'], ['Programat pentru predare incepand cu aceasta data', 'ready_for_pickup'],
-      ['Predat la factor', 'out_for_delivery'], ['In prelucrare', 'in_transit']]);
+    expect(result.events!.slice(0, 4).map(event => [event.description, event.stage, event.stage_source])).toEqual([
+      ['In prelucrare', 'ready_for_pickup', 'none'], ['Programat pentru predare incepand cu aceasta data', 'ready_for_pickup', 'carrier_map'],
+      ['Predat la factor', 'out_for_delivery', 'carrier_map'], ['In prelucrare', 'in_transit', 'carrier_map']]);
     // Another office's processing moves the item on.
     const moved = edited('inbound', payload => {
       payload.details.push({ data: '13.06.2026', ora: '08:40', detaliu: 'In prelucrare', unitatePostala: '- Oficiul Postal Exemplu 6' });

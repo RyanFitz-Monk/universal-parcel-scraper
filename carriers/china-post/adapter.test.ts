@@ -296,5 +296,8 @@ describe('China Post adapter', () => {
   it("shows ParcelsApp's half-translated departure from the office of posting in English", () => {
     expect(chinaPostEnglish('Departed from 收寄点【示例】')).toBe('Departed from the office of posting');
     expect(chinaPostEnglish('离开收寄点【示例】')).toBe('Departed from the office of posting');
+    // The destination leg's office of exchange and transit offices abroad.
+    expect(chinaPostEnglish('境外进口互换局留存')).toBe('Held at the import office of exchange abroad');
+    expect(chinaPostEnglish('到达境外经转局')).toBe('Arrived at a transit office abroad');
   });
 });

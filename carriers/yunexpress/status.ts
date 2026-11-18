@@ -1,4 +1,4 @@
-import type { CarrierStatus } from '../../core/result/index.js';
+import type { CarrierEvent, CarrierStatus } from '../../core/result/index.js';
 import type { ClassifiedStatus } from '../../core/status/index.js';
 import { countryCode } from '../../core/time/index.js';
 import { normalizeStatusWording, type CarrierStatusMap } from '../../core/status/statusMap.js';
@@ -232,6 +232,25 @@ export function withoutRepeatedParts(location: string): string {
 // so the parcel keeps the one it had: here a reminder to collect it that
 // failed to send.
 const NOTICE = normalizeStatusWording('REMINDER EMAIL SENT FAILED');
+
+const IMPORT_CLEARED = new Set(['Clearance processing completed - Import', 'Customs released - Import'].map(normalizeStatusWording));
+const BROKER_WAREHOUSE = normalizeStatusWording('Arrived at the warehouse of Customs Broker');
+
+/**
+ * Import clearance can complete before the parcel reaches the customs broker's warehouse: arriving
+ * there then is the broker taking the parcel to hand it on, not a new clearance. Such an arrival,
+ * the scans given newest first, keeps the stage of the scan before it, with no source of its own.
+ */
+export function keepBrokerAfterClearance(events: readonly CarrierEvent[]): void {
+  let cleared = false;
+  let before: CarrierEvent | undefined;
+  for (const event of [...events].reverse()) {
+    const wording = normalizeStatusWording(event.description ?? '');
+    if (cleared && before?.stage && wording === BROKER_WAREHOUSE) Object.assign(event, { stage: before.stage, stage_source: 'none' });
+    if (IMPORT_CLEARED.has(wording)) cleared = true;
+    if (event.stage) before = event;
+  }
+}
 
 /** Whether the wording is a relayed notice the map gives no stage on purpose. */
 export function isYunExpressNotice(description: string): boolean {

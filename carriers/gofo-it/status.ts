@@ -7,7 +7,8 @@ const ATTEMPTS = new Set(statuses.entries.filter(entry => entry.stage === 'faile
 export function gofoItalyStage(code: string | null, wording: string): Stage | undefined {
   const normalized = normalizeStatusWording(wording);
   if (code === '205' && !/^consegnato(?:$|[ ,.!])/.test(normalized)) return undefined;
-  if (code === '206' && ATTEMPTS.has(normalized)) return 'failed_attempt';
+  // A failed delivery under the alert code, whatever reason follows its "tipo:", is a failed attempt.
+  if (code === '206' && (ATTEMPTS.has(normalized) || /^consegna fallita\b/.test(normalized))) return 'failed_attempt';
   return code ? STAGES.get(code) : undefined;
 }
 export const statusMap: CarrierStatusMap = { stage: gofoItalyStage, gaps: [] };

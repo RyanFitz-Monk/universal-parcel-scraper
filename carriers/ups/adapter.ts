@@ -619,7 +619,7 @@ export function parseUPSTrackingResponse(
   // A parcel UPS hands to the U.S. Postal Service for the last leg (Ground
   // Saver, for one) names its USPS number. Anything that is not a USPS package
   // number is dropped, and a routing barcode keeps only its package number.
-  const postal = isRecord(detail.additionalInformation)
+  const postal = isRecord(detail.additionalInformation) && !upgraded(events)
     ? uspsPackageIdentifier(cleanScalar(detail.additionalInformation.postalServiceTrackingID))
     : null;
   // The ship-to address, else the delivery address, and who took a delivered parcel.
@@ -734,6 +734,12 @@ function apiDeliveryDate(detail: JsonObject, ...types: string[]): string | null 
   return null;
 }
 
+// UPS upgrades a parcel's service at the shipper's or the receiver's request ("We have upgraded the package as
+// requested by the receiver."): it then carries the parcel to the door, and the USPS number named for the service
+// it had, which UPS goes on naming, is no leg of it.
+const UPGRADE = /^we have upgraded the package as requested\b/i;
+const upgraded = (events: readonly CarrierEvent[]) => events.some((event) => UPGRADE.test(event.description ?? ''));
+
 const WINDOW_CLOCK = /^([01]\d|2[0-3])([0-5]\d)(?:[0-5]\d)?$/;
 
 /**
@@ -821,7 +827,7 @@ export function parseUPSApiResponse(payload: unknown, trackingNumber: string): C
   const taker = delivered && isRecord(detail.deliveryInformation) ? text(detail.deliveryInformation.receivedBy, 120) : '';
   const service = isRecord(detail.service) ? clean(text(detail.service.description, 200).replace(/[®™℠]/g, ' '), 80) : '';
   // A parcel UPS hands to the U.S. Postal Service names its USPS number among the alternate numbers.
-  const postal = (Array.isArray(detail.alternateTrackingNumber) ? detail.alternateTrackingNumber.filter(isRecord) : [])
+  const postal = upgraded(events) ? null : (Array.isArray(detail.alternateTrackingNumber) ? detail.alternateTrackingNumber.filter(isRecord) : [])
     .filter((entry) => cleanScalar(entry.type).toUpperCase().startsWith('USPS'))
     .map((entry) => uspsPackageIdentifier(cleanScalar(entry.number)))
     .find(Boolean) ?? null;

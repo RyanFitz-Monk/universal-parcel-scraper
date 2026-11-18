@@ -94,6 +94,7 @@ describe('status map answers', () => {
     expect(answer('gofo-it', '205', 'Livré')).toEqual(unknown);
     expect(answer('gofo-fr', '206', "Échec de la livraison, motif : Le destinataire n'est pas chez lui")).toEqual(mapped('failed_attempt'));
     expect(answer('gofo-it', '206', 'Consegna fallita, tipo:Destinatario assente')).toEqual(mapped('failed_attempt'));
+    expect(answer('gofo-it', '206', 'Consegna fallita, tipo: Indirizzo errato')).toEqual(mapped('failed_attempt'));
     expect(answer('gofo-fr', '206', 'Alerte')).toEqual(mapped('exception'));
     expect(answer('gofo-nl', '205', 'Bezorgd in de brievenbus')).toEqual(mapped('delivered'));
     expect(answer('gofo-nl', '205', 'Consegnato')).toEqual(unknown);
@@ -1756,7 +1757,9 @@ describe("universal providers' answers", () => {
       ['Acceptance refusal', 'failed_attempt'],
       // Lietuvos paštas' acceptance, a bare receipt the shared rules leave unread.
       ['Parcel received', 'accepted'],
-      ['Warehouse receipt.', 'accepted'], ['Received by warehouse', 'accepted'], ['Package received and scanned at warehouse', 'accepted'],
+      ['Warehouse receipt.', 'accepted'], ['Package received by warehouse', 'accepted'], ['Package received and scanned at warehouse', 'accepted'],
+      // Cainiao's pickup and its consolidation warehouse's receipt after it, as its partners' maps read them.
+      ['Received by logistics company', 'accepted'], ['Received by warehouse', 'in_transit'],
       ["We've got it", 'accepted'], ['Received at Evri', 'accepted'], ['Received by our network', 'accepted'], ['Checked in at origin hub', 'accepted'], ['Parcel received and processing', 'accepted'], ['Acceptance, Sent To Spain', 'accepted'],
       ['China Post has received the mail', 'accepted'], ['Envío recogido en origen', 'accepted'],
       ['First parcel scan along Poste Italiane’s logistic network', 'accepted'], ['RFID Confirmed Pickup', 'accepted'],

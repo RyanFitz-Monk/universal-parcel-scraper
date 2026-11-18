@@ -135,10 +135,10 @@
     {
       "wording": "Pendiente de recepción en CTT Express",
       "language": "es",
-      "stage": "in_transit",
+      "stage": "registered",
       "confirmedBy": "live",
       "firstSeen": "2026-11-17",
-      "note": "CTT Express's pre-advice relayed with its explanation after a comma, without a CNE code, two weeks before CTT Express's despatch: CNE still carries the parcel, so it is not read as the start of the journey. The shared rules read the explanation's \"entregaremos\" as a lost parcel."
+      "note": "CTT Express's pre-advice relayed with its explanation after a comma, without a CNE code, two weeks before CTT Express's despatch. Registered, as CTT Express's own row; dated over a minute after a movement, it reads as no step back. The shared rules read the explanation's \"entregaremos\" as a lost parcel."
     },
     {
       "wording": "Enviado",

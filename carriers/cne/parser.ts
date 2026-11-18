@@ -35,9 +35,9 @@ const WORDING: Readonly<Record<string, Stage>> = {
   'Handled by local carrier': 'in_transit',
   // DHL's sort in Germany as CNE relays it after the hand-over, under its shipping code.
   'The shipment has been processed in the parcel center of origin.': 'in_transit',
-  // CTT Express's statuses in Spain as CNE relays them, "label,explanation": its pre-advice, which comes
-  // mid-journey while CNE still carries the parcel, the despatch, the delivery round and the delivery.
-  'Pendiente de recepción en CTT Express': 'in_transit', Enviado: 'in_transit', 'En reparto': 'out_for_delivery',
+  // CTT Express's statuses in Spain as CNE relays them, "label,explanation": its pre-advice, registered as
+  // CTT Express and the other forwarders read it, the despatch, the delivery round and the delivery.
+  'Pendiente de recepción en CTT Express': 'registered', Enviado: 'in_transit', 'En reparto': 'out_for_delivery',
   Entregado: 'delivered',
 };
 // CNE capitalises the same labels differently ("Arrived At" and "Arrived at").

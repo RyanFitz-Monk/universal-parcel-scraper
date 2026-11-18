@@ -659,6 +659,15 @@ describe('UPS structured response', () => {
       expect(dropped).not.toHaveProperty('delivery_carrier');
       expect(dropped).not.toHaveProperty('delivery_tracking_number');
     }
+    // A parcel upgraded at the receiver's request goes on with UPS, which still names the USPS number.
+    const upgraded = withScans([
+      scan('DP', 'Departed from Facility', '20260805 09:07:00', 'EXAMPLE CITY, MD, US'),
+      scan('ZC', 'We have upgraded the package as requested by the receiver.', '20260805 06:27:00', 'EXAMPLE CITY, MD, US'),
+      scan('OR', 'Arrived at Facility', '20260804 17:56:00', 'EXAMPLE CITY, MD, US'),
+    ], { additionalInformation: { serviceInformation: { serviceName: 'UPS Ground Saver&#174;' }, postalServiceTrackingID: POSTAL_PIC } });
+    const kept = parseUPSTrackingResponse(upgraded, TRACKING_NUMBER, TODAY);
+    expect(kept).toMatchObject({ current_stage: 'in_transit', service_name: 'UPS Ground Saver' });
+    expect(kept).not.toHaveProperty('delivery_tracking_number');
   });
 
   it('produces every capability carrier.json declares', () => {

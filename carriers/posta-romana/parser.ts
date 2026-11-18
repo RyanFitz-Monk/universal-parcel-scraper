@@ -86,11 +86,13 @@ export function parsePostaRomana(payload: unknown, rawNumber: string, readAt = D
     let stage: Stage = classified.stage;
     if (stage === 'accepted' && moved) stage = 'in_transit';
     if (stage === 'delivered' && returning) stage = 'returned';
-    if (waitingAt !== undefined && waitingAt === event.location && isPostaRomanaProcessing(event.description!)) stage = 'ready_for_pickup';
+    // The processing keeps the stage of the notice before it, with no source of its own.
+    const kept = waitingAt !== undefined && waitingAt === event.location && isPostaRomanaProcessing(event.description!);
+    if (kept) stage = 'ready_for_pickup';
     if (stage !== 'accepted') moved = true;
     if (stage === 'returned') returning = true;
     waitingAt = stage === 'ready_for_pickup' ? event.location : undefined;
-    Object.assign(event, { stage, stage_source: classified.source });
+    Object.assign(event, { stage, stage_source: kept ? 'none' : classified.source });
   }
   const events = scans.reverse().map(({ event }) => event);
 
@@ -108,7 +110,7 @@ export function parsePostaRomana(payload: unknown, rawNumber: string, readAt = D
 
   return {
     status: stage ? languageStageStatus(stage) : 'unknown',
-    ...(stage ? { current_stage: stage, current_stage_source: latest.stage_source } : {}),
+    ...(stage ? { current_stage: stage, current_stage_source: events.find(event => event.stage_source !== 'none')?.stage_source ?? 'none' } : {}),
     last_status_text: latest.description!,
     last_update: latest.time!,
     expected_delivery: null,
