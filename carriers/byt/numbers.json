@@ -1,0 +1,17 @@
+{
+  "carrier": "byt",
+  "records": [
+    {
+      "number": "BYT73915820461937",
+      "role": "shipment",
+      "evidence": "synthetic",
+      "derivedFrom": "donated_real",
+      "shapeConfirmed": "2026-11-18",
+      "expect": {
+        "carrier": "byt",
+        "confidence": "high"
+      },
+      "note": "Made-up number in the shape of the waybills BYT's tracker answers."
+    }
+  ]
+}

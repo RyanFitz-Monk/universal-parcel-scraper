@@ -111,6 +111,12 @@ export interface HualeiTenant {
    * and goes.
    */
   readonly departure?: string;
+  /**
+   * The number a row's wording says the parcel goes on under, as BYT's "the new tracking number
+   * is …": on a record that holds no delivery carrier's number, the newest such row gives it, and a
+   * carrier in `unlabelledPartners` takes it when its own high-confidence rule claims it whole.
+   */
+  readonly handOff?: (content: string) => string | undefined;
 }
 
 /**
@@ -600,9 +606,13 @@ export function parseHualeiTrack(payload: unknown, raw: string, tenant: HualeiTe
   const tracking = trackingOf(record);
   // On a tenant that names its own numbers, a tracking number of another shape is the delivery carrier's.
   const downstream = tenant.ownNumber && tracking && !own(tracking) ? tracking : '';
-  return result(details.map((row) => trackRow(row, provider)), {
-    number, destination, partner: partnerOf(record, destination, tenant, downstream),
-    tracking: downstream ? '' : tracking, ...(downstream ? { downstream } : {}),
+  const rows = details.map((row) => trackRow(row, provider));
+  // Else the number the newest row that hands the parcel on names, the rows coming newest first.
+  const handed = downstream || text(record, 'business_channeltransfercode', provider, 64) || !tenant.handOff ? ''
+    : rows.map((row) => identity(tenant.handOff!(row.content) ?? '')).find((value) => value && value !== identity(number)) ?? '';
+  return result(rows, {
+    number, destination, partner: partnerOf(record, destination, tenant, downstream || handed),
+    tracking: downstream ? '' : tracking, ...(downstream || handed ? { downstream: downstream || handed } : {}),
     service: hualeiServiceName(text(record, 'productKindName', provider, 100)) || undefined,
   }, tenant, readAt);
 }

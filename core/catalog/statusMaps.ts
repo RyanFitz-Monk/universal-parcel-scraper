@@ -112,6 +112,7 @@ import { statusMap as bpost } from '../../carriers/bpost/status.js';
 import { statusMap as bringPosten } from '../../carriers/bring-posten/status.js';
 import { statusMap as bringerParcel } from '../../carriers/bringer-parcel/status.js';
 import { statusMap as brt } from '../../carriers/brt/status.js';
+import { statusMap as byt } from '../../carriers/byt/status.js';
 import { statusMap as bulgarianPosts } from '../../carriers/bulgarian-posts/status.js';
 import { statusMap as burdDelivery } from '../../carriers/burd-delivery/status.js';
 import { statusMap as bussgods } from '../../carriers/bussgods/status.js';
@@ -852,7 +853,7 @@ export const STATUS_MAPS: Readonly<Record<string, CarrierStatusMap>> = {
   'apple-express': appleExpress, aquiline, aramex, 'aramex-au': aramexAu,
   'aramex-nz': aramexNz, 'aras-kargo': arasKargo, 'arrow-xl': arrowXl, asendia, 'asyad-express': asyadExpress, 'atlantic-courier': atlanticCourier, 'ats-healthcare': atsHealthcare, 'australia-post': australiaPost, 'austrian-post': austrianPost, averitt, aymakan, 'bangladesh-post': bangladeshPost,
   'barid-al-maghrib': baridAlMaghrib, belpost, 'best-overnite-express': bestOverniteExpress, bestfulfill, 'better-trucks': betterTrucks, 'bex-express': bexExpress, 'bjs-home-delivery': bjsHomeDelivery, 'blue-dart': blueDart, 'blue-express': blueExpress, blueex, bombino,
-  bookurier, 'border-express': borderExpress, bosta, 'box-now': boxNow, boxtal, bpost, 'bring-posten': bringPosten, 'bringer-parcel': bringerParcel, brt, 'bulgarian-posts': bulgarianPosts, 'burd-delivery': burdDelivery, bussgods,
+  bookurier, 'border-express': borderExpress, bosta, 'box-now': boxNow, boxtal, bpost, 'bring-posten': bringPosten, 'bringer-parcel': bringerParcel, brt, 'bulgarian-posts': bulgarianPosts, 'burd-delivery': burdDelivery, bussgods, byt,
   byhd, 'c-chez-vous': cChezVous, c3x, cacesa, 'canada-post': canadaPost, canpar, cargus, 'castle-parcels': castleParcels, castores, 'cbl-logistica': cblLogistica, ccfs, cdek, cdl, celeritas,
   'central-transport': centralTransport, 'ceska-posta': ceskaPosta, 'ceva-logistics': cevaLogistics, chazki, chilexpress, 'china-post': chinaPost,
   'chit-chats': chitChats, chronodiali, chronopost, chukou1, 'chunghwa-post': chunghwaPost, chunil, ciblex, citilogistics, 'city-air-express': cityAirExpress, 'city-express-rs': cityExpressRs, 'citylink-express': citylinkExpress, citymail,

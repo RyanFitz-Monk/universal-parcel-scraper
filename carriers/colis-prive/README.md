@@ -33,7 +33,7 @@ recipient's postcode.
   never log it, quote it in an issue or put it in a fixture or `numbers.json`.
   The corpus keeps bare 12-character numbers only.
 - Yanwen's US last-mile numbers, `YW` with a hub code and twelve digits,
-  YWE's numbers, `YWE` and fourteen digits, GOFO's numbers, `GF` or `CI` with a
+  YWE's numbers, `YWE` and fourteen digits, BYT's, `BYT` and fourteen digits, GOFO's numbers, `GF` or `CI` with a
   country code and thirteen digits, Cainiao's `CNG` numbers with fourteen digits
   and numbers that open with DobroPost's prefix `DBRPST` also end in five digits;
   detection does not read those as a postcode.

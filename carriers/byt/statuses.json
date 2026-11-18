@@ -1,0 +1,20 @@
+{
+  "carrier": "byt",
+  "entries": [
+    {"code": "ARRIVAL", "wording": "Package received & scanned at warehouse", "language": "en", "stage": "accepted", "confirmedBy": "live", "note": "The first scan in BYT's hands, at its warehouse."},
+    {"wording": "Parcel Data Received", "language": "en", "stage": "registered", "confirmedBy": "live", "note": "The order's data, written after the warehouse receipt; its clock is the order's."},
+    {"wording": "Shipment information received", "language": "en", "stage": "registered", "confirmedBy": "live"},
+    {"code": "SHIPMENT", "wording": "Package departed from the warehouse", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "The shipment is in transit to the next hub", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Arrived at export center", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "The warehouse changed the last-mile vendor due to the weight difference, the new tracking number is", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "Followed by the new last-mile number. The map reads the opening words."},
+    {"wording": "Packaged Leaving Scan", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Exports Center Sorting and Packing", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Customs export clearance completed", "language": "en", "stage": "in_transit", "confirmedBy": "live", "note": "Released by export customs; the parcel carries on."},
+    {"wording": "Package handed over to airline", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Departed from export center", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Package in transit to destination country", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "The flight has landed", "language": "en", "stage": "in_transit", "confirmedBy": "live"},
+    {"wording": "Destination country customs clearance begins", "language": "en", "stage": "customs", "confirmedBy": "live", "note": "Import clearance under way at the destination."}
+  ]
+}

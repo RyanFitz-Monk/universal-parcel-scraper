@@ -3,7 +3,7 @@
 Tracks shipments of GZYL (广州云链货运代理有限公司), a Guangzhou forwarder, on its own tenant of
 the Hualei (华磊) forwarder platform. [Tianhui Hengyuan](../thhy/README.md),
 [JRT](../jrt/README.md), [Meiteshun Logistics](../mtscn/README.md),
-[Mayi Yinfu](../mayiyinfu/README.md), [BYHD](../byhd/README.md),
+[Mayi Yinfu](../mayiyinfu/README.md), [BYHD](../byhd/README.md), [BYT](../byt/README.md),
 [MeiHoo Pegasus](../meihoo-pegasus/README.md), [Pengyou](../pengyou/README.md),
 [Kun Express](../kun-express/README.md), [JHGJ](../jhgj/README.md),
 [SPT Express](../sptexp/README.md), [Huaya Express](../huaya-express/README.md),
@@ -100,7 +100,9 @@ instead.
   claims whole is that carrier's under a channel too, unless the label names another carrier: in the
   table, or by a catalog name or brand among its Latin words. The page names no channel or service,
   so a channel's partner is read from the interface alone; the page applies a tenant's own-number
-  rule and the partners it hands to unnamed as the interface does.
+  rule and the partners it hands to unnamed as the interface does. A tenant whose rows name the
+  number the parcel goes on under, as BYT's "the new tracking number is …", gives the newest one
+  as the delivery carrier's when the record has no transfer number, under the same rule.
 - Recipient, sender, address, postcode, weight, fee, signature, signatory and delivery photo
   fields are never read; postcodes, with a country's letters before them (`CH-`), and signatories
   are cut from scan text, including a delivery row's place, which can carry the recipient's

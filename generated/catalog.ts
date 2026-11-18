@@ -1658,7 +1658,7 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": [
       {
-        "pattern": "^(?!YW[A-Z]{3}\\d{12}$|YWE\\d{14}$|(?:GF|CI)[A-Z]{2}\\d{13}$|CNG\\d{14}$|DBRPST\\d{11}$)[A-Z0-9]{12}(?:(?:0[1-9]|[1-8]\\d|9[0-5]|97|98)\\d{3}|[BL][1-9]\\d{3})$",
+        "pattern": "^(?!YW[A-Z]{3}\\d{12}$|YWE\\d{14}$|BYT\\d{14}$|(?:GF|CI)[A-Z]{2}\\d{13}$|CNG\\d{14}$|DBRPST\\d{11}$)[A-Z0-9]{12}(?:(?:0[1-9]|[1-8]\\d|9[0-5]|97|98)\\d{3}|[BL][1-9]\\d{3})$",
         "confidence": "low"
       },
       {
@@ -13059,6 +13059,32 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       }
     ],
     "detectionRules": []
+  },
+  "byt": {
+    "displayName": "BYT",
+    "color": "#51a7e8",
+    "aliases": [
+      "BYT56",
+      "佰邮通",
+      "上海佰邮通"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "byt"
+    },
+    "canaryUrl": "https://t.17track.net/",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^BYT\\d{14}$",
+        "confidence": "high"
+      }
+    ]
   },
   "c3x": {
     "displayName": "C3X",
@@ -65198,6 +65224,7 @@ export const CARRIER_IDS = [
   "bussgods",
   "byhd",
   "bypost",
+  "byt",
   "c3x",
   "c807-xpress",
   "cacesa",
@@ -67057,6 +67084,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "bussgods": ["bussgods-1"],
   "byhd": ["byhd-1"],
   "bypost": [],
+  "byt": ["byt-1"],
   "c3x": [],
   "c807-xpress": [],
   "cacesa": [],
