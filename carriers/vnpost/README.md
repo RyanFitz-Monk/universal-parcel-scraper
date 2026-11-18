@@ -24,7 +24,7 @@ without one it replies HTTP 422 "Vui lòng nhập captcha", and a wrong one gets
 đúng hoặc đã hết hạn".
 
 The answer is case-sensitive, and the image mixes capitals, small letters and digits that look
-alike. Automatic recognition remains unreliable, so the library has no unattended guest
+alike. Automatic guest verification remains unreliable, so the library has no unattended guest
 retrieval path. An accepted guest lookup can return a shipment matching the whole number,
 plus event rows: `info` holds the item, `locate` holds scan clocks, statuses and places, and
 `delivery` holds delivery attempts. A parser for dated history remains unimplemented.
