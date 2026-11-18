@@ -116,7 +116,13 @@ export function parseNacex(html: string, raw: string): CarrierResult {
   const summaryCell = statusCells.eq(1);
   const summaryLabels = summaryCell.children('b, font.fuente_titulo_green');
   const summaryLabel = clean(summaryLabels.length === 1 ? summaryLabels.text() : summaryCell.text(), 120).replace(AGENCY_CODE, '');
-  if (!summaryLabel || !/^[\p{L}][\p{L}\s().,-]{1,119}$/u.test(summaryLabel)) throw new SchemaError('NACEX', 'NACEX returned an invalid current status');
+  // The summary repeats the newest history row. When that row is one of the empty rows NACEX can
+  // print, the summary is empty too, and the newest scan with a label gives the current status.
+  const newestRow = history.find('td.sg_hist_desc').first();
+  const blankSummary = !clean(summaryCell.text(), 300) && newestRow.length === 1 && !clean(newestRow.text(), 300);
+  if (!blankSummary && (!summaryLabel || !/^[\p{L}][\p{L}\s().,-]{1,119}$/u.test(summaryLabel))) {
+    throw new SchemaError('NACEX', 'NACEX returned an invalid current status');
+  }
   const rows = history.find('tr');
   if (!rows.length) throw new IndeterminateError('NACEX', 'NACEX returned empty shipment history');
   if (rows.length > 500) throw new SchemaError('NACEX', 'NACEX returned too many scans');
@@ -172,8 +178,9 @@ export function parseNacex(html: string, raw: string): CarrierResult {
   // Calendar headings have no scan clock or zone: a scan keeps its day alone.
   // Preserve provider order, including same-day repeated scans.
   // The summary repeats the newest scan's label, read as that scan is.
-  const mapped = classifyNacexStatus(summaryLabel);
-  const current = isNacexNotice(summaryLabel) || summaryLabel === events[0]!.provider_status ? applied.get(events[0]!) ?? mapped : mapped;
+  const shown = blankSummary ? String(events[0]!.provider_status) : summaryLabel;
+  const mapped = classifyNacexStatus(shown);
+  const current = isNacexNotice(shown) || shown === events[0]!.provider_status ? applied.get(events[0]!) ?? mapped : mapped;
   const latestPhysical = scans.find(scan => scan.mapped && !scan.notice);
   if (mapped?.stage === 'delivered' && latestPhysical?.mapped?.stage !== 'delivered') {
     throw new SchemaError('NACEX', 'NACEX current status contradicts its latest shipment scan');
@@ -189,7 +196,7 @@ export function parseNacex(html: string, raw: string): CarrierResult {
   const estimate = block && !block.delivered && newestDay && current?.stage !== 'exception'
     ? nearestDay(newestDay, block.month, block.day) : null;
   return { status: current?.status ?? 'unknown', ...(current ? { current_stage: current.stage } : {}),
-    last_status_text: mapped?.status === 'delivered' ? 'Delivered' : summaryLabel,
+    last_status_text: mapped?.status === 'delivered' ? 'Delivered' : shown,
     last_update: null, ...(events[0]!.local_time ? { last_update_local: events[0]!.local_time } : {}),
     ...(estimate && estimate >= newestDay! ? { expected_delivery: estimate } : {}), events: events.slice(0, 100) };
 }

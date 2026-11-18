@@ -209,6 +209,23 @@ describe('NACEX direct tracking', () => {
       .toMatchObject({ status: 'in_transit', current_stage: 'accepted', events: [{ stage: 'accepted', location: 'TEST ORIGIN' }] });
   });
 
+  it('reads the newest labelled scan when an empty newest row leaves the summary empty', () => {
+    const history = (summary: string, rows: string[]) => edit($ => {
+      $('#tabla_estado tr').eq(1).children('td').last().html(summary);
+      $('#table_historico').html('<tr><td class="sg_hist_fecha" colspan="2">15 January 2026</td></tr>'
+        + rows.map(row => `<tr><td class="sg_hist_desc">${row}</td></tr>`).join(''));
+    });
+    const moving = ['<b>En tránsito</b><br>9900-01 - TEST DEPOT', '<b>Aceptada</b><br>9900 - TEST ORIGIN'];
+    const blank = parseNacex(history('<b></b>', ['<b></b>', ...moving]), NUMBER);
+    expect(blank).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'En tránsito', last_update_local: '2026-01-15' });
+    expect(blank.events).toEqual(parseNacex(history('En tránsito', moving), NUMBER).events);
+    // An empty summary over a scan with a label, or a malformed one over an empty row, is still a changed page.
+    for (const body of [history('', moving), history('<b>???</b>', ['<b></b>', ...moving])]) {
+      expect(() => parseNacex(body, NUMBER)).toThrowError(expect.objectContaining({ kind: 'schema' }));
+    }
+    expect(() => parseNacex(history('', ['<b></b>']), NUMBER)).toThrowError(expect.objectContaining({ kind: 'indeterminate' }));
+  });
+
   it('rejects a delivered header contradicted by the newest mapped scan, allowing newer administrative rows', () => {
     const contradiction = edit($ => {
       $('.sg_hist_desc').first().children('font').text('En reparto');

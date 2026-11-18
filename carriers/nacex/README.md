@@ -38,7 +38,9 @@ redirects resume delivery, as does the agency's handling of an incident that war
 delay ("Gestión de servicio, posible demora"); requests to contact the agency and incidents
 closed without success are problems. A parenthetical agency or pickup point code after
 a label is dropped. A history row with no text at all, an empty label NACEX can print between
-two scans, is skipped; a label that is present but malformed still fails the page.
+two scans, is skipped; a label that is present but malformed still fails the page. When such a
+row is the newest, the summary that repeats it is empty too, and the newest scan with a label
+gives the current status.
 
 Only status labels and depot localities of movement scans are retained. A
 platform's locality is its town after "PLAT", cut to twelve letters
