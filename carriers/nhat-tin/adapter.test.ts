@@ -211,3 +211,15 @@ describe('Nhat Tin Logistics status vocabulary', () => {
     expect(nhatTinStage('')).toBeNull();
   });
 });
+
+it('shows delivery first when pickup and delivery share the only minute', () => {
+  const result = parseNhatTin(changed('delivered', bill => {
+    delete bill.billstatus;
+    delete bill.billstatus_desc;
+    const pickup = bill.histories[0]!, delivery = bill.histories.at(-1)!;
+    bill.histories = [pickup, { ...delivery, loc_time: pickup.loc_time }];
+  }), DELIVERED);
+  expect(result.current_stage).toBe('delivered');
+  expect(result.events?.map(event => event.stage)).toEqual(['delivered', 'accepted']);
+  expect(result.last_status_text).toBe(result.events?.[0]?.description);
+});
