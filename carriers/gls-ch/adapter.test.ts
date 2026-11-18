@@ -200,7 +200,7 @@ describe('GLS Switzerland response normalization', () => {
     expect(JSON.stringify(waiting)).not.toMatch(/2760000000|07:00/);
   });
 
-  it('keeps the first date of an arrival range and names the text, whose end the adapter does not read yet', () => {
+  it('keeps the first date of an arrival range and names the range text', () => {
     const parse = (payload: JsonObject) => parseGLSSwitzerlandTrackingResponse(payload, OFFICIAL_TEST_PARCEL_NUMBER);
     for (const payload of [deliveredOverviewFixture(), detailedFixture(), parcelShopFixture()]) {
       expect(parse(payload)).not.toHaveProperty('unread_estimates');
@@ -230,6 +230,12 @@ describe('GLS Switzerland response normalization', () => {
     const nextDay = parcel('08:10', 'INDELIVERY', 'The parcel is expected to be delivered during the day.');
     (nextDay.history as JsonObject[])[0]!.date = '21-Jun-2026';
     expect(parse(nextDay)).toMatchObject({ expected_delivery: null, expected_delivery_withdrawn: true });
+    const range: JsonObject = { ...parcel('09:30'), arrivalTime: { value: '20-Jun-2026 - 22-Jun-2026' } };
+    (range.history as JsonObject[])[0]!.date = '21-Jun-2026';
+    expect(parse(range)).not.toHaveProperty('expected_delivery_withdrawn');
+    (range.history as JsonObject[])[0]!.date = '23-Jun-2026';
+    expect(parse(range).expected_delivery_withdrawn).toBe(true);
+    expect(parse({ ...range, arrivalTime: { value: '20-Jun-2026 - 32-Jun-2026' } })).not.toHaveProperty('expected_delivery_withdrawn');
     // A date without a slot holds through its day.
     expect(parse({ ...parcel('17:11'), arrivalTime: { name: 'Expected delivery:', value: '20-Jun-2026' } })).toMatchObject({ expected_delivery: '2026-06-20' });
   });
