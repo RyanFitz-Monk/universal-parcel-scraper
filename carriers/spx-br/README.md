@@ -43,6 +43,8 @@ label's first fifteen characters.
 - In Portuguese the feed sends `Start_Confiscation` with an empty message. The scan takes SPX's
   English wording for it, "Parcel has entered confiscation process", as ParcelsApp relays it.
 - Recognition makes the same requests.
+- A Shopee order number, six digits of the order's date and eight letters and digits, is not
+  an SPX number: neither lookup holds one. Shopee's order page shows the label's number.
 
 ## Notes
 
