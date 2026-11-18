@@ -25,7 +25,18 @@ describe('readShipments', () => {
       }]);
   });
 
+  it('finds the header after workbook title rows and preserves source row numbers', () => {
+    assert.deepEqual(readShipments('Title,,,,\nSubtitle,,,,\n\nRecipient,Company,Tracking #\nAda,Example,123456789012'), [{
+      row: 5,
+      number: '123456789012',
+      recipient: 'Ada',
+      company: 'Example',
+      campaign: '',
+      carrier: undefined,
+    }]);
+  });
+
   it('rejects files without a tracking-number column', () => {
-    assert.throws(() => readShipments('Recipient,Company\nAda,Example'), /No tracking-number column was found/);
+    assert.throws(() => readShipments('Recipient,Company\nAda,Example'), /No recipient and tracking-number header row was found/);
   });
 });

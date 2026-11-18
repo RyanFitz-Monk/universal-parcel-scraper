@@ -29,7 +29,7 @@ function parseRows(text, delimiter) {
     } else if (char === '\n' || char === '\r') {
       row.push(field);
       field = '';
-      if (row.some(value => value.trim())) rows.push(row);
+      rows.push(row);
       row = [];
       if (char === '\r' && text[i + 1] === '\n') i += 1;
     } else {
@@ -47,25 +47,21 @@ function normalizedHeader(value) {
 }
 
 export function readShipments(text) {
-  const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
-  let inQuotes = false;
-  let tabs = 0;
-  let commas = 0;
-  for (let i = 0; i < firstLine.length; i += 1) {
-    if (firstLine[i] === '"' && firstLine[i + 1] === '"' && inQuotes) {
-      i += 1;
-    } else if (firstLine[i] === '"') {
-      inQuotes = !inQuotes;
-    } else if (!inQuotes && firstLine[i] === '\t') {
-      tabs += 1;
-    } else if (!inQuotes && firstLine[i] === ',') {
-      commas += 1;
-    }
-  }
-  const delimiter = tabs > commas ? '\t' : ',';
-  const [headers, ...records] = parseRows(text, delimiter);
-  if (!headers) throw new TypeError('The input file is empty');
-
+  if (!text.trim()) throw new TypeError('The input file is empty');
+  const parsed = [',', '\t'].map(delimiter => {
+    const rows = parseRows(text, delimiter);
+    const headerIndex = rows.findIndex(row => {
+      const names = new Set(row.map(normalizedHeader));
+      return names.has('recipient') && ['tracking', 'trackingnumber', 'trackingno', 'trackingid', 'number']
+        .some(name => names.has(name));
+    });
+    return { rows, headerIndex };
+  }).filter(candidate => candidate.headerIndex >= 0)
+    .sort((left, right) => left.headerIndex - right.headerIndex);
+  const candidate = parsed[0];
+  if (!candidate) throw new TypeError('No recipient and tracking-number header row was found');
+  const headers = candidate.rows[candidate.headerIndex];
+  const records = candidate.rows.slice(candidate.headerIndex + 1);
   const columns = new Map(headers.map((header, index) => [normalizedHeader(header), index]));
   const trackingIndex = ['tracking', 'trackingnumber', 'trackingno', 'trackingid', 'number']
     .map(header => columns.get(header)).find(index => index !== undefined);
@@ -81,7 +77,7 @@ export function readShipments(text) {
     const number = values[trackingIndex]?.trim();
     if (!number) return [];
     return [{
-      row: index + 2,
+      row: index + candidate.headerIndex + 2,
       number,
       recipient: values[recipientIndex]?.trim() ?? '',
       company: values[companyIndex]?.trim() ?? '',
@@ -89,6 +85,14 @@ export function readShipments(text) {
       carrier: values[carrierIndex]?.trim() || undefined,
     }];
   });
+}
+
+function decodeFile(buffer) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer);
+  }
 }
 
 function setting(name, fallback, maximum) {
@@ -146,7 +150,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (!inputPath || extra.length) {
     throw new TypeError('Usage: node scripts/track-batch.mjs <export.csv|export.tsv>');
   }
-  const shipments = readShipments(await readFile(inputPath, 'utf8'));
+  const shipments = readShipments(decodeFile(await readFile(inputPath)));
   if (shipments.length === 0) throw new TypeError('No tracking numbers were found in the input file');
 
   const budgetMs = setting('PARCEL_LOOKUP_BUDGET_MS', 30_000, 120_000);
