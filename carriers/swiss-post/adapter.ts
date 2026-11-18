@@ -163,7 +163,7 @@ function dimensionsText(item: JsonObject): string | null {
 
 /** Plain text of a wording, in case it carries markup. */
 function plain(value: string): string {
-  return load(`<span>${value}</span>`)('span').text().trim().slice(0, 500);
+  return load(value, {}, false).root().text().trim().slice(0, 500);
 }
 
 /**
