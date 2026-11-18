@@ -590,7 +590,8 @@ test('Australia Post sends the tracking request only once DataDome has answered 
 test('Australia Post sends the tracking request without DataDome\'s report once half the budget is spent', async () => {
   const { page, capture, respond } = await fixture(australiaUrl, australiaApi);
   page.evaluate = async (_callback, args) => {
-    assert.ok(args.budgetMs > 0 && args.budgetMs <= 200);
+    // A timer may fire a millisecond early by the wall clock.
+    assert.ok(args.budgetMs > 0 && args.budgetMs <= 205);
     await respond(australiaReply());
   };
   const started = Date.now();
