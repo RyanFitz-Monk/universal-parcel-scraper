@@ -16,7 +16,7 @@ builds no address.
 
 ## Why there is no adapter
 
-The tracking form on `vnpost.vn/vi`, also served at `vietnampost.vn`, opens a Laravel session,
+The [tracking form](https://vnpost.vn/vi), also served at `vietnampost.vn`, opens a Laravel session,
 gets an image address from `/handle-captcha/refresh-captcha`, then sends the whole number and
 the image's answer to `/postcode/thong-tin` as `post_code` and `captcha`. The image is a
 four-character `mews` JPEG. The service checks the answer before it looks the number up:
@@ -24,11 +24,10 @@ without one it replies HTTP 422 "Vui lòng nhập captcha", and a wrong one gets
 đúng hoặc đã hết hạn".
 
 The answer is case-sensitive, and the image mixes capitals, small letters and digits that look
-alike. The library's shared text reader does not tell capitals from small letters, so the
-service refuses most of its answers. With an accepted answer, the service refuses the archived
-numbers as wrong (`Mã bưu gửi không đúng!`), so there is no found reply to read. The page's
-template names the reply's parts: `info` for the item, `locate` for dated scans with their
-place, and `delivery` for delivery attempts.
+alike. Automatic recognition remains unreliable, so the library has no unattended guest
+retrieval path. An accepted guest lookup can return a shipment matching the whole number,
+plus event rows: `info` holds the item, `locate` holds scan clocks, statuses and places, and
+`delivery` holds delivery attempts. A parser for dated history remains unimplemented.
 
 The international tracker on `ipostal.vnpost.vn` posts the numbers to `/api/v1/tra-cuu-buu-gui`
 with a reCAPTCHA v2 checkbox token and, without one, answers "Vui lòng xác nhận captcha."
