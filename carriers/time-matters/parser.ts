@@ -112,7 +112,7 @@ export function parseTimeMatters(payload: unknown, rawNumber: string, language: 
   // The page dates "Delivered" by the hand-over at the last stop, or by the arrival at a delivery address.
   const ending = last ? rows(last.trackingPoints, 60, 'tracking point list') : [];
   const closing = ending.find(point => Boolean(point.handover) && point.actual)
-    ?? (toDoor ? ['Arrival', 'Available'].map(type => ending.find(point => point.type === type)).find(Boolean) : undefined);
+    ?? (toDoor ? ['Arrival', 'Available'].map(type => ending.find(point => point.type === type && point.actual)).find(Boolean) : undefined);
   const mark = (code: string, at: { iso: string; timestamp: number } | null): void => {
     const status = timeMattersStatus(code)!;
     if (at) scans.push({ at: at.timestamp, index: 10_000, event: { time: at.iso, description: status[language], provider_code: code, stage: status.stage, stage_source: 'carrier_map' } });
@@ -129,9 +129,9 @@ export function parseTimeMatters(payload: unknown, rawNumber: string, language: 
   const stage: Stage = name === 'PACKAGE_CLAIM' && (toDoor || (typeof payload.transportType === 'string' && payload.transportType.endsWith('TO_DOOR')))
     ? 'in_transit' : state.stage;
   // "Delivery time" on the page: the estimated, else the scheduled, arrival at the delivery address.
-  const due = toDoor && (stage === 'registered' || stage === 'in_transit')
-    ? ['Arrival', 'Available'].map(type => ending.find(point => point.type === type)).find(Boolean) : undefined;
-  const promised = due ? [due.estimated, due.planned].find(value => typeof value === 'string' && value !== '') : undefined;
+  const promised = toDoor && (stage === 'registered' || stage === 'in_transit')
+    ? ['Arrival', 'Available'].flatMap(type => ending.filter(point => point.type === type)
+      .flatMap(point => [point.estimated, point.planned])).find(value => typeof value === 'string' && value !== '') : undefined;
   const moment = promised === undefined ? null : explicitOffsetTime(promised)?.iso ?? clean(promised, 40);
   const estimate = moment ? windowEstimate(moment, moment) : { expected_delivery: null };
   const delivered = name === 'FINISHED' ? events.find(event => event.provider_code === name)?.time : undefined;

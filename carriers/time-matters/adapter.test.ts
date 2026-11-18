@@ -267,3 +267,17 @@ describe('time:matters guest adapter', () => {
     }
   });
 });
+
+it('uses the available milestone when arrival lacks the needed clock', () => {
+  const data = fixture();
+  const points = data.routing.at(-1).trackingPoints;
+  const time = '2026-03-02T14:20:00Z';
+  points.splice(0, points.length, { type: 'Arrival' }, { type: 'Available', estimated: time });
+  expect(parseTimeMatters(data, NUMBER).expected_delivery).toBe(time);
+  data.status = 'FINISHED';
+  points[0].planned = time;
+  points[1].actual = time;
+  const result = parseTimeMatters(data, NUMBER);
+  expect(result.delivered_at).toBe(time);
+  expect(result.events?.[0]?.stage).toBe('delivered');
+});
