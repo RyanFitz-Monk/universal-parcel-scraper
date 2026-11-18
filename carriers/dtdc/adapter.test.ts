@@ -364,3 +364,12 @@ describe('DTDC links', () => {
       .toMatchObject({ trackingNumber: 'W00000000', carrier: 'dtdc', source: 'link' });
   });
 });
+
+it('flags a browser history only when unique scans exceed the cap', () => {
+  const scans = Array.from({ length: 101 }, (_, index) => scan('In Transit', 'Aug 26, 2026 8:20AM', 'Scan ' + index));
+  const capped = parseDtdcPage(page(scans.join('')), NUMBER);
+  expect(capped.events).toHaveLength(100);
+  expect(capped.history_truncated).toBe(true);
+  scans[100] = scans[0]!;
+  expect(parseDtdcPage(page(scans.join('')), NUMBER)).not.toHaveProperty('history_truncated');
+});
