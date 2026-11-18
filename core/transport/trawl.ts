@@ -90,7 +90,7 @@ const DEFAULT_MAX_BYTES = 10_000_000;
 export const TRAWL_TRANSPORT_ALLOWANCE_MS = 15_000;
 const TRANSPORT_ALLOWANCE_MS = TRAWL_TRANSPORT_ALLOWANCE_MS;
 
-function pageHttpError(provider: string, status: number, headers: unknown): UpstreamHttpError {
+export function pageHttpError(provider: string, status: number, headers: unknown): UpstreamHttpError {
   const retryHeader = isRecord(headers)
     ? Object.entries(headers).find(([key]) => key.toLowerCase() === 'retry-after')?.[1] : undefined;
   const retryAfterMs = typeof retryHeader !== 'string' ? undefined : /^\d+$/.test(retryHeader.trim())

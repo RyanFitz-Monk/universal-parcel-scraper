@@ -270,9 +270,10 @@ describe('Veho adapter', () => {
   });
 
   it('never reads a refusal as a missing parcel, and rests a refused proxy too', async () => {
-    const { trawl, requests } = browser([attestation(403)], [attestation(429)]);
-    const { tracker, fetcher } = setup({ trawl, env: { VEHO_FALLBACK_PROXY_URL: PROXY } });
-    await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+    const { trawl, requests } = browser([attestation(403)], [{ ...attestation(429), headers: { 'Retry-After': '45' } }]);
+    const { tracker, fetcher, records } = setup({ trawl, env: { VEHO_FALLBACK_PROXY_URL: PROXY } });
+    await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited', retryAfterMs: 45_000 });
+    expect(records.at(-1)).toMatchObject({ outcome: 'rate_limited', error: { retryAfterMs: 45_000 } });
     await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
     expect(requests).toHaveLength(2);
     expect(fetcher).not.toHaveBeenCalled();

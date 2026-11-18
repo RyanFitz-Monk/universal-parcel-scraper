@@ -5,6 +5,7 @@ import { runSteps } from '../../core/runner/index.js';
 import type { StepRecord, StepRecorder } from '../../core/telemetry/index.js';
 import { browserContextProxy } from '../../core/transport/browserRouteTrial.js';
 import { decodeText, fetchBounded, userAgentOf } from '../../core/transport/index.js';
+import { pageHttpError } from '../../core/transport/trawl.js';
 import { attestInBrowser, type AttestationReply } from './browser.js';
 import { API, ATTESTATION, MAX_BYTES, normalizeVehoNumber, ORIGIN, PAGE, parseVeho, PROVIDER, vehoRequest } from './parser.js';
 
@@ -117,7 +118,9 @@ export class VehoTracker {
     signal.throwIfAborted();
     if (!response) throw new ChallengeError(PROVIDER, "Veho's page obtained no guest attestation");
     if ([401, 403, 429].includes(response.status)) {
-      this.rests.set(path, this.now() + REFUSAL_REST_MS[path]);
+      const refusal = response.status === 429 ? pageHttpError(PROVIDER, 429, { 'retry-after': response.retryAfter }) : null;
+      this.rests.set(path, this.now() + Math.max(REFUSAL_REST_MS[path], refusal?.retryAfterMs ?? 0));
+      if (refusal) throw refusal;
       throw new ChallengeError(PROVIDER, 'Veho refused this address a guest attestation');
     }
     if (response.status !== 200) throw new UpstreamHttpError(PROVIDER, response.status);
@@ -143,7 +146,8 @@ export class VehoTracker {
     const response = page.capturedResponses.filter(row => row.url === ATTESTATION).at(-1);
     if (!response) return null;
     const incomplete = !!response.error || response.truncated || response.base64Encoded;
-    return { status: response.status, body: incomplete ? null : response.body, truncated: incomplete };
+    const retryAfter = Object.entries(response.headers).find(([key]) => key.toLowerCase() === 'retry-after')?.[1];
+    return { status: response.status, retryAfter, body: incomplete ? null : response.body, truncated: incomplete };
   }
 
   /** One browser read at a time: a lookup waits for the read under way and uses its attestation. */
