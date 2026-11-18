@@ -1466,6 +1466,10 @@ export const trackingLinkCases: TrackingLinkCase[] = [
   { carrier: 'zecheng', number: 'ZCGJ0000000002CN',
     route: /^https:\/\/api\.zecwl\.com\/index\/tracknumber\/track\?nos=ZCGJ0000000002CN$/,
     marker: /快件跟踪|跟踪\(Track\)/ },
+  // The tracker renders the number's scans on the server and prefills its form with the number.
+  { carrier: 'jetspeed', number: 'JSD000000000199',
+    route: /^https:\/\/www\.jetspeed-express\.com\/search_kuai_di\/search\/orderid\/JSD000000000199$/,
+    marker: /订单查询|订单号/ },
   // The tracking page carries the waybill form and reads no number from its address.
   { carrier: 'pdu', number: 'CO00000001PD',
     route: /^https:\/\/www\.pduni\.com\/MV\/en\/customer-services\/waybill-inquiry$/,

@@ -1,0 +1,50 @@
+{
+  "id": "jetspeed",
+  "displayName": "JETSPEED",
+  "aliases": [
+    "Jetspeed Express",
+    "捷速达",
+    "捷速達",
+    "捷速达国际快运"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#ff6600"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "url": "https://www.jetspeed-express.com/search_kuai_di/search/orderid/{trackingNumber}",
+    "searchUrl": "https://www.jetspeed-express.com/",
+    "canaryUrl": "https://www.jetspeed-express.com/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "jetspeed-express.com"
+      ],
+      "path": "/search_kuai_di/search/orderid/([^/?#]+)"
+    }
+  ],
+  "detection": [
+    {
+      "id": "jetspeed-1",
+      "pattern": "^JSD\\d{12}$",
+      "confidence": "low"
+    }
+  ]
+}

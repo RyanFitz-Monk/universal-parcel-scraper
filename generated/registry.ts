@@ -2469,6 +2469,7 @@ export const REGISTRY: RegistryDefinition = {
     "jetizz": "universal",
     "jetline-couriers": "jetline-couriers",
     "jetpak": "universal",
+    "jetspeed": "universal",
     "jhgj": "jhgj",
     "jiachen-express": "universal",
     "jiayang": "jiayang",

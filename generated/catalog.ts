@@ -33590,6 +33590,42 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "jetspeed": {
+    "displayName": "JETSPEED",
+    "color": "#ff6600",
+    "aliases": [
+      "Jetspeed Express",
+      "捷速达",
+      "捷速達",
+      "捷速达国际快运"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://www.jetspeed-express.com/",
+    "trackingUrlTemplate": "https://www.jetspeed-express.com/search_kuai_di/search/orderid/{trackingNumber}",
+    "trackingSearchUrl": "https://www.jetspeed-express.com/",
+    "linkRules": [
+      {
+        "domains": [
+          "jetspeed-express.com"
+        ],
+        "path": "/search_kuai_di/search/orderid/([^/?#]+)"
+      }
+    ],
+    "detectionRules": [
+      {
+        "pattern": "^JSD\\d{12}$",
+        "confidence": "low"
+      }
+    ]
+  },
   "jhgj": {
     "displayName": "Jiuhao International",
     "color": "#283593",
@@ -65756,6 +65792,7 @@ export const CARRIER_IDS = [
   "jetizz",
   "jetline-couriers",
   "jetpak",
+  "jetspeed",
   "jhgj",
   "jiachen-express",
   "jiayang",
@@ -67614,6 +67651,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "jetizz": [],
   "jetline-couriers": [],
   "jetpak": [],
+  "jetspeed": ["jetspeed-1"],
   "jhgj": ["jhgj-1"],
   "jiachen-express": [],
   "jiayang": ["jiayang-1"],
