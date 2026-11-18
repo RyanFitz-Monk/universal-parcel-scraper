@@ -373,6 +373,27 @@ describe('normalization', () => {
     }
   });
 
+  it('reads a letter O in an Allegro One AD0 number as a zero', () => {
+    for (const typed of ['ado jdfz5hczx7sb3g', 'ADOJDFZ5HCZX7SB3G', 'AD0JDFZ5HCZX7SBOG', 'ADOJDFZ5HCZXOSB3G']) {
+      expect(detectCarrierMatch(typed), typed).toMatchObject({ carrier: 'allegro-one', confidence: 'high' });
+    }
+    expect(normalizeTrackingNumber('ADOJDFZ5HCZX7SB3G')).toBe('AD0JDFZ5HCZX7SB3G');
+    // Only at Allegro One's length and with its letters, which hold no other vowel: anything else stays as typed.
+    for (const typed of ['ADOJDFZ5HCZX7SB3', 'ADOJDFZ5HCZX7SB3GG', 'ADOJAFZ5HCZX7SB3G', 'ACOJDFZ5HCZX7SB3G']) {
+      expect(normalizeTrackingNumber(typed), typed).toBe(typed);
+    }
+  });
+
+  it('reads a number pasted twice in a row once', () => {
+    expect(normalizeTrackingNumber('FR5820461937 FR5820461937')).toBe('FR5820461937');
+    expect(detectCarrierMatch('FR5820461937FR5820461937')).toMatchObject({ carrier: 'amazon-logistics', confidence: 'high' });
+    expect(normalizeTrackingNumber('RR123456785CNRR123456785CN')).toBe('RR123456785CN');
+    // Two different numbers, or a repeat shorter than ten characters, stay as typed.
+    for (const typed of ['FR5820461937FR4820461937', '123456789123456789', 'ABCABC', '0'.repeat(26)]) {
+      expect(normalizeTrackingNumber(typed), typed).toBe(typed);
+    }
+  });
+
   it('reads a letter O among a JS Express waybill\'s digits as a zero', () => {
     for (const typed of ['jseab 000000001o yq', 'JSEAB000000001OYQ', 'JSEABO00000001OYQ']) {
       expect(normalizeTrackingNumber(typed), typed).toBe('JSEAB0000000010YQ');

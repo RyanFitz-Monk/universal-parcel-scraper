@@ -65,8 +65,10 @@ describe('SkladUSA scoped guest history parser', () => {
   it('uses the shared whole-reference gate and canonical lowercase URL', () => {
     expect(normalizeSkladusaNumber(' sk1000-000017ua ')).toBe(NUMBER);
     expect(skladusaTrackingUrl('SK1000 000017UA')).toBe(URL);
+    // The same number pasted twice reads once.
+    expect(normalizeSkladusaNumber(NUMBER + NUMBER)).toBe(NUMBER);
     for (const value of ['SK10000000170UA', 'SK100000017UA', '1000000017', 'SK1000000017PL', '../' + NUMBER,
-      NUMBER + NUMBER, ' '.repeat(65) + NUMBER]) {
+      NUMBER + 'SK2604817351UA', ' '.repeat(65) + NUMBER]) {
       expect(() => normalizeSkladusaNumber(value)).toThrow(expect.objectContaining({ kind: 'invalid_input' }));
     }
   });

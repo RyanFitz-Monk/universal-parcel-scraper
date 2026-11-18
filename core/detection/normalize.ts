@@ -30,13 +30,18 @@ import { hasS10CheckDigit } from './s10CheckDigit.js';
  * tracker knows the number with the letter. GOFO's GFUS and GFCA waybills go on
  * with a zero, so a letter O there is that zero: no carrier issues GFUS or GFCA,
  * a letter O and thirteen digits, and GOFO's tracker knows the number with the
- * zero. A NO
+ * zero. Allegro One's AD0 numbers hold no vowel after AD0, so a letter O in one
+ * is a zero typed as a letter. A NO
  * LIMIT shipment number, P/1234/LABC/2026, reads the same without its slashes,
  * which are dropped. MRW's receipts print a slash after the office's five
  * digits, 01234/A567890, and its tracker knows the twelve characters without it.
+ * A number of ten characters or more pasted twice in a row reads once, unless it
+ * repeats one character, which is no number.
  */
 export function normalizeTrackingNumber(raw: string): string {
-  const value = raw.toUpperCase().replace(/[\s.-]/g, '');
+  const typed = raw.toUpperCase().replace(/[\s.-]/g, '');
+  const twice = /^([A-Z0-9]{10,40})\1$/.exec(typed)?.[1];
+  const value = twice && !/^(.)\1*$/.test(twice) ? twice : typed;
   if (/^\(00\)\d{18}$/.test(value)) return `00${value.slice(4)}`;
   const lastDigit = /^(\d{12,})\((\d)\)$/.exec(value);
   if (lastDigit) return `${lastDigit[1]}${lastDigit[2]}`;
@@ -50,6 +55,8 @@ export function normalizeTrackingNumber(raw: string): string {
   if (jrt) return `JRT${jrt[1]}`;
   const gofo = /^(GF(?:US|CA))O(\d{13})$/.exec(value);
   if (gofo) return `${gofo[1]}0${gofo[2]}`;
+  const allegro = /^AD[0O][0-9B-DF-HJ-NP-TV-XZO]{14}$/.test(value) ? value.slice(2) : '';
+  if (allegro.includes('O')) return `AD${allegro.replace(/O/g, '0')}`;
   const jsExpress = /^(JSE[A-Z])([A-Z0])([\dO]{10})YQ$/.exec(value);
   if (jsExpress && (jsExpress[2] === '0' || jsExpress[3]!.includes('O'))) {
     return `${jsExpress[1]}${jsExpress[2] === '0' ? 'O' : jsExpress[2]}${jsExpress[3]!.replace(/O/g, '0')}YQ`;
