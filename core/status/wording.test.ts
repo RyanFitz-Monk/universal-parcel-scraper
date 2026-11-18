@@ -1308,3 +1308,7 @@ describe('classifyWording', () => {
     expect(wordingStage('Estado interno 99')).toBe('in_transit');
   });
 });
+
+it('classifies the loss a sender reports', () => {
+  expect(wordingStage('The sender has notified us that the parcel has been lost')).toBe('exception');
+});
