@@ -10,8 +10,8 @@
 import type { Stage } from '../../generated/catalog.js';
 import { deliveryForecastRemainder, trackingLanguageStage } from './language.js';
 
-// A German delivery booked, chosen, simplified or stopped, which no round has started.
-const DELIVERY_ARRANGED = /wunsch|gebucht|gewählt|gewünscht|festgelegt|beauftragt|angefordert|vereinbart|vereinfacht|gestoppt|angehalten/;
+// A German delivery booked, chosen, planned, being arranged, simplified or stopped, which no round has started.
+const DELIVERY_ARRANGED = /wunsch|gebucht|gewählt|gewünscht|festgelegt|beauftragt|angefordert|vereinbart|\bplan(?:en|t|ung)\b|geplant|terminabstimmung|terminvereinbarung|vereinfacht|gestoppt|angehalten/;
 
 // A parcel deposited is delivered only where the recipient lives: in the mailbox or at the door. Carriers deposit
 // parcels in bags, at post offices and with other posts on the way, and senders deposit them with the carrier, so
@@ -95,7 +95,7 @@ export function classifyWording(text: string, fallback: Stage = 'in_transit'): C
     return matched('delivered', 'delivered');
   }
   // "In delivery", but not a delivery terminal or depot the parcel is sorted in, nor a delivery
-  // booked, chosen or stopped ("Ein WunschTag für die Zustellung wurde gebucht").
+  // booked, chosen, planned or stopped ("Ein WunschTag für die Zustellung wurde gebucht").
   if (['out for delivery', 'out for doorstep delivery', 'loading into delivery vehicle', 'loaded into delivery vehicle']
     .some((term) => value.includes(term))
     || (value.includes('zustellung') && !DELIVERY_ARRANGED.test(value))

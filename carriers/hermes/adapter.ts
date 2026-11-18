@@ -2,6 +2,7 @@ import { lookupBudget, recognizeFromLookup, type AdapterFactory, type TrackingCo
 import { isValidSscc } from '../../core/detection/numericChecksums.js';
 import { NotFoundError, SchemaError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
+import { listsNewestFirst } from '../../core/result/order.js';
 import { clean, cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
 import { isRecord, type JsonObject } from '../../core/types.js';
 import { hermesEventStage, hermesStatus } from './status.js';
@@ -96,6 +97,10 @@ export function parseHermesTrackingResponse(
     }
     return description?.trim() && time?.trim() ? [{ description, time, statusId: event.sendungsstatusId }] : [];
   });
+  // Hermes lists its timeline oldest first, and two rows it books in one minute in the order they
+  // happened ("we'll call you", then "we could not reach you"): turned around before sorting, the
+  // later of them leads.
+  if (listsNewestFirst(meaningfulEvents) !== true) meaningfulEvents.reverse();
   meaningfulEvents.sort((left, right) => right.time.localeCompare(left.time));
   const events = meaningfulEvents.map((event) => ({
     time: event.time,

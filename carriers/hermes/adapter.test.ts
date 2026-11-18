@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NotFoundError, SchemaError } from '../../core/errors/index.js';
+import { resolveResult } from '../../core/result/resolve.js';
 import { NOOP_RECORDER } from '../../core/telemetry/index.js';
 import { adapter, HermesTracker, parseHermesTrackingResponse } from './adapter.js';
 import { hermesStatus } from './status.js';
@@ -127,6 +128,23 @@ describe('Hermes no-data response', () => {
       'delivered',
       'exception',
     ]);
+  });
+
+  it('lets the later of two rows Hermes books in one minute lead, as it lists them oldest first', () => {
+    const rows = [
+      { sendungsstatusId: 9997, sendungsstatus: 'Deine Sendung ist im Verteilzentrum eingetroffen.', sendungsstatusBuchungszeitpunkt: '2026-10-11 09:00' },
+      { sendungsstatusId: 9998, sendungsstatus: 'Wir planen aktuell die Zustellung deiner Bestellung.', sendungsstatusBuchungszeitpunkt: '2026-10-12 12:58' },
+      { sendungsstatusId: 9999, sendungsstatus: 'Leider konnten wir dich telefonisch nicht erreichen.', sendungsstatusBuchungszeitpunkt: '2026-10-12 12:58' },
+    ];
+    for (const listed of [rows, [...rows].reverse()]) {
+      const payload = onTour({});
+      ((bodyOf(payload).auftragsdaten as Order).statusjourneyDto as Order).auftragstatusdaten = listed;
+      const result = parseHermesTrackingResponse(payload, DELIVERED_NUMBER);
+      expect(result.events?.map((event) => event.description?.slice(0, 12))).toEqual(['Leider konnt', 'Wir planen a', 'Deine Sendun']);
+      expect(result.last_status_text).toMatch(/^Leider/);
+      // Planning the delivery is no round: the parcel stays in transit.
+      expect(resolveResult(result).current_stage).toBe('in_transit');
+    }
   });
 
   it('parses a sanitized fixture from Hermes\'s public delivered sample', () => {
