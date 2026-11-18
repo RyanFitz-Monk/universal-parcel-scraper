@@ -147,6 +147,10 @@ export const CAINIAO_ACTION_STATUS = new Map<string, CarrierStatus>([
   ['RT_CW_OUTBOUND', 'exception'],
   ['RT_EX_PICKUP', 'exception'],
   ['RT_EX_SIGNED', 'exception'],
+  // The way back from the departure hub after a failed hand-over to the airline: "Package returning" there,
+  // then "Package returning. Departed from warehouse.".
+  ['RT_LH_HO', 'exception'],
+  ['RT_WH_HO_OUT', 'exception'],
   // "Shipment cancelled" (group AE_GROUP_CANCELLED), under the order's "Abnormal status": the seller's pickup
   // order closed before any pickup, and the parcel will not come, as the shared rules read a cancellation.
   ['PICKUP_ORDER_CLOSED_NOTIFY', 'exception'],

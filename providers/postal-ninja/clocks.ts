@@ -32,6 +32,9 @@ const FIXED_CLOCKS: ReadonlyMap<string, string> = new Map([
   ['Raben', 'UTC'],
   // Also for their scans abroad: Singapore Post's in China. Swiss Post's own are in
   // Switzerland; the destination post's it relays keep their office's clock (serviceZone).
+  // Australia Post's scans in the UK on an item from there came eleven hours after the instants
+  // Australia Post's tracker gives them, on Sydney's daylight clock.
+  ['Australia Post', 'Australia/Sydney'],
   ['Singapore Post', 'Asia/Singapore'],
   ['Swiss Post', 'Europe/Zurich'],
 ]);

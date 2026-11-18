@@ -151,6 +151,7 @@ describe('Evri UK anonymous history', () => {
     ['5_SHOP', 'SYNTHETIC_COLLECTED_POINT', 'delivered', 'delivered'],
     ['6_INFO', 'DELAY_ASAP', 'in_transit', 'in_transit'],
     ['6_INFO', 'DELAY_ONEDAY', 'in_transit', 'in_transit'],
+    ['6_INFO', 'DELAY_WORKING_ON_IT', 'in_transit', 'in_transit'],
     ['6_INFO', 'RE_ATTEMPT_NOT_WITHIN_GEOFENCE', 'in_transit', 'in_transit'],
   ])('files rail %s point %s as %s', (stageCode, code, stage, status) => {
     const payload = history();
@@ -181,6 +182,10 @@ describe('Evri UK anonymous history', () => {
     for (const point of ['DELAY_ASAP', 'DELAY_ONEDAY', 'RE_ATTEMPT_NOT_WITHIN_GEOFENCE']) {
       expect(statusMapAnswer({ carrier: 'evri-uk', providerCode: `6_INFO/${point}`, description: sorry }), point).toEqual({ kind: 'mapped', stage: 'in_transit' });
     }
+    // A delay at the depot, which the shared rules would read as out for delivery ("on its way").
+    const delayed = "we're sorry, your parcel has been delayed. we're working to get it on its way on the next working day and we'll let you know when it's out for delivery";
+    expect(statusMapAnswer({ carrier: 'evri-uk', providerCode: '6_INFO/DELAY_WORKING_ON_IT', description: delayed }))
+      .toEqual({ kind: 'mapped', stage: 'in_transit' });
     expect(statusMapAnswer({ carrier: 'evri-uk', providerCode: '6_INFO/POTENTIAL_FRAUD', description: 'potential fraud event' }))
       .toEqual({ kind: 'mapped', stage: 'pending' });
   });

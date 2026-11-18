@@ -108,6 +108,11 @@ describe('Postal Ninja result parsing', () => {
       const scans = [{ ds, dt: '2026-08-17T07:22:00', dsc: 'Out for delivery' }, { ds, dt: '2026-08-17T11:17:00', dsc: 'Delivered' }];
       expect(times(parsePostalNinjaResponse(withEvents(scans), number, zone))).toEqual(['2026-08-17T11:17:00.000Z', '2026-08-17T07:22:00.000Z']);
     }
+    // Australia Post's scans abroad are on Sydney's clock, not the origin's.
+    const sydney = [{ ds: 'Australia Post', dt: '2026-11-20T19:15:00', dsc: 'Cleared and awaiting international departure' },
+      { ds: 'Australia Post', dt: '2026-11-20T03:40:00', dsc: 'Received item from Sender (Outbound)' }];
+    expect(times(parsePostalNinjaResponse(withEvents(sydney), number, 'Europe/London')))
+      .toEqual(['2026-11-20T08:15:00.000Z', '2026-11-19T16:40:00.000Z']);
     // GOFO's clock follows its network, named by the destination.
     const gofo = (destCn?: string) => postal(number, destCn, [{ ds: 'GOFO Express', dt: '2026-08-17T11:17:00', dsc: 'Delivered' }]);
     expect(parsePostalNinjaResponse(gofo('US'), number).last_update).toBe('2026-08-17T18:17:00.000Z');

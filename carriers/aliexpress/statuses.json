@@ -701,6 +701,24 @@
       "note": "The return delivered to the seller."
     },
     {
+      "code": "RT_LH_HO",
+      "wording": "Package returning",
+      "language": "en",
+      "stage": "exception",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-18",
+      "note": "The way back from the departure hub after \"Airline handover problem at departure transport hub\": not transit toward the recipient."
+    },
+    {
+      "code": "RT_WH_HO_OUT",
+      "wording": "Package returning. Departed from warehouse.",
+      "language": "en",
+      "stage": "exception",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-18",
+      "note": "The same return leaving the warehouse."
+    },
+    {
       "code": "SC_HO_OUT_SUCCESS",
       "wording": "Departed from departure country/region sorting center",
       "language": "en",
