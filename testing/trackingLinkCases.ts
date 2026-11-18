@@ -1466,6 +1466,10 @@ export const trackingLinkCases: TrackingLinkCase[] = [
   { carrier: 'zecheng', number: 'ZCGJ0000000002CN',
     route: /^https:\/\/api\.zecwl\.com\/index\/tracknumber\/track\?nos=ZCGJ0000000002CN$/,
     marker: /快件跟踪|跟踪\(Track\)/ },
+  // The tracking page carries the waybill form and reads no number from its address.
+  { carrier: 'pdu', number: 'CO00000001PD',
+    route: /^https:\/\/www\.pduni\.com\/MV\/en\/customer-services\/waybill-inquiry$/,
+    marker: /Waybill Tracking|Please enter waybill number|运单查询/, forwarding: 'none' },
   // The home page carries the waybill form; its link holds no number.
   { carrier: 'suhu', number: 'SUH0000000000002AB',
     route: /^https:\/\/www\.suhusupplychain\.com\/$/,

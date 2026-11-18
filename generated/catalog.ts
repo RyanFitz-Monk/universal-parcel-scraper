@@ -44855,6 +44855,34 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "pdu": {
+    "displayName": "PDU",
+    "color": "#005cfe",
+    "aliases": [
+      "Parcel Delivery Union",
+      "友递联",
+      "友遞聯"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "pdu"
+    },
+    "canaryUrl": "https://www.pduni.com/",
+    "trackingUrlTemplate": "https://www.pduni.com/",
+    "trackingSearchUrl": "https://www.pduni.com/MV/en/customer-services/waybill-inquiry",
+    "linkRules": [],
+    "detectionRules": [
+      {
+        "pattern": "^[A-Z]{2}\\d{8}PD$",
+        "confidence": "low"
+      }
+    ]
+  },
   "pecom": {
     "displayName": "PEC",
     "color": "#242265",
@@ -66066,6 +66094,7 @@ export const CARRIER_IDS = [
   "pdn-express",
   "pdq-chile",
   "pds-direct",
+  "pdu",
   "pecom",
   "peddler",
   "pelican-express",
@@ -67923,6 +67952,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "pdn-express": ["pdn-express-1"],
   "pdq-chile": [],
   "pds-direct": [],
+  "pdu": ["pdu-1"],
   "pecom": [],
   "peddler": ["peddler-1","peddler-2"],
   "pelican-express": [],

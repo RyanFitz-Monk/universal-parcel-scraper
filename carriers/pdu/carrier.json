@@ -1,0 +1,66 @@
+{
+  "id": "pdu",
+  "displayName": "PDU",
+  "aliases": [
+    "Parcel Delivery Union",
+    "友递联",
+    "友遞聯"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#005cfe"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "pdu",
+    "steps": [
+      "direct"
+    ]
+  },
+  "capabilities": [
+    "history",
+    "provider_code",
+    "delivered_at"
+  ],
+  "portal": {
+    "url": "https://www.pduni.com/",
+    "searchUrl": "https://www.pduni.com/MV/en/customer-services/waybill-inquiry",
+    "canaryUrl": "https://www.pduni.com/",
+    "shows": [
+      "status",
+      "history",
+      "offset_timestamps",
+      "origin_country",
+      "destination_country",
+      "proof_of_delivery"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "provider_code",
+      "delivered_at"
+    ],
+    "discarded": [
+      "origin_country",
+      "destination_country"
+    ],
+    "unavailable": [
+      "eta",
+      "proof_of_delivery"
+    ]
+  },
+  "links": [],
+  "detection": [
+    {
+      "id": "pdu-1",
+      "pattern": "^[A-Z]{2}\\d{8}PD$",
+      "confidence": "low"
+    }
+  ]
+}

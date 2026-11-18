@@ -1,0 +1,20 @@
+{
+  "carrier": "pdu",
+  "entries": [
+    {"code": "TRANSIT", "wording": "In Transit", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A state in the tracking page's script; its scans include the sender's data reaching PDU."},
+    {"code": "COLLECTING", "wording": "Being Collected", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A state in the tracking page's script; seen on the last-mile carrier collecting the parcel from customs."},
+    {"code": "FINAL_COLLECTING", "wording": "Last-Mile Collection", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A state in the tracking page's script; seen on the parcel reaching the last-mile carrier's depot."},
+    {"code": "DELIVERY", "wording": "Out for Delivery", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "A state in the tracking page's script. Seen on national transit as well as on the delivery round, so only the round's wording makes it out for delivery."},
+    {"code": "DELIVERY_EXCEPTION", "wording": "Delivery Exception", "stage": "exception", "language": "en", "confirmedBy": "bundle", "note": "A state in the tracking page's script."},
+    {"code": "SIGNED", "wording": "Delivered", "stage": "delivered", "language": "en", "confirmedBy": "live", "note": "A state in the tracking page's script."},
+    {"code": "TO_BE_RETURN", "wording": "Awaiting Return", "stage": "exception", "language": "en", "confirmedBy": "bundle", "note": "A state in the tracking page's script: to be sent back, not yet on its way."},
+    {"code": "RETURNED", "wording": "Returned", "stage": "returned", "language": "en", "confirmedBy": "bundle", "note": "A state in the tracking page's script."},
+    {"wording": "Shipment information sent to PDU.", "stage": "registered", "language": "en", "confirmedBy": "live", "note": "PDU's own scan, under TRANSIT, when the sender's data arrives."},
+    {"wording": "Package not found in last mile or customs process.", "stage": "registered", "language": "en", "confirmedBy": "live", "note": "The first scan, under TRANSIT, after the code Pending: no last-mile record yet. The shared wording rules would read customs."},
+    {"wording": "Recogida en Aduanas", "stage": "in_transit", "language": "es", "confirmedBy": "live", "note": "Colombian last mile, code REA, under COLLECTING."},
+    {"wording": "Ingreso a CEDI", "stage": "in_transit", "language": "es", "confirmedBy": "live", "note": "Colombian last mile, code IAC, under FINAL_COLLECTING: into the distribution centre."},
+    {"wording": "En tránsito nacional", "stage": "in_transit", "language": "es", "confirmedBy": "live", "note": "Colombian last mile, code LTH, under DELIVERY."},
+    {"wording": "Salida a Ruta", "stage": "out_for_delivery", "language": "es", "confirmedBy": "live", "note": "Colombian last mile, code RUT, under DELIVERY: the round has begun."},
+    {"wording": "Entregado", "stage": "delivered", "language": "es", "confirmedBy": "live", "note": "Colombian last mile, code ENT, under SIGNED."}
+  ]
+}

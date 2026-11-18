@@ -1,0 +1,31 @@
+{
+  "code": 200,
+  "msg": "success",
+  "success": true,
+  "data": {
+    "orderTrackStatus": {
+      "collecting": 0, "delivery": 0, "deliveryException": 0, "finalCollecting": 0, "nonExists": 0,
+      "returned": 0, "signed": 1, "toBeReturn": 0, "total": 1, "transit": 0
+    },
+    "orderTracks": [
+      {
+        "destinationCountry": "CO",
+        "oriCountry": "CN",
+        "serviceTrackingNumber": "CO00000001PD",
+        "trackCity": null,
+        "trackProvince": null,
+        "trackStatus": "SIGNED",
+        "trackUpdateTime": "2026-03-12 15:20:00",
+        "trackDetailList": [
+          { "signedPhoto": false, "trackCnTime": "2026-03-13T04:20:00", "trackDescription": "ENT,Entregado", "trackRealTime": "2026-03-12 15:20:00", "trackStatus": "SIGNED", "trackTimeZone": "UTC-5" },
+          { "signedPhoto": false, "trackCnTime": "2026-03-12T20:05:00", "trackDescription": "RUT,Salida a Ruta", "trackRealTime": "2026-03-12 07:05:00", "trackStatus": "DELIVERY", "trackTimeZone": "UTC-5" },
+          { "signedPhoto": false, "trackCnTime": "2026-03-11T09:40:00", "trackDescription": "LTH,En tránsito nacional", "trackRealTime": "2026-03-10 20:40:00", "trackStatus": "DELIVERY", "trackTimeZone": "UTC-5" },
+          { "signedPhoto": false, "trackCnTime": "2026-03-10T23:10:00", "trackDescription": "IAC,Ingreso a CEDI", "trackRealTime": "2026-03-10 10:10:00", "trackStatus": "FINAL_COLLECTING", "trackTimeZone": "UTC-5" },
+          { "signedPhoto": false, "trackCnTime": "2026-03-09T22:30:00", "trackDescription": "REA,Recogida en Aduanas", "trackRealTime": "2026-03-09 09:30:00", "trackStatus": "COLLECTING", "trackTimeZone": "UTC-5" },
+          { "signedPhoto": false, "trackCnTime": "2026-02-25T11:00:00", "trackDescription": "Shipment information sent to PDU.", "trackRealTime": "2026-02-25 11:00:00", "trackStatus": "TRANSIT", "trackTimeZone": "UTC+8" },
+          { "signedPhoto": false, "trackCnTime": "2026-02-25T10:15:00.250", "trackDescription": "Pending,Package not found in last mile or customs process.", "trackRealTime": "2026-02-24 21:15:00", "trackStatus": "TRANSIT", "trackTimeZone": "UTC-5" }
+        ]
+      }
+    ]
+  }
+}

@@ -8547,5 +8547,13 @@
       "gls-it"
     ],
     "reason": "Asendia's global portal finds a parcel by a customer reference of AW and nine digits, which also fits GLS Italy's two letters and nine digits. Both rules are low, and the carrier that knows the number decides."
+  },
+  {
+    "shape": "Two letters, eight digits and PD",
+    "carriers": [
+      "colis-prive",
+      "pdu"
+    ],
+    "reason": "Colis Privé accepts any twelve letters and digits; PDU's numbers to Colombia end in PD after its country code and eight digits. Both rules are low, and the carrier that knows the number decides."
   }
 ]

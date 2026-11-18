@@ -523,6 +523,7 @@ import { adapter as pcpExpress } from '../carriers/pcp-express/adapter.js';
 import { adapter as pcsLogisticsVn } from '../carriers/pcs-logistics-vn/adapter.js';
 import { adapter as pdnExpress } from '../carriers/pdn-express/adapter.js';
 import { adapter as pdqChile } from '../carriers/pdq-chile/adapter.js';
+import { adapter as pdu } from '../carriers/pdu/adapter.js';
 import { adapter as pecom } from '../carriers/pecom/adapter.js';
 import { adapter as pengyou } from '../carriers/pengyou/adapter.js';
 import { adapter as peninsulaTruckLines } from '../carriers/peninsula-truck-lines/adapter.js';
@@ -1322,6 +1323,7 @@ export const REGISTRY: RegistryDefinition = {
     "pcs-logistics-vn": pcsLogisticsVn,
     "pdn-express": pdnExpress,
     "pdq-chile": pdqChile,
+    "pdu": pdu,
     "pecom": pecom,
     "pengyou": pengyou,
     "peninsula-truck-lines": peninsulaTruckLines,
@@ -2819,6 +2821,7 @@ export const REGISTRY: RegistryDefinition = {
     "pdn-express": "pdn-express",
     "pdq-chile": "pdq-chile",
     "pds-direct": "universal",
+    "pdu": "pdu",
     "pecom": "pecom",
     "peddler": "universal",
     "pelican-express": "universal",
