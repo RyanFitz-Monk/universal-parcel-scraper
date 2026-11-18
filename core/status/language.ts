@@ -553,8 +553,9 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // "from your sender. We will provide updates here once we receive it", as ParcelsApp relays one.
   if (/\b(?:we're|we are) expecting (?:your|the) (?:parcel|package|item|shipment) (?:to arrive with us|from (?:your|the) (?:sender|shipper|seller|retailer)\b)/.test(text)) return 'registered';
   // The sender's notice that a parcel is coming, as Bring words its pre-advice in English: "We have received a
-  // message from the sender that a shipment is on its way", "The sender has let us know that a parcel is on its way".
-  if (/^(?:(?:we have|we've) received (?:a )?(?:message|notice|notification) from the (?:sender|shipper)|the (?:sender|shipper) has (?:let us know|notified us|told us)) that (?:a|the|your) (?:parcel|shipment|package|item) is on its way(?: to us)?[.!]?$/.test(text)) return 'registered';
+  // message from the sender that a shipment is on its way", "The sender has let us know that a parcel is on its way",
+  // "The sender has notified us that a parcel is on its way to our terminal". What else the sender reports is not one.
+  if (/^(?:(?:we have|we've) received (?:a )?(?:message|notice|notification) from the (?:sender|shipper)|the (?:sender|shipper) has (?:let us know|notified us|told us)) that (?:a|the|your) (?:parcel|shipment|package|item) is on its way\b/.test(text)) return 'registered';
   // GLS's shipment the sender created and has not entrusted to it yet, as GLS Italy and relays word it.
   if (/\bcreated by the sender\b.*\bwaiting for it to be (?:entrusted|handed(?: over)?) to us\b/.test(text)) return 'registered';
   // The shipment's pre-alert, its electronic notice: "Pre-alerted shipment enriched by PostNL management".

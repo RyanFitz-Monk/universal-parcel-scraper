@@ -1311,6 +1311,8 @@ describe('classifyWording', () => {
   });
 });
 
-it('classifies the loss a sender reports', () => {
+it('classifies the loss a sender reports, and keeps its notice of a parcel on the way', () => {
   expect(wordingStage('The sender has notified us that the parcel has been lost')).toBe('exception');
+  expect(wordingStage('The sender has notified us that a parcel is on its way to our terminal. '
+    + 'When we have received the parcel, the tracking will be updated.')).toBe('registered');
 });
