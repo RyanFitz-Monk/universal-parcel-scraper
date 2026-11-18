@@ -950,6 +950,30 @@
       "note": "GOFO's line haul between its hubs."
     },
     {
+      "wording": "Loaded onto a vehicle",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The last-mile partner loading the parcel, days after the container reached it and before it leaves its facility."
+    },
+    {
+      "wording": "Departed Facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The last-mile partner's facility sending the parcel on, hours after the loading."
+    },
+    {
+      "wording": "Arrived at the next Facility",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-15",
+      "note": "The last-mile partner's next facility, the day after the departure."
+    },
+    {
       "wording": "Arrived at GOFO Delivery Station",
       "language": "en",
       "stage": "in_transit",

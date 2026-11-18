@@ -145,6 +145,10 @@ const WORDING = new Map<string, ClassifiedStatus>([
   ['Loaded on Vehicle', { status: 'in_transit', stage: 'in_transit' }],
   ['Departed GOFO Regional Hub', { status: 'in_transit', stage: 'in_transit' }],
   ['In Transit to Next Facility', { status: 'in_transit', stage: 'in_transit' }],
+  // The last-mile partner's rows after the container reached it: loaded, leaving a facility, and at the next one.
+  ['Loaded onto a vehicle', { status: 'in_transit', stage: 'in_transit' }],
+  ['Departed Facility', { status: 'in_transit', stage: 'in_transit' }],
+  ['Arrived at the next Facility', { status: 'in_transit', stage: 'in_transit' }],
   ['Arrived at GOFO Delivery Station', { status: 'in_transit', stage: 'in_transit' }],
   ['Out for Delivery', { status: 'out_for_delivery', stage: 'out_for_delivery' }],
   // A destination courier's transit hub, its delivery task and its sorting, after the import release and the pickup at
