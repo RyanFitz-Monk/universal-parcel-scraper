@@ -70,6 +70,21 @@ parcel-scraper serve                           # the HTTP API
 
 Output is JSON, so it pipes into `jq`. `parcel-scraper --help` lists the environment variables.
 
+To check an exported Excel sheet in one sequential batch, save it as CSV or TSV and run:
+
+```sh
+node --env-file=.env.local scripts/track-batch.mjs shipments.csv > tracking-report.tsv
+```
+
+Put any credentials and browser-service URL in a local `.env.local` file, which is ignored by
+Git. UPS API access uses `UPS_CLIENT_ID` and `UPS_CLIENT_SECRET`; FedEx API access uses
+`FEDEX_API_KEY` and `FEDEX_SECRET_KEY`. USPS needs a configured browser service via
+`FLARESOLVERR_URL`. `PARCEL_LOOKUP_BUDGET_MS` sets each lookup's time limit and
+`PARCEL_BATCH_DELAY_MS` sets the pause between lookups (both default to 30 seconds).
+The report omits tracking numbers and the command does not edit the workbook. Review carrier
+refresh limits before running a large batch; blocked or unavailable carrier sites are reported
+as unresolved.
+
 ### Node
 
 ```js
