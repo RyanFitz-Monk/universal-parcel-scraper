@@ -20,7 +20,7 @@ describe('ReadWindow', () => {
     await expect(window().take(5_000)).rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced', retryAfterMs: 10_000 });
   });
 
-  it('keeps the turn of a wait the lookup ends, and leaves the pacing as the answer', async () => {
+  it('releases an aborted wait and caps concurrent reads when the window opens', async () => {
     vi.useFakeTimers();
     const window = () => new ReadWindow('Example', 'example abort', 1, 10_000);
     await window().take(20_000);
@@ -28,7 +28,10 @@ describe('ReadWindow', () => {
     const cut = window().take(20_000, controller.signal);
     controller.abort();
     await expect(cut).rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced' });
-    // The abandoned turn still counts: the next one is twenty seconds away.
-    await expect(window().take(15_000)).rejects.toMatchObject({ retryAfterMs: 20_000 });
+    const contenders = Promise.allSettled([window().take(15_000), window().take(15_000)]);
+    await vi.advanceTimersByTimeAsync(10_000);
+    const outcomes = await contenders;
+    expect(outcomes.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect(outcomes.find(result => result.status === 'rejected')).toMatchObject({ reason: { retryAfterMs: 10_000 } });
   });
 });

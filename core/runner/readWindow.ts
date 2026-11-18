@@ -4,7 +4,7 @@ import { paused } from './pause.js';
 /** The time a read that waited for its turn keeps for the read itself. */
 const READ_RESERVE_MS = 3_000;
 
-/** When each window's reads went out, or will, oldest first, by carrier and egress. A restart forgets them. */
+/** When each window's reads went out, oldest first, by carrier and egress. A restart forgets them. */
 const windows = new Map<string, number[]>();
 
 /**
@@ -24,13 +24,20 @@ export class ReadWindow {
 
   /** Takes a turn for one read, waiting for it when `remainingMs` leaves time for the read after the wait. */
   async take(remainingMs: number, signal?: AbortSignal): Promise<void> {
-    const now = Date.now();
-    while (this.#sent.length && this.#sent[0]! <= now - this.windowMs) this.#sent.shift();
-    const turn = this.#sent.length < this.reads ? now : this.#sent[this.#sent.length - this.reads]! + this.windowMs;
-    if (turn > now && turn - now > remainingMs - READ_RESERVE_MS) throw this.#full(turn - now);
-    this.#sent.push(turn);
-    // A wait the lookup's end cuts short leaves the pacing as the answer; the turn stays taken.
-    if (turn > now && !await paused(turn - now, signal)) throw this.#full(Math.max(1, turn - Date.now()));
+    const deadline = Date.now() + remainingMs - READ_RESERVE_MS;
+    for (;;) {
+      signal?.throwIfAborted();
+      const now = Date.now();
+      while (this.#sent.length && this.#sent[0]! <= now - this.windowMs) this.#sent.shift();
+      if (this.#sent.length < this.reads) {
+        this.#sent.push(now);
+        return;
+      }
+      const turn = this.#sent[0]! + this.windowMs;
+      if (turn > deadline) throw this.#full(turn - now);
+      if (!await paused(turn - now, signal)) throw this.#full(Math.max(1, turn - Date.now()));
+      // Other waiters may have taken the available turns while this one slept.
+    }
   }
 
   #full(waitMs: number): RateLimitedError {
