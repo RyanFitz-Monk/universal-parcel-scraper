@@ -115,6 +115,7 @@ export const STAGE_STATUS: Record<string, CarrierStatus> = {
   out_for_delivery: 'out_for_delivery',
   delivered: 'delivered',
   customs: 'in_transit',
+  exception: 'exception',
   failed_attempt: 'exception',
   ready_for_pickup: 'in_transit',
   returned: 'exception',

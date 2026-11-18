@@ -367,20 +367,29 @@ const ARRIVAL_SLOT = /^\s*,?\s*\d{1,2}:\d{2}\s*[-–]\s*(\d{1,2}):(\d{2})\b/;
 /** The arrival text's first date, and when its slot ends, or its day without one. */
 interface ArrivalEstimate { day: string; slotEndsAt: number; dayEndsAt: number }
 
+function arrivalDay(value: string) {
+  const raw = paddedDate(value);
+  for (const format of ['d-MMM-yyyy', 'd/MM/yyyy', 'd.MM.yyyy']) {
+    const parsed = firstOccurrence(DateTime.fromFormat(raw, format, { zone: 'Europe/Zurich', locale: 'en' }));
+    if (parsed.isValid) return parsed;
+  }
+  return null;
+}
+
 function expectedDelivery(parcel: JsonObject): ArrivalEstimate | null {
   const text = arrivalText(parcel);
   const match = text.match(ARRIVAL_DATE);
-  if (!match) return null;
-  const raw = paddedDate(match[0]);
-  for (const format of ['d-MMM-yyyy', 'd/MM/yyyy', 'd.MM.yyyy']) {
-    const parsed = firstOccurrence(DateTime.fromFormat(raw, format, { zone: 'Europe/Zurich', locale: 'en' }));
-    if (!parsed.isValid) continue;
-    const dayEndsAt = parsed.plus({ days: 1 }).startOf('day').toMillis();
-    const slot = text.slice((match.index ?? 0) + match[0].length).match(ARRIVAL_SLOT);
-    const slotEnd = slot ? parsed.startOf('day').plus({ hours: Number(slot[1]), minutes: Number(slot[2]) }).toMillis() : dayEndsAt;
-    return { day: parsed.toISODate(), slotEndsAt: Math.min(slotEnd, dayEndsAt), dayEndsAt };
-  }
-  return null;
+  const start = match && arrivalDay(match[0]);
+  if (!match || !start) return null;
+  const tail = text.slice((match.index ?? 0) + match[0].length).trim();
+  const slot = tail.match(ARRIVAL_SLOT);
+  const range = tail.match(ARRIVAL_DATE);
+  const end = range ? arrivalDay(range[0]) : start;
+  // An unrecognized suffix can contain a later bound. Keep the estimate open.
+  const dayEndsAt = end && end >= start && (!tail || slot || range)
+    ? end.plus({ days: 1 }).startOf('day').toMillis() : Infinity;
+  const slotEnd = slot && !range ? start.startOf('day').plus({ hours: Number(slot[1]), minutes: Number(slot[2]) }).toMillis() : dayEndsAt;
+  return { day: start.toISODate(), slotEndsAt: Math.min(slotEnd, dayEndsAt), dayEndsAt };
 }
 
 /**
@@ -395,7 +404,7 @@ function missedArrival(estimate: ArrivalEstimate, newestScan: string | undefined
 
 /**
  * The estimate reads the arrival text's first date. A text with more dates gives a range whose
- * end is not read yet, so it is named as unread, whatever the parcel's status.
+ * end is not exposed, so it is named as unread, whatever the parcel's status.
  */
 function unreadArrival(parcel: JsonObject): Pick<CarrierResult, 'unread_estimates'> {
   const arrival = arrivalText(parcel);

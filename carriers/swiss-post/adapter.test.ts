@@ -608,3 +608,18 @@ describe('Swiss Post outage page', () => {
     expect(error).toMatchObject({ kind: 'transport', message: 'Swiss Post redirected its tracking service' });
   });
 });
+
+it('reports a refused parcel as an exception during ongoing delivery', () => {
+  const result = parseSwissPostShipment(item({ status: { status: 'ON_GOING_DELIVERY' } }), [
+    scan('3700', '2026-09-10T07:00:00+02:00', { title: 'The recipient has refused delivery' }),
+  ]);
+  expect(result).toMatchObject({ status: 'exception', current_stage: 'exception' });
+});
+
+it('reads nested formatting once in a scan title and headline', () => {
+  const result = parseSwissPostShipment(item(), [scan('4000', '2026-09-10T07:00:00+02:00', {
+    title: 'Item <span><strong>delivered</strong></span>',
+  })]);
+  expect(result.last_status_text).toBe('Item delivered');
+  expect(result.events?.[0]?.description).toBe('Item delivered');
+});

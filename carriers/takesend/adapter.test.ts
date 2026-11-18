@@ -160,3 +160,12 @@ describe('Take Send status vocabulary', () => {
     expect(statusMapAnswer({ carrier: 'takesend', providerCode: null, description: 'Synthetic note' })).toEqual({ kind: 'unknown' });
   });
 });
+
+it('follows the transfer number when Take Send lists no scans', async () => {
+  const upstream = fixture('in-transit').replace(/<trackitem [^>]*\/>/g, '');
+  const partner = JSON.parse(readFileSync(new URL('../ywe/fixtures/returned.json', import.meta.url), 'utf8'));
+  partner[0].expressCode = PARTNER;
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(upstream)).mockResolvedValueOnce(Response.json(partner));
+  const result = await createTracker({ fetcher, providers: [], env: {} }).track({ number: NUMBER, carrier: 'takesend' });
+  expect(result).toMatchObject({ source: 'ywe', handoff: { number: PARTNER, confirmed: true } });
+});

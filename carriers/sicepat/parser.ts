@@ -48,7 +48,9 @@ export function parseSicepat(payload: unknown, raw: string): CarrierResult {
   if (!Array.isArray(row.track_history) || row.track_history.length > 1000) throw new SchemaError(PROVIDER, 'SiCepat changed its history');
   if (!row.track_history.length) throw new NoHistoryError(PROVIDER);
   const events: CarrierEvent[] = [], seen = new Set<string>();
-  for (const scan of row.track_history) {
+  // The feed is oldest first. Visit the newest row first so equal minutes retain that order.
+  for (let index = row.track_history.length - 1; index >= 0; index -= 1) {
+    const scan: unknown = row.track_history[index];
     if (!isRecord(scan) || typeof scan.status !== 'string' || !/^[A-Z][A-Z0-9_ -]{0,63}$/.test(scan.status)
       || typeof scan.city !== 'string' || scan.city.length > 2000) throw new SchemaError(PROVIDER, 'SiCepat returned an invalid scan');
     const code = scan.status;
@@ -56,7 +58,7 @@ export function parseSicepat(payload: unknown, raw: string): CarrierResult {
     const description = code === 'DLV' ? 'Delivered' : clean(scan.city.replace(/\[SIGESIT(?:\s*-\s*[^\]]*)?\]/gi, '[SIGESIT]'), 1000);
     if (!description) throw new SchemaError(PROVIDER, 'SiCepat omitted scan wording');
     const stage = sicepatStage(code, description);
-    const site = /\b(?:di|dari)\s+[^[\]]+\[([^\]]+)\]/i.exec(description)?.[1];
+    const site = /\boleh\s+\[/i.test(description) ? undefined : /\b(?:di|dari)\s+[^[\]]+\[([^\]]+)\]/i.exec(description)?.[1];
     const event: CarrierEvent = { local_time: clock(scan.date_time), provider_code: code, description,
       ...(site ? { location: clean(site, 200) } : {}), ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
     const key = JSON.stringify(event);

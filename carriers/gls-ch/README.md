@@ -69,8 +69,8 @@ upstream error.
 - Scan date and time arrive as separate offset-less fields and are read in
   `Europe/Zurich` (gls-de relabels the timezone only).
 - The estimate is the first date of the `arrivalTime` text, dropped once the parcel is
-  delivered or in exception. A text with more dates, a range whose end the adapter does not
-  read yet, is named in `unread_estimates`.
+  delivered or in exception. For a date range, the last day determines when the estimate expires.
+  The result names the range in `unread_estimates` because only the first day is displayed.
 - GLS keeps showing a slot it missed, such as "20-Jun-2026, 11:00 - 12:00" while the parcel
   reaches a parcel centre that evening. A scan after the slot's end, or after its day while the
   parcel is out for delivery, withdraws the estimate (`expected_delivery_withdrawn`). A date

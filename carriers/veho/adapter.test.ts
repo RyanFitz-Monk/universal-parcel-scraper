@@ -113,6 +113,8 @@ describe('Veho parser', () => {
     }), NUMBER);
     expect(open(() => {})).toMatchObject({ current_stage: 'failed_attempt', status: 'exception', expected_delivery: '2026-03-06' });
     expect(open(order => { order.deliveryDateInfo.dateType = 'Estimated'; }).expected_delivery).toBe('2026-03-06');
+    expect(open(order => { order.deliveryDateInfo.date = '2026-02-30'; }).expected_delivery).toBeNull();
+    expect(open(order => { order.deliveryDateInfo.date = '2028-02-29'; }).expected_delivery).toBe('2028-02-29');
     const window = open(order => { order.packages[0].deliveryTimeWindow = { startsAt: '2026-03-06T17:00:00.000Z', endsAt: '2026-03-06T21:00:00.000Z' }; });
     expect(window).toMatchObject({ expected_delivery_from: '2026-03-06T17:00:00Z', expected_delivery: '2026-03-06T21:00:00Z' });
     const delayed = open(order => { order.deliveryDateInfo.dateType = 'Delayed'; });
@@ -270,9 +272,10 @@ describe('Veho adapter', () => {
   });
 
   it('never reads a refusal as a missing parcel, and rests a refused proxy too', async () => {
-    const { trawl, requests } = browser([attestation(403)], [attestation(429)]);
-    const { tracker, fetcher } = setup({ trawl, env: { VEHO_FALLBACK_PROXY_URL: PROXY } });
-    await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
+    const { trawl, requests } = browser([attestation(403)], [{ ...attestation(429), headers: { 'Retry-After': '45' } }]);
+    const { tracker, fetcher, records } = setup({ trawl, env: { VEHO_FALLBACK_PROXY_URL: PROXY } });
+    await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited', retryAfterMs: 45_000 });
+    expect(records.at(-1)).toMatchObject({ outcome: 'rate_limited', error: { retryAfterMs: 45_000 } });
     await expect(tracker.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge' });
     expect(requests).toHaveLength(2);
     expect(fetcher).not.toHaveBeenCalled();

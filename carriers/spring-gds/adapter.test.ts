@@ -109,11 +109,11 @@ describe('PostNL transient failures', () => {
     expect(await refused).toMatchObject({ kind: 'rate_limited', status: 429 });
     expect(fetcher).toHaveBeenCalledTimes(6);
     await expect(tracker.fetch(POSTNL_WRONG_NUMBER, { budgetMs: 10_000 }))
-      .rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced', retryAfterMs: 25_000 });
+      .rejects.toMatchObject({ kind: 'rate_limited', reason: 'self_paced', retryAfterMs: 23_000 });
     expect(fetcher).toHaveBeenCalledTimes(6);
     await vi.advanceTimersByTimeAsync(5_000);
     const waited = new PostNLTracker({ fetcher }).fetch(POSTNL_WRONG_NUMBER);
-    await vi.advanceTimersByTimeAsync(19_999);
+    await vi.advanceTimersByTimeAsync(17_999);
     expect(fetcher).toHaveBeenCalledTimes(6);
     await vi.advanceTimersByTimeAsync(1);
     await expect(waited).resolves.toMatchObject({ status: 'in_transit' });

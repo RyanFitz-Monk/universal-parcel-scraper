@@ -63,7 +63,8 @@ A missing number is the service's reply with a null order and no error. A refuse
 HTTP 401, or an unauthorized error beside a null order: it is a challenge, never a missing
 parcel, and the token is dropped.
 
-Without a browser, or while every path is refused, a lookup ends as a challenge.
+An attestation exchange that answers HTTP 429 reports a rate limit and carries the
+server's Retry-After when supplied. Without a browser, a lookup ends as a challenge.
 
 Collections from the recipient's address are not asked for; their operations carry no stage.
 

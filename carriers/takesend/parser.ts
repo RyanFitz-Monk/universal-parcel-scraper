@@ -75,7 +75,9 @@ export function parseTakesend(xml: string, raw: string): CarrierResult {
     throw new NotFoundError(PROVIDER);
   }
   if (items.length > 500) throw new SchemaError(PROVIDER, 'Take Send returned an invalid history');
-  if (!items.length) throw new NoHistoryError(PROVIDER);
+  const partner = handoff(track, number);
+  if (!items.length) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed',
+    deliveryCarrier: partner.delivery_carrier ?? undefined, deliveryTrackingNumber: partner.delivery_tracking_number ?? undefined });
   const events: CarrierEvent[] = items.toArray().map((element) => {
     const item = $(element);
     const description = attribute(item, 'intro') || attribute(item, 'statusnameus') || attribute(item, 'statusname');
@@ -95,6 +97,6 @@ export function parseTakesend(xml: string, raw: string): CarrierResult {
   return { status: current ? languageStageStatus(current.stage) : 'unknown',
     ...(current ? { current_stage: current.stage, current_stage_source: current.source } : {}),
     last_status_text: newest.description!, last_update: newest.time ?? null, expected_delivery: null,
-    ...(country ? { destination_country: country } : {}), ...handoff(track, number),
+    ...(country ? { destination_country: country } : {}), ...partner,
     events: events.slice(0, 100), ...(events.length > 100 ? { history_truncated: true } : {}) };
 }

@@ -37,6 +37,7 @@ describe('SiCepat app history', () => {
     expect(JSON.stringify(result)).not.toMatch(/Synthetic Courier|receiver|address|sigesit_img|POD_/);
     expect(result.events!.find(e => e.provider_code === 'ANT')!.description).toBe('Paket dibawa [SIGESIT]');
     expect(result.events!.find(e => e.provider_code === 'ANT')!.location).toBeUndefined();
+    expect(result.events!.find(event => event.description?.includes('pick up oleh'))).not.toHaveProperty('location');
     expect(result.events!.at(-1)!.location).toBeUndefined();
   });
 
@@ -124,4 +125,13 @@ describe('SiCepat supplied transports and routing', () => {
     expect(detectCarrierMatch(NUMBER).candidates ?? []).not.toContain('sicepat');
     expect(recognitionCandidates(NUMBER).map(c => c.carrier)).not.toContain('sicepat');
   });
+});
+
+it('places delivery after a departure in the same minute', () => {
+  const result = parseSicepat(changed(p => {
+    p.data.sicepat.result.track_history = ['ANT', 'DLV'].map(status => ({ status, city: 'Synthetic scan', date_time: '2026-11-10 12:00' }));
+  }), NUMBER);
+  expect(result.current_stage).toBe('delivered');
+  expect(result.last_status_text).toBe('Delivered');
+  expect(result.events?.map(event => event.provider_code)).toEqual(['DLV', 'ANT']);
 });

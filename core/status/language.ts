@@ -455,7 +455,7 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   if (/^(?:package|parcel) shipment$/.test(text)) return 'in_transit';
   // Carrier-reported problems that are neither a missed attempt nor a return.
   if (/\b(?:damaged|broken in transit)\b|endommag|avarie|deterior|beschadigt|danneggiat|danad[oa]|danificad|uszkodzon/.test(text)) return 'exception';
-  if (/\blost (?:in transit|package|parcel|shipment)?\b|colis perdu|envoi perdu|\begare(?:e|s|es)?\b|verloren|verlust der sendung|smarrit|(?:paquete|envio) perdid|extraviad|zagubion|zaginion/.test(text)) return 'exception';
+  if (/\b(?:parcel|package|shipment|item) (?:has been|was|is) lost\b|\blost (?:in transit|package|parcel|shipment)?\b|colis perdu|envoi perdu|\begare(?:e|s|es)?\b|verloren|verlust der sendung|smarrit|(?:paquete|envio) perdid|extraviad|zagubion|zaginion/.test(text)) return 'exception';
   if (/refused by (?:the )?(?:recipient|consignee)|\brefused\b|rejected by (?:the )?recipient|refus(?:e|ee)? par le destinataire|refus du destinataire|(?:colis|envoi|pli) refuse|annahme verweigert|verweigert|rifiutat|rechazad|recusad|odmowa przyjecia|odmowiono przyjecia/.test(text)) return 'exception';
   if (/address (?:incomplete|incorrect|invalid|insufficient|unknown)|(?:incorrect|incomplete|insufficient|wrong|invalid|non[- ]?existent) addres|(?:updated|correct(?:ed)?|complete) (?:delivery )?address (?:is )?(?:required|needed)|address(?:ee)? (?:unknown|cannot be located)|recipient unknown|adresse (?:incorrecte|incomplete|erronee|invalide|inconnue)|destinataire inconnu|(?:adresse|anschrift) (?:unvollstandig|falsch|unbekannt)|empfanger unbekannt|indirizzo (?:errato|incompleto|insufficiente|sconosciuto)|destinatario sconosciuto|direccion (?:incorrecta|incompleta|erronea|desconocida)|destinatario desconocido|endereco (?:incorreto|incompleto|errado|desconhecido)|destinatario desconhecido|adres (?:niepelny|nieprawidlowy|bledny)|nieznany adresat/.test(text)) return 'exception';
   if (CUSTOMS_PROBLEM_ENDED.test(text)) return 'in_transit';
@@ -554,7 +554,7 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   if (/\b(?:we're|we are) expecting (?:your|the) (?:parcel|package|item|shipment) (?:to arrive with us|from (?:your|the) (?:sender|shipper|seller|retailer)\b)/.test(text)) return 'registered';
   // The sender's notice that a parcel is coming, as Bring words its pre-advice in English: "We have received a
   // message from the sender that a shipment is on its way", "The sender has let us know that a parcel is on its way".
-  if (/^(?:we have|we've) received (?:a )?(?:message|notice|notification) from the (?:sender|shipper) that\b|^the (?:sender|shipper) has (?:let us know|notified us|told us) that\b/.test(text)) return 'registered';
+  if (/^(?:(?:we have|we've) received (?:a )?(?:message|notice|notification) from the (?:sender|shipper)|the (?:sender|shipper) has (?:let us know|notified us|told us)) that (?:a|the|your) (?:parcel|shipment|package|item) is on its way(?: to us)?[.!]?$/.test(text)) return 'registered';
   // GLS's shipment the sender created and has not entrusted to it yet, as GLS Italy and relays word it.
   if (/\bcreated by the sender\b.*\bwaiting for it to be (?:entrusted|handed(?: over)?) to us\b/.test(text)) return 'registered';
   // The shipment's pre-alert, its electronic notice: "Pre-alerted shipment enriched by PostNL management".

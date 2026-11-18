@@ -59,5 +59,5 @@ export function parseDtdcPage(html: string, trackingNumber: string): CarrierResu
   return { status: mapped?.status ?? 'unknown', ...(mapped ? { current_stage: mapped.stage } : {}),
     last_status_text: last.description!, last_update: last.time!, timezone: ZONE,
     ...(mapped?.stage === 'delivered' ? { delivered_at: last.time! } : {}),
-    events: events.slice(0, 100) };
+    ...(events.length > 100 ? { history_truncated: true } : {}), events: events.slice(0, 100) };
 }

@@ -2,7 +2,7 @@ import { ChallengeError, IndeterminateError, InvalidInputError, NoHistoryError, 
 import type { CarrierEvent, CarrierResult } from '../../core/result/index.js';
 import { withTieOrder } from '../../core/result/order.js';
 import { languageStageStatus, type Stage } from '../../core/status/index.js';
-import { explicitOffsetTime } from '../../core/time/index.js';
+import { calendarDay, explicitOffsetTime } from '../../core/time/index.js';
 import { clean } from '../../core/transport/text.js';
 import { isRecord } from '../../core/types.js';
 import { vehoEvent } from './status.js';
@@ -130,6 +130,7 @@ function estimate(order: Record<string, unknown>, pkg: Record<string, unknown>):
   if (from && to && Date.parse(from) < Date.parse(to)) return { expected_delivery_from: from, expected_delivery: to };
   const info = isRecord(order.deliveryDateInfo) ? order.deliveryDateInfo : {};
   if (info.dateType === 'Delayed') return { expected_delivery: null, expected_delivery_withdrawn: true };
-  const day = typeof info.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(info.date) && Number.isFinite(Date.parse(info.date)) ? info.date : null;
+  const parts = typeof info.date === 'string' && /^(\d{4})-(\d{2})-(\d{2})$/.exec(info.date);
+  const day = parts ? calendarDay(Number(parts[1]), Number(parts[2]), Number(parts[3])) : null;
   return { expected_delivery: day && (info.dateType === 'Estimated' || info.dateType === 'Expected') ? day : null };
 }

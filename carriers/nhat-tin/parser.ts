@@ -142,7 +142,7 @@ export function parseNhatTin(payload: unknown, raw: string): CarrierResult {
   // A bill the tracker lists without a scan is a known number.
   if (!scans.length) throw new NoHistoryError(PROVIDER, undefined, { reason: 'listed' });
   // Newest first. The page lists the scans oldest first; a reply listed newest first stays as it is.
-  if (scans[0]!.wall < scans.at(-1)!.wall) scans.reverse();
+  if (scans[0]!.wall <= scans.at(-1)!.wall) scans.reverse();
   const events = scans.map(({ event }) => event);
 
   const code = text(bill, 'billstatus', 16);
