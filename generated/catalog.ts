@@ -2021,6 +2021,10 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
       {
         "pattern": "^EEUS\\d{9}[A-Z]{2}\\d$",
         "confidence": "low"
+      },
+      {
+        "pattern": "^AW\\d{9}$",
+        "confidence": "low"
       }
     ]
   },
@@ -66652,7 +66656,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "heppner": ["heppner-1"],
   "ciblex": ["ciblex-1","ciblex-full-barcode"],
   "paack": ["paack-1","paack-5340","paack-shein"],
-  "asendia": ["asendia-1","asendia-2","asendia-3","asendia-4","asendia-5"],
+  "asendia": ["asendia-1","asendia-2","asendia-3","asendia-4","asendia-5","asendia-6"],
   "shipup": [],
   "india-post": ["india-post-1"],
   "hermes-de": ["hermes-de-1","hermes-de-022","hermes-de-2","hermes-de-padded","hermes-de-3"],

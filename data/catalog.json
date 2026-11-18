@@ -2017,6 +2017,10 @@
       {
         "pattern": "^EEUS\\d{9}[A-Z]{2}\\d$",
         "confidence": "low"
+      },
+      {
+        "pattern": "^AW\\d{9}$",
+        "confidence": "low"
       }
     ]
   },

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseAsendiaGlobalResponse, asendiaBrowser } from './browser.js';
 import type { TrawlClient } from '../../core/transport/trawl.js';
 import { asendiaTrackingApiUrl } from './probe.js';
+import { deliveryHandoff } from '../../core/catalog/handoff.js';
 
 const number = 'ASE00000000';
 const parcel = () => ({ tracking_id: number, status: 'Delivered', destination_country_name: 'France',
@@ -26,6 +27,20 @@ describe('Asendia global portal', () => {
       { context_code: 1000, data: [parcel(), parcel()] }]) {
       expect(() => parseAsendiaGlobalResponse(value, number)).toThrowError(expect.objectContaining({ kind: 'schema' }));
     }
+  });
+  it('reads the one parcel a customer reference names, under its last-mile number', () => {
+    const reference = 'AW999999901';
+    const named = parseAsendiaGlobalResponse({ context_code: 1000, data: [{ tracking_id: 'H9999999999999999901', status: 'Delivered' }] }, reference);
+    expect(named).toMatchObject({ status: 'delivered', current_stage: 'delivered', summary_only: true, events: [],
+      delivery_tracking_number: 'H9999999999999999901' });
+    expect(deliveryHandoff('asendia', reference, named)).toEqual({ carrier: 'hermes-de', number: 'H9999999999999999901', basis: 'reference' });
+    expect(parseAsendiaGlobalResponse({ context_code: 1000, data: [{ ...parcel(), tracking_id: reference }] }, reference).delivery_tracking_number).toBeUndefined();
+    for (const data of [[{ tracking_id: 'H9999999999999999901', status: 'Delivered' }, { tracking_id: 'H9999999999999999902', status: 'Delivered' }],
+      [{ tracking_id: 'H-1', status: 'Delivered' }], [{ status: 'Delivered' }]]) {
+      expect(() => parseAsendiaGlobalResponse({ context_code: 1000, data }, reference)).toThrowError(expect.objectContaining({ kind: 'schema' }));
+    }
+    expect(() => parseAsendiaGlobalResponse({ context_code: 1000, data: [{ tracking_id: 'H9999999999999999901', status: 'Delivered' }] }, 'AW99999990'))
+      .toThrowError(expect.objectContaining({ kind: 'schema' }));
   });
   it('reads the public client event fields without inventing offsets for wall clocks', () => {
     const result = parseAsendiaGlobalResponse({ context_code: 1000, data: [{ ...parcel(), events: [

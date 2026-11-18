@@ -8539,5 +8539,13 @@
       "oca"
     ],
     "reason": "OCA's five digits, 0000 and ten digits can also read as a Hermes delivery note: a year digit, the day of the year, six digits, 0000 and five digits. Both rules are low, recognition asks OCA only for a lookup in Argentina, and the carrier that knows the number decides."
+  },
+  {
+    "shape": "AW and nine digits",
+    "carriers": [
+      "asendia",
+      "gls-it"
+    ],
+    "reason": "Asendia's global portal finds a parcel by a customer reference of AW and nine digits, which also fits GLS Italy's two letters and nine digits. Both rules are low, and the carrier that knows the number decides."
   }
 ]

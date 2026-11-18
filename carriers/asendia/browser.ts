@@ -7,7 +7,7 @@ import type { TrawlClient } from '../../core/transport/trawl.js';
 
 type TrawlPage = Awaited<ReturnType<TrawlClient['scrape']>>;
 import { isRecord } from '../../core/types.js';
-import { asendiaRecipient, asendiaTrackingApiUrl, asendiaTrackingUrl, normalizeAsendiaTrackingNumber } from './probe.js';
+import { ASENDIA_REFERENCE, asendiaRecipient, asendiaTrackingApiUrl, asendiaTrackingUrl, normalizeAsendiaTrackingNumber } from './probe.js';
 import { classifyAsendiaStatus } from './status.js';
 
 const PROVIDER = 'Asendia';
@@ -22,8 +22,12 @@ export function parseAsendiaGlobalResponse(payload: unknown, raw: string): Carri
   if (!payload.data.length) throw new NotFoundError(PROVIDER);
   const matches = payload.data.filter(row => isRecord(row) && [row.tracking_id, row.upper_tracking_id]
     .some(value => typeof value === 'string' && value.toUpperCase() === number));
-  if (matches.length !== 1 || !isRecord(matches[0])) throw new SchemaError(PROVIDER, 'Asendia returned a different or ambiguous shipment');
-  const parcel = matches[0];
+  // A search by a customer reference answers with the one parcel it names, under that parcel's
+  // last-mile number, which the hand-off then asks.
+  const named = ASENDIA_REFERENCE.test(number) && !matches.length && payload.data.length === 1 && isRecord(payload.data[0])
+    && typeof payload.data[0].tracking_id === 'string' && /^[A-Z0-9]{4,40}$/i.test(payload.data[0].tracking_id) ? payload.data[0] : null;
+  if (!named && (matches.length !== 1 || !isRecord(matches[0]))) throw new SchemaError(PROVIDER, 'Asendia returned a different or ambiguous shipment');
+  const parcel = (named ?? matches[0]) as Record<string, unknown>;
   const wording = clean(parcel.status, 300);
   if (!wording) throw new SchemaError(PROVIDER, 'Asendia returned no current parcel status');
   if (parcel.events !== undefined && (!Array.isArray(parcel.events) || parcel.events.length > 500)) {
@@ -60,6 +64,7 @@ export function parseAsendiaGlobalResponse(payload: unknown, raw: string): Carri
     ...(events[0]?.local_time ? { last_update_local: events[0].local_time } : {}),
     ...(country ? { destination_country_name: country } : {}),
     ...asendiaRecipient(parcel),
+    ...(named ? { delivery_tracking_number: (named.tracking_id as string).toUpperCase() } : {}),
     ...(!events.length ? { summary_only: true } : {}),
     ...(events.length > 100 ? { history_truncated: true } : {}),
     events: events.slice(0, 100), tracking_url: asendiaTrackingUrl(number), tracking_source: 'structured-web-response',

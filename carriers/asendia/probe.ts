@@ -99,6 +99,9 @@ export function normalizeAsendiaTrackingNumber(raw: string): string {
   return value;
 }
 
+/** The customer references the global portal finds a parcel by: AW and nine digits. */
+export const ASENDIA_REFERENCE = /^AW\d{9}$/;
+
 export function asendiaTrackingUrl(rawTrackingNumber: string): string {
   return `${TRACKING_PAGE}/${encodeURIComponent(normalizeAsendiaTrackingNumber(rawTrackingNumber))}`;
 }

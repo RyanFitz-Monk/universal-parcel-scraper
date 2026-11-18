@@ -87,6 +87,10 @@ a summary through universal providers (see [routing](https://github.com/plhery/d
 - A1 also accepts customer references, merchant references and last-mile numbers. They are
   not specific to Asendia, so there is no detection rule for them. S10 numbers issued by a
   partner post stay with that post.
+- The global portal also finds a parcel by a customer reference of AW and nine digits, as
+  parcels for Germany carry. Its answer names the parcel by its last-mile number, such as a
+  Hermes barcode, which becomes `delivery_tracking_number` for the hand-off. The rule is low:
+  GLS Italy's two letters and nine digits share the layout.
 - eBay International Standard Delivery's `ESUS` + 9 digits are a low suggestion with DHL
   eCommerce: eBay names DHL Global Mail's tracker for them, and A1 answers some. eBay
   International Shipping's `EEUS`, nine digits, the destination's country code and a digit are

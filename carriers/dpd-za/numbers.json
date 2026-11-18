@@ -132,6 +132,7 @@
         "carrier": "unknown",
         "confidence": "low",
         "candidates": [
+          "asendia",
           "gls-it"
         ]
       },
