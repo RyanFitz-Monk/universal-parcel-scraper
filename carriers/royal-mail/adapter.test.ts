@@ -1024,3 +1024,12 @@ describe('Royal Mail lookup budget', () => {
       .rejects.toMatchObject({ kind: 'transport' });
   });
 });
+
+it('dates collection from the summary when its code recurs another day', () => {
+  const result = parseRoyalMailTrackingResponse({ mailPieces: { mailPieceId: IN_TRANSIT_NUMBER,
+    events: [{ eventCode: 'EVNSC', eventName: 'Collected From Your Customer Service Point', eventDateTime: '2026-01-19T16:00:00Z' }],
+    summary: { statusCategory: 'Collected', statusDescription: 'Collected', lastEventCode: 'EVNSC', lastEventDateTime: '2026-01-20T16:00:00Z' },
+  } }, IN_TRANSIT_NUMBER);
+  expect(result.delivered_at).toBe('2026-01-20T16:00:00Z');
+  expect(result.events?.[0]?.stage).toBeUndefined();
+});

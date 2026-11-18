@@ -265,14 +265,19 @@ export function parseRoyalMailTrackingResponse(payload: unknown, trackingNumber:
   const delivered = stage === 'delivered';
   // A summary that calls the item collected or delivered on a Customer Service Point's collection
   // makes that collection the recipient's: the delivery.
+  const lastCode = cleanScalar(summary.lastEventCode, 64);
+  const newestClock = newest?.time ?? newest?.local_time ?? newest?.provider_time_text;
+  const sameCollection = lastText && newestClock
+    ? (lastTime && newest?.time ? Date.parse(lastTime) === Date.parse(newest.time) : lastText === newestClock)
+    : lastCode === newest?.provider_code;
   if (delivered && newest && !newest.stage && COLLECTIONS.has(newest.provider_code ?? '')
     && !trimmed.some(event => event.stage === 'delivered')
-    && (Boolean(lastTime) && lastTime === newest.time || cleanScalar(summary.lastEventCode, 64) === newest.provider_code)) {
+    && sameCollection) {
     newest.stage = 'delivered';
     newest.stage_source = 'carrier_map';
   }
   const deliveredAt = !delivered ? null : trimmed.find(event => event.stage === 'delivered' && event.time)?.time
-    ?? (royalMailEventStage(cleanScalar(summary.lastEventCode, 64)) === 'delivered' ? lastTime : null);
+    ?? (COLLECTIONS.has(lastCode) || royalMailEventStage(lastCode) === 'delivered' ? lastTime : null);
   const estimate = delivered ? null : expectedDelivery(mailpiece.estimatedDelivery);
   const signer = !delivered ? '' : cleanScalar(SIGNER.exec(trimmed.find(event => event.stage === 'delivered')?.description ?? '')?.[1]
     ?? SIGNER.exec(statusText)?.[1], 120);
