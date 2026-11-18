@@ -81,6 +81,22 @@ try {
     } catch { assert.equal(bestFreightCalls, 1); }
     assert(existsSync(new URL('./carriers/best-freight-cn/ocr-worker.mjs', import.meta.resolve('universal-parcel-scraper/node'))));
     assert(existsSync(new URL('./carriers/best-freight-cn/ocr-consensus.mjs', import.meta.resolve('universal-parcel-scraper/node'))));
+    // Exercise the public guest OCR protocol through the installed registry and facade.
+    const flashNumber = 'SYNTHETIC123'; let flashCalls = 0;
+    const flash = await createTracker({ providers: [], trawlUrl: 'http://trawl.invalid', fetcher: async (_url, init) => {
+      flashCalls++; const request = JSON.parse(init.body);
+      assert.equal(request.url, 'https://www.flashcourier.com.br/rastreio/' + flashNumber);
+      const api = 'https://www.flashcourier.com.br/api/hawb/' + flashNumber + '/tipo/todos';
+      assert.deepEqual(request.captureResponses, [api]); assert.equal(request.skipHttp, true);
+      return Response.json({ tier: 3, status: 'success', durationMs: 5, effectiveUrl: request.url, statusCode: 200,
+        html: JSON.stringify({ protocol: 'flash-courier-guest-v1', requestedNumber: flashNumber, diagnostic: null }),
+        capturedResponses: [{ url: api, status: 200, headers: {}, trackingNumberSubmitted: flashNumber,
+          body: JSON.stringify({ kind: 'history', success: true, number: flashNumber, primaryNumber: '12345678901', customerReference: flashNumber,
+            summary: 'Pedido entregue', events: [{ status: 'Entrega efetuada com sucesso', clock: '07/08/2026 08:57:50' }] }) }] });
+    } }).track({ number: flashNumber, carrier: 'flash-courier' });
+    assert.equal(flash.source, 'flash-courier'); assert.equal(flash.result.status, 'delivered');
+    assert.equal(flash.result.events[0].local_time, '2026-08-07T08:57:50');
+    assert.equal(flash.result.events[0].instant, '2026-08-07T08:57:50-03:00'); assert.equal(flashCalls, 1);
     // The installed forwarder keeps its incomplete history and named handoff.
     const ftdNzReply = ${JSON.stringify(ftdNzReply)};
     let ftdNzCalls = 0, ftdNzHandoffCalls = 0;

@@ -53,6 +53,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
   if (carrierPage && asendiaBrowserNumber(url, capture)) return await runAsendiaBrowser(carrierRun)
   if (carrierPage && correiosBrowserNumber(url, capture)) return await runCorreiosBrowser(carrierRun)
   if (carrierPage && onlogExpressBrowserNumber(url, capture)) return await runOnlogExpressBrowser({ ...carrierRun, signal: budget.signal })
+  if (carrierPage && flashCourierRequest(url, capture)) return await runFlashCourierGuest({ ...carrierRun, signal: budget.signal, validateTarget: address => budget.run(() => validateOutboundUrl(address)) })
   if (carrierPage && paxelBrowserNumber(url, capture)) return await runPaxelBrowser({ ...carrierRun, signal: budget.signal,
     createContext: () => newWanbContext(handle.browser, { onCreated: handle.noteTemporaryContext,
       requestReplacement: handle.requestBrowserReplacement, ignoreHttpsErrors: ${fresh ? 'ignoreCertificateErrors' : 'false'} }),
@@ -134,6 +135,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
     + 'import { asendiaBrowserNumber, runAsendiaBrowser } from "../utils/asendia-browser.mjs"\n'
     + 'import { correiosBrowserNumber, runCorreiosBrowser } from "../utils/correios-browser.mjs"\n'
     + 'import { onlogExpressBrowserNumber, runOnlogExpressBrowser } from "../utils/onlog-express-browser.mjs"\n'
+    + 'import { flashCourierRequest, runFlashCourierGuest } from "../utils/flash-courier-guest.mjs"\n'
     + 'import { paxelBrowserNumber, runPaxelBrowser } from "../utils/paxel-browser.mjs"\n'
     + 'import { waitForChallengeResolution as waitPaxelCloudflare } from "../utils/challengeWait"\n'
     + 'import { viettelPostBrowserNumber, runViettelPostBrowser } from "../utils/viettel-post-browser.mjs"\n'

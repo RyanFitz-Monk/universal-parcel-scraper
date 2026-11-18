@@ -1,5 +1,22 @@
 {
   "carrier": "flash-courier",
-  "gap": "No public page shows a Flash Courier number.",
-  "records": []
+  "records": [
+    {
+      "number": "FC074260572BR",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://www.reclameaqui.com.br/magazine-luiza-luizacred/cartao-magalu-nao-entregue-com-comprovante-falso-e-mau-atendimento-do-sac-itau_TJ3CMHIdMx04_HPt/",
+        "access": "indexed_excerpt"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "note": "The guest tracker returns dated history bound to this public customer reference; sender references have no exclusive issuer shape.",
+      "expect": {
+        "carrier": "correios-br",
+        "confidence": "high"
+      }
+    }
+  ]
 }

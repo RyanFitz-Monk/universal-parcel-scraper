@@ -1,4 +1,47 @@
 {
   "carrier": "flash-courier",
-  "entries": []
+  "entries": [
+    {
+      "wording": "Aguardando Postagem",
+      "stage": "registered",
+      "language": "pt",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Recebemos sua encomenda, em breve seguiremos com a entrega",
+      "stage": "accepted",
+      "language": "pt",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Enviado para unidade entregadora",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Encomenda recebida na unidade entregadora, em breve seguiremos com a sua entrega.",
+      "stage": "in_transit",
+      "language": "pt",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Em rota de entrega",
+      "stage": "out_for_delivery",
+      "language": "pt",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Entrega não Efetuada — Motivo: Destinatário Ausente",
+      "stage": "failed_attempt",
+      "language": "pt",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Entrega efetuada com sucesso",
+      "stage": "delivered",
+      "language": "pt",
+      "confirmedBy": "live"
+    }
+  ]
 }

@@ -324,3 +324,5 @@ a measured slider movement. A refreshed challenge cancels the held drag. The hel
 verification and tracking separate, waits for the page callback after the widget disappears,
 and captures only the matching whole-waybill POST. It enters no CPF/CNPJ or account/POD
 flow, and retains no images, tokens, remarks, staff or recipient fields.
+
+Flash Courier uses a scoped anonymous HTTP helper with the local CPU OCR environment. It binds the official form and returned shipment to the whole reference, caps fresh images and submissions separately, keeps cookies and answers in memory, and ends the subprocess within the caller budget. No browser context is opened for this route.

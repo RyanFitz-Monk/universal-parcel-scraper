@@ -71,6 +71,7 @@ const ENVIRONMENTS: Readonly<Record<string, Browsers>> = {
 const BROWSER_ONLY: Readonly<Record<string, readonly (keyof Browsers)[]>> = {
   'onlog-express': ['service'],
   'jumppoint-international': ['service'],
+  'flash-courier': ['service'],
   paxel: ['service'],
   sicepat: ['service'],
   aeropost: ['service'],

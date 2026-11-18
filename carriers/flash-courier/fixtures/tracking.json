@@ -1,0 +1,50 @@
+{
+  "kind": "history",
+  "success": true,
+  "number": "FC074260572BR",
+  "primaryNumber": "09095635498",
+  "customerReference": "FC074260572BR",
+  "summary": "Pedido entregue",
+  "events": [
+    {
+      "status": "Aguardando Postagem",
+      "clock": "31/07/2026 03:06:38"
+    },
+    {
+      "status": "Recebemos sua encomenda, em breve seguiremos com a entrega",
+      "clock": "01/08/2026 09:00:29"
+    },
+    {
+      "status": "Enviado para unidade entregadora",
+      "clock": "01/08/2026 09:00:30"
+    },
+    {
+      "status": "Encomenda recebida na unidade entregadora, em breve seguiremos com a sua entrega.",
+      "clock": "04/08/2026 08:22:23"
+    },
+    {
+      "status": "Em rota de entrega",
+      "clock": "04/08/2026 09:30:31"
+    },
+    {
+      "status": "Entrega não Efetuada — Motivo: Destinatário Ausente",
+      "clock": "05/08/2026 08:37:46"
+    },
+    {
+      "status": "Em rota de entrega",
+      "clock": "05/08/2026 08:54:05"
+    },
+    {
+      "status": "Entrega não Efetuada — Motivo: Destinatário Ausente",
+      "clock": "06/08/2026 09:09:49"
+    },
+    {
+      "status": "Em rota de entrega",
+      "clock": "06/08/2026 09:31:16"
+    },
+    {
+      "status": "Entrega efetuada com sucesso",
+      "clock": "07/08/2026 08:57:50"
+    }
+  ]
+}

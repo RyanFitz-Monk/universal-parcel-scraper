@@ -29,6 +29,9 @@ export interface TrackingLinkCase {
 // independently of the generated link templates, so a template that drifts
 // fails here instead of passing against itself.
 export const trackingLinkCases: TrackingLinkCase[] = [
+  { carrier: 'flash-courier', number: 'SYNTHETIC123',
+    route: /^https:\/\/www\.flashcourier\.com\.br\/rastreio\/SYNTHETIC123$/,
+    marker: /Consulte sua\s+entrega|Digite o código de rastreio/i },
   { carrier: 'whatsship', number: 'WS10293847561029384DL',
     route: /^https:\/\/www\.whatsship\.com\/#tracking$/,
     marker: /Enter Tracking Number \(e\.g\.,/i, forwarding: 'none' },

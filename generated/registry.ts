@@ -257,6 +257,7 @@ import { adapter as fermopoint } from '../carriers/fermopoint/adapter.js';
 import { adapter as fezDelivery } from '../carriers/fez-delivery/adapter.js';
 import { adapter as fgDelivery } from '../carriers/fg-delivery/adapter.js';
 import { adapter as firstLine } from '../carriers/first-line/adapter.js';
+import { adapter as flashCourier } from '../carriers/flash-courier/adapter.js';
 import { adapter as flashExpress } from '../carriers/flash-express/adapter.js';
 import { adapter as flashExpressPh } from '../carriers/flash-express-ph/adapter.js';
 import { adapter as flashbirdCa } from '../carriers/flashbird-ca/adapter.js';
@@ -1059,6 +1060,7 @@ export const REGISTRY: RegistryDefinition = {
     "fez-delivery": fezDelivery,
     "fg-delivery": fgDelivery,
     "first-line": firstLine,
+    "flash-courier": flashCourier,
     "flash-express": flashExpress,
     "flash-express-ph": flashExpressPh,
     "flashbird-ca": flashbirdCa,
@@ -2214,7 +2216,7 @@ export const REGISTRY: RegistryDefinition = {
     "first-line": "first-line",
     "first-logistics": "universal",
     "fiscourier": "universal",
-    "flash-courier": "universal",
+    "flash-courier": "flash-courier",
     "flash-express": "flash-express",
     "flash-express-la": "universal",
     "flash-express-ph": "flash-express-ph",

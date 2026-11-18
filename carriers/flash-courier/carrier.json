@@ -14,18 +14,32 @@
   "timezone": "America/Sao_Paulo",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "flash-courier",
+    "steps": [
+      "trawl"
+    ],
+    "browser": true,
+    "localClocks": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history"
+  ],
   "portal": {
     "url": "https://www.flashcourier.com.br/rastreio/{trackingNumber}",
     "searchUrl": "https://www.flashcourier.com.br/rastreio/",
     "canaryUrl": "https://www.flashcourier.com.br/rastreio/",
-    "shows": [],
-    "scraped": [],
+    "shows": [
+      "status",
+      "history"
+    ],
+    "scraped": [
+      "status",
+      "history"
+    ],
     "discarded": [],
-    "unavailable": []
+    "unavailable": [
+      "offset_timestamps"
+    ]
   },
   "links": [
     {

@@ -25343,7 +25343,9 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/Sao_Paulo",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "flash-courier",
+      "localClocks": true,
+      "browser": true
     },
     "canaryUrl": "https://www.flashcourier.com.br/rastreio/",
     "trackingUrlTemplate": "https://www.flashcourier.com.br/rastreio/{trackingNumber}",
