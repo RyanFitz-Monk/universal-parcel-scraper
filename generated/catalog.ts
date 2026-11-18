@@ -38753,7 +38753,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "timezone": "America/Sao_Paulo",
     "tracking": {
       "mode": "automatic",
-      "adapter": "universal"
+      "adapter": "mandae",
+      "browser": true
     },
     "canaryUrl": "https://rastreae.com.br/busca",
     "trackingUrlTemplate": "https://rastreae.com.br/resultado/{trackingNumber}",

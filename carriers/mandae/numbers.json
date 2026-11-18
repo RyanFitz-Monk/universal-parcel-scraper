@@ -231,6 +231,25 @@
         "confidence": "none"
       },
       "note": "An archived lookup on Mandaê's former tracking page asked for this code; the capture shows only the page shell, so the history was not visible."
+    },
+    {
+      "number": "EDCSO02740934",
+      "role": "shipment",
+      "evidence": "public_shipment_report",
+      "source": {
+        "url": "https://web.archive.org/web/20261024144920/https://rastreae.api.mandae.com.br/v2/rastreamentos/EDCSO02740934",
+        "date": "2026-10-24",
+        "dateKind": "capture",
+        "access": "full_page"
+      },
+      "context": {
+        "assessment": "confirmed"
+      },
+      "expect": {
+        "carrier": "unknown",
+        "confidence": "none"
+      },
+      "note": "An archived reply of Rastreaê's tracking API shows this code's history, posted via a partner carrier under the partner's own code."
     }
   ]
 }

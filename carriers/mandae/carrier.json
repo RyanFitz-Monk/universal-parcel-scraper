@@ -18,18 +18,46 @@
   "timezone": "America/Sao_Paulo",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "mandae",
+    "steps": [
+      "trawl"
+    ],
+    "browser": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "eta",
+    "offset_timestamps",
+    "canonical_tracking_number"
+  ],
   "portal": {
     "url": "https://rastreae.com.br/resultado/{trackingNumber}",
     "searchUrl": "https://rastreae.com.br/busca",
     "canaryUrl": "https://rastreae.com.br/busca",
-    "shows": [],
-    "scraped": [],
-    "discarded": [],
-    "unavailable": []
+    "shows": [
+      "status",
+      "history",
+      "eta",
+      "offset_timestamps",
+      "delivery_partner",
+      "progress_rail",
+      "canonical_tracking_number"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "eta",
+      "offset_timestamps",
+      "canonical_tracking_number"
+    ],
+    "discarded": [
+      "delivery_partner",
+      "progress_rail"
+    ],
+    "unavailable": [
+      "location",
+      "proof_of_delivery"
+    ]
   },
   "links": [
     {

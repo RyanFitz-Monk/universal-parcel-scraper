@@ -441,6 +441,7 @@ import { adapter as mailplusAu } from '../carriers/mailplus-au/adapter.js';
 import { adapter as mainfreight } from '../carriers/mainfreight/adapter.js';
 import { adapter as makatiExpress } from '../carriers/makati-express/adapter.js';
 import { adapter as maltapost } from '../carriers/maltapost/adapter.js';
+import { adapter as mandae } from '../carriers/mandae/adapter.js';
 import { adapter as maritimeOntario } from '../carriers/maritime-ontario/adapter.js';
 import { adapter as marutiAir } from '../carriers/maruti-air/adapter.js';
 import { adapter as matkahuolto } from '../carriers/matkahuolto/adapter.js';
@@ -1238,6 +1239,7 @@ export const REGISTRY: RegistryDefinition = {
     "mainfreight": mainfreight,
     "makati-express": makatiExpress,
     "maltapost": maltapost,
+    "mandae": mandae,
     "maritime-ontario": maritimeOntario,
     "maruti-air": marutiAir,
     "matkahuolto": matkahuolto,
@@ -2620,7 +2622,7 @@ export const REGISTRY: RegistryDefinition = {
     "makesend": "universal",
     "maldives-post": "universal",
     "maltapost": "maltapost",
-    "mandae": "universal",
+    "mandae": "mandae",
     "maple-logistics": "universal",
     "maraton": "universal",
     "maritime-ontario": "maritime-ontario",

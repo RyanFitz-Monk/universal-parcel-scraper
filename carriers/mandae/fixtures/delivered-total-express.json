@@ -1,0 +1,62 @@
+{
+  "codigoRastreamento": "121705277",
+  "situacaoEncomenda": "Entregue",
+  "transportadora": "Total Express SP",
+  "associada": false,
+  "dataChegadaVendida": "2018-03-29T00:00:00-03:00",
+  "progresso": {
+    "alerta": false,
+    "marcadores": [
+      {
+        "mensagem": "Em separação",
+        "data": "2018-03-14T19:16:05.109-03:00"
+      },
+      {
+        "mensagem": "Em trânsito",
+        "data": "2018-03-15T19:16:14.992-03:00"
+      },
+      {
+        "mensagem": "Entregue",
+        "data": "2018-03-26T18:50:00-03:00"
+      }
+    ]
+  },
+  "historico": [
+    {
+      "descricao": "Entrega realizada",
+      "complemento": "Muito bem! Sua entrega foi realizada e esperamos que goste do seu produto.",
+      "exibirAlerta": false,
+      "dataHora": "2018-03-26T18:50:00-03:00"
+    },
+    {
+      "descricao": "Encomenda em rota final",
+      "complemento": "Sua encomenda já está a caminho do seu endereço e em breve será entregue. Fique atento e aproveite sua compra! =)",
+      "exibirAlerta": false,
+      "dataHora": "2018-03-26T12:14:58-03:00"
+    },
+    {
+      "descricao": "Encomenda recebida na unidade da transportadora",
+      "complemento": " RECEBIDO CD DE: - COY",
+      "exibirAlerta": false,
+      "dataHora": "2018-03-23T12:14:04-03:00"
+    },
+    {
+      "descricao": "Encomenda em rota",
+      "complemento": "Sua encomenda foi encaminhada para uma unidade da transportadora ",
+      "exibirAlerta": false,
+      "dataHora": "2018-03-20T04:31:05-03:00"
+    },
+    {
+      "descricao": "Encomenda processada",
+      "complemento": "Sua encomenda foi processada na unidade da transportadora. Acompanhe as próximas atualizações. RECEBIDA E PROCESSADA NO CD : HUB/MATRIZ",
+      "exibirAlerta": false,
+      "dataHora": "2018-03-16T20:02:01-03:00"
+    },
+    {
+      "descricao": "Encomenda recebida na unidade da transportadora",
+      "complemento": " COLETA RECEBIDA COM NC NO CD DE",
+      "exibirAlerta": false,
+      "dataHora": "2018-03-16T19:58:57-03:00"
+    }
+  ]
+}

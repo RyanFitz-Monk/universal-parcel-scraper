@@ -1,0 +1,68 @@
+{
+  "codigoRastreamento": "EDCSO02740934",
+  "situacaoEncomenda": "Entregue",
+  "transportadora": "JT_HUB",
+  "associada": false,
+  "dataChegadaVendida": "2026-11-06T00:00:00-03:00",
+  "progresso": {
+    "alerta": false,
+    "marcadores": [
+      {
+        "mensagem": "Em separação",
+        "data": "2026-10-20T18:56:40.321-03:00"
+      },
+      {
+        "mensagem": "Em trânsito",
+        "data": "2026-10-20T19:02:27.629-03:00"
+      },
+      {
+        "mensagem": "Entregue",
+        "data": "2026-10-27T15:25:57-03:00"
+      }
+    ]
+  },
+  "historico": [
+    {
+      "descricao": "Entrega realizada",
+      "complemento": "Muito bem! Sua entrega foi realizada e esperamos que goste do seu produto.",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-27T15:25:57-03:00"
+    },
+    {
+      "descricao": "Encomenda em rota final",
+      "complemento": "Sua encomenda já está a caminho do seu endereço e em breve será entregue. Fique atento e aproveite sua compra! =)",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-27T03:23:36-03:00"
+    },
+    {
+      "descricao": "Encomenda recebida na unidade da transportadora",
+      "complemento": " ",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-26T01:36:27-03:00"
+    },
+    {
+      "descricao": "Encomenda em rota",
+      "complemento": "Sua encomenda está sendo transferida de unidade de distribuição",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-25T21:14:31-03:00"
+    },
+    {
+      "descricao": "Encomenda em rota",
+      "complemento": "Sua encomenda está sendo transferida de unidade de distribuição",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-21T22:28:37-03:00"
+    },
+    {
+      "descricao": "Encomenda em rota",
+      "complemento": "Sua encomenda está sendo transferida de unidade de distribuição",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-21T13:13:26-03:00"
+    },
+    {
+      "descricao": "Encomenda encaminhada",
+      "complemento": "Sua encomenda foi postada via JT_HUB com o código 52457974",
+      "exibirAlerta": false,
+      "dataHora": "2026-10-20T19:02:27.629-03:00"
+    }
+  ]
+}
