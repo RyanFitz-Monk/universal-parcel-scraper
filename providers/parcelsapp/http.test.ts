@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_USER_AGENT } from '../../core/transport/index.js';
 import { parcelsAppChecksum, parcelsAppRequest, ParcelsAppHttpClient, PARCELSAPP_API } from './http.js';
 
 describe('ParcelsApp public request protocol', () => {
@@ -15,7 +14,10 @@ describe('ParcelsApp public request protocol', () => {
     const form = new URLSearchParams(parcelsAppRequest('zz 123-456.78900').toString());
     const shifted = decodeURIComponent(form.get('trackingId')!);
     expect([...shifted].map((char) => String.fromCharCode((char.charCodeAt(0) - 76 + 126) % 126)).join('')).toBe('ZZ12345678900');
-    expect(form.get('se')).toMatch(/,214,13,2720665355$/);
+    expect(form.get('se')).toMatch(/,214,13,1378910874$/);
+    const [outer, , inner] = form.get('se')!.split(',').map((size) => size.split('x').map(Number));
+    expect(inner![0]).toBeLessThanOrEqual(outer![0]!);
+    expect(inner![1]).toBeLessThanOrEqual(outer![1]!);
     expect(form.get('se')).not.toBe(parcelsAppRequest('ZZ12345678901').get('se'));
     expect([...form.keys()]).toEqual(['trackingId', 'carrier', 'language', 'country', 'platform', 'wd', 'c', 'p', 'l', 'se']);
   });
@@ -38,7 +40,8 @@ describe('ParcelsApp public request protocol', () => {
     }));
     const headers = new Headers(fetcher.mock.calls[0]![1]!.headers);
     expect(headers.get('Content-Type')).toContain('application/x-www-form-urlencoded');
-    expect(headers.get('User-Agent')).toBe(DEFAULT_USER_AGENT);
+    expect(headers.get('User-Agent')).toMatch(/^Mozilla\/5\.0 \(Macintosh;.* Chrome\/\d/);
+    expect(headers.get('Accept-Language')).toBe('en-US,en;q=0.9');
     expect(headers.has('cookie')).toBe(false);
   });
 

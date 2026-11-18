@@ -277,7 +277,7 @@ describe('standalone tracker', () => {
 
   it('accepts a country hint without retrying an empty universal answer', async () => {
     const lookup = vi.fn().mockRejectedValue(new NotFoundError('UPS'));
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ error: 'NO_DATA' }));
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ error: 'NO_DATA', carriers: [] }));
     await expect(createTracker({ registry: registry(lookup), fetcher, providers: ['ParcelsApp'] }).track({ number, countryHint: 'FR' }))
       .rejects.toMatchObject({ attempts: [{ source: 'ups', kind: 'not_found' }, { source: 'ParcelsApp', kind: 'indeterminate' }] });
     expect(fetcher).toHaveBeenCalledOnce();

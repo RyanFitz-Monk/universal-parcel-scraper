@@ -1,14 +1,19 @@
 
-import { fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
+import { fetchBounded, parseJsonBytes } from '../../core/transport/index.js';
 import { numberOf } from '../shared/result.js';
 
 export const PARCELSAPP_API = 'https://parcelsapp.com/api/v2/parcels';
 
-// Public frontend protocol, verified 2026-09-12. No session or issued secret:
-// packs/js/application-aa19cda6a00923f7e330.js on dvow0vltefbxy.cloudfront.net.
-// The website accepts this fixed telemetry profile, including its documented
-// "undefined" stack fallback. The checksum below binds it to each number.
-const TELEMETRY = '1361x780,1470x830,1280x800,no,MacIntel,Gecko,Mozilla,Netscape,Google Inc.,true,true,'
+// Public frontend protocol: no session or issued secret, from the tracking bundle
+// (packs/js/application-….js on dvow0vltefbxy.cloudfront.net). The website accepts
+// this fixed telemetry profile of Chrome on a Mac, including its documented
+// "undefined" stack fallback, when the window's inner size (third) fits inside its
+// outer size (first). It refuses a window larger inside than outside, a request
+// without Accept-Language and a User-Agent that names no browser, with a bare
+// NO_DATA. The checksum below binds the profile to each number. The ticket (pt) and
+// sensor (s2) fields the page now adds are not required.
+const BROWSER_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
+const TELEMETRY = '1470x832,1470x832,1470x709,no,MacIntel,Gecko,Mozilla,Netscape,Google Inc.,true,true,'
   + 'Google Inc. (Apple),ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version),true,true,'
   + Buffer.from('parcelsapp.com').toString('base64') + ',' + Buffer.from('undefined').toString('base64');
 
@@ -47,11 +52,7 @@ export function parcelsAppRequest(trackingNumber: string, postcode?: string | nu
 }
 
 export class ParcelsAppHttpClient {
-  readonly #userAgent: string;
-
-  constructor(readonly fetcher?: typeof fetch, userAgent?: string) {
-    this.#userAgent = userAgentOf(userAgent);
-  }
+  constructor(readonly fetcher?: typeof fetch) {}
 
   async fetch(trackingNumber: string, timeoutMs: number, postcode?: string | null, signal?: AbortSignal): Promise<unknown> {
     const number = numberOf(trackingNumber);
@@ -61,7 +62,7 @@ export class ParcelsAppHttpClient {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         Origin: 'https://parcelsapp.com', Referer: `https://parcelsapp.com/en/tracking/${number}`,
-        'User-Agent': this.#userAgent, 'X-Requested-With': 'XMLHttpRequest',
+        'User-Agent': BROWSER_USER_AGENT, 'Accept-Language': 'en-US,en;q=0.9', 'X-Requested-With': 'XMLHttpRequest',
       },
       body: parcelsAppRequest(number, postcode),
     }, { provider: 'ParcelsApp', fetcher: this.fetcher, timeoutMs: Math.floor(timeoutMs), maxBytes: 2_000_000 });

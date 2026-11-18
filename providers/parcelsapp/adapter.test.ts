@@ -3855,8 +3855,20 @@ describe('ParcelsApp browser capture', () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(captured(null, { html: empty, capturedResponses: [] }));
     await expect(tracker(fetcher).fetch(number)).rejects.toMatchObject({ kind: 'indeterminate', reason: 'history_missing' });
     // A page that is neither the empty view nor the shipment's stays a schema failure.
-    fetcher.mockResolvedValue(captured({ error: 'NO_DATA' }, { html: '<div class="tracking-info"></div>' }));
+    fetcher.mockResolvedValue(captured({ error: 'NO_DATA', carriers: [] }, { html: '<div class="tracking-info"></div>' }));
     await expect(tracker(fetcher).fetch(number)).rejects.toThrow('identity missing');
+  });
+
+  it("reads the page's refused lookup, a bare NO_DATA, as inconclusive rather than no history", async () => {
+    const empty = '<div class="tracking-info empty"><div class="parcel"></div></div>';
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(captured({ error: 'NO_DATA' }, { html: empty }));
+    const error = await tracker(fetcher).fetch(number).catch((error: unknown) => error);
+    expect(error).toMatchObject({ kind: 'indeterminate', reason: 'guest_refused' });
+    expect(error).not.toBeInstanceOf(NoHistoryError);
+    // A history the page renders anyway is still read.
+    const html = rendered(row('18 Aug 2026', '03:04', 'Electronic information submitted by shipper'));
+    fetcher.mockResolvedValue(captured({ error: 'NO_DATA' }, { html }));
+    await expect(tracker(fetcher).fetch(number, undefined, null, 'Europe/Zurich')).resolves.toMatchObject({ current_stage: 'registered' });
   });
 
   it('rejects a page rendered for another shipment instead of reporting its history', async () => {
@@ -4011,11 +4023,23 @@ describe('ParcelsApp direct lookup', () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
-  it.each([{ error: 'NO_DATA' }, { error: 'NO_TRACKER' }, { states: [] }])('leaves no-history replies inconclusive without browser retries: %j', async (payload) => {
+  it.each([{ error: 'NO_DATA', carriers: [], services: [] }, { error: 'NO_TRACKER' }, { states: [] }])('leaves no-history replies inconclusive without browser retries: %j', async (payload) => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(reply(payload));
     const error = await new ParcelsAppTracker({ fetcher, trawl: new TrawlClient('http://browser.test', fetcher) }).fetch(number).catch((error: unknown) => error);
     expect(carrierErrorKind(error)).toBe('indeterminate');
     expect(error).toBeInstanceOf(NoHistoryError);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it('reads a bare NO_DATA as a refused lookup, not a missing parcel, and spends no browser lookup on it', async () => {
+    const steps: StepRecord[] = [];
+    const recorder: StepRecorder = { step: (record) => { steps.push(record); }, lookup: () => {} };
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(reply({ error: 'NO_DATA' }));
+    const error = await new ParcelsAppTracker({ fetcher, recorder, trawl: new TrawlClient('http://browser.test', fetcher) })
+      .fetch(number).catch((error: unknown) => error);
+    expect(error).toMatchObject({ kind: 'indeterminate', reason: 'guest_refused' });
+    expect(error).not.toBeInstanceOf(NoHistoryError);
+    expect(steps).toMatchObject([{ step: 'direct', outcome: 'indeterminate' }]);
     expect(fetcher).toHaveBeenCalledOnce();
   });
 

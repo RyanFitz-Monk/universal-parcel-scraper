@@ -2297,9 +2297,18 @@ const NUMBER_FORM = /^(?:one|two|three|\d+) digits? (?:is|are) missing from the 
 const numberFormNotice = (raw: unknown): boolean => isRecord(raw) && typeof raw.status === 'string'
   && NUMBER_FORM.test(raw.status.trim()) && !raw.carrier && !raw.location;
 
+/**
+ * ParcelsApp's refusal of a request it does not take for its website's: NO_DATA alone. Its
+ * answer for a number it has no data for also lists the carriers and services it checked.
+ */
+const refused = (payload: unknown): boolean => isRecord(payload) && payload.error === 'NO_DATA' && Object.keys(payload).length === 1;
+
+const refusal = () => new IndeterminateError(SOURCE, 'ParcelsApp refused the lookup', { reason: 'guest_refused' });
+
 function parseHistory(payload: unknown, trackingNumber: string, timezone: string | null = null, readAt = Date.now(),
   filed: string | null = null): CarrierResult {
   if (isRecord(payload) && payload.error === 'RELOAD') throw new ChallengeError(SOURCE);
+  if (refused(payload)) throw refusal();
   if (isRecord(payload) && (payload.error === 'NO_DATA' || payload.error === 'NO_TRACKER')) {
     throw new NoHistoryError(SOURCE, 'ParcelsApp has no usable shipment history');
   }
@@ -2645,7 +2654,6 @@ export interface ParcelsAppOptions {
   fetcher?: typeof fetch;
   recorder?: StepRecorder;
   timeoutMs?: number;
-  userAgent?: string;
   /** Null runs only the existing browser capture tier. */
   httpClient?: ParcelsAppHttpClient | null;
 }
@@ -2654,7 +2662,7 @@ export class ParcelsAppTracker {
   private readonly http: ParcelsAppHttpClient | null;
 
   constructor(readonly options: ParcelsAppOptions = {}) {
-    this.http = options.httpClient === undefined ? new ParcelsAppHttpClient(options.fetcher, options.userAgent) : options.httpClient;
+    this.http = options.httpClient === undefined ? new ParcelsAppHttpClient(options.fetcher) : options.httpClient;
   }
 
   async fetch(trackingNumber: string, budgetMs = this.options.timeoutMs ?? PARCELSAPP_BUDGET_MS, postcode?: string | null, timezone: string | null = null,
@@ -2701,6 +2709,7 @@ export class ParcelsAppTracker {
         };
         const page = await loadCapture(this.options.trawl ?? null, capture);
         let noData = false;
+        let refusedReply = false;
         for (const body of capturedBodies(page, capture)) {
           let payload: unknown;
           try {
@@ -2708,7 +2717,16 @@ export class ParcelsAppTracker {
             return parseResponse(payload, number, page.html, timezone, Date.now(), carrier);
           } catch {
             // Polling replies, unrelated numbers and demo shipments are not history.
-            noData ||= isRecord(payload) && (payload.error === 'NO_DATA' || payload.error === 'NO_TRACKER');
+            refusedReply ||= refused(payload);
+            noData ||= !refused(payload) && isRecord(payload) && (payload.error === 'NO_DATA' || payload.error === 'NO_TRACKER');
+          }
+        }
+        if (refusedReply && !noData) {
+          // A refused page has no history to render; read one only if it does.
+          try {
+            return parseHtml(page.html, number, timezone, Date.now(), carrier);
+          } catch {
+            throw refusal();
           }
         }
         // For a number it has no data for, ParcelsApp renders its empty view, which
@@ -2726,7 +2744,7 @@ export class ParcelsAppTracker {
 
 export const adapter: AdapterFactory = (environment) => {
   const tracker = new ParcelsAppTracker({
-    trawl: environment.trawl, fetcher: environment.fetcher, recorder: environment.recorder, userAgent: environment.userAgent,
+    trawl: environment.trawl, fetcher: environment.fetcher, recorder: environment.recorder,
   });
   return {
     id: SOURCE,

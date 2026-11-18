@@ -30,14 +30,19 @@ deadline still wins.
    For a number it has no data for, ParcelsApp renders its empty view
    (`.tracking-info.empty`), which leaves out the number, so no captured reply can be
    bound to it. With the page's own `NO_DATA` or `NO_TRACKER` that is no history, as on
-   the direct step; without either it is inconclusive.
+   the direct step; without either it is inconclusive. A captured refusal (below) stays a
+   refusal unless the page renders a history.
 
 Other outcomes:
 
 - HTTP errors on the direct step. A 429 or 5xx keeps its status and `Retry-After` and gets
   no browser attempt.
 - `NO_DATA`, `NO_TRACKER` and empty histories are inconclusive, not proof that the
-  shipment does not exist. They end the lookup.
+  shipment does not exist. They end the lookup. ParcelsApp's `NO_DATA` for a number also
+  lists the carriers and services it checked.
+- A bare `{"error":"NO_DATA"}`, with nothing else, is ParcelsApp refusing the request, not
+  an answer about the number. It is inconclusive (reason `guest_refused`), is not read as
+  no history, and gets no browser attempt: the tracking page gets the same refusal.
 - `DOWN`, `BUSY`, `PARSER`, `CAPTCHA` and `MAINTENANCE` mean ParcelsApp's own lookup at
   the carrier failed: its page says the carrier's website is down, busy, unreadable,
   refusing automated tracking or under maintenance. They are inconclusive (reason
@@ -65,8 +70,14 @@ Built from the site's tracking bundle (`packs/js/application-….js`; the
   WebGL properties, base64 host and stack; `undefined` is accepted for the stack),
   followed by the telemetry length, the number's length, and the unsigned MurmurHash2
   (seed 978) of `encodeURIComponent(number) + telemetry`. The adapter sends one fixed
-  telemetry profile. Without the trailing checksum tuple the API returns `RELOAD`.
+  telemetry profile, whose inner window (third field) fits inside its outer window (first
+  field). Without the trailing checksum tuple the API returns `RELOAD`.
+- Headers: a desktop Chrome `User-Agent` and `Accept-Language`.
 - A stored postcode uses `extra[zipcode]`.
+
+ParcelsApp refuses, with a bare `NO_DATA`, a window larger inside than outside, a request
+without `Accept-Language` and a `User-Agent` that names no browser. The ticket (`pt`,
+`ptv`), sensor (`s2`) and CSRF fields the page also sends are not required.
 
 `se` is a public checksum, not an issued credential, so Node alone is enough. The browser
 step exists for future protocol changes.
@@ -835,16 +846,13 @@ step exists for future protocol changes.
 - Postcode unlock is unverified. For an invalid postcode, SEUR and bpost repeat
   `require_fields` instead of returning an explicit error, both in the real form and via
   HTTP. Verifying the unlock needs a known valid number and postcode pair.
-- Rate limit. On 2026-10-10 ParcelsApp blocked an address after about 145 lookups in 40
-  minutes, three or four a minute, most of them for numbers it had not cached. From then on
-  it answered every lookup from that address with an instant `{"error":"NO_DATA"}` and
-  HTTP 200, for any number, on the website too. The block still held four hours later.
-  Another network got answers, and so did the production server, at a few lookups an hour.
-  The adapter cannot tell this answer from a real one, which is one reason `NO_DATA` stays
-  inconclusive.
-- Test with the adapter, not curl. The same day, curl from the production server got
-  `NO_DATA` for a parcel the adapter fetched from that server and address minutes
-  earlier, with the same body and User-Agent, over HTTP/1.1 and HTTP/2.
+- Rate limit. ParcelsApp blocked an address after about 145 lookups in 40 minutes, three
+  or four a minute, most of them for numbers it had not cached. From then on it answered
+  every lookup from that address with an instant bare `{"error":"NO_DATA"}` and HTTP 200,
+  for any number, on the website too, for more than four hours. Another network got
+  answers, and so did the production server, at a few lookups an hour.
+- Test with the adapter, not curl: curl's `User-Agent` names no browser, so ParcelsApp
+  refuses it.
 - Email, phone, house-number, sign-in and country-selector forms are not supported.
 
 ## Rejected approaches
