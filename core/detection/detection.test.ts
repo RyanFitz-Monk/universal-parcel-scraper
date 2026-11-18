@@ -796,6 +796,17 @@ describe('the detection engine', () => {
     expect(parseTrackingInput(input)).toMatchObject({ trackingNumber: number, source: 'text' });
   });
 
+  it('leaves out a tracking word pasted onto a number only when a carrier confidently claims the rest', () => {
+    for (const input of ['SuiviJRT0000000001MM', 'SUIVIJRT0000000001MM', 'Suivi:JRT0000000001MM', 'trackingJRT0000000001MM']) {
+      expect(parseTrackingInput(input), input).toMatchObject({ trackingNumber: 'JRT0000000001MM', carrier: 'jrt', confidence: 'high' });
+    }
+    expect(parseTrackingInput('SUIVIRR123456785FR')).toMatchObject({ trackingNumber: 'RR123456785FR', confidence: 'high' });
+    for (const input of ['SuiviJRT0000000001', 'SuiviABC123', 'SuiviColis']) {
+      expect(parseTrackingInput(input).confidence, input).not.toBe('high');
+      expect(parseTrackingInput(input).trackingNumber, input).not.toMatch(/^JRT/);
+    }
+  });
+
   it('reads a waybill named in a message', () => {
     for (const input of ['Your DHL waybill 1234567890 is ready', 'Waybill No. 1234567890 has shipped', 'Tu número de guía es 1234567890']) {
       expect(parseTrackingInput(input)).toMatchObject({ trackingNumber: '1234567890', source: 'text' });

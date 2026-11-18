@@ -128,6 +128,7 @@ const TRACKED = 'suivi|seguimiento|rastreo|tracciamento|rastreio|rastreamento|tr
 const LABEL = new RegExp('^(?:\\p{L}+\\s+)?(?:(?:\\p{L}*(?:code|nummer)|number|numer|numero|número|numéro|nr|n\\.?[°º]|kod|codice|codigo|código)'
   + `(?:\\s+(?:(?:de|du|del|di|do|da)\\s+(?:${TRACKED}|colis|envío|envio|spedizione)|przesyłki|paczki))?|${TRACKED})`
   + '(?:\\s+(?:no|nr)\\.)?(?:[.:#\\s]+|(?<=[°º]|waybill|tracking))(?=\\d)', 'iu');
+const GLUED_TRACKING_WORD = new RegExp(`^(?:${TRACKED})[.:#_-]*(?=\\p{L})`, 'iu');
 // A label of another number: an order's, a customer's, an invoice's, a phone's or a voucher's.
 const OTHER_NUMBER = /order|bestell|auftrag|commande|pedido|ordine|zam[oó]wieni|kunden|customer|client|rechnung|invoice|factur|telefon|phone|gutschein|voucher|coupon|rabatt|promo/iu;
 // A word among the groups of an entry. The letters a number prints apart are
@@ -157,6 +158,12 @@ function numberEnteredWhole(input: string): { number: string; labelled: boolean 
     const number = input.slice(label[0].length);
     if (isDateToken(number.replace(/\s+/g, '.'))) return undefined;
     if (validTrackingNumber(number) && !holdsWord(number)) return { number, labelled: true };
+  }
+  // A tracking word pasted onto a number a carrier confidently claims, its space lost: "SuiviJRT…MM".
+  const glued = claimed ? null : GLUED_TRACKING_WORD.exec(input);
+  if (glued) {
+    const number = input.slice(glued[0].length);
+    if (validTrackingNumber(number) && detectCarrierMatch(number).confidence === 'high') return { number, labelled: true };
   }
   return validTrackingNumber(input) && (claimed || !holdsWord(input)) ? { number: input, labelled: false } : undefined;
 }
