@@ -4051,7 +4051,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "displayName": "Correios Brazil",
     "color": "#ffd500",
     "aliases": [
-      "Brazil Post"
+      "Brazil Post",
+      "Brazil Correios"
     ],
     "countries": [
       "BR"

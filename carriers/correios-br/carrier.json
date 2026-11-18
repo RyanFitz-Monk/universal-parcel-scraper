@@ -2,7 +2,8 @@
   "id": "correios-br",
   "displayName": "Correios Brazil",
   "aliases": [
-    "Brazil Post"
+    "Brazil Post",
+    "Brazil Correios"
   ],
   "region": {
     "countries": [
