@@ -32,6 +32,26 @@ export function australiaPostBrowserRequest(rawUrl, capture = {}, { proxied = fa
   return Boolean(number && capture.captureResponses?.length === 1 && capture.captureResponses[0] === api);
 }
 
+// Browser exceptions can contain private request URLs and proxy credentials.
+// Return only an allowlisted category; an HTTP-looking message alone proves no response.
+function failureCategory(error) {
+  try {
+    const name = typeof error?.name === 'string' ? error.name : '';
+    const code = typeof error?.code === 'string' ? error.code : '';
+    const message = typeof error?.message === 'string' ? error.message.slice(0, 2048) : '';
+    if (name === 'AbortError' || code === 'ABORT_ERR') return 'aborted';
+    if (name === 'TimeoutError' || ['ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT'].includes(code)) return 'timeout';
+    if (/Target page, context or browser has been closed|Browser has been closed|browserContext\.newPage: Target closed/.test(message)) return 'context_closed';
+    if (/net::ERR_(?:PROXY_CONNECTION_FAILED|TUNNEL_CONNECTION_FAILED)\b/.test(message)) return 'proxy';
+    if (['ENOTFOUND', 'EAI_AGAIN'].includes(code) || /net::ERR_NAME_NOT_RESOLVED\b/.test(message)) return 'dns';
+    if (['ECONNRESET', 'ECONNREFUSED', 'UND_ERR_SOCKET'].includes(code)
+      || /net::ERR_CONNECTION_(?:CLOSED|RESET|REFUSED|TIMED_OUT)\b/.test(message)) return 'connection';
+    if (['CERT_HAS_EXPIRED', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'].includes(code)
+      || /net::ERR_CERT_(?:AUTHORITY_INVALID|DATE_INVALID|COMMON_NAME_INVALID)\b/.test(message)) return 'tls';
+  } catch { /* A thrown value need not be a native Error. */ }
+  return 'unknown';
+}
+
 /** A fresh context on the leased browser; an injected context retains its proxy and fingerprint. */
 export async function runAustraliaPostBrowser({ url, handle, tier, maxTimeout, capture, installPolicy, openContext, signal,
   locale = process.env.AUSTRALIA_POST_BROWSER_LOCALE || 'de-DE',
@@ -42,6 +62,7 @@ export async function runAustraliaPostBrowser({ url, handle, tier, maxTimeout, c
   let timer;
   let abort;
   let expired = false;
+  let phase = 'validation';
   const remaining = () => Math.max(1, maxTimeout - (Date.now() - start));
   const close = async target => {
     let finished = false;
@@ -63,22 +84,35 @@ export async function runAustraliaPostBrowser({ url, handle, tier, maxTimeout, c
       (async () => {
         // Match the verified network locale without changing the shared pool.
         // Carrier event offsets and the API's status vocabulary are independent.
+        phase = 'context_creation';
         const created = openContext ? await openContext() : await handle.browser.newContext({ viewport: null, locale });
-        if (!openContext) handle.noteTemporaryContext?.();
+        phase = 'context_accounting';
+        try { if (!openContext) handle.noteTemporaryContext?.(); }
+        catch (error) { await close(created); throw error; }
         if (expired) { await close(created); throw new Error('Australia Post context arrived after its deadline'); }
         context = created;
+        phase = 'page_creation';
         const page = await context.newPage();
+        phase = 'policy_installation';
         await installPolicy(page);
         if (openContext && filterProxied) {
+          phase = 'proxy_filter_installation';
           await page.route('**/*', route => australiaPostProxyAllows(route.request(), url)
             ? route.fallback() : route.abort('blockedbyclient'));
         }
+        phase = 'capture_attachment';
         pageCapture = await attachTrackingCapture(page, url, capture);
+        phase = 'navigation';
         const navigation = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: remaining() });
+        phase = 'capture_preparation';
         await pageCapture.prepare(remaining());
+        phase = 'capture_settle';
         await pageCapture.settle(remaining());
+        phase = 'capture_drain';
         const evidence = await pageCapture.drain();
+        phase = 'page_content';
         const html = await page.content();
+        phase = 'response_metadata';
         return { tier, status: 'success', durationMs: Date.now() - start,
           html, statusCode: navigation?.status() ?? 0, effectiveUrl: page.url(),
           cookies: [], userAgent: await page.evaluate(() => navigator.userAgent), ...evidence };
@@ -92,9 +126,12 @@ export async function runAustraliaPostBrowser({ url, handle, tier, maxTimeout, c
         if (signal.aborted) abort();
       })] : []),
     ]);
-  } catch {
+  } catch (error) {
+    const category = expired ? signal?.aborted ? 'aborted' : 'budget_exhausted' : failureCategory(error);
     return { tier, status: 'error', durationMs: Date.now() - start,
-      reason: expired ? 'Australia Post browser budget exhausted' : 'Australia Post browser retrieval failed' };
+      reason: expired ? 'Australia Post browser budget exhausted'
+        : `Australia Post browser retrieval failed (phase=${phase}; category=${category})`,
+      diagnostic: { phase, category } };
   } finally {
     clearTimeout(timer);
     if (abort) signal.removeEventListener('abort', abort);
