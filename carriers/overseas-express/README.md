@@ -14,13 +14,23 @@ digits. Eight digits are shared with other carriers, so no rule claims them.
 The header form on `www.overseas.hr` sends the number as `trackingid` to
 `inet.overseas.hr/auth`. Archived lookups use `is.overseas.hr/tracking/?trackingid={number}`,
 `is.overseas.hr/track-and-trace/{number}` and, on the former site,
-`www.overseas.hr/Tracking/Package/{number}`. The newer pages fill the form by script, and no
-address was seen to open a history, so the catalog has no parcel link.
+`www.overseas.hr/Tracking/Package/{number}`. `inet.overseas.hr/{number}` runs the lookup (see
+Retrieval), but the gateway refused a desktop Chrome too, so the catalog has no parcel link.
+
+## Retrieval
+
+I-NET, the tracker on `inet.overseas.hr`, looks a code up with
+`POST inetapi.overseas.hr/NesyIntegration/GetGuestShipmentDetails` and
+`{"Platform":201,"Reference":"{number}"}`, or `ExternalId` for a 14-digit shipment number. Both
+hosts sit behind an Azure application gateway that answers HTTP 403 to plain HTTP clients; the
+TRAWL browser loads them. Opening `inet.overseas.hr/{number}` forwards to `/auth?id={number}`,
+whose guest panel runs that lookup itself, so a TRAWL capture can read the reply once the page
+settles. An unknown code answers HTTP 200 with `resultCode` 400 and "Barkodovi nisu pronađeni".
 
 ## Why there is no adapter
 
-The tracker hosts `is.overseas.hr` and `inet.overseas.hr` answer HTTP 403 from an Azure
-application gateway before any page loads.
+The newest public sample answers as an unknown code, so no reply has shown a held shipment's
+fields. An adapter needs one found reply.
 
 ## Testing
 
