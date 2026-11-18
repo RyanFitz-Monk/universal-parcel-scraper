@@ -37,6 +37,7 @@ describe('SiCepat app history', () => {
     expect(JSON.stringify(result)).not.toMatch(/Synthetic Courier|receiver|address|sigesit_img|POD_/);
     expect(result.events!.find(e => e.provider_code === 'ANT')!.description).toBe('Paket dibawa [SIGESIT]');
     expect(result.events!.find(e => e.provider_code === 'ANT')!.location).toBeUndefined();
+    expect(result.events!.find(event => event.description?.includes('pick up oleh'))).not.toHaveProperty('location');
     expect(result.events!.at(-1)!.location).toBeUndefined();
   });
 

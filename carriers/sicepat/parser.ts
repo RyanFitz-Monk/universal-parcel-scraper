@@ -58,7 +58,7 @@ export function parseSicepat(payload: unknown, raw: string): CarrierResult {
     const description = code === 'DLV' ? 'Delivered' : clean(scan.city.replace(/\[SIGESIT(?:\s*-\s*[^\]]*)?\]/gi, '[SIGESIT]'), 1000);
     if (!description) throw new SchemaError(PROVIDER, 'SiCepat omitted scan wording');
     const stage = sicepatStage(code, description);
-    const site = /\b(?:di|dari)\s+[^[\]]+\[([^\]]+)\]/i.exec(description)?.[1];
+    const site = /\boleh\s+\[/i.test(description) ? undefined : /\b(?:di|dari)\s+[^[\]]+\[([^\]]+)\]/i.exec(description)?.[1];
     const event: CarrierEvent = { local_time: clock(scan.date_time), provider_code: code, description,
       ...(site ? { location: clean(site, 200) } : {}), ...(stage ? { stage, stage_source: 'carrier_map' } : {}) };
     const key = JSON.stringify(event);
