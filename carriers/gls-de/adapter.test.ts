@@ -97,10 +97,18 @@ describe('GLS Germany', () => {
     },
   );
 
-  it.each(['', '12', 'ABCDE', '1'.repeat(13), '75001/2'])('rejects invalid postcode %s before the network request', async (postcode) => {
-    const fetcher = vi.spyOn(globalThis, 'fetch');
-    await expect(new GLSGermanyTracker().fetch(NUMBER, postcode)).rejects.toThrow('requires the recipient postcode');
+  it.each(['12', 'ABCDE', '1'.repeat(13), '75001/2'])('rejects invalid postcode %s before the network request', async (postcode) => {
+    const fetcher = vi.fn<typeof fetch>();
+    await expect(new GLSGermanyTracker({ fetcher }).fetch(NUMBER, postcode)).rejects.toThrow('requires the recipient postcode');
     expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('answers without a postcode with the overview alone, as a summary', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({ tuStatus: [parcel()] }));
+    const result = await new GLSGermanyTracker({ fetcher }).fetch(NUMBER, ' ');
+    expect(result).toMatchObject({ status: 'delivered', summary_only: true, timezone: 'Europe/Berlin' });
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(new URL(String(fetcher.mock.calls[0]![0])).pathname).toMatch(/\/rstt029$/);
   });
 
   it('resolves a printed 12-digit number to its matching 11-digit parcel and preserves the Swiss postcode', async () => {

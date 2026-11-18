@@ -13,7 +13,9 @@ and [GLS Austria](../gls-at/README.md), whose pages ask the same service, point
 `rstt029` overview, then `rstt028` with the parcel number, postcode and
 `REQUEST` owner code. The overview's identity is validated before the postcode
 is sent, so a wrong or expired number never transmits it. A request that fails
-to reach GLS, or hangs, is sent once more, as in gls-ch.
+to reach GLS, or hangs, is sent once more, as in gls-ch. GLS Poland and Austria leave the
+postcode optional: without one, the overview's status is the whole answer, marked
+`summary_only`.
 
 ## Notes
 

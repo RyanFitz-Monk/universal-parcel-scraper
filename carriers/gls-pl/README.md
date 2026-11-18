@@ -14,9 +14,10 @@ adapter of its own: `tracking.adapter` is [`gls-de`](../gls-de/README.md), whose
 - The Polish page asks the same service under `/PL/pl/` rather than `/GROUP/en/`. The path
   sets only the language: both answer the same parcels with the same codes and clocks.
 - Like the group's other pages, the Polish page shows the progress bar to anyone and the
-  scans only after the delivery postcode. The postcode is optional in the catalog, so a
-  parcel saved without it is tracked through enabled universal providers instead; the
-  adapter then asks GLS nothing.
+  scans only after the delivery postcode. The postcode is optional in the catalog. Without
+  it the adapter asks the overview alone and answers with its status as `summary_only`, which
+  a fuller history from an enabled universal provider replaces. An overview without a status
+  asks for the postcode.
 - An expired number is GLS's `E000` on the overview and an unknown one `E206`; both are not
   found. A postcode that does not match is `E609` or `E800` on the detail, which asks for the
   postcode again (`postcode_mismatch`).

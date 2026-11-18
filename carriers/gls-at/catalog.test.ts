@@ -66,10 +66,22 @@ describe('GLS Austria', () => {
     expect(requested(fetcher)[1]!.pathname).toBe(`${SERVICE}/rstt028/${IN_TRANSIT}`);
   });
 
-  it('asks GLS nothing without the postcode, leaving the parcel to other sources', async () => {
-    const fetcher = replies();
-    await expect(track(fetcher, DELIVERED)).rejects.toMatchObject({ attempts: [{ source: 'gls-at', kind: 'input_required' }] });
-    expect(fetcher).not.toHaveBeenCalled();
+  it('answers without the postcode with the overview\'s status alone, for other sources to fill', async () => {
+    const fetcher = replies('overview-delivered.json');
+    const answer = await track(fetcher, DELIVERED);
+    expect(answer).toMatchObject({ carrier: 'gls-at', source: 'gls-at', result: {
+      status: 'delivered', current_stage: 'delivered', summary_only: true, events: [], last_update: null,
+    } });
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(requested(fetcher)[0]!.pathname).toBe(`${SERVICE}/rstt029`);
+    expect(requested(fetcher)[0]!.searchParams.has('postalCode')).toBe(false);
+  });
+
+  it('asks for the postcode when the overview gives no status, and binds the overview to the number', async () => {
+    const overview = JSON.parse(readFileSync(new URL('./fixtures/overview-delivered.json', import.meta.url), 'utf8')) as { tuStatus: Array<Record<string, unknown>> };
+    overview.tuStatus[0]!.progressBar = {};
+    await expect(track(replies(Response.json(overview)), DELIVERED)).rejects.toMatchObject({ attempts: [{ source: 'gls-at', kind: 'input_required' }] });
+    await expect(track(replies('overview-in-transit.json'), DELIVERED)).rejects.toMatchObject({ attempts: [{ source: 'gls-at', kind: 'schema' }] });
   });
 
   it.each(['E000', 'E206'])('reads GLS\'s %s for the number as not found before the postcode is sent', async (code) => {

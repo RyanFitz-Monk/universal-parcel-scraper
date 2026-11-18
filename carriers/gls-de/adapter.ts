@@ -1,6 +1,6 @@
 
 import { lookupBudget, type AdapterFactory, type LookupBudget, type TrackingContext } from '../../core/adapter/index.js';
-import { IndeterminateError, NotFoundError, SchemaError, UpstreamHttpError } from '../../core/errors/index.js';
+import { IndeterminateError, InputRequiredError, NotFoundError, SchemaError, UpstreamHttpError } from '../../core/errors/index.js';
 import type { CarrierResult } from '../../core/result/index.js';
 import { withNetworkRetry } from '../../core/runner/networkRetry.js';
 import { cleanScalar, fetchBounded, parseJsonBytes, userAgentOf } from '../../core/transport/index.js';
@@ -63,16 +63,25 @@ export class GLSGermanyTracker {
 
   async fetch(rawTrackingNumber: string, rawPostcode: string, context: TrackingContext = {}): Promise<CarrierResult> {
     const number = normalizeGLSSwitzerlandTrackingNumber(rawTrackingNumber);
-    const postcode = normalizeGLSSwitzerlandPostcode(rawPostcode, 'any');
-    // Two requests, each with the full request timeout.
-    const budget = lookupBudget(context, 2 * this.timeoutMs);
+    // GLS Poland and Austria leave the postcode optional. A typed one is still checked before any request.
+    const postcode = rawPostcode.trim() ? normalizeGLSSwitzerlandPostcode(rawPostcode, 'any') : null;
+    // Two requests with a postcode, each with the full request timeout.
+    const budget = lookupBudget(context, (postcode ? 2 : 1) * this.timeoutMs);
     const overview = await this.request(glsSwitzerlandOverviewApiUrl(number, this.now()), budget);
     // Validate the overview identity before resolving a Track ID to a parcel number.
+    let summary: CarrierResult;
     try {
-      parseGLSSwitzerlandTrackingResponse(overview, number);
+      summary = parseGLSSwitzerlandTrackingResponse(overview, number);
     } catch (error) {
       if (error instanceof GLSSwitzerlandTrackingError) throw new GLSGermanyTrackingError();
       throw error;
+    }
+    // Without the postcode the overview's status is the answer, as GLS's page shows it to anyone. It
+    // holds no scans, so a fuller history from another source replaces it. An overview without a
+    // status leaves only the postcode to ask for.
+    if (!postcode) {
+      if (summary.status === 'unknown') throw new InputRequiredError('GLS', 'postcode', 'GLS shows this parcel only with the recipient postcode');
+      return { ...summary, summary_only: true, timezone: 'Europe/Berlin' };
     }
     if (!isRecord(overview) || !Array.isArray(overview.tuStatus)) {
       throw new SchemaError(CARRIER, 'GLS Germany returned an invalid overview');
@@ -89,7 +98,7 @@ export class GLSGermanyTracker {
     try {
       const result = parseGLSSwitzerlandTrackingResponse(detail, String(parcel.tuNo));
       // Both services use CET/CEST; expose the regional timezone to clients.
-      return { ...result, ...glsDeliveryReference(parseGLSSwitzerlandTrackingResponse(overview, number)), timezone: 'Europe/Berlin' };
+      return { ...result, ...glsDeliveryReference(summary), timezone: 'Europe/Berlin' };
     } catch (error) {
       if (error instanceof GLSSwitzerlandTrackingError) throw new GLSGermanyTrackingError();
       throw error;
