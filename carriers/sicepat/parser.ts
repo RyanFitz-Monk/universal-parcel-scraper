@@ -48,7 +48,9 @@ export function parseSicepat(payload: unknown, raw: string): CarrierResult {
   if (!Array.isArray(row.track_history) || row.track_history.length > 1000) throw new SchemaError(PROVIDER, 'SiCepat changed its history');
   if (!row.track_history.length) throw new NoHistoryError(PROVIDER);
   const events: CarrierEvent[] = [], seen = new Set<string>();
-  for (const scan of row.track_history) {
+  // The feed is oldest first. Visit the newest row first so equal minutes retain that order.
+  for (let index = row.track_history.length - 1; index >= 0; index -= 1) {
+    const scan: unknown = row.track_history[index];
     if (!isRecord(scan) || typeof scan.status !== 'string' || !/^[A-Z][A-Z0-9_ -]{0,63}$/.test(scan.status)
       || typeof scan.city !== 'string' || scan.city.length > 2000) throw new SchemaError(PROVIDER, 'SiCepat returned an invalid scan');
     const code = scan.status;
