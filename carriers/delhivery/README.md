@@ -20,7 +20,12 @@ detection bounds only the last digit.
 ## Notes
 
 Future progress labels are excluded. Current status becomes a snapshot when no scan
-reports it at the same instant; its timestamp is never assigned to an undated scan.
+reports it at the same instant; its timestamp is never assigned to an undated scan that
+other scans could repeat. Anonymous tracking shows only the latest scan, undated, and the
+status as a bare token ("IN_TRANSIT"). When a reply holds that one scan and nothing else, in
+the status's stage and leg, the scan is the status: the snapshot takes its words and place.
+The parcel app's identity policy then lets the placed snapshot take over the placeless row of
+its stage stored at that instant.
 Freight (B2B) replies date each reached milestone instead of its scans, and a pickup
 milestone can have no scans. Such a milestone becomes an event of its own. Its date has
 no year: it takes the year, no more than one before the status date, in which the day

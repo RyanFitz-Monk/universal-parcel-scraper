@@ -55,6 +55,32 @@ describe('Delhivery direct tracking', () => {
     const value = payload(); value.data[0].status = { status: 'IN_TRANSIT', statusDateTime: '2026-01-03T14:00:00' };
     expect(parseDelhivery(value, NUMBER)).toMatchObject({ status: 'in_transit', current_stage: 'in_transit' });
   });
+  it('words and places a status token by the latest scan when the reply shows that scan alone', () => {
+    const latestOnly = (status: string, scan: string) => {
+      const value = payload();
+      value.data[0].status = { status, statusType: 'UD', statusDateTime: '2026-01-03T11:24:38.512000', instructions: 'Private instruction' };
+      value.data[0].currentFlow = 'Forward';
+      value.data[0].trackingStates = [{ label: 'On the Way', scans: [
+        { scan, scanType: 'UD', scanDateTime: '', cityLocation: 'Example City', scanNslRemark: 'Private remark', scannedLocation: 'Example_Hub (Example State)' },
+      ] }];
+      return parseDelhivery(value, NUMBER);
+    };
+    const result = latestOnly('IN_TRANSIT', 'In Transit');
+    expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'In Transit', last_update: '2026-01-03T11:24:38.512+05:30' });
+    expect(result.events).toEqual([
+      { description: 'In Transit', time: '2026-01-03T11:24:38.512+05:30', location: 'Example City', stage: 'in_transit', summary_snapshot: true },
+    ]);
+    expect(JSON.stringify(result)).not.toMatch(/Private|Example_Hub/);
+    // A scan of another stage is not the status: the token stays a placeless snapshot beside the undated scan.
+    const other = latestOnly('DISPATCHED', 'In Transit');
+    expect(other).toMatchObject({ current_stage: 'out_for_delivery', last_status_text: 'DISPATCHED' });
+    expect(other.events).toEqual([
+      expect.objectContaining({ description: 'DISPATCHED', time: '2026-01-03T11:24:38.512+05:30', summary_snapshot: true }),
+      expect.objectContaining({ description: 'In Transit', location: 'Example City' }),
+    ]);
+    expect(other.events?.[0]).not.toHaveProperty('location');
+    expect(other.events?.[1]).not.toHaveProperty('time');
+  });
   it('keeps unknown status and historical scan semantics separate', () => {
     const value = payload(); value.data[0].status = { status: 'New current status', statusDateTime: 'not a date' };
     value.data[0].trackingStates[0].scans[0].scan = 'New scan';
@@ -115,11 +141,10 @@ describe('Delhivery direct tracking', () => {
     const value = JSON.parse(readFileSync(new URL('./fixtures/return-in-transit.json', import.meta.url), 'utf8'));
     const result = parseDelhivery(value, NUMBER);
     expect(result).toMatchObject({ status: 'in_transit', current_stage: 'in_transit', last_status_text: 'RETURNED' });
+    // Its one scan is the status: the snapshot takes its words and place, on the return leg.
     expect(result.events).toEqual([
-      expect.objectContaining({ description: 'In Transit', stage: 'in_transit', provider_leg: 'return', summary_snapshot: true }),
-      expect.objectContaining({ stage: 'in_transit', provider_leg: 'return', location: 'Example City' }),
+      { description: 'In Transit', time: '2026-01-03T14:00:00+05:30', location: 'Example City', stage: 'in_transit', provider_leg: 'return', summary_snapshot: true },
     ]);
-    expect(result.events?.[1]).not.toHaveProperty('time');
     expect(result.delivered_at).toBeUndefined();
     value.data[0].hqStatus = 'Delivered';
     expect(parseDelhivery(value, NUMBER)).toMatchObject({ status: 'exception', current_stage: 'returned' });

@@ -69,6 +69,7 @@ export function parseDelhivery(payload: unknown, number: string): CarrierResult 
   const seen = new Set<string>();
   const reached = typeof item.currentTrackIndex === 'number' && Number.isSafeInteger(item.currentTrackIndex) ? item.currentTrackIndex : -1;
   let deliveredAt: ParsedTime | null = null;
+  let scanEvents = 0;
   // Only completed scans and reached milestones become events. States past the
   // current index are the website's future progress rail and never claim movement.
   for (const [index, state] of item.trackingStates.slice(0, 100).entries()) {
@@ -108,13 +109,24 @@ export function parseDelhivery(payload: unknown, number: string): CarrierResult 
         ? classifyDelhiveryStatus('RTO DELIVERED') : scanStatus;
       events.push({ description: label, ...(time ? { time: time.iso } : timeText ? { provider_time_text: timeText } : {}), ...(location ? { location } : {}),
         ...(classified ? { stage: classified.stage } : {}), ...(returnScan ? { provider_leg: 'return' } : {}) });
+      scanEvents += 1;
     }
+  }
+  // Anonymous tracking shows only the latest scan, undated. A reply holding that one scan and
+  // nothing else, in the status's stage and leg, shows the status itself: the dated snapshot
+  // takes the scan's words and place, rather than the status token alone.
+  const only = events.length === 1 && scanEvents === 1 ? events[0]! : undefined;
+  const latest = only && updated && mapped && !only.time && !only.provider_time_text && only.stage === mapped.stage
+    && (only.provider_leg === 'return') === returning ? only : undefined;
+  if (latest) {
+    events[0] = { description: latest.description, time: updated!.iso, ...(latest.location ? { location: latest.location } : {}),
+      stage: mapped!.stage, ...(returning ? { provider_leg: 'return' } : {}), summary_snapshot: true };
   }
   // Repeated scan labels cannot bind a summary timestamp to a particular
   // historical location. Keep the dated status snapshot separate. A dated
   // delivered milestone already records the delivery the status repeats.
   const deliveryRecorded = mapped?.stage === 'delivered' && deliveredAt !== null;
-  if (snapshotDescription && !deliveryRecorded && (!updated || !events.some(event => event.time && Date.parse(event.time) === updated.timestamp
+  if (snapshotDescription && !latest && !deliveryRecorded && (!updated || !events.some(event => event.time && Date.parse(event.time) === updated.timestamp
     && event.description?.toUpperCase() === snapshotDescription.toUpperCase() && event.stage === mapped?.stage
     && (!returning || event.provider_leg === 'return')))) {
     events.unshift({ description: snapshotDescription, ...(updated ? { time: updated.iso } : currentTimeText ? { provider_time_text: currentTimeText } : {}),
@@ -128,7 +140,7 @@ export function parseDelhivery(payload: unknown, number: string): CarrierResult 
   // A freight status can date a later proof-of-delivery audit: its delivered milestone dates the delivery.
   const deliveryTime = deliveredAt ?? updated;
   return { status: mapped?.status ?? 'unknown', ...(mapped ? { current_stage: mapped.stage } : {}),
-    last_status_text: description, last_update: updated?.iso ?? null, expected_delivery: null,
+    last_status_text: latest && !returning ? latest.description : description, last_update: updated?.iso ?? null, expected_delivery: null,
     ...(mapped?.status === 'delivered' && deliveryTime ? { delivered_at: deliveryTime.iso } : {}),
     timezone: 'Asia/Kolkata', events: [...dated, ...undated].slice(0, 100) };
 }

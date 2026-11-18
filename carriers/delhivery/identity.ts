@@ -6,12 +6,15 @@ const wording = (scan: SameInstantScan) => scan.description.replace(/\s+/g, ' ')
  * Delhivery restates a scan at its instant in the same words and place. A freight milestone names
  * no place, and Delhivery relabels one when the shipment turns back: "On the Way" becomes
  * "Undelivered" at the same date once it returns to the seller. A placeless row is taken over by a
- * placeless scan at its instant, when the match is unique both ways.
+ * placeless scan at its instant, when the match is unique both ways. A status snapshot stored as its
+ * bare token ("IN_TRANSIT") is restated in the latest scan's words and place once a reply shows that
+ * scan alone, so a placed scan takes over a placeless row of its stage at its instant too.
  */
 export const sameInstantIdentityPolicy: SameInstantIdentityPolicy = {
   sourceCarrierId: 'delhivery', storedSources: ['delhivery'], requireProviderCode: false,
   matchEachScan: true,
   matches: (incoming, stored) => wording(incoming) !== '' && wording(stored) !== ''
-    && incoming.location.trim() === stored.location.trim()
-    && (incoming.location.trim() === '' || wording(incoming) === wording(stored)),
+    && (incoming.location.trim() === stored.location.trim()
+      ? incoming.location.trim() === '' || wording(incoming) === wording(stored)
+      : stored.location.trim() === '' && incoming.stage !== '' && incoming.stage === stored.stage),
 };

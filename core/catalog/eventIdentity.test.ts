@@ -29,7 +29,7 @@ describe('same-instant identity policies', () => {
     expect(sameInstantIdentityPolicy('india-post')).toBeUndefined();
   });
 
-  it('matches a Delhivery freight milestone relabelled at its date, and a scan only in the same words and place', () => {
+  it('matches a Delhivery freight milestone relabelled at its date, a scan in the same words and place, and a placed scan over a placeless row of its stage', () => {
     const policy = sameInstantIdentityPolicy('delhivery', { supportsScanMatching: true });
     expect(policy).toMatchObject({ sourceCarrierId: 'delhivery', storedSources: ['delhivery'], matchEachScan: true, matchWallClock: true });
     const scan = (description: string, location = '') => ({ stage: 'in_transit', description, providerCode: '', location });
@@ -38,6 +38,9 @@ describe('same-instant identity policies', () => {
     expect(policy?.matches?.(scan('Out for Delivery', 'Sample City'), scan('Shipment Received at Facility', 'Sample City'))).toBe(false);
     expect(policy?.matches?.(scan('Undelivered'), scan('On the Way', 'Sample City'))).toBe(false);
     expect(policy?.matches?.(scan(''), scan('On the Way'))).toBe(false);
+    // A status token stored placeless is restated in its latest scan's words and place, of the same stage.
+    expect(policy?.matches?.(scan('In Transit', 'Sample City'), scan('IN_TRANSIT'))).toBe(true);
+    expect(policy?.matches?.({ ...scan('Dispatched', 'Sample City'), stage: 'out_for_delivery' }, scan('IN_TRANSIT'))).toBe(false);
     expect(sameInstantIdentityPolicy('delhivery')).toBeUndefined();
   });
 
