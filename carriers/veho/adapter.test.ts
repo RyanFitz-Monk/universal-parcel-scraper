@@ -113,6 +113,8 @@ describe('Veho parser', () => {
     }), NUMBER);
     expect(open(() => {})).toMatchObject({ current_stage: 'failed_attempt', status: 'exception', expected_delivery: '2026-03-06' });
     expect(open(order => { order.deliveryDateInfo.dateType = 'Estimated'; }).expected_delivery).toBe('2026-03-06');
+    expect(open(order => { order.deliveryDateInfo.date = '2026-02-30'; }).expected_delivery).toBeNull();
+    expect(open(order => { order.deliveryDateInfo.date = '2028-02-29'; }).expected_delivery).toBe('2028-02-29');
     const window = open(order => { order.packages[0].deliveryTimeWindow = { startsAt: '2026-03-06T17:00:00.000Z', endsAt: '2026-03-06T21:00:00.000Z' }; });
     expect(window).toMatchObject({ expected_delivery_from: '2026-03-06T17:00:00Z', expected_delivery: '2026-03-06T21:00:00Z' });
     const delayed = open(order => { order.deliveryDateInfo.dateType = 'Delayed'; });
