@@ -13,6 +13,7 @@
     {"wording": "Send item abroad (EDI-received)", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "The despatch the item left the posting country in, from the sending post's electronic data."},
     {"wording": "Receive item at office of exchange (Otb)", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "An outbound item at Bulgaria's office of exchange, where the page stops following it."},
     {"wording": "Receive item at office of exchange (Inb)", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "Arrived in Bulgaria."},
+    {"wording": "Receive item at sorting centre (Inb)", "stage": "in_transit", "language": "en", "confirmedBy": "live", "firstSeen": "2026-11-17", "note": "A sorting centre after the inbound office of exchange, an hour or a day before the delivery."},
     {"wording": "Send item to customs (Inb)", "stage": "customs", "language": "en", "confirmedBy": "live"},
     {"wording": "Record item customs information (Inb)", "stage": "customs", "language": "en", "confirmedBy": "live", "note": "Customs recorded its status for the item, which the page shows beside the event, such as \"Awaiting presentation to customs commissioner\"."},
     {"wording": "Return item from customs (Inb)", "stage": "in_transit", "language": "en", "confirmedBy": "live", "note": "Customs handed the item back to the post."},

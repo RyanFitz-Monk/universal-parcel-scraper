@@ -55,12 +55,12 @@ const PREFIXES: ReadonlyArray<readonly [string, Stage]> = [
  * step without its outcome, PY the payment of fees during clearance, MS a
  * missort, SM the wait for the next planned movement, CC the wait for the
  * consignee's collection, ND a delivery attempt that could not be completed,
- * RT the return to the shipper. They stage a scan
+ * RT the return to the shipper, FD the hand-over to a third-party agent that delivers. They stage a scan
  * whose wording the map does not know, as in another language.
  */
 const CODES: ReadonlyMap<string, Stage> = new Map([
   ['SA', 'accepted'], ['IC', 'customs'], ['CD', 'customs'], ['PY', 'customs'], ['MS', 'exception'], ['SM', 'in_transit'],
-  ['CC', 'ready_for_pickup'], ['ND', 'failed_attempt'], ['RT', 'returned'],
+  ['CC', 'ready_for_pickup'], ['ND', 'failed_attempt'], ['RT', 'returned'], ['FD', 'in_transit'],
 ]);
 
 // Some pieces of a multi-piece shipment handed over while others are still on the way, written again

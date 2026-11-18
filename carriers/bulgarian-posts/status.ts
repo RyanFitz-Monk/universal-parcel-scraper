@@ -15,6 +15,7 @@ const IPS: ReadonlyMap<string, Stage> = new Map([
   // The despatch the item left in, from the sending post's electronic data.
   ['send item abroad (edi-received)', 'in_transit'],
   ['receive item at office of exchange', 'in_transit'],
+  ['receive item at sorting centre', 'in_transit'],
   ['receive item at location', 'in_transit'],
   ['insert item into domestic bag', 'in_transit'],
   ['send item to domestic location', 'in_transit'],
