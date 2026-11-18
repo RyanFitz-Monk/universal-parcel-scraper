@@ -107,11 +107,12 @@ export function parsePdu(payload: unknown, rawNumber: string): CarrierResult {
   if (!payload.success || payload.code !== 200) throw new IndeterminateError(PROVIDER, 'PDU did not answer the lookup');
   const data = payload.data;
   if (!isRecord(data) || !Array.isArray(data.orderTracks)) throw new SchemaError(PROVIDER, 'PDU returned no tracks');
-  const record = data.orderTracks.find(track => isRecord(track) && folded(track.serviceTrackingNumber ?? track.trackingNumber) === number);
+  const tracks: readonly unknown[] = data.orderTracks;
+  const record = tracks.find(track => isRecord(track) && folded(track.serviceTrackingNumber ?? track.trackingNumber) === number);
   const counts = isRecord(data.orderTrackStatus) ? data.orderTrackStatus : {};
   if (!isRecord(record)) {
     // The page counts a number PDU does not know under "not found".
-    if (!data.orderTracks.length && typeof counts.nonExists === 'number' && counts.nonExists > 0) throw new NotFoundError(PROVIDER);
+    if (!tracks.length && typeof counts.nonExists === 'number' && counts.nonExists > 0) throw new NotFoundError(PROVIDER);
     throw new IndeterminateError(PROVIDER, 'PDU answered without the requested number');
   }
   const rows = record.trackDetailList ?? [];
