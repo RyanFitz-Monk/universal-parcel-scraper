@@ -605,6 +605,8 @@ export function trackingLanguageStage(description: string): Stage | undefined {
   // A completed clearance or release moves the parcel on; holds, inspections,
   // submissions and clearance still pending or negated stay with customs.
   if (/(?:国内|出口|进口|目的国)?清关中/.test(text)) return 'customs';
+  // A clearance completed in Chinese, as a provider relays "目的国清关完成" with the place in 【】, unless customs then holds the parcel.
+  if (/清关(?:已)?(?:完成|完毕|成功)|清关放行/.test(text) && !EXPORT_HOLD.test(text)) return 'in_transit';
   if (CUSTOMS_PENDING.test(text)) return 'customs';
   if (customsReleased(text)) return 'in_transit';
   if (CUSTOMS.test(text)) return 'customs';

@@ -1013,6 +1013,14 @@
       "note": "The US shipping partner's regional hub, after its collection for the last-mile carrier; GOFO's map reads the same wording with its own name as transit."
     },
     {
+      "wording": "Departed Carrier's Regional Hub",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The US shipping partner's regional hub sending the parcel on, after its arrival there."
+    },
+    {
       "wording": "Accepted at USPS Facility",
       "stage": "in_transit",
       "language": "en",

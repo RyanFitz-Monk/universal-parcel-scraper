@@ -1068,6 +1068,7 @@ describe('classifyWording', () => {
       ['出口报关中', 'in_transit'], ['出口清关中', 'in_transit'], ['快件从转运仓发出至机场，出口报关中', 'in_transit'],
       ['Export customs clearance in progress, held for inspection', 'customs'], ['Held for export customs inspection', 'customs'],
       ['出口清关中，海关查验', 'customs'], ['Import customs clearance in progress', 'customs'],
+      ['目的国清关完成【Example】', 'in_transit'], ['进口清关完成', 'in_transit'],
       ['Shipment started the customs clearance process at destination', 'customs'],
       ['LM Carrier: [DHL] , LM Tracking No.: [1234567890]', 'in_transit'],
       // Australia Post's scan by the post abroad, as Ship24 relays it without the code.

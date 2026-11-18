@@ -84,6 +84,7 @@ export const CAINIAO_ACTION_STATUS = new Map<string, CarrierStatus>([
   ['CC_EX_SUCCESS', 'in_transit'],
   ['LH_HO_IN_SUCCESS', 'in_transit'],
   ['LH_HO_AIRLINE', 'in_transit'],
+  ['LH_HO_AIRLINE_FAILURE', 'in_transit'],
   ['LH_DEPART', 'in_transit'],
   ['LH_ARRIVE', 'in_transit'],
   ['LH_HO_OUT_SUCCESS', 'in_transit'],

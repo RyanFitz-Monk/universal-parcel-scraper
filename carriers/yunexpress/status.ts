@@ -88,6 +88,7 @@ const ENTRIES: ReadonlyArray<readonly [string, ClassifiedStatus]> = [
   ['Picked up by Shipping Partner, Carrier\'s Awaiting Item', { status: 'in_transit', stage: 'accepted' }],
   // Its regional hub after that collection, as GOFO's map reads the same wording with its own name.
   ['Arrived at Carrier\'s Regional Hub', { status: 'in_transit', stage: 'in_transit' }],
+  ['Departed Carrier\'s Regional Hub', { status: 'in_transit', stage: 'in_transit' }],
   ['POD available', { status: 'delivered', stage: 'delivered' }],
   ['Shipment not yet received or processed', { status: 'pending', stage: 'registered' }],
   ['Order information received. We\'re expecting your parcel to arrive with us.', { status: 'pending', stage: 'registered' }],

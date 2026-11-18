@@ -737,6 +737,15 @@
       "note": "The sorting center turned the parcel away on arrival: not an acceptance, and unlike a processing delay, a fault."
     },
     {
+      "code": "LH_HO_AIRLINE_FAILURE",
+      "wording": "Airline handover problem at departure transport hub",
+      "language": "en",
+      "stage": "in_transit",
+      "confirmedBy": "live",
+      "firstSeen": "2026-11-17",
+      "note": "The hand-over to the airline failed at the departure hub, so the flight waits for another hand-over: a delay before the flight, like a sorting center's processing delay, not an exception."
+    },
+    {
       "code": "SC_OUTBOUND_FAILURE",
       "wording": "Processing delay at sorting center",
       "language": "en",
