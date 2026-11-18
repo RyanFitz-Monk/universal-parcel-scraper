@@ -54363,6 +54363,41 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     ],
     "detectionRules": []
   },
+  "starintlship": {
+    "displayName": "StarinTlship",
+    "color": "#011245",
+    "aliases": [
+      "StarinTiship"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://starintlship.top/",
+    "trackingSearchUrl": "https://starintlship.top/waybill-tracking/",
+    "linkRules": [
+      {
+        "domains": [
+          "starintlship.top"
+        ],
+        "pathPattern": "^/waybill-tracking/?$",
+        "params": [
+          "tracknumbers"
+        ]
+      }
+    ],
+    "detectionRules": [
+      {
+        "pattern": "^DHHL\\d{8}CN$",
+        "confidence": "low"
+      }
+    ]
+  },
   "starken": {
     "displayName": "Starken",
     "color": "#009f3e",
@@ -66304,6 +66339,7 @@ export const CARRIER_IDS = [
   "st-courier",
   "stallion-express",
   "starex-az",
+  "starintlship",
   "starken",
   "starlinks",
   "starlinks-global",
@@ -68160,6 +68196,7 @@ export const DETECTION_RULE_IDS: Readonly<Record<CarrierId, readonly string[]>> 
   "st-courier": [],
   "stallion-express": ["stallion-express-1","stallion-express-2"],
   "starex-az": [],
+  "starintlship": ["starintlship-1"],
   "starken": [],
   "starlinks": ["starlinks-1"],
   "starlinks-global": ["starlinks-global-1"],

@@ -54359,6 +54359,41 @@
     ],
     "detectionRules": []
   },
+  "starintlship": {
+    "displayName": "StarinTlship",
+    "color": "#011245",
+    "aliases": [
+      "StarinTiship"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "selectable": true,
+    "timezone": "Asia/Shanghai",
+    "tracking": {
+      "mode": "automatic",
+      "adapter": "universal"
+    },
+    "canaryUrl": "https://starintlship.top/",
+    "trackingSearchUrl": "https://starintlship.top/waybill-tracking/",
+    "linkRules": [
+      {
+        "domains": [
+          "starintlship.top"
+        ],
+        "pathPattern": "^/waybill-tracking/?$",
+        "params": [
+          "tracknumbers"
+        ]
+      }
+    ],
+    "detectionRules": [
+      {
+        "pattern": "^DHHL\\d{8}CN$",
+        "confidence": "low"
+      }
+    ]
+  },
   "starken": {
     "displayName": "Starken",
     "color": "#009f3e",

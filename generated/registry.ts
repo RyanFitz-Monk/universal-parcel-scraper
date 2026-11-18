@@ -3110,6 +3110,7 @@ export const REGISTRY: RegistryDefinition = {
     "st-courier": "st-courier",
     "stallion-express": "stallion-express",
     "starex-az": "starex-az",
+    "starintlship": "universal",
     "starken": "starken",
     "starlinks": "universal",
     "starlinks-global": "starlinks-global",

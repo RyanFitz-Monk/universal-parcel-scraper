@@ -1,0 +1,49 @@
+{
+  "id": "starintlship",
+  "displayName": "StarinTlship",
+  "aliases": [
+    "StarinTiship"
+  ],
+  "region": {
+    "countries": [
+      "CN"
+    ]
+  },
+  "brand": {
+    "color": "#011245"
+  },
+  "selectable": true,
+  "timezone": "Asia/Shanghai",
+  "tracking": {
+    "mode": "automatic",
+    "adapter": "universal",
+    "steps": []
+  },
+  "capabilities": [],
+  "portal": {
+    "searchUrl": "https://starintlship.top/waybill-tracking/",
+    "canaryUrl": "https://starintlship.top/",
+    "shows": [],
+    "scraped": [],
+    "discarded": [],
+    "unavailable": []
+  },
+  "links": [
+    {
+      "domains": [
+        "starintlship.top"
+      ],
+      "pathPattern": "^/waybill-tracking/?$",
+      "params": [
+        "tracknumbers"
+      ]
+    }
+  ],
+  "detection": [
+    {
+      "id": "starintlship-1",
+      "pattern": "^DHHL\\d{8}CN$",
+      "confidence": "low"
+    }
+  ]
+}
