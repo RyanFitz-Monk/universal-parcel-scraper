@@ -7,13 +7,17 @@ China to destination delivery partners.
 
 The [public form](https://www.hh-exp.cn/WebTrack/CargoTrack.html) opens verification through
 `init.php` and asks `tncode.php` for its challenge. That is a picture whose characters are
-clicked in order (`click_captcha`), which the adapter does not solve, so the lookup ends as a
-challenge. When HuaHan serves its plain arithmetic question instead, the adapter submits the
-answer to `check.php` and, after an explicit acceptance, posts one complete waybill to
-`CargoTrackActionPlus.php` in the same cookie session. The lookup refuses an unverified
-session. Each lookup opens a fresh session and shares one deadline across the four requests.
-HuaHan caps the verification sessions one address opens in an hour; that refusal is a rate
-limit.
+clicked in order (`click_captcha`), or a plain arithmetic question. After `check.php` accepts
+the clicks or the answer, the form posts one complete waybill to `CargoTrackActionPlus.php` in
+the same cookie session. The lookup refuses an unverified session.
+
+The direct step answers the arithmetic question itself. The picture needs OCR, so the
+browser service's [helper](../../trawl/huahan-verify.mjs) runs the same requests and reads it
+with the worker ZTO's helper uses, without opening a browser. It submits a reading only when
+the worker is sure of it, tries at most two pictures, and returns the tracking reply without the
+shipper's reference or names. While HuaHan shows the picture the direct step rests, as
+each of its tries opens a session. HuaHan caps the verification sessions one address opens in
+an hour; that refusal is a rate limit and ends the lookup.
 
 The reply must repeat the requested waybill and confirm success. An explicit absence is
 not found; verification failures, changed replies and an empty history remain distinct.
@@ -61,9 +65,10 @@ outside this adapter's scope.
 
 ## Limitations
 
-There is no cheap recognition flow: tracking requires a fresh verification exchange. The
-picture and other challenge types remain a challenge and enabled universal providers can recover. Provider
-history can supplement scans whose clocks cannot be placed on a timeline.
+There is no cheap recognition flow: tracking requires a fresh verification exchange. Without
+the browser service, or when no picture passes, the picture remains a challenge and enabled
+universal providers can recover. Provider history can supplement scans whose clocks cannot be
+placed on a timeline.
 
 The customer API at `api.hh-exp.com/default/svc/web-service` needs account credentials;
 it is separate from the anonymous web form.

@@ -73,6 +73,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
   if (carrierPage && jAndTBrBrowserNumber(url, capture)) return await runJAndTBrBrowser({ ...carrierRun, signal: budget.signal })
   if (carrierPage && ztoBrowserNumber(url, capture)) return await runZtoBrowser({ ...carrierRun, signal: budget.signal })
   if (carrierPage && chinaPostBrowserNumber(url, capture)) return await runChinaPostBrowser({ ...carrierRun, signal: budget.signal })
+  if (carrierPage && huahanVerifyNumber(url, capture)) return await runHuahanVerify({ ...carrierRun, signal: budget.signal })
   if (carrierPage && jdDomesticNumber(url, capture)) return await runJdDomestic({ ...carrierRun, signal: budget.signal })
   if (carrierPage && sfExpressSessionNumber(url, capture)) {
     return await sfExpressSessions.run({ ...carrierRun, signal: budget.signal })
@@ -142,6 +143,7 @@ for (const [file, tier, fresh] of [['2.ts', '2', false], ['browser.ts', 'tier', 
     + 'import { jAndTBrBrowserNumber, runJAndTBrBrowser } from "../utils/j-and-t-br-browser.mjs"\n'
     + 'import { ztoBrowserNumber, runZtoBrowser } from "../utils/zto-browser.mjs"\n'
     + 'import { chinaPostBrowserNumber, runChinaPostBrowser } from "../utils/china-post-browser.mjs"\n'
+    + 'import { huahanVerifyNumber, runHuahanVerify } from "../utils/huahan-verify.mjs"\n'
     + 'import { jdDomesticNumber, runJdDomestic } from "../utils/jd-domestic-browser.mjs"\n'
     + 'import { australiaPostBrowserRequest, runAustraliaPostBrowser } from "../utils/australia-post-browser.mjs"\n'
     + 'import { sfExpressSessionNumber, sfExpressSessions } from "../utils/sf-express-session.mjs"\n'

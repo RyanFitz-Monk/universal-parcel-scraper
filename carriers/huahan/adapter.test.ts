@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { statusMapAnswer } from '../../core/catalog/statusMaps.js';
 import type { Stage } from '../../core/status/index.js';
-import { HuahanTracker, solveHuahanQuestion } from './adapter.js';
+import { TrawlClient, type TrawlCapturedResponse } from '../../core/transport/trawl.js';
+import { HUAHAN_TRACKING, HuahanTracker, parseHuahanCapture, solveHuahanQuestion } from './adapter.js';
 import { parseHuahan } from './parser.js';
 import { huahanStage } from './status.js';
 
@@ -64,6 +65,58 @@ describe('HuaHan guest tracking', () => {
     const capped = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(response({ ask: 0, msg: '请求次数已达每小时上限，请稍后再试', data: [] }));
     await expect(new HuahanTracker({ fetcher: capped }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited' });
     expect(capped).toHaveBeenCalledTimes(1);
+  });
+
+  describe('through the browser service', () => {
+    let services = 0;
+    const captured = (fields: Partial<TrawlCapturedResponse> = {}): TrawlCapturedResponse => ({ url: HUAHAN_TRACKING, status: 200,
+      headers: {}, body: JSON.stringify(fixture()), truncated: false, base64Encoded: false, error: null, trackingNumberSubmitted: NUMBER, ...fields });
+    const setup = (entries: TrawlCapturedResponse[]) => {
+      const trawl = new TrawlClient(`http://browser.test/huahan-${services += 1}`);
+      const scrape = vi.spyOn(trawl, 'scrape').mockResolvedValue({ url: '', html: '', cookies: [], userAgent: null,
+        tier: 2, statusCode: 200, capturedResponses: entries, raw: {} });
+      const picture = () => vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(init())
+        .mockResolvedValueOnce(response({ ask: 1, tip: ['华', '翰'], count: 2, img: 'data:image/webp;base64,AAAA' }));
+      return { trawl, scrape, picture };
+    };
+
+    it('reads the parcel there after the picture, then rests the direct step', async () => {
+      const { trawl, scrape, picture } = setup([captured()]);
+      const first = picture();
+      const result = await new HuahanTracker({ fetcher: first, trawl }).fetch(NUMBER);
+      expect(result).toMatchObject({ current_stage: 'delivered' });
+      expect(first).toHaveBeenCalledTimes(2);
+      expect(scrape.mock.calls[0]![0]).toMatchObject({ url: `https://www.hh-exp.cn/WebTrack/CargoTrack.html?ordernumber=${NUMBER}`,
+        skipHttp: true, captureResponses: [HUAHAN_TRACKING] });
+      const later = picture();
+      await new HuahanTracker({ fetcher: later, trawl }).fetch(NUMBER);
+      expect(later).not.toHaveBeenCalled();
+      expect(scrape).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not ask the browser service after a rate limit', async () => {
+      const { trawl, scrape } = setup([captured()]);
+      const capped = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(response({ ask: 0, msg: '请求次数已达每小时上限，请稍后再试', data: [] }));
+      await expect(new HuahanTracker({ fetcher: capped, trawl }).fetch(NUMBER)).rejects.toMatchObject({ kind: 'rate_limited' });
+      expect(scrape).not.toHaveBeenCalled();
+    });
+
+    it('keeps each failure kind of the helper\'s answer', () => {
+      expect(() => parseHuahanCapture([], NUMBER)).toThrow(expect.objectContaining({ kind: 'challenge', reason: 'click_captcha' }));
+      expect(() => parseHuahanCapture([captured({ trackingNumberSubmitted: 'HHWAA0000000002YQ' })], NUMBER))
+        .toThrow(expect.objectContaining({ kind: 'challenge' }));
+      expect(() => parseHuahanCapture([captured({ body: JSON.stringify({ ask: 0, msg: '请求次数已达每小时上限' }) })], NUMBER))
+        .toThrow(expect.objectContaining({ kind: 'rate_limited' }));
+      expect(() => parseHuahanCapture([captured({ body: JSON.stringify({ ask: 0, msg: '没有找到记录', data: [] }) })], NUMBER))
+        .toThrow(expect.objectContaining({ kind: 'not_found' }));
+      expect(() => parseHuahanCapture([captured({ status: 403, body: null, error: 'HuaHan verification returned a page' })], NUMBER))
+        .toThrow(expect.objectContaining({ kind: 'challenge' }));
+      expect(() => parseHuahanCapture([captured({ body: null, error: 'HuaHan tracking reply is not JSON' })], NUMBER))
+        .toThrow(expect.objectContaining({ kind: 'schema' }));
+      expect(() => parseHuahanCapture([captured({ body: null, truncated: true })], NUMBER)).toThrow(expect.objectContaining({ kind: 'schema' }));
+      expect(() => parseHuahanCapture([captured({ status: 503, body: null })], NUMBER)).toThrow(expect.objectContaining({ status: 503 }));
+      expect(parseHuahanCapture([captured()], NUMBER).events).toHaveLength(2);
+    });
   });
 
   it('requires accepted verification before looking up a shipment', async () => {

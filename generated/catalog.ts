@@ -30508,7 +30508,8 @@ export const CARRIER_CATALOG: Readonly<Record<CarrierId, CarrierDefinition>> = {
     "tracking": {
       "mode": "automatic",
       "adapter": "huahan",
-      "localClocks": true
+      "localClocks": true,
+      "browser": true
     },
     "canaryUrl": "https://www.hh-exp.cn/WebTrack/CargoTrack.html",
     "trackingSearchUrl": "https://www.hh-exp.cn/WebTrack/CargoTrack.html",

@@ -2,7 +2,7 @@
 
 Some carriers and universal providers only answer a full browser session. This image extends
 [TRAWL](https://github.com/germondai/trawl) with identity-bound capture for DHL Express, FedEx, UPS, USPS, Royal Mail,
-Australia Post, YunExpress, 17TRACK, SF Express, WanbExpress, XPO, Asendia, Correios Brazil, DHL Poland, Magyar Posta, Poste Italiane, SwiftX, China Post, JD Logistics, Ozon, MailAmericas, LBC Express, Evri UK, J&T Express Brazil, Onlog Express, Viettel Post and ZTO. The adapter checks the captured response against
+Australia Post, YunExpress, 17TRACK, SF Express, WanbExpress, XPO, Asendia, Correios Brazil, DHL Poland, Magyar Posta, Poste Italiane, SwiftX, China Post, JD Logistics, Ozon, MailAmericas, LBC Express, Evri UK, J&T Express Brazil, Onlog Express, Viettel Post, ZTO and HuaHan. The adapter checks the captured response against
 the requested parcel. A solved challenge alone is not tracking history.
 
 MailAmericas lets the official page complete its AWS check in a fresh context, then captures
@@ -123,6 +123,11 @@ with its phase retained in a `china-post.verification` warning. A `china-post.ti
 warning gives each lookup's final phase, puzzle count, OCR time and the times its page,
 form, first puzzle and tracking reply arrived. Its two-scan guest window stays marked
 incomplete; the helper enters no phone digits and signs into no account.
+HuaHan's helper opens no browser: it makes the guest form's own requests and reads the
+ordered-character picture with the same worker. A reading below its confidence floor is
+not submitted; each of at most two pictures opens its own verification session, which
+HuaHan counts per address. The widget's refusal returns in the reply's shape, and a
+`huahan.verification` warning gives counts and an outcome label, without images or tokens.
 JD's domestic single-icon helper matches the prompt's foreground colour pattern,
 then independently segments each candidate region to check its shape in the same
 rotated pose. Empty rotation padding does not exclude icons near an image edge.
