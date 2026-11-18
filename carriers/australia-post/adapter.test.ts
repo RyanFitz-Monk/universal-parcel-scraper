@@ -386,6 +386,23 @@ function direct(body: unknown = fixture(), status = 200, headers: Record<string,
 }
 
 describe('Australia Post direct retrieval', () => {
+  it.each([401, 403])('keeps a direct HTTP %i refusal in recovery telemetry without its response body', async status => {
+    const recorder = { step: vi.fn(), lookup: vi.fn() };
+    const { fetcher, browser } = direct('PRIVATE_REFUSAL_BODY', status);
+    const client = new AustraliaPostTracker({ trawl: browserService(browser), fetcher, recorder });
+    await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
+    const refusedStep = recorder.step.mock.calls.find(([record]) => record.step === 'direct')?.[0];
+    const recoveredStep = recorder.step.mock.calls.find(([record]) => record.step === 'trawl')?.[0];
+    expect(refusedStep).toMatchObject({ outcome: 'challenge', error: { kind: 'challenge', status, reason: `http_${status}` } });
+    expect(recoveredStep).toMatchObject({ outcome: 'ok', fallbackError: refusedStep.error });
+    expect(String(refusedStep.error)).toContain(`HTTP ${status}`);
+    expect(JSON.stringify(recorder.step.mock.calls)).not.toContain('PRIVATE_REFUSAL_BODY');
+    expect(browser).toHaveBeenCalledTimes(1);
+    const gateway = new AustraliaPostTracker({ trawl: null, fetcher });
+    await expect(gateway.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge', status, reason: `http_${status}`,
+      message: `Australia Post requires the browser tracking service (tracking API HTTP ${status})` });
+  });
+
   it('asks the gateway as the official app does and never starts a browser after an answer', async () => {
     const { tracker: client, fetcher, browser } = direct();
     await expect(client.fetch(NUMBER)).resolves.toMatchObject({ status: 'delivered' });
@@ -497,6 +514,21 @@ describe('Australia Post recognition', () => {
 });
 
 describe('Australia Post browser retrieval', () => {
+  it.each([401, 403])('keeps the latest whole-bound HTTP %i refusal in the thrown error and recorder', async status => {
+    const recorder = { step: vi.fn(), lookup: vi.fn() };
+    const otherStatus = status === 401 ? 403 : 401;
+    const { trawl, direct: fetcher } = tracker(service([capture({}, otherStatus),
+      capture('PRIVATE_REFUSAL_BODY', status), { ...capture({}, otherStatus), url: australiaPostApiUrl(OTHER) }]));
+    const client = new AustraliaPostTracker({ trawl, fetcher, recorder });
+    await expect(client.fetch(NUMBER)).rejects.toMatchObject({ kind: 'challenge', status, reason: `http_${status}`,
+      message: `Australia Post tracking API returned HTTP ${status}` });
+    expect(recorder.step).toHaveBeenCalledWith(expect.objectContaining({ step: 'trawl', outcome: 'challenge',
+      error: expect.objectContaining({ kind: 'challenge', status, reason: `http_${status}` }) }));
+    expect(recorder.lookup).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'challenge',
+      error: expect.objectContaining({ status, reason: `http_${status}` }) }));
+    expect(JSON.stringify(recorder.step.mock.calls)).not.toContain('PRIVATE_REFUSAL_BODY');
+  });
+
   it('serializes exact capture and page URLs, reserves transport time and records the step', async () => {
     const { trawl, fetcher, direct: refusedDirect } = tracker(service());
     const recorder = { step: vi.fn(), lookup: vi.fn() };

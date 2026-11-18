@@ -441,7 +441,10 @@ export class AustraliaPostTracker {
         const retry = capture.headers['retry-after'];
         throw new RateLimitedError(PROVIDER, retry && /^\d+$/.test(retry) ? Number(retry) * 1000 : undefined);
       }
-      if ([401, 403].includes(capture.status)) throw new ChallengeError(PROVIDER);
+      if ([401, 403].includes(capture.status)) {
+        throw new ChallengeError(PROVIDER, `Australia Post tracking API returned HTTP ${capture.status}`,
+          { status: capture.status, reason: `http_${capture.status}` });
+      }
       if (capture.status >= 400) throw new UpstreamHttpError(PROVIDER, capture.status);
       if (capture.status !== 200 || capture.error || capture.truncated || capture.base64Encoded || capture.body === null) {
         throw new TransportError(PROVIDER, 'Australia Post returned an incomplete browser response');
@@ -488,7 +491,9 @@ export class AustraliaPostTracker {
         }
         if (response.status !== 200) {
           rest.refused();
-          throw new ChallengeError(PROVIDER, trawl ? undefined : 'Australia Post requires the browser tracking service');
+          throw new ChallengeError(PROVIDER, trawl ? `Australia Post tracking API returned HTTP ${response.status}`
+            : `Australia Post requires the browser tracking service (tracking API HTTP ${response.status})`,
+          { status: response.status, reason: `http_${response.status}` });
         }
         let payload: unknown;
         try { payload = JSON.parse(new TextDecoder().decode(bytes)); } catch { throw new SchemaError(PROVIDER, 'Australia Post returned invalid tracking JSON'); }
