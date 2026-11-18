@@ -468,7 +468,7 @@ export class PostNLTracker {
    */
   private async track(trackingNumber: string, accessToken: string, signal: AbortSignal, deadline: number): Promise<Uint8Array> {
     const counted = counting(this.fetcher);
-    let soonest: number | undefined;
+    let earliestExpiry: number | undefined;
     for (;;) {
       let reply: { response: Response; bytes: Uint8Array };
       try {
@@ -496,11 +496,13 @@ export class PostNLTracker {
       }
       if (reply.response.status !== 429) return reply.bytes;
       const refusal = new UpstreamHttpError('PostNL tracking', 429, retryAfterOf(reply.response.headers.get('retry-after')));
-      if (refusal.retryAfterMs !== undefined) soonest = Math.min(soonest ?? Infinity, refusal.retryAfterMs);
+      const now = Date.now();
+      if (refusal.retryAfterMs !== undefined) earliestExpiry = Math.min(earliestExpiry ?? Infinity, now + refusal.retryAfterMs);
       const pause = refusal.retryAfterMs === undefined ? undefined : Math.min(QUOTA_PAUSE_MS, Math.max(1_000, refusal.retryAfterMs));
       if (counted.tries() >= TRACKING_TRIES) {
         const quota = postNLQuota(this.fetcher);
-        quota.restUntil = Math.max(quota.restUntil, Date.now() + Math.min(QUOTA_REST_MAX_MS, Math.max(QUOTA_PAUSE_MS, soonest ?? QUOTA_REST_MS)));
+        const remaining = earliestExpiry === undefined ? QUOTA_REST_MS : earliestExpiry - now;
+        quota.restUntil = Math.max(quota.restUntil, now + Math.min(QUOTA_REST_MAX_MS, Math.max(QUOTA_PAUSE_MS, remaining)));
       }
       if (pause === undefined || counted.tries() >= TRACKING_TRIES || performance.now() + pause >= deadline || !await paused(pause, signal)) {
         throw rateLimited(refusal, counted.tries());
