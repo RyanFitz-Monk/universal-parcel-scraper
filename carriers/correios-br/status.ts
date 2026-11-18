@@ -27,6 +27,8 @@ const codes: Record<string, ClassifiedStatus> = {
   'FC/03': { status: 'in_transit', stage: 'in_transit' },
   // A unit found the address wrong before any delivery run: an address problem, not an attempt.
   'FC/04': { status: 'exception', stage: 'exception' },
+  // Content that is restricted or cannot fly: the item goes on by another route, with its route correction (FC/03).
+  'FC/52': { status: 'in_transit', stage: 'in_transit' },
   'DO/01': { status: 'in_transit', stage: 'in_transit' },
   'RO/01': { status: 'in_transit', stage: 'in_transit' },
   'PAR/10': { status: 'in_transit', stage: 'in_transit' },
