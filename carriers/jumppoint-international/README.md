@@ -1,32 +1,24 @@
 # Jumppoint International Express
 
-Jumppoint International Express parcels use enabled universal providers. There is no dedicated
-adapter.
+Tracks Jumppoint's international waybills through its anonymous guest portal. The domestic
+network has a separate [Jumppoint adapter](../jumppoint/README.md).
 
-Jumppoint International Express is the cross-border service of Jumppoint, a Hong Kong delivery
-company. Its parcels track on their own site, apart from [Jumppoint](../jumppoint/README.md)'s
-domestic waybills.
+## How it works
 
-## Numbers
+1. `trawl`: opens the official `int-tracking.jumppoint.io/?q=` page. Its native reCAPTCHA flow
+   obtains a fresh token and calls `int-tracking-api.jumppoint.io/shipment/tracking/`.
+   The adapter binds the captured query and returned tracking number to the whole input.
 
-The international tracker on `int-tracking.jumppoint.io` accepts `JP`, two letters and ten
-digits, besides the domestic `JP` and twelve digits. `jumppoint-international-1` claims the
-international layout, which no other carrier's rule reads. ParcelPanel's Jumppoint page offers
-one as a sample.
+Requires TRAWL. Recognition is browser-only and opt-in; HTTP recognition starts no browser.
+The newest bound reply decides, including refusals. An empty echoed identifier stays inconclusive,
+so enabled universal providers remain available. Tokens stay inside the browser lookup.
 
-## Notes
-
-- The tracker's lookup, `GET https://int-tracking-api.jumppoint.io/shipment/tracking/`, refuses
-  a request without the page's reCAPTCHA token, so there is no adapter.
-- Providers name the service by the domestic network's name, "Jumppoint". Jumppoint is a
-  network brand, so for a number of this layout the name points here.
-
-## Links
-
-The tracker reads the numbers to show from `q`, so `int-tracking.jumppoint.io/?q={number}` opens
-one parcel.
+The translated scan labels supply stages. Scan instants keep the offsets the API supplies;
+an offset-less clock is an unsupported reply and leaves provider fallback available. Recipient fields, references and free-text remarks are omitted. The
+international layout stays separate from the domestic network's numeric waybills.
 
 ## Testing
 
-Provider live-test inputs and commands are in the
-[provider READMEs](../../providers/README.md).
+Set `FLARESOLVERR_URL`, `JUMPPOINT_INTERNATIONAL_TRACKING_NUMBER` and optionally
+`JUMPPOINT_INTERNATIONAL_UNKNOWN_NUMBER`, then run
+`npm run test:carriers:live -- carriers/jumppoint-international`.

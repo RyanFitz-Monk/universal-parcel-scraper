@@ -91,9 +91,44 @@ export async function requestAustraliaPostInPage({ number, budgetMs, clients = {
     })();
     const api = new URL('https://digitalapi.auspost.com.au/shipments-gateway/v1/watchlist/shipments');
     api.searchParams.set('trackingIds', number);
-    await fetch(api.href, { credentials: 'include', redirect: 'error', signal: controller.signal,
+    const response = await fetch(api.href, { credentials: 'include', redirect: 'error', signal: controller.signal,
       headers: { 'api-key': key, 'Content-Type': 'application/json', AP_CHANNEL_NAME: 'WEB_DETAIL' } });
+    return response.status;
   } finally { clearTimeout(timer); }
+}
+
+/** Keep DataDome's native fetch wrapper: the worker's isolated world cannot see it. */
+export function requestAustraliaPostMainWorld({ number, budgetMs, clients, source }) {
+  if (location.origin !== 'https://auspost.com.au' || !(budgetMs > 0)) {
+    return Promise.reject(new Error('Australia Post page request context is invalid'));
+  }
+  const id = `au-request-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return new Promise((resolve, reject) => {
+    const marker = document.createElement('meta');
+    const script = document.createElement('script');
+    marker.name = id;
+    marker.dataset.state = 'pending';
+    const nonce = document.querySelector('script[nonce]')?.nonce;
+    if (nonce) script.nonce = nonce;
+    let timer;
+    const cleanup = () => { clearTimeout(timer); observer.disconnect(); marker.remove(); script.remove(); };
+    const observer = new MutationObserver(() => {
+      if (marker.dataset.state === 'complete') {
+        const status = Number(marker.dataset.status);
+        cleanup();
+        resolve(status);
+      } else if (marker.dataset.state === 'failed') {
+        cleanup();
+        reject(new Error('Australia Post page request failed'));
+      }
+    });
+    observer.observe(marker, { attributes: true, attributeFilter: ['data-state'] });
+    timer = setTimeout(() => { cleanup(); reject(new Error('Australia Post page request deadline exceeded')); }, budgetMs);
+    // The caller supplies only our self-contained official request builder. The public
+    // configuration and number stay in this context; no key or issued state is exported.
+    script.textContent = `(()=>{const marker=document.querySelector('meta[name="${id}"]'),script=document.currentScript;Promise.resolve().then(()=>(${source})(${JSON.stringify({ number, budgetMs, clients })})).then(status=>{if(marker){marker.dataset.status=String(status);marker.dataset.state='complete'}},()=>{if(marker)marker.dataset.state='failed'}).finally(()=>script?.remove())})()`;
+    document.head.append(marker, script);
+  });
 }
 
 /** LBC's XML-shaped JSON, without contacts, proof links, nonces or recipient prose. */
@@ -249,6 +284,7 @@ const SITES = [
   {
     api: 'https://digitalapi.auspost.com.au/shipments-gateway/v1/watchlist/shipments',
     queryNumber: true,
+    protectionRetry: true,
     number(page) {
       if (page.origin !== 'https://auspost.com.au' || page.search || page.hash) return null;
       return /^\/mypost\/track\/details\/([A-Z0-9]{10,34})\/?$/.exec(page.pathname)?.[1] ?? null;
@@ -282,7 +318,7 @@ const SITES = [
     },
     // A tracking request sent before DataDome's first report is answered is refused, so it waits
     // for that answer, briefly, as the page's own requests do while the application starts.
-    async prepare(page, number, budgetMs, { state }) {
+    async prepare(page, number, budgetMs, { state, finish }) {
       const deadline = Date.now() + budgetMs;
       const timers = [];
       let waited = false;
@@ -296,8 +332,11 @@ const SITES = [
         waited = true;
         timers.forEach(clearTimeout);
       }
-      await page.evaluate(requestAustraliaPostInPage,
-        { number, budgetMs: Math.max(0, deadline - Date.now()), clients: Object.fromEntries(australiaPostClients) });
+      const status = await page.evaluate(requestAustraliaPostMainWorld,
+        { number, budgetMs: Math.max(0, deadline - Date.now()), clients: Object.fromEntries(australiaPostClients), source: requestAustraliaPostInPage.toString() });
+      // A completed refused fetch has no native retry left. A 200 waits for its
+      // captured body instead, even if an earlier protection response was 403.
+      if (Number.isInteger(status) && status !== 200) finish();
     },
   },
   {
@@ -555,7 +594,10 @@ export async function attachTrackingCapture(page, url, options) {
     // UPS retries can arrive after the old capture limit. Keep their arrival
     // order and latest metadata, including refusals whose bodies are private.
     if (site.keepLatestCaptures && entries.length > 20) entries.shift();
-    if (entry.status !== 200 && !site.perNumber) { finish(); return; }
+    if (entry.status !== 200 && !site.perNumber) {
+      if (!site.protectionRetry || ![401, 403].includes(entry.status)) finish();
+      return;
+    }
     const type = headers['content-type'] ?? '';
     const length = headers['content-length'] === undefined ? 0 : Number(headers['content-length']);
     // The browser already decoded this response for the site. Do not implement
@@ -599,7 +641,7 @@ export async function attachTrackingCapture(page, url, options) {
     ...(site.prepare && (!site.prepareFor || site.prepareFor(target)) ? { async prepare(budgetMs) {
       const deadline = Date.now() + Math.max(0, budgetMs);
       await site.prepare(page, number, Math.max(0, deadline - Date.now()), { state, target, settle,
-        restart: () => { ready = restart(); }, hasTrackingRequest: () => trackingRequested,
+        restart: () => { ready = restart(); }, hasTrackingRequest: () => trackingRequested, finish,
         refuse({ status, retryAfter }) {
           if (entries.length >= 20) entries.shift();
           entries.push({ url: api, status, body: null, headers: retryAfter ? { 'retry-after': String(retryAfter).slice(0, 100) } : {},

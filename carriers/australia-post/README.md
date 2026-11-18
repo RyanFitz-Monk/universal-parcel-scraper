@@ -22,7 +22,9 @@ refusal there leaves the number unchecked instead of starting the browser.
      from the page's app module and makes that GET inside the browser session with
      `AP_CHANNEL_NAME: WEB_DETAIL`. The key is never pinned here, and browser state is never replayed
      over plain HTTP. The browser service remembers the key per module path, so the module is not
-     downloaded twice.
+     downloaded twice. The GET runs in the page's execution world so DataDome's own fetch
+     wrapper can verify and repeat a refused request. Capture keeps the intermediate refusal
+     until that wrapper finishes and the final tracking body has been read.
    - The GET waits until DataDome's tag has had its first report answered (at most half the page's
      budget, 8 s): sent earlier, it is refused.
    - Through a proxy, which is paid by the byte, the page loads only its document, DataDome's

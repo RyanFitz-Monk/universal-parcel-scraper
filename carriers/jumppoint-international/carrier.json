@@ -17,16 +17,30 @@
   "timezone": "Asia/Hong_Kong",
   "tracking": {
     "mode": "automatic",
-    "adapter": "universal",
-    "steps": []
+    "adapter": "jumppoint-international",
+    "steps": [
+      "trawl"
+    ],
+    "browser": true
   },
-  "capabilities": [],
+  "capabilities": [
+    "history",
+    "offset_timestamps"
+  ],
   "portal": {
     "url": "https://int-tracking.jumppoint.io/?q={trackingNumber}",
     "searchUrl": "https://int-tracking.jumppoint.io/",
     "canaryUrl": "https://int-tracking.jumppoint.io/",
-    "shows": [],
-    "scraped": [],
+    "shows": [
+      "status",
+      "history",
+      "offset_timestamps"
+    ],
+    "scraped": [
+      "status",
+      "history",
+      "offset_timestamps"
+    ],
     "discarded": [],
     "unavailable": []
   },

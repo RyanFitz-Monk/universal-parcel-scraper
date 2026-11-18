@@ -1,11 +1,77 @@
 {
   "carrier": "jumppoint-international",
   "entries": [
-    {"wording": "Order Created", "stage": "registered", "language": "en", "confirmedBy": "source", "note": "The order data, before the parcel is handed over."},
-    {"wording": "Handover to Linehaul", "stage": "in_transit", "language": "en", "confirmedBy": "source", "note": "The parcel handed to the line haul."},
-    {"wording": "Departure from Origin Airport", "stage": "in_transit", "language": "en", "confirmedBy": "source"},
-    {"wording": "Arrival at Destination Airport", "stage": "in_transit", "language": "en", "confirmedBy": "source"},
-    {"wording": "Import Customs Handover To Lastmile", "stage": "in_transit", "language": "en", "confirmedBy": "source", "note": "Import customs hands the cleared parcel to the delivering carrier."},
-    {"wording": "Arrival at Last Mile Distribution Point", "stage": "in_transit", "language": "en", "confirmedBy": "source", "note": "The delivering carrier's depot, before the delivery round."}
+    {
+      "wording": "Successful Delivery",
+      "stage": "delivered",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Out For Last Mile Delivery",
+      "stage": "out_for_delivery",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Arrival at Last Mile Distribution Point",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "On way to next Sorting Station",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Arrived at Main Sorting Warehouse",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Import Customs Handover To Lastmile",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Arrival at Destination Airport",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Departure from Origin Airport",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Handover to Linehaul",
+      "stage": "in_transit",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Arrival at Origin Warehouse",
+      "stage": "accepted",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Order Created",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "live"
+    },
+    {
+      "wording": "Order Confirmed",
+      "stage": "registered",
+      "language": "en",
+      "confirmedBy": "live"
+    }
   ]
 }

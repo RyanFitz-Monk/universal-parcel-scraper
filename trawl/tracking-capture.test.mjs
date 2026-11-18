@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runInNewContext } from 'node:vm';
-import { attachTrackingCapture, australiaPostClientKnown, requestAustraliaPostInPage, reserveDeadline } from './tracking-capture.mjs';
+import { attachTrackingCapture, australiaPostClientKnown, requestAustraliaPostInPage, requestAustraliaPostMainWorld, reserveDeadline } from './tracking-capture.mjs';
 import { swiftxDropPhoneFragment, swiftxEnterPhoneDigits } from './swiftx-slider.mjs';
 const api = 'https://t.17track.net/track/restapi';
 const number = 'ZZ12345678900';
@@ -444,8 +444,8 @@ test('Australia Post capture requires the exact public page, number and anonymou
   assert.equal((await capture.drain()).capturedResponses.length, 2);
 });
 
-test('Australia Post stops on a matched negative or challenge instead of accepting an app shell', async () => {
-  for (const [body, status] of [[australiaReply(australiaNumber, 400), 200], ['', 403]]) {
+test('Australia Post stops on a matched negative instead of accepting an app shell', async () => {
+  for (const [body, status] of [[australiaReply(australiaNumber, 400), 200]]) {
     const { capture, respond } = await fixture(australiaUrl, australiaApi);
     await respond(body, { status });
     assert.equal(capture.hasResponse(), true);
@@ -473,7 +473,7 @@ function australiaBrowser({ source = 'api:{shipmentsGateway:"synthetic-public-cl
 
 test('Australia Post reads current public configuration and submits only the anonymous tracking request', async () => {
   const browser = australiaBrowser();
-  assert.equal(await browser.run(), undefined);
+  assert.equal(await browser.run(), 200);
   assert.equal(browser.calls.length, 2);
   assert.equal(browser.calls[0].options.redirect, 'error');
   const { url, options } = browser.calls[1];
@@ -487,7 +487,7 @@ test('Australia Post reads current public configuration and submits only the ano
 
 test('Australia Post uses a key already read for the page\'s module without downloading the module again', async () => {
   const known = australiaBrowser({ clients: { '/mypost/track/assets/index-example.js': 'synthetic-known-client-config' } });
-  assert.equal(await known.run(), undefined);
+  assert.equal(await known.run(), 200);
   assert.deepEqual(known.calls.map(call => call.url), [australiaApi]);
   assert.equal(known.calls[0].options.headers['api-key'], 'synthetic-known-client-config');
   for (const clients of [{ '/mypost/track/assets/index-other.js': 'synthetic-known-client-config' },
@@ -530,7 +530,7 @@ const australiaReport = { url: () => 'https://dd.auspost.com.au/js/' };
 test('Australia Post preparation captures history before the generic CAPTCHA solver runs', async () => {
   const { page, capture, respond, handlers } = await fixture(australiaUrl, australiaApi);
   page.evaluate = async (callback, args) => {
-    assert.equal(callback, requestAustraliaPostInPage);
+    assert.equal(callback, requestAustraliaPostMainWorld);
     assert.equal(args.number, australiaNumber);
     assert.ok(args.budgetMs > 0);
     await respond(australiaReply());
@@ -553,7 +553,7 @@ test('Australia Post reads the public key from the module the page loaded and re
   assert.equal(australiaPostClientKnown(modulePath), false);
   await respond(source, { url: `https://auspost.com.au${modulePath}`, method: 'GET' });
   page.evaluate = async (callback, args) => {
-    assert.equal(callback, requestAustraliaPostInPage);
+    assert.equal(callback, requestAustraliaPostMainWorld);
     assert.equal(args.clients[modulePath], 'synthetic-loaded-client-config');
     await respond(australiaReply());
   };
@@ -1218,4 +1218,59 @@ test('a capture ends its waits before the service deadline and keeps its other m
   const stock = reserveDeadline({ settle: async () => {}, drain: async () => ({}), archive: () => 'archive' }, 2500);
   assert.equal(stock.prepare, undefined);
   assert.equal(stock.archive(), 'archive');
+});
+
+test('Australia Post retains an intermediate 403 until the native wrapper yields bound history', async () => {
+  const { page, capture, respond, handlers } = await fixture(australiaUrl, australiaApi);
+  page.evaluate = async (_callback, args) => {
+    assert.equal(args.source, requestAustraliaPostInPage.toString());
+    await respond('', { status: 403 });
+    assert.equal(capture.hasResponse(), false);
+    // Fetch resolves at headers; the capture still has to finish reading its final body.
+    setTimeout(() => { void respond(australiaReply(), { read: async () => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+      return Buffer.from(australiaReply());
+    } }); }, 5);
+    return 200;
+  };
+  await handlers.requestfinished(australiaReport);
+  await capture.prepare(1000);
+  const rows = (await capture.drain()).capturedResponses;
+  assert.deepEqual(rows.map(row => row.status), [403, 200]);
+  assert.equal(rows[0].body, null);
+  assert.equal(rows[1].body, australiaReply());
+});
+
+test('Australia Post ends promptly when the native wrapper finishes with a refusal', async () => {
+  const { page, capture, respond, handlers } = await fixture(australiaUrl, australiaApi);
+  page.evaluate = async () => { await respond('', { status: 403 }); return 403; };
+  await handlers.requestfinished(australiaReport);
+  const started = Date.now();
+  await capture.prepare(5000);
+  assert.ok(Date.now() - started < 1500);
+  assert.equal((await capture.drain()).capturedResponses[0].status, 403);
+});
+
+test('Australia Post main-world bridge uses the page realm and removes its ephemeral nodes', async () => {
+  const { parseHTML } = await import('linkedom');
+  const { document, MutationObserver } = parseHTML('<html><head><script nonce="synthetic-nonce"></script></head><body></body></html>');
+  const append = document.head.append.bind(document.head);
+  const pageWorld = { document, Promise, mainPageWorld: true };
+  pageWorld.window = pageWorld;
+  document.head.append = (...nodes) => {
+    append(...nodes);
+    const script = nodes.find(node => node.tagName === 'SCRIPT');
+    if (script) { assert.equal(script.nonce, 'synthetic-nonce'); runInNewContext(script.textContent, pageWorld); }
+  };
+  const request = async () => { if (!window.mainPageWorld) throw Error('PRIVATE_PAGE_ERROR'); return 200; };
+  const run = (origin = 'https://auspost.com.au', source = request.toString(), budgetMs = 100) => runInNewContext(
+    `(${requestAustraliaPostMainWorld.toString()})({number:'7T0000000000000000001',budgetMs,source})`,
+    { location: { origin }, window: {}, document, MutationObserver, setTimeout, clearTimeout, budgetMs, source });
+  assert.equal(await run(), 200);
+  assert.equal(document.querySelectorAll('meta[name^="au-request-"]').length, 0);
+  await assert.rejects(run('https://other.test'), /context is invalid/);
+  await assert.rejects(run(undefined, 'async()=>{throw Error("PRIVATE_PAGE_ERROR")}'), error => !error.message.includes('PRIVATE_PAGE_ERROR'));
+  await assert.rejects(run(undefined, 'async()=>new Promise(()=>{})', 10), /deadline exceeded/);
+  assert.equal(document.querySelectorAll('meta[name^="au-request-"]').length, 0);
+  assert.equal(document.querySelectorAll('script').length, 1);
 });
